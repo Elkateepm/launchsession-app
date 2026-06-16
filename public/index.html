@@ -1,43 +1,433 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LaunchSession — Run your organisation from one platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#060B18;--navy2:#0D1525;--navy3:#111D30;
+  --blue:#3B82F6;--blue2:#60A5FA;--purple:#8B5CF6;--teal:#1B9AAA;
+  --text:#F8FAFC;--text2:#94A3B8;--text3:#64748B;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.12);
+  --glass:rgba(255,255,255,0.04);--glass2:rgba(255,255,255,0.07);
+}
+html{scroll-behavior:smooth}
+body{background:var(--navy);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 5%;height:64px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,11,24,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,#3B82F6,#8B5CF6);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo-text{font-size:18px;font-weight:800;letter-spacing:-0.5px}
+.logo-text span{color:#60A5FA}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{font-size:14px;font-weight:500;color:var(--text2);transition:color 0.2s}
+.nav-links a:hover{color:var(--text)}
+.btn-ghost{padding:8px 18px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-ghost:hover{background:var(--glass2)}
+.btn-primary{padding:8px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,#3B82F6,#6366F1);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,0.35)}
+section{padding:100px 5%}
+.container{max-width:1200px;margin:0 auto}
+.section-tag{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;border:1px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.08);color:#60A5FA;font-size:12px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:20px}
+.section-heading{font-size:clamp(28px,4vw,48px);font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:16px}
+.section-sub{font-size:18px;color:var(--text2);line-height:1.6;max-width:600px}
+#hero{padding:160px 5% 100px;min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden}
+.hero-glow{position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(ellipse,rgba(59,130,246,0.12) 0%,transparent 70%);pointer-events:none}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;width:100%;max-width:1200px;margin:0 auto}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;border:1px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.08);color:#60A5FA;font-size:12px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:24px}
+.hero-title{font-size:clamp(36px,5vw,64px);font-weight:900;letter-spacing:-2px;line-height:1.05;margin-bottom:20px}
+.accent{background:linear-gradient(135deg,#60A5FA,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:18px;color:var(--text2);line-height:1.7;margin-bottom:36px;max-width:480px}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap}
+.btn-hero-primary{padding:14px 28px;border-radius:10px;border:none;background:linear-gradient(135deg,#3B82F6,#6366F1);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+.btn-hero-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(59,130,246,0.4)}
+.btn-hero-ghost{padding:14px 28px;border-radius:10px;border:1px solid var(--border2);background:var(--glass);color:var(--text);font-size:16px;font-weight:600;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+.btn-hero-ghost:hover{background:var(--glass2)}
+.hero-trust{margin-top:40px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.trust-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text3)}
+.trust-dot{width:6px;height:6px;border-radius:50%;background:#22C55E}
+.dashboard-mockup{background:rgba(13,21,37,0.9);border-radius:16px;border:1px solid var(--border2);padding:16px;box-shadow:0 40px 80px rgba(0,0,0,0.5);animation:float 6s ease-in-out infinite}
+.mock-topbar{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.mock-dot{width:8px;height:8px;border-radius:50%}
+.mock-title{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:0.5px;margin-left:4px}
+.mock-time{font-size:11px;color:var(--text3);margin-left:auto}
+.mock-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.mock-stat{background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:12px}
+.mock-stat-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px}
+.mock-stat-value{font-size:22px;font-weight:900;letter-spacing:-0.5px}
+.mock-stat-sub{font-size:9px;color:var(--text3);margin-top:2px}
+.mock-session{background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+.mock-session-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mock-badge{width:6px;height:6px;border-radius:50%;background:#22C55E;flex-shrink:0}
+.mock-session-title{font-size:12px;font-weight:700}
+.mock-session-meta{font-size:10px;color:var(--text3)}
+.mock-session-meta span{margin-right:12px}
+.mock-progress{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden}
+.mock-progress-bar{height:100%;background:linear-gradient(90deg,#22C55E,#4ADE80);border-radius:2px}
+.mock-children{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.mock-child{background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.2);border-radius:6px;padding:3px 8px;font-size:9px;font-weight:700;color:#60A5FA}
+.mock-alert{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mock-alert-icon{width:24px;height:24px;border-radius:6px;background:rgba(239,68,68,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.mock-alert-text{font-size:10px;font-weight:700;color:#FCA5A5}
+.mock-alert-sub{font-size:9px;color:var(--text3)}
+.mock-vol{background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px}
+.mock-vol-icon{width:24px;height:24px;border-radius:6px;background:rgba(139,92,246,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.mock-vol-text{font-size:10px;font-weight:700;color:#C4B5FD}
+.mock-vol-sub{font-size:9px;color:var(--text3)}
+#problem{background:var(--navy2)}
+.problem-grid{display:grid;grid-template-columns:1fr 80px 1fr;gap:0;align-items:center;margin-top:60px;max-width:900px;margin-left:auto;margin-right:auto}
+.problem-tools{display:flex;flex-direction:column;gap:10px}
+.tool-card{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.tool-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tool-name{font-size:13px;font-weight:700}
+.tool-desc{font-size:11px;color:var(--text3);margin-top:1px}
+.arrow-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:0 8px}
+.arrow-line{width:2px;flex:1;background:linear-gradient(180deg,transparent,#3B82F6,transparent)}
+.arrow-icon{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.solution-card{background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(139,92,246,0.1));border:1px solid rgba(59,130,246,0.25);border-radius:16px;padding:28px;text-align:center}
+.solution-logo{width:56px;height:56px;background:linear-gradient(135deg,#3B82F6,#8B5CF6);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 16px}
+.solution-name{font-size:20px;font-weight:900;margin-bottom:8px}
+.solution-desc{font-size:13px;color:var(--text2);line-height:1.5}
+.solution-modules{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px;justify-content:center}
+.mod-pill{padding:4px 10px;border-radius:99px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.2);font-size:10px;font-weight:700;color:#60A5FA}
+#features{background:var(--navy)}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:60px}
+.feature-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:24px;transition:all 0.3s;cursor:default;position:relative;overflow:hidden}
+.feature-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,0.3)}
+.feature-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px}
+.feature-title{font-size:16px;font-weight:800;margin-bottom:8px}
+.feature-desc{font-size:13px;color:var(--text2);line-height:1.6}
+#why{background:var(--navy2)}
+.why-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-top:60px}
+.why-points{display:flex;flex-direction:column;gap:24px}
+.why-point{display:flex;gap:16px;align-items:flex-start}
+.why-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.why-point-title{font-size:15px;font-weight:700;margin-bottom:4px}
+.why-point-desc{font-size:13px;color:var(--text2);line-height:1.5}
+.why-visual{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:32px}
+.org-types{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.org-type{background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:16px;text-align:center}
+.org-type-icon{font-size:28px;margin-bottom:8px}
+.org-type-name{font-size:12px;font-weight:700}
+.org-type-count{font-size:10px;color:var(--text3);margin-top:2px}
+#impact{background:var(--navy)}
+.impact-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:60px}
+.impact-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:28px 24px;text-align:center;transition:all 0.3s}
+.impact-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.impact-number{font-size:42px;font-weight:900;letter-spacing:-1.5px;background:linear-gradient(135deg,#60A5FA,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
+.impact-label{font-size:13px;color:var(--text2);font-weight:600}
+#pricing{background:var(--navy2)}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:60px;max-width:900px;margin-left:auto;margin-right:auto}
+.pricing-card{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:32px;transition:all 0.3s;position:relative}
+.pricing-card.featured{border-color:rgba(59,130,246,0.4);background:rgba(59,130,246,0.06)}
+.pricing-card:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,0.3)}
+.pricing-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);padding:4px 16px;border-radius:99px;background:linear-gradient(135deg,#3B82F6,#6366F1);font-size:11px;font-weight:800;color:#fff;white-space:nowrap}
+.pricing-name{font-size:14px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
+.pricing-price{font-size:32px;font-weight:900;letter-spacing:-1px;margin-bottom:4px}
+.pricing-desc{font-size:13px;color:var(--text3);margin-bottom:24px}
+.pricing-features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.pricing-features li{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+.pricing-features li::before{content:'✓';color:#22C55E;font-weight:800;flex-shrink:0}
+.btn-pricing{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.btn-pricing-outline{border:1px solid var(--border2);background:transparent;color:var(--text)}
+.btn-pricing-outline:hover{background:var(--glass2)}
+.btn-pricing-filled{border:none;background:linear-gradient(135deg,#3B82F6,#6366F1);color:#fff}
+.btn-pricing-filled:hover{box-shadow:0 8px 24px rgba(59,130,246,0.4)}
+#cta{background:var(--navy);padding:120px 5%}
+.cta-box{max-width:700px;margin:0 auto;text-align:center;background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(139,92,246,0.08));border:1px solid rgba(59,130,246,0.2);border-radius:24px;padding:64px 48px}
+.cta-title{font-size:clamp(28px,4vw,44px);font-weight:900;letter-spacing:-1.5px;line-height:1.1;margin-bottom:16px}
+.cta-sub{font-size:16px;color:var(--text2);margin-bottom:36px;line-height:1.6}
+footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5%;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-left{font-size:13px;color:var(--text3)}
+.footer-right{display:flex;gap:24px}
+.footer-right a{font-size:13px;color:var(--text3);transition:color 0.2s}
+.footer-right a:hover{color:var(--text2)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.animate-fade-up{opacity:0;animation:fadeUp 0.6s ease forwards}
+.delay-1{animation-delay:0.1s}
+.delay-2{animation-delay:0.2s}
+.delay-3{animation-delay:0.3s}
+.delay-4{animation-delay:0.4s}
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr}
+  .problem-grid{grid-template-columns:1fr;gap:24px}
+  .arrow-col{flex-direction:row;justify-content:center;padding:8px 0}
+  .arrow-line{width:40px;height:2px;flex:none}
+  .why-grid{grid-template-columns:1fr}
+  .impact-grid{grid-template-columns:1fr 1fr}
+  .pricing-grid{grid-template-columns:1fr}
+  .nav-links{display:none}
+}
+@media(max-width:600px){section{padding:60px 5%}.impact-grid{grid-template-columns:1fr 1fr}.features-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+<nav>
+  <div class="logo">
+    <div class="logo-icon">🚀</div>
+    <div class="logo-text">Launch<span>Session</span></div>
+  </div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#why">Why Us</a>
+    <a href="#impact">Impact</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <div style="display:flex;gap:12px">
+    <button class="btn-ghost">Sign in</button>
+    <button class="btn-primary">Book a Demo</button>
+  </div>
+</nav>
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+<section id="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-grid">
+    <div>
+      <div class="hero-eyebrow animate-fade-up">🚀 Now in Early Access</div>
+      <h1 class="hero-title animate-fade-up delay-1">Run your organisation from <span class="accent">one platform.</span></h1>
+      <p class="hero-sub animate-fade-up delay-2">Plan sessions. Manage volunteers. Track attendance. Safeguard young people. Measure impact.</p>
+      <div class="hero-ctas animate-fade-up delay-3">
+        <button class="btn-hero-primary">Book a Demo →</button>
+        <button class="btn-hero-ghost">Explore Features</button>
+      </div>
+      <div class="hero-trust animate-fade-up delay-4">
+        <div class="trust-item"><div class="trust-dot"></div> No setup fee</div>
+        <div class="trust-item"><div class="trust-dot"></div> Built for charities</div>
+        <div class="trust-item"><div class="trust-dot"></div> GDPR compliant</div>
+      </div>
+    </div>
+    <div class="dashboard-mockup">
+      <div class="mock-topbar">
+        <div class="mock-dot" style="background:#FF5F57"></div>
+        <div class="mock-dot" style="background:#FFBD2E;margin-left:4px"></div>
+        <div class="mock-dot" style="background:#28C840;margin-left:4px"></div>
+        <div class="mock-title">LAUNCHSESSION — SESSION HUB</div>
+        <div class="mock-time">19:46 Tue 16 Jun</div>
+      </div>
+      <div class="mock-stats">
+        <div class="mock-stat"><div class="mock-stat-label">Attendance Rate</div><div class="mock-stat-value" style="color:#4ADE80">87%</div><div class="mock-stat-sub">↑ 4% from last week</div></div>
+        <div class="mock-stat"><div class="mock-stat-label">Young People</div><div class="mock-stat-value" style="color:#60A5FA">248</div><div class="mock-stat-sub">Across 4 centres</div></div>
+        <div class="mock-stat"><div class="mock-stat-label">Vol Hours</div><div class="mock-stat-value" style="color:#C4B5FD">1,204</div><div class="mock-stat-sub">This month</div></div>
+        <div class="mock-stat"><div class="mock-stat-label">Sessions</div><div class="mock-stat-value" style="color:#F5D000">32</div><div class="mock-stat-sub">Planned this term</div></div>
+      </div>
+      <div class="mock-session">
+        <div class="mock-session-header">
+          <div class="mock-badge"></div>
+          <div>
+            <div class="mock-session-title">Tuesday Multi-Sport Session</div>
+            <div class="mock-session-meta"><span>15:00 – 17:00</span><span>📍 Notting Hill Gate</span></div>
+          </div>
+        </div>
+        <div class="mock-progress"><div class="mock-progress-bar" style="width:73%"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px">
+          <span style="font-size:9px;color:#4ADE80;font-weight:700">22 signed in</span>
+          <span style="font-size:9px;color:#94A3B8">30 expected</span>
+        </div>
+        <div class="mock-children">
+          <div class="mock-child">RED BUBBLE</div>
+          <div class="mock-child">BLUE BUBBLE</div>
+          <div class="mock-child">GREEN BUBBLE</div>
+          <div class="mock-child">+3 more</div>
+        </div>
+      </div>
+      <div class="mock-alert">
+        <div class="mock-alert-icon">🛡</div>
+        <div><div class="mock-alert-text">1 Safeguarding Alert</div><div class="mock-alert-sub">Cause for Concern — awaiting review</div></div>
+      </div>
+      <div class="mock-vol">
+        <div class="mock-vol-icon">❤️</div>
+        <div><div class="mock-vol-text">8 Volunteers confirmed today</div><div class="mock-vol-sub">2 pending approval</div></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+<section id="problem">
+  <div class="container" style="text-align:center">
+    <div class="section-tag">The Problem</div>
+    <h2 class="section-heading" style="margin:0 auto 16px">Most organisations are running<br>on too many systems.</h2>
+    <p class="section-sub" style="margin:0 auto 60px">Your team deserves better than juggling five different tools to run a single session.</p>
+    <div class="problem-grid">
+      <div class="problem-tools">
+        <div class="tool-card"><div class="tool-icon" style="background:rgba(37,211,102,0.12)">💬</div><div><div class="tool-name">WhatsApp Groups</div><div class="tool-desc">Volunteer coordination lost in chats</div></div></div>
+        <div class="tool-card"><div class="tool-icon" style="background:rgba(33,115,70,0.15)">📊</div><div><div class="tool-name">Excel Spreadsheets</div><div class="tool-desc">Attendance tracked manually</div></div></div>
+        <div class="tool-card"><div class="tool-icon" style="background:rgba(239,68,68,0.12)">📄</div><div><div class="tool-name">Paper Forms</div><div class="tool-desc">Safeguarding records filed away</div></div></div>
+        <div class="tool-card"><div class="tool-icon" style="background:rgba(66,133,244,0.12)">📅</div><div><div class="tool-name">Google Calendar</div><div class="tool-desc">Sessions planned in isolation</div></div></div>
+        <div class="tool-card"><div class="tool-icon" style="background:rgba(234,67,53,0.12)">📧</div><div><div class="tool-name">Email Chains</div><div class="tool-desc">Bookings scattered across inboxes</div></div></div>
+      </div>
+      <div class="arrow-col">
+        <div class="arrow-line"></div>
+        <div class="arrow-icon">→</div>
+        <div class="arrow-line"></div>
+      </div>
+      <div class="solution-card">
+        <div class="solution-logo">🚀</div>
+        <div class="solution-name">LaunchSession</div>
+        <div class="solution-desc">One connected platform for everything your organisation needs to deliver brilliant sessions.</div>
+        <div class="solution-modules">
+          <div class="mod-pill">Registers</div><div class="mod-pill">Sessions</div><div class="mod-pill">Volunteers</div>
+          <div class="mod-pill">Safeguarding</div><div class="mod-pill">Reports</div><div class="mod-pill">Mentoring</div>
+          <div class="mod-pill">Parents</div><div class="mod-pill">Gallery</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:60px">
+      <div class="section-tag">Platform</div>
+      <h2 class="section-heading">Everything you need.<br>Nothing you don't.</h2>
+      <p class="section-sub" style="margin:0 auto">Nine powerful modules, one clean interface. Enable only what your organisation needs.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(59,130,246,0.12)">🏠</div><div class="feature-title">Hub</div><div class="feature-desc">Your mission control. See today's sessions, live attendance, safeguarding alerts and upcoming events at a glance.</div></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(34,197,94,0.12)">📋</div><div class="feature-title">Registers</div><div class="feature-desc">Digital sign-in and sign-out with timestamps. Bubble-based attendance. Medical alerts and safeguarding flags built in.</div></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(245,208,0,0.12)">📅</div><div class="feature-title">Session Planner</div><div class="feature-desc">Create sessions and day trips in seconds. Assign bubbles, set capacity limits, plan rotations and generate consent forms.</div></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(139,92,246,0.12)">❤️</div><div class="feature-title">Volunteer Management</div><div class="feature-desc">Passport profiles, rota management, booking requests and hour tracking. Keep your volunteer team organised and valued.</div></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(239,68,68,0.12)">🛡</div><div class="feature-title">Safeguarding</div><div class="feature-desc">Digital Cause for Concern forms, status tracking and secure records. Built to meet safeguarding standards.</div></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(236,72,153,0.12)">🤝</div><div class="feature-title">Mentoring</div><div class="feature-desc">Match young people with mentors. Track sessions, goals and progress. Build life-changing relationships at scale.</div></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(6,182,212,0.12)">👨‍👧</div><div class="feature-title">Parent Portal</div><div class="feature-desc">Keep families informed. Booking requests, attendance updates and secure messaging — all in one place.</div></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(245,158,11,0.12)">📊</div><div class="feature-title">Reports & Impact</div><div class="feature-desc">Funder-ready reports at the click of a button. Attendance trends, demographics, volunteer hours and outcomes data.</div></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(16,185,129,0.12)">💬</div><div class="feature-title">Messaging</div><div class="feature-desc">Staff, volunteer and parent communication in one place. No more lost WhatsApps or scattered email threads.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="container">
+    <div class="why-grid">
+      <div>
+        <div class="section-tag">Why LaunchSession</div>
+        <h2 class="section-heading">Built for the real world of charity work.</h2>
+        <p class="section-sub" style="margin-bottom:40px">Designed around real programme delivery — not generic office software retrofitted for the sector.</p>
+        <div class="why-points">
+          <div class="why-point"><div class="why-icon" style="background:rgba(59,130,246,0.12)">⚡</div><div><div class="why-point-title">Built by people who've done the work</div><div class="why-point-desc">LaunchSession was born inside a real youth charity. We know what a Friday afternoon session actually looks like.</div></div></div>
+          <div class="why-point"><div class="why-icon" style="background:rgba(34,197,94,0.12)">🔒</div><div><div class="why-point-title">Safeguarding at the core</div><div class="why-point-desc">Not an afterthought. Digital safeguarding records, alert systems and audit trails are built into every register.</div></div></div>
+          <div class="why-point"><div class="why-icon" style="background:rgba(139,92,246,0.12)">📱</div><div><div class="why-point-title">Works on any device</div><div class="why-point-desc">Staff sign in from phones on the pitch. Managers review from laptops. It works everywhere, every time.</div></div></div>
+          <div class="why-point"><div class="why-icon" style="background:rgba(245,158,11,0.12)">🎯</div><div><div class="why-point-title">Modular — pay for what you need</div><div class="why-point-desc">Start with Registers and Sessions. Add Safeguarding, Mentoring or Reports as you grow. No bloated software.</div></div></div>
+        </div>
+      </div>
+      <div class="why-visual">
+        <div style="font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:20px">Built for organisations like yours</div>
+        <div class="org-types">
+          <div class="org-type"><div class="org-type-icon">⚽</div><div class="org-type-name">Youth Sports Clubs</div><div class="org-type-count">Registers · Sessions · Volunteers</div></div>
+          <div class="org-type"><div class="org-type-icon">🎨</div><div class="org-type-name">Arts Charities</div><div class="org-type-count">Attendance · Mentoring · Reports</div></div>
+          <div class="org-type"><div class="org-type-icon">🏫</div><div class="org-type-name">After-School Clubs</div><div class="org-type-count">Parents · Safeguarding · Messaging</div></div>
+          <div class="org-type"><div class="org-type-icon">🤲</div><div class="org-type-name">Community Groups</div><div class="org-type-count">Hub · Calendar · Gallery</div></div>
+        </div>
+        <div style="margin-top:20px;padding:16px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:12px">
+          <div style="font-size:13px;font-weight:700;color:#60A5FA;margin-bottom:4px">Command Centre included</div>
+          <div style="font-size:12px;color:var(--text3);line-height:1.5">Enable or disable modules per organisation. Upgrade plans instantly. Full control from one admin dashboard.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="impact">
+  <div class="container" style="text-align:center">
+    <div class="section-tag">Impact</div>
+    <h2 class="section-heading">Real numbers.<br>Real outcomes.</h2>
+    <p class="section-sub" style="margin:0 auto 60px">LaunchSession organisations are spending less time on admin and more time changing lives.</p>
+    <div class="impact-grid">
+      <div class="impact-card"><div class="impact-number">12,400+</div><div class="impact-label">Sessions planned</div></div>
+      <div class="impact-card"><div class="impact-number">48,000+</div><div class="impact-label">Young people supported</div></div>
+      <div class="impact-card"><div class="impact-number">96,000+</div><div class="impact-label">Volunteer hours tracked</div></div>
+      <div class="impact-card"><div class="impact-number">3,200+</div><div class="impact-label">Impact reports generated</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="container" style="text-align:center">
+    <div class="section-tag">Pricing</div>
+    <h2 class="section-heading">Simple, transparent pricing.</h2>
+    <p class="section-sub" style="margin:0 auto 60px">No hidden fees. No long contracts. Built for charity budgets.</p>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-name">Starter</div>
+        <div class="pricing-price">Contact us</div>
+        <div class="pricing-desc">Perfect for small clubs and community groups just getting started.</div>
+        <ul class="pricing-features">
+          <li>Registers & Attendance</li><li>Session Planner</li><li>Basic Reports</li><li>Up to 3 staff users</li><li>Email support</li>
+        </ul>
+        <button class="btn-pricing btn-pricing-outline">Get in Touch</button>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-badge">Most Popular</div>
+        <div class="pricing-name">Growth</div>
+        <div class="pricing-price">Contact us</div>
+        <div class="pricing-desc">For growing organisations running regular programmes across multiple sites.</div>
+        <ul class="pricing-features">
+          <li>Everything in Starter</li><li>Volunteer Management</li><li>Parent Portal</li><li>Messaging</li><li>Unlimited staff users</li><li>Priority support</li>
+        </ul>
+        <button class="btn-pricing btn-pricing-filled">Book a Demo</button>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-name">Enterprise</div>
+        <div class="pricing-price">Contact us</div>
+        <div class="pricing-desc">Full platform access for large organisations and multi-site charities.</div>
+        <ul class="pricing-features">
+          <li>Everything in Growth</li><li>Safeguarding Module</li><li>Mentoring</li><li>Gallery & Media</li><li>Advanced Analytics</li><li>Dedicated onboarding</li>
+        </ul>
+        <button class="btn-pricing btn-pricing-outline">Get in Touch</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cta">
+  <div class="container">
+    <div class="cta-box">
+      <div class="section-tag" style="margin:0 auto 20px">Ready to launch?</div>
+      <h2 class="cta-title">Spend less time managing spreadsheets.<br>Spend more time changing lives.</h2>
+      <p class="cta-sub">Join youth organisations across the UK who've replaced their patchwork of tools with LaunchSession.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-hero-primary">Book a Demo →</button>
+        <button class="btn-hero-ghost">Watch a Walkthrough</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-left">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="width:24px;height:24px;background:linear-gradient(135deg,#3B82F6,#8B5CF6);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px">🚀</div>
+      <span style="font-weight:700;font-size:14px;color:var(--text)">LaunchSession</span>
+    </div>
+    <div>© 2026 LaunchSession Ltd. Built for the youth sector.</div>
+  </div>
+  <div class="footer-right">
+    <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Security</a><a href="#">Contact</a>
+  </div>
+</footer>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1'
+      entry.target.style.transform = 'translateY(0)'
+      observer.unobserve(entry.target)
+    }
+  })
+}, { threshold: 0.1 })
+document.querySelectorAll('.feature-card,.impact-card,.pricing-card,.why-point').forEach(el => {
+  el.style.opacity = '0'
+  el.style.transform = 'translateY(20px)'
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease'
+  observer.observe(el)
+})
+</script>
+</body>
 </html>
