@@ -10,6 +10,7 @@ export function OrgProvider({ children }) {
 
   useEffect(() => {
     const detectOrg = async () => {
+      console.log('OrgContext mounting, href:', window.location.href)
       const hostname = window.location.hostname
       let slug = null
 
