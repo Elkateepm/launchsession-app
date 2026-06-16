@@ -181,7 +181,7 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
     <a href="#pricing">Pricing</a>
   </div>
   <div style="display:flex;gap:12px">
-    <button class="btn-ghost">Sign in</button>
+    <button class="btn-ghost" onclick="signIn()">Sign in</button>
     <button class="btn-primary">Book a Demo</button>
   </div>
 </nav>
@@ -412,6 +412,14 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
   </div>
 </footer>
 
+<script>
+function signIn() {
+  const slug = prompt('Enter your organisation name (e.g. solidarity-sports):')
+  if (slug && slug.trim()) {
+    window.location.href = 'https://app.launchsession.co.uk/?org=' + slug.trim().toLowerCase().replace(/\s+/g, '-')
+  }
+}
+</script>
 <script>
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
