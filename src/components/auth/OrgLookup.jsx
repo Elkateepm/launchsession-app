@@ -131,7 +131,7 @@ export default function OrgLookup() {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 24 }}>
-          <button onClick={() => window.location.href = 'https://www.launchsession.co.uk'} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={() => window.location.href = '/'} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             ← Back to launchsession.co.uk
           </button>
         </div>
