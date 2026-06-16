@@ -1,3 +1,4 @@
+import Hub from '../hub/Hub'
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import Registers from '../registers/Registers'
@@ -82,8 +83,9 @@ export default function Dashboard({ session, org }) {
 
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
 
-          {/* HOME */}
-          {tab === 'home' && (
+          {/* HOME — Hub */}
+          {tab === 'home' && <Hub org={org} session={session} onNavigate={setTab} />}
+          {tab === 'home_old' && (
             <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
               <div style={{ background: 'linear-gradient(135deg, #0A0A1A, #12122A)', borderRadius: 20, padding: '28px 32px', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: -30, right: -30, width: 150, height: 150, borderRadius: '50%', background: primary + '15' }} />
@@ -118,6 +120,9 @@ export default function Dashboard({ session, org }) {
 
           {/* REGISTERS — real component */}
           {tab === 'registers' && <Registers org={org} session={session} />}
+
+          {/* HUB */}
+          {tab === 'home' && false && null}
 
           {/* OTHER MODULES — coming soon */}
           {tab !== 'home' && tab !== 'registers' && (
