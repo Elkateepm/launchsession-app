@@ -4,22 +4,21 @@ import { supabase } from '../../lib/supabase'
 import Registers from '../registers/Registers'
 
 const PLAN_MODULES = {
-  starter:    ['registers', 'sessions', 'reports'],
-  pro:        ['registers', 'sessions', 'reports', 'volunteers', 'parents', 'calendar', 'messaging'],
-  enterprise: ['registers', 'sessions', 'reports', 'volunteers', 'parents', 'calendar', 'messaging', 'mentoring', 'safeguarding', 'gallery'],
+  starter:    ['registers', 'planner', 'reports'],
+  pro:        ['registers', 'planner', 'reports', 'volunteers', 'parent_portal', 'messaging'],
+  enterprise: ['registers', 'planner', 'reports', 'volunteers', 'parent_portal', 'messaging', 'mentoring', 'safeguarding', 'gallery'],
 }
 
 const ALL_MODULES = [
-  { key: 'registers',    label: 'Registers',    icon: '📋' },
-  { key: 'sessions',     label: 'Sessions',     icon: '📅' },
-  { key: 'volunteers',   label: 'Volunteers',   icon: '❤️' },
-  { key: 'parents',      label: 'Parents',      icon: '👨‍👧' },
-  { key: 'calendar',     label: 'Calendar',     icon: '🗓' },
-  { key: 'mentoring',    label: 'Mentoring',    icon: '🤝' },
-  { key: 'safeguarding', label: 'Safeguarding', icon: '🛡' },
-  { key: 'messaging',    label: 'Messaging',    icon: '💬' },
-  { key: 'reports',      label: 'Reports',      icon: '📊' },
-  { key: 'gallery',      label: 'Gallery',      icon: '🖼' },
+  { key: 'registers',     label: 'Registers',    icon: '📋' },
+  { key: 'planner',       label: 'Sessions',     icon: '📅' },
+  { key: 'volunteers',    label: 'Volunteers',   icon: '❤️' },
+  { key: 'parent_portal', label: 'Parents',      icon: '👨‍👧' },
+  { key: 'mentoring',     label: 'Mentoring',    icon: '🤝' },
+  { key: 'safeguarding',  label: 'Safeguarding', icon: '🛡' },
+  { key: 'messaging',     label: 'Messaging',    icon: '💬' },
+  { key: 'reports',       label: 'Reports',      icon: '📊' },
+  { key: 'gallery',       label: 'Gallery',      icon: '🖼' },
 ]
 
 export default function Dashboard({ session, org }) {
