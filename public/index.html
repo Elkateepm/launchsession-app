@@ -413,11 +413,9 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
 </footer>
 
 <script>
+}
 function signIn() {
-  const slug = prompt('Enter your organisation name (e.g. solidarity-sports):')
-  if (slug && slug.trim()) {
-    window.location.href = 'https://app.launchsession.co.uk/?org=' + slug.trim().toLowerCase().replace(/\s+/g, '-')
-  }
+  window.location.href = 'https://app.launchsession.co.uk'
 }
 </script>
 <script>
@@ -441,11 +439,6 @@ document.querySelectorAll('.btn-hero-primary,.btn-pricing-filled').forEach(btn =
     window.location.href = 'mailto:hello@launchsession.co.uk?subject=Book a Demo&body=Hi, I would like to book a demo of LaunchSession.'
   })
 })
-function signIn() {
-  const slug = prompt('Enter your organisation slug (e.g. solidarity-sports):')
-  if (slug && slug.trim()) {
-    window.location.href = 'https://app.launchsession.co.uk/?org=' + slug.trim().toLowerCase().replace(/\s+/g, '-')
-  }
 }
 </script>
 </body>
