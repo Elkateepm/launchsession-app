@@ -7,23 +7,25 @@ export function OrgProvider({ children }) {
   const [org,     setOrg]     = useState(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
+  const [noOrg,   setNoOrg]   = useState(false)
 
   useEffect(() => {
     const detectOrg = async () => {
-      console.log('OrgContext mounting, href:', window.location.href)
       const hostname = window.location.hostname
       let slug = null
 
-      // Detect subdomain e.g. solidaritysports.launchsession.app
       if (hostname.includes('.launchsession.app')) {
         slug = hostname.split('.')[0]
       } else {
-        // Fallback: ?org= param works everywhere (localhost + Vercel preview)
         const params = new URLSearchParams(window.location.search)
-        slug = params.get('org') || 'solidarity-sports'
+        slug = params.get('org')
       }
 
-      if (!slug) { setError('No organisation detected'); setLoading(false); return }
+      if (!slug) {
+        setNoOrg(true)
+        setLoading(false)
+        return
+      }
 
       const { data, error } = await supabase
         .from('organisations')
@@ -32,12 +34,10 @@ export function OrgProvider({ children }) {
         .eq('status', 'active')
         .single()
 
-      console.log('Slug:', slug, 'Data:', data, 'Error:', error)
       if (error || !data) {
-        setError('Organisation not found or inactive — slug: ' + slug)
+        setError('Organisation not found or inactive')
       } else {
         setOrg(data)
-        // Apply org branding
         document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
         document.title = data.name || 'LaunchSession'
       }
@@ -47,7 +47,7 @@ export function OrgProvider({ children }) {
   }, [])
 
   return (
-    <OrgContext.Provider value={{ org, loading, error }}>
+    <OrgContext.Provider value={{ org, loading, error, noOrg }}>
       {children}
     </OrgContext.Provider>
   )

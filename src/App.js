@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { OrgProvider, useOrg } from './context/OrgContext'
 import Login from './components/auth/Login'
+import OrgLookup from './components/auth/OrgLookup'
 import Dashboard from './components/dashboard/Dashboard'
 
 function AppContent() {
-  const { org, loading: orgLoading, error: orgError } = useOrg()
+  const { org, loading: orgLoading, error: orgError, noOrg } = useOrg()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -25,6 +26,8 @@ function AppContent() {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
+
+  if (noOrg) return <OrgLookup />
 
   if (orgError) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0A0A1A', flexDirection: 'column', gap: 12 }}>
