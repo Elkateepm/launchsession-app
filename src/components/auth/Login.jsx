@@ -75,7 +75,7 @@ export default function Login({ org }) {
           {org?.logo_url ? (
             <img src={org.logo_url} alt={orgName} style={{ height: 56, objectFit: 'contain', marginBottom: 16 }} />
           ) : (
-            <img src='/logo.png' alt='LaunchSession' style={{ width: 120, height: 120, objectFit: 'contain', margin: '0 auto 16px', display: 'block' }} />
+            <img src='/logo.png' alt='LaunchSession' style={{ width: 180, height: 180, objectFit: 'contain', margin: '0 auto 8px', display: 'block' }} />
           )}
           <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase' }}>{orgName}</div>
         </div>
