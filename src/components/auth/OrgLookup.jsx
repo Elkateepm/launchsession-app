@@ -130,8 +130,15 @@ export default function OrgLookup() {
           )}
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
-          Powered by <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>LaunchSession</span>
+        <div style={{ textAlign: 'center', marginTop: 24 }}>
+          <a href="https://www.launchsession.co.uk" style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'color 0.2s' }}
+            onMouseOver={e => e.target.style.color='rgba(255,255,255,0.6)'}
+            onMouseOut={e => e.target.style.color='rgba(255,255,255,0.3)'}>
+            ← Back to launchsession.co.uk
+          </a>
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: 'rgba(255,255,255,0.15)' }}>
+          Powered by <span style={{ color: 'rgba(255,255,255,0.25)', fontWeight: 600 }}>LaunchSession</span>
         </div>
       </div>
     </div>
