@@ -222,7 +222,7 @@ export default function Registers({ org, session: authSession }) {
   const primary = org?.primary_color || '#1B9AAA'
   const bubbles = org?.bubbles || DEFAULT_BUBBLES
 
-  const { sessions: todaySessions, session } = useTodaySession(orgId)
+  const { session } = useTodaySession(orgId)
   const { children, setChildren, loading } = useChildren(orgId)
   const { attendance, updateStatus } = useAttendance(session?.id)
 
