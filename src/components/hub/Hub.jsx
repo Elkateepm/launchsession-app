@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { format, startOfMonth, endOfMonth } from 'date-fns'
+import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
 
