@@ -1,3 +1,4 @@
+import SessionPlanner from '../sessions/SessionPlanner'
 import Hub from '../hub/Hub'
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
@@ -123,8 +124,10 @@ export default function Dashboard({ session, org }) {
           {/* HUB */}
           {tab === 'home' && false && null}
 
+          {tab === 'planner' && <SessionPlanner org={org} />}
+
           {/* OTHER MODULES — coming soon */}
-          {tab !== 'home' && tab !== 'registers' && (
+          {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center', padding: 40 }}>
                 <div style={{ fontSize: 40, marginBottom: 14 }}>{ALL_MODULES.find(m => m.key === tab)?.icon}</div>
