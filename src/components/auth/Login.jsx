@@ -30,7 +30,7 @@ export default function Login({ org }) {
     setLoading(true)
     setError('')
     // Check if user exists
-    const { data } = await supabase.from('user_profiles').select('id').eq('email', email).maybeSingle()
+    await supabase.from('user_profiles').select('id').eq('email', email).maybeSingle()
     setLoading(false)
     setStep(STEPS.PASSWORD)
   }
