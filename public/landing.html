@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5, user-scalable=yes" />
 <title>LaunchSession — Run your organisation from one platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -181,7 +181,7 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
     <a href="#pricing">Pricing</a>
   </div>
   <div style="display:flex;gap:12px">
-    <button class="btn-ghost">Sign in</button>
+    <button class="btn-ghost" onclick="signIn()">Sign in</button>
     <button class="btn-primary">Book a Demo</button>
   </div>
 </nav>
@@ -413,6 +413,10 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
 </footer>
 
 <script>
+function signIn() {
+  window.location.href = 'https://app.launchsession.co.uk'
+}
+
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -422,11 +426,18 @@ const observer = new IntersectionObserver((entries) => {
     }
   })
 }, { threshold: 0.1 })
+
 document.querySelectorAll('.feature-card,.impact-card,.pricing-card,.why-point').forEach(el => {
   el.style.opacity = '0'
   el.style.transform = 'translateY(20px)'
   el.style.transition = 'opacity 0.5s ease, transform 0.5s ease'
   observer.observe(el)
+})
+
+document.querySelectorAll('.btn-hero-primary,.btn-pricing-filled').forEach(btn => {
+  btn.addEventListener('click', () => {
+    window.location.href = 'mailto:hello@launchsession.co.uk?subject=Book a Demo&body=Hi, I would like to book a demo of LaunchSession.'
+  })
 })
 </script>
 </body>
