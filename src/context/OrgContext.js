@@ -31,8 +31,9 @@ export function OrgProvider({ children }) {
         .eq('status', 'active')
         .single()
 
+      console.log('Slug:', slug, 'Data:', data, 'Error:', error)
       if (error || !data) {
-        setError('Organisation not found or inactive')
+        setError('Organisation not found or inactive — slug: ' + slug)
       } else {
         setOrg(data)
         // Apply org branding
