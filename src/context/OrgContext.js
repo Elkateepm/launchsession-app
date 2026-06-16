@@ -16,9 +16,8 @@ export function OrgProvider({ children }) {
       // Detect subdomain e.g. solidaritysports.launchsession.app
       if (hostname.includes('.launchsession.app')) {
         slug = hostname.split('.')[0]
-      }
-      // Local dev: ?org=solidarity-sports or localhost uses default
-      else if (hostname === 'localhost') {
+      } else {
+        // Fallback: ?org= param works everywhere (localhost + Vercel preview)
         const params = new URLSearchParams(window.location.search)
         slug = params.get('org') || 'solidarity-sports'
       }
