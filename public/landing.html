@@ -188,22 +188,35 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
 </head>
 <body>
 
-<nav>
-  <div class="logo">
-    <img src="/logo.png" alt="LaunchSession" style="height:48px;width:48px;object-fit:contain" />
+<nav id="navbar">
+  <a class="logo" href="#">
+    <img src="/logo.png" alt="LaunchSession" />
     <div class="logo-text">Launch<span>Session</span></div>
-  </div>
+  </a>
   <div class="nav-links">
     <a href="#features">Features</a>
     <a href="#why">Why Us</a>
     <a href="#impact">Impact</a>
     <a href="#pricing">Pricing</a>
   </div>
-  <div style="display:flex;gap:12px">
+  <div class="nav-cta">
     <button class="btn-ghost" onclick="signIn()">Sign in</button>
-    <button class="btn-primary">Book a Demo</button>
+    <button class="btn-primary" onclick="window.location.href='mailto:hello@launchsession.co.uk?subject=Book a Demo'"><span>Book a Demo →</span></button>
   </div>
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features" onclick="toggleMenu()">Features</a>
+  <a href="#why" onclick="toggleMenu()">Why Us</a>
+  <a href="#impact" onclick="toggleMenu()">Impact</a>
+  <a href="#pricing" onclick="toggleMenu()">Pricing</a>
+  <div class="mobile-menu-cta">
+    <button class="btn-ghost" onclick="signIn()" style="width:100%;padding:12px;font-size:15px">Sign in</button>
+    <button class="btn-primary" style="width:100%;padding:12px;font-size:15px"><span>Book a Demo →</span></button>
+  </div>
+</div>
 
 <section id="hero">
   <div class="hero-glow"></div>
