@@ -25,7 +25,7 @@ const ALL_MODULES = [
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState('home')
   const plan    = org?.plan || 'starter'
-  const allowed = PLAN_MODULES[plan] || PLAN_MODULES.starter
+  const allowed = org?.modules || PLAN_MODULES[plan] || PLAN_MODULES.starter
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
   const availableModules = ALL_MODULES.filter(m => allowed.includes(m.key))
