@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import Registers from '../registers/Registers'
 
 const PLAN_MODULES = {
   starter:    ['registers', 'sessions', 'reports'],
@@ -30,7 +31,9 @@ export default function Dashboard({ session, org }) {
   const handleSignOut = () => supabase.auth.signOut()
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg, #f9fafb)', overflow: 'hidden' }}>
+
+      {/* SIDEBAR */}
       <div style={{ width: 220, background: '#0A0A1A', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
         <div style={{ padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -63,28 +66,35 @@ export default function Dashboard({ session, org }) {
         </div>
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <div style={{ background: '#fff', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>{ALL_MODULES.find(m => m.key === tab)?.label || 'Home'}</div>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 1 }}>{orgName}</div>
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
-        </div>
+      {/* MAIN CONTENT */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-        <div style={{ padding: 24 }}>
+        {/* TOPBAR — hidden when in registers (it has its own header) */}
+        {tab !== 'registers' && (
+          <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{ALL_MODULES.find(m => m.key === tab)?.label || 'Home'}</div>
+              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>{orgName}</div>
+            </div>
+            <div style={{ fontSize: 12, color: '#9ca3af' }}>{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+          </div>
+        )}
+
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+
+          {/* HOME */}
           {tab === 'home' && (
-            <div className="fade-up">
+            <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
               <div style={{ background: 'linear-gradient(135deg, #0A0A1A, #12122A)', borderRadius: 20, padding: '28px 32px', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: -30, right: -30, width: 150, height: 150, borderRadius: '50%', background: primary + '15' }} />
                 <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Welcome back 👋</div>
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: org?.slogan ? 16 : 0 }}>{orgName} · {plan.charAt(0).toUpperCase() + plan.slice(1)} Plan</div>
-                {org?.slogan && <div style={{ fontSize: 13, color: primary, fontStyle: 'italic' }}>"{org.slogan}"</div>}
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>{orgName} · {plan.charAt(0).toUpperCase() + plan.slice(1)} Plan</div>
+                {org?.slogan && <div style={{ fontSize: 13, color: primary, fontStyle: 'italic', marginTop: 8 }}>"{org.slogan}"</div>}
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Your Modules</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Your Modules</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12, marginBottom: 24 }}>
                 {availableModules.map(m => (
-                  <button key={m.key} onClick={() => setTab(m.key)} className="card" style={{ padding: '20px 16px', textAlign: 'center', border: '1px solid var(--border)', cursor: 'pointer', background: '#fff', borderRadius: 12 }}>
+                  <button key={m.key} onClick={() => setTab(m.key)} style={{ padding: '20px 16px', textAlign: 'center', border: '1px solid #e5e7eb', cursor: 'pointer', background: '#fff', borderRadius: 12 }}>
                     <div style={{ fontSize: 28, marginBottom: 8 }}>{m.icon}</div>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{m.label}</div>
                   </button>
@@ -92,10 +102,10 @@ export default function Dashboard({ session, org }) {
               </div>
               {ALL_MODULES.filter(m => !allowed.includes(m.key)).length > 0 && (
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>🔒 Upgrade to unlock</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>🔒 Upgrade to unlock</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
                     {ALL_MODULES.filter(m => !allowed.includes(m.key)).map(m => (
-                      <div key={m.key} className="card" style={{ padding: '20px 16px', textAlign: 'center', opacity: 0.4, filter: 'grayscale(1)', borderRadius: 12, border: '1px solid var(--border)', background: '#fff' }}>
+                      <div key={m.key} style={{ padding: '20px 16px', textAlign: 'center', opacity: 0.4, filter: 'grayscale(1)', borderRadius: 12, border: '1px solid #e5e7eb', background: '#fff' }}>
                         <div style={{ fontSize: 28, marginBottom: 8 }}>{m.icon}</div>
                         <div style={{ fontSize: 13, fontWeight: 600 }}>{m.label}</div>
                       </div>
@@ -105,11 +115,18 @@ export default function Dashboard({ session, org }) {
               )}
             </div>
           )}
-          {tab !== 'home' && (
-            <div className="card fade-up" style={{ padding: '60px 20px', textAlign: 'center', borderRadius: 12, border: '1px solid var(--border)', background: '#fff' }}>
-              <div style={{ fontSize: 40, marginBottom: 14 }}>{ALL_MODULES.find(m => m.key === tab)?.icon}</div>
-              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{ALL_MODULES.find(m => m.key === tab)?.label}</div>
-              <div style={{ fontSize: 14, color: 'var(--muted)' }}>This module is being built</div>
+
+          {/* REGISTERS — real component */}
+          {tab === 'registers' && <Registers org={org} session={session} />}
+
+          {/* OTHER MODULES — coming soon */}
+          {tab !== 'home' && tab !== 'registers' && (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center', padding: 40 }}>
+                <div style={{ fontSize: 40, marginBottom: 14 }}>{ALL_MODULES.find(m => m.key === tab)?.icon}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{ALL_MODULES.find(m => m.key === tab)?.label}</div>
+                <div style={{ fontSize: 14, color: '#9ca3af' }}>This module is being built</div>
+              </div>
             </div>
           )}
         </div>
