@@ -71,7 +71,7 @@ export default function OrgLookup() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src='/logo.png' alt='LaunchSession' style={{ width: 56, height: 56, objectFit: 'contain', margin: '0 auto 16px', display: 'block' }} />
+          <img src='/logo.png' alt='LaunchSession' style={{ width: 120, height: 120, objectFit: 'contain', margin: '0 auto 16px', display: 'block' }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase' }}>LaunchSession</div>
         </div>
 
