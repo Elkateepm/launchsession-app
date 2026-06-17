@@ -12,6 +12,17 @@ export default function Hub({ org, session, setTab }) {
   const [showSignIn, setShowSignIn] = useState(false);
   const [selectedLiveSession, setSelectedLiveSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth < 768);
+    }
+
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -175,7 +186,7 @@ export default function Hub({ org, session, setTab }) {
 
   if (loading) {
     return (
-      <div style={styles.page}>
+      <div style={{ ...styles.page, ...(isMobile ? styles.pageMobile : {}) }}>
         <div style={styles.loading}>Loading today’s hub...</div>
       </div>
     );
@@ -183,7 +194,7 @@ export default function Hub({ org, session, setTab }) {
 
   return (
     <div style={styles.page}>
-      <section style={styles.welcome}>
+      <section style={{ ...styles.welcome, ...(isMobile ? styles.welcomeMobile : {}) }}>
         <div>
           <div style={styles.orgLabel}>{org?.name || "LaunchSession"}</div>
           <h1 style={styles.title}>Good morning, mohammed! 👋</h1>
@@ -192,7 +203,7 @@ export default function Hub({ org, session, setTab }) {
           </p>
         </div>
 
-        <div style={styles.dateCard}>
+        <div style={{ ...styles.dateCard, ...(isMobile ? styles.dateCardMobile : {}) }}>
           <div style={styles.dateDay}>
             {new Date().toLocaleDateString("en-GB", { weekday: "long" })}
           </div>
@@ -206,8 +217,8 @@ export default function Hub({ org, session, setTab }) {
         </div>
       </section>
 
-      <section style={styles.topGrid}>
-        <div style={styles.liveCard}>
+      <section style={{ ...styles.topGrid, ...(isMobile ? styles.topGridMobile : {}) }}>
+        <div style={{ ...styles.liveCard, ...(isMobile ? styles.liveCardMobile : {}) }}>
           <div style={styles.liveTop}>
             <span style={styles.liveBadge}>
               {liveSessions.length > 0 ? `● ${liveSessions.length} Live Session${liveSessions.length > 1 ? "s" : ""}` : "No Session Today"}
@@ -220,7 +231,7 @@ export default function Hub({ org, session, setTab }) {
 
           {liveSessions.length > 0 ? (
             <>
-              <div style={styles.liveSummaryGrid}>
+              <div style={{ ...styles.liveSummaryGrid, ...(isMobile ? styles.liveSummaryGridMobile : {}) }}>
                 <Metric label="Checked In" value={overallStats.present} colour="#22c55e" />
                 <Metric label="Expected" value={overallStats.expected} colour="#facc15" />
                 <Metric label="Absent" value={overallStats.absent} colour="#ef4444" />
@@ -235,7 +246,7 @@ export default function Hub({ org, session, setTab }) {
                     : 0;
 
                   return (
-                    <div key={item.id} style={styles.liveSessionRow}>
+                    <div key={item.id} style={{ ...styles.liveSessionRow, ...(isMobile ? styles.liveSessionRowMobile : {}) }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={styles.liveSessionTitle}>{item.title}</div>
                         <div style={styles.liveSessionMeta}>
@@ -273,7 +284,7 @@ export default function Hub({ org, session, setTab }) {
                         </div>
                       </div>
 
-                      <div style={styles.liveSessionStats}>
+                      <div style={{ ...styles.liveSessionStats, ...(isMobile ? styles.liveSessionStatsMobile : {}) }}>
                         <button
                           style={styles.expectedChip}
                           onClick={() => {
@@ -366,14 +377,14 @@ export default function Hub({ org, session, setTab }) {
         </div>
       </section>
 
-      <section style={styles.quickGrid}>
+      <section style={{ ...styles.quickGrid, ...(isMobile ? styles.quickGridMobile : {}) }}>
         <QuickCard icon="📋" title="Take Register" text="Sign children in quickly" onClick={() => go("registers")} />
         <QuickCard icon="📅" title="Calendar" text="View sessions and events" onClick={() => go("calendar")} />
         <QuickCard icon="❤️" title="Volunteers" text="Manage your team" onClick={() => go("volunteers")} />
         <QuickCard icon="🤝" title="Mentoring" text="Track mentoring work" onClick={() => go("mentoring")} />
       </section>
 
-      <section style={styles.bottomGrid}>
+      <section style={{ ...styles.bottomGrid, ...(isMobile ? styles.bottomGridMobile : {}) }}>
         <div style={styles.timelineCard}>
           <div style={styles.sectionHeader}>
             <h3 style={styles.cardTitle}>Coming Up</h3>
@@ -425,6 +436,7 @@ export default function Hub({ org, session, setTab }) {
           session={selectedLiveSession}
           children={children}
           attendance={getSessionAttendance(selectedLiveSession.id)}
+          isMobile={isMobile}
           onClose={() => {
             setShowSignIn(false);
             setSelectedLiveSession(null);
@@ -461,7 +473,7 @@ function Metric({ label, value, colour, onClick }) {
   );
 }
 
-function SignInModal({ orgId, session, children, attendance, onClose, onSignedIn }) {
+function SignInModal({ orgId, session, children, attendance, isMobile, onClose, onSignedIn }) {
   const [search, setSearch] = useState("");
   const [savingId, setSavingId] = useState(null);
 
@@ -542,7 +554,7 @@ function SignInModal({ orgId, session, children, attendance, onClose, onSignedIn
 
   return (
     <div style={styles.modalOverlay} onClick={onClose}>
-      <div style={styles.signInModal} onClick={(event) => event.stopPropagation()}>
+      <div style={{ ...styles.signInModal, ...(isMobile ? styles.signInModalMobile : {}) }} onClick={(event) => event.stopPropagation()}>
         <div style={styles.modalHeader}>
           <div>
             <div style={styles.modalEyebrow}>Live Register</div>
@@ -567,7 +579,7 @@ function SignInModal({ orgId, session, children, attendance, onClose, onSignedIn
             const isPresent = record?.status === "present";
 
             return (
-              <div key={child.id} style={styles.childRow}>
+              <div key={child.id} style={{ ...styles.childRow, ...(isMobile ? styles.childRowMobile : {}) }}>
                 <div style={styles.childAvatar}>
                   {(child.first_name?.[0] || "?")}{(child.last_name?.[0] || "")}
                 </div>
@@ -583,7 +595,7 @@ function SignInModal({ orgId, session, children, attendance, onClose, onSignedIn
                 </div>
 
                 {isPresent ? (
-                  <div style={styles.childActions}>
+                  <div style={{ ...styles.childActions, ...(isMobile ? styles.childActionsMobile : {}) }}>
                     <span style={styles.signedInChip}>Signed in</span>
                     <button
                       style={styles.signOutButton}
@@ -1280,6 +1292,56 @@ const styles = {
     height: "100%",
     borderRadius: 999,
     background: "linear-gradient(90deg,#38bdf8,#818cf8)",
+  },
+
+  pageMobile: {
+    padding: 12,
+  },
+  welcomeMobile: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 12,
+  },
+  dateCardMobile: {
+    textAlign: "left",
+  },
+  topGridMobile: {
+    gridTemplateColumns: "1fr",
+  },
+  liveCardMobile: {
+    padding: 16,
+    borderRadius: 20,
+  },
+  liveSummaryGridMobile: {
+    gridTemplateColumns: "repeat(2,1fr)",
+  },
+  liveSessionRowMobile: {
+    flexDirection: "column",
+    alignItems: "stretch",
+  },
+  liveSessionStatsMobile: {
+    width: "100%",
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr",
+  },
+  quickGridMobile: {
+    gridTemplateColumns: "1fr",
+  },
+  bottomGridMobile: {
+    gridTemplateColumns: "1fr",
+  },
+  signInModalMobile: {
+    maxWidth: "100%",
+    maxHeight: "92vh",
+    borderRadius: 20,
+  },
+  childRowMobile: {
+    alignItems: "stretch",
+    flexWrap: "wrap",
+  },
+  childActionsMobile: {
+    width: "100%",
+    justifyContent: "space-between",
   },
 
 };
