@@ -193,13 +193,424 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
   .hamburger{display:flex}
 }
 @media(max-width:600px){section{padding:60px 5%}.impact-grid{grid-template-columns:1fr 1fr}.features-grid{grid-template-columns:1fr}}
+
+.nav-spacer{
+  width:180px;
+  flex-shrink:0;
+}
+
+
+
+
+/* 10/10 hero polish */
+.hero{
+  padding-top:42px !important;
+  min-height:calc(100vh - 120px) !important;
+}
+
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 72% 42%, rgba(59,130,246,0.16), transparent 34%),
+    radial-gradient(circle at 27% 48%, rgba(139,92,246,0.13), transparent 32%);
+  pointer-events:none;
+}
+
+.hero-content,
+.hero-visual{
+  position:relative;
+  z-index:1;
+}
+
+.logo img{
+  width:46px !important;
+  height:46px !important;
+  filter:drop-shadow(0 8px 20px rgba(59,130,246,0.25));
+}
+
+.nav-wrapper{
+  box-shadow:0 18px 70px rgba(0,0,0,0.28);
+}
+
+.hero-badge,
+.badge,
+.early-badge{
+  box-shadow:0 0 34px rgba(59,130,246,0.18);
+}
+
+.hero h1{
+  max-width:720px;
+  text-shadow:0 22px 80px rgba(96,165,250,0.12);
+}
+
+.hero p{
+  max-width:650px;
+}
+
+.hero-visual{
+  transform:translateY(-10px) scale(1.035);
+}
+
+.hero-visual::before,
+.mockup-wrap::before,
+.dashboard-wrap::before{
+  content:"";
+  position:absolute;
+  width:560px;
+  height:560px;
+  right:-90px;
+  top:-80px;
+  background:radial-gradient(circle, rgba(59,130,246,0.2), transparent 68%);
+  filter:blur(28px);
+  z-index:-1;
+  pointer-events:none;
+}
+
+.mockup,
+.dashboard,
+.session-hub{
+  box-shadow:
+    0 32px 120px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(255,255,255,0.08),
+    0 0 80px rgba(59,130,246,0.08);
+}
+
+.btn-demo,
+.primary,
+.cta-primary{
+  box-shadow:
+    0 16px 42px rgba(59,130,246,0.34),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.btn-demo:hover,
+.primary:hover,
+.cta-primary:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 22px 56px rgba(59,130,246,0.42),
+    inset 0 1px 0 rgba(255,255,255,0.24);
+}
+
+.btn-secondary,
+.secondary{
+  backdrop-filter:blur(14px);
+}
+
+.hero-trust{
+  margin-top:34px !important;
+}
+
+.hero-trust span{
+  box-shadow:0 0 18px rgba(34,197,94,0.32);
+}
+
+@media(max-width:900px){
+  .hero{
+    padding-top:28px !important;
+  }
+
+  .hero-visual{
+    transform:none;
+  }
+
+  .logo img{
+    width:40px !important;
+    height:40px !important;
+  }
+}
+
+
+/* Real product hero mockup */
+.real-product-mockup{
+  width:720px;
+  max-width:100%;
+  padding:18px !important;
+  background:
+    linear-gradient(180deg, rgba(16,24,48,0.96), rgba(9,14,30,0.96)) !important;
+}
+
+.live-panel{
+  margin-top:14px;
+  padding:18px;
+  border-radius:24px;
+  background:linear-gradient(135deg, rgba(8,19,55,0.98), rgba(28,43,103,0.92));
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+.live-panel-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:16px;
+}
+
+.live-kicker{
+  color:#67E8F9;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+}
+
+.live-kicker span{
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:#2DD4BF;
+  margin-right:8px;
+  box-shadow:0 0 18px rgba(45,212,191,0.8);
+}
+
+.live-title{
+  margin-top:8px;
+  color:white;
+  font-size:21px;
+  font-weight:900;
+  letter-spacing:-0.04em;
+}
+
+.live-count{
+  color:#DDE7FF;
+  font-weight:800;
+  font-size:12px;
+}
+
+.session-cards{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.session-card{
+  padding:16px;
+  border-radius:22px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.045));
+  border:1px solid rgba(255,255,255,0.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.session-top{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.session-icon{
+  width:46px;
+  height:46px;
+  border-radius:16px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#22D3EE,#14B8A6);
+  font-size:22px;
+}
+
+.session-name{
+  color:white;
+  font-weight:900;
+  font-size:18px;
+}
+
+.session-time{
+  color:#CBD5E1;
+  font-size:12px;
+  margin-top:2px;
+}
+
+.live-pill{
+  margin-left:auto;
+  background:#22C55E;
+  color:white;
+  font-weight:900;
+  font-size:10px;
+  padding:7px 10px;
+  border-radius:999px;
+}
+
+.session-metrics{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  overflow:hidden;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.1);
+  margin:14px 0;
+  background:rgba(255,255,255,0.06);
+}
+
+.session-metrics div{
+  padding:10px 6px;
+  text-align:center;
+  border-right:1px solid rgba(255,255,255,0.08);
+}
+
+.session-metrics div:last-child{
+  border-right:0;
+}
+
+.session-metrics strong{
+  display:block;
+  font-size:20px;
+  line-height:1;
+}
+
+.session-metrics span{
+  display:block;
+  font-size:8px;
+  color:#AAB8D4;
+  font-weight:800;
+  margin-top:2px;
+}
+
+.register-line div:first-child{
+  display:flex;
+  justify-content:space-between;
+  color:#D9E2F5;
+  font-size:11px;
+  font-weight:800;
+}
+
+.real-progress{
+  height:8px;
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:8px;
+  background:rgba(255,255,255,0.12);
+}
+
+.real-progress i{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#22D3EE,#14B8A6);
+}
+
+.session-actions{
+  display:grid;
+  grid-template-columns:1.3fr 1fr 1fr;
+  gap:8px;
+  margin-top:14px;
+}
+
+.session-actions button{
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(255,255,255,0.07);
+  color:white;
+  border-radius:12px;
+  padding:10px 8px;
+  font-size:10px;
+  font-weight:900;
+}
+
+.session-actions button:first-child{
+  background:linear-gradient(135deg,#22D3EE,#14B8A6);
+  border:0;
+}
+
+.attention-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1.2fr;
+  gap:12px;
+  margin-top:14px;
+}
+
+.glance-card,
+.attention-centre{
+  border-radius:18px;
+  padding:14px;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+.glance-icon{
+  font-size:28px;
+  margin-bottom:8px;
+}
+
+.glance-card strong{
+  display:block;
+  color:white;
+  font-size:12px;
+}
+
+.glance-card span{
+  display:block;
+  color:#AAB8D4;
+  font-size:10px;
+  margin-top:3px;
+}
+
+.attention-title{
+  color:white;
+  font-size:12px;
+  font-weight:900;
+  margin-bottom:8px;
+}
+
+.attention-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:7px 0;
+  border-top:1px solid rgba(255,255,255,0.08);
+  color:#DDE7FF;
+  font-size:10px;
+  font-weight:800;
+}
+
+.attention-item b{
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:#22C55E;
+}
+
+.attention-item b.blue{
+  background:#0EA5E9;
+}
+
+@media(max-width:900px){
+  .session-cards,
+  .attention-grid{
+    grid-template-columns:1fr;
+  }
+
+  .real-product-mockup{
+    width:100%;
+  }
+}
+
+
+/* force navbar logo visibility */
+.logo{
+  gap:22px !important;
+  overflow:visible !important;
+}
+
+.logo img{
+  width:66px !important;
+  height:66px !important;
+  transform:scale(1.55) !important;
+  transform-origin:center !important;
+  margin-right:18px !important;
+  margin-top:20px !important;
+  filter:drop-shadow(0 10px 24px rgba(59,130,246,0.35)) !important;
+}
+
+.logo:hover img{
+  transform:scale(1.65) rotate(-4deg) !important;
+}
+
 </style>
 </head>
 <body>
 
 <div class="nav-wrapper" id="navWrapper">
 <nav>
-  <a class="logo" href="#">
+  <a class="logo" href="/landing.html">
     <img src="/logo.png" alt="LaunchSession" />
     <div class="logo-brand">
       <div class="logo-text">Launch<span>Session</span></div>
@@ -255,47 +666,102 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
         <div class="trust-item"><div class="trust-dot"></div> GDPR compliant</div>
       </div>
     </div>
-    <div class="dashboard-mockup">
+    <div class="dashboard-mockup real-product-mockup">
       <div class="mock-topbar">
         <div class="mock-dot" style="background:#FF5F57"></div>
         <div class="mock-dot" style="background:#FFBD2E;margin-left:4px"></div>
         <div class="mock-dot" style="background:#28C840;margin-left:4px"></div>
-        <div class="mock-title">LAUNCHSESSION — SESSION HUB</div>
-        <div class="mock-time">19:46 Tue 16 Jun</div>
+        <div class="mock-title">SOLIDARITY SPORTS — LIVE OPERATIONS</div>
+        <div class="mock-time">Wed 17 Jun</div>
       </div>
-      <div class="mock-stats">
-        <div class="mock-stat"><div class="mock-stat-label">Attendance Rate</div><div class="mock-stat-value" style="color:#4ADE80">87%</div><div class="mock-stat-sub">↑ 4% from last week</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">Young People</div><div class="mock-stat-value" style="color:#60A5FA">248</div><div class="mock-stat-sub">Across 4 centres</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">Vol Hours</div><div class="mock-stat-value" style="color:#C4B5FD">1,204</div><div class="mock-stat-sub">This month</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">Sessions</div><div class="mock-stat-value" style="color:#F5D000">32</div><div class="mock-stat-sub">Planned this term</div></div>
-      </div>
-      <div class="mock-session">
-        <div class="mock-session-header">
-          <div class="mock-badge"></div>
+
+      <div class="live-panel">
+        <div class="live-panel-header">
           <div>
-            <div class="mock-session-title">Tuesday Multi-Sport Session</div>
-            <div class="mock-session-meta"><span>15:00 – 17:00</span><span>📍 Notting Hill Gate</span></div>
+            <div class="live-kicker"><span></span> Live Session Today</div>
+            <div class="live-title">Today’s Delivery Hub</div>
+          </div>
+          <div class="live-count">2 active today</div>
+        </div>
+
+        <div class="session-cards">
+          <div class="session-card">
+            <div class="session-top">
+              <div class="session-icon">🏃</div>
+              <div>
+                <div class="session-name">Sports</div>
+                <div class="session-time">09:00 – 15:00</div>
+              </div>
+              <div class="live-pill">LIVE</div>
+            </div>
+
+            <div class="session-metrics">
+              <div><strong style="color:#2DD4BF">4</strong><span>Signed in</span></div>
+              <div><strong style="color:#60A5FA">4</strong><span>Expected</span></div>
+              <div><strong style="color:#FB923C">0</strong><span>Absent</span></div>
+              <div><strong style="color:#C084FC">0</strong><span>Out</span></div>
+            </div>
+
+            <div class="register-line">
+              <div><span>Register progress</span><strong>100%</strong></div>
+              <div class="real-progress"><i style="width:100%"></i></div>
+            </div>
+
+            <div class="session-actions">
+              <button>Open Register →</button>
+              <button>→ Sign In</button>
+              <button>← Sign Out</button>
+            </div>
+          </div>
+
+          <div class="session-card second">
+            <div class="session-top">
+              <div class="session-icon">🏃</div>
+              <div>
+                <div class="session-name">London</div>
+                <div class="session-time">09:00 – 15:00</div>
+              </div>
+              <div class="live-pill">LIVE</div>
+            </div>
+
+            <div class="session-metrics">
+              <div><strong style="color:#2DD4BF">0</strong><span>Signed in</span></div>
+              <div><strong style="color:#60A5FA">4</strong><span>Expected</span></div>
+              <div><strong style="color:#FB923C">0</strong><span>Absent</span></div>
+              <div><strong style="color:#C084FC">0</strong><span>Out</span></div>
+            </div>
+
+            <div class="register-line">
+              <div><span>Register progress</span><strong>0%</strong></div>
+              <div class="real-progress"><i style="width:8%"></i></div>
+            </div>
+
+            <div class="session-actions">
+              <button>Open Register →</button>
+              <button>→ Sign In</button>
+              <button>← Sign Out</button>
+            </div>
           </div>
         </div>
-        <div class="mock-progress"><div class="mock-progress-bar" style="width:73%"></div></div>
-        <div style="display:flex;justify-content:space-between;margin-top:6px">
-          <span style="font-size:9px;color:#4ADE80;font-weight:700">22 signed in</span>
-          <span style="font-size:9px;color:#94A3B8">30 expected</span>
-        </div>
-        <div class="mock-children">
-          <div class="mock-child">RED BUBBLE</div>
-          <div class="mock-child">BLUE BUBBLE</div>
-          <div class="mock-child">GREEN BUBBLE</div>
-          <div class="mock-child">+3 more</div>
-        </div>
       </div>
-      <div class="mock-alert">
-        <div class="mock-alert-icon">🛡</div>
-        <div><div class="mock-alert-text">1 Safeguarding Alert</div><div class="mock-alert-sub">Cause for Concern — awaiting review</div></div>
-      </div>
-      <div class="mock-vol">
-        <div class="mock-vol-icon">❤️</div>
-        <div><div class="mock-vol-text">8 Volunteers confirmed today</div><div class="mock-vol-sub">2 pending approval</div></div>
+
+      <div class="attention-grid">
+        <div class="glance-card">
+          <div class="glance-icon">📅</div>
+          <strong>2 sessions today</strong>
+          <span>Ready for delivery</span>
+        </div>
+        <div class="glance-card">
+          <div class="glance-icon">✅</div>
+          <strong>4 signed in</strong>
+          <span>All clear</span>
+        </div>
+        <div class="attention-centre">
+          <div class="attention-title">🔔 Attention Centre</div>
+          <div class="attention-item"><span>📝 Registers</span><b></b></div>
+          <div class="attention-item"><span>🛡 Safeguarding</span><b></b></div>
+          <div class="attention-item"><span>💬 Messages</span><b class="blue"></b></div>
+        </div>
       </div>
     </div>
   </div>
