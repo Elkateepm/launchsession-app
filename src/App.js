@@ -11,6 +11,11 @@ function AppContent() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (window.location.pathname === '/') {
+      window.location.replace('/landing.html')
+      return
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
