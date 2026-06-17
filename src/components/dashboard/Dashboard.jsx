@@ -67,6 +67,13 @@ function NavSection({ title, children }) {
 
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState('home')
+  const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobileBottomNav(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const plan    = org?.plan || 'starter'
   const allowed = org?.modules || PLAN_MODULES[plan] || PLAN_MODULES.starter
   const primary = org?.primary_color || '#1B9AAA'
@@ -193,7 +200,7 @@ export default function Dashboard({ session, org }) {
       )}
 
       {/* MAIN CONTENT */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobileBottomNav ? 78 : 0 }}>
         {tab !== 'registers' && (
           <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
             {false && (
