@@ -14,6 +14,7 @@ const PLAN_MODULES = {
 }
 
 const ALL_MODULES = [
+    { key: 'calendar', label: 'Calendar', icon: '📅', group: 'delivery' },
   { key: 'registers',     label: 'Registers',    icon: '📋', group: 'delivery' },
   { key: 'planner',       label: 'Sessions',     icon: '📅', group: 'delivery' },
   { key: 'volunteers',    label: 'Volunteers',   icon: '❤️', group: 'delivery' },
