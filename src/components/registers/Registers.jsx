@@ -61,60 +61,154 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
 
 function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdateStatus }) {
   const [absenceReason, setAbsenceReason] = useState('')
+  const [tab, setTab] = useState('info')
   const name = `${child.first_name} ${child.last_name}`
+  const age = child.date_of_birth ? new Date().getFullYear() - new Date(child.date_of_birth).getFullYear() : null
   const signedInTime = attendanceRecord?.signed_in_at ? format(new Date(attendanceRecord.signed_in_at), 'HH:mm') : null
   const signedOutTime = attendanceRecord?.signed_out_at ? format(new Date(attendanceRecord.signed_out_at), 'HH:mm') : null
   const handleAction = (newStatus) => { onUpdateStatus(child.id, newStatus, newStatus === 'absent' ? { absence_reason: absenceReason } : {}); onClose() }
+  const hasAlerts = child.allergies || child.medical_notes || child.sen
+
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 600, display: 'flex', justifyContent: 'flex-end' }}>
-      <div onClick={e => e.stopPropagation()} style={{ width: 380, background: '#fff', height: '100%', overflowY: 'auto', boxShadow: '-4px 0 24px rgba(0,0,0,0.1)' }}>
-        <div style={{ background: `linear-gradient(135deg, ${bubble?.color || '#1B9AAA'}, ${bubble?.dark || '#0D6B78'})`, padding: '20px', position: 'relative' }}>
-          <button onClick={onClose} style={{ position: 'absolute', top: 12, right: 12, width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 16 }}>×</button>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff', overflow: 'hidden', flexShrink: 0 }}>
-              {child.photo_url ? <img src={child.photo_url} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${child.first_name[0]}${child.last_name[0]}`}
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+        
+        {/* GRADIENT HEADER */}
+        <div style={{ background: `linear-gradient(135deg, ${bubble?.color || '#1B9AAA'}, ${bubble?.dark || '#0D6B78'})`, padding: '24px 20px 20px', position: 'relative', borderRadius: '20px 20px 0 0' }}>
+          <div style={{ position: 'absolute', top: 0, right: 0, width: 100, height: 100, borderRadius: '0 20px 0 100%', background: 'rgba(255,255,255,0.08)' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1 }}>Child Profile</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+              <button onClick={onClose} style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', cursor: 'pointer', color: '#fff', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
             </div>
-            <div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#fff' }}>{name}</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
-                {bubble?.label} Group{signedInTime ? ' · In ' + signedInTime : ''}{signedOutTime ? ' · Out ' + signedOutTime : ''}
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ position: 'relative', display: 'inline-block', marginBottom: 12 }}>
+              <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', border: '3px solid rgba(255,255,255,0.4)', overflow: 'hidden', margin: '0 auto' }}>
+                {child.photo_url ? <img src={child.photo_url} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${child.first_name[0]}${child.last_name[0]}`}
               </div>
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 22, height: 22, borderRadius: '50%', background: '#111', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, cursor: 'pointer' }}>📷</div>
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', marginBottom: 8 }}>{name}</div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
+              {bubble && <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 99, padding: '3px 12px', fontSize: 12, fontWeight: 700 }}>{bubble.label}</span>}
+              {age && <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 99, padding: '3px 12px', fontSize: 12, fontWeight: 700 }}>Age {age}</span>}
+              {signedInTime && <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 99, padding: '3px 12px', fontSize: 12, fontWeight: 700 }}>In {signedInTime}</span>}
+              {signedOutTime && <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 99, padding: '3px 12px', fontSize: 12, fontWeight: 700 }}>Out {signedOutTime}</span>}
             </div>
           </div>
         </div>
-        <div style={{ padding: 16 }}>
-          {(child.allergies || child.medical_notes || child.sen) && (
-            <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#DC2626', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>⚠ Health Alerts</div>
-              {child.allergies && <div style={{ fontSize: 13, color: '#DC2626', fontWeight: 600, marginBottom: 3 }}>🟠 {child.allergies}</div>}
-              {child.medical_notes && <div style={{ fontSize: 13, color: '#DC2626', fontWeight: 600, marginBottom: 3 }}>🔴 {child.medical_notes}</div>}
+
+        <div style={{ padding: '0 16px 20px' }}>
+          {/* ALERTS */}
+          {hasAlerts && (
+            <div style={{ background: '#EFF9F9', border: '1px solid #B2E0E8', borderRadius: 10, padding: '12px 14px', margin: '14px 0 0' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#0D6B78', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>⚠ Alerts</div>
+              {child.allergies && <div style={{ fontSize: 13, color: '#B45309', fontWeight: 600, marginBottom: 2 }}>🟠 Allergy: {child.allergies}</div>}
+              {child.medical_notes && <div style={{ fontSize: 13, color: '#DC2626', fontWeight: 600, marginBottom: 2 }}>🔴 Medical: {child.medical_notes}</div>}
               {child.sen && <div style={{ fontSize: 13, color: '#7C3AED', fontWeight: 600 }}>🛡 SEN: {child.sen}</div>}
             </div>
           )}
-          {child.emergency_contact_name && (
-            <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: 12, marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#1E40AF', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>📞 Emergency Contact</div>
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{child.emergency_contact_name}</div>
-              {child.emergency_contact_phone && <a href={`tel:${child.emergency_contact_phone}`} style={{ fontSize: 13, color: '#2563EB', textDecoration: 'none', fontWeight: 600 }}>{child.emergency_contact_phone}</a>}
+
+          {/* TABS */}
+          <div style={{ display: 'flex', gap: 6, margin: '14px 0 14px', background: '#F3F4F6', borderRadius: 10, padding: 4 }}>
+            {[['info','Info'],['actions','Sign In/Out'],['edit','Edit'],['notes','Notes']].map(([key, label]) => (
+              <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '7px 4px', borderRadius: 8, border: 'none', background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#111' : '#6b7280', fontWeight: tab === key ? 700 : 500, fontSize: 12, cursor: 'pointer', boxShadow: tab === key ? '0 1px 4px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* INFO TAB */}
+          {tab === 'info' && (
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Date of Birth</div>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>{child.date_of_birth ? format(new Date(child.date_of_birth), 'd MMM yyyy') : '—'}</div>
+                </div>
+                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Age</div>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>{age ? `${age} years` : '—'}</div>
+                </div>
+              </div>
+              {child.school_name && (
+                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>School</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{child.school_name}</div>
+                </div>
+              )}
+              <div style={{ background: child.emergency_contact_name ? '#EFF6FF' : '#F9FAFB', border: child.emergency_contact_name ? '1px solid #BFDBFE' : '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px', marginBottom: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#1E40AF', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>📞 Emergency Contact</div>
+                {child.emergency_contact_name ? (
+                  <>
+                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{child.emergency_contact_name}</div>
+                    {child.emergency_contact_phone && <a href={`tel:${child.emergency_contact_phone}`} style={{ fontSize: 13, color: '#2563EB', textDecoration: 'none', fontWeight: 600 }}>{child.emergency_contact_phone}</a>}
+                  </>
+                ) : <div style={{ fontSize: 13, color: '#9ca3af' }}>Not set</div>}
+              </div>
+              <div style={{ background: child.consent_travel_alone ? '#F0FDF4' : '#FEF2F2', border: child.consent_travel_alone ? '1px solid #BBF7D0' : '1px solid #FECACA', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: child.consent_travel_alone ? '#16A34A' : '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: 16 }}>🚶</span>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: child.consent_travel_alone ? '#15803D' : '#B91C1C', textTransform: 'uppercase', letterSpacing: 0.5 }}>Travel Alone</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{child.consent_travel_alone ? 'Consent given' : 'No consent to travel alone'}</div>
+                </div>
+              </div>
             </div>
           )}
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Update Attendance</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-            <button onClick={() => handleAction('signed_in')} disabled={status === 'signed_in'}
-              style={{ padding: '12px', borderRadius: 8, border: 'none', background: status === 'signed_in' ? '#DCFCE7' : '#16A34A', color: status === 'signed_in' ? '#16A34A' : '#fff', fontWeight: 700, fontSize: 13, cursor: status === 'signed_in' ? 'default' : 'pointer' }}>
-              {status === 'signed_in' ? '✓ Checked In' : 'Check In'}
-            </button>
-            <button onClick={() => handleAction('signed_out')} disabled={status === 'signed_out' || status === 'expected' || status === 'unmarked' || !status}
-              style={{ padding: '12px', borderRadius: 8, border: 'none', background: status === 'signed_out' ? '#DBEAFE' : '#1B9AAA', color: status === 'signed_out' ? '#1D4ED8' : '#fff', fontWeight: 700, fontSize: 13, cursor: (status === 'signed_out' || !status || status === 'expected' || status === 'unmarked') ? 'default' : 'pointer', opacity: (status === 'expected' || status === 'unmarked' || !status) ? 0.4 : 1 }}>
-              {status === 'signed_out' ? '✓ Signed Out' : 'Sign Out'}
-            </button>
-          </div>
-          <input placeholder="Absence reason (optional)" value={absenceReason} onChange={e => setAbsenceReason(e.target.value)}
-            style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, marginBottom: 8, boxSizing: 'border-box', outline: 'none' }} />
-          <button onClick={() => handleAction('absent')}
-            style={{ width: '100%', padding: '11px', borderRadius: 8, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6b7280', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-            Mark Absent
-          </button>
+
+          {/* SIGN IN/OUT TAB */}
+          {tab === 'actions' && (
+            <div>
+              {(signedInTime || signedOutTime) && (
+                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '12px', marginBottom: 14, display: 'flex', gap: 20, justifyContent: 'center' }}>
+                  {signedInTime && <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: '#16A34A', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Signed In</div>
+                    <div style={{ fontSize: 24, fontWeight: 900, color: '#16A34A' }}>{signedInTime}</div>
+                  </div>}
+                  {signedOutTime && <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: '#1B9AAA', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Signed Out</div>
+                    <div style={{ fontSize: 24, fontWeight: 900, color: '#1B9AAA' }}>{signedOutTime}</div>
+                  </div>}
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                <button onClick={() => handleAction('signed_in')} disabled={status === 'signed_in'}
+                  style={{ padding: '14px', borderRadius: 10, border: 'none', background: status === 'signed_in' ? '#DCFCE7' : '#16A34A', color: status === 'signed_in' ? '#16A34A' : '#fff', fontWeight: 800, fontSize: 14, cursor: status === 'signed_in' ? 'default' : 'pointer' }}>
+                  {status === 'signed_in' ? '✓ Signed In' : 'Sign In'}
+                </button>
+                <button onClick={() => handleAction('signed_out')} disabled={status === 'signed_out' || status === 'expected' || status === 'unmarked' || !status}
+                  style={{ padding: '14px', borderRadius: 10, border: 'none', background: status === 'signed_out' ? '#DBEAFE' : '#1B9AAA', color: status === 'signed_out' ? '#1D4ED8' : '#fff', fontWeight: 800, fontSize: 14, cursor: (status === 'signed_out' || !status || status === 'expected' || status === 'unmarked') ? 'default' : 'pointer', opacity: (status === 'expected' || status === 'unmarked' || !status) ? 0.4 : 1 }}>
+                  {status === 'signed_out' ? '✓ Signed Out' : 'Sign Out'}
+                </button>
+              </div>
+              <input placeholder="Absence reason (optional)" value={absenceReason} onChange={e => setAbsenceReason(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 13, marginBottom: 10, boxSizing: 'border-box', outline: 'none' }} />
+              <button onClick={() => handleAction('absent')}
+                style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6b7280', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                Mark Absent
+              </button>
+            </div>
+          )}
+
+          {/* EDIT TAB */}
+          {tab === 'edit' && (
+            <div style={{ textAlign: 'center', padding: '20px 0', color: '#9ca3af' }}>
+              <div style={{ fontSize: 13 }}>Edit profile coming soon</div>
+            </div>
+          )}
+
+          {/* NOTES TAB */}
+          {tab === 'notes' && (
+            <div>
+              <textarea placeholder="Add a session note..." rows={4}
+                style={{ width: '100%', border: '1.5px solid #e5e7eb', borderRadius: 10, padding: '10px 12px', fontSize: 13, fontFamily: 'inherit', resize: 'none', outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
+              <button style={{ width: '100%', padding: '11px', borderRadius: 10, border: 'none', background: '#111', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Add Note</button>
+            </div>
+          )}
         </div>
       </div>
     </div>
