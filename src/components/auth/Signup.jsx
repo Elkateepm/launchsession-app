@@ -22,7 +22,7 @@ export default function Signup() {
     const { data: authData, error: authError } = await supabase.auth.signUp({ email, password })
 
     if (authError) {
-      setError(authError.message || JSON.stringify(authError))
+      console.error('AUTH ERROR:', authError); setError(JSON.stringify(authError, null, 2))
       setLoading(false)
       return
     }
@@ -49,7 +49,7 @@ export default function Signup() {
       .single()
 
     if (orgError) {
-      setError(orgError.message || JSON.stringify(orgError))
+      console.error('ORG ERROR:', orgError); setError(JSON.stringify(orgError, null, 2))
       setLoading(false)
       return
     }
@@ -63,7 +63,7 @@ export default function Signup() {
     }])
 
     if (profileError) {
-      setError(profileError.message || JSON.stringify(profileError))
+      console.error('PROFILE ERROR:', profileError); setError(JSON.stringify(profileError, null, 2))
       setLoading(false)
       return
     }
@@ -77,7 +77,7 @@ export default function Signup() {
       <form onSubmit={handleSignup} style={{ width:'100%', maxWidth:460, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:24, padding:32 }}>
         <h1 style={{ color:'#fff', margin:0 }}>Start your free 7-day trial</h1>
         <p style={{ color:'rgba(255,255,255,0.55)' }}>Create your LaunchSession workspace.</p>
-        {error && <div style={{ color:'#FCA5A5', marginBottom:16 }}>{error}</div>}
+        {error && <pre style={{ color:'#FCA5A5', marginBottom:16, whiteSpace:'pre-wrap', fontSize:12 }}>{error}</pre>}
         <input required placeholder="Organisation name" value={orgName} onChange={e=>setOrgName(e.target.value)} style={inp} />
         <input required placeholder="Your full name" value={fullName} onChange={e=>setFullName(e.target.value)} style={inp} />
         <input required type="email" placeholder="Work email" value={email} onChange={e=>setEmail(e.target.value)} style={inp} />
