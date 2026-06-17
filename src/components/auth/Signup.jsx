@@ -16,7 +16,7 @@ export default function Signup() {
     setMessage('')
     setError('')
 
-    const { error: authError } = await supabase.auth.signUp({
+    const signupPromise = supabase.auth.signUp({
       email,
       password,
       options: {
@@ -27,6 +27,12 @@ export default function Signup() {
         }
       }
     })
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Signup timed out. Please check Supabase Auth settings.')), 10000)
+    )
+
+    const { error: authError } = await Promise.race([signupPromise, timeoutPromise])
 
     if (authError) {
       setError(authError.message || 'Could not create trial account.')
