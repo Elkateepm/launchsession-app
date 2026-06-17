@@ -6,8 +6,7 @@ const OrgContext = createContext(null)
 export function OrgProvider({ children }) {
   const [org,     setOrg]     = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState(null)
-  const [noOrg,   setNoOrg]   = useState(false)
+    const [noOrg,   setNoOrg]   = useState(false)
 
   useEffect(() => {
     const detectOrg = async () => {
