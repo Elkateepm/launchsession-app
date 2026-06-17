@@ -210,12 +210,13 @@ export default function Mentoring({ org, session }) {
               ))}
             </Panel>
 
-            <Panel title="🚀 Next Steps">
-              <div style={styles.nextStep}>1. Create a referral</div>
-              <div style={styles.nextStep}>2. Match child with volunteer</div>
-              <div style={styles.nextStep}>3. Assign staff supervisor</div>
-              <div style={styles.nextStep}>4. Log mentoring check-ins</div>
-              <div style={styles.nextStep}>5. Review outcomes every 6 weeks</div>
+            <Panel title="🛤️ Mentoring Pathway">
+              <PathwayStep number="1" title="Referral" text="A young person is referred for mentoring support." color={primary} />
+              <PathwayStep number="2" title="Awaiting Match" text="Staff review needs and choose the right mentor." color="#F59E0B" />
+              <PathwayStep number="3" title="Matched" text="Child, volunteer and supervising staff are linked." color="#E91E63" />
+              <PathwayStep number="4" title="Active Mentoring" text="Regular sessions and check-ins begin." color="#16A34A" />
+              <PathwayStep number="5" title="6-Week Review" text="Progress, relationship and safeguarding are reviewed." color="#7C3AED" />
+              <PathwayStep number="6" title="Outcomes" text="Confidence, wellbeing and engagement are tracked." color="#2563EB" />
             </Panel>
           </div>
         </div>
@@ -477,6 +478,19 @@ function MatchProfile({ org, match, session, primary, onBack }) {
             {saving ? 'Saving...' : 'Save Check-in'}
           </button>
         </Panel>
+      </div>
+    </div>
+  )
+}
+
+
+function PathwayStep({ number, title, text, color }) {
+  return (
+    <div style={styles.pathwayStep}>
+      <div style={{ ...styles.pathwayNumber, background: color }}>{number}</div>
+      <div>
+        <div style={styles.pathwayTitle}>{title}</div>
+        <div style={styles.pathwayText}>{text}</div>
       </div>
     </div>
   )
@@ -761,6 +775,38 @@ const styles = {
     alignItems: 'center',
     padding: '12px 0',
     borderBottom: '1px solid #EEF2F7',
+  },
+  pathwayStep: {
+    display: 'flex',
+    gap: 12,
+    alignItems: 'flex-start',
+    background: '#F8FAFC',
+    border: '1px solid #E5EAF2',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
+  },
+  pathwayNumber: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 950,
+    flexShrink: 0,
+  },
+  pathwayTitle: {
+    fontSize: 13,
+    fontWeight: 950,
+    color: '#0F172A',
+  },
+  pathwayText: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 3,
+    lineHeight: 1.4,
   },
   nextStep: {
     background: '#F8FAFC',
