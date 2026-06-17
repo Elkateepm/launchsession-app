@@ -72,7 +72,7 @@ export function OrgProvider({ children }) {
   }, [])
 
   return (
-    <OrgContext.Provider value={{ org, loading, error, noOrg }}>
+    <OrgContext.Provider value={{ org, loading, noOrg }}>
       {children}
     </OrgContext.Provider>
   )
