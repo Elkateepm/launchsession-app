@@ -1243,14 +1243,7 @@ const styles = {
     background: "linear-gradient(90deg,#38bdf8,#818cf8)",
   },
 
-progressLabelRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 10,
-    color: "rgba(255,255,255,0.62)",
-    fontSize: 11,
-    fontWeight: 800,
-  },
+
 pageMobile: {
     padding: 12,
   },
