@@ -130,13 +130,12 @@ export default function Dashboard({ session, org }) {
             <NavItem icon="🏠" label="Home" active={tab === 'home'} onClick={() => setTab('home')} primary={primary} />
           </NavSection>
 
-          {deliveryModules.length > 0 && (
-            <NavSection title="Delivery">
-              {deliveryModules.map(m => (
-                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => setTab(m.key)} primary={primary} />
-              ))}
-            </NavSection>
-          )}
+          <NavSection title="Delivery">
+            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => setTab('calendar')} primary={primary} />
+            {deliveryModules.map(m => (
+              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => setTab(m.key)} primary={primary} />
+            ))}
+          </NavSection>
 
           {safetyModules.length > 0 && (
             <NavSection title="Safety & Comms">
