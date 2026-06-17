@@ -280,7 +280,7 @@ export default function Registers({ org }) {
             style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, outline: 'none', boxSizing: 'border-box', background: '#F9FAFB' }} />
           {search && <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16 }}>×</button>}
         </div>
-        <div style={{ display: 'flex', gap: 6' }}>
+        <div style={{ display: 'flex', gap: 6 }}>
           {['All', 'Checked In', 'Absent', 'Yet to Arrive', 'Left'].map((f, i) => {
             const keys = ['all', 'signed_in', 'absent', 'expected', 'signed_out']
             const active = statusFilter === keys[i]
