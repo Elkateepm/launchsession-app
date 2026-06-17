@@ -82,7 +82,7 @@ export default function Signup() {
         <input required placeholder="Your full name" value={fullName} onChange={e=>setFullName(e.target.value)} style={inp} />
         <input required type="email" placeholder="Work email" value={email} onChange={e=>setEmail(e.target.value)} style={inp} />
         <input required type="password" placeholder="Create password" value={password} onChange={e=>setPassword(e.target.value)} style={inp} />
-        <button disabled={loading} style={btn}>{loading ? 'Creating trial...' : 'Start Free Trial'}</button>
+        <button type="submit" disabled={loading} style={btn}>{loading ? 'Creating trial...' : 'Start Free Trial'}</button>
       </form>
     </div>
   )
