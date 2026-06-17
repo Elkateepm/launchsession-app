@@ -298,12 +298,12 @@ export default function Hub({ org, session, setTab }) {
           ) : (
             <div style={styles.emptyLive}>
               <div style={{ fontSize: 34 }}>🌤️</div>
-              <h2 style={styles.sessionTitle}>Nothing scheduled right now</h2>
+              <h2 style={styles.sessionTitle}>No active sessions</h2>
               <p style={styles.sessionMeta}>
-                Use Calendar or Sessions to plan upcoming activities.
+                Plan your next session, trip, mentoring activity or workshop.
               </p>
-              <button style={styles.primaryButton} onClick={() => go("calendar")}>
-                Open Calendar →
+              <button style={styles.primaryButton} onClick={() => go("sessions")}>
+                Open Session Planner →
               </button>
             </div>
           )}
@@ -348,7 +348,7 @@ export default function Hub({ org, session, setTab }) {
 
       <section style={{ ...styles.quickGrid, ...(isMobile ? styles.quickGridMobile : {}) }}>
         <QuickCard icon="📋" title="Take Register" text="Sign children in quickly" onClick={() => go("registers")} />
-        <QuickCard icon="📅" title="Calendar" text="View sessions and events" onClick={() => go("calendar")} />
+        <QuickCard icon="📅" title="Calendar" text="View sessions and events" onClick={() => go("sessions")} />
         <QuickCard icon="❤️" title="Volunteers" text="Manage your team" onClick={() => go("volunteers")} />
         <QuickCard icon="🤝" title="Mentoring" text="Track mentoring work" onClick={() => go("mentoring")} />
       </section>
