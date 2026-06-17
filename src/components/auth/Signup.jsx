@@ -2,69 +2,51 @@ import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
 export default function Signup() {
-  const [orgName, setOrgName] = useState('')
+  const [organisationName, setOrganisationName] = useState('')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
   const handleSignup = async e => {
-    alert('1. Handler fired');
-
-    alert('2. About to call Supabase signUp');
     e.preventDefault()
     setLoading(true)
     setMessage('')
     setError('')
 
-    const signupPromise = supabase.auth.signUp({
+    const { error } = await supabase.from('trial_requests').insert([{
+      organisation_name: organisationName,
+      full_name: fullName,
       email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          organisation_name: orgName,
-          trial_requested: true
-        }
-      }
-    })
+      status: 'new'
+    }])
 
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Signup timed out. Please check Supabase Auth settings.')), 10000)
-    )
-
-    const { error: authError } = await Promise.race([signupPromise, timeoutPromise])
-
-    alert('3. Supabase signUp returned');
-
-    if (authError) {
-      setError(authError.message || 'Could not create trial account.')
+    if (error) {
+      setError(error.message || 'Could not submit trial request.')
       setLoading(false)
       return
     }
 
     setLoading(false)
-    setMessage('✅ Trial request created. Please check your email to confirm your account.')
+    setMessage('✅ Trial request received. We’ll contact you shortly to activate your LaunchSession workspace.')
   }
 
   return (
     <div style={{ minHeight:'100vh', background:'#060B18', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <form onSubmit={handleSignup} style={{ width:'100%', maxWidth:460, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:24, padding:32 }}>
         <h1 style={{ color:'#fff', margin:0 }}>Start your free 7-day trial</h1>
-        <p style={{ color:'rgba(255,255,255,0.55)' }}>Create your LaunchSession workspace.</p>
+        <p style={{ color:'rgba(255,255,255,0.55)' }}>Request access to your LaunchSession workspace.</p>
 
         {error && <div style={{ color:'#FCA5A5', marginBottom:16 }}>{error}</div>}
         {message && <div style={{ color:'#86EFAC', marginBottom:16 }}>{message}</div>}
 
-        <input required placeholder="Organisation name" value={orgName} onChange={e=>setOrgName(e.target.value)} style={inp} />
+        <input required placeholder="Organisation name" value={organisationName} onChange={e=>setOrganisationName(e.target.value)} style={inp} />
         <input required placeholder="Your full name" value={fullName} onChange={e=>setFullName(e.target.value)} style={inp} />
         <input required type="email" placeholder="Work email" value={email} onChange={e=>setEmail(e.target.value)} style={inp} />
-        <input required type="password" placeholder="Create password" value={password} onChange={e=>setPassword(e.target.value)} style={inp} />
 
         <button type="submit" disabled={loading || !!message} style={btn}>
-          {loading ? 'Creating trial...' : message ? 'Check your email' : 'Start Free Trial'}
+          {loading ? 'Submitting...' : message ? 'Request Sent' : 'Start Free Trial'}
         </button>
       </form>
     </div>
