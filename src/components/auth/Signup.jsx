@@ -17,59 +17,27 @@ export default function Signup() {
     setLoading(true)
     setError('')
 
-    const slug = slugify(orgName)
-
-    const { data: authData, error: authError } = await supabase.auth.signUp({ email, password })
+    const { error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          organisation_name: orgName,
+          trial_requested: true
+        }
+      }
+    })
 
     if (authError) {
-      console.error('AUTH ERROR:', authError); setError(JSON.stringify(authError, null, 2))
+      console.error('AUTH ERROR:', authError)
+      setError(authError.message || JSON.stringify(authError, null, 2))
       setLoading(false)
       return
     }
 
-    if (!authData?.user?.id) {
-      setError('Could not create user. Please try another email address.')
-      setLoading(false)
-      return
-    }
-
-    const now = new Date()
-    const expires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-
-    const { data: org, error: orgError } = await supabase
-      .from('organisations')
-      .insert([{
-        name: orgName,
-        slug,
-        status: 'trial',
-        trial_started_at: now.toISOString(),
-        trial_expires_at: expires.toISOString()
-      }])
-      .select()
-      .single()
-
-    if (orgError) {
-      console.error('ORG ERROR:', orgError); setError(JSON.stringify(orgError, null, 2))
-      setLoading(false)
-      return
-    }
-
-    const { error: profileError } = await supabase.from('user_profiles').insert([{
-      id: authData.user.id,
-      org_id: org.id,
-      email,
-      full_name: fullName,
-      role: 'admin'
-    }])
-
-    if (profileError) {
-      console.error('PROFILE ERROR:', profileError); setError(JSON.stringify(profileError, null, 2))
-      setLoading(false)
-      return
-    }
-
-    localStorage.setItem('launchsession_org_slug', slug)
-    window.location.href = '/?org=' + slug
+    setLoading(false)
+    setError('✅ Trial request created. Please check your email to confirm your account. We will activate your workspace shortly.')
   }
 
   return (
