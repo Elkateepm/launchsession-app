@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { OrgProvider, useOrg } from './context/OrgContext'
 import Login from './components/auth/Login'
+import CreatePassword from './components/auth/CreatePassword'
 import Signup from './components/auth/Signup'
 import OrgLookup from './components/auth/OrgLookup'
 import Dashboard from './components/dashboard/Dashboard'
 
 function AppContent() {
+  const pathname = window.location.pathname
+  if (pathname === '/create-password') return <CreatePassword />
   const { org, loading: orgLoading, error: orgError, noOrg } = useOrg()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
