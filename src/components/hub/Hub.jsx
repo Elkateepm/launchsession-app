@@ -97,9 +97,9 @@ export default function Hub({ org, session, setTab }) {
 
     return {
       expected: Math.max(children.length, sessionAttendance.length),
-      present: sessionAttendance.filter((item) => item.status === "present").length,
+      present: sessionAttendance.filter((item) => item.status === "signed_in").length,
       absent: sessionAttendance.filter((item) => item.status === "absent").length,
-      left: sessionAttendance.filter((item) => item.status === "left").length,
+      left: sessionAttendance.filter((item) => item.status === "signed_out").length,
     };
   }
 

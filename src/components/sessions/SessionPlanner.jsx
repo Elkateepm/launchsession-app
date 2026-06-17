@@ -285,9 +285,22 @@ export default function SessionPlanner({ org }) {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this session?')) return
-    await supabase.from('sessions').delete().eq('id', id)
+    if (!window.confirm('Delete this session? This cannot be undone.')) return
+
+    const { error } = await supabase
+      .from('sessions')
+      .delete()
+      .eq('id', id)
+      .eq('org_id', orgId)
+
+    if (error) {
+      alert('Failed to delete session')
+      return
+    }
+
     setSessions(prev => prev.filter(s => s.id !== id))
+
+    alert('Session deleted')
   }
 
   return (
