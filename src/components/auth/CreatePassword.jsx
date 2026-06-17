@@ -48,6 +48,11 @@ export default function CreatePassword() {
       return
     }
 
+    if (!invite) {
+      setError('Invite not found or already used. Please use the invite link from your email.')
+      return
+    }
+
     setSaving(true)
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
