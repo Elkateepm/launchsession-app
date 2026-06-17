@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { OrgProvider, useOrg } from './context/OrgContext'
 import Login from './components/auth/Login'
+import Signup from './components/auth/Signup'
 import OrgLookup from './components/auth/OrgLookup'
 import Dashboard from './components/dashboard/Dashboard'
 
@@ -32,6 +33,7 @@ function AppContent() {
     </div>
   )
 
+  if (window.location.pathname === '/signup') return <Signup />
   if (noOrg) return <OrgLookup />
 
   if (orgError) return (
