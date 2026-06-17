@@ -11,6 +11,7 @@ export default function Signup() {
   const [error, setError] = useState('')
 
   const handleSignup = async e => {
+    alert('Signup handler fired');
     e.preventDefault()
     setLoading(true)
     setMessage('')
