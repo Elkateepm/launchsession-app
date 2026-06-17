@@ -7,11 +7,13 @@ export default function Signup() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
   const handleSignup = async e => {
     e.preventDefault()
     setLoading(true)
+    setMessage('')
     setError('')
 
     const { error: authError } = await supabase.auth.signUp({
@@ -27,14 +29,13 @@ export default function Signup() {
     })
 
     if (authError) {
-      console.error('AUTH ERROR:', authError)
-      setError(authError.message || JSON.stringify(authError, null, 2))
+      setError(authError.message || 'Could not create trial account.')
       setLoading(false)
       return
     }
 
     setLoading(false)
-    setError('✅ Trial request created. Please check your email to confirm your account. We will activate your workspace shortly.')
+    setMessage('✅ Trial request created. Please check your email to confirm your account.')
   }
 
   return (
@@ -42,12 +43,18 @@ export default function Signup() {
       <form onSubmit={handleSignup} style={{ width:'100%', maxWidth:460, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:24, padding:32 }}>
         <h1 style={{ color:'#fff', margin:0 }}>Start your free 7-day trial</h1>
         <p style={{ color:'rgba(255,255,255,0.55)' }}>Create your LaunchSession workspace.</p>
-        {error && <pre style={{ color:'#FCA5A5', marginBottom:16, whiteSpace:'pre-wrap', fontSize:12 }}>{error}</pre>}
+
+        {error && <div style={{ color:'#FCA5A5', marginBottom:16 }}>{error}</div>}
+        {message && <div style={{ color:'#86EFAC', marginBottom:16 }}>{message}</div>}
+
         <input required placeholder="Organisation name" value={orgName} onChange={e=>setOrgName(e.target.value)} style={inp} />
         <input required placeholder="Your full name" value={fullName} onChange={e=>setFullName(e.target.value)} style={inp} />
         <input required type="email" placeholder="Work email" value={email} onChange={e=>setEmail(e.target.value)} style={inp} />
         <input required type="password" placeholder="Create password" value={password} onChange={e=>setPassword(e.target.value)} style={inp} />
-        <button type="submit" disabled={loading} style={btn}>{loading ? 'Creating trial...' : 'Start Free Trial'}</button>
+
+        <button type="submit" disabled={loading || !!message} style={btn}>
+          {loading ? 'Creating trial...' : message ? 'Check your email' : 'Start Free Trial'}
+        </button>
       </form>
     </div>
   )
