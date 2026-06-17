@@ -91,16 +91,19 @@ export default function Hub({ org, session, setTab, onNavigate }) {
   const nextSession = upcomingSessions[0];
 
   const liveHeroSession = todaySessions[0];
-  const liveHeroAttendance = liveHeroSession
-    ? attendance.filter(a => a.session_id === liveHeroSession.id)
-    : [];
-  const liveHeroSignedIn = liveHeroAttendance.filter(a => a.status === "signed_in").length;
-  const liveHeroAbsent = liveHeroAttendance.filter(a => a.status === "absent").length;
-  const liveHeroSignedOut = liveHeroAttendance.filter(a => a.status === "signed_out").length;
-  const liveHeroExpected = Math.max(children.length, liveHeroAttendance.length);
-  const liveHeroPercent = liveHeroExpected > 0
-    ? Math.round((liveHeroSignedIn / liveHeroExpected) * 100)
-    : 0;
+  const getLiveSessionStats = (item) => {
+    const records = attendance.filter(a => a.session_id === item.id);
+    const signedIn = records.filter(a => a.status === "signed_in").length;
+    const absent = records.filter(a => a.status === "absent").length;
+    const signedOut = records.filter(a => a.status === "signed_out").length;
+    const expected = Math.max(children.length, records.length);
+    const percent = expected > 0 ? Math.round((signedIn / expected) * 100) : 0;
+
+    return { signedIn, absent, signedOut, expected, percent };
+  };
+  const liveHeroStats = liveHeroSession
+    ? getLiveSessionStats(liveHeroSession)
+    : { signedIn: 0, absent: 0, signedOut: 0, expected: 0, percent: 0 };
 
   if (loading) {
     return (
@@ -148,19 +151,44 @@ export default function Hub({ org, session, setTab, onNavigate }) {
           </div>
 
           <div style={styles.liveStatsGrid}>
-            <div style={styles.liveStat}><strong>{liveHeroSignedIn}</strong><span>Signed in</span></div>
-            <div style={styles.liveStat}><strong>{liveHeroExpected}</strong><span>Expected</span></div>
-            <div style={styles.liveStat}><strong>{liveHeroAbsent}</strong><span>Absent</span></div>
-            <div style={styles.liveStat}><strong>{liveHeroSignedOut}</strong><span>Signed out</span></div>
+            <div style={styles.liveStat}><strong>{liveHeroStats.signedIn}</strong><span>Signed in</span></div>
+            <div style={styles.liveStat}><strong>{liveHeroStats.expected}</strong><span>Expected</span></div>
+            <div style={styles.liveStat}><strong>{liveHeroStats.absent}</strong><span>Absent</span></div>
+            <div style={styles.liveStat}><strong>{liveHeroStats.signedOut}</strong><span>Signed out</span></div>
           </div>
 
           <div style={styles.progressLabel}>
             <span>Register progress</span>
-            <span>{liveHeroPercent}%</span>
+            <span>{liveHeroStats.percent}%</span>
           </div>
           <div style={styles.progressBar}>
-            <div style={{ ...styles.progressFill, width: `${liveHeroPercent}%`, background: primary }} />
+            <div style={{ ...styles.progressFill, width: `${liveHeroStats.percent}%`, background: primary }} />
           </div>
+
+          {todaySessions.length > 1 && (
+            <div style={styles.multiLiveGrid}>
+              {todaySessions.slice(1).map(item => {
+                const itemStats = getLiveSessionStats(item);
+
+                return (
+                  <button key={item.id} onClick={() => go("registers")} style={styles.multiLiveCard}>
+                    <div style={{ flex: 1 }}>
+                      <div style={styles.multiLiveTitle}>{item.title}</div>
+                      <div style={styles.multiLiveMeta}>
+                        {item.start_time || "No time"}
+                        {item.end_time ? ` – ${item.end_time}` : ""}
+                        {item.location ? ` · ${item.location}` : ""}
+                      </div>
+                    </div>
+                    <div style={styles.multiLiveStats}>
+                      {itemStats.signedIn} / {itemStats.expected}
+                    </div>
+                    <span style={styles.multiLiveArrow}>→</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </section>
       ) : (
         <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, #6D28D9)` }}>
@@ -531,6 +559,46 @@ const styles = {
   progressFill: {
     height: "100%",
     borderRadius: 999,
+  },
+  multiLiveGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 12,
+    marginTop: 18,
+  },
+  multiLiveCard: {
+    border: "1px solid rgba(255,255,255,0.14)",
+    background: "rgba(255,255,255,0.08)",
+    color: "#fff",
+    borderRadius: 16,
+    padding: 14,
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    textAlign: "left",
+    cursor: "pointer",
+  },
+  multiLiveTitle: {
+    fontSize: 14,
+    fontWeight: 950,
+  },
+  multiLiveMeta: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.68)",
+    marginTop: 4,
+  },
+  multiLiveStats: {
+    background: "rgba(20,184,166,0.18)",
+    border: "1px solid rgba(94,234,212,0.28)",
+    color: "#5EEAD4",
+    borderRadius: 999,
+    padding: "6px 10px",
+    fontSize: 12,
+    fontWeight: 950,
+  },
+  multiLiveArrow: {
+    color: "#5EEAD4",
+    fontWeight: 950,
   },
   encouragement: {
     borderRadius: 18,
