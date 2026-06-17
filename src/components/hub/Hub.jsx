@@ -83,13 +83,8 @@ export default function Hub({ org, session, setTab, onNavigate }) {
       .slice(0, 3);
   }, [sessions, reflections]);
 
-  function sessionAttendance(sessionId) {
-    return attendance.filter(a => a.session_id === sessionId);
-  }
-
   const signedIn = attendance.filter(a => a.status === "signed_in").length;
   const signedOut = attendance.filter(a => a.status === "signed_out").length;
-  const absent = attendance.filter(a => a.status === "absent").length;
   const medicalAlerts = children.filter(c => c.allergies || c.medical_notes).length;
   const attendanceRate = children.length > 0 ? Math.round((signedIn / children.length) * 100) : 0;
 
