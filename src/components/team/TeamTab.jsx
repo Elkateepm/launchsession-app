@@ -126,15 +126,12 @@ export default function TeamTab({ org, session }) {
     }
 
     const { data, error: addError } = await supabase
-      .from('user_profiles')
-      .insert([{
-        email,
-        full_name: manualName.trim() || email.split('@')[0],
-        role: manualRole,
-        org_id: org.id
-      }])
-      .select()
-      .single()
+      .rpc('manual_add_user_profile', {
+        p_email: email,
+        p_full_name: manualName.trim() || email.split('@')[0],
+        p_role: manualRole,
+        p_org_id: org.id
+      })
 
     if (addError) {
       setError(addError.message)
