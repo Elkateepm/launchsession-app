@@ -52,7 +52,7 @@ export function OrgProvider({ children }) {
         .from('organisations')
         .select('*')
         .eq('slug', slug)
-        .eq('status', 'active')
+        .in('status', ['active', 'trial'])
         .single()
 
       if (error || !data) {
