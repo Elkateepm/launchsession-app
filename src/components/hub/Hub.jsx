@@ -10,6 +10,7 @@ export default function Hub({ org, session, setTab }) {
   const [concerns, setConcerns] = useState([]);
   const [children, setChildren] = useState([]);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [selectedLiveSession, setSelectedLiveSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const today = new Date().toISOString().split("T")[0];
@@ -74,23 +75,35 @@ export default function Hub({ org, session, setTab }) {
     return sessions.filter((item) => item.session_date === today);
   }, [sessions, today]);
 
-  const liveSession = todaySessions[0] || null;
+  const liveSessions = todaySessions.slice(0, 15);
 
-  const liveAttendance = useMemo(() => {
-    if (!liveSession) return [];
+  function getSessionAttendance(sessionId) {
+    return attendance.filter((item) => item.session_id === sessionId);
+  }
 
-    return attendance.filter((item) => item.session_id === liveSession.id);
-  }, [attendance, liveSession]);
+  function getSessionStats(sessionId) {
+    const sessionAttendance = getSessionAttendance(sessionId);
 
-  const stats = {
-    expected: Math.max(children.length, liveAttendance.length),
-    present: liveAttendance.filter((item) => item.status === "present").length,
-    absent: liveAttendance.filter((item) => item.status === "absent").length,
-    left: liveAttendance.filter((item) => item.status === "left").length,
-  };
+    return {
+      expected: Math.max(children.length, sessionAttendance.length),
+      present: sessionAttendance.filter((item) => item.status === "present").length,
+      absent: sessionAttendance.filter((item) => item.status === "absent").length,
+      left: sessionAttendance.filter((item) => item.status === "left").length,
+    };
+  }
 
-  const checkedPercent =
-    stats.expected > 0 ? Math.round((stats.present / stats.expected) * 100) : 0;
+  const overallStats = liveSessions.reduce(
+    (total, item) => {
+      const itemStats = getSessionStats(item.id);
+      return {
+        expected: total.expected + itemStats.expected,
+        present: total.present + itemStats.present,
+        absent: total.absent + itemStats.absent,
+        left: total.left + itemStats.left,
+      };
+    },
+    { expected: 0, present: 0, absent: 0, left: 0 }
+  );
 
   const upcoming = sessions.slice(0, 5);
 
@@ -135,43 +148,70 @@ export default function Hub({ org, session, setTab }) {
         <div style={styles.liveCard}>
           <div style={styles.liveTop}>
             <span style={styles.liveBadge}>
-              {liveSession ? "● Session Live" : "No Session Today"}
+              {liveSessions.length > 0 ? `● ${liveSessions.length} Live Session${liveSessions.length > 1 ? "s" : ""}` : "No Session Today"}
             </span>
 
-            {liveSession?.start_time && (
-              <span style={styles.timeText}>
-                {liveSession.start_time}
-                {liveSession.end_time ? ` – ${liveSession.end_time}` : ""}
-              </span>
-            )}
+            <span style={styles.timeText}>
+              Max 15 live sessions
+            </span>
           </div>
 
-          {liveSession ? (
+          {liveSessions.length > 0 ? (
             <>
-              <h2 style={styles.sessionTitle}>{liveSession.title}</h2>
-              <p style={styles.sessionMeta}>
-                {liveSession.location || "No location set"}
-              </p>
-
-              <div style={styles.attendanceGrid}>
-                <Metric label="Checked In" value={stats.present} colour="#22c55e" />
-                <Metric label="Expected" value={stats.expected} colour="#facc15" onClick={() => setShowSignIn(true)} />
-                <Metric label="Absent" value={stats.absent} colour="#ef4444" />
-                <Metric label="Left" value={stats.left} colour="#94a3b8" />
+              <div style={styles.liveSummaryGrid}>
+                <Metric label="Checked In" value={overallStats.present} colour="#22c55e" />
+                <Metric label="Expected" value={overallStats.expected} colour="#facc15" />
+                <Metric label="Absent" value={overallStats.absent} colour="#ef4444" />
+                <Metric label="Left" value={overallStats.left} colour="#94a3b8" />
               </div>
 
-              <div style={styles.progressWrap}>
-                <div style={styles.progressBar}>
-                  <div style={{ ...styles.progressFill, width: `${checkedPercent}%` }} />
-                </div>
-                <div style={styles.progressText}>
-                  {checkedPercent}% checked in · {stats.expected} total
-                </div>
+              <div style={styles.liveSessionList}>
+                {liveSessions.map((item) => {
+                  const itemStats = getSessionStats(item.id);
+                  const checkedPercent = itemStats.expected > 0
+                    ? Math.round((itemStats.present / itemStats.expected) * 100)
+                    : 0;
+
+                  return (
+                    <div key={item.id} style={styles.liveSessionRow}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={styles.liveSessionTitle}>{item.title}</div>
+                        <div style={styles.liveSessionMeta}>
+                          {item.start_time || "No time"}
+                          {item.end_time ? ` – ${item.end_time}` : ""}
+                          {item.location ? ` · ${item.location}` : ""}
+                        </div>
+
+                        <div style={styles.miniProgressBar}>
+                          <div style={{ ...styles.miniProgressFill, width: `${checkedPercent}%` }} />
+                        </div>
+                      </div>
+
+                      <div style={styles.liveSessionStats}>
+                        <button
+                          style={styles.expectedChip}
+                          onClick={() => {
+                            setSelectedLiveSession(item);
+                            setShowSignIn(true);
+                          }}
+                        >
+                          {itemStats.expected} expected
+                        </button>
+
+                        <span style={styles.presentChip}>
+                          {itemStats.present} signed in
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-              <button style={styles.primaryButton} onClick={() => go("registers")}>
-                Open Register →
-              </button>
+              {todaySessions.length > 15 && (
+                <div style={styles.liveLimitNote}>
+                  Showing first 15 live sessions. {todaySessions.length - 15} more scheduled today.
+                </div>
+              )}
             </>
           ) : (
             <div style={styles.emptyLive}>
@@ -193,8 +233,8 @@ export default function Hub({ org, session, setTab }) {
           <AttentionRow
             icon="📝"
             label="Registers"
-            value={stats.expected > stats.present ? `${stats.expected - stats.present} waiting` : "All clear"}
-            tone={stats.expected > stats.present ? "amber" : "green"}
+            value={overallStats.expected > overallStats.present ? `${overallStats.expected - overallStats.present} waiting` : "All clear"}
+            tone={overallStats.expected > overallStats.present ? "amber" : "green"}
             onClick={() => go("registers")}
           />
 
@@ -277,13 +317,16 @@ export default function Hub({ org, session, setTab }) {
         </div>
       </section>
 
-      {showSignIn && liveSession && (
+      {showSignIn && selectedLiveSession && (
         <SignInModal
           orgId={orgId}
-          session={liveSession}
+          session={selectedLiveSession}
           children={children}
-          attendance={liveAttendance}
-          onClose={() => setShowSignIn(false)}
+          attendance={getSessionAttendance(selectedLiveSession.id)}
+          onClose={() => {
+            setShowSignIn(false);
+            setSelectedLiveSession(null);
+          }}
           onSignedIn={(newRecord) => {
             setAttendance((prev) => {
               const exists = prev.some((item) => item.id === newRecord.id);
@@ -939,6 +982,91 @@ const styles = {
     padding: "8px 12px",
     fontSize: 12,
     fontWeight: 900,
+  },
+
+  liveSummaryGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4,1fr)",
+    gap: 10,
+    marginBottom: 14,
+  },
+  liveSessionList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
+    maxHeight: 430,
+    overflowY: "auto",
+    paddingRight: 4,
+  },
+  liveSessionRow: {
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: 16,
+    padding: 14,
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+  },
+  liveSessionTitle: {
+    fontSize: 15,
+    fontWeight: 900,
+    color: "#fff",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  liveSessionMeta: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.55)",
+    fontWeight: 700,
+    marginTop: 4,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  miniProgressBar: {
+    marginTop: 9,
+    height: 6,
+    borderRadius: 999,
+    background: "rgba(255,255,255,0.12)",
+    overflow: "hidden",
+  },
+  miniProgressFill: {
+    height: "100%",
+    borderRadius: 999,
+    background: "linear-gradient(90deg,#22c55e,#14b8a6)",
+  },
+  liveSessionStats: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 0,
+  },
+  expectedChip: {
+    border: "1px solid rgba(250,204,21,0.35)",
+    background: "rgba(250,204,21,0.14)",
+    color: "#fde68a",
+    borderRadius: 999,
+    padding: "8px 11px",
+    fontSize: 12,
+    fontWeight: 900,
+    cursor: "pointer",
+  },
+  presentChip: {
+    background: "rgba(34,197,94,0.14)",
+    color: "#86efac",
+    borderRadius: 999,
+    padding: "8px 11px",
+    fontSize: 12,
+    fontWeight: 900,
+    whiteSpace: "nowrap",
+  },
+  liveLimitNote: {
+    marginTop: 12,
+    fontSize: 12,
+    color: "rgba(255,255,255,0.55)",
+    fontWeight: 700,
+    textAlign: "center",
   },
 
 };
