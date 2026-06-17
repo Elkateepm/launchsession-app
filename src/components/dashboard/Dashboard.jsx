@@ -156,7 +156,6 @@ export default function Dashboard({ session, org }) {
 
           <NavSection title="Organisation">
             <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => setTab('team')} primary={primary} />
-            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => setTab('calendar')} primary={primary} />
             <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => setTab('settings')} primary={primary} />
           </NavSection>
         </div>
