@@ -1,3 +1,4 @@
+import TeamTab from '../team/TeamTab'
 import SessionPlanner from '../sessions/SessionPlanner'
 import Hub from '../hub/Hub'
 import React, { useState } from 'react'
@@ -62,6 +63,9 @@ export default function Dashboard({ session, org }) {
           ))}
         </div>
         <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+          <button onClick={() => setTab('team')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: tab === 'team' ? primary + '20' : 'transparent', color: tab === 'team' ? primary : 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
+            <span>👥</span> Team & Staff
+          </button>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.user.email}</div>
           <button onClick={handleSignOut} style={{ fontSize: 11, color: primary, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>Sign out</button>
         </div>
@@ -125,6 +129,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'home' && false && null}
 
           {tab === 'planner' && <SessionPlanner org={org} />}
+          {tab === 'team' && <TeamTab org={org} session={session} />}
 
           {/* OTHER MODULES — coming soon */}
           {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && (
