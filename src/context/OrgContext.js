@@ -14,11 +14,19 @@ export function OrgProvider({ children }) {
       const hostname = window.location.hostname
       let slug = null
 
-      if (hostname.includes('.launchsession.app')) {
+      const params = new URLSearchParams(window.location.search)
+      slug = params.get('org') || localStorage.getItem('launchsession_org_slug')
+
+      if (!slug && hostname.includes('.launchsession.app')) {
         slug = hostname.split('.')[0]
-      } else {
-        const params = new URLSearchParams(window.location.search)
-        slug = params.get('org')
+      }
+
+      if (!slug && hostname.includes('.launchsession.co.uk')) {
+        slug = hostname.split('.')[0]
+      }
+
+      if (slug && slug !== 'www' && slug !== 'app') {
+        localStorage.setItem('launchsession_org_slug', slug)
       }
 
       if (!slug) {

@@ -38,7 +38,8 @@ export default function OrgLookup() {
   }
 
   const handleContinue = (selectedOrg) => {
-    window.location.href = window.location.origin + '?org=' + selectedOrg.slug
+    localStorage.setItem('launchsession_org_slug', selectedOrg.slug)
+    window.location.href = window.location.origin + '/login?org=' + selectedOrg.slug
   }
 
   return (
