@@ -256,13 +256,14 @@ export default function Dashboard({ session, org }) {
             background: 'rgba(10,15,30,0.96)',
             borderRadius: 20,
             display: 'grid',
-            gridTemplateColumns: 'repeat(4,1fr)',
+            gridTemplateColumns: 'repeat(5,1fr)',
             border: '1px solid rgba(255,255,255,0.08)',
             boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
             zIndex: 9999,
             padding: 4
           }}>
             {[
+              { key: 'home', label: 'Home', icon: '🏠' },
               { key: 'planner', label: 'Planner', icon: '📅' },
               { key: 'registers', label: 'Register', icon: '📋' },
               { key: 'mentoring', label: 'Mentoring', icon: '🤝' },
