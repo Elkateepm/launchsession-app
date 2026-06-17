@@ -11,7 +11,9 @@ export default function Signup() {
   const [error, setError] = useState('')
 
   const handleSignup = async e => {
-    alert('Signup handler fired');
+    alert('1. Handler fired');
+
+    alert('2. About to call Supabase signUp');
     e.preventDefault()
     setLoading(true)
     setMessage('')
@@ -34,6 +36,8 @@ export default function Signup() {
     )
 
     const { error: authError } = await Promise.race([signupPromise, timeoutPromise])
+
+    alert('3. Supabase signUp returned');
 
     if (authError) {
       setError(authError.message || 'Could not create trial account.')
