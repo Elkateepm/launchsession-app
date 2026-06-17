@@ -195,12 +195,28 @@ export default function Hub({ org, session, setTab }) {
                             setShowSignIn(true);
                           }}
                         >
-                          {itemStats.expected} expected
+                          {itemStats.expected} Expected
                         </button>
 
-                        <span style={styles.presentChip}>
-                          {itemStats.present} signed in
-                        </span>
+                        <button
+                          style={styles.signInChipButton}
+                          onClick={() => {
+                            setSelectedLiveSession(item);
+                            setShowSignIn(true);
+                          }}
+                        >
+                          Sign In
+                        </button>
+
+                        <button
+                          style={styles.signOutChipButton}
+                          onClick={() => {
+                            setSelectedLiveSession(item);
+                            setShowSignIn(true);
+                          }}
+                        >
+                          Sign Out
+                        </button>
                       </div>
                     </div>
                   );
@@ -376,6 +392,30 @@ function SignInModal({ orgId, session, children, attendance, onClose, onSignedIn
     return fullName.includes(search.toLowerCase());
   });
 
+  async function signOutChild(child) {
+    const existing = attendanceByChild[child.id];
+
+    if (!existing?.id) return;
+
+    setSavingId(child.id);
+
+    const { data, error } = await supabase
+      .from("attendance")
+      .update({
+        status: "left",
+        signed_out_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id)
+      .eq("org_id", orgId)
+      .select()
+      .single();
+
+    if (!error && data) onSignedIn(data);
+    if (error) console.error("Sign out update error:", error);
+
+    setSavingId(null);
+  }
+
   async function signInChild(child) {
     const existing = attendanceByChild[child.id];
     setSavingId(child.id);
@@ -457,7 +497,16 @@ function SignInModal({ orgId, session, children, attendance, onClose, onSignedIn
                 </div>
 
                 {isPresent ? (
-                  <span style={styles.signedInChip}>Signed in</span>
+                  <div style={styles.childActions}>
+                    <span style={styles.signedInChip}>Signed in</span>
+                    <button
+                      style={styles.signOutButton}
+                      onClick={() => signOutChild(child)}
+                      disabled={savingId === child.id}
+                    >
+                      {savingId === child.id ? "Signing..." : "Sign Out"}
+                    </button>
+                  </div>
                 ) : (
                   <button
                     style={styles.signInButton}
@@ -1067,6 +1116,44 @@ const styles = {
     color: "rgba(255,255,255,0.55)",
     fontWeight: 700,
     textAlign: "center",
+  },
+
+  signInChipButton: {
+    border: "1px solid rgba(34,197,94,0.35)",
+    background: "rgba(34,197,94,0.16)",
+    color: "#86efac",
+    borderRadius: 999,
+    padding: "8px 11px",
+    fontSize: 12,
+    fontWeight: 900,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+  },
+  signOutChipButton: {
+    border: "1px solid rgba(239,68,68,0.35)",
+    background: "rgba(239,68,68,0.14)",
+    color: "#fca5a5",
+    borderRadius: 999,
+    padding: "8px 11px",
+    fontSize: 12,
+    fontWeight: 900,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+  },
+  childActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  },
+  signOutButton: {
+    border: "none",
+    background: "linear-gradient(135deg,#dc2626,#ef4444)",
+    color: "#fff",
+    borderRadius: 12,
+    padding: "10px 14px",
+    fontWeight: 900,
+    cursor: "pointer",
+    minWidth: 92,
   },
 
 };
