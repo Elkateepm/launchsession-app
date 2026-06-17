@@ -39,9 +39,16 @@ export default function Login({ org }) {
     e.preventDefault()
     setLoading(true)
     setError('')
+
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError(error.message)
-    setLoading(false)
+
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+      return
+    }
+
+    window.location.href = '/hub'
   }
 
   const handleMagicLink = async () => {
