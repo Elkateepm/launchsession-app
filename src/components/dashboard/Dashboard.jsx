@@ -26,16 +26,17 @@ const ALL_MODULES = [
   { key: 'gallery',       label: 'Gallery',      icon: '🖼', group: 'insights' },
 ]
 
-function NavItem({ icon, label, active, onClick, badge, primary }) {
+function NavItem({ icon, label, active, onClick, badge, primary, collapsed }) {
   const [hovered, setHovered] = useState(false)
   return (
     <button
+      title={label}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
         width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-        padding: '9px 12px', borderRadius: 10, border: 'none',
+        padding: collapsed ? '10px 0' : '9px 12px', justifyContent: collapsed ? 'center' : 'flex-start', borderRadius: 10, border: 'none',
         background: active ? `${primary}22` : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
         color: active ? primary : hovered ? '#fff' : 'rgba(255,255,255,0.55)',
         fontSize: 13, fontWeight: active ? 700 : 500,
@@ -45,8 +46,8 @@ function NavItem({ icon, label, active, onClick, badge, primary }) {
       }}
     >
       <span style={{ fontSize: 15, width: 20, textAlign: 'center', flexShrink: 0 }}>{icon}</span>
-      <span style={{ flex: 1 }}>{label}</span>
-      {badge && (
+      {!collapsed && <span style={{ flex: 1 }}>{label}</span>}
+      {!collapsed && badge && (
         <span style={{ background: badge.color || '#EF4444', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>
           {badge.text}
         </span>
@@ -56,10 +57,10 @@ function NavItem({ icon, label, active, onClick, badge, primary }) {
   )
 }
 
-function NavSection({ title, children }) {
+function NavSection({ title, children, collapsed }) {
   return (
     <div style={{ marginBottom: 6 }}>
-      <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: 1.5, padding: '8px 12px 4px' }}>{title}</div>
+      {!collapsed && <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: 1.5, padding: '8px 12px 4px' }}>{title}</div>}
       {children}
     </div>
   )
@@ -67,6 +68,7 @@ function NavSection({ title, children }) {
 
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState('home')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
   const [showMobileMore, setShowMobileMore] = React.useState(false);
 
@@ -91,7 +93,7 @@ export default function Dashboard({ session, org }) {
     <div style={{ display: 'flex', height: '100vh', background: '#F1F5F9', overflow: 'hidden' }}>
 
       {/* SIDEBAR */}
-      <div style={{ width: 248, background: '#0A0F1E', display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ width: sidebarCollapsed ? 72 : 248, background: '#0A0F1E', transition: 'width 0.2s ease', display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)' }}>
 
         {/* ORG HEADER */}
         <div style={{ padding: '16px 14px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -103,16 +105,21 @@ export default function Dashboard({ session, org }) {
                 {orgName[0]}
               </div>
             )}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            {!sidebarCollapsed && <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{orgName}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', flexShrink: 0 }} />
                 <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 0.8 }}>{plan} plan</span>
               </div>
-            </div>
+            </div>}
           </div>
+          <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} style={{ marginTop: 12, width: '100%', padding: 8, borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', fontWeight: 800 }}>
+            {sidebarCollapsed ? '→' : '← Collapse'}
+          </button>
         </div>
 
+        {!sidebarCollapsed && (
+        <>
         {/* QUICK ACTIONS */}
         <div style={{ padding: '10px 10px 4px' }}>
           <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: 1.5, padding: '4px 12px 6px' }}>Quick Actions</div>
@@ -132,39 +139,42 @@ export default function Dashboard({ session, org }) {
           </div>
         </div>
 
+        </>
+        )}
+
         {/* NAV */}
         <div style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
-          <NavSection title="">
-            <NavItem icon="🏠" label="Home" active={tab === 'home'} onClick={() => { setTab('home') }} primary={primary} />
+          <NavSection collapsed={sidebarCollapsed} title="">
+            <NavItem icon="🏠" label="Home" active={tab === 'home'} onClick={() => { setTab('home') }} primary={primary} collapsed={sidebarCollapsed} />
           </NavSection>
 
-          <NavSection title="Delivery">
-            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => { setTab('calendar') }} primary={primary} />
+          <NavSection collapsed={sidebarCollapsed} title="Delivery">
+            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => { setTab('calendar') }} primary={primary} collapsed={sidebarCollapsed} />
             {deliveryModules.map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary} />
+              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
             ))}
           </NavSection>
 
           {safetyModules.length > 0 && (
-            <NavSection title="Safety & Comms">
+            <NavSection collapsed={sidebarCollapsed} title="Safety & Comms">
               {safetyModules.map(m => (
-                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary}
+                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary} collapsed={sidebarCollapsed}
                   badge={m.key === 'safeguarding' ? { text: '1', color: '#F59E0B' } : null} />
               ))}
             </NavSection>
           )}
 
           {insightModules.length > 0 && (
-            <NavSection title="Insights">
+            <NavSection collapsed={sidebarCollapsed} title="Insights">
               {insightModules.map(m => (
-                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary} />
+                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
               ))}
             </NavSection>
           )}
 
-          <NavSection title="Organisation">
-            <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => { setTab('team') }} primary={primary} />
-            <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => { setTab('settings') }} primary={primary} />
+          <NavSection collapsed={sidebarCollapsed} title="Organisation">
+            <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => { setTab('team') }} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => { setTab('settings') }} primary={primary} collapsed={sidebarCollapsed} />
           </NavSection>
         </div>
 
@@ -174,17 +184,17 @@ export default function Dashboard({ session, org }) {
             <div style={{ width: 32, height: 32, borderRadius: 10, background: `linear-gradient(135deg, ${primary}88, #6366F188)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
               {userName[0]?.toUpperCase() || '?'}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            {!sidebarCollapsed && <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail}</div>
-            </div>
+            </div>}
           </div>
-          <button onClick={handleSignOut}
+          {!sidebarCollapsed && <button onClick={handleSignOut}
             style={{ width: '100%', padding: '7px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#FCA5A5'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}>
             Sign out
-          </button>
+          </button>}
         </div>
       </div>
 
