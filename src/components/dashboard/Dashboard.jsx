@@ -68,6 +68,7 @@ function NavSection({ title, children }) {
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState('home')
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
+  const [showMobileMore, setShowMobileMore] = React.useState(false);
 
   React.useEffect(() => {
     const handleResize = () => setIsMobileBottomNav(window.innerWidth < 768);
@@ -246,6 +247,67 @@ export default function Dashboard({ session, org }) {
           )}
         </div>
 
+
+        {/* Mobile More Menu */}
+        {isMobileBottomNav && showMobileMore && (
+          <div
+            onClick={() => setShowMobileMore(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(15,23,42,0.55)',
+              zIndex: 9998,
+              display: 'flex',
+              alignItems: 'flex-end'
+            }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{
+                width: '100%',
+                background: '#fff',
+                borderRadius: '24px 24px 0 0',
+                padding: '18px 16px 96px',
+                boxShadow: '0 -20px 60px rgba(15,23,42,0.25)'
+              }}
+            >
+              <div style={{ width: 42, height: 5, borderRadius: 99, background: '#cbd5e1', margin: '0 auto 16px' }} />
+              <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>More</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Open another LaunchSession area</div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {[
+                  { key: 'calendar', label: 'Calendar', icon: '📅' },
+                  { key: 'team', label: 'Team & Staff', icon: '👥' },
+                  { key: 'messaging', label: 'Messages', icon: '💬' },
+                  { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
+                  { key: 'reports', label: 'Reports', icon: '📊' },
+                  { key: 'settings', label: 'Settings', icon: '⚙️' }
+                ].map(item => (
+                  <button
+                    key={item.key}
+                    onClick={() => {
+                      setTab(item.key);
+                      setShowMobileMore(false);
+                    }}
+                    style={{
+                      border: '1px solid #e5e7eb',
+                      background: '#f8fafc',
+                      borderRadius: 18,
+                      padding: 16,
+                      textAlign: 'left',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a' }}>{item.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {isMobileBottomNav && (
           <div style={{
             position: 'fixed',
@@ -267,9 +329,9 @@ export default function Dashboard({ session, org }) {
               { key: 'planner', label: 'Planner', icon: '📅' },
               { key: 'registers', label: 'Register', icon: '📋' },
               { key: 'mentoring', label: 'Mentoring', icon: '🤝' },
-              { key: 'settings', label: 'More', icon: '⚙️' }
+              { key: 'more', label: 'More', icon: '⚙️' }
             ].map(item => (
-              <button key={item.key} onClick={() => setTab(item.key)} style={{
+              <button key={item.key} onClick={() => item.key === 'more' ? setShowMobileMore(true) : setTab(item.key)} style={{
                 border: 'none',
                 borderRadius: 16,
                 background: tab === item.key ? `linear-gradient(135deg, ${primary}, #6366F1)` : 'transparent',

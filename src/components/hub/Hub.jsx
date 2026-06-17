@@ -445,6 +445,7 @@ function Metric({ label, value, colour, onClick }) {
 function SignInModal({ orgId, session, children, attendance, isMobile, onClose, onSignedIn }) {
   const [search, setSearch] = useState("");
   const [savingId, setSavingId] = useState(null);
+  const [turboMode, setTurboMode] = useState(false);
 
   const attendanceByChild = useMemo(() => {
     const map = {};
@@ -529,18 +530,34 @@ function SignInModal({ orgId, session, children, attendance, isMobile, onClose, 
             <div style={styles.modalEyebrow}>Live Register</div>
             <h2 style={styles.modalTitle}>Sign in children</h2>
             <div style={styles.modalSub}>{session.title}</div>
+            <div style={styles.turboSummary}>
+              {attendance.filter(item => item.status === "present").length} / {children.length} signed in
+            </div>
           </div>
 
           <button style={styles.closeButton} onClick={onClose}>×</button>
         </div>
 
-        <input
-          style={styles.searchInput}
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search children..."
-          autoFocus
-        />
+        <div style={styles.turboToolbar}>
+          <input
+            style={{ ...styles.searchInput, margin: 0, flex: 1 }}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search children..."
+            autoFocus
+          />
+
+          <button
+            onClick={() => setTurboMode(prev => !prev)}
+            style={{
+              ...styles.turboButton,
+              background: turboMode ? "linear-gradient(135deg,#16a34a,#22c55e)" : "#f1f5f9",
+              color: turboMode ? "#fff" : "#0f172a"
+            }}
+          >
+            ⚡ Turbo
+          </button>
+        </div>
 
         <div style={styles.childList}>
           {filteredChildren.map((child) => {
@@ -548,7 +565,23 @@ function SignInModal({ orgId, session, children, attendance, isMobile, onClose, 
             const isPresent = record?.status === "present";
 
             return (
-              <div key={child.id} style={{ ...styles.childRow, ...(isMobile ? styles.childRowMobile : {}) }}>
+              <div
+                key={child.id}
+                onClick={() => {
+                  if (!turboMode || savingId === child.id) return;
+                  if (isPresent) {
+                    signOutChild(child);
+                  } else {
+                    signInChild(child);
+                  }
+                }}
+                style={{
+                  ...styles.childRow,
+                  ...(isMobile ? styles.childRowMobile : {}),
+                  cursor: turboMode ? "pointer" : "default",
+                  borderColor: turboMode ? (isPresent ? "#22c55e55" : "#0891b255") : "#e5e7eb"
+                }}
+              >
                 <div style={styles.childAvatar}>
                   {(child.first_name?.[0] || "?")}{(child.last_name?.[0] || "")}
                 </div>
@@ -1292,6 +1325,31 @@ pageMobile: {
   childActionsMobile: {
     width: "100%",
     justifyContent: "space-between",
+  },
+
+  turboToolbar: {
+    display: "flex",
+    gap: 10,
+    padding: "16px 22px",
+    borderBottom: "1px solid #f1f5f9",
+  },
+  turboButton: {
+    border: "none",
+    borderRadius: 14,
+    padding: "0 14px",
+    fontWeight: 900,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+  },
+  turboSummary: {
+    marginTop: 8,
+    display: "inline-flex",
+    background: "#ecfeff",
+    color: "#0891b2",
+    borderRadius: 999,
+    padding: "6px 10px",
+    fontSize: 12,
+    fontWeight: 900,
   },
 
 };
