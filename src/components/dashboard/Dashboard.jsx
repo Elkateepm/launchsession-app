@@ -127,20 +127,20 @@ export default function Dashboard({ session, org }) {
         {/* NAV */}
         <div style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
           <NavSection title="">
-            <NavItem icon="🏠" label="Home" active={tab === 'home'} onClick={() => setTab('home')} primary={primary} />
+            <NavItem icon="🏠" label="Home" active={tab === 'home'} onClick={() => { setTab('home') }} primary={primary} />
           </NavSection>
 
           <NavSection title="Delivery">
-            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => setTab('calendar')} primary={primary} />
+            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => { setTab('calendar') }} primary={primary} />
             {deliveryModules.map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => setTab(m.key)} primary={primary} />
+              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary} />
             ))}
           </NavSection>
 
           {safetyModules.length > 0 && (
             <NavSection title="Safety & Comms">
               {safetyModules.map(m => (
-                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => setTab(m.key)} primary={primary}
+                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary}
                   badge={m.key === 'safeguarding' ? { text: '1', color: '#F59E0B' } : null} />
               ))}
             </NavSection>
@@ -149,14 +149,14 @@ export default function Dashboard({ session, org }) {
           {insightModules.length > 0 && (
             <NavSection title="Insights">
               {insightModules.map(m => (
-                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => setTab(m.key)} primary={primary} />
+                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary} />
               ))}
             </NavSection>
           )}
 
           <NavSection title="Organisation">
-            <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => setTab('team')} primary={primary} />
-            <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => setTab('settings')} primary={primary} />
+            <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => { setTab('team') }} primary={primary} />
+            <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => { setTab('settings') }} primary={primary} />
           </NavSection>
         </div>
 
@@ -180,10 +180,39 @@ export default function Dashboard({ session, org }) {
         </div>
       </div>
 
+      {false && (
+        <div
+          onClick={() => {}}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15,23,42,0.55)",
+            zIndex: 900,
+          }}
+        />
+      )}
+
       {/* MAIN CONTENT */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         {tab !== 'registers' && (
-          <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
+            {false && (
+              <button
+                onClick={() => console.log('open mobile menu')}
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 12,
+                  border: "1px solid #e5e7eb",
+                  background: "#fff",
+                  fontSize: 22,
+                  cursor: "pointer",
+                  flexShrink: 0,
+                }}
+              >
+                ☰
+              </button>
+            )}
             <div>
               <div style={{ fontSize: 17, fontWeight: 700, color: '#111' }}>{tab === 'home' ? 'Home' : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</div>
               <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>{orgName}</div>
