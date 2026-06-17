@@ -287,6 +287,17 @@ export default function SessionPlanner({ org }) {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this session? This cannot be undone.')) return
 
+    const { error: attendanceError } = await supabase
+      .from('attendance')
+      .delete()
+      .eq('session_id', id)
+      .eq('org_id', orgId)
+
+    if (attendanceError) {
+      alert('Failed to delete session attendance')
+      return
+    }
+
     const { error } = await supabase
       .from('sessions')
       .delete()
