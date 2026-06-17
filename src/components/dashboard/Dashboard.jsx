@@ -1,5 +1,6 @@
 import Settings from '../settings/Settings'
 import TeamTab from '../team/TeamTab'
+import Mentoring from '../mentoring/Mentoring'
 import SessionPlanner from '../sessions/SessionPlanner'
 import Hub from '../hub/Hub'
 import React, { useState } from 'react'
@@ -246,6 +247,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'team'      && <TeamTab org={org} session={session} />}
           {tab === 'calendar' && <Calendar org={org} session={session} />}
           {tab === 'settings'  && <Settings org={org} session={session} />}
+          {tab === 'mentoring' && <Mentoring org={org} session={session} />}
           {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && tab !== 'team' && tab !== 'settings' && (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center', padding: 40 }}>
