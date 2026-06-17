@@ -5,6 +5,7 @@ import Hub from '../hub/Hub'
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import Registers from '../registers/Registers'
+import Calendar from '../calendar/Calendar';
 
 const PLAN_MODULES = {
   starter:    ['registers', 'planner', 'reports'],
@@ -155,6 +156,7 @@ export default function Dashboard({ session, org }) {
 
           <NavSection title="Organisation">
             <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => setTab('team')} primary={primary} />
+            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => setTab('calendar')} primary={primary} />
             <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => setTab('settings')} primary={primary} />
           </NavSection>
         </div>
@@ -196,6 +198,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'registers' && <Registers org={org} session={session} />}
           {tab === 'planner'   && <SessionPlanner org={org} />}
           {tab === 'team'      && <TeamTab org={org} session={session} />}
+          {tab === 'calendar' && <Calendar org={org} session={session} />}
           {tab === 'settings'  && <Settings org={org} session={session} />}
           {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && tab !== 'team' && tab !== 'settings' && (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
