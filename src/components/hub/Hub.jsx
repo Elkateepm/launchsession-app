@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
-export default function Hub({ org, session, setTab }) {
+export default function Hub({ org, session, setTab, onNavigate }) {
   const orgId = org?.id;
 
   const [sessions, setSessions] = useState([]);
@@ -119,7 +119,8 @@ export default function Hub({ org, session, setTab }) {
   const upcoming = sessions.slice(0, 5);
 
   function go(tab) {
-    if (typeof setTab === "function") setTab(tab);
+    if (typeof onNavigate === "function") onNavigate(tab);
+    else if (typeof setTab === "function") setTab(tab);
   }
 
   function getDurationProgress(item) {
