@@ -9,7 +9,6 @@ import Dashboard from './components/dashboard/Dashboard'
 
 function AppContent() {
   const pathname = window.location.pathname
-  if (pathname === '/create-password') return <CreatePassword />
   const { org, loading: orgLoading, error: orgError, noOrg } = useOrg()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -36,6 +35,7 @@ function AppContent() {
     </div>
   )
 
+  if (pathname === '/create-password') return <CreatePassword />
   if (window.location.pathname === '/signup') return <Signup />
   if (noOrg) return <OrgLookup />
 
