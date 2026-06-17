@@ -105,6 +105,15 @@ export default function Hub({ org, session, setTab, onNavigate }) {
     ? getLiveSessionStats(liveHeroSession)
     : { signedIn: 0, absent: 0, signedOut: 0, expected: 0, percent: 0 };
 
+  const openRegisterForSession = (sessionId) => {
+    try {
+      window.localStorage.setItem("launchsession_selected_session_id", sessionId);
+    } catch (e) {
+      // ignore storage issues
+    }
+    go("registers");
+  };
+
   if (loading) {
     return (
       <div style={styles.page}>
@@ -135,59 +144,90 @@ export default function Hub({ org, session, setTab, onNavigate }) {
             <span style={styles.liveCount}>{todaySessions.length} active today</span>
           </div>
 
-          <div style={styles.liveHeroBody}>
-            <div>
-              <h2 style={styles.liveHeroTitle}>{liveHeroSession.title}</h2>
-              <p style={styles.liveHeroMeta}>
-                {liveHeroSession.start_time || "No time"}
-                {liveHeroSession.end_time ? ` – ${liveHeroSession.end_time}` : ""}
-                {liveHeroSession.location ? ` · ${liveHeroSession.location}` : ""}
-              </p>
-            </div>
-
-            <button style={styles.liveHeroButton} onClick={() => go("registers")}>
-              Open Live Register →
-            </button>
-          </div>
-
-          <div style={styles.liveStatsGrid}>
-            <div style={styles.liveStat}><strong>{liveHeroStats.signedIn}</strong><span>Signed in</span></div>
-            <div style={styles.liveStat}><strong>{liveHeroStats.expected}</strong><span>Expected</span></div>
-            <div style={styles.liveStat}><strong>{liveHeroStats.absent}</strong><span>Absent</span></div>
-            <div style={styles.liveStat}><strong>{liveHeroStats.signedOut}</strong><span>Signed out</span></div>
-          </div>
-
-          <div style={styles.progressLabel}>
-            <span>Register progress</span>
-            <span>{liveHeroStats.percent}%</span>
-          </div>
-          <div style={styles.progressBar}>
-            <div style={{ ...styles.progressFill, width: `${liveHeroStats.percent}%`, background: primary }} />
-          </div>
-
-          {todaySessions.length > 1 && (
-            <div style={styles.multiLiveGrid}>
-              {todaySessions.slice(1).map(item => {
+          {todaySessions.length > 1 ? (
+            <div style={styles.equalLiveGrid}>
+              {todaySessions.map(item => {
                 const itemStats = getLiveSessionStats(item);
+                const hasRegister = itemStats.expected > 0 || itemStats.signedIn > 0 || itemStats.absent > 0 || itemStats.signedOut > 0;
 
                 return (
-                  <button key={item.id} onClick={() => go("registers")} style={styles.multiLiveCard}>
-                    <div style={{ flex: 1 }}>
-                      <div style={styles.multiLiveTitle}>{item.title}</div>
-                      <div style={styles.multiLiveMeta}>
+                  <div key={item.id} style={styles.equalLiveCard}>
+                    <div>
+                      <div style={styles.equalLiveTitle}>{item.title}</div>
+                      <div style={styles.equalLiveMeta}>
                         {item.start_time || "No time"}
                         {item.end_time ? ` – ${item.end_time}` : ""}
                         {item.location ? ` · ${item.location}` : ""}
                       </div>
                     </div>
-                    <div style={styles.multiLiveStats}>
-                      {itemStats.signedIn} / {itemStats.expected}
+
+                    <div style={styles.equalStatsGrid}>
+                      <div style={styles.equalStat}><strong>{itemStats.signedIn}</strong><span>In</span></div>
+                      <div style={styles.equalStat}><strong>{itemStats.expected}</strong><span>Expected</span></div>
+                      <div style={styles.equalStat}><strong>{itemStats.absent}</strong><span>Absent</span></div>
+                      <div style={styles.equalStat}><strong>{itemStats.signedOut}</strong><span>Out</span></div>
                     </div>
-                    <span style={styles.multiLiveArrow}>→</span>
-                  </button>
+
+                    <div style={styles.progressLabel}>
+                      <span>Register progress</span>
+                      <span>{itemStats.percent}%</span>
+                    </div>
+                    <div style={styles.progressBar}>
+                      <div style={{ ...styles.progressFill, width: `${itemStats.percent}%`, background: primary }} />
+                    </div>
+
+                    <div style={styles.equalActions}>
+                      <button style={styles.equalPrimaryButton} onClick={() => openRegisterForSession(item.id)}>
+                        Open Register →
+                      </button>
+
+                      {hasRegister && (
+                        <>
+                          <button style={styles.equalGhostButton} onClick={() => openRegisterForSession(item.id)}>
+                            Sign In
+                          </button>
+                          <button style={styles.equalGhostButton} onClick={() => openRegisterForSession(item.id)}>
+                            Sign Out
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 );
               })}
             </div>
+          ) : (
+            <>
+              <div style={styles.liveHeroBody}>
+                <div>
+                  <h2 style={styles.liveHeroTitle}>{liveHeroSession.title}</h2>
+                  <p style={styles.liveHeroMeta}>
+                    {liveHeroSession.start_time || "No time"}
+                    {liveHeroSession.end_time ? ` – ${liveHeroSession.end_time}` : ""}
+                    {liveHeroSession.location ? ` · ${liveHeroSession.location}` : ""}
+                  </p>
+                </div>
+
+                <button style={styles.liveHeroButton} onClick={() => openRegisterForSession(liveHeroSession.id)}>
+                  Open Live Register →
+                </button>
+              </div>
+
+              <div style={styles.liveStatsGrid}>
+                <div style={styles.liveStat}><strong>{liveHeroStats.signedIn}</strong><span>Signed in</span></div>
+                <div style={styles.liveStat}><strong>{liveHeroStats.expected}</strong><span>Expected</span></div>
+                <div style={styles.liveStat}><strong>{liveHeroStats.absent}</strong><span>Absent</span></div>
+                <div style={styles.liveStat}><strong>{liveHeroStats.signedOut}</strong><span>Signed out</span></div>
+              </div>
+
+              <div style={styles.progressLabel}>
+                <span>Register progress</span>
+                <span>{liveHeroStats.percent}%</span>
+              </div>
+              <div style={styles.progressBar}>
+                <div style={{ ...styles.progressFill, width: `${liveHeroStats.percent}%`, background: primary }} />
+              </div>
+            </>
           )}
         </section>
       ) : (
