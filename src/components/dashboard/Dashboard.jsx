@@ -1,3 +1,4 @@
+import Settings from '../settings/Settings'
 import TeamTab from '../team/TeamTab'
 import SessionPlanner from '../sessions/SessionPlanner'
 import Hub from '../hub/Hub'
@@ -195,15 +196,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'registers' && <Registers org={org} session={session} />}
           {tab === 'planner'   && <SessionPlanner org={org} />}
           {tab === 'team'      && <TeamTab org={org} session={session} />}
-          {tab === 'settings'  && (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ textAlign: 'center', padding: 40 }}>
-                <div style={{ fontSize: 40, marginBottom: 14 }}>⚙️</div>
-                <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Settings</div>
-                <div style={{ fontSize: 14, color: '#9ca3af' }}>Coming soon</div>
-              </div>
-            </div>
-          )}
+          {tab === 'settings'  && <Settings org={org} session={session} />}
           {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && tab !== 'team' && tab !== 'settings' && (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center', padding: 40 }}>
