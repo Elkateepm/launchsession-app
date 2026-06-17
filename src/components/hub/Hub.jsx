@@ -153,37 +153,6 @@ export default function Hub({ org, session, setTab }) {
     return `${minutes}m left`;
   }
 
-  function getDurationProgress(item) {
-    if (!item.start_time || !item.end_time) return 0;
-
-    const now = new Date();
-    const start = new Date(`${item.session_date}T${item.start_time}`);
-    const end = new Date(`${item.session_date}T${item.end_time}`);
-
-    if (now <= start) return 0;
-    if (now >= end) return 100;
-
-    return Math.round(((now - start) / (end - start)) * 100);
-  }
-
-  function getTimeRemaining(item) {
-    if (!item.end_time) return "No end time";
-
-    const now = new Date();
-    const end = new Date(`${item.session_date}T${item.end_time}`);
-
-    const diff = end - now;
-
-    if (diff <= 0) return "Finished";
-
-    const mins = Math.floor(diff / 60000);
-    const hours = Math.floor(mins / 60);
-    const minutes = mins % 60;
-
-    if (hours > 0) return `${hours}h ${minutes}m left`;
-    return `${minutes}m left`;
-  }
-
   if (loading) {
     return (
       <div style={{ ...styles.page, ...(isMobile ? styles.pageMobile : {}) }}>
@@ -1274,13 +1243,7 @@ const styles = {
     background: "linear-gradient(90deg,#38bdf8,#818cf8)",
   },
 
-  progressGroup: {
-    marginTop: 10,
-    display: "flex",
-    flexDirection: "column",
-    gap: 6,
-  },
-  progressLabelRow: {
+progressLabelRow: {
     display: "flex",
     justifyContent: "space-between",
     gap: 10,
@@ -1288,13 +1251,7 @@ const styles = {
     fontSize: 11,
     fontWeight: 800,
   },
-  durationProgressFill: {
-    height: "100%",
-    borderRadius: 999,
-    background: "linear-gradient(90deg,#38bdf8,#818cf8)",
-  },
-
-  pageMobile: {
+pageMobile: {
     padding: 12,
   },
   welcomeMobile: {
