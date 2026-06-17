@@ -1,334 +1,654 @@
-import React, { useState, useEffect } from 'react'
-import { format } from 'date-fns'
-import { supabase } from '../../lib/supabase'
-import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
 
-// ─── ENCOURAGEMENT BANNER ─────────────────────────────────────
-function EncouragementBanner({ session, orgName }) {
-  const [stats, setStats] = useState(null)
-  const [index, setIndex] = useState(0)
-  const [fade, setFade] = useState(true)
+import React, { useEffect, useMemo, useState } from "react";
+import { supabase } from "../../lib/supabase";
 
-  useEffect(() => {
-    if (!session?.id) return
-    supabase.from('attendance').select('status').eq('session_id', session.id)
-      .then(({ data }) => {
-        if (data) setStats({
-          total: data.length,
-          signedIn: data.filter(a => a.status === 'signed_in').length,
-          absent: data.filter(a => a.status === 'absent').length,
-        })
-      })
-  }, [session?.id])
+export default function Hub({ org, session, setTab }) {
+  const orgId = org?.id;
 
-  const messages = [
-    stats?.signedIn > 0
-      ? `🌟 ${stats.signedIn} ${stats.signedIn === 1 ? 'child' : 'children'} signed in today — great work team!`
-      : '👋 Ready for today? Sign children in when they arrive.',
-    stats?.total > 0
-      ? `📊 ${stats.total} expected today${stats.absent > 0 ? ` · ${stats.absent} absent` : ' · all accounted for!'}`
-      : '✨ Every child deserves happiness — thank you for making it happen.',
-    '💪 Your dedication makes a real difference to these children\'s lives.',
-    `🏆 ${orgName} — building confidence, one session at a time.`,
-  ].filter(Boolean)
+  const [sessions, setSessions] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [concerns, setConcerns] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
-    if (messages.length <= 1) return
-    const timer = setInterval(() => {
-      setFade(false)
-      setTimeout(() => { setIndex(i => (i + 1) % messages.length); setFade(true) }, 400)
-    }, 8000)
-    return () => clearInterval(timer)
-  }, [messages.length])
+    if (!orgId) return;
 
-  return (
-    <div style={{ margin: '16px 16px 0', background: 'linear-gradient(135deg, #1A1A2E 0%, #2D1B4E 100%)', borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, minHeight: 52 }}>
-      <div style={{ fontSize: 20, flexShrink: 0 }}>{messages[index]?.split(' ')[0]}</div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.4, opacity: fade ? 1 : 0, transition: 'opacity 0.4s ease', flex: 1 }}>
-        {messages[index]?.slice(messages[index].indexOf(' ') + 1)}
+    let alive = true;
+
+    async function loadHub() {
+      setLoading(true);
+
+      const [{ data: sessionData }, { data: attendanceData }, { data: concernData }] =
+        await Promise.all([
+          supabase
+            .from("sessions")
+            .select("*")
+            .eq("org_id", orgId)
+            .gte("session_date", today)
+            .order("session_date", { ascending: true })
+            .order("start_time", { ascending: true }),
+
+          supabase
+            .from("attendance")
+            .select("*")
+            .eq("org_id", orgId),
+
+          supabase
+            .from("safeguarding_concerns")
+            .select("*")
+            .eq("org_id", orgId)
+            .eq("status", "open"),
+        ]);
+
+      if (!alive) return;
+
+      setSessions(sessionData || []);
+      setAttendance(attendanceData || []);
+      setConcerns(concernData || []);
+      setLoading(false);
+    }
+
+    loadHub();
+
+    const interval = setInterval(loadHub, 30000);
+
+    return () => {
+      alive = false;
+      clearInterval(interval);
+    };
+  }, [orgId, today]);
+
+  const todaySessions = useMemo(() => {
+    return sessions.filter((item) => item.session_date === today);
+  }, [sessions, today]);
+
+  const liveSession = todaySessions[0] || null;
+
+  const liveAttendance = useMemo(() => {
+    if (!liveSession) return [];
+
+    return attendance.filter((item) => item.session_id === liveSession.id);
+  }, [attendance, liveSession]);
+
+  const stats = {
+    expected: liveAttendance.length,
+    present: liveAttendance.filter((item) => item.status === "present").length,
+    absent: liveAttendance.filter((item) => item.status === "absent").length,
+    left: liveAttendance.filter((item) => item.status === "left").length,
+  };
+
+  const checkedPercent =
+    stats.expected > 0 ? Math.round((stats.present / stats.expected) * 100) : 0;
+
+  const upcoming = sessions.slice(0, 5);
+
+  function go(tab) {
+    if (typeof setTab === "function") setTab(tab);
+  }
+
+  if (loading) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.loading}>Loading today’s hub...</div>
       </div>
-      {messages.length > 1 && (
-        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-          {messages.map((_, i) => (
-            <div key={i} style={{ width: i === index ? 12 : 4, height: 4, borderRadius: 2, background: i === index ? '#F5D000' : 'rgba(255,255,255,0.3)', transition: 'all 0.3s' }} />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── HERO CARD ────────────────────────────────────────────────
-function HeroCard({ session, onViewRegister, primary }) {
-  const { attendance } = useAttendance(session?.id)
-  const signedIn  = attendance.filter(a => a.status === 'signed_in').length
-  const expected  = attendance.filter(a => a.status === 'expected').length
-  const absent    = attendance.filter(a => a.status === 'absent').length
-  const signedOut = attendance.filter(a => a.status === 'signed_out').length
-  const total     = attendance.length
-
-  if (!session) return (
-    <div style={{ margin: '16px 16px 0', background: `linear-gradient(135deg, ${primary}CC, ${primary}88)`, borderRadius: 20, padding: '28px 24px', textAlign: 'center' }}>
-      <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>TODAY</div>
-      <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', marginBottom: 6 }}>No session scheduled today</div>
-      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>Check the calendar for upcoming activities</div>
-    </div>
-  )
-
-  const pct = total > 0 ? Math.round((signedIn / total) * 100) : 0
+    );
+  }
 
   return (
-    <div style={{ margin: '16px 16px 0', background: 'linear-gradient(135deg, #0D1B2A 0%, #1A2E44 100%)', borderRadius: 20, overflow: 'hidden' }}>
-      <div style={{ padding: '16px 18px 12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: primary, textTransform: 'uppercase', letterSpacing: 1.5, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80' }} />Session Live
+    <div style={styles.page}>
+      <section style={styles.welcome}>
+        <div>
+          <div style={styles.orgLabel}>{org?.name || "LaunchSession"}</div>
+          <h1 style={styles.title}>Good morning, mohammed! 👋</h1>
+          <p style={styles.subtitle}>
+            Here’s what needs attention across today’s sessions.
+          </p>
+        </div>
+
+        <div style={styles.dateCard}>
+          <div style={styles.dateDay}>
+            {new Date().toLocaleDateString("en-GB", { weekday: "long" })}
           </div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
-            {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}
+          <div style={styles.dateText}>
+            {new Date().toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
           </div>
         </div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 4 }}>{session.title}</div>
-        {session.location && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginBottom: 12 }}>📍 {session.location.split(',')[0]}</div>}
+      </section>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
-          {[
-            { num: signedIn,  label: 'In',       color: '#4ADE80' },
-            { num: expected,  label: 'Expected',  color: '#F5D000' },
-            { num: absent,    label: 'Absent',    color: '#FF8080' },
-            { num: signedOut, label: 'Left',      color: '#9FE1CB' },
-          ].map(({ num, label, color }) => (
-            <div key={label} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 4px', textAlign: 'center' }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color, lineHeight: 1 }}>{num}</div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginTop: 3, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div>
-            </div>
-          ))}
-        </div>
+      <section style={styles.topGrid}>
+        <div style={styles.liveCard}>
+          <div style={styles.liveTop}>
+            <span style={styles.liveBadge}>
+              {liveSession ? "● Session Live" : "No Session Today"}
+            </span>
 
-        <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 99, height: 5, marginBottom: 4 }}>
-          <div style={{ background: 'linear-gradient(90deg, #417505, #4ADE80)', width: pct + '%', height: '100%', borderRadius: 99, transition: 'width 0.4s' }} />
-        </div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 14 }}>{pct}% checked in · {total} total</div>
-
-        <button onClick={onViewRegister} style={{ width: '100%', background: primary, color: '#fff', border: 'none', borderRadius: 12, padding: '12px', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
-          Open Register →
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ─── QUICK ACTIONS ────────────────────────────────────────────
-function QuickActions({ onNavigate, primary }) {
-  const actions = [
-    { icon: '📋', label: 'Child Bookings',  key: 'registers' },
-    { icon: '❤️', label: 'Vol Bookings',    key: 'volunteers' },
-    { icon: '🤝', label: 'Mentoring',       key: 'mentoring' },
-    { icon: '💬', label: 'Parent Msgs',     key: 'messaging' },
-  ]
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, margin: '16px 16px 0' }}>
-      {actions.map(a => (
-        <button key={a.key} onClick={() => onNavigate(a.key)}
-          style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '14px 8px', textAlign: 'center', cursor: 'pointer' }}>
-          <div style={{ fontSize: 22, marginBottom: 6 }}>{a.icon}</div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280' }}>{a.label}</div>
-        </button>
-      ))}
-    </div>
-  )
-}
-
-// ─── ATTENDANCE WIDGET ────────────────────────────────────────
-function AttendanceWidget({ session, orgId, primary }) {
-  const { children } = useChildren(orgId)
-  const { attendance } = useAttendance(session?.id)
-
-  const BUBBLES = [
-    { key: 'red',    label: 'RED',    color: '#E53935' },
-    { key: 'green',  label: 'GREEN',  color: '#417505' },
-    { key: 'yellow', label: 'YELLOW', color: '#B8860B' },
-    { key: 'blue',   label: 'BLUE',   color: '#1B9AAA' },
-    { key: 'purple', label: 'PURPLE', color: '#7B2D8B' },
-    { key: 'teens',  label: 'TEENS',  color: '#1A1A1A' },
-  ]
-
-  const getStatus = (childId) => attendance.find(a => a.child_id === childId)?.status || 'unmarked'
-
-  const bubbleStats = BUBBLES.map(b => {
-    const bubbleKids = children.filter(c => {
-      const g = (c.group_name || '').toLowerCase()
-      return g === b.key || g === b.label.toLowerCase()
-    })
-    return { ...b, total: bubbleKids.length, signedIn: bubbleKids.filter(c => getStatus(c.id) === 'signed_in').length }
-  }).filter(b => b.total > 0)
-
-  if (!session || bubbleStats.length === 0) return null
-
-  return (
-    <div style={{ margin: '16px 16px 0' }}>
-      <div style={{ fontSize: 11, fontWeight: 800, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
-        {attendance.filter(a => a.status === 'signed_in').length} signed in · By Bubble
-      </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {bubbleStats.map(b => (
-          <div key={b.key} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8, minWidth: 90 }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: b.color, flexShrink: 0 }} />
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: b.color, lineHeight: 1 }}>{b.signedIn}</div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.4 }}>{b.label}</div>
-            </div>
+            {liveSession?.start_time && (
+              <span style={styles.timeText}>
+                {liveSession.start_time}
+                {liveSession.end_time ? ` – ${liveSession.end_time}` : ""}
+              </span>
+            )}
           </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
-// ─── UPCOMING SESSIONS ────────────────────────────────────────
-function UpcomingSessions({ orgId }) {
-  const [sessions, setSessions] = useState([])
+          {liveSession ? (
+            <>
+              <h2 style={styles.sessionTitle}>{liveSession.title}</h2>
+              <p style={styles.sessionMeta}>
+                {liveSession.location || "No location set"}
+              </p>
 
-  useEffect(() => {
-    if (!orgId) return
-    const today = format(new Date(), 'yyyy-MM-dd')
-    supabase.from('sessions').select('*').eq('org_id', orgId).gte('session_date', today).order('session_date').limit(5)
-      .then(({ data }) => setSessions(data || []))
-  }, [orgId])
+              <div style={styles.attendanceGrid}>
+                <Metric label="Checked In" value={stats.present} colour="#22c55e" />
+                <Metric label="Expected" value={stats.expected} colour="#facc15" />
+                <Metric label="Absent" value={stats.absent} colour="#ef4444" />
+                <Metric label="Left" value={stats.left} colour="#94a3b8" />
+              </div>
 
-  if (sessions.length === 0) return null
-
-  const byMonth = sessions.reduce((acc, s) => {
-    const month = format(new Date(s.session_date), 'MMMM yyyy')
-    if (!acc[month]) acc[month] = []
-    acc[month].push(s)
-    return acc
-  }, {})
-
-  return (
-    <div style={{ margin: '16px 16px 0' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <div style={{ fontSize: 14, fontWeight: 800 }}>📅 Coming Up</div>
-        <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>Next 30 days · {sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
-      </div>
-      {Object.entries(byMonth).map(([month, monthSessions]) => (
-        <div key={month}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{month}</div>
-          {monthSessions.map(s => {
-            const date = new Date(s.session_date)
-            return (
-              <div key={s.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '12px 14px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ textAlign: 'center', minWidth: 40 }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase' }}>{format(date, 'EEE')}</div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: '#111', lineHeight: 1 }}>{format(date, 'd')}</div>
+              <div style={styles.progressWrap}>
+                <div style={styles.progressBar}>
+                  <div style={{ ...styles.progressFill, width: `${checkedPercent}%` }} />
                 </div>
+                <div style={styles.progressText}>
+                  {checkedPercent}% checked in · {stats.expected} total
+                </div>
+              </div>
+
+              <button style={styles.primaryButton} onClick={() => go("registers")}>
+                Open Register →
+              </button>
+            </>
+          ) : (
+            <div style={styles.emptyLive}>
+              <div style={{ fontSize: 34 }}>🌤️</div>
+              <h2 style={styles.sessionTitle}>Nothing scheduled right now</h2>
+              <p style={styles.sessionMeta}>
+                Use Calendar or Sessions to plan upcoming activities.
+              </p>
+              <button style={styles.primaryButton} onClick={() => go("calendar")}>
+                Open Calendar →
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div style={styles.attentionCard}>
+          <h3 style={styles.cardTitle}>Attention Centre</h3>
+
+          <AttentionRow
+            icon="📝"
+            label="Registers"
+            value={stats.expected > stats.present ? `${stats.expected - stats.present} waiting` : "All clear"}
+            tone={stats.expected > stats.present ? "amber" : "green"}
+            onClick={() => go("registers")}
+          />
+
+          <AttentionRow
+            icon="🛡️"
+            label="Safeguarding"
+            value={concerns.length > 0 ? `${concerns.length} open` : "No open concerns"}
+            tone={concerns.length > 0 ? "red" : "green"}
+            onClick={() => go("safeguarding")}
+          />
+
+          <AttentionRow
+            icon="💬"
+            label="Messages"
+            value="Check inbox"
+            tone="blue"
+            onClick={() => go("messaging")}
+          />
+
+          <AttentionRow
+            icon="❤️"
+            label="Volunteers"
+            value="Review cover"
+            tone="blue"
+            onClick={() => go("volunteers")}
+          />
+        </div>
+      </section>
+
+      <section style={styles.quickGrid}>
+        <QuickCard icon="📋" title="Take Register" text="Sign children in quickly" onClick={() => go("registers")} />
+        <QuickCard icon="📅" title="Calendar" text="View sessions and events" onClick={() => go("calendar")} />
+        <QuickCard icon="❤️" title="Volunteers" text="Manage your team" onClick={() => go("volunteers")} />
+        <QuickCard icon="🤝" title="Mentoring" text="Track mentoring work" onClick={() => go("mentoring")} />
+      </section>
+
+      <section style={styles.bottomGrid}>
+        <div style={styles.timelineCard}>
+          <div style={styles.sectionHeader}>
+            <h3 style={styles.cardTitle}>Coming Up</h3>
+            <span style={styles.muted}>Next 30 days · {upcoming.length} sessions</span>
+          </div>
+
+          {upcoming.length === 0 ? (
+            <EmptyState text="No upcoming sessions yet." />
+          ) : (
+            upcoming.map((item) => (
+              <div key={item.id} style={styles.timelineItem}>
+                <div style={styles.dateBox}>
+                  <strong>
+                    {new Date(item.session_date).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                    })}
+                  </strong>
+                  <span>
+                    {new Date(item.session_date).toLocaleDateString("en-GB", {
+                      month: "short",
+                    })}
+                  </span>
+                </div>
+
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#111', marginBottom: 3 }}>{s.title}</div>
-                  <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>
-                    {s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}
-                    {s.location ? ` · ${s.location.split(',')[0]}` : ''}
+                  <div style={styles.timelineTitle}>{item.title}</div>
+                  <div style={styles.timelineMeta}>
+                    {item.start_time || "No time"} {item.location ? `· ${item.location}` : ""}
                   </div>
                 </div>
               </div>
-            )
-          })}
+            ))
+          )}
         </div>
-      ))}
+
+        <div style={styles.activityCard}>
+          <h3 style={styles.cardTitle}>Recent Activity</h3>
+
+          <Activity text="Hub refreshed with latest session data" />
+          <Activity text="Calendar module is now available" />
+          <Activity text="Settings hub updated successfully" />
+          <Activity text="Organisation modules loaded" />
+        </div>
+      </section>
     </div>
-  )
+  );
 }
 
-// ─── LIVE CLOCK ───────────────────────────────────────────────
-function LiveClock() {
-  const [time, setTime] = useState(new Date())
-  useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t) }, [])
+function Metric({ label, value, colour }) {
   return (
-    <div style={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', background: '#fff' }}>
-      <div style={{ fontSize: 13, fontWeight: 600, color: '#6b7280' }}>{format(time, 'EEEE, d MMMM yyyy')}</div>
-      <div style={{ fontSize: 18, fontWeight: 900, color: '#111', fontVariantNumeric: 'tabular-nums' }}>
-        {format(time, 'HH:mm')}<span style={{ fontSize: 12, color: '#9ca3af' }}>{format(time, ':ss')}</span>
-      </div>
+    <div style={styles.metric}>
+      <div style={{ ...styles.metricValue, color: colour }}>{value}</div>
+      <div style={styles.metricLabel}>{label}</div>
     </div>
-  )
+  );
 }
 
-// ─── HUB MAIN ────────────────────────────────────────────────
-export default function Hub({ org, session: authSession, onNavigate }) {
-  const orgId  = org?.id
-  const primary = org?.primary_color || '#1B9AAA'
-  const orgName = org?.name || 'Organisation'
-
-  const { sessions: todaySessions, session } = useTodaySession(orgId)
-  const [nextSession, setNextSession] = useState(null)
-  const [timeLeft, setTimeLeft] = useState('')
-
-  useEffect(() => {
-    if (!orgId) return
-    const today = format(new Date(), 'yyyy-MM-dd')
-    supabase.from('sessions').select('*').eq('org_id', orgId).gte('session_date', today).order('session_date').limit(1)
-      .then(({ data }) => { if (data?.length > 0) setNextSession(data[0]) })
-  }, [orgId])
-
-  useEffect(() => {
-    if (!session?.end_time) return
-    const calc = () => {
-      const [h, m] = session.end_time.split(':').map(Number)
-      const end = new Date(); end.setHours(h, m, 0, 0)
-      const diff = end - new Date()
-      if (diff <= 0) { setTimeLeft(''); return }
-      const hrs = Math.floor(diff / 3600000)
-      const mins = Math.floor((diff % 3600000) / 60000)
-      setTimeLeft(hrs > 0 ? `${hrs}h ${mins}m left` : `${mins}m left`)
-    }
-    calc()
-    const t = setInterval(calc, 30000)
-    return () => clearInterval(t)
-  }, [session])
-
-  const bannerText = session
-    ? `${session.title} · ${session.start_time}–${session.end_time}${timeLeft ? ` · ${timeLeft}` : ''}`
-    : nextSession ? `Next: ${nextSession.title} · ${format(new Date(nextSession.session_date), 'd MMM')}`
-    : orgName
-
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-  const firstName = authSession?.user?.email?.split('@')[0] || 'there'
+function AttentionRow({ icon, label, value, tone, onClick }) {
+  const colours = {
+    green: "#16a34a",
+    amber: "#d97706",
+    red: "#dc2626",
+    blue: "#0891b2",
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-
-      {/* TOP BANNER */}
-      <div style={{ background: session ? '#417505' : primary, padding: '6px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }} onClick={() => onNavigate('calendar')}>
-        <span style={{ fontSize: 12, fontWeight: 800, color: '#F5D000' }}>→</span>
-        <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', letterSpacing: 0.3 }}>{bannerText}</span>
-        <span style={{ fontSize: 12, fontWeight: 800, color: '#F5D000' }}>→</span>
-      </div>
-
-      {/* LOGO + GREETING */}
-      <div style={{ background: '#fff', padding: '12px 16px 10px', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: primary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>{orgName}</div>
-        <div style={{ fontSize: 20, fontWeight: 900, color: '#111' }}>{greeting}, {firstName}! 👋</div>
-      </div>
-
-      <LiveClock />
-
-      {/* SCROLLABLE CONTENT */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
-        <EncouragementBanner session={session} orgName={orgName} />
-
-        {todaySessions.length === 0
-          ? <HeroCard session={null} onViewRegister={() => onNavigate('registers')} primary={primary} />
-          : todaySessions.map(s => (
-            <HeroCard key={s.id} session={s} onViewRegister={() => onNavigate('registers')} primary={primary} />
-          ))
-        }
-
-        <QuickActions onNavigate={onNavigate} primary={primary} />
-        <AttendanceWidget session={session} orgId={orgId} primary={primary} />
-        <UpcomingSessions orgId={orgId} />
-
-        <div style={{ height: 32 }} />
-      </div>
-    </div>
-  )
+    <button style={styles.attentionRow} onClick={onClick}>
+      <span style={styles.attentionIcon}>{icon}</span>
+      <span style={{ flex: 1 }}>
+        <strong style={styles.attentionLabel}>{label}</strong>
+        <span style={styles.attentionValue}>{value}</span>
+      </span>
+      <span style={{ ...styles.statusDot, background: colours[tone] }} />
+    </button>
+  );
 }
+
+function QuickCard({ icon, title, text, onClick }) {
+  return (
+    <button style={styles.quickCard} onClick={onClick}>
+      <div style={styles.quickIcon}>{icon}</div>
+      <div>
+        <div style={styles.quickTitle}>{title}</div>
+        <div style={styles.quickText}>{text}</div>
+      </div>
+      <div style={styles.quickArrow}>→</div>
+    </button>
+  );
+}
+
+function EmptyState({ text }) {
+  return (
+    <div style={styles.emptyState}>
+      <div style={{ fontSize: 28 }}>🗓️</div>
+      <div>{text}</div>
+    </div>
+  );
+}
+
+function Activity({ text }) {
+  return (
+    <div style={styles.activityRow}>
+      <span style={styles.activityDot}>✓</span>
+      <span>{text}</span>
+    </div>
+  );
+}
+
+const styles = {
+  page: {
+    padding: 24,
+    background: "#f1f5f9",
+    minHeight: "100%",
+    color: "#0f172a",
+    overflowY: "auto",
+  },
+  loading: {
+    padding: 40,
+    background: "#fff",
+    borderRadius: 18,
+    fontWeight: 800,
+    color: "#64748b",
+  },
+  welcome: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 20,
+    alignItems: "center",
+    marginBottom: 18,
+  },
+  orgLabel: {
+    color: "#0891b2",
+    fontSize: 12,
+    fontWeight: 900,
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    marginBottom: 6,
+  },
+  title: {
+    margin: 0,
+    fontSize: 28,
+    fontWeight: 900,
+  },
+  subtitle: {
+    margin: "7px 0 0",
+    color: "#64748b",
+    fontSize: 14,
+  },
+  dateCard: {
+    background: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: 16,
+    padding: "14px 18px",
+    textAlign: "right",
+    boxShadow: "0 10px 25px rgba(15,23,42,0.04)",
+  },
+  dateDay: {
+    fontWeight: 900,
+    fontSize: 14,
+  },
+  dateText: {
+    color: "#64748b",
+    fontSize: 12,
+    marginTop: 3,
+  },
+  topGrid: {
+    display: "grid",
+    gridTemplateColumns: "2fr 1fr",
+    gap: 16,
+    marginBottom: 16,
+  },
+  liveCard: {
+    background: "linear-gradient(135deg,#0f172a,#172554)",
+    color: "#fff",
+    borderRadius: 24,
+    padding: 22,
+    boxShadow: "0 24px 50px rgba(15,23,42,0.22)",
+  },
+  liveTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  liveBadge: {
+    color: "#5eead4",
+    fontSize: 11,
+    fontWeight: 900,
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+  },
+  timeText: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 13,
+    fontWeight: 800,
+  },
+  sessionTitle: {
+    margin: 0,
+    fontSize: 24,
+    fontWeight: 900,
+  },
+  sessionMeta: {
+    margin: "6px 0 18px",
+    color: "rgba(255,255,255,0.68)",
+    fontSize: 14,
+  },
+  attendanceGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4,1fr)",
+    gap: 10,
+    marginBottom: 14,
+  },
+  metric: {
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 16,
+    padding: 14,
+    textAlign: "center",
+  },
+  metricValue: {
+    fontSize: 26,
+    fontWeight: 900,
+  },
+  metricLabel: {
+    fontSize: 10,
+    textTransform: "uppercase",
+    letterSpacing: 1.2,
+    color: "rgba(255,255,255,0.55)",
+    fontWeight: 900,
+    marginTop: 3,
+  },
+  progressWrap: {
+    marginBottom: 16,
+  },
+  progressBar: {
+    height: 7,
+    borderRadius: 999,
+    background: "rgba(255,255,255,0.12)",
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    background: "linear-gradient(90deg,#22c55e,#14b8a6)",
+    borderRadius: 999,
+  },
+  progressText: {
+    marginTop: 7,
+    fontSize: 12,
+    color: "rgba(255,255,255,0.55)",
+    textAlign: "center",
+    fontWeight: 700,
+  },
+  primaryButton: {
+    width: "100%",
+    border: "none",
+    background: "linear-gradient(135deg,#0891b2,#14b8a6)",
+    color: "#fff",
+    borderRadius: 14,
+    padding: 14,
+    fontWeight: 900,
+    cursor: "pointer",
+    fontSize: 14,
+  },
+  emptyLive: {
+    textAlign: "center",
+    padding: "10px 0 0",
+  },
+  attentionCard: {
+    background: "#fff",
+    borderRadius: 24,
+    padding: 18,
+    border: "1px solid #e5e7eb",
+    boxShadow: "0 18px 35px rgba(15,23,42,0.06)",
+  },
+  cardTitle: {
+    margin: "0 0 14px",
+    fontSize: 17,
+    fontWeight: 900,
+  },
+  attentionRow: {
+    width: "100%",
+    border: "1px solid #e5e7eb",
+    background: "#f8fafc",
+    borderRadius: 14,
+    padding: 12,
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 10,
+    cursor: "pointer",
+    textAlign: "left",
+  },
+  attentionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    background: "#fff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 18,
+  },
+  attentionLabel: {
+    display: "block",
+    fontSize: 13,
+  },
+  attentionValue: {
+    display: "block",
+    fontSize: 12,
+    color: "#64748b",
+    marginTop: 2,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+  },
+  quickGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4,1fr)",
+    gap: 14,
+    marginBottom: 16,
+  },
+  quickCard: {
+    background: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: 18,
+    padding: 16,
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    cursor: "pointer",
+    textAlign: "left",
+    boxShadow: "0 12px 25px rgba(15,23,42,0.04)",
+  },
+  quickIcon: {
+    fontSize: 26,
+  },
+  quickTitle: {
+    fontWeight: 900,
+    fontSize: 14,
+  },
+  quickText: {
+    color: "#64748b",
+    fontSize: 12,
+    marginTop: 3,
+  },
+  quickArrow: {
+    marginLeft: "auto",
+    color: "#94a3b8",
+    fontWeight: 900,
+  },
+  bottomGrid: {
+    display: "grid",
+    gridTemplateColumns: "2fr 1fr",
+    gap: 16,
+  },
+  timelineCard: {
+    background: "#fff",
+    borderRadius: 22,
+    padding: 18,
+    border: "1px solid #e5e7eb",
+  },
+  activityCard: {
+    background: "#fff",
+    borderRadius: 22,
+    padding: 18,
+    border: "1px solid #e5e7eb",
+  },
+  sectionHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    alignItems: "center",
+  },
+  muted: {
+    color: "#94a3b8",
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  timelineItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    borderRadius: 16,
+    border: "1px solid #e5e7eb",
+    marginBottom: 10,
+  },
+  dateBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    background: "#f1f5f9",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  timelineTitle: {
+    fontWeight: 900,
+    fontSize: 14,
+  },
+  timelineMeta: {
+    color: "#64748b",
+    fontSize: 12,
+    marginTop: 3,
+  },
+  emptyState: {
+    padding: 24,
+    textAlign: "center",
+    color: "#64748b",
+    fontWeight: 700,
+  },
+  activityRow: {
+    display: "flex",
+    gap: 10,
+    alignItems: "center",
+    padding: "10px 0",
+    borderBottom: "1px solid #f1f5f9",
+    color: "#334155",
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  activityDot: {
+    color: "#16a34a",
+    fontWeight: 900,
+  },
+};
