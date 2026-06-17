@@ -13,22 +13,31 @@ export function OrgProvider({ children }) {
     const detectOrg = async () => {
       const hostname = window.location.hostname
       const pathname = window.location.pathname
-      const appRoutes = ['/org-search', '/login', '/landing.html']
-      let slug = null
-
       const params = new URLSearchParams(window.location.search)
-      slug = params.get('org') || localStorage.getItem('launchsession_org_slug')
+
+      if (pathname === '/org-search') {
+        localStorage.removeItem('launchsession_org_slug')
+        setOrg(null)
+        setNoOrg(true)
+        setLoading(false)
+        return
+      }
+
+      let slug = params.get('org')
+
+      if (!slug && pathname !== '/login') {
+        slug = localStorage.getItem('launchsession_org_slug')
+      }
 
       if (!slug && hostname.includes('.launchsession.app')) {
         slug = hostname.split('.')[0]
       }
 
-      if (!slug && hostname.includes('.launchsession.co.uk') && !appRoutes.includes(pathname)) {
-        slug = hostname.split('.')[0]
-      }
-
-      if (slug && slug !== 'www' && slug !== 'app') {
-        localStorage.setItem('launchsession_org_slug', slug)
+      if (!slug && hostname.includes('.launchsession.co.uk')) {
+        const subdomain = hostname.split('.')[0]
+        if (subdomain !== 'www' && subdomain !== 'launchsession') {
+          slug = subdomain
+        }
       }
 
       if (!slug) {
@@ -36,6 +45,8 @@ export function OrgProvider({ children }) {
         setLoading(false)
         return
       }
+
+      localStorage.setItem('launchsession_org_slug', slug)
 
       const { data, error } = await supabase
         .from('organisations')
@@ -45,14 +56,19 @@ export function OrgProvider({ children }) {
         .single()
 
       if (error || !data) {
-        setError('Organisation not found or inactive')
+        localStorage.removeItem('launchsession_org_slug')
+        setOrg(null)
+        setNoOrg(true)
       } else {
         setOrg(data)
+        setNoOrg(false)
         document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
         document.title = data.name || 'LaunchSession'
       }
+
       setLoading(false)
     }
+
     detectOrg()
   }, [])
 
