@@ -1,8 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
-  value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-
 export default function Signup() {
   const [orgName, setOrgName] = useState('')
   const [fullName, setFullName] = useState('')
