@@ -75,7 +75,7 @@ export default function Hub({ org, session, setTab }) {
     return sessions.filter((item) => item.session_date === today);
   }, [sessions, today]);
 
-  const liveSessions = todaySessions.slice(0, 15);
+  const liveSessions = todaySessions;
 
   function getSessionAttendance(sessionId) {
     return attendance.filter((item) => item.session_id === sessionId);
@@ -152,7 +152,7 @@ export default function Hub({ org, session, setTab }) {
             </span>
 
             <span style={styles.timeText}>
-              Max 15 live sessions
+              {liveSessions.length} active today
             </span>
           </div>
 
