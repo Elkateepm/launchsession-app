@@ -197,10 +197,14 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
 </head>
 <body>
 
-<nav id="navbar">
+<div class="nav-wrapper" id="navWrapper">
+<nav>
   <a class="logo" href="#">
     <img src="/logo.png" alt="LaunchSession" />
-    <div class="logo-text">Launch<span>Session</span></div>
+    <div class="logo-brand">
+      <div class="logo-text">Launch<span>Session</span></div>
+      <div class="logo-sub">Organisation OS</div>
+    </div>
   </a>
   <div class="nav-links">
     <a href="#features">Features</a>
@@ -208,14 +212,21 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
     <a href="#impact">Impact</a>
     <a href="#pricing">Pricing</a>
   </div>
-  <div class="nav-cta">
+  <div class="nav-right">
+    <div class="nav-status">
+      <div class="status-dot"></div>
+      <span class="status-text">Early Access Open</span>
+    </div>
     <button class="btn-ghost" onclick="signIn()">Sign in</button>
-    <button class="btn-primary" onclick="window.location.href='mailto:hello@launchsession.co.uk?subject=Book a Demo'"><span>Book a Demo →</span></button>
+    <button class="btn-demo" onclick="window.location.href='mailto:hello@launchsession.co.uk?subject=Book a Demo'">
+      Book a Demo <span class="arrow">→</span>
+    </button>
   </div>
   <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
     <span></span><span></span><span></span>
   </button>
 </nav>
+</div>
 <div class="mobile-menu" id="mobileMenu">
   <a href="#features" onclick="toggleMenu()">Features</a>
   <a href="#why" onclick="toggleMenu()">Why Us</a>
