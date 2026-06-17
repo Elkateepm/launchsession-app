@@ -302,7 +302,7 @@ export default function Hub({ org, session, setTab }) {
               <p style={styles.sessionMeta}>
                 Plan your next session, trip, mentoring activity or workshop.
               </p>
-              <button style={styles.primaryButton} onClick={() => go("sessions")}>
+              <button style={styles.primaryButton} onClick={() => go("planner")}>
                 Open Session Planner →
               </button>
             </div>
@@ -348,7 +348,7 @@ export default function Hub({ org, session, setTab }) {
 
       <section style={{ ...styles.quickGrid, ...(isMobile ? styles.quickGridMobile : {}) }}>
         <QuickCard icon="📋" title="Take Register" text="Sign children in quickly" onClick={() => go("registers")} />
-        <QuickCard icon="📅" title="Calendar" text="View sessions and events" onClick={() => go("sessions")} />
+        <QuickCard icon="📅" title="Calendar" text="View sessions and events" onClick={() => go("planner")} />
         <QuickCard icon="❤️" title="Volunteers" text="Manage your team" onClick={() => go("volunteers")} />
         <QuickCard icon="🤝" title="Mentoring" text="Track mentoring work" onClick={() => go("mentoring")} />
       </section>
