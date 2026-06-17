@@ -90,7 +90,7 @@ export default function Dashboard({ session, org }) {
     <div style={{ display: 'flex', height: '100vh', background: '#F1F5F9', overflow: 'hidden' }}>
 
       {/* SIDEBAR */}
-      <div style={{ width: 248, background: '#0A0F1E', display: 'flex', flexDirection: 'column', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ width: 248, background: '#0A0F1E', display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)' }}>
 
         {/* ORG HEADER */}
         <div style={{ padding: '16px 14px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
