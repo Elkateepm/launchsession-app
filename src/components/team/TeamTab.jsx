@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
-const ROLES = ['admin', 'staff', 'volunteer']
+const ROLES = ['owner', 'admin', 'manager', 'staff', 'volunteer']
 
 export default function TeamTab({ org, session }) {
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
   const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteFirstName, setInviteFirstName] = useState('')
+  const [inviteLastName, setInviteLastName] = useState('')
+  const [invites, setInvites] = useState([])
   const [inviteRole, setInviteRole] = useState('staff')
   const [inviting, setInviting] = useState(false)
   const [inviteSuccess, setInviteSuccess] = useState('')
@@ -14,8 +17,14 @@ export default function TeamTab({ org, session }) {
 
   useEffect(() => {
     if (!org?.id) return
-    supabase.from('user_profiles').select('*').eq('org_id', org.id).order('created_at')
-      .then(({ data }) => { setMembers(data || []); setLoading(false) })
+    Promise.all([
+      supabase.from('user_profiles').select('*').eq('org_id', org.id).order('created_at'),
+      supabase.from('staff_invites').select('*').eq('org_id', org.id).order('created_at', { ascending: false })
+    ]).then(([membersResult, invitesResult]) => {
+      setMembers(membersResult.data || [])
+      setInvites(invitesResult.data || [])
+      setLoading(false)
+    })
   }, [org?.id])
 
   const handleInvite = async e => {
@@ -25,33 +34,61 @@ export default function TeamTab({ org, session }) {
     setError('')
     setInviteSuccess('')
 
-    // Check if already exists
-    const { data: existing } = await supabase.from('user_profiles').select('id').eq('email', inviteEmail.trim().toLowerCase()).eq('org_id', org.id).maybeSingle()
-    if (existing) { setError('This person is already in your team.'); setInviting(false); return }
+    const email = inviteEmail.trim().toLowerCase()
 
-    // Send magic link invite via Supabase auth
-    const { error: inviteErr } = await supabase.auth.signInWithOtp({
-      email: inviteEmail.trim().toLowerCase(),
-      options: {
-        emailRedirectTo: `https://app.launchsession.co.uk/?org=${org.slug}`,
-        data: { org_id: org.id, org_name: org.name, role: inviteRole }
-      }
-    })
+    const { data: existingMember } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('email', email)
+      .eq('org_id', org.id)
+      .maybeSingle()
 
-    if (inviteErr) { setError(inviteErr.message); setInviting(false); return }
+    if (existingMember) {
+      setError('This person is already in your team.')
+      setInviting(false)
+      return
+    }
 
-    // Add to user_profiles
-    await supabase.from('user_profiles').upsert([{
-      email: inviteEmail.trim().toLowerCase(),
-      org_id: org.id,
-      role: inviteRole,
-      full_name: inviteEmail.split('@')[0]
-    }], { onConflict: 'email' })
+    const { data: existingInvite } = await supabase
+      .from('staff_invites')
+      .select('id')
+      .eq('email', email)
+      .eq('org_id', org.id)
+      .eq('status', 'pending')
+      .maybeSingle()
 
-    const { data: updated } = await supabase.from('user_profiles').select('*').eq('org_id', org.id).order('created_at')
-    setMembers(updated || [])
-    setInviteSuccess(`Invite sent to ${inviteEmail}!`)
+    if (existingInvite) {
+      setError('This person already has a pending invite.')
+      setInviting(false)
+      return
+    }
+
+    const { data: newInvite, error: inviteError } = await supabase
+      .from('staff_invites')
+      .insert([{
+        org_id: org.id,
+        first_name: inviteFirstName.trim(),
+        last_name: inviteLastName.trim(),
+        email,
+        role: inviteRole,
+        status: 'pending',
+        invited_by: session?.user?.id || null
+      }])
+      .select()
+      .single()
+
+    if (inviteError) {
+      setError(inviteError.message)
+      setInviting(false)
+      return
+    }
+
+    setInvites(prev => [newInvite, ...prev])
+    setInviteSuccess(`Invite created for ${email}. Copy their invite link below.`)
     setInviteEmail('')
+    setInviteFirstName('')
+    setInviteLastName('')
+    setInviteRole('staff')
     setInviting(false)
   }
 
@@ -62,11 +99,47 @@ export default function TeamTab({ org, session }) {
   }
 
   const primary = org?.primary_color || '#1B9AAA'
-  const roleColors = { admin: '#8B5CF6', staff: '#1B9AAA', volunteer: '#417505' }
+  const roleColors = { owner: '#111827', admin: '#8B5CF6', manager: '#F59E0B', staff: '#1B9AAA', volunteer: '#417505' }
+  const admins = members.filter(m => ['owner', 'admin'].includes(m.role)).length
+  const staff = members.filter(m => m.role === 'staff' || m.role === 'manager').length
+  const volunteers = members.filter(m => m.role === 'volunteer').length
+  const pendingInvites = invites.filter(i => i.status === 'pending').length
+
+  const inviteLink = (invite) => `${window.location.origin}/?org=${org?.slug || ''}&invite=${invite.invite_token}`
+
+  const copyInvite = async (invite) => {
+    try {
+      await navigator.clipboard.writeText(inviteLink(invite))
+      setInviteSuccess('Invite link copied')
+    } catch (err) {
+      setError('Could not copy invite link')
+    }
+  }
+
+  const cancelInvite = async (id) => {
+    if (!window.confirm('Cancel this invite?')) return
+    await supabase.from('staff_invites').update({ status: 'cancelled' }).eq('id', id).eq('org_id', org.id)
+    setInvites(prev => prev.map(i => i.id === id ? { ...i, status: 'cancelled' } : i))
+  }
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
-      <div style={{ maxWidth: 640, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 30, fontWeight: 950, color: '#111827' }}>👥 Team & Staff</div>
+          <div style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
+            Invite staff, manage volunteers and build your organisation team.
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14, marginBottom: 24 }}>
+          <TeamMetric icon="👥" label="Team Members" value={members.length} color={primary} />
+          <TeamMetric icon="🛡️" label="Admins" value={admins} color="#8B5CF6" />
+          <TeamMetric icon="💼" label="Staff / Managers" value={staff} color="#1B9AAA" />
+          <TeamMetric icon="❤️" label="Volunteers" value={volunteers} color="#417505" />
+          <TeamMetric icon="✉️" label="Pending Invites" value={pendingInvites} color="#F59E0B" />
+        </div>
 
         {/* Invite card */}
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 24, marginBottom: 24 }}>
@@ -77,7 +150,17 @@ export default function TeamTab({ org, session }) {
           {inviteSuccess && <div style={{ background: '#F0FFF4', border: '1px solid #B0E8C0', color: '#1A5C1A', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>✓ {inviteSuccess}</div>}
 
           <form onSubmit={handleInvite}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 10, alignItems: 'flex-end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr auto auto', gap: 10, alignItems: 'flex-end' }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>First name</label>
+                <input value={inviteFirstName} onChange={e => setInviteFirstName(e.target.value)} placeholder="First name"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Last name</label>
+                <input value={inviteLastName} onChange={e => setInviteLastName(e.target.value)} placeholder="Last name"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              </div>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Email address</label>
                 <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} required placeholder="staff@organisation.com"
@@ -96,6 +179,52 @@ export default function TeamTab({ org, session }) {
               </button>
             </div>
           </form>
+        </div>
+
+
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', marginBottom: 24 }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: 15, fontWeight: 800 }}>Pending Invites</div>
+            <div style={{ fontSize: 13, color: '#6b7280', fontWeight: 600 }}>{pendingInvites} pending</div>
+          </div>
+
+          {invites.length === 0 ? (
+            <div style={{ padding: 30, textAlign: 'center', color: '#9ca3af' }}>
+              <div style={{ fontSize: 30, marginBottom: 8 }}>✉️</div>
+              <div style={{ fontSize: 14, fontWeight: 800 }}>No invites yet</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>Invite staff and volunteers using the form above.</div>
+            </div>
+          ) : invites.map((invite, index) => {
+            const fullName = `${invite.first_name || ''} ${invite.last_name || ''}`.trim() || invite.email
+            const active = invite.status === 'pending'
+            return (
+              <div key={invite.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: index < invites.length - 1 ? '1px solid #f3f4f6' : 'none', opacity: active ? 1 : 0.55 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: roleColors[invite.role] || primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                  {fullName[0]?.toUpperCase() || '?'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>{fullName}</div>
+                  <div style={{ fontSize: 12, color: '#9ca3af' }}>{invite.email}</div>
+                </div>
+                <span style={{ padding: '3px 10px', borderRadius: 99, background: (roleColors[invite.role] || primary) + '18', color: roleColors[invite.role] || primary, fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+                  {invite.role || 'staff'}
+                </span>
+                <span style={{ padding: '3px 10px', borderRadius: 99, background: active ? '#FEF3C7' : '#F3F4F6', color: active ? '#B45309' : '#6b7280', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+                  {invite.status}
+                </span>
+                {active && (
+                  <>
+                    <button onClick={() => copyInvite(invite)} style={{ border: '1px solid #e5e7eb', background: '#fff', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                      Copy Link
+                    </button>
+                    <button onClick={() => cancelInvite(invite.id)} style={{ border: '1px solid #FECACA', background: '#FFF7F7', color: '#DC2626', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                      Cancel
+                    </button>
+                  </>
+                )}
+              </div>
+            )
+          })}
         </div>
 
         {/* Team list */}
@@ -135,6 +264,23 @@ export default function TeamTab({ org, session }) {
               )}
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+function TeamMetric({ icon, label, value, color }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 18, boxShadow: '0 10px 24px rgba(15,23,42,0.05)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 42, height: 42, borderRadius: 14, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
+          {icon}
+        </div>
+        <div>
+          <div style={{ fontSize: 26, fontWeight: 950, color }}>{value}</div>
+          <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 800 }}>{label}</div>
         </div>
       </div>
     </div>
