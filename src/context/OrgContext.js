@@ -12,6 +12,8 @@ export function OrgProvider({ children }) {
   useEffect(() => {
     const detectOrg = async () => {
       const hostname = window.location.hostname
+      const pathname = window.location.pathname
+      const appRoutes = ['/org-search', '/login', '/landing.html']
       let slug = null
 
       const params = new URLSearchParams(window.location.search)
@@ -21,7 +23,7 @@ export function OrgProvider({ children }) {
         slug = hostname.split('.')[0]
       }
 
-      if (!slug && hostname.includes('.launchsession.co.uk')) {
+      if (!slug && hostname.includes('.launchsession.co.uk') && !appRoutes.includes(pathname)) {
         slug = hostname.split('.')[0]
       }
 
