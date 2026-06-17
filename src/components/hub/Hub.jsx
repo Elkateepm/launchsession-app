@@ -8,6 +8,8 @@ export default function Hub({ org, session, setTab }) {
   const [sessions, setSessions] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [concerns, setConcerns] = useState([]);
+  const [children, setChildren] = useState([]);
+  const [showSignIn, setShowSignIn] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const today = new Date().toISOString().split("T")[0];
@@ -20,7 +22,7 @@ export default function Hub({ org, session, setTab }) {
     async function loadHub() {
       setLoading(true);
 
-      const [{ data: sessionData }, { data: attendanceData }, { data: concernData }] =
+      const [{ data: sessionData }, { data: attendanceData }, { data: concernData }, { data: childData }] =
         await Promise.all([
           supabase
             .from("sessions")
@@ -40,6 +42,13 @@ export default function Hub({ org, session, setTab }) {
             .select("*")
             .eq("org_id", orgId)
             .eq("status", "open"),
+
+          supabase
+            .from("children")
+            .select("*")
+            .eq("org_id", orgId)
+            .eq("active", true)
+            .order("first_name", { ascending: true }),
         ]);
 
       if (!alive) return;
@@ -47,6 +56,7 @@ export default function Hub({ org, session, setTab }) {
       setSessions(sessionData || []);
       setAttendance(attendanceData || []);
       setConcerns(concernData || []);
+      setChildren(childData || []);
       setLoading(false);
     }
 
@@ -73,7 +83,7 @@ export default function Hub({ org, session, setTab }) {
   }, [attendance, liveSession]);
 
   const stats = {
-    expected: liveAttendance.length,
+    expected: Math.max(children.length, liveAttendance.length),
     present: liveAttendance.filter((item) => item.status === "present").length,
     absent: liveAttendance.filter((item) => item.status === "absent").length,
     left: liveAttendance.filter((item) => item.status === "left").length,
@@ -145,7 +155,7 @@ export default function Hub({ org, session, setTab }) {
 
               <div style={styles.attendanceGrid}>
                 <Metric label="Checked In" value={stats.present} colour="#22c55e" />
-                <Metric label="Expected" value={stats.expected} colour="#facc15" />
+                <Metric label="Expected" value={stats.expected} colour="#facc15" onClick={() => setShowSignIn(true)} />
                 <Metric label="Absent" value={stats.absent} colour="#ef4444" />
                 <Metric label="Left" value={stats.left} colour="#94a3b8" />
               </div>
@@ -266,15 +276,163 @@ export default function Hub({ org, session, setTab }) {
           <Activity text="Organisation modules loaded" />
         </div>
       </section>
+
+      {showSignIn && liveSession && (
+        <SignInModal
+          orgId={orgId}
+          session={liveSession}
+          children={children}
+          attendance={liveAttendance}
+          onClose={() => setShowSignIn(false)}
+          onSignedIn={(newRecord) => {
+            setAttendance((prev) => {
+              const exists = prev.some((item) => item.id === newRecord.id);
+              if (exists) {
+                return prev.map((item) => item.id === newRecord.id ? newRecord : item);
+              }
+              return [...prev, newRecord];
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function Metric({ label, value, colour }) {
+function Metric({ label, value, colour, onClick }) {
   return (
-    <div style={styles.metric}>
+    <button
+      onClick={onClick}
+      style={{
+        ...styles.metric,
+        cursor: onClick ? "pointer" : "default",
+        border: onClick ? "1px solid rgba(250,204,21,0.35)" : styles.metric.border,
+      }}
+    >
       <div style={{ ...styles.metricValue, color: colour }}>{value}</div>
       <div style={styles.metricLabel}>{label}</div>
+      {onClick && <div style={styles.metricHint}>Click to sign in</div>}
+    </button>
+  );
+}
+
+function SignInModal({ orgId, session, children, attendance, onClose, onSignedIn }) {
+  const [search, setSearch] = useState("");
+  const [savingId, setSavingId] = useState(null);
+
+  const attendanceByChild = useMemo(() => {
+    const map = {};
+    attendance.forEach((item) => {
+      map[item.child_id] = item;
+    });
+    return map;
+  }, [attendance]);
+
+  const filteredChildren = children.filter((child) => {
+    const fullName = `${child.first_name || ""} ${child.last_name || ""}`.toLowerCase();
+    return fullName.includes(search.toLowerCase());
+  });
+
+  async function signInChild(child) {
+    const existing = attendanceByChild[child.id];
+    setSavingId(child.id);
+
+    if (existing?.id) {
+      const { data, error } = await supabase
+        .from("attendance")
+        .update({
+          status: "present",
+          signed_in_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id)
+        .eq("org_id", orgId)
+        .select()
+        .single();
+
+      if (!error && data) onSignedIn(data);
+      if (error) console.error("Sign in update error:", error);
+    } else {
+      const { data, error } = await supabase
+        .from("attendance")
+        .insert({
+          org_id: orgId,
+          session_id: session.id,
+          child_id: child.id,
+          status: "present",
+          signed_in_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (!error && data) onSignedIn(data);
+      if (error) console.error("Sign in insert error:", error);
+    }
+
+    setSavingId(null);
+  }
+
+  return (
+    <div style={styles.modalOverlay} onClick={onClose}>
+      <div style={styles.signInModal} onClick={(event) => event.stopPropagation()}>
+        <div style={styles.modalHeader}>
+          <div>
+            <div style={styles.modalEyebrow}>Live Register</div>
+            <h2 style={styles.modalTitle}>Sign in children</h2>
+            <div style={styles.modalSub}>{session.title}</div>
+          </div>
+
+          <button style={styles.closeButton} onClick={onClose}>×</button>
+        </div>
+
+        <input
+          style={styles.searchInput}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search children..."
+          autoFocus
+        />
+
+        <div style={styles.childList}>
+          {filteredChildren.map((child) => {
+            const record = attendanceByChild[child.id];
+            const isPresent = record?.status === "present";
+
+            return (
+              <div key={child.id} style={styles.childRow}>
+                <div style={styles.childAvatar}>
+                  {(child.first_name?.[0] || "?")}{(child.last_name?.[0] || "")}
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div style={styles.childName}>
+                    {child.first_name} {child.last_name}
+                  </div>
+                  <div style={styles.childMeta}>
+                    {child.group_name || "No group"}
+                    {child.allergies ? ` · ⚠️ ${child.allergies}` : ""}
+                  </div>
+                </div>
+
+                {isPresent ? (
+                  <span style={styles.signedInChip}>Signed in</span>
+                ) : (
+                  <button
+                    style={styles.signInButton}
+                    onClick={() => signInChild(child)}
+                    disabled={savingId === child.id}
+                  >
+                    {savingId === child.id ? "Signing..." : "Sign In"}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+
+          {filteredChildren.length === 0 && (
+            <div style={styles.emptyState}>No children found.</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -441,6 +599,7 @@ const styles = {
     borderRadius: 16,
     padding: 14,
     textAlign: "center",
+    color: "#fff",
   },
   metricValue: {
     fontSize: 26,
@@ -651,4 +810,135 @@ const styles = {
     color: "#16a34a",
     fontWeight: 900,
   },
+  metricHint: {
+    marginTop: 5,
+    fontSize: 9,
+    color: "rgba(255,255,255,0.45)",
+    fontWeight: 800,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  modalOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(15,23,42,0.58)",
+    zIndex: 999,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  signInModal: {
+    width: "100%",
+    maxWidth: 720,
+    maxHeight: "82vh",
+    background: "#fff",
+    borderRadius: 24,
+    boxShadow: "0 30px 90px rgba(15,23,42,0.35)",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+  },
+  modalHeader: {
+    padding: 22,
+    borderBottom: "1px solid #e5e7eb",
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 16,
+    alignItems: "flex-start",
+  },
+  modalEyebrow: {
+    fontSize: 12,
+    fontWeight: 900,
+    color: "#0891b2",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 5,
+  },
+  modalTitle: {
+    margin: 0,
+    fontSize: 24,
+    fontWeight: 900,
+  },
+  modalSub: {
+    color: "#64748b",
+    fontSize: 13,
+    marginTop: 4,
+    fontWeight: 700,
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 999,
+    border: "none",
+    background: "#f1f5f9",
+    cursor: "pointer",
+    fontSize: 22,
+    color: "#334155",
+  },
+  searchInput: {
+    margin: "16px 22px",
+    padding: "13px 15px",
+    borderRadius: 14,
+    border: "1px solid #e5e7eb",
+    outline: "none",
+    fontSize: 14,
+    fontWeight: 700,
+  },
+  childList: {
+    overflowY: "auto",
+    padding: "0 22px 22px",
+  },
+  childRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+    border: "1px solid #e5e7eb",
+    background: "#f8fafc",
+    marginBottom: 10,
+  },
+  childAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    background: "linear-gradient(135deg,#0891b2,#14b8a6)",
+    color: "#fff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: 900,
+    flexShrink: 0,
+  },
+  childName: {
+    fontWeight: 900,
+    fontSize: 14,
+    color: "#0f172a",
+  },
+  childMeta: {
+    color: "#64748b",
+    fontSize: 12,
+    fontWeight: 700,
+    marginTop: 3,
+  },
+  signInButton: {
+    border: "none",
+    background: "linear-gradient(135deg,#16a34a,#22c55e)",
+    color: "#fff",
+    borderRadius: 12,
+    padding: "10px 14px",
+    fontWeight: 900,
+    cursor: "pointer",
+    minWidth: 92,
+  },
+  signedInChip: {
+    background: "#dcfce7",
+    color: "#15803d",
+    borderRadius: 999,
+    padding: "8px 12px",
+    fontSize: 12,
+    fontWeight: 900,
+  },
+
 };
