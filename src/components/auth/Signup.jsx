@@ -20,7 +20,18 @@ export default function Signup() {
     const slug = slugify(orgName)
 
     const { data: authData, error: authError } = await supabase.auth.signUp({ email, password })
-    if (authError) { setError(authError.message); setLoading(false); return }
+
+    if (authError) {
+      setError(authError.message || JSON.stringify(authError))
+      setLoading(false)
+      return
+    }
+
+    if (!authData?.user?.id) {
+      setError('Could not create user. Please try another email address.')
+      setLoading(false)
+      return
+    }
 
     const now = new Date()
     const expires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
@@ -37,15 +48,25 @@ export default function Signup() {
       .select()
       .single()
 
-    if (orgError) { setError(orgError.message); setLoading(false); return }
+    if (orgError) {
+      setError(orgError.message || JSON.stringify(orgError))
+      setLoading(false)
+      return
+    }
 
-    await supabase.from('user_profiles').insert([{
+    const { error: profileError } = await supabase.from('user_profiles').insert([{
       id: authData.user.id,
       org_id: org.id,
       email,
       full_name: fullName,
       role: 'admin'
     }])
+
+    if (profileError) {
+      setError(profileError.message || JSON.stringify(profileError))
+      setLoading(false)
+      return
+    }
 
     localStorage.setItem('launchsession_org_slug', slug)
     window.location.href = '/?org=' + slug
