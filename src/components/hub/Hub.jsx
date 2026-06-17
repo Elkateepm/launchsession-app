@@ -152,20 +152,49 @@ export default function Hub({ org, session, setTab, onNavigate }) {
 
                 return (
                   <div key={item.id} style={styles.equalLiveCard}>
-                    <div>
-                      <div style={styles.equalLiveTitle}>{item.title}</div>
-                      <div style={styles.equalLiveMeta}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                        <div style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: 20,
+                          background: "linear-gradient(135deg, #06B6D4, #14B8A6)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 30,
+                          boxShadow: "0 12px 24px rgba(20,184,166,0.25)"
+                        }}>
+                          {item.session_type === "trip" ? "🚌" : item.session_type === "mentoring" ? "🤝" : item.session_type === "workshop" ? "🛠️" : "🏃"}
+                        </div>
+                        <div>
+                          <div style={styles.equalLiveTitle}>{item.title}</div>
+                          <div style={styles.equalLiveMeta}>
                         {item.start_time || "No time"}
                         {item.end_time ? ` – ${item.end_time}` : ""}
                         {item.location ? ` · ${item.location}` : ""}
+                          </div>
+                        </div>
                       </div>
+
+                      <span style={{
+                        background: "#16A34A",
+                        color: "#fff",
+                        borderRadius: 999,
+                        padding: "7px 13px",
+                        fontSize: 12,
+                        fontWeight: 950,
+                        boxShadow: "0 8px 18px rgba(22,163,74,0.24)"
+                      }}>
+                        LIVE
+                      </span>
                     </div>
 
                     <div style={styles.equalStatsGrid}>
-                      <div style={styles.equalStat}><strong>{itemStats.signedIn}</strong><span>In</span></div>
-                      <div style={styles.equalStat}><strong>{itemStats.expected}</strong><span>Expected</span></div>
-                      <div style={styles.equalStat}><strong>{itemStats.absent}</strong><span>Absent</span></div>
-                      <div style={styles.equalStat}><strong>{itemStats.signedOut}</strong><span>Out</span></div>
+                      <div style={styles.equalStat}><strong style={{ fontSize: 24, color: "#34D399" }}>{itemStats.signedIn}</strong><span style={{ fontSize: 11, color: "#34D399", fontWeight: 900 }}>Signed in</span></div>
+                      <div style={styles.equalStat}><strong style={{ fontSize: 24, color: "#60A5FA" }}>{itemStats.expected}</strong><span style={{ fontSize: 11, color: "#60A5FA", fontWeight: 900 }}>Expected</span></div>
+                      <div style={styles.equalStat}><strong style={{ fontSize: 24, color: "#FB923C" }}>{itemStats.absent}</strong><span style={{ fontSize: 11, color: "#FB923C", fontWeight: 900 }}>Absent</span></div>
+                      <div style={styles.equalStat}><strong style={{ fontSize: 24, color: "#C084FC" }}>{itemStats.signedOut}</strong><span style={{ fontSize: 11, color: "#C084FC", fontWeight: 900 }}>Out</span></div>
                     </div>
 
                     <div style={styles.progressLabel}>
@@ -184,10 +213,10 @@ export default function Hub({ org, session, setTab, onNavigate }) {
                       {hasRegister && (
                         <>
                           <button style={styles.equalGhostButton} onClick={() => openRegisterForSession(item.id)}>
-                            Sign In
+                            ⇥ Sign In
                           </button>
                           <button style={styles.equalGhostButton} onClick={() => openRegisterForSession(item.id)}>
-                            Sign Out
+                            ⇤ Sign Out
                           </button>
                         </>
                       )}
