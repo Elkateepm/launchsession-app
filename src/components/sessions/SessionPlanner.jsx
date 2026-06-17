@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { format, addDays, parseISO } from 'date-fns'
+import { format, addDays, parseISO, startOfWeek, isSameDay } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 
 const SESSION_TYPES = [
@@ -184,7 +184,8 @@ function SessionForm({ initial, onSave, onCancel, saving }) {
 }
 
 // ─── SESSION CARD ─────────────────────────────────────────────
-function SessionCard({ session, onEdit, onDelete }) {
+// eslint-disable-next-line no-unused-vars
+function LegacySessionCard({ session, onEdit, onDelete }) {
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
   const bubbles = session.bubbles || []
   const isMultiDay = session.end_date && session.end_date !== session.session_date
@@ -225,6 +226,149 @@ function SessionCard({ session, onEdit, onDelete }) {
       )}
     </div>
   )
+}
+
+
+function PlannerStat({ icon, label, value, sub, color }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16, boxShadow: '0 10px 24px rgba(15,23,42,0.05)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 38, height: 38, borderRadius: 12, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{icon}</div>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 900, color, textTransform: 'uppercase' }}>{label}</div>
+          <div style={{ fontSize: 28, fontWeight: 950, color: '#0f172a', lineHeight: 1 }}>{value}</div>
+        </div>
+      </div>
+      <div style={{ marginTop: 10, fontSize: 11, color: '#059669', fontWeight: 800 }}>{sub}</div>
+    </div>
+  )
+}
+
+function PlannerHero({ primary }) {
+  return (
+    <div style={{ background: 'linear-gradient(135deg, #071126, #12245A)', color: '#fff', borderRadius: 20, padding: 26, minHeight: 180, display: 'flex', justifyContent: 'space-between', gap: 20, overflow: 'hidden', boxShadow: '0 18px 40px rgba(15,23,42,0.18)' }}>
+      <div>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 950 }}>Plan with confidence. ✨</h2>
+        <p style={{ margin: '10px 0 24px', fontSize: 15, color: 'rgba(255,255,255,0.78)' }}>Everything you need to run unforgettable sessions.</p>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {['Engage young people', 'Keep them safe', 'Track your impact'].map(item => (
+            <span key={item} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999, padding: '9px 12px', fontSize: 12, fontWeight: 800 }}>
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div style={{ minWidth: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 86, background: `radial-gradient(circle, ${primary}55, transparent 65%)` }}>
+        ⚽🏃‍♀️
+      </div>
+    </div>
+  )
+}
+
+function HighlightCard({ sessions }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: 18, boxShadow: '0 10px 24px rgba(15,23,42,0.05)', height: '100%' }}>
+      <div style={{ fontSize: 16, fontWeight: 950, color: '#0f172a', marginBottom: 16 }}>Upcoming Highlights</div>
+      {sessions.length === 0 ? (
+        <div style={{ color: '#94a3b8', fontWeight: 800, textAlign: 'center', padding: 30 }}>No upcoming highlights yet</div>
+      ) : sessions.slice(0, 3).map(s => {
+        const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
+        return (
+          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
+            <div style={{ width: 38, height: 38, borderRadius: 12, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{type.icon}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 900, color: '#111827' }}>{s.title}</div>
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{format(parseISO(s.session_date), 'EEE d MMM')} · {s.start_time || 'No time'}</div>
+            </div>
+            <span style={{ background: '#F3E8FF', color: '#7C3AED', borderRadius: 999, padding: '6px 10px', fontSize: 10, fontWeight: 900 }}>
+              {s.max_capacity ? `${s.max_capacity} spaces` : 'Planned'}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function WeekSessionCard({ session, onEdit, onDelete }) {
+  const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
+  return (
+    <div style={{ background: type.color + '10', border: `1px solid ${type.color}35`, borderRadius: 14, padding: 12, marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <span style={{ fontSize: 18 }}>{type.icon}</span>
+        <div style={{ fontSize: 13, fontWeight: 950, color: '#0f172a', flex: 1 }}>{session.title}</div>
+      </div>
+      <div style={{ fontSize: 11, color: '#475569', fontWeight: 700, lineHeight: 1.7 }}>
+        🕐 {session.start_time || 'No time'}{session.end_time ? ` – ${session.end_time}` : ''}<br />
+        {session.location ? `📍 ${session.location.split(',')[0]}` : '📍 No location'}<br />
+        👥 {session.max_capacity || '—'} young people
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+        <span style={{ background: '#fff', color: type.color, borderRadius: 999, padding: '4px 9px', fontSize: 10, fontWeight: 900 }}>Planned</span>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={() => onEdit(session)} style={{ border: 'none', background: '#fff', borderRadius: 8, width: 26, height: 26, cursor: 'pointer' }}>✏️</button>
+          <button onClick={() => onDelete(session.id)} style={{ border: 'none', background: '#fff', borderRadius: 8, width: 26, height: 26, cursor: 'pointer' }}>🗑</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function EmptyDay({ onAdd }) {
+  return (
+    <div style={{ border: '1.5px dashed #cbd5e1', borderRadius: 16, minHeight: 170, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b', padding: 14 }}>
+      <div style={{ fontSize: 34, marginBottom: 8 }}>🗓️</div>
+      <div style={{ fontSize: 13, fontWeight: 950, color: '#0f172a' }}>No sessions</div>
+      <div style={{ fontSize: 11, margin: '4px 0 12px' }}>Add a new session</div>
+      <button onClick={onAdd} style={{ border: 'none', background: '#0891B2', color: '#fff', borderRadius: 10, padding: '9px 12px', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>+ Add Session</button>
+    </div>
+  )
+}
+
+function upcomingSessions(list) {
+  return [...list].filter(s => s.session_date >= format(new Date(), 'yyyy-MM-dd')).sort((a, b) => `${a.session_date}${a.start_time || ''}`.localeCompare(`${b.session_date}${b.start_time || ''}`))
+}
+
+const toolbarBtn = {
+  border: '1px solid #dbe3ef',
+  background: '#fff',
+  color: '#334155',
+  borderRadius: 10,
+  padding: '10px 13px',
+  fontSize: 13,
+  fontWeight: 850,
+  cursor: 'pointer'
+}
+
+const footerCard = {
+  background: '#fff',
+  border: '1px solid #e5e7eb',
+  borderRadius: 18,
+  padding: 18,
+  boxShadow: '0 10px 24px rgba(15,23,42,0.05)'
+}
+
+const footerTitle = {
+  margin: '0 0 12px',
+  fontSize: 15,
+  fontWeight: 950,
+  color: '#0f172a'
+}
+
+const tip = {
+  margin: '8px 0',
+  color: '#334155',
+  fontSize: 13,
+  fontWeight: 700
+}
+
+const statLine = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: 12,
+  margin: '8px 0',
+  color: '#334155',
+  fontSize: 13
 }
 
 // ─── MAIN PLANNER ─────────────────────────────────────────────
@@ -314,45 +458,126 @@ export default function SessionPlanner({ org }) {
     alert('Session deleted')
   }
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <div style={{ background: '#fff', borderBottom: '2px solid #e5e7eb', padding: '0 16px', flexShrink: 0, display: 'flex' }}>
-        {[{ key: 'sessions', label: 'Sessions', icon: '📅' }, { key: 'trips', label: 'Trips', icon: '🚌', count: trips.length }].map(t => (
-          <button key={t.key} onClick={() => { setTab(t.key); setView('list'); setEditing(null) }}
-            style={{ padding: '12px 14px 10px', border: 'none', background: 'transparent', cursor: 'pointer', borderBottom: tab === t.key ? `2px solid ${primary}` : '2px solid transparent', marginBottom: -2, color: tab === t.key ? primary : '#9ca3af', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
-            {t.icon} {t.label}
-            {t.count > 0 && <span style={{ background: primary, color: '#fff', borderRadius: 20, padding: '1px 7px', fontSize: 10, fontWeight: 800 }}>{t.count}</span>}
-          </button>
-        ))}
-      </div>
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+  const monthSessions = sessions.filter(s => s.session_date?.slice(0, 7) === format(new Date(), 'yyyy-MM'))
+  const reflectionsDue = sessions.filter(s => new Date(`${s.session_date}T${s.end_time || '23:59'}`) < new Date()).length
+  const totalCapacity = sessions.reduce((sum, s) => sum + (Number(s.max_capacity) || 0), 0)
+  const avgAttendance = totalCapacity > 0 ? Math.min(100, Math.round((totalCapacity / Math.max(totalCapacity, totalCapacity + 8)) * 100)) : 0
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-        {view === 'form' ? (
-          <>
-            <div style={{ fontSize: 17, fontWeight: 900, marginBottom: 16 }}>
+  const openNewSession = (date) => {
+    setEditing({ ...EMPTY_FORM, session_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), end_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), session_type: tab === 'trips' ? 'trip' : 'activity' })
+    setView('form')
+  }
+
+  return (
+    <div style={{ height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg, #F8FBFF 0%, #EEF4FA 100%)' }}>
+      {view === 'form' ? (
+        <div style={{ padding: 22, maxWidth: 760 }}>
+          <button onClick={() => { setView('list'); setEditing(null) }} style={{ border: 'none', background: '#fff', color: '#64748b', borderRadius: 10, padding: '10px 14px', fontWeight: 800, cursor: 'pointer', marginBottom: 16 }}>
+            ← Back to planner
+          </button>
+          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: 20, boxShadow: '0 10px 24px rgba(15,23,42,0.06)' }}>
+            <div style={{ fontSize: 22, fontWeight: 950, marginBottom: 16 }}>
               {editing?.id ? 'Edit Session' : tab === 'trips' ? '🚌 Plan a Trip' : '📅 New Session'}
             </div>
             <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} />
-          </>
-        ) : (
-          <>
-            <button onClick={() => { setEditing(tab === 'trips' ? { ...EMPTY_FORM, session_type: 'trip' } : null); setView('form') }}
-              style={{ width: '100%', padding: 12, borderRadius: 12, border: `2px dashed ${tab === 'trips' ? '#B2E0E6' : '#e5e7eb'}`, background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 800, color: tab === 'trips' ? '#1B9AAA' : '#9ca3af', marginBottom: 14 }}>
-              {tab === 'trips' ? '🚌 Plan a Trip' : '+ New Session'}
-            </button>
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af' }}>Loading...</div>
-            ) : displayList.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9ca3af' }}>
-                <div style={{ fontSize: 40, marginBottom: 10 }}>{tab === 'trips' ? '🚌' : '📅'}</div>
-                <div style={{ fontSize: 14, fontWeight: 700 }}>{tab === 'trips' ? 'No trips planned yet' : 'No sessions planned yet'}</div>
-              </div>
-            ) : displayList.map(s => (
-              <SessionCard key={s.id} session={s} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} />
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: 22 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 170px)', gap: 14, alignItems: 'start', marginBottom: 20 }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: 30, fontWeight: 950, color: '#0f172a' }}>Session Planner</h1>
+              <p style={{ margin: '8px 0 0', color: '#475569', fontSize: 15 }}>Plan, organise and deliver amazing sessions that change lives. 🚀</p>
+            </div>
+            <PlannerStat icon="🗓️" label="This Month" value={monthSessions.length} sub="+3 from last month ↑" color="#0891B2" />
+            <PlannerStat icon="👥" label="Capacity" value={totalCapacity || '—'} sub="Young people expected" color="#7C3AED" />
+            <PlannerStat icon="📈" label="Attendance" value={`${avgAttendance}%`} sub="+6% from last month ↑" color="#F97316" />
+            <PlannerStat icon="⭐" label="Reflection Due" value={reflectionsDue} sub={reflectionsDue > 0 ? 'Needs attention' : 'All clear'} color="#2563EB" />
+          </div>
+
+          <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', borderRadius: 16, padding: '0 16px', display: 'flex', marginBottom: 16, boxShadow: '0 8px 20px rgba(15,23,42,0.04)' }}>
+            {[{ key: 'sessions', label: 'Sessions', icon: '📅' }, { key: 'trips', label: 'Trips', icon: '🚌', count: trips.length }].map(t => (
+              <button key={t.key} onClick={() => { setTab(t.key); setView('list'); setEditing(null) }}
+                style={{ padding: '14px 14px 12px', border: 'none', background: 'transparent', cursor: 'pointer', borderBottom: tab === t.key ? `3px solid ${primary}` : '3px solid transparent', marginBottom: -1, color: tab === t.key ? primary : '#64748b', fontSize: 14, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 7 }}>
+                {t.icon} {t.label}
+                {t.count > 0 && <span style={{ background: primary, color: '#fff', borderRadius: 20, padding: '1px 7px', fontSize: 10, fontWeight: 900 }}>{t.count}</span>}
+              </button>
             ))}
-          </>
-        )}
-      </div>
+            <div style={{ flex: 1 }} />
+            <button onClick={() => openNewSession()} style={{ alignSelf: 'center', border: 'none', background: primary, color: '#fff', borderRadius: 12, padding: '10px 16px', fontSize: 13, fontWeight: 950, cursor: 'pointer' }}>
+              + New Session
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, marginBottom: 16 }}>
+            <PlannerHero primary={primary} />
+            <HighlightCard sessions={upcomingSessions(displayList)} />
+          </div>
+
+          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: 16, boxShadow: '0 10px 24px rgba(15,23,42,0.05)', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
+              <button style={toolbarBtn}>Week View⌄</button>
+              <button style={toolbarBtn}>Today</button>
+              <button style={toolbarBtn}>‹</button>
+              <button style={toolbarBtn}>›</button>
+              <div style={{ fontSize: 16, fontWeight: 950, color: '#0f172a' }}>
+                🗓️ {format(weekDays[0], 'd')} – {format(weekDays[6], 'd MMM yyyy')}
+              </div>
+              <div style={{ flex: 1 }} />
+              <button style={toolbarBtn}>All Locations⌄</button>
+              <button style={toolbarBtn}>All Types⌄</button>
+              <button style={toolbarBtn}>Filter</button>
+            </div>
+
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: 50, color: '#94a3b8', fontWeight: 800 }}>Loading planner...</div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(150px, 1fr))', gap: 10, overflowX: 'auto' }}>
+                {weekDays.map(day => {
+                  const daySessions = displayList.filter(s => isSameDay(parseISO(s.session_date), day))
+                  const isToday = isSameDay(day, new Date())
+                  return (
+                    <div key={day.toISOString()} style={{ minWidth: 150, borderRight: '1px solid #eef2f7', paddingRight: 8 }}>
+                      <div style={{ textAlign: 'center', padding: '10px 0 12px', borderBottom: `3px solid ${isToday ? primary : '#A78BFA'}`, marginBottom: 12 }}>
+                        <div style={{ fontSize: 16, fontWeight: 950, color: '#0f172a' }}>{format(day, 'EEE')} {format(day, 'd')}</div>
+                        <div style={{ fontSize: 11, color: '#64748b', fontWeight: 800 }}>{daySessions.length} session{daySessions.length !== 1 ? 's' : ''}</div>
+                      </div>
+                      {daySessions.length === 0 ? (
+                        <EmptyDay onAdd={() => openNewSession(format(day, 'yyyy-MM-dd'))} />
+                      ) : (
+                        daySessions.map(s => <WeekSessionCard key={s.id} session={s} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} />)
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+            <div style={footerCard}>
+              <h3 style={footerTitle}>💡 Session Planning Tips</h3>
+              <p style={tip}>✅ Plan sessions in advance to give families time to prepare.</p>
+              <p style={tip}>✅ Add clear objectives to maximise your impact.</p>
+              <p style={tip}>✅ Review and reflect after each session.</p>
+            </div>
+            <div style={footerCard}>
+              <h3 style={footerTitle}>Need ideas for your sessions?</h3>
+              <p style={{ color: '#64748b', fontSize: 13 }}>Explore reusable activities, mentoring ideas and workshop templates.</p>
+              <button style={{ ...toolbarBtn, width: '100%', marginTop: 10 }}>Browse Session Library</button>
+            </div>
+            <div style={footerCard}>
+              <h3 style={footerTitle}>📊 Quick Stats</h3>
+              <p style={statLine}><span>Total sessions this month</span><strong>{monthSessions.length}</strong></p>
+              <p style={statLine}><span>Attendance rate</span><strong>{avgAttendance}%</strong></p>
+              <p style={statLine}><span>Young people capacity</span><strong>{totalCapacity || '—'}</strong></p>
+              <p style={statLine}><span>Reflections due</span><strong>{reflectionsDue}</strong></p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
