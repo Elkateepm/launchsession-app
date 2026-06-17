@@ -12,16 +12,55 @@ const PLAN_MODULES = {
 }
 
 const ALL_MODULES = [
-  { key: 'registers',     label: 'Registers',    icon: '📋' },
-  { key: 'planner',       label: 'Sessions',     icon: '📅' },
-  { key: 'volunteers',    label: 'Volunteers',   icon: '❤️' },
-  { key: 'parent_portal', label: 'Parents',      icon: '👨‍👧' },
-  { key: 'mentoring',     label: 'Mentoring',    icon: '🤝' },
-  { key: 'safeguarding',  label: 'Safeguarding', icon: '🛡' },
-  { key: 'messaging',     label: 'Messaging',    icon: '💬' },
-  { key: 'reports',       label: 'Reports',      icon: '📊' },
-  { key: 'gallery',       label: 'Gallery',      icon: '🖼' },
+  { key: 'registers',     label: 'Registers',    icon: '📋', group: 'delivery' },
+  { key: 'planner',       label: 'Sessions',     icon: '📅', group: 'delivery' },
+  { key: 'volunteers',    label: 'Volunteers',   icon: '❤️', group: 'delivery' },
+  { key: 'parent_portal', label: 'Parents',      icon: '👨‍👧', group: 'delivery' },
+  { key: 'mentoring',     label: 'Mentoring',    icon: '🤝', group: 'delivery' },
+  { key: 'safeguarding',  label: 'Safeguarding', icon: '🛡', group: 'safety' },
+  { key: 'messaging',     label: 'Messaging',    icon: '💬', group: 'safety' },
+  { key: 'reports',       label: 'Reports',      icon: '📊', group: 'insights' },
+  { key: 'gallery',       label: 'Gallery',      icon: '🖼', group: 'insights' },
 ]
+
+function NavItem({ icon, label, active, onClick, badge, primary }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+        padding: '9px 12px', borderRadius: 10, border: 'none',
+        background: active ? `${primary}22` : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
+        color: active ? primary : hovered ? '#fff' : 'rgba(255,255,255,0.55)',
+        fontSize: 13, fontWeight: active ? 700 : 500,
+        marginBottom: 2, cursor: 'pointer', textAlign: 'left',
+        transition: 'all 0.15s ease', position: 'relative',
+        boxShadow: active ? `inset 3px 0 0 ${primary}` : hovered ? 'inset 3px 0 0 rgba(255,255,255,0.1)' : 'none',
+      }}
+    >
+      <span style={{ fontSize: 15, width: 20, textAlign: 'center', flexShrink: 0 }}>{icon}</span>
+      <span style={{ flex: 1 }}>{label}</span>
+      {badge && (
+        <span style={{ background: badge.color || '#EF4444', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>
+          {badge.text}
+        </span>
+      )}
+      {active && <div style={{ position: 'absolute', right: 8, width: 6, height: 6, borderRadius: '50%', background: primary, boxShadow: `0 0 6px ${primary}` }} />}
+    </button>
+  )
+}
+
+function NavSection({ title, children }) {
+  return (
+    <div style={{ marginBottom: 6 }}>
+      <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: 1.5, padding: '8px 12px 4px' }}>{title}</div>
+      {children}
+    </div>
+  )
+}
 
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState('home')
@@ -30,55 +69,121 @@ export default function Dashboard({ session, org }) {
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
   const availableModules = ALL_MODULES.filter(m => allowed.includes(m.key))
+  const deliveryModules  = availableModules.filter(m => m.group === 'delivery')
+  const safetyModules    = availableModules.filter(m => m.group === 'safety')
+  const insightModules   = availableModules.filter(m => m.group === 'insights')
   const handleSignOut = () => supabase.auth.signOut()
+  const userEmail = session?.user?.email || ''
+  const userName = userEmail.split('@')[0]
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg, #f9fafb)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#F1F5F9', overflow: 'hidden' }}>
 
       {/* SIDEBAR */}
-      <div style={{ width: 220, background: '#0A0A1A', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-        <div style={{ padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ width: 248, background: '#0A0F1E', display: 'flex', flexDirection: 'column', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+
+        {/* ORG HEADER */}
+        <div style={{ padding: '16px 14px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {org?.logo_url ? (
-              <img src={org.logo_url} alt={orgName} style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'contain' }} />
+              <img src={org.logo_url} alt={orgName} style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain', flexShrink: 0 }} />
             ) : (
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
                 {orgName[0]}
               </div>
             )}
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{orgName}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 2 }}>{plan} plan</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{orgName}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', flexShrink: 0 }} />
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 0.8 }}>{plan} plan</span>
+              </div>
             </div>
           </div>
         </div>
-        <div style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
-          <button onClick={() => setTab('home')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8, border: 'none', background: tab === 'home' ? primary + '20' : 'transparent', color: tab === 'home' ? primary : 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: tab === 'home' ? 600 : 400, marginBottom: 4, cursor: 'pointer', textAlign: 'left', borderLeft: '3px solid ' + (tab === 'home' ? primary : 'transparent') }}>
-            <span>🏠</span> Home
-          </button>
-          {availableModules.map(m => (
-            <button key={m.key} onClick={() => setTab(m.key)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8, border: 'none', background: tab === m.key ? primary + '20' : 'transparent', color: tab === m.key ? primary : 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: tab === m.key ? 600 : 400, marginBottom: 2, cursor: 'pointer', textAlign: 'left', borderLeft: '3px solid ' + (tab === m.key ? primary : 'transparent') }}>
-              <span>{m.icon}</span> {m.label}
-            </button>
-          ))}
+
+        {/* QUICK ACTIONS */}
+        <div style={{ padding: '10px 10px 4px' }}>
+          <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: 1.5, padding: '4px 12px 6px' }}>Quick Actions</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, padding: '0 2px' }}>
+            {[
+              { icon: '📅', label: 'New Session', tab: 'planner' },
+              { icon: '📋', label: 'Register', tab: 'registers' },
+              { icon: '👥', label: 'Add Staff', tab: 'team' },
+              { icon: '📊', label: 'Reports', tab: 'reports' },
+            ].map(a => (
+              <button key={a.tab} onClick={() => setTab(a.tab)} style={{ padding: '8px 6px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)' }}>
+                <span style={{ fontSize: 13 }}>{a.icon}</span> {a.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-          <button onClick={() => setTab('team')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: tab === 'team' ? primary + '20' : 'transparent', color: tab === 'team' ? primary : 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
-            <span>👥</span> Team & Staff
+
+        {/* NAV */}
+        <div style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
+          <NavSection title="">
+            <NavItem icon="🏠" label="Home" active={tab === 'home'} onClick={() => setTab('home')} primary={primary} />
+          </NavSection>
+
+          {deliveryModules.length > 0 && (
+            <NavSection title="Delivery">
+              {deliveryModules.map(m => (
+                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => setTab(m.key)} primary={primary} />
+              ))}
+            </NavSection>
+          )}
+
+          {safetyModules.length > 0 && (
+            <NavSection title="Safety & Comms">
+              {safetyModules.map(m => (
+                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => setTab(m.key)} primary={primary}
+                  badge={m.key === 'safeguarding' ? { text: '1', color: '#F59E0B' } : null} />
+              ))}
+            </NavSection>
+          )}
+
+          {insightModules.length > 0 && (
+            <NavSection title="Insights">
+              {insightModules.map(m => (
+                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => setTab(m.key)} primary={primary} />
+              ))}
+            </NavSection>
+          )}
+
+          <NavSection title="Organisation">
+            <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => setTab('team')} primary={primary} />
+            <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => setTab('settings')} primary={primary} />
+          </NavSection>
+        </div>
+
+        {/* USER PROFILE */}
+        <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: `linear-gradient(135deg, ${primary}88, #6366F188)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+              {userName[0]?.toUpperCase() || '?'}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail}</div>
+            </div>
+          </div>
+          <button onClick={handleSignOut}
+            style={{ width: '100%', padding: '7px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#FCA5A5'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}>
+            Sign out
           </button>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.user.email}</div>
-          <button onClick={handleSignOut} style={{ fontSize: 11, color: primary, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>Sign out</button>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
-        {/* TOPBAR — hidden when in registers (it has its own header) */}
         {tab !== 'registers' && (
-          <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>{ALL_MODULES.find(m => m.key === tab)?.label || 'Home'}</div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: '#111' }}>{tab === 'home' ? 'Home' : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</div>
               <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>{orgName}</div>
             </div>
             <div style={{ fontSize: 12, color: '#9ca3af' }}>{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
@@ -86,53 +191,20 @@ export default function Dashboard({ session, org }) {
         )}
 
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-
-          {/* HOME — Hub */}
-          {tab === 'home' && <Hub org={org} session={session} onNavigate={setTab} />}
-          {tab === 'home_old' && (
-            <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
-              <div style={{ background: 'linear-gradient(135deg, #0A0A1A, #12122A)', borderRadius: 20, padding: '28px 32px', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: -30, right: -30, width: 150, height: 150, borderRadius: '50%', background: primary + '15' }} />
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Welcome back 👋</div>
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>{orgName} · {plan.charAt(0).toUpperCase() + plan.slice(1)} Plan</div>
-                {org?.slogan && <div style={{ fontSize: 13, color: primary, fontStyle: 'italic', marginTop: 8 }}>"{org.slogan}"</div>}
+          {tab === 'home'      && <Hub org={org} session={session} onNavigate={setTab} />}
+          {tab === 'registers' && <Registers org={org} session={session} />}
+          {tab === 'planner'   && <SessionPlanner org={org} />}
+          {tab === 'team'      && <TeamTab org={org} session={session} />}
+          {tab === 'settings'  && (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center', padding: 40 }}>
+                <div style={{ fontSize: 40, marginBottom: 14 }}>⚙️</div>
+                <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Settings</div>
+                <div style={{ fontSize: 14, color: '#9ca3af' }}>Coming soon</div>
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Your Modules</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12, marginBottom: 24 }}>
-                {availableModules.map(m => (
-                  <button key={m.key} onClick={() => setTab(m.key)} style={{ padding: '20px 16px', textAlign: 'center', border: '1px solid #e5e7eb', cursor: 'pointer', background: '#fff', borderRadius: 12 }}>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>{m.icon}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{m.label}</div>
-                  </button>
-                ))}
-              </div>
-              {ALL_MODULES.filter(m => !allowed.includes(m.key)).length > 0 && (
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>🔒 Upgrade to unlock</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
-                    {ALL_MODULES.filter(m => !allowed.includes(m.key)).map(m => (
-                      <div key={m.key} style={{ padding: '20px 16px', textAlign: 'center', opacity: 0.4, filter: 'grayscale(1)', borderRadius: 12, border: '1px solid #e5e7eb', background: '#fff' }}>
-                        <div style={{ fontSize: 28, marginBottom: 8 }}>{m.icon}</div>
-                        <div style={{ fontSize: 13, fontWeight: 600 }}>{m.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
-
-          {/* REGISTERS — real component */}
-          {tab === 'registers' && <Registers org={org} session={session} />}
-
-          {/* HUB */}
-          {tab === 'home' && false && null}
-
-          {tab === 'planner' && <SessionPlanner org={org} />}
-          {tab === 'team' && <TeamTab org={org} session={session} />}
-
-          {/* OTHER MODULES — coming soon */}
-          {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && (
+          {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && tab !== 'team' && tab !== 'settings' && (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center', padding: 40 }}>
                 <div style={{ fontSize: 40, marginBottom: 14 }}>{ALL_MODULES.find(m => m.key === tab)?.icon}</div>
