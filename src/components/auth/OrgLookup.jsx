@@ -1,3 +1,4 @@
+// AUTH FLOW LOCK: org lookup must save selected org then route to /login?org=slug.
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 

@@ -1,3 +1,4 @@
+// AUTH FLOW LOCK: /org-search must clear saved org and never default to a previous organisation.
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 

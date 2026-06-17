@@ -1,3 +1,4 @@
+// AUTH FLOW LOCK: sign out must clear Supabase session, local org slug, and return to landing.
 import Settings from '../settings/Settings'
 import TeamTab from '../team/TeamTab'
 import Mentoring from '../mentoring/Mentoring'
