@@ -90,6 +90,18 @@ export default function Hub({ org, session, setTab, onNavigate }) {
 
   const nextSession = upcomingSessions[0];
 
+  const liveHeroSession = todaySessions[0];
+  const liveHeroAttendance = liveHeroSession
+    ? attendance.filter(a => a.session_id === liveHeroSession.id)
+    : [];
+  const liveHeroSignedIn = liveHeroAttendance.filter(a => a.status === "signed_in").length;
+  const liveHeroAbsent = liveHeroAttendance.filter(a => a.status === "absent").length;
+  const liveHeroSignedOut = liveHeroAttendance.filter(a => a.status === "signed_out").length;
+  const liveHeroExpected = Math.max(children.length, liveHeroAttendance.length);
+  const liveHeroPercent = liveHeroExpected > 0
+    ? Math.round((liveHeroSignedIn / liveHeroExpected) * 100)
+    : 0;
+
   if (loading) {
     return (
       <div style={styles.page}>
@@ -113,17 +125,56 @@ export default function Hub({ org, session, setTab, onNavigate }) {
         </div>
       </section>
 
-      <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, #6D28D9)` }}>
-        <div style={styles.trophy}>🏆</div>
-        <div>
-          <h2 style={styles.encouragementTitle}>Keep making an impact, {orgName}! ⭐</h2>
-          <p style={styles.encouragementText}>
-            You’ve supported {children.length} young people across {sessions.length} planned sessions.
-          </p>
-          <p style={styles.encouragementSmall}>❤️ Every session. Every child. Every opportunity.</p>
-        </div>
-        <div style={styles.confetti}>✨ 🎉 🌈</div>
-      </section>
+      {liveHeroSession ? (
+        <section style={styles.liveHero}>
+          <div style={styles.liveHeroTop}>
+            <span style={styles.liveBadge}>● LIVE SESSION TODAY</span>
+            <span style={styles.liveCount}>{todaySessions.length} active today</span>
+          </div>
+
+          <div style={styles.liveHeroBody}>
+            <div>
+              <h2 style={styles.liveHeroTitle}>{liveHeroSession.title}</h2>
+              <p style={styles.liveHeroMeta}>
+                {liveHeroSession.start_time || "No time"}
+                {liveHeroSession.end_time ? ` – ${liveHeroSession.end_time}` : ""}
+                {liveHeroSession.location ? ` · ${liveHeroSession.location}` : ""}
+              </p>
+            </div>
+
+            <button style={styles.liveHeroButton} onClick={() => go("registers")}>
+              Open Live Register →
+            </button>
+          </div>
+
+          <div style={styles.liveStatsGrid}>
+            <div style={styles.liveStat}><strong>{liveHeroSignedIn}</strong><span>Signed in</span></div>
+            <div style={styles.liveStat}><strong>{liveHeroExpected}</strong><span>Expected</span></div>
+            <div style={styles.liveStat}><strong>{liveHeroAbsent}</strong><span>Absent</span></div>
+            <div style={styles.liveStat}><strong>{liveHeroSignedOut}</strong><span>Signed out</span></div>
+          </div>
+
+          <div style={styles.progressLabel}>
+            <span>Register progress</span>
+            <span>{liveHeroPercent}%</span>
+          </div>
+          <div style={styles.progressBar}>
+            <div style={{ ...styles.progressFill, width: `${liveHeroPercent}%`, background: primary }} />
+          </div>
+        </section>
+      ) : (
+        <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, #6D28D9)` }}>
+          <div style={styles.trophy}>🏆</div>
+          <div>
+            <h2 style={styles.encouragementTitle}>Keep making an impact, {orgName}! ⭐</h2>
+            <p style={styles.encouragementText}>
+              You’ve supported {children.length} young people across {sessions.length} planned sessions.
+            </p>
+            <p style={styles.encouragementSmall}>❤️ Every session. Every child. Every opportunity.</p>
+          </div>
+          <div style={styles.confetti}>✨ 🎉 🌈</div>
+        </section>
+      )}
 
       <section style={styles.mainGrid}>
         <div style={styles.leftColumn}>
@@ -395,6 +446,91 @@ const styles = {
     flexDirection: "column",
     gap: 4,
     minWidth: 140,
+  },
+  liveHero: {
+    background: "linear-gradient(135deg, #081226, #12235A)",
+    borderRadius: 22,
+    color: "#fff",
+    padding: 24,
+    marginBottom: 22,
+    boxShadow: "0 18px 38px rgba(15,23,42,0.25)",
+  },
+  liveHeroTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 22,
+  },
+  liveBadge: {
+    color: "#5EEAD4",
+    fontSize: 12,
+    fontWeight: 950,
+    letterSpacing: 2,
+  },
+  liveCount: {
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 13,
+    fontWeight: 800,
+  },
+  liveHeroBody: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+    marginBottom: 22,
+  },
+  liveHeroTitle: {
+    margin: 0,
+    fontSize: 28,
+    fontWeight: 950,
+  },
+  liveHeroMeta: {
+    margin: "8px 0 0",
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 14,
+  },
+  liveHeroButton: {
+    border: "none",
+    background: "linear-gradient(135deg, #06B6D4, #14B8A6)",
+    color: "#fff",
+    borderRadius: 14,
+    padding: "13px 18px",
+    fontWeight: 950,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+  },
+  liveStatsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 12,
+    marginBottom: 18,
+  },
+  liveStat: {
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: 16,
+    padding: 14,
+    display: "flex",
+    flexDirection: "column",
+    gap: 4,
+  },
+  progressLabel: {
+    display: "flex",
+    justifyContent: "space-between",
+    color: "rgba(255,255,255,0.78)",
+    fontSize: 12,
+    fontWeight: 800,
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: 10,
+    background: "rgba(255,255,255,0.12)",
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 999,
   },
   encouragement: {
     borderRadius: 18,
