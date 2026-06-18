@@ -30,7 +30,19 @@ export default function Login({ org }) {
     setLoading(true)
     setError('')
     // Check if user exists
-    await supabase.from('user_profiles').select('id').eq('email', email).maybeSingle()
+    // Check user belongs to this org
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('id, org_id')
+      .eq('email', email)
+      .eq('org_id', org?.id)
+      .maybeSingle()
+
+    if (!profile) {
+      setError('No account found for this email in this workspace.')
+      setLoading(false)
+      return
+    }
     setLoading(false)
     setStep(STEPS.PASSWORD)
   }
