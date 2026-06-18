@@ -61,6 +61,21 @@ export default function CreatePassword() {
       await supabase.from('admin_invites').update({ status: 'accepted', accepted_at: new Date().toISOString() }).eq('id', invite.id)
     }
 
+    // Sign in immediately after signup
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: invite.email,
+      password
+    })
+
+    if (signInError) {
+      // Account created but email confirmation required - redirect to login
+      setDone(true)
+      setTimeout(() => {
+        window.location.href = '/?org=' + invite.organisations.slug
+      }, 2000)
+      return
+    }
+
     setDone(true)
     setTimeout(() => {
       localStorage.setItem('launchsession_org_slug', invite.organisations.slug)
