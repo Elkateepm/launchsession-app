@@ -15,7 +15,8 @@ function AppContent() {
 
   useEffect(() => {
     const hasOrg = new URLSearchParams(window.location.search).get('org')
-    if (window.location.pathname === '/' && !hasOrg) {
+    const isDashboard = window.location.pathname === '/dashboard'
+    if (window.location.pathname === '/' && !hasOrg && !isDashboard) {
       window.location.replace('/landing.html')
       return
     }

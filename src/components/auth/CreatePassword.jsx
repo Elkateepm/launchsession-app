@@ -71,7 +71,7 @@ export default function CreatePassword() {
       // Account created but email confirmation required - redirect to login
       setDone(true)
       setTimeout(() => {
-        window.location.href = '/?org=' + invite.organisations.slug
+        window.location.href = '/dashboard?org=' + invite.organisations.slug
       }, 2000)
       return
     }
@@ -79,7 +79,7 @@ export default function CreatePassword() {
     setDone(true)
     setTimeout(() => {
       localStorage.setItem('launchsession_org_slug', invite.organisations.slug)
-      window.location.href = '/?org=' + invite.organisations.slug
+      window.location.href = '/dashboard?org=' + invite.organisations.slug
     }, 2000)
   }
 
