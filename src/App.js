@@ -14,7 +14,8 @@ function AppContent() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (window.location.pathname === '/') {
+    const hasOrg = new URLSearchParams(window.location.search).get('org')
+    if (window.location.pathname === '/' && !hasOrg) {
       window.location.replace('/landing.html')
       return
     }
