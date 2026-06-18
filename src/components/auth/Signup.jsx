@@ -62,6 +62,16 @@ export default function Signup() {
           <label style={label}>Work email</label>
           <input required type="email" placeholder="jane@organisation.org" value={email} onChange={e=>setEmail(e.target.value)} style={inp} />
 
+          {organisationName.trim() && !message && (
+            <div style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 12, padding: '12px 16px', marginTop: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 18 }}>🏢</span>
+              <div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 2 }}>Your workspace will be called:</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{organisationName.trim()}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>Make sure this is spelled correctly before submitting</div>
+              </div>
+            </div>
+          )}
           <button type="submit" disabled={loading || !!message} style={{...btn, opacity: loading || message ? 0.75 : 1}}>
             {loading ? 'Submitting...' : message ? 'Request Sent' : 'Start Free 7-Day Trial →'}
           </button>
