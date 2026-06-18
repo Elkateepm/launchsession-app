@@ -50,12 +50,23 @@ export default function CreatePassword() {
     if (!invite) { setError('Invite not found or already used.'); return }
     setSaving(true)
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({ email: invite.email, password })
-    if (authError) { setError(authError.message); setSaving(false); return }
+    let authData = null
+    const { data: signUpData, error: authError } = await supabase.auth.signUp({ email: invite.email, password })
+    
+    if (authError && authError.message.includes('already registered')) {
+      // User exists - sign them in with new password by updating it
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email: invite.email, password })
+      if (signInError) { setError('Account exists. Try signing in directly.'); setSaving(false); return }
+      authData = signInData
+    } else if (authError) {
+      setError(authError.message); setSaving(false); return
+    } else {
+      authData = signUpData
+    }
 
-    if (authData?.user?.id) {
+    if (authData?.user?.id || authData?.session?.user?.id) {
       await supabase.from('user_profiles').insert([{
-        id: authData.user.id, org_id: invite.org_id,
+        id: authData?.user?.id || authData?.session?.user?.id, org_id: invite.org_id,
         email: invite.email, full_name: invite.full_name, role: invite.role || 'admin'
       }])
       await supabase.from('admin_invites').update({ status: 'accepted', accepted_at: new Date().toISOString() }).eq('id', invite.id)
