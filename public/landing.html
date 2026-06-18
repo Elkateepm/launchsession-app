@@ -190,9 +190,25 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
   .pricing-grid{grid-template-columns:1fr}
   .nav-links{display:none}
   .nav-cta{display:none}
+  .nav-status{display:none}
   .hamburger{display:flex}
 }
-@media(max-width:600px){section{padding:60px 5%}.impact-grid{grid-template-columns:1fr 1fr}.features-grid{grid-template-columns:1fr}}
+@media(max-width:600px){
+  section{padding:60px 5%}
+  .impact-grid{grid-template-columns:1fr 1fr}
+  .features-grid{grid-template-columns:1fr}
+  .nav-wrapper{top:12px;width:calc(100% - 24px)}
+  nav{padding:0 14px;height:52px}
+  .logo-text{font-size:15px}
+  .logo-sub{display:none}
+  .logo img{height:32px;width:32px}
+  .hero-ctas{flex-direction:column;width:100%}
+  .btn-hero-primary,.btn-hero-ghost{width:100%;justify-content:center}
+  .cta-box{padding:40px 24px}
+  .pricing-grid{grid-template-columns:1fr}
+  .impact-grid{grid-template-columns:1fr 1fr}
+  .hero-mock{display:none}
+}
 
 .nav-spacer{
   width:180px;
