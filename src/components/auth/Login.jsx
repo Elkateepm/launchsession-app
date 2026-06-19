@@ -35,16 +35,11 @@ export default function Login({ org }) {
 
     setLoading(true)
     setError('')
-    // Check if user exists
-    // Check user belongs to this org
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('id, org_id')
-      .eq('email', email)
-      .eq('org_id', org.id)
-      .maybeSingle()
 
-    if (!profile) {
+    const { data: exists, error: rpcError } = await supabase
+      .rpc('check_user_in_org', { p_email: email.trim(), p_org_id: org.id })
+
+    if (rpcError || !exists) {
       setError('No account found for this email in this workspace.')
       setLoading(false)
       return
