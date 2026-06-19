@@ -27,6 +27,12 @@ export default function Login({ org }) {
   const handleEmailContinue = async e => {
     e.preventDefault()
     if (!email.trim()) return
+
+    if (!org?.id) {
+      setError('Workspace is still loading — please wait a moment and try again.')
+      return
+    }
+
     setLoading(true)
     setError('')
     // Check if user exists
@@ -35,7 +41,7 @@ export default function Login({ org }) {
       .from('user_profiles')
       .select('id, org_id')
       .eq('email', email)
-      .eq('org_id', org?.id)
+      .eq('org_id', org.id)
       .maybeSingle()
 
     if (!profile) {
