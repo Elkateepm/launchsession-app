@@ -62,7 +62,7 @@ export default function Signup() {
           <label style={label}>Work email</label>
           <input required type="email" placeholder="jane@organisation.org" value={email} onChange={e=>setEmail(e.target.value)} style={inp} />
 
-          <button type="submit" disabled={loading || cd ~/Desktop/launchsession-app && echo "# LaunchSession Trial Flow Lock" > TRIAL_FLOW_LOCK.md && echo "" >> TRIAL_FLOW_LOCK.md && echo "Landing Page -> Start Free 7-Day Trial -> Trial Request Form -> trial_requests table -> Confirmation Message" >> TRIAL_FLOW_LOCK.md && npm run build && git add -A && git commit -m "chore: lock trial request workflow" && git push origin mainmessage} style={{...btn, opacity: loading || message ? 0.75 : 1}}>
+          <button type="submit" disabled={loading || message} style={{...btn, opacity: loading || message ? 0.75 : 1}}>
             {loading ? 'Submitting...' : message ? 'Request Sent' : 'Start Free 7-Day Trial →'}
           </button>
 
