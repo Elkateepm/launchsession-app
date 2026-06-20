@@ -340,6 +340,90 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
 }
 
 
+/* Hero trusted-by line */
+.hero-trusted-line{margin-top:18px;font-size:13.5px;color:var(--text2);opacity:0.75}
+
+/* Sign-in card */
+.signin-card{
+  position:relative;
+  width:100%;
+  max-width:420px;
+  margin-left:auto;
+  padding:40px 36px;
+  border-radius:24px;
+  background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
+  border:1px solid rgba(255,255,255,0.1);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 8px 40px rgba(0,0,0,0.35),0 0 60px rgba(37,99,235,0.12),inset 0 1px 0 rgba(255,255,255,0.06);
+  overflow:hidden;
+}
+.signin-glow{
+  position:absolute;
+  top:-120px;
+  right:-100px;
+  width:280px;
+  height:280px;
+  background:radial-gradient(circle,rgba(37,99,235,0.25) 0%,transparent 70%);
+  pointer-events:none;
+}
+.signin-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:24px}
+.signin-particles span{
+  position:absolute;
+  width:3px;height:3px;
+  border-radius:50%;
+  background:rgba(96,165,250,0.5);
+  animation:signinFloat 8s ease-in-out infinite;
+}
+.signin-particles span:nth-child(1){top:20%;left:15%;animation-delay:0s}
+.signin-particles span:nth-child(2){top:65%;left:80%;animation-delay:1.5s}
+.signin-particles span:nth-child(3){top:40%;left:50%;animation-delay:3s}
+.signin-particles span:nth-child(4){top:80%;left:25%;animation-delay:4.5s}
+.signin-particles span:nth-child(5){top:10%;left:70%;animation-delay:6s}
+@keyframes signinFloat{
+  0%,100%{transform:translateY(0);opacity:0.3}
+  50%{transform:translateY(-16px);opacity:0.8}
+}
+.signin-header{position:relative;margin-bottom:28px}
+.signin-header h2{font-size:24px;font-weight:800;margin:0 0 6px;letter-spacing:-0.5px}
+.signin-header p{font-size:14.5px;color:var(--text2);margin:0}
+.signin-form{position:relative;display:flex;flex-direction:column}
+.signin-label{font-size:12.5px;font-weight:600;color:var(--text2);margin:14px 0 6px;letter-spacing:0.2px}
+.signin-label:first-of-type{margin-top:0}
+.signin-input{
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.04);
+  color:#fff;
+  font-size:14.5px;
+  transition:all 0.2s;
+}
+.signin-input::placeholder{color:rgba(255,255,255,0.3)}
+.signin-input:focus{outline:none;border-color:rgba(37,99,235,0.6);background:rgba(37,99,235,0.06);box-shadow:0 0 0 3px rgba(37,99,235,0.15)}
+.signin-options{display:flex;align-items:center;justify-content:space-between;margin:18px 0 22px;font-size:13px}
+.signin-remember{display:flex;align-items:center;gap:6px;color:var(--text2);cursor:pointer}
+.signin-forgot{color:#60A5FA;text-decoration:none}
+.signin-forgot:hover{text-decoration:underline}
+.signin-submit{
+  padding:13px;
+  border-radius:10px;
+  border:none;
+  background:linear-gradient(135deg,#3B82F6,#6366F1);
+  color:#fff;
+  font-size:15.5px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.signin-submit:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(59,130,246,0.4)}
+.signin-help{position:relative;margin-top:20px;font-size:13px;color:var(--text2);text-align:center}
+.signin-help a{color:#60A5FA;text-decoration:none}
+.signin-help a:hover{text-decoration:underline}
+@media(max-width:900px){
+  .signin-card{max-width:100%;margin-left:0;margin-top:32px;padding:32px 24px}
+}
+
 /* Real product hero mockup */
 .real-product-mockup{
   width:720px;
@@ -682,104 +766,29 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
         <div class="trust-item"><div class="trust-dot"></div> Built for charities</div>
         <div class="trust-item"><div class="trust-dot"></div> GDPR compliant</div>
       </div>
+      <p class="hero-trusted-line animate-fade-up delay-4">Trusted by charities, youth organisations and community groups across the UK</p>
     </div>
-    <div class="dashboard-mockup real-product-mockup">
-      <div class="mock-topbar">
-        <div class="mock-dot" style="background:#FF5F57"></div>
-        <div class="mock-dot" style="background:#FFBD2E;margin-left:4px"></div>
-        <div class="mock-dot" style="background:#28C840;margin-left:4px"></div>
-        <div class="mock-title">SOLIDARITY SPORTS — LIVE OPERATIONS</div>
-        <div class="mock-time">Wed 17 Jun</div>
+    <div class="signin-card animate-fade-up delay-2">
+      <div class="signin-particles">
+        <span></span><span></span><span></span><span></span><span></span>
       </div>
-
-      <div class="live-panel">
-        <div class="live-panel-header">
-          <div>
-            <div class="live-kicker"><span></span> Live Session Today</div>
-            <div class="live-title">Today’s Delivery Hub</div>
-          </div>
-          <div class="live-count">2 active today</div>
-        </div>
-
-        <div class="session-cards">
-          <div class="session-card">
-            <div class="session-top">
-              <div class="session-icon">🏃</div>
-              <div>
-                <div class="session-name">Sports</div>
-                <div class="session-time">09:00 – 15:00</div>
-              </div>
-              <div class="live-pill">LIVE</div>
-            </div>
-
-            <div class="session-metrics">
-              <div><strong style="color:#2DD4BF">4</strong><span>Signed in</span></div>
-              <div><strong style="color:#60A5FA">4</strong><span>Expected</span></div>
-              <div><strong style="color:#FB923C">0</strong><span>Absent</span></div>
-              <div><strong style="color:#C084FC">0</strong><span>Out</span></div>
-            </div>
-
-            <div class="register-line">
-              <div><span>Register progress</span><strong>100%</strong></div>
-              <div class="real-progress"><i style="width:100%"></i></div>
-            </div>
-
-            <div class="session-actions">
-              <button>Open Register →</button>
-              <button>→ Sign In</button>
-              <button>← Sign Out</button>
-            </div>
-          </div>
-
-          <div class="session-card second">
-            <div class="session-top">
-              <div class="session-icon">🏃</div>
-              <div>
-                <div class="session-name">London</div>
-                <div class="session-time">09:00 – 15:00</div>
-              </div>
-              <div class="live-pill">LIVE</div>
-            </div>
-
-            <div class="session-metrics">
-              <div><strong style="color:#2DD4BF">0</strong><span>Signed in</span></div>
-              <div><strong style="color:#60A5FA">4</strong><span>Expected</span></div>
-              <div><strong style="color:#FB923C">0</strong><span>Absent</span></div>
-              <div><strong style="color:#C084FC">0</strong><span>Out</span></div>
-            </div>
-
-            <div class="register-line">
-              <div><span>Register progress</span><strong>0%</strong></div>
-              <div class="real-progress"><i style="width:8%"></i></div>
-            </div>
-
-            <div class="session-actions">
-              <button>Open Register →</button>
-              <button>→ Sign In</button>
-              <button>← Sign Out</button>
-            </div>
-          </div>
-        </div>
+      <div class="signin-glow"></div>
+      <div class="signin-header">
+        <h2>Welcome back 👋</h2>
+        <p>Sign in to your organisation account</p>
       </div>
-
-      <div class="attention-grid">
-        <div class="glance-card">
-          <div class="glance-icon">📅</div>
-          <strong>2 sessions today</strong>
-          <span>Ready for delivery</span>
+      <form class="signin-form" onsubmit="event.preventDefault(); window.location.href='/org-search'">
+        <label class="signin-label">Email address</label>
+        <input class="signin-input" type="email" placeholder="you@organisation.org" required>
+        <label class="signin-label">Password</label>
+        <input class="signin-input" type="password" placeholder="••••••••" required>
+        <div class="signin-options">
+          <label class="signin-remember"><input type="checkbox"> Remember me</label>
+          <a href="#" class="signin-forgot">Forgot password?</a>
         </div>
-        <div class="glance-card">
-          <div class="glance-icon">✅</div>
-          <strong>4 signed in</strong>
-          <span>All clear</span>
-        </div>
-        <div class="attention-centre">
-          <div class="attention-title">🔔 Attention Centre</div>
-          <div class="attention-item"><span>📝 Registers</span><b></b></div>
-          <div class="attention-item"><span>🛡 Safeguarding</span><b></b></div>
-          <div class="attention-item"><span>💬 Messages</span><b class="blue"></b></div>
-        </div>
-      </div>
+        <button type="submit" class="signin-submit">Sign in</button>
+      </form>
+      <div class="signin-help">Need help accessing your organisation? <a href="mailto:support@launchsession.co.uk">Contact support</a></div>
     </div>
   </div>
 </section>
