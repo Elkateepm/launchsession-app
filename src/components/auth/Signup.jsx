@@ -23,6 +23,7 @@ export default function Signup() {
     }])
 
     if (error) {
+      console.log('FULL ERROR:', error)
       setError(error.message || 'Could not submit trial request.')
       setLoading(false)
       return
