@@ -24,13 +24,13 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
     if (err) { setError(err.message); setSaving(false) } else { onAdded(data); onClose() }
   }
   const inp = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, marginBottom: 10, outline: 'none', boxSizing: 'border-box' }
-  const lbl = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }
+  const lbl = { fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '88vh', overflowY: 'auto', paddingBottom: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '88vh', overflowY: 'auto', paddingBottom: 24 }}>
         <div style={{ padding: '18px 20px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 16, fontWeight: 800 }}>Add Walk-in</div>
-          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', background: '#f3f4f6', border: 'none', cursor: 'pointer', fontSize: 16 }}>×</button>
+          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface3)', border: 'none', cursor: 'pointer', fontSize: 16 }}>×</button>
         </div>
         <div style={{ padding: '16px 20px 0' }}>
           {error && <div style={{ background: '#FEF2F2', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
@@ -41,7 +41,7 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div><label style={lbl}>Date of Birth</label><input style={inp} type="date" value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)} /></div>
             <div><label style={lbl}>Group</label>
-              <select style={{ ...inp, background: '#fff' }} value={form.group_name} onChange={e => set('group_name', e.target.value)}>
+              <select style={{ ...inp, background: 'var(--surface)' }} value={form.group_name} onChange={e => set('group_name', e.target.value)}>
                 {bubbles.map(b => <option key={b.key} value={b.label}>{b.label}</option>)}
               </select>
             </div>
@@ -71,7 +71,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
         
         {/* GRADIENT HEADER */}
         <div style={{ background: `linear-gradient(135deg, ${bubble?.color || '#1B9AAA'}, ${bubble?.dark || '#0D6B78'})`, padding: '24px 20px 20px', position: 'relative', borderRadius: '20px 20px 0 0' }}>
@@ -112,7 +112,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
           )}
 
           {/* TABS */}
-          <div style={{ display: 'flex', gap: 6, margin: '14px 0 14px', background: '#F3F4F6', borderRadius: 10, padding: 4 }}>
+          <div style={{ display: 'flex', gap: 6, margin: '14px 0 14px', background: 'var(--surface3)', borderRadius: 10, padding: 4 }}>
             {[['info','Info'],['actions','Sign In/Out'],['edit','Edit'],['notes','Notes']].map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '7px 4px', borderRadius: 8, border: 'none', background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#111' : '#6b7280', fontWeight: tab === key ? 700 : 500, fontSize: 12, cursor: 'pointer', boxShadow: tab === key ? '0 1px 4px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s' }}>
                 {label}
@@ -124,18 +124,18 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
           {tab === 'info' && (
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 12px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Date of Birth</div>
+                <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Date of Birth</div>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{child.date_of_birth ? format(new Date(child.date_of_birth), 'd MMM yyyy') : '—'}</div>
                 </div>
-                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 12px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Age</div>
+                <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Age</div>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{age ? `${age} years` : '—'}</div>
                 </div>
               </div>
               {child.school_name && (
-                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>School</div>
+                <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>School</div>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{child.school_name}</div>
                 </div>
               )}
@@ -146,7 +146,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
                     <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{child.emergency_contact_name}</div>
                     {child.emergency_contact_phone && <a href={`tel:${child.emergency_contact_phone}`} style={{ fontSize: 13, color: '#2563EB', textDecoration: 'none', fontWeight: 600 }}>{child.emergency_contact_phone}</a>}
                   </>
-                ) : <div style={{ fontSize: 13, color: '#9ca3af' }}>Not set</div>}
+                ) : <div style={{ fontSize: 13, color: 'var(--text3)' }}>Not set</div>}
               </div>
               <div style={{ background: child.consent_travel_alone ? '#F0FDF4' : '#FEF2F2', border: child.consent_travel_alone ? '1px solid #BBF7D0' : '1px solid #FECACA', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: child.consent_travel_alone ? '#16A34A' : '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -164,7 +164,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
           {tab === 'actions' && (
             <div>
               {(signedInTime || signedOutTime) && (
-                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '12px', marginBottom: 14, display: 'flex', gap: 20, justifyContent: 'center' }}>
+                <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px', marginBottom: 14, display: 'flex', gap: 20, justifyContent: 'center' }}>
                   {signedInTime && <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 10, fontWeight: 800, color: '#16A34A', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Signed In</div>
                     <div style={{ fontSize: 24, fontWeight: 900, color: '#16A34A' }}>{signedInTime}</div>
@@ -188,7 +188,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
               <input placeholder="Absence reason (optional)" value={absenceReason} onChange={e => setAbsenceReason(e.target.value)}
                 style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 13, marginBottom: 10, boxSizing: 'border-box', outline: 'none' }} />
               <button onClick={() => handleAction('absent')}
-                style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6b7280', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                 Mark Absent
               </button>
             </div>
@@ -196,7 +196,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
 
           {/* EDIT TAB */}
           {tab === 'edit' && (
-            <div style={{ textAlign: 'center', padding: '20px 0', color: '#9ca3af' }}>
+            <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text3)' }}>
               <div style={{ fontSize: 13 }}>Edit profile coming soon</div>
             </div>
           )}
@@ -305,20 +305,20 @@ export default function Registers({ org }) {
       <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '14px 20px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div>
-            <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 2 }}>Home › Registers</div>
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 2 }}>Home › Registers</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ fontSize: 19, fontWeight: 800, color: '#111' }}>{session?.title || 'Registers'}</div>
               {session ? (
                 <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 800 }}>In Progress</span>
               ) : (
-                <span style={{ background: '#F3F4F6', color: '#6b7280', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>No Session</span>
+                <span style={{ background: '#F3F4F6', color: 'var(--text3)', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>No Session</span>
               )}
             </div>
             {session && (
               <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-                <span style={{ fontSize: 12, color: '#6b7280' }}>📅 {today}</span>
-                {session.start_time && <span style={{ fontSize: 12, color: '#6b7280' }}>🕐 {session.start_time}{session.end_time ? ' – ' + session.end_time : ''}</span>}
-                {session.location && <span style={{ fontSize: 12, color: '#6b7280' }}>📍 {session.location.split(',')[0]}</span>}
+                <span style={{ fontSize: 12, color: 'var(--text3)' }}>📅 {today}</span>
+                {session.start_time && <span style={{ fontSize: 12, color: 'var(--text3)' }}>🕐 {session.start_time}{session.end_time ? ' – ' + session.end_time : ''}</span>}
+                {session.location && <span style={{ fontSize: 12, color: 'var(--text3)' }}>📍 {session.location.split(',')[0]}</span>}
               </div>
             )}
           </div>
@@ -341,7 +341,7 @@ export default function Registers({ org }) {
             <div style={{ width: 40, height: 40, borderRadius: 10, background: color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{icon}</div>
             <div>
               <div style={{ fontSize: 24, fontWeight: 900, color, lineHeight: 1 }}>{num}</div>
-              <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, marginTop: 2 }}>{label}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>{label}</div>
               <div style={{ fontSize: 10, color, fontWeight: 700 }}>{sub}</div>
             </div>
           </div>
@@ -367,7 +367,7 @@ export default function Registers({ org }) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px' }}>
               <div style={{ position: 'relative', flex: 1 }}>
-                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }}>🔍</span>
+                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text3)', fontSize: 13 }}>🔍</span>
                 <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..."
                   style={{ width: '100%', padding: '8px 10px 8px 32px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, outline: 'none', boxSizing: 'border-box', background: '#F9FAFB' }} />
               </div>
@@ -401,14 +401,14 @@ export default function Registers({ org }) {
           <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 130px 170px 150px 100px', gap: 0, padding: '8px 20px', background: '#F8FAFC', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
             <div><input type="checkbox" checked={allSelected} onChange={() => setSelectedIds(allSelected ? [] : filtered.map(c => c.id))} style={{ cursor: 'pointer' }} /></div>
             {['Child', 'Group', 'Allergies / Medical', 'Status', ''].map(h => (
-              <div key={h} style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.4 }}>{h}</div>
+              <div key={h} style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{h}</div>
             ))}
           </div>
 
           {/* ROWS */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {loading ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 60, color: '#9ca3af' }}>Loading...</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 60, color: 'var(--text3)' }}>Loading...</div>
             ) : filtered.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px' }}>
                 <div style={{ fontSize: 36, marginBottom: 10 }}>📋</div>
@@ -429,7 +429,7 @@ export default function Registers({ org }) {
                 absent:     { label: 'Absent',         color: '#B91C1C', bg: '#FEE2E2', dot: '#EF4444', time: null },
                 expected:   { label: 'Yet to Arrive',  color: '#B45309', bg: '#FEF3C7', dot: '#F59E0B', time: null },
                 unmarked:   { label: 'Yet to Arrive',  color: '#B45309', bg: '#FEF3C7', dot: '#F59E0B', time: null },
-              }[status] || { label: '—', color: '#6b7280', bg: '#F3F4F6', dot: '#9ca3af', time: null }
+              }[status] || { label: '—', color: 'var(--text3)', bg: '#F3F4F6', dot: '#9ca3af', time: null }
 
               return (
                 <div key={child.id} style={{ display: 'grid', gridTemplateColumns: '36px 1fr 130px 170px 150px 100px', gap: 0, padding: '11px 20px', borderBottom: '1px solid #F3F4F6', background: isSelected ? '#EFF6FF' : '#fff', alignItems: 'center', transition: 'background 0.1s' }}
@@ -442,7 +442,7 @@ export default function Registers({ org }) {
                     </div>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{child.first_name} {child.last_name}</div>
-                      <div style={{ fontSize: 11, color: '#9ca3af' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text3)' }}>
                         {child.date_of_birth ? `Age ${age}` : ''}{child.gender ? ' · ' + child.gender : ''}
                       </div>
                     </div>
@@ -453,7 +453,7 @@ export default function Registers({ org }) {
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                     {child.allergies && <span style={{ background: '#FFF7ED', color: '#C2410C', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontWeight: 700 }}>🟠 {child.allergies.length > 10 ? child.allergies.slice(0,10)+'…' : child.allergies}</span>}
                     {child.medical_notes && <span style={{ background: '#FEF2F2', color: '#DC2626', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontWeight: 700 }}>🔴 Medical</span>}
-                    {!child.allergies && !child.medical_notes && <span style={{ fontSize: 12, color: '#9ca3af' }}>No known allergies</span>}
+                    {!child.allergies && !child.medical_notes && <span style={{ fontSize: 12, color: 'var(--text3)' }}>No known allergies</span>}
                   </div>
                   <div>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: statusCfg.bg, borderRadius: 8, padding: '5px 10px' }}>
@@ -478,7 +478,7 @@ export default function Registers({ org }) {
                       </button>
                     )}
                     <button onClick={() => setSelectedChild({ child, status, attRec })}
-                      style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid #e5e7eb', background: '#fff', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>
+                      style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid #e5e7eb', background: '#fff', color: 'var(--text3)', fontSize: 13, cursor: 'pointer' }}>
                       ···
                     </button>
                   </div>
@@ -515,7 +515,7 @@ export default function Registers({ org }) {
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{t.icon}</div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{t.label}</div>
-                  <div style={{ fontSize: 10, color: '#9ca3af' }}>{t.sub}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text3)' }}>{t.sub}</div>
                 </div>
               </button>
             ))}
@@ -526,7 +526,7 @@ export default function Registers({ org }) {
             <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 8 }}>Register Notes</div>
             <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Add any notes about this session..."
               style={{ width: '100%', height: 80, border: '1px solid #e5e7eb', borderRadius: 8, padding: '8px', fontSize: 12, resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', color: '#374151' }} />
-            <div style={{ fontSize: 10, color: '#9ca3af', textAlign: 'right', marginTop: 2 }}>{note.length} / 500</div>
+            <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'right', marginTop: 2 }}>{note.length} / 500</div>
           </div>
 
           {/* Safeguarding */}
