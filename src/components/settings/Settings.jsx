@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 const NAV = [
   { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform' },
   { key: 'users',        icon: '👥', label: 'Users & Permissions', group: 'Platform' },
-  { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform' },
+  { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform', requiresBranding: true },
   { key: 'safeguarding', icon: '🛡', label: 'Safeguarding', group: 'Operations' },
   { key: 'registers',    icon: '📋', label: 'Registers', group: 'Operations' },
   { key: 'sessions',     icon: '📅', label: 'Sessions', group: 'Operations' },
@@ -402,16 +402,24 @@ function ComingSoon({ label }) {
 }
 
 export default function Settings({ org, session }) {
+  const brandingEnabled = org?.branding_enabled !== false
   const [active, setActive] = useState('organisation')
   const [search, setSearch] = useState('')
 
-  const filtered = NAV.filter(n => !search || n.label.toLowerCase().includes(search.toLowerCase()))
+  const filtered = NAV.filter(n => (!search || n.label.toLowerCase().includes(search.toLowerCase())) && (!n.requiresBranding || brandingEnabled))
   const groups = GROUPS.map(g => ({ group: g, items: filtered.filter(n => n.group === g) })).filter(g => g.items.length > 0)
 
   const renderContent = () => {
     switch(active) {
       case 'organisation':   return <OrgSection org={org} />
-      case 'branding':       return <BrandingSection org={org} />
+      case 'branding':       return brandingEnabled ? <BrandingSection org={org} /> : (
+        <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🎨</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Branding Centre is not enabled</div>
+          <div style={{ fontSize: 14, color: '#64748B', marginBottom: 24 }}>Contact your LaunchSession administrator to enable custom branding for your workspace.</div>
+          <a href="mailto:hello@launchsession.co.uk" style={{ padding: '12px 28px', borderRadius: 10, background: '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Contact Support</a>
+        </div>
+      )
       case 'security':       return <SecuritySection />
       case 'notifications':  return <NotificationsSection />
       case 'integrations':   return <IntegrationsSection />
