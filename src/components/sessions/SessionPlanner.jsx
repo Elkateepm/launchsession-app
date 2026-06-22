@@ -30,8 +30,8 @@ const EMPTY_FORM = {
   consent_required: false, volunteer_limit: '', rotation_slots: [],
 }
 
-const inp = { width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', background: '#FAFAFA', boxSizing: 'border-box' }
-const lbl = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }
+const inp = { width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface2)', boxSizing: 'border-box' }
+const lbl = { fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }
 
 function Field({ label, children }) {
   return <div style={{ marginBottom: 14 }}><label style={lbl}>{label}</label>{children}</div>
@@ -61,11 +61,11 @@ function RotationPlanner({ slots, onChange, selectedBubbles }) {
   return (
     <div>
       {slots.map((slot, i) => (
-        <div key={i} style={{ background: '#F8FAFC', borderRadius: 12, border: '1.5px solid #e5e7eb', padding: 12, marginBottom: 10 }}>
+        <div key={i} style={{ background: 'var(--surface2)', borderRadius: 12, border: '1.5px solid var(--border)', padding: 12, marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <input type="time" value={slot.time} onChange={e => updateTime(i, e.target.value)}
               style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 14, fontWeight: 700, width: 120 }} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', flex: 1 }}>SLOT {i + 1}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', flex: 1 }}>SLOT {i + 1}</span>
             <button onClick={() => removeSlot(i)} style={{ background: '#FEE2E2', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: '#C00', fontSize: 16 }}>×</button>
           </div>
           {activeBubbles.map(b => (
@@ -73,7 +73,7 @@ function RotationPlanner({ slots, onChange, selectedBubbles }) {
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: b.color, flexShrink: 0 }} />
               <span style={{ fontSize: 12, fontWeight: 700, width: 52, flexShrink: 0 }}>{b.label}</span>
               <select value={slot.bubbles?.[b.key] || ''} onChange={e => updateActivity(i, b.key, e.target.value)}
-                style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, background: '#fff' }}>
+                style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface)' }}>
                 <option value="">— Select activity —</option>
                 {ACTIVITIES.map(a => <option key={a} value={a}>{a}</option>)}
               </select>
@@ -81,7 +81,7 @@ function RotationPlanner({ slots, onChange, selectedBubbles }) {
           ))}
         </div>
       ))}
-      <button onClick={addSlot} style={{ width: '100%', padding: 10, borderRadius: 10, border: '1.5px dashed #e5e7eb', background: '#fff', fontSize: 13, fontWeight: 700, color: '#1B9AAA', cursor: 'pointer' }}>
+      <button onClick={addSlot} style={{ width: '100%', padding: 10, borderRadius: 10, border: '1.5px dashed var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 700, color: '#1B9AAA', cursor: 'pointer' }}>
         + Add Rotation Slot
       </button>
     </div>
@@ -152,7 +152,7 @@ function SessionForm({ initial, onSave, onCancel, saving }) {
         <div style={{ background: '#E8F7F9', borderRadius: 14, padding: 14, marginBottom: 14, border: '1.5px solid #B2E0E6' }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: '#1B9AAA', marginBottom: 12 }}>🚌 Trip Details</div>
           <Field label="Meeting Point">
-            <input value={form.meeting_point || ''} onChange={e => set('meeting_point', e.target.value)} placeholder="e.g. Outside community centre" style={{ ...inp, background: '#fff' }} />
+            <input value={form.meeting_point || ''} onChange={e => set('meeting_point', e.target.value)} placeholder="e.g. Outside community centre" style={{ ...inp, background: 'var(--surface)' }} />
           </Field>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <button onClick={() => set('packed_lunch', !form.packed_lunch)} style={{ padding: 10, borderRadius: 10, border: `2px solid ${form.packed_lunch ? '#417505' : '#e5e7eb'}`, background: form.packed_lunch ? '#EDFAED' : '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 800, color: form.packed_lunch ? '#417505' : '#6b7280' }}>
@@ -174,7 +174,7 @@ function SessionForm({ initial, onSave, onCancel, saving }) {
       </Field>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 10, marginTop: 4 }}>
-        <button onClick={onCancel} style={{ padding: 13, borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: '#6b7280' }}>Cancel</button>
+        <button onClick={onCancel} style={{ padding: 13, borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3)' }}>Cancel</button>
         <button onClick={() => onSave(form)} disabled={saving || !form.title} style={{ padding: 13, borderRadius: 12, border: 'none', background: saving || !form.title ? '#9ca3af' : type?.color || '#111', color: '#fff', fontSize: 14, fontWeight: 800, cursor: saving || !form.title ? 'default' : 'pointer' }}>
           {saving ? 'Saving...' : initial?.id ? 'Save Changes' : 'Create Session'}
         </button>
@@ -191,21 +191,21 @@ function LegacySessionCard({ session, onEdit, onDelete }) {
   const isMultiDay = session.end_date && session.end_date !== session.session_date
 
   return (
-    <div style={{ background: '#fff', borderRadius: 16, padding: '14px 16px', marginBottom: 10, border: '1.5px solid #e5e7eb' }}>
+    <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ width: 40, height: 40, borderRadius: 12, background: type.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
           {type.icon}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#111', marginBottom: 4 }}>{session.title}</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 12, fontWeight: 600, color: '#6b7280' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{session.title}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 12, fontWeight: 600, color: 'var(--text3)' }}>
             <span>📅 {format(parseISO(session.session_date), 'd MMM')}{isMultiDay ? ` – ${format(parseISO(session.end_date), 'd MMM yyyy')}` : ''}</span>
             <span>🕐 {session.start_time} – {session.end_time}</span>
             {session.location && <span>📍 {session.location.split(',')[0]}</span>}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-          <button onClick={() => onEdit(session)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: 13 }}>✏️</button>
+          <button onClick={() => onEdit(session)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontSize: 13 }}>✏️</button>
           <button onClick={() => onDelete(session.id)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid #FFE5E5', background: '#FFF0F0', cursor: 'pointer', fontSize: 13 }}>🗑</button>
         </div>
       </div>
