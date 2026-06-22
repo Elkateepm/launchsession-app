@@ -10,6 +10,24 @@ export function OrgProvider({ children }) {
     const [noOrg,   setNoOrg]   = useState(false)
 
   useEffect(() => {
+    let pollInterval = null
+
+    const verifyOrgStillActive = async (slug) => {
+      const { data, error } = await supabase
+        .from('organisations')
+        .select('id, status')
+        .eq('slug', slug)
+        .in('status', ['active', 'trial'])
+        .single()
+
+      if (error || !data) {
+        clearInterval(pollInterval)
+        localStorage.removeItem('launchsession_org_slug')
+        await supabase.auth.signOut()
+        window.location.replace('/org-search')
+      }
+    }
+
     const detectOrg = async () => {
       const hostname = window.location.hostname
       const pathname = window.location.pathname
@@ -64,12 +82,14 @@ export function OrgProvider({ children }) {
         setNoOrg(false)
         document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
         document.title = data.name || 'LaunchSession'
+        pollInterval = setInterval(() => verifyOrgStillActive(slug), 30000)
       }
 
       setLoading(false)
     }
 
     detectOrg()
+    return () => { if (pollInterval) clearInterval(pollInterval) }
   }, [])
 
   return (
