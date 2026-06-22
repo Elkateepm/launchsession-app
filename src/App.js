@@ -8,6 +8,24 @@ import OrgLookup from './components/auth/OrgLookup'
 import Dashboard from './components/dashboard/Dashboard'
 import Onboarding from './components/onboarding/Onboarding'
 
+function AuthedApp({ session, org }) {
+  const [onboardingDone, setOnboardingDone] = React.useState(null)
+
+  React.useEffect(() => {
+    supabase.from('user_profiles')
+      .select('onboarding_complete, role')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => {
+        setOnboardingDone(!data || data.onboarding_complete || data.role !== 'admin' ? true : false)
+      })
+  }, [session.user.id])
+
+  if (onboardingDone === null) return null
+  if (!onboardingDone) return <Onboarding session={session} org={org} onComplete={() => setOnboardingDone(true)} />
+  return <Dashboard session={session} org={org} />
+}
+
 function AppContent() {
   const pathname = window.location.pathname
   const { org, loading: orgLoading, error: orgError, noOrg } = useOrg()
@@ -51,22 +69,9 @@ function AppContent() {
     </div>
   )
 
-  if (session) {
-    const profile = session.user
-    const [onboardingDone, setOnboardingDone] = React.useState(null)
-
-    React.useEffect(() => {
-      supabase.from('user_profiles').select('onboarding_complete, role').eq('id', profile.id).single().then(({ data }) => {
-        setOnboardingDone(!data || data.onboarding_complete || data.role !== 'admin' ? true : false)
-      })
-    }, [profile.id])
-
-    if (onboardingDone === null) return null
-    if (!onboardingDone) return <Onboarding session={session} org={org} onComplete={() => setOnboardingDone(true)} />
-    return <Dashboard session={session} org={org} />
-  }
-
-  return <Login org={org} />
+  return session
+    ? <AuthedApp session={session} org={org} />
+    : <Login org={org} />
 }
 
 export default function App() {
