@@ -48,7 +48,7 @@ function Toggle({ value, onChange, label }) {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f3f4f6' }}>
       <span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 500 }}>{label}</span>
       <div onClick={() => onChange(!value)} style={{ width: 40, height: 22, borderRadius: 11, background: value ? '#1B9AAA' : '#D1D5DB', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
-        <div style={{ position: 'absolute', top: 2, left: value ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+        <div style={{ position: 'absolute', top: 2, left: value ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
       </div>
     </div>
   )
@@ -242,12 +242,12 @@ function BrandingSection({ org, refreshOrg }) {
                   {['Sessions', 'Registers', 'Team', 'Reports'].map((item, i) => (
                     <div key={item} style={{ borderRadius: 8, padding: 10, background: i === 0 ? `${color}14` : '#fff', border: `1px solid ${i === 0 ? color + '40' : '#E5E7EB'}` }}>
                       <div style={{ width: 16, height: 3, borderRadius: 99, background: i === 0 ? color : '#CBD5E1', marginBottom: 6 }} />
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#0F172A' }}>{item}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{item}</div>
                     </div>
                   ))}
                 </div>
                 <button style={{ width: '100%', border: 'none', borderRadius: 8, padding: 10, background: color, color: '#fff', fontWeight: 700, fontSize: 12 }}>Primary Action</button>
-                <div style={{ textAlign: 'center', fontSize: 10, color: '#94A3B8', marginTop: 10 }}>Powered by LaunchSession</div>
+                <div style={{ textAlign: 'center', fontSize: 10, color: 'var(--text3)', marginTop: 10 }}>Powered by LaunchSession</div>
               </div>
             </div>
           </SettingCard>
@@ -270,12 +270,12 @@ function SecuritySection() {
           <div style={{ width: 56, height: 56, borderRadius: '50%', background: scoreColor + '20', border: `3px solid ${scoreColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: scoreColor, flexShrink: 0 }}>{score}/3</div>
           <div>
             <div style={{ fontSize: 16, fontWeight: 700, color: scoreColor }}>{scoreLabel}</div>
-            <div style={{ fontSize: 13, color: '#6b7280' }}>Your account security rating</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)' }}>Your account security rating</div>
           </div>
         </div>
       </SettingCard>
       <SettingCard title="Password & Authentication">
-        <button style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid #e5e7eb', background: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 12 }}>Change Password</button>
+        <button style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 12 }}>Change Password</button>
         <Toggle value={false} onChange={() => {}} label="Two-Factor Authentication (2FA)" />
         <Toggle value={true} onChange={() => {}} label="Email login notifications" />
       </SettingCard>
@@ -283,7 +283,7 @@ function SecuritySection() {
         <div style={{ background: '#F0FFF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700 }}>Current Session</div>
-            <div style={{ fontSize: 11, color: '#6b7280' }}>Chrome · macOS · Now</div>
+            <div style={{ fontSize: 11, color: 'var(--text3)' }}>Chrome · macOS · Now</div>
           </div>
           <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Active</span>
         </div>
@@ -327,7 +327,7 @@ function IntegrationsSection() {
               <span style={{ fontSize: 24 }}>{i.icon}</span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{i.name}</div>
-                <div style={{ fontSize: 11, color: '#9ca3af' }}>{i.desc}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{i.desc}</div>
               </div>
             </div>
             <div>
