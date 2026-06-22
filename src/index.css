@@ -10,6 +10,18 @@
   --border: #E5E7EB;
   --bg:     #F3F4F6;
   --text:   #111827;
+
+  /* Extended theme tokens */
+  --surface:       #ffffff;
+  --surface2:      #F9FAFB;
+  --surface3:      #F3F4F6;
+  --surface-hover: #F1F5F9;
+  --text2:    #374151;
+  --text3:    #6B7280;
+  --text4:    rgba(0,0,0,0.35);
+  --border2:  #D1D5DB;
+  --card-bg:     #ffffff;
+  --card-border: #E5E7EB;
   --font:   'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --radius: 12px;
   --shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -20,23 +32,38 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); -web
 [data-theme="dark"] {
   --white:  #1E1E2E;
   --muted:  #94A3B8;
-  --border: #2D2D3F;
-  --bg:     #0F0F1A;
-  --text:   #F1F5F9;
   --shadow: 0 2px 8px rgba(0,0,0,0.3);
+
+  --surface:       #1A1A2E;
+  --surface2:      #16162A;
+  --surface3:      #12122A;
+  --surface-hover: #202040;
+
+  --text:     #F1F5F9;
+  --text2:    #CBD5E1;
+  --text3:    #94A3B8;
+  --text4:    rgba(255,255,255,0.3);
+
+  --border:   #2D2D3F;
+  --border2:  #3D3D5F;
+
+  --bg:       #0F0F1A;
+
+  --card-bg:     #1A1A2E;
+  --card-border: #2D2D3F;
 }
 
 [data-theme="dark"] .card {
-  background: #1A1A2E;
-  border-color: #2D2D3F;
+  background: var(--card-bg);
+  border-color: var(--card-border);
 }
 
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea {
-  background: #1A1A2E;
-  color: #F1F5F9;
-  border-color: #2D2D3F;
+  background: var(--surface2);
+  color: var(--text);
+  border-color: var(--border);
 }
 
 @keyframes spin    { to { transform: rotate(360deg); } }

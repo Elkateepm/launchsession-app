@@ -98,7 +98,7 @@ export default function Dashboard({ session, org }) {
   const userName = userEmail.split('@')[0]
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F1F5F9', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
 
       {/* SIDEBAR */}
       <div style={{ width: sidebarCollapsed ? 72 : 248, background: '#0A0F1E', transition: 'width 0.2s ease', display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)' }}>
@@ -225,7 +225,7 @@ export default function Dashboard({ session, org }) {
       {/* MAIN CONTENT */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobileBottomNav ? 78 : 0 }}>
         {tab !== 'registers' && (
-          <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
+          <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
             {false && (
               <button
                 onClick={() => console.log('open mobile menu')}
@@ -244,10 +244,10 @@ export default function Dashboard({ session, org }) {
               </button>
             )}
             <div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: '#111' }}>{tab === 'home' ? 'Home' : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</div>
-              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>{orgName}</div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>{tab === 'home' ? 'Home' : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>{orgName}</div>
             </div>
-            <div style={{ fontSize: 12, color: '#9ca3af' }}>{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)' }}>{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
           </div>
         )}
 
@@ -282,7 +282,7 @@ export default function Dashboard({ session, org }) {
               <div style={{ textAlign: 'center', padding: 40 }}>
                 <div style={{ fontSize: 40, marginBottom: 14 }}>{ALL_MODULES.find(m => m.key === tab)?.icon}</div>
                 <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{ALL_MODULES.find(m => m.key === tab)?.label}</div>
-                <div style={{ fontSize: 14, color: '#9ca3af' }}>This module is being built</div>
+                <div style={{ fontSize: 14, color: 'var(--text3)' }}>This module is being built</div>
               </div>
             </div>
           )}
@@ -312,9 +312,9 @@ export default function Dashboard({ session, org }) {
                 boxShadow: '0 -20px 60px rgba(15,23,42,0.25)'
               }}
             >
-              <div style={{ width: 42, height: 5, borderRadius: 99, background: '#cbd5e1', margin: '0 auto 16px' }} />
+              <div style={{ width: 42, height: 5, borderRadius: 99, background: 'var(--border)', margin: '0 auto 16px' }} />
               <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>More</div>
-              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Open another LaunchSession area</div>
+              <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Open another LaunchSession area</div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {[
@@ -333,7 +333,7 @@ export default function Dashboard({ session, org }) {
                     }}
                     style={{
                       border: '1px solid #e5e7eb',
-                      background: '#f8fafc',
+                      background: 'var(--surface2)',
                       borderRadius: 18,
                       padding: 16,
                       textAlign: 'left',
@@ -341,7 +341,7 @@ export default function Dashboard({ session, org }) {
                     }}
                   >
                     <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
-                    <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a' }}>{item.label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)' }}>{item.label}</div>
                   </button>
                 ))}
               </div>
