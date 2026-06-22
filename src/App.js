@@ -17,7 +17,9 @@ function AuthedApp({ session, org }) {
       .eq('id', session.user.id)
       .single()
       .then(({ data }) => {
-        setOnboardingDone(!data || data.onboarding_complete ? true : false)
+        const isOwnerOrAdmin = data?.role === 'owner' || data?.role === 'admin'
+        const needsOnboarding = data && !data.onboarding_complete && isOwnerOrAdmin
+        setOnboardingDone(!needsOnboarding)
       })
   }, [session.user.id])
 

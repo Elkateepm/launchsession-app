@@ -44,7 +44,7 @@ export default function Onboarding({ session, org, onComplete }) {
 
     const { error: orgError } = await supabase
       .from('organisations')
-      .update({ type: orgType, city })
+      .update({ type: orgType, city, size, focus, onboarding_data: { org_type: orgType, size, city, focus, completed_at: new Date().toISOString() } })
       .eq('id', org.id)
 
     if (orgError) { setError('Could not save organisation details.'); setSaving(false); return }
