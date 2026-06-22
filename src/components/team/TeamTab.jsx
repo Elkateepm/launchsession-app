@@ -176,8 +176,8 @@ export default function TeamTab({ org, session }) {
       <div style={{ maxWidth: 1120, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 30, fontWeight: 950, color: '#111827' }}>👥 Team & Staff</div>
-          <div style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
+          <div style={{ fontSize: 30, fontWeight: 950, color: 'var(--text)' }}>👥 Team & Staff</div>
+          <div style={{ fontSize: 14, color: 'var(--text3)', marginTop: 4 }}>
             Invite staff, manage volunteers and build your organisation team.
           </div>
         </div>
@@ -191,9 +191,9 @@ export default function TeamTab({ org, session }) {
         </div>
 
         {/* Invite card */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 24, marginBottom: 24 }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 24 }}>
           <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Invite Staff</div>
-          <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>Send a magic link invite — they'll be added to {org?.name} automatically.</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Send a magic link invite — they'll be added to {org?.name} automatically.</div>
 
           {error && <div style={{ background: '#FFF0F0', border: '1px solid #FFD0D0', color: '#C00', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>{error}</div>}
           {inviteSuccess && <div style={{ background: '#F0FFF4', border: '1px solid #B0E8C0', color: '#1A5C1A', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>✓ {inviteSuccess}</div>}
@@ -201,24 +201,24 @@ export default function TeamTab({ org, session }) {
           <form onSubmit={handleInvite}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr auto auto', gap: 10, alignItems: 'flex-end' }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>First name</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>First name</label>
                 <input value={inviteFirstName} onChange={e => setInviteFirstName(e.target.value)} placeholder="First name"
                   style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Last name</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Last name</label>
                 <input value={inviteLastName} onChange={e => setInviteLastName(e.target.value)} placeholder="Last name"
                   style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Email address</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Email address</label>
                 <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} required placeholder="staff@organisation.com"
                   style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Role</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Role</label>
                 <select value={inviteRole} onChange={e => setInviteRole(e.target.value)}
-                  style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', background: '#fff', cursor: 'pointer' }}>
+                  style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface)', cursor: 'pointer' }}>
                   {ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
                 </select>
               </div>
@@ -231,14 +231,14 @@ export default function TeamTab({ org, session }) {
         </div>
 
 
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', marginBottom: 24 }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', marginBottom: 24 }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: 15, fontWeight: 800 }}>Pending Invites</div>
-            <div style={{ fontSize: 13, color: '#6b7280', fontWeight: 600 }}>{pendingInvites} pending</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>{pendingInvites} pending</div>
           </div>
 
           {invites.length === 0 ? (
-            <div style={{ padding: 30, textAlign: 'center', color: '#9ca3af' }}>
+            <div style={{ padding: 30, textAlign: 'center', color: 'var(--text3)' }}>
               <div style={{ fontSize: 30, marginBottom: 8 }}>✉️</div>
               <div style={{ fontSize: 14, fontWeight: 800 }}>No invites yet</div>
               <div style={{ fontSize: 13, marginTop: 4 }}>Invite staff and volunteers using the form above.</div>
@@ -252,8 +252,8 @@ export default function TeamTab({ org, session }) {
                   {fullName[0]?.toUpperCase() || '?'}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>{fullName}</div>
-                  <div style={{ fontSize: 12, color: '#9ca3af' }}>{invite.email}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{fullName}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text3)' }}>{invite.email}</div>
                 </div>
                 <span style={{ padding: '3px 10px', borderRadius: 99, background: (roleColors[invite.role] || primary) + '18', color: roleColors[invite.role] || primary, fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
                   {invite.role || 'staff'}
@@ -263,7 +263,7 @@ export default function TeamTab({ org, session }) {
                 </span>
                 {active && (
                   <>
-                    <button onClick={() => copyInvite(invite)} style={{ border: '1px solid #e5e7eb', background: '#fff', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                    <button onClick={() => copyInvite(invite)} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
                       Copy Link
                     </button>
                     <button onClick={() => cancelInvite(invite.id)} style={{ border: '1px solid #FECACA', background: '#FFF7F7', color: '#DC2626', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
@@ -277,28 +277,28 @@ export default function TeamTab({ org, session }) {
         </div>
 
 
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 24, marginBottom: 24 }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 24 }}>
           <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Manual Add</div>
-          <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>
             Add someone directly to this organisation without sending an invite.
           </div>
 
           <form onSubmit={handleManualAdd}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr auto auto', gap: 10, alignItems: 'flex-end' }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Full name</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Full name</label>
                 <input value={manualName} onChange={e => setManualName(e.target.value)} placeholder="Full name"
                   style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Email address</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Email address</label>
                 <input type="email" value={manualEmail} onChange={e => setManualEmail(e.target.value)} required placeholder="staff@organisation.com"
                   style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Role</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Role</label>
                 <select value={manualRole} onChange={e => setManualRole(e.target.value)}
-                  style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', background: '#fff', cursor: 'pointer' }}>
+                  style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface)', cursor: 'pointer' }}>
                   {ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
                 </select>
               </div>
@@ -311,15 +311,15 @@ export default function TeamTab({ org, session }) {
         </div>
 
         {/* Team list */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: 15, fontWeight: 800 }}>Team Members</div>
-            <div style={{ fontSize: 13, color: '#6b7280', fontWeight: 600 }}>{members.length} {members.length === 1 ? 'person' : 'people'}</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>{members.length} {members.length === 1 ? 'person' : 'people'}</div>
           </div>
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#9ca3af' }}>Loading...</div>
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading...</div>
           ) : members.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#9ca3af' }}>
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>👥</div>
               <div style={{ fontSize: 14, fontWeight: 700 }}>No team members yet</div>
               <div style={{ fontSize: 13, marginTop: 4 }}>Invite your first staff member above</div>
@@ -331,7 +331,7 @@ export default function TeamTab({ org, session }) {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{m.full_name || m.email}</div>
-                <div style={{ fontSize: 12, color: '#9ca3af' }}>{m.email}</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)' }}>{m.email}</div>
               </div>
               <div style={{ flexShrink: 0 }}>
                 <span style={{ padding: '3px 10px', borderRadius: 99, background: roleColors[m.role] + '18' || '#f3f4f6', color: roleColors[m.role] || '#6b7280', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>
