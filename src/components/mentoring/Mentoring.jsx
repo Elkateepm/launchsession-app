@@ -609,7 +609,7 @@ const styles = {
     minHeight: '100%',
     overflowY: 'auto',
     background: 'linear-gradient(180deg, #F8FBFF 0%, #EEF4FA 100%)',
-    color: '#0F172A',
+    color: 'var(--text)',
   },
   hero: {
     borderRadius: 22,
@@ -647,7 +647,7 @@ const styles = {
     padding: '0 22px 18px',
   },
   metric: {
-    background: '#fff',
+    background: 'var(--surface)',
     border: '1px solid #E5EAF2',
     borderRadius: 18,
     padding: 16,
@@ -671,7 +671,7 @@ const styles = {
   },
   metricLabel: {
     fontSize: 11,
-    color: '#64748B',
+    color: 'var(--text3)',
     fontWeight: 900,
     textTransform: 'uppercase',
   },
@@ -708,7 +708,7 @@ const styles = {
     gap: 18,
   },
   panel: {
-    background: '#fff',
+    background: 'var(--surface)',
     border: '1px solid #E5EAF2',
     borderRadius: 20,
     padding: 18,
@@ -722,7 +722,7 @@ const styles = {
   row: {
     width: '100%',
     border: '1px solid #E5EAF2',
-    background: '#F8FAFC',
+    background: 'var(--surface2)',
     borderRadius: 16,
     padding: 14,
     display: 'flex',
@@ -766,7 +766,7 @@ const styles = {
   empty: {
     textAlign: 'center',
     padding: 28,
-    color: '#64748B',
+    color: 'var(--text3)',
     fontWeight: 800,
   },
   smallRow: {
@@ -780,7 +780,7 @@ const styles = {
     display: 'flex',
     gap: 12,
     alignItems: 'flex-start',
-    background: '#F8FAFC',
+    background: 'var(--surface2)',
     border: '1px solid #E5EAF2',
     borderRadius: 14,
     padding: 12,
@@ -800,23 +800,23 @@ const styles = {
   pathwayTitle: {
     fontSize: 13,
     fontWeight: 950,
-    color: '#0F172A',
+    color: 'var(--text)',
   },
   pathwayText: {
     fontSize: 12,
-    color: '#64748B',
+    color: 'var(--text3)',
     marginTop: 3,
     lineHeight: 1.4,
   },
   nextStep: {
-    background: '#F8FAFC',
+    background: 'var(--surface2)',
     border: '1px solid #E5EAF2',
     borderRadius: 12,
     padding: 11,
     marginBottom: 8,
     fontSize: 13,
     fontWeight: 800,
-    color: '#334155',
+    color: 'var(--text2)',
   },
   formWrap: {
     maxWidth: 680,
@@ -863,7 +863,7 @@ const styles = {
   label: {
     fontSize: 11,
     fontWeight: 900,
-    color: '#64748B',
+    color: 'var(--text3)',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 6,
@@ -877,7 +877,7 @@ const styles = {
   chip: {
     border: '1.5px solid #E5E7EB',
     borderRadius: 999,
-    background: '#fff',
+    background: 'var(--surface)',
     padding: '9px 13px',
     fontSize: 13,
     fontWeight: 850,
@@ -926,7 +926,7 @@ const styles = {
   },
   bubbleLabel: {
     fontSize: 10,
-    color: '#64748B',
+    color: 'var(--text3)',
     fontWeight: 900,
     textTransform: 'uppercase',
   },
@@ -942,7 +942,7 @@ const styles = {
   moodButton: {
     border: '1.5px solid #E5E7EB',
     borderRadius: 12,
-    background: '#fff',
+    background: 'var(--surface)',
     padding: '10px 6px',
     cursor: 'pointer',
     display: 'flex',
