@@ -81,6 +81,12 @@ export function OrgProvider({ children }) {
         setOrg(data)
         setNoOrg(false)
         document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
+        if (data.logo_url) {
+          const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
+          favicon.rel = 'icon'
+          favicon.href = data.logo_url + '?t=' + Date.now()
+          document.head.appendChild(favicon)
+        }
         document.title = data.name || 'LaunchSession'
         pollInterval = setInterval(() => verifyOrgStillActive(slug), 30000)
       }

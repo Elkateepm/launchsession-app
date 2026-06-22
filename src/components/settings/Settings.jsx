@@ -158,6 +158,12 @@ function BrandingSection({ org, refreshOrg }) {
     }).eq('id', org?.id)
 
     document.documentElement.style.setProperty('--org-primary', color)
+    if (logoUrl) {
+      const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
+      favicon.rel = 'icon'
+      favicon.href = logoUrl + '?t=' + Date.now()
+      document.head.appendChild(favicon)
+    }
     if (refreshOrg) await refreshOrg()
     setSaving(false)
     setSaved(true)
