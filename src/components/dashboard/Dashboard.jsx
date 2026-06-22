@@ -242,6 +242,24 @@ export default function Dashboard({ session, org }) {
         )}
 
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          {org?.trial_expires_at && org?.plan === 'starter' && (() => {
+            const expires = new Date(org.trial_expires_at)
+            const daysLeft = Math.max(0, Math.ceil((expires - new Date()) / (1000 * 60 * 60 * 24)))
+            const urgent = daysLeft <= 2
+            return (
+              <div style={{ padding: '6px 20px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderRadius: 10, background: urgent ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.05)', border: `1px solid ${urgent ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.15)'}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 13 }}>{urgent ? '⚠️' : '🚀'}</span>
+                    <span style={{ fontSize: 13, color: urgent ? '#DC2626' : '#64748B', fontWeight: 500 }}>
+                      {daysLeft === 0 ? 'Your trial expires today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left on your free trial`}
+                    </span>
+                  </div>
+                  <a href="mailto:hello@launchsession.co.uk?subject=Upgrade LaunchSession" style={{ fontSize: 12, fontWeight: 700, color: urgent ? '#DC2626' : '#3B82F6', textDecoration: 'none' }}>Upgrade →</a>
+                </div>
+              </div>
+            )
+          })()}
           {tab === 'home'      && <Hub org={org} session={session} onNavigate={setTab} />}
           {tab === 'registers' && <Registers org={org} session={session} />}
           {tab === 'planner'   && <SessionPlanner org={org} />}
