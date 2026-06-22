@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useOrg } from '../../context/OrgContext'
 
 const NAV = [
   { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform' },
@@ -109,7 +110,7 @@ function OrgSection({ org }) {
   )
 }
 
-function BrandingSection({ org }) {
+function BrandingSection({ org, refreshOrg }) {
   const [color, setColor] = useState(org?.primary_color || '#1B9AAA')
   const [slogan, setSlogan] = useState(org?.slogan || '')
   const [logoPreview, setLogoPreview] = useState(org?.logo_url || '')
@@ -157,6 +158,7 @@ function BrandingSection({ org }) {
     }).eq('id', org?.id)
 
     document.documentElement.style.setProperty('--org-primary', color)
+    if (refreshOrg) await refreshOrg()
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
@@ -402,6 +404,7 @@ function ComingSoon({ label }) {
 }
 
 export default function Settings({ org, session }) {
+  const { refreshOrg } = useOrg()
   const brandingEnabled = org?.branding_enabled !== false
   const [active, setActive] = useState('organisation')
   const [search, setSearch] = useState('')
@@ -412,7 +415,7 @@ export default function Settings({ org, session }) {
   const renderContent = () => {
     switch(active) {
       case 'organisation':   return <OrgSection org={org} />
-      case 'branding':       return brandingEnabled ? <BrandingSection org={org} /> : (
+      case 'branding':       return brandingEnabled ? <BrandingSection org={org} refreshOrg={refreshOrg} /> : (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎨</div>
           <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Branding Centre is not enabled</div>

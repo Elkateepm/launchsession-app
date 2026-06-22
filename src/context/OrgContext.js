@@ -92,8 +92,19 @@ export function OrgProvider({ children }) {
     return () => { if (pollInterval) clearInterval(pollInterval) }
   }, [])
 
+  const refreshOrg = async () => {
+    const slug = localStorage.getItem('launchsession_org_slug')
+    if (!slug) return
+    const { data } = await supabase.from('organisations').select('*').eq('slug', slug).single()
+    if (data) {
+      setOrg(data)
+      document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
+      document.title = data.name || 'LaunchSession'
+    }
+  }
+
   return (
-    <OrgContext.Provider value={{ org, loading, noOrg }}>
+    <OrgContext.Provider value={{ org, loading, noOrg, refreshOrg }}>
       {children}
     </OrgContext.Provider>
   )
