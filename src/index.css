@@ -17,6 +17,28 @@
 
 body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
 
+[data-theme="dark"] {
+  --white:  #1E1E2E;
+  --muted:  #94A3B8;
+  --border: #2D2D3F;
+  --bg:     #0F0F1A;
+  --text:   #F1F5F9;
+  --shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .card {
+  background: #1A1A2E;
+  border-color: #2D2D3F;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #1A1A2E;
+  color: #F1F5F9;
+  border-color: #2D2D3F;
+}
+
 @keyframes spin    { to { transform: rotate(360deg); } }
 @keyframes fadeUp  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 

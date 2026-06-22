@@ -71,6 +71,12 @@ function NavSection({ title, children, collapsed }) {
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState('home')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [darkMode, setDarkMode] = React.useState(() => localStorage.getItem('dark_mode') === 'true')
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light')
+    localStorage.setItem('dark_mode', darkMode)
+  }, [darkMode])
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
   const [showMobileMore, setShowMobileMore] = React.useState(false);
 
@@ -191,6 +197,10 @@ export default function Dashboard({ session, org }) {
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail}</div>
             </div>}
           </div>
+          {!sidebarCollapsed && <button onClick={() => setDarkMode(d => !d)}
+            style={{ width: '100%', padding: '7px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 6, transition: 'all 0.15s' }}>
+            {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+          </button>}
           {!sidebarCollapsed && <button onClick={handleSignOut}
             style={{ width: '100%', padding: '7px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#FCA5A5'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
