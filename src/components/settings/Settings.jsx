@@ -21,10 +21,10 @@ const GROUPS = ['Platform', 'Operations', 'Communications', 'Account']
 
 function SettingCard({ title, description, children }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, marginBottom: 16, overflow: 'hidden' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, marginBottom: 16, overflow: 'hidden' }}>
       <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6' }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>{title}</div>
-        {description && <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>{description}</div>}
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{title}</div>
+        {description && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>{description}</div>}
       </div>
       <div style={{ padding: '20px' }}>{children}</div>
     </div>
@@ -34,19 +34,19 @@ function SettingCard({ title, description, children }) {
 function Field({ label, hint, children }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>{label}</label>
-      {hint && <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 6 }}>{hint}</div>}
+      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 4 }}>{label}</label>
+      {hint && <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 6 }}>{hint}</div>}
       {children}
     </div>
   )
 }
 
-const inp = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#fff' }
+const inp = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)' }
 
 function Toggle({ value, onChange, label }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f3f4f6' }}>
-      <span style={{ fontSize: 14, color: '#374151', fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 500 }}>{label}</span>
       <div onClick={() => onChange(!value)} style={{ width: 40, height: 22, borderRadius: 11, background: value ? '#1B9AAA' : '#D1D5DB', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
         <div style={{ position: 'absolute', top: 2, left: value ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
       </div>
@@ -174,11 +174,11 @@ function BrandingSection({ org, refreshOrg }) {
 
   return (
     <div>
-      <div style={{ background: 'linear-gradient(135deg,#F0F9FF,#EEF2FF)', border: '1px solid #E0E7FF', borderRadius: 16, padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 900, color: '#6366F1', letterSpacing: 2, textTransform: 'uppercase' }}>Branding Centre</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginTop: 4 }}>Make LaunchSession feel like {org?.name || 'your organisation'}</div>
-          <div style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>Logo, colour and tagline — all in one place.</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginTop: 4 }}>Make LaunchSession feel like {org?.name || 'your organisation'}</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Logo, colour and tagline — all in one place.</div>
         </div>
         <div style={{ fontSize: 36 }}>🎨</div>
       </div>
@@ -186,13 +186,13 @@ function BrandingSection({ org, refreshOrg }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 16 }}>
         <div>
           <SettingCard title="Logo" description="Shown in the sidebar, login screen and workspace header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#F8FAFC', border: '1.5px dashed #CBD5E1', borderRadius: 14, padding: 16, marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--surface2)', border: '1.5px dashed var(--border2)', borderRadius: 14, padding: 16, marginBottom: 4 }}>
               <div style={{ width: 72, height: 72, borderRadius: 16, background: logoPreview ? '#fff' : color, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 22, color: '#fff', flexShrink: 0, boxShadow: `0 8px 24px ${color}40` }}>
                 {logoPreview ? <img src={logoPreview} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : initials}
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>Upload your logo</div>
-                <div style={{ fontSize: 12, color: '#64748B', marginBottom: 10 }}>PNG or SVG on transparent background works best.</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Upload your logo</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>PNG or SVG on transparent background works best.</div>
                 <input type="file" accept="image/*" onChange={handleLogoChange} style={{ fontSize: 12 }} />
               </div>
             </div>
@@ -204,10 +204,10 @@ function BrandingSection({ org, refreshOrg }) {
               <input style={{ ...inp, flex: 1 }} value={color} onChange={e => setColor(e.target.value)} placeholder="#1B9AAA" />
               <div style={{ width: 44, height: 44, borderRadius: 10, background: color, flexShrink: 0, boxShadow: `0 8px 20px ${color}50` }} />
             </div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#94A3B8', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Presets</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Presets</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {palettes.map(p => (
-                <button key={p.color} onClick={() => setColor(p.color)} style={{ border: color === p.color ? `2px solid ${p.color}` : '1px solid #E5E7EB', background: '#fff', borderRadius: 999, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#334155' }}>
+                <button key={p.color} onClick={() => setColor(p.color)} style={{ border: color === p.color ? `2px solid ${p.color}` : '1px solid var(--border)', background: 'var(--surface)', borderRadius: 999, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--text2)' }}>
                   <span style={{ width: 10, height: 10, borderRadius: '50%', background: p.color, display: 'inline-block' }} />{p.name}
                 </button>
               ))}
@@ -237,7 +237,7 @@ function BrandingSection({ org, refreshOrg }) {
                   </div>
                 </div>
               </div>
-              <div style={{ padding: 14, background: '#F8FAFC' }}>
+              <div style={{ padding: 14, background: 'var(--surface2)' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                   {['Sessions', 'Registers', 'Team', 'Reports'].map((item, i) => (
                     <div key={item} style={{ borderRadius: 8, padding: 10, background: i === 0 ? `${color}14` : '#fff', border: `1px solid ${i === 0 ? color + '40' : '#E5E7EB'}` }}>
@@ -348,7 +348,7 @@ function BillingSection({ org }) {
       <SettingCard title="Current Plan">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: '#111', textTransform: 'capitalize' }}>{org?.plan || 'Starter'}</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', textTransform: 'capitalize' }}>{org?.plan || 'Starter'}</div>
             <div style={{ fontSize: 13, color: '#6b7280' }}>Contact us for pricing</div>
           </div>
           <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700 }}>Active</span>
@@ -363,7 +363,7 @@ function BillingSection({ org }) {
         ].map(u => (
           <div key={u.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
             <span style={{ fontSize: 14, color: '#374151' }}>{u.label}</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{u.value} <span style={{ color: '#9ca3af', fontWeight: 400 }}>/ {u.max}</span></span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{u.value} <span style={{ color: '#9ca3af', fontWeight: 400 }}>/ {u.max}</span></span>
           </div>
         ))}
       </SettingCard>
@@ -388,7 +388,7 @@ function HelpSection() {
             onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
             <span style={{ fontSize: 22 }}>{l.icon}</span>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{l.title}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{l.title}</div>
               <div style={{ fontSize: 12, color: '#9ca3af' }}>{l.desc}</div>
             </div>
             <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: 16 }}>›</span>
@@ -446,7 +446,7 @@ export default function Settings({ org, session }) {
       {/* SETTINGS SIDEBAR */}
       <div style={{ width: 220, background: '#fff', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto' }}>
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#111', marginBottom: 10 }}>⚙️ Settings</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>⚙️ Settings</div>
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9ca3af' }}>🔍</span>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search settings..."
@@ -475,8 +475,8 @@ export default function Settings({ org, session }) {
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
         <div style={{ maxWidth: 700 }}>
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#111' }}>{current?.icon} {current?.label}</div>
-            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>Manage your {current?.label?.toLowerCase()} settings</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>{current?.icon} {current?.label}</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Manage your {current?.label?.toLowerCase()} settings</div>
           </div>
           {renderContent()}
         </div>
