@@ -112,42 +112,139 @@ function OrgSection({ org }) {
 function BrandingSection({ org }) {
   const [color, setColor] = useState(org?.primary_color || '#1B9AAA')
   const [slogan, setSlogan] = useState(org?.slogan || '')
+  const [logoPreview, setLogoPreview] = useState(org?.logo_url || '')
+  const [logoFile, setLogoFile] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  const palettes = [
+    { name: 'Ocean', color: '#1B9AAA' },
+    { name: 'Blaze', color: '#FF6B1A' },
+    { name: 'Forest', color: '#16A34A' },
+    { name: 'Violet', color: '#7C3AED' },
+    { name: 'Navy', color: '#0B2D5E' },
+    { name: 'Rose', color: '#E11D48' },
+  ]
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoFile(file)
+    setLogoPreview(URL.createObjectURL(file))
+  }
+
   const handleSave = async () => {
     setSaving(true)
-    await supabase.from('organisations').update({ primary_color: color, slogan }).eq('id', org?.id)
+    let logoUrl = org?.logo_url || ''
+
+    if (logoFile) {
+      const ext = logoFile.name.split('.').pop()
+      const filePath = `${org.id}/logo.${ext}`
+      const { error: uploadError } = await supabase.storage
+        .from('org-logos')
+        .upload(filePath, logoFile, { upsert: true })
+
+      if (!uploadError) {
+        const { data } = supabase.storage.from('org-logos').getPublicUrl(filePath)
+        logoUrl = data.publicUrl
+      }
+    }
+
+    await supabase.from('organisations').update({
+      primary_color: color,
+      slogan,
+      logo_url: logoUrl,
+    }).eq('id', org?.id)
+
     document.documentElement.style.setProperty('--org-primary', color)
-    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000)
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2500)
   }
+
+  const initials = (org?.name || 'LS').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
   return (
     <div>
-      <SettingCard title="Brand Colours" description="Customise your platform colours">
-        <Field label="Primary Colour" hint="Used for buttons, active states and accents">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ width: 48, height: 40, borderRadius: 8, border: '1.5px solid #e5e7eb', cursor: 'pointer', padding: 2 }} />
-            <input style={{ ...inp, flex: 1 }} value={color} onChange={e => setColor(e.target.value)} placeholder="#1B9AAA" />
-            <div style={{ width: 40, height: 40, borderRadius: 8, background: color, flexShrink: 0 }} />
-          </div>
-        </Field>
-        <div style={{ background: '#F8FAFC', borderRadius: 10, padding: 16, marginBottom: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Live Preview</div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: color, color: '#fff', fontSize: 13, fontWeight: 700 }}>Primary Button</button>
-            <div style={{ padding: '8px 16px', borderRadius: 8, border: `2px solid ${color}`, color: color, fontSize: 13, fontWeight: 700 }}>Outline Button</div>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, alignSelf: 'center' }} />
-            <span style={{ color, fontSize: 13, fontWeight: 700 }}>Active Link</span>
-          </div>
+      <div style={{ background: 'linear-gradient(135deg,#F0F9FF,#EEF2FF)', border: '1px solid #E0E7FF', borderRadius: 16, padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 900, color: '#6366F1', letterSpacing: 2, textTransform: 'uppercase' }}>Branding Centre</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginTop: 4 }}>Make LaunchSession feel like {org?.name || 'your organisation'}</div>
+          <div style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>Logo, colour and tagline — all in one place.</div>
         </div>
-      </SettingCard>
-      <SettingCard title="Organisation Tagline">
-        <Field label="Tagline / Slogan" hint="Shown on the login screen and Hub"><input style={inp} value={slogan} onChange={e => setSlogan(e.target.value)} placeholder="e.g. Sport for every child" /></Field>
-        <button onClick={handleSave} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: saving ? '#9ca3af' : color, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-          {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Branding'}
-        </button>
-      </SettingCard>
+        <div style={{ fontSize: 36 }}>🎨</div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 16 }}>
+        <div>
+          <SettingCard title="Logo" description="Shown in the sidebar, login screen and workspace header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#F8FAFC', border: '1.5px dashed #CBD5E1', borderRadius: 14, padding: 16, marginBottom: 4 }}>
+              <div style={{ width: 72, height: 72, borderRadius: 16, background: logoPreview ? '#fff' : color, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 22, color: '#fff', flexShrink: 0, boxShadow: `0 8px 24px ${color}40` }}>
+                {logoPreview ? <img src={logoPreview} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : initials}
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>Upload your logo</div>
+                <div style={{ fontSize: 12, color: '#64748B', marginBottom: 10 }}>PNG or SVG on transparent background works best.</div>
+                <input type="file" accept="image/*" onChange={handleLogoChange} style={{ fontSize: 12 }} />
+              </div>
+            </div>
+          </SettingCard>
+
+          <SettingCard title="Primary Colour" description="Used for buttons, active states and highlights">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ width: 52, height: 44, borderRadius: 10, border: '1.5px solid #e5e7eb', cursor: 'pointer', padding: 2 }} />
+              <input style={{ ...inp, flex: 1 }} value={color} onChange={e => setColor(e.target.value)} placeholder="#1B9AAA" />
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: color, flexShrink: 0, boxShadow: `0 8px 20px ${color}50` }} />
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#94A3B8', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Presets</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {palettes.map(p => (
+                <button key={p.color} onClick={() => setColor(p.color)} style={{ border: color === p.color ? `2px solid ${p.color}` : '1px solid #E5E7EB', background: '#fff', borderRadius: 999, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#334155' }}>
+                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: p.color, display: 'inline-block' }} />{p.name}
+                </button>
+              ))}
+            </div>
+          </SettingCard>
+
+          <SettingCard title="Tagline" description="Shown on the login screen and workspace hub">
+            <Field label="Slogan"><input style={inp} value={slogan} onChange={e => setSlogan(e.target.value)} placeholder="e.g. Sport for every child" /></Field>
+            <button onClick={handleSave} disabled={saving} style={{ padding: '12px 28px', borderRadius: 10, border: 'none', background: saving ? '#9ca3af' : color, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 24px ${color}40` }}>
+              {saving ? 'Saving...' : saved ? '✅ Saved!' : 'Save Branding'}
+            </button>
+          </SettingCard>
+        </div>
+
+        <div>
+          <SettingCard title="Live Preview" description="How your workspace will look">
+            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB' }}>
+              <div style={{ background: `linear-gradient(135deg, ${color}, #0F172A)`, padding: 16, color: '#fff' }}>
+                <div style={{ fontSize: 10, opacity: 0.7, letterSpacing: 2, fontWeight: 800, marginBottom: 10 }}>WORKSPACE</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 14 }}>
+                    {logoPreview ? <img src={logoPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : initials}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 900 }}>{org?.name || 'Your Organisation'}</div>
+                    <div style={{ fontSize: 11, opacity: 0.7 }}>{slogan || 'Your tagline here'}</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ padding: 14, background: '#F8FAFC' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                  {['Sessions', 'Registers', 'Team', 'Reports'].map((item, i) => (
+                    <div key={item} style={{ borderRadius: 8, padding: 10, background: i === 0 ? `${color}14` : '#fff', border: `1px solid ${i === 0 ? color + '40' : '#E5E7EB'}` }}>
+                      <div style={{ width: 16, height: 3, borderRadius: 99, background: i === 0 ? color : '#CBD5E1', marginBottom: 6 }} />
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#0F172A' }}>{item}</div>
+                    </div>
+                  ))}
+                </div>
+                <button style={{ width: '100%', border: 'none', borderRadius: 8, padding: 10, background: color, color: '#fff', fontWeight: 700, fontSize: 12 }}>Primary Action</button>
+                <div style={{ textAlign: 'center', fontSize: 10, color: '#94A3B8', marginTop: 10 }}>Powered by LaunchSession</div>
+              </div>
+            </div>
+          </SettingCard>
+        </div>
+      </div>
     </div>
   )
 }
