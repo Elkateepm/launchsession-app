@@ -98,8 +98,6 @@ export default function Hub({ org, session, setTab, onNavigate }) {
 
     return { signedIn, absent, signedOut, expected, percent };
   };
-    ? getLiveSessionStats(liveHeroSession)
-    : { signedIn: 0, absent: 0, signedOut: 0, expected: 0, percent: 0 };
 
   const openRegisterForSession = (sessionId) => {
     try {
