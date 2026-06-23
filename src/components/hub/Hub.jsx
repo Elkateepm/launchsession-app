@@ -95,7 +95,7 @@ export default function Hub({ org, session, setTab, onNavigate }) {
     const records = attendance.filter(a => a.session_id === item.id);
     const signedIn = records.filter(a => a.status === "signed_in").length;
     const absent = records.filter(a => a.status === "absent").length;
-    const _signedOut = records.filter(a => a.status === "signed_out").length;
+    const signedOut = records.filter(a => a.status === "signed_out").length;
     const expected = Math.max(children.length, records.length);
     const percent = expected > 0 ? Math.round((signedIn / expected) * 100) : 0;
 
