@@ -124,292 +124,181 @@ export default function Hub({ org, session, setTab, onNavigate }) {
 
   return (
     <div style={styles.page}>
-      <section style={{ ...styles.hero, ...(isMobile ? styles.heroMobile : {}) }}>
+      {/* HEADER */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div style={{ ...styles.orgPill, color: primary }}>{orgName.toUpperCase()}</div>
-          <h1 style={styles.title}>Good morning, mohammed! 👋</h1>
-          <p style={styles.subtitle}>Here’s what’s happening at {orgName} today.</p>
+          <div style={{ fontSize: 11, fontWeight: 800, color: primary, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>{orgName}</div>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', margin: 0 }}>
+            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'} 👋
+          </h1>
+          <p style={{ color: 'var(--text3)', fontSize: 14, margin: '4px 0 0' }}>
+            {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
         </div>
-
-        <div style={styles.dateCard}>
-          <strong>{new Date().toLocaleDateString("en-GB", { weekday: "long" })}</strong>
-          <span>{new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={() => go('registers')} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+            📋 Take Register
+          </button>
+          <button onClick={() => go('planner')} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+            + Plan Session
+          </button>
         </div>
-      </section>
+      </div>
 
-      {liveHeroSession ? (
-        <section style={styles.liveHero}>
-          <div style={styles.liveHeroTop}>
-            <span style={styles.liveBadge}>● LIVE SESSION TODAY</span>
-            <span style={styles.liveCount}>{todaySessions.length} active today</span>
+      {/* TODAY'S SESSIONS */}
+      {todaySessions.length > 0 ? (
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#16A34A', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16A34A', display: 'inline-block', boxShadow: '0 0 8px #16A34A' }} />
+            {todaySessions.length} LIVE SESSION{todaySessions.length > 1 ? 'S' : ''} TODAY
           </div>
-
-          {todaySessions.length > 1 ? (
-            <div style={styles.equalLiveGrid}>
-              {todaySessions.map(item => {
-                const itemStats = getLiveSessionStats(item);
-                const hasRegister = itemStats.expected > 0 || itemStats.signedIn > 0 || itemStats.absent > 0 || itemStats.signedOut > 0;
-
-                return (
-                  <div key={item.id} style={styles.equalLiveCard}>
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                        <div style={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: 20,
-                          background: "linear-gradient(135deg, #06B6D4, #14B8A6)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 30,
-                          boxShadow: "0 12px 24px rgba(20,184,166,0.25)"
-                        }}>
-                          {item.session_type === "trip" ? "🚌" : item.session_type === "mentoring" ? "🤝" : item.session_type === "workshop" ? "🛠️" : "🏃"}
-                        </div>
-                        <div>
-                          <div style={styles.equalLiveTitle}>{item.title}</div>
-                          <div style={styles.equalLiveMeta}>
-                        {item.start_time || "No time"}
-                        {item.end_time ? ` – ${item.end_time}` : ""}
-                        {item.location ? ` · ${item.location}` : ""}
-                          </div>
-                        </div>
+          <div style={{ display: 'grid', gridTemplateColumns: todaySessions.length > 1 ? '1fr 1fr' : '1fr', gap: 14 }}>
+            {todaySessions.map(s => {
+              const stats = getLiveSessionStats(s)
+              return (
+                <div key={s.id} style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
+                        {s.session_type === 'trip' ? '🚌' : s.session_type === 'mentoring' ? '🤝' : s.session_type === 'workshop' ? '🛠️' : '🏃'}
                       </div>
-
-                      <span style={{
-                        background: "#16A34A",
-                        color: "#fff",
-                        borderRadius: 999,
-                        padding: "7px 13px",
-                        fontSize: 12,
-                        fontWeight: 950,
-                        boxShadow: "0 8px 18px rgba(22,163,74,0.24)"
-                      }}>
-                        LIVE
-                      </span>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text)' }}>{s.title}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{s.start_time || ''}{s.end_time ? ` – ${s.end_time}` : ''}{s.location ? ` · ${s.location}` : ''}</div>
+                      </div>
                     </div>
-
-                    <div style={styles.equalStatsGrid}>
-                      <div style={styles.equalStat}><strong style={{ fontSize: 24, color: "#34D399" }}>{itemStats.signedIn}</strong><span style={{ fontSize: 11, color: "#34D399", fontWeight: 900 }}>Signed in</span></div>
-                      <div style={styles.equalStat}><strong style={{ fontSize: 24, color: "#60A5FA" }}>{itemStats.expected}</strong><span style={{ fontSize: 11, color: "#60A5FA", fontWeight: 900 }}>Expected</span></div>
-                      <div style={styles.equalStat}><strong style={{ fontSize: 24, color: "#FB923C" }}>{itemStats.absent}</strong><span style={{ fontSize: 11, color: "#FB923C", fontWeight: 900 }}>Absent</span></div>
-                      <div style={styles.equalStat}><strong style={{ fontSize: 24, color: "#C084FC" }}>{itemStats.signedOut}</strong><span style={{ fontSize: 11, color: "#C084FC", fontWeight: 900 }}>Out</span></div>
+                    <span style={{ background: 'rgba(22,163,74,0.1)', color: '#16A34A', borderRadius: 99, padding: '4px 10px', fontSize: 11, fontWeight: 800 }}>LIVE</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
+                    {[['Signed In', stats.signedIn, '#2DD4BF'], ['Expected', stats.expected, '#60A5FA'], ['Absent', stats.absent, '#FB923C'], ['Signed Out', stats.signedOut, '#C084FC']].map(([label, val, col]) => (
+                      <div key={label} style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 20, fontWeight: 900, color: col }}>{val}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 600 }}>{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text3)', marginBottom: 6 }}>
+                      <span>Register progress</span><span style={{ fontWeight: 700 }}>{stats.percent}%</span>
                     </div>
-
-                    <div style={styles.progressLabel}>
-                      <span>Register progress</span>
-                      <span>{itemStats.percent}%</span>
-                    </div>
-                    <div style={styles.progressBar}>
-                      <div style={{ ...styles.progressFill, width: `${itemStats.percent}%`, background: primary }} />
-                    </div>
-
-                    <div style={styles.equalActions}>
-                      <button style={styles.equalPrimaryButton} onClick={() => openRegisterForSession(item.id)}>
-                        Open Register →
-                      </button>
-
-                      {hasRegister && (
-                        <>
-                          <button style={styles.equalGhostButton} onClick={() => openRegisterForSession(item.id)}>
-                            ⇥ Sign In
-                          </button>
-                          <button style={styles.equalGhostButton} onClick={() => openRegisterForSession(item.id)}>
-                            ⇤ Sign Out
-                          </button>
-                        </>
-                      )}
+                    <div style={{ height: 6, background: 'var(--border)', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${stats.percent}%`, background: primary, borderRadius: 99, transition: 'width 0.4s' }} />
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <>
-              <div style={styles.liveHeroBody}>
-                <div>
-                  <h2 style={styles.liveHeroTitle}>{liveHeroSession.title}</h2>
-                  <p style={styles.liveHeroMeta}>
-                    {liveHeroSession.start_time || "No time"}
-                    {liveHeroSession.end_time ? ` – ${liveHeroSession.end_time}` : ""}
-                    {liveHeroSession.location ? ` · ${liveHeroSession.location}` : ""}
-                  </p>
+                  <button onClick={() => openRegisterForSession(s.id)} style={{ padding: '12px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+                    Open Register →
+                  </button>
                 </div>
-
-                <button style={styles.liveHeroButton} onClick={() => openRegisterForSession(liveHeroSession.id)}>
-                  Open Live Register →
-                </button>
-              </div>
-
-              <div style={styles.liveStatsGrid}>
-                <div style={styles.liveStat}><strong>{liveHeroStats.signedIn}</strong><span>Signed in</span></div>
-                <div style={styles.liveStat}><strong>{liveHeroStats.expected}</strong><span>Expected</span></div>
-                <div style={styles.liveStat}><strong>{liveHeroStats.absent}</strong><span>Absent</span></div>
-                <div style={styles.liveStat}><strong>{liveHeroStats.signedOut}</strong><span>Signed out</span></div>
-              </div>
-
-              <div style={styles.progressLabel}>
-                <span>Register progress</span>
-                <span>{liveHeroStats.percent}%</span>
-              </div>
-              <div style={styles.progressBar}>
-                <div style={{ ...styles.progressFill, width: `${liveHeroStats.percent}%`, background: primary }} />
-              </div>
-            </>
-          )}
-        </section>
-      ) : (
-        <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, #6D28D9)` }}>
-          <div style={styles.trophy}>🏆</div>
-          <div>
-            <h2 style={styles.encouragementTitle}>Keep making an impact, {orgName}! ⭐</h2>
-            <p style={styles.encouragementText}>
-              You’ve supported {children.length} young people across {sessions.length} planned sessions.
-            </p>
-            <p style={styles.encouragementSmall}>❤️ Every session. Every child. Every opportunity.</p>
+              )
+            })}
           </div>
-          <div style={styles.confetti}>✨ 🎉 🌈</div>
-        </section>
+        </div>
+      ) : (
+        <div style={{ background: 'var(--surface)', border: '1.5px dashed var(--border)', borderRadius: 16, padding: '28px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>No sessions today</div>
+            <div style={{ fontSize: 14, color: 'var(--text3)' }}>Plan your next session to get started.</div>
+          </div>
+          <button onClick={() => go('planner')} style={{ padding: '11px 22px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+            + Plan a Session
+          </button>
+        </div>
       )}
 
-      <section style={styles.mainGrid}>
-        <div style={styles.leftColumn}>
-          <Panel title="🧭 Today at a glance">
-            <div style={{ ...styles.glanceGrid, ...(isMobile ? styles.mobileGrid : {}) }}>
-              <StatCard
-                icon="🗓️"
-                title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"}
-                text={todaySessions.length > 0 ? "Ready for delivery" : "Plan something amazing"}
-                button="Open Session Planner"
-                onClick={() => go("planner")}
-                colour={primary}
-              />
-
-              <StatCard
-                icon="⚽"
-                title={nextSession ? nextSession.title : "Next Session"}
-                text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"}
-                badge={nextSession ? "Upcoming" : "Plan now"}
-                onClick={() => go("planner")}
-                colour="#7C3AED"
-              />
-
-              <StatCard
-                icon="✅"
-                title={signedIn > 0 ? `${signedIn} signed in` : "Registers"}
-                text={signedOut > 0 ? `${signedOut} signed out` : "All clear"}
-                button="Take Register"
-                onClick={() => go("registers")}
-                colour="#16A34A"
-              />
-
-              <StatCard
-                icon="⭐"
-                title={`${completedWithoutReflection.length} due`}
-                text="Sessions need reflection"
-                button="Complete now"
-                onClick={() => go("planner")}
-                colour="#F59E0B"
-              />
+      {/* MAIN GRID */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: 20 }}>
+        {/* LEFT */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* UPCOMING SESSIONS */}
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>📅 Upcoming Sessions</div>
+              <button onClick={() => go('planner')} style={{ fontSize: 12, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer' }}>+ New →</button>
             </div>
-          </Panel>
-
-          <Panel title="⚡ Action Centre">
-            <div style={{ ...styles.actionGrid, ...(isMobile ? styles.mobileGrid : {}) }}>
-              <ActionCard icon="📋" title="Start Register" text="Take attendance in one tap" onClick={() => go("registers")} colour="#10B981" />
-              <ActionCard icon="🟣" title="Open Session Planner" text="Plan your next great session" onClick={() => go("planner")} colour="#8B5CF6" />
-              <ActionCard icon="🧒" title="Add Child" text="Register a young person" onClick={() => go("registers")} colour="#F59E0B" />
-              <ActionCard icon="🛡️" title="Safeguarding" text="Check concerns and alerts" onClick={() => go("safeguarding")} colour="#2563EB" />
-              <ActionCard icon="🤝" title="Mentoring" text="Track mentoring work" onClick={() => go("mentoring")} colour="#E91E63" />
-            </div>
-          </Panel>
-
-          <div style={{ ...styles.bottomGrid, ...(isMobile ? styles.mobileGrid : {}) }}>
-            <Panel title="💙 Encouragement for you">
-              <div style={styles.encourageCard}>
-                <h2 style={styles.bigMessage}>Small steps.<br />Big change. ❤️</h2>
-                <p style={styles.cardText}>
-                  Your commitment this month has helped create safe spaces, build confidence and inspire brighter futures.
-                </p>
-                <button style={{ ...styles.greenButton, background: primary }}>Keep going, you’re making a difference! 🌱</button>
-              </div>
-            </Panel>
-
-            <Panel title="📅 Coming Up">
-              {upcomingSessions.length === 0 ? (
-                <Empty text="No upcoming sessions yet." />
-              ) : (
-                upcomingSessions.map(s => (
-                  <MiniRow key={s.id} icon="⚽" title={s.title} text={`${formatDate(s.session_date)} · ${s.start_time || "No time"}`} />
-                ))
-              )}
-            </Panel>
-
-            <Panel title={`⭐ Reflection Due (${completedWithoutReflection.length})`}>
-              {completedWithoutReflection.length === 0 ? (
-                <Empty text="No reflections due. Great work!" />
-              ) : (
-                <>
-                  {completedWithoutReflection.map(s => (
-                    <MiniRow key={s.id} icon="📝" title={s.title} text={formatDate(s.session_date)} badge="Due" />
-                  ))}
-                  <button style={styles.yellowButton} onClick={() => go("planner")}>Complete reflections →</button>
-                </>
-              )}
-            </Panel>
+            {upcomingSessions.length === 0 ? (
+              <div style={{ padding: '24px 20px', color: 'var(--text3)', fontSize: 14, textAlign: 'center' }}>No upcoming sessions. <span style={{ color: primary, cursor: 'pointer', fontWeight: 700 }} onClick={() => go('planner')}>Plan one now →</span></div>
+            ) : (
+              upcomingSessions.map(s => (
+                <div key={s.id} onClick={() => go('registers')} style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: `${primary}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+                      {s.session_type === 'trip' ? '🚌' : s.session_type === 'mentoring' ? '🤝' : '🏃'}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{s.title}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text3)' }}>{formatDate(s.session_date)} · {s.start_time || 'No time'}</div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 12, color: 'var(--text3)' }}>→</span>
+                </div>
+              ))
+            )}
           </div>
+
+          {/* REFLECTIONS DUE */}
+          {completedWithoutReflection.length > 0 && (
+            <div style={{ background: 'var(--surface)', border: '1.5px solid rgba(245,158,11,0.3)', borderRadius: 16, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#D97706' }}>⭐ {completedWithoutReflection.length} Reflection{completedWithoutReflection.length > 1 ? 's' : ''} Due</div>
+                <button onClick={() => go('planner')} style={{ fontSize: 12, fontWeight: 700, color: '#D97706', background: 'none', border: 'none', cursor: 'pointer' }}>Complete all →</button>
+              </div>
+              {completedWithoutReflection.slice(0, 3).map(s => (
+                <div key={s.id} style={{ padding: '12px 20px', borderBottom: '1px solid var(--border)', fontSize: 13, color: 'var(--text)' }}>
+                  <span style={{ fontWeight: 700 }}>{s.title}</span> <span style={{ color: 'var(--text3)' }}>· {formatDate(s.session_date)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div style={styles.rightColumn}>
-          <Panel title="🔔 Attention Centre">
-            <AttentionRow icon="📝" label="Registers" value={signedIn > 0 ? `${signedIn} signed in` : "All clear"} tone="green" onClick={() => go("registers")} />
-            <AttentionRow icon="🛡️" label="Safeguarding" value={concerns.length > 0 ? `${concerns.length} open concern${concerns.length > 1 ? "s" : ""}` : "No open concerns"} tone={concerns.length > 0 ? "amber" : "green"} onClick={() => go("safeguarding")} />
-            <AttentionRow icon="💬" label="Messages" value="Check inbox" tone="blue" onClick={() => go("messages")} />
-            <AttentionRow icon="❤️" label="Volunteers" value="Review cover" tone="blue" onClick={() => go("volunteers")} />
-          </Panel>
+        {/* RIGHT */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* QUICK ACTIONS */}
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Quick Actions</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { icon: '📋', label: 'Take Register', tab: 'registers', bg: '#10B981' },
+                { icon: '📅', label: 'Plan a Session', tab: 'planner', bg: '#8B5CF6' },
+                { icon: '🧒', label: 'Add Child', tab: 'registers', bg: '#F59E0B' },
+                { icon: '🛡️', label: 'Safeguarding', tab: 'safeguarding', bg: '#2563EB' },
+              ].map(a => (
+                <button key={a.label} onClick={() => go(a.tab)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${a.bg}18`; e.currentTarget.style.borderColor = `${a.bg}40` }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
+                  <span style={{ width: 32, height: 32, borderRadius: 8, background: `${a.bg}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{a.icon}</span>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          <Panel title="💪 You’re doing amazing work!">
-            <div style={styles.rocketCard}>
-              <div>
-                <h2 style={styles.bigMessage}>Consistency is changing lives.</h2>
-                <p style={styles.cardText}>Thank you for showing up for {orgName}.</p>
+          {/* ATTENTION CENTRE */}
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>🔔 Attention Centre</div>
+            {[
+              { icon: '📝', label: 'Registers', value: signedIn > 0 ? `${signedIn} signed in` : 'All clear', tone: signedIn > 0 ? '#16A34A' : '#94A3B8', tab: 'registers' },
+              { icon: '🛡️', label: 'Safeguarding', value: concerns.length > 0 ? `${concerns.length} open` : 'No concerns', tone: concerns.length > 0 ? '#F59E0B' : '#94A3B8', tab: 'safeguarding' },
+              { icon: '👥', label: 'Young People', value: `${children.length} registered`, tone: primary, tab: 'registers' },
+              { icon: '📊', label: 'Attendance', value: `${attendanceRate}%`, tone: '#2563EB', tab: 'registers' },
+            ].map(row => (
+              <div key={row.label} onClick={() => go(row.tab)} style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 16 }}>{row.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{row.label}</span>
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 700, color: row.tone }}>{row.value}</span>
               </div>
-              <div style={styles.rocket}>🚀</div>
-            </div>
-          </Panel>
-
-          <Panel title="🛡️ Safeguarding Snapshot">
-            <div style={styles.snapshotGrid}>
-              <SmallMetric label="Open Concerns" value={concerns.length} colour="#059669" />
-              <SmallMetric label="Medical Alerts" value={medicalAlerts} colour="#F59E0B" />
-              <SmallMetric label="Needs Attention" value={completedWithoutReflection.length} colour="#DC2626" />
-            </div>
-          </Panel>
-
-          <Panel title="💎 Our Impact This Month">
-            <div style={styles.impactGrid}>
-              <SmallMetric label="Young People" value={children.length} colour={primary} />
-              <SmallMetric label="Sessions" value={sessions.length} colour="#7C3AED" />
-              <SmallMetric label="Signed In" value={signedIn} colour="#2563EB" />
-              <SmallMetric label="Attendance" value={`${attendanceRate}%`} colour="#059669" />
-            </div>
-          </Panel>
-
-          <div style={styles.quote}>
-            “Alone we can do so little; together we can do so much.”
-            <br />
-            <strong>— Helen Keller</strong>
+            ))}
           </div>
         </div>
-      </section>
-
-      <div style={styles.footerBanner}>
-        🌱 Building stronger communities through sport, mentoring and opportunity.
-        <br />
-        <strong>Thank you for being part of the {orgName} family! 💚</strong>
       </div>
     </div>
+
   );
 }
 
