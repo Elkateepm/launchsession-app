@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useOrgSettings } from '../hooks/useOrgSettings';
+import { useOrgSettings } from '../../hooks/useOrgSettings';
 
 const PRESET_GROUPS = [
   { label: 'Under 7s', color: '#4F6EF7' },
