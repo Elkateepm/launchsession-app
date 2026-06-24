@@ -72,7 +72,6 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
   const [profile, setProfile] = useState(null)
   const [activeSection, setActiveSection] = useState('profile')
   const [edits, setEdits] = useState({})
-  const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const hasEdits = Object.keys(edits).length > 0
   const [photoUploading, setPhotoUploading] = useState(false)
@@ -115,16 +114,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
     setTimeout(() => setSaved(false), 2000)
   }
 
-  const handleSaveAll = async () => {
-    if (!hasEdits) return
-    setSaving(true)
-    await supabase.from('user_profiles').update(edits).eq('id', userId)
-    setEdits({})
-    setSaving(false)
-    setSaved(true)
-    if (onProfileUpdate) onProfileUpdate()
-    setTimeout(() => setSaved(false), 2000)
-  }
+
 
   const NAV = [
     { key: 'profile',   icon: '👤', label: 'My Profile',        sub: 'View and edit your details' },
