@@ -288,7 +288,7 @@ export default function Dashboard({ session, org }) {
               </div>
             )
           })()}
-          {tab === 'home'      && <Hub org={org} session={session} onNavigate={setTab} />}
+          {tab === 'home'      && <Hub org={org} session={session} onNavigate={setTab} userProfile={userProfile} />}
           {tab === 'registers' && <Registers org={org} session={session} />}
           {tab === 'planner'   && <SessionPlanner org={org} />}
           {tab === 'team'      && <TeamTab org={org} session={session} />}
