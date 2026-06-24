@@ -71,6 +71,10 @@ export default function ProfilePage({ session, org, onClose, onSignOut }) {
   const userEmail = session?.user?.email || ''
   const [profile, setProfile] = useState(null)
   const [activeSection, setActiveSection] = useState('profile')
+  const [edits, setEdits] = useState({})
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const hasEdits = Object.keys(edits).length > 0
   const [photoUploading, setPhotoUploading] = useState(false)
   const [editField, setEditField] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
@@ -102,9 +106,19 @@ export default function ProfilePage({ session, org, onClose, onSignOut }) {
     setPhotoUploading(false)
   }
 
-  const saveField = async (field, value) => {
-    await supabase.from('user_profiles').update({ [field]: value }).eq('id', userId)
+  const saveField = (field, value) => {
+    setEdits(e => ({ ...e, [field]: value }))
     setProfile(p => ({ ...p, [field]: value }))
+  }
+
+  const handleSaveAll = async () => {
+    if (!hasEdits) return
+    setSaving(true)
+    await supabase.from('user_profiles').update(edits).eq('id', userId)
+    setEdits({})
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
   }
 
   const NAV = [
@@ -276,8 +290,15 @@ export default function ProfilePage({ session, org, onClose, onSignOut }) {
           </div>
 
           {/* Footer */}
-          <div style={{ padding: '12px 28px', borderTop: '1px solid #f3f4f6', textAlign: 'center', fontSize: 11, color: '#d1d5db', flexShrink: 0 }}>
+          <div style={{ padding: '12px 28px', borderTop: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+            {hasEdits ? (
+              <button onClick={handleSaveAll} disabled={saving} style={{ padding: '9px 24px', borderRadius: 9, border: 'none', background: saved ? '#10B981' : '#4F6EF7', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer', transition: 'background 0.2s' }}>
+                {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Changes'}
+              </button>
+            ) : <div />}
+            <div style={{ fontSize: 11, color: '#d1d5db' }}>
             LaunchSession · {role.badge} Account · {org?.name || ''}
+            </div>
           </div>
         </div>
       </div>
