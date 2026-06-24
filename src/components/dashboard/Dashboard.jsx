@@ -1,5 +1,6 @@
 // AUTH FLOW LOCK: sign out must clear Supabase session, local org slug, and return to landing.
 import Settings from '../settings/Settings'
+import ProfilePage from '../profile/ProfilePage'
 import TeamTab from '../team/TeamTab'
 import Mentoring from '../mentoring/Mentoring'
 import SessionPlanner from '../sessions/SessionPlanner'
@@ -67,6 +68,14 @@ function NavSection({ title, children, collapsed }) {
     <div style={{ marginBottom: 6 }}>
       {!collapsed && <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: 1.5, padding: '8px 12px 4px' }}>{title}</div>}
       {children}
+    {showProfile && (
+        <ProfilePage
+          session={session}
+          org={org}
+          onClose={() => setShowProfile(false)}
+          onSignOut={() => { setShowProfile(false); supabase.auth.signOut() }}
+        />
+      )}
     </div>
   )
 }
@@ -99,6 +108,7 @@ export default function Dashboard({ session, org }) {
   const handleSignOut = () => supabase.auth.signOut()
   const userEmail = session?.user?.email || ''
   const [userProfile, setUserProfile] = useState(null)
+  const [showProfile, setShowProfile] = useState(false)
 
   useEffect(() => {
     if (!session?.user?.id) return
@@ -204,7 +214,7 @@ export default function Dashboard({ session, org }) {
 
         {/* USER PROFILE */}
         <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, cursor: 'pointer' }} onClick={() => setShowProfile(true)}>
             <div style={{ width: 32, height: 32, borderRadius: 10, background: `linear-gradient(135deg, ${primary}88, #6366F188)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
               {userName[0]?.toUpperCase() || '?'}
             </div>
