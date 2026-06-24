@@ -143,7 +143,7 @@ export default function Hub({ org, session, setTab, onNavigate }) {
       <section style={{ ...styles.hero, ...(isMobile ? styles.heroMobile : {}) }}>
         <div>
           <div style={{ ...styles.orgPill, color: primary }}>{orgName.toUpperCase()}</div>
-          <h1 style={styles.title}>Good morning, {hubUserName}! 👋</h1>
+          <h1 style={styles.title}>{getGreeting()}, {hubUserName}! 👋</h1>
           <p style={styles.subtitle}>Here’s what’s happening at {orgName} today.</p>
         </div>
 
