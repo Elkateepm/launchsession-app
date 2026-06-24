@@ -71,9 +71,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
   const userEmail = session?.user?.email || ''
   const [profile, setProfile] = useState(null)
   const [activeSection, setActiveSection] = useState('profile')
-  const [edits, setEdits] = useState({})
   const [saved, setSaved] = useState(false)
-  const hasEdits = Object.keys(edits).length > 0
   const [photoUploading, setPhotoUploading] = useState(false)
   const [editField, setEditField] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
