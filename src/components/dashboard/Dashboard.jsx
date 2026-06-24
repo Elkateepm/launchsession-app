@@ -106,17 +106,17 @@ export default function Dashboard({ session, org }) {
     if (!session?.user?.id) return
     supabase
       .from('user_profiles')
-      .select('full_name, role')
+      .select('full_name, role, photo_url')
       .eq('id', session.user.id)
       .single()
       .then(({ data }) => { if (data) setUserProfile(data) })
+  }, [session?.user?.id])
 
   const refreshUserProfile = () => {
     if (!session?.user?.id) return
     supabase.from('user_profiles').select('full_name, role, photo_url').eq('id', session.user.id).single()
       .then(({ data }) => { if (data) setUserProfile(data) })
   }
-  }, [session?.user?.id])
 
   const userName = userProfile?.full_name || userEmail.split('@')[0]
 
