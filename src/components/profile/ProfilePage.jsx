@@ -105,11 +105,14 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
   }
 
   const saveField = async (field, value) => {
-    await supabase.from('user_profiles').update({ [field]: value }).eq('id', userId)
-    setProfile(p => ({ ...p, [field]: value }))
-    if (onProfileUpdate) onProfileUpdate()
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    const { data, error } = await supabase.from('user_profiles').update({ [field]: value }).eq('id', userId).select()
+    console.log('saveField', field, value, 'userId:', userId, 'data:', data, 'error:', error)
+    if (!error) {
+      setProfile(p => ({ ...p, [field]: value }))
+      if (onProfileUpdate) onProfileUpdate()
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    }
   }
 
 
