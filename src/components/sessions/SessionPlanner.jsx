@@ -1,3 +1,4 @@
+import { useOrgSettings } from '../../hooks/useOrgSettings'
 import React, { useState, useEffect } from 'react'
 import { format, addDays, parseISO, startOfWeek, isSameDay } from 'date-fns'
 import { supabase } from '../../lib/supabase'
@@ -10,7 +11,7 @@ const SESSION_TYPES = [
   { key: 'mentoring', label: 'Mentoring', icon: '🤝', color: '#E91E8C' },
 ]
 
-const BUBBLE_DEFS = [
+const DEFAULT_BUBBLE_DEFS = [
   { key: 'red',    label: 'Red',    color: '#E53935' },
   { key: 'green',  label: 'Green',  color: '#417505' },
   { key: 'yellow', label: 'Yellow', color: '#B8860B' },
@@ -18,6 +19,15 @@ const BUBBLE_DEFS = [
   { key: 'purple', label: 'Purple', color: '#7B2D8B' },
   { key: 'teens',  label: 'Teens',  color: '#1A1A1A' },
 ]
+
+function normaliseBubbleDefs(groups) {
+  if (!groups || groups.length === 0) return DEFAULT_BUBBLE_DEFS
+  return groups.map(g => ({
+    key:   (g.id || g.label).toString(),
+    label: g.label,
+    color: g.color || '#1B9AAA',
+  }))
+}
 
 const ACTIVITIES = ['Football', 'Basketball', 'Tennis', 'Athletics', 'Arts & Crafts', 'Swimming', 'Dance', 'Boxing', 'Cricket', 'Dodgeball', 'Free Play', 'Workshop']
 
@@ -38,8 +48,8 @@ function Field({ label, children }) {
 }
 
 // ─── ROTATION PLANNER ────────────────────────────────────────
-function RotationPlanner({ slots, onChange, selectedBubbles }) {
-  const activeBubbles = BUBBLE_DEFS.filter(b => (selectedBubbles || []).map(s => s.toLowerCase()).includes(b.key))
+function RotationPlanner({ slots, onChange, selectedBubbles, bubbleDefs }) {
+  const activeBubbles = (bubbleDefs || DEFAULT_BUBBLE_DEFS).filter(b => (selectedBubbles || []).includes(b.label))
   const addSlot = () => {
     const lastTime = slots.length > 0 ? slots[slots.length - 1].time : '09:00'
     const [h, m] = lastTime.split(':').map(Number)
@@ -89,7 +99,7 @@ function RotationPlanner({ slots, onChange, selectedBubbles }) {
 }
 
 // ─── SESSION FORM ─────────────────────────────────────────────
-function SessionForm({ initial, onSave, onCancel, saving }) {
+function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs }) {
   const [form, setForm] = useState(initial || EMPTY_FORM)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const type = SESSION_TYPES.find(t => t.key === form.session_type)
@@ -136,7 +146,7 @@ function SessionForm({ initial, onSave, onCancel, saving }) {
       <div style={{ marginBottom: 14 }}>
         <label style={lbl}>Bubbles</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-          {BUBBLE_DEFS.map(b => {
+          {(bubbleDefs || DEFAULT_BUBBLE_DEFS).map(b => {
             const active = (form.bubbles || []).includes(b.label)
             return (
               <button key={b.key} onClick={() => set('bubbles', active ? form.bubbles.filter(x => x !== b.label) : [...(form.bubbles || []), b.label])}
@@ -166,7 +176,7 @@ function SessionForm({ initial, onSave, onCancel, saving }) {
       )}
 
       <Field label="Bubble Rotation (optional)">
-        <RotationPlanner slots={form.rotation_slots || []} onChange={v => set('rotation_slots', v)} selectedBubbles={form.bubbles || []} />
+        <RotationPlanner slots={form.rotation_slots || []} onChange={v => set('rotation_slots', v)} selectedBubbles={form.bubbles || []} bubbleDefs={bubbleDefs} />
       </Field>
 
       <Field label="Description">
@@ -375,6 +385,8 @@ const statLine = {
 export default function SessionPlanner({ org }) {
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
+  const { groups: orgGroups } = useOrgSettings(orgId)
+  const bubbleDefs = normaliseBubbleDefs(orgGroups)
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('list')
@@ -481,7 +493,7 @@ export default function SessionPlanner({ org }) {
             <div style={{ fontSize: 22, fontWeight: 950, marginBottom: 16 }}>
               {editing?.id ? 'Edit Session' : tab === 'trips' ? '🚌 Plan a Trip' : '📅 New Session'}
             </div>
-            <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} />
+            <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} />
           </div>
         </div>
       ) : (

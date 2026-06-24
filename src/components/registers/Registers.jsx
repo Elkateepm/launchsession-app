@@ -3,6 +3,7 @@ import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
 import ExcelUploadModal from './ExcelUploadModal'
+import { useOrgSettings } from '../../hooks/useOrgSettings'
 
 const DEFAULT_BUBBLES = [
   { key: 'red',    label: 'Red',    color: '#DC2626', light: '#FEF2F2', dark: '#991B1B' },
@@ -12,6 +13,21 @@ const DEFAULT_BUBBLES = [
   { key: 'purple', label: 'Purple', color: '#7C3AED', light: '#F5F3FF', dark: '#4C1D95' },
   { key: 'teens',  label: 'Teens',  color: '#374151', light: '#F9FAFB', dark: '#111827' },
 ]
+
+// Convert org custom_groups (from useOrgSettings) to bubble shape
+function normaliseBubbles(groups) {
+  if (!groups || groups.length === 0) return DEFAULT_BUBBLES
+  return groups.map(g => {
+    const hex = g.color || '#1B9AAA'
+    return {
+      key:   (g.id || g.label).toString(),
+      label: g.label,
+      color: hex,
+      light: hex + '20',
+      dark:  hex,
+    }
+  })
+}
 
 function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
   const [form, setForm] = useState({ first_name: '', last_name: '', date_of_birth: '', group_name: bubbles[0]?.label || '', allergies: '', medical_notes: '', emergency_contact_name: '', emergency_contact_phone: '' })
@@ -43,7 +59,7 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
             <div><label style={lbl}>Date of Birth</label><input style={inp} type="date" value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)} /></div>
             <div><label style={lbl}>Group</label>
               <select style={{ ...inp, background: 'var(--surface)' }} value={form.group_name} onChange={e => set('group_name', e.target.value)}>
-                {bubbles.map(b => <option key={b.key} value={b.label}>{b.label}</option>)}
+                {bubbles.map(b => <option key={b.key || b.id} value={b.label}>{b.label}</option>)}
               </select>
             </div>
           </div>
@@ -219,7 +235,8 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
 export default function Registers({ org }) {
   const orgId  = org?.id
   const primary = org?.primary_color || '#1B9AAA'
-  const bubbles = DEFAULT_BUBBLES
+  const { groups: orgGroups } = useOrgSettings(orgId)
+  const bubbles = normaliseBubbles(orgGroups)
   const { session } = useTodaySession(orgId)
   const { children, setChildren, loading } = useChildren(orgId)
   const { attendance, updateStatus } = useAttendance(session?.id)
