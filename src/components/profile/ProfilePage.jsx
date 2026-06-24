@@ -87,7 +87,6 @@ function EditProfileModal({ profile, userId, onClose, onSaved }) {
 }
 
 function ChangePasswordModal({ onClose }) {
-  const [current, setCurrent] = useState('')
   const [newPw, setNewPw] = useState('')
   const [confirm, setConfirm] = useState('')
   const [saving, setSaving] = useState(false)
