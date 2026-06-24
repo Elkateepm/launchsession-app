@@ -140,18 +140,67 @@ export default function Hub({ org, session, setTab, onNavigate }) {
 
   return (
     <div style={styles.page}>
-      <section style={{ ...styles.hero, ...(isMobile ? styles.heroMobile : {}) }}>
-        <div>
-          <div style={{ ...styles.orgPill, color: primary }}>{orgName.toUpperCase()}</div>
-          <h1 style={styles.title}>{getGreeting()}, {hubUserName}! 👋</h1>
-          <p style={styles.subtitle}>Here’s what’s happening at {orgName} today.</p>
+            {/* ── PREMIUM HEADER ─────────────────────────────── */}
+      <header style={{ background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border, #e5e7eb)', padding: '0 28px', flexShrink: 0 }}>
+
+        {/* STATUS BAR */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderBottom: '1px solid var(--border, #f1f5f9)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            {org?.logo_url ? (
+              <img src={org.logo_url} alt={orgName} style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'contain' }} />
+            ) : (
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: '#fff' }}>
+                {orgName[0]}
+              </div>
+            )}
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text, #111)', lineHeight: 1.2 }}>{orgName}</div>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: primary, background: primary + '18', borderRadius: 4, padding: '1px 6px' }}>
+                {org?.plan || 'Starter'}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, maxWidth: 480, position: 'relative' }}>
+            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 14 }}>🔍</span>
+            <input placeholder="Search young people, sessions, volunteers..."
+              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px 8px 36px', borderRadius: 10, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface2, #f9fafb)', fontSize: 13, color: 'var(--text, #111)', outline: 'none' }} />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto', flexShrink: 0 }}>
+            <button onClick={() => setTab('messaging')} style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid var(--border, #e5e7eb)', background: 'transparent', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Messages">💬</button>
+            <div style={{ width: 1, height: 20, background: 'var(--border, #e5e7eb)' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${primary}88, #6366F188)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>
+                {hubUserName[0]?.toUpperCase() || '?'}
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text, #111)' }}>{hubUserName}</div>
+            </div>
+            <div style={{ width: 1, height: 20, background: 'var(--border, #e5e7eb)' }} />
+            <div style={{ fontSize: 12, color: 'var(--text3, #6b7280)', fontWeight: 500, whiteSpace: 'nowrap' }}>
+              {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+            </div>
+          </div>
         </div>
 
-        <div style={styles.dateCard}>
-          <strong>{new Date().toLocaleDateString("en-GB", { weekday: "long" })}</strong>
-          <span>{new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
+        {/* WELCOME ROW */}
+        <div style={{ padding: '14px 0 12px' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: primary, marginBottom: 4 }}>{orgName}</div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--text, #0f172a)', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
+            {getGreeting()}, {hubUserName}
+          </h1>
+          <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 13, color: 'var(--text3, #64748b)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ color: todaySessions.length > 0 ? '#10b981' : '#9ca3af', fontSize: 8 }}>●</span>
+              {todaySessions.length} session{todaySessions.length !== 1 ? 's' : ''} today
+            </span>
+            <span style={{ color: 'var(--border, #e5e7eb)' }}>·</span>
+            <span style={{ fontSize: 13, color: 'var(--text3, #64748b)' }}>{liveHeroStats?.expected || 0} young people expected</span>
+            <span style={{ color: 'var(--border, #e5e7eb)' }}>·</span>
+            <span style={{ fontSize: 13, color: '#10b981', fontWeight: 600 }}>✓ No safeguarding concerns</span>
+          </div>
         </div>
-      </section>
+      </header>
 
       {liveHeroSession ? (
         <section style={styles.liveHero}>
