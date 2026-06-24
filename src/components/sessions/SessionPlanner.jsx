@@ -222,7 +222,7 @@ function LegacySessionCard({ session, onEdit, onDelete }) {
       {bubbles.length > 0 && (
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 10 }}>
           {bubbles.map(b => {
-            const bd = BUBBLE_DEFS.find(d => d.label === b) || BUBBLE_DEFS[0]
+            const bd = DEFAULT_BUBBLE_DEFS.find(d => d.label === b) || DEFAULT_BUBBLE_DEFS[0]
             return <span key={b} style={{ background: bd.color, color: '#fff', borderRadius: 20, padding: '2px 10px', fontSize: 10, fontWeight: 800 }}>{b}</span>
           })}
         </div>
