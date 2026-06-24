@@ -2,6 +2,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function Hub({ org, session, setTab, onNavigate }) {
+  const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
+
+  React.useEffect(() => {
+    if (!session?.user?.id) return
+    import('../../lib/supabase').then(({ supabase }) => {
+      supabase.from('user_profiles').select('full_name').eq('id', session.user.id).single()
+        .then(({ data }) => { if (data?.full_name) setHubUserName(data.full_name) })
+    })
+  }, [session?.user?.id])
   const orgId = org?.id;
   const primary = org?.primary_color || "#1B9AAA";
   const orgName = org?.name || "LaunchSession";
@@ -127,7 +136,7 @@ export default function Hub({ org, session, setTab, onNavigate }) {
       <section style={{ ...styles.hero, ...(isMobile ? styles.heroMobile : {}) }}>
         <div>
           <div style={{ ...styles.orgPill, color: primary }}>{orgName.toUpperCase()}</div>
-          <h1 style={styles.title}>Good morning, mohammed! 👋</h1>
+          <h1 style={styles.title}>Good morning, {hubUserName}! 👋</h1>
           <p style={styles.subtitle}>Here’s what’s happening at {orgName} today.</p>
         </div>
 
