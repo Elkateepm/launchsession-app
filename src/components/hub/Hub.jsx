@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
-export default function Hub({ org, session, setTab, onNavigate, userProfile }) {
+export default function Hub({ org, session, setTab, onNavigate, userProfile, onAvatarClick }) {
   const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
 
   const getGreeting = () => {
@@ -170,7 +170,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto', flexShrink: 0 }}>
             <button onClick={() => setTab('messaging')} style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid var(--border, #e5e7eb)', background: 'transparent', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Messages">💬</button>
             <div style={{ width: 1, height: 20, background: 'var(--border, #e5e7eb)' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={onAvatarClick}>
               <div style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, border: `2px solid ${primary}` }}>
                 {userProfile?.photo_url
                   ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
