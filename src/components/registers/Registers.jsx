@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
+import ExcelUploadModal from './ExcelUploadModal'
 
 const DEFAULT_BUBBLES = [
   { key: 'red',    label: 'Red',    color: '#DC2626', light: '#FEF2F2', dark: '#991B1B' },
@@ -230,6 +231,7 @@ export default function Registers({ org }) {
   const [toast, setToast] = useState('')
   const [selectedIds, setSelectedIds] = useState([])
   const [note, setNote] = useState('')
+  const [showExcelUpload, setShowExcelUpload] = useState(false)
 
   const getAttRec = (childId) => attendance.find(a => a.child_id === childId)
   const getStatus = (childId) => getAttRec(childId)?.status || 'unmarked'
@@ -508,6 +510,7 @@ export default function Registers({ org }) {
               { icon: '➕', label: 'Add Walk-in', sub: 'Child not on list', action: () => setShowAdd(true) },
               { icon: '👤', label: 'Take Headcount', sub: 'Manual headcount' },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet' },
+              { icon: '📊', label: 'Import from Excel', sub: 'Bulk add children', action: () => setShowExcelUpload(true) },
             ].map(t => (
               <button key={t.label} onClick={t.action} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8, border: 'none', background: 'transparent', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 2, transition: 'background 0.1s' }}
                 onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
@@ -559,6 +562,7 @@ export default function Registers({ org }) {
         />
       )}
       {showAdd && <AddChildModal orgId={orgId} bubbles={bubbles} onClose={() => setShowAdd(false)} onAdded={child => { setChildren(prev => [...prev, child]); setShowAdd(false) }} />}
+      {showExcelUpload && <ExcelUploadModal orgId={orgId} bubbles={bubbles} onClose={() => setShowExcelUpload(false)} onImported={newChildren => { setChildren(prev => [...prev, ...newChildren]); setShowExcelUpload(false) }} />}
     </div>
   )
 }
