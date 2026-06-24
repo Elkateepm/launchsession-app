@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { supabase } from '../../lib/supabase'
 
 const ORG_TYPES = [
@@ -33,6 +34,9 @@ export default function Onboarding({ session, org, onComplete }) {
   const [city, setCity] = useState('')
   const [country, setCountry] = useState('UK')
   const [focus, setFocus] = useState('')
+  const [customGroups, setCustomGroups] = useState([])
+  const [newGroupLabel, setNewGroupLabel] = useState('')
+  const [newGroupColor, setNewGroupColor] = useState('#4F6EF7')
   const [contactName, setContactName] = useState('')
   const [contactEmail, setContactEmail] = useState('')
   const [saving, setSaving] = useState(false)
@@ -55,7 +59,8 @@ export default function Onboarding({ session, org, onComplete }) {
         focus,
         contact_name: contactName,
         contact_email: contactEmail,
-        onboarding_data: { org_type: orgType, size, city, country, focus, contact_name: contactName, contact_email: contactEmail, completed_at: new Date().toISOString() }
+        onboarding_data: { org_type: orgType, size, city, country, focus, contact_name: contactName, contact_email: contactEmail, completed_at: new Date().toISOString() },
+        ...(customGroups.length > 0 ? { custom_groups: customGroups } : {})
       })
       .eq('id', org.id)
 
@@ -72,7 +77,7 @@ export default function Onboarding({ session, org, onComplete }) {
     onComplete()
   }
 
-  const TOTAL_STEPS = 6
+  const TOTAL_STEPS = 7
   const page = { minHeight: '100vh', background: 'radial-gradient(circle at 20% 0%, rgba(37,99,235,0.28), transparent 32%), linear-gradient(135deg, #020617 0%, #071A3A 45%, #020817 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, color: '#fff' }
   const card = { width: '100%', maxWidth: 520, background: 'linear-gradient(145deg, rgba(15,23,42,0.96), rgba(2,6,23,0.98))', border: '1px solid rgba(96,165,250,0.18)', borderRadius: 24, padding: '40px 36px', boxShadow: '0 28px 80px rgba(0,0,0,0.35)' }
   const title = { fontSize: 26, fontWeight: 900, marginBottom: 8, letterSpacing: -0.5 }
@@ -147,7 +152,77 @@ export default function Onboarding({ session, org, onComplete }) {
     </div></div>
   )
 
+
+  const COLOR_SWATCHES = ['#4F6EF7','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4','#F97316','#EC4899']
+  const PRESET_GROUPS = ['Under 7s','Under 10s','Under 12s','Under 14s','Under 16s','Beginners','Intermediate','Advanced','Team A','Team B']
+
+  const addGroup = () => {
+    const label = newGroupLabel.trim()
+    if (!label || customGroups.find(g => g.label === label)) return
+    setCustomGroups(prev => [...prev, { id: 'g-' + Date.now(), label, color: newGroupColor }])
+    setNewGroupLabel('')
+  }
+
   if (step === 5) return (
+    <div style={page}><div style={card}>
+      <Progress />
+      <div style={title}>Set up your groups</div>
+      <div style={sub}>Add the groups your participants are organised into — like "Under 10s" or "Beginners". <span style={{ color: '#60A5FA' }}>You can skip this and set it up later in Settings → Registers.</span></div>
+
+      {/* Presets */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 20 }}>
+        {PRESET_GROUPS.map(label => (
+          <button key={label} onClick={() => {
+            if (!customGroups.find(g => g.label === label)) {
+              setCustomGroups(prev => [...prev, { id: 'g-' + Date.now() + label, label, color: newGroupColor }])
+            }
+          }}
+            style={{ padding: '5px 12px', borderRadius: 20, border: '1.5px solid rgba(255,255,255,0.15)', background: customGroups.find(g => g.label === label) ? 'rgba(79,110,247,0.3)' : 'rgba(255,255,255,0.05)', color: customGroups.find(g => g.label === label) ? '#93C5FD' : 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            + {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Added groups */}
+      {customGroups.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          {customGroups.map(g => (
+            <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: g.color, flexShrink: 0 }} />
+              <span style={{ flex: 1, fontSize: 14, color: '#fff' }}>{g.label}</span>
+              <button onClick={() => setCustomGroups(prev => prev.filter(x => x.id !== g.id))}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 16 }}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Custom add */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 20 }}>
+        <input
+          style={{ ...inp, marginBottom: 0, flex: 1 }}
+          placeholder="Custom group name..."
+          value={newGroupLabel}
+          onChange={e => setNewGroupLabel(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && addGroup()}
+        />
+        <div style={{ display: 'flex', gap: 4 }}>
+          {COLOR_SWATCHES.map(c => (
+            <button key={c} onClick={() => setNewGroupColor(c)}
+              style={{ width: 18, height: 18, borderRadius: '50%', background: c, border: newGroupColor === c ? '2px solid #fff' : 'none', cursor: 'pointer', flexShrink: 0 }} />
+          ))}
+        </div>
+        <button onClick={addGroup}
+          style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#4F6EF7', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add</button>
+      </div>
+
+      <button style={btn(false)} onClick={next}>Continue →</button>
+      <button style={btnGhost} onClick={next}>Skip for now</button>
+      <button style={{ ...btnGhost, marginTop: 6 }} onClick={back}>← Back</button>
+    </div></div>
+  )
+
+  if (step === 6) return (
     <div style={page}><div style={card}>
       <Progress />
       <div style={title}>Who's the main contact?</div>
