@@ -110,6 +110,12 @@ export default function Dashboard({ session, org }) {
       .eq('id', session.user.id)
       .single()
       .then(({ data }) => { if (data) setUserProfile(data) })
+
+  const refreshUserProfile = () => {
+    if (!session?.user?.id) return
+    supabase.from('user_profiles').select('full_name, role, photo_url').eq('id', session.user.id).single()
+      .then(({ data }) => { if (data) setUserProfile(data) })
+  }
   }, [session?.user?.id])
 
   const userName = userProfile?.full_name || userEmail.split('@')[0]
@@ -420,6 +426,7 @@ export default function Dashboard({ session, org }) {
           org={org}
           onClose={() => setShowProfile(false)}
           onSignOut={() => { setShowProfile(false); supabase.auth.signOut() }}
+          onProfileUpdate={refreshUserProfile}
         />
       )}
     </div>

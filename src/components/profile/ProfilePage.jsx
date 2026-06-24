@@ -66,7 +66,7 @@ function ChangePasswordModal({ onClose }) {
   )
 }
 
-export default function ProfilePage({ session, org, onClose, onSignOut }) {
+export default function ProfilePage({ session, org, onClose, onSignOut, onProfileUpdate }) {
   const userId = session?.user?.id
   const userEmail = session?.user?.email || ''
   const [profile, setProfile] = useState(null)
@@ -102,6 +102,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut }) {
       const url = data.publicUrl + '?t=' + Date.now()
       await supabase.from('user_profiles').update({ photo_url: url }).eq('id', userId)
       setProfile(p => ({ ...p, photo_url: url }))
+      if (onProfileUpdate) onProfileUpdate()
     }
     setPhotoUploading(false)
   }
