@@ -4,7 +4,7 @@ import TeamTab from '../team/TeamTab'
 import Mentoring from '../mentoring/Mentoring'
 import SessionPlanner from '../sessions/SessionPlanner'
 import Hub from '../hub/Hub'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import Registers from '../registers/Registers'
 import Calendar from '../calendar/Calendar';
@@ -98,7 +98,19 @@ export default function Dashboard({ session, org }) {
   const insightModules   = availableModules.filter(m => m.group === 'insights')
   const handleSignOut = () => supabase.auth.signOut()
   const userEmail = session?.user?.email || ''
-  const userName = userEmail.split('@')[0]
+  const [userProfile, setUserProfile] = useState(null)
+
+  useEffect(() => {
+    if (!session?.user?.id) return
+    supabase
+      .from('user_profiles')
+      .select('full_name, role')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => { if (data) setUserProfile(data) })
+  }, [session?.user?.id])
+
+  const userName = userProfile?.full_name || userEmail.split('@')[0]
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
