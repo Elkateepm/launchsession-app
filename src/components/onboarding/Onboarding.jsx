@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { supabase } from '../../lib/supabase'
 
 const ORG_TYPES = [
