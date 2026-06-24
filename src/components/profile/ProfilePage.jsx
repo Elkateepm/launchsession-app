@@ -107,9 +107,12 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
     setPhotoUploading(false)
   }
 
-  const saveField = (field, value) => {
-    setEdits(e => ({ ...e, [field]: value }))
+  const saveField = async (field, value) => {
+    await supabase.from('user_profiles').update({ [field]: value }).eq('id', userId)
     setProfile(p => ({ ...p, [field]: value }))
+    if (onProfileUpdate) onProfileUpdate()
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
   }
 
   const handleSaveAll = async () => {
@@ -119,6 +122,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
     setEdits({})
     setSaving(false)
     setSaved(true)
+    if (onProfileUpdate) onProfileUpdate()
     setTimeout(() => setSaved(false), 2000)
   }
 
