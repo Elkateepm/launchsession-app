@@ -46,10 +46,9 @@ function EditProfileModal({ profile, userId, onClose, onSaved }) {
   }
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface, #fff)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', paddingBottom: 32 }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface, #fff)', borderRadius: 20, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', paddingBottom: 32, boxShadow: '0 24px 80px rgba(0,0,0,0.3)' }}>
         <div style={{ position: 'sticky', top: 0, background: 'var(--surface, #fff)', padding: '14px 20px 12px', borderBottom: '1px solid var(--border, #e5e7eb)', zIndex: 1 }}>
-          <div style={{ width: 36, height: 4, background: 'var(--border, #e5e7eb)', borderRadius: 2, margin: '0 auto 14px' }} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text, #111)' }}>Edit Profile</div>
             <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: 'var(--text3, #9ca3af)' }}>×</button>
@@ -106,10 +105,9 @@ function ChangePasswordModal({ onClose }) {
   }
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface, #fff)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 500, paddingBottom: 32 }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface, #fff)', borderRadius: 20, width: '100%', maxWidth: 500, paddingBottom: 32, boxShadow: '0 24px 80px rgba(0,0,0,0.3)' }}>
         <div style={{ padding: '14px 20px 12px', borderBottom: '1px solid var(--border, #e5e7eb)' }}>
-          <div style={{ width: 36, height: 4, background: 'var(--border, #e5e7eb)', borderRadius: 2, margin: '0 auto 14px' }} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text, #111)' }}>Change Password</div>
             <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: 'var(--text3, #9ca3af)' }}>×</button>
@@ -172,7 +170,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut }) {
   const primary = org?.primary_color || '#4F6EF7'
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto' }}>
       <div style={{ background: 'var(--surface2, #f9fafb)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 560, maxHeight: '92vh', overflowY: 'auto', paddingBottom: 32 }}>
 
         {/* Header */}
