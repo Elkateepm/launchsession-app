@@ -68,14 +68,6 @@ function NavSection({ title, children, collapsed }) {
     <div style={{ marginBottom: 6 }}>
       {!collapsed && <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: 1.5, padding: '8px 12px 4px' }}>{title}</div>}
       {children}
-    {showProfile && (
-        <ProfilePage
-          session={session}
-          org={org}
-          onClose={() => setShowProfile(false)}
-          onSignOut={() => { setShowProfile(false); supabase.auth.signOut() }}
-        />
-      )}
     </div>
   )
 }
@@ -422,6 +414,14 @@ export default function Dashboard({ session, org }) {
           </div>
         )}
       </div>
+      {showProfile && (
+        <ProfilePage
+          session={session}
+          org={org}
+          onClose={() => setShowProfile(false)}
+          onSignOut={() => { setShowProfile(false); supabase.auth.signOut() }}
+        />
+      )}
     </div>
   )
 }
