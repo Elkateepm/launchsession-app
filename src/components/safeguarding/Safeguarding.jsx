@@ -78,7 +78,7 @@ export default function Safeguarding({ org, session }) {
               org={org}
               session={session}
               onClose={() => setShowForm(false)}
-              onSubmitted={() => setShowForm(false)}
+              onSubmitted={() => {}}
             />
           </div>
         </>
