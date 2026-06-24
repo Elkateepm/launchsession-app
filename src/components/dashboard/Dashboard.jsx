@@ -10,6 +10,7 @@ import Registers from '../registers/Registers'
 import Calendar from '../calendar/Calendar';
 import Templates from '../templates/Templates'
 import Safeguarding from '../safeguarding/Safeguarding'
+import Reports from '../reports/Reports'
 
 const PLAN_MODULES = {
   starter:    ['registers', 'planner', 'reports'],
@@ -282,7 +283,8 @@ export default function Dashboard({ session, org }) {
           {tab === 'mentoring' && <Mentoring org={org} session={session} />}
           {tab === 'templates' && <Templates org={org} session={session} />}
           {tab === 'safeguarding' && <Safeguarding org={org} session={session} />}
-          {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && tab !== 'team' && tab !== 'settings' && tab !== 'templates' && tab !== 'mentoring' && tab !== 'calendar' && tab !== 'safeguarding' && (
+          {tab === 'reports' && <Reports org={org} session={session} />}
+          {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && tab !== 'team' && tab !== 'settings' && tab !== 'templates' && tab !== 'mentoring' && tab !== 'calendar' && tab !== 'safeguarding' && tab !== 'reports' && (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center', padding: 40 }}>
                 <div style={{ fontSize: 40, marginBottom: 14 }}>{ALL_MODULES.find(m => m.key === tab)?.icon}</div>
