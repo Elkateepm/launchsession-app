@@ -36,37 +36,44 @@ function NavItem({ icon, label, active, onClick, badge, primary, collapsed }) {
   const [hovered, setHovered] = useState(false)
   return (
     <button
-      title={label}
+      title={collapsed ? label : undefined}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
         width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-        padding: collapsed ? '10px 0' : '9px 12px', justifyContent: collapsed ? 'center' : 'flex-start', borderRadius: 10, border: 'none',
-        background: active ? `${primary}22` : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
-        color: active ? primary : hovered ? '#fff' : 'rgba(255,255,255,0.55)',
+        padding: collapsed ? '10px 0' : '8px 12px',
+        justifyContent: collapsed ? 'center' : 'flex-start',
+        borderRadius: 10, border: 'none',
+        background: active
+          ? `linear-gradient(90deg, ${primary}28, ${primary}10)`
+          : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
+        color: active ? '#fff' : hovered ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.45)',
         fontSize: 13, fontWeight: active ? 700 : 500,
-        marginBottom: 2, cursor: 'pointer', textAlign: 'left',
+        marginBottom: 1, cursor: 'pointer', textAlign: 'left',
         transition: 'all 0.15s ease', position: 'relative',
-        boxShadow: active ? `inset 3px 0 0 ${primary}` : hovered ? 'inset 3px 0 0 rgba(255,255,255,0.1)' : 'none',
+        borderLeft: active ? `3px solid ${primary}` : '3px solid transparent',
       }}
     >
-      <span style={{ fontSize: 15, width: 20, textAlign: 'center', flexShrink: 0 }}>{icon}</span>
-      {!collapsed && <span style={{ flex: 1 }}>{label}</span>}
+      <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0, transform: hovered && !active ? 'translateX(1px)' : 'none', transition: 'transform 0.15s' }}>{icon}</span>
+      {!collapsed && <span style={{ flex: 1, fontSize: 13 }}>{label}</span>}
       {!collapsed && badge && (
         <span style={{ background: badge.color || '#EF4444', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>
           {badge.text}
         </span>
       )}
-      {active && <div style={{ position: 'absolute', right: 8, width: 6, height: 6, borderRadius: '50%', background: primary, boxShadow: `0 0 6px ${primary}` }} />}
+      {active && !collapsed && <div style={{ width: 6, height: 6, borderRadius: '50%', background: primary, boxShadow: `0 0 8px ${primary}`, flexShrink: 0 }} />}
     </button>
   )
 }
 
 function NavSection({ title, children, collapsed }) {
   return (
-    <div style={{ marginBottom: 6 }}>
-      {!collapsed && <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: 1.5, padding: '8px 12px 4px' }}>{title}</div>}
+    <div style={{ marginBottom: 4 }}>
+      {!collapsed && title && (
+        <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.18)', textTransform: 'uppercase', letterSpacing: 2, padding: '12px 12px 4px' }}>{title}</div>
+      )}
+      {collapsed && title && <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 16px' }} />}
       {children}
     </div>
   )
@@ -124,10 +131,21 @@ export default function Dashboard({ session, org }) {
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
 
       {/* SIDEBAR */}
-      <div style={{ width: sidebarCollapsed ? 72 : 248, background: '#0A0F1E', transition: 'width 0.2s ease', display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ width: sidebarCollapsed ? 64 : 240, background: '#080D1A', transition: 'width 0.25s cubic-bezier(0.4,0,0.2,1)', display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.04)', position: 'relative' }}>
+
+        {/* COLLAPSE BUTTON */}
+        <button
+          onClick={() => setSidebarCollapsed(c => !c)}
+          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          style={{ position: 'absolute', top: 20, right: -10, width: 20, height: 20, borderRadius: '50%', background: '#1E2A3A', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, zIndex: 10, transition: 'all 0.15s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#2A3A4A'; e.currentTarget.style.color = '#fff' }}
+          onMouseLeave={e => { e.currentTarget.style.background = '#1E2A3A'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)' }}
+        >
+          {sidebarCollapsed ? '›' : '‹'}
+        </button>
 
         {/* ORG HEADER */}
-        <div style={{ padding: '16px 14px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ padding: '16px 12px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {org?.logo_url ? (
               <img src={org.logo_url} alt={orgName} style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain', flexShrink: 0 }} />
@@ -144,9 +162,7 @@ export default function Dashboard({ session, org }) {
               </div>
             </div>}
           </div>
-          <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} style={{ marginTop: 12, width: '100%', padding: 8, borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', fontWeight: 800 }}>
-            {sidebarCollapsed ? '→' : '← Collapse'}
-          </button>
+
         </div>
 
         {!sidebarCollapsed && (
@@ -211,28 +227,43 @@ export default function Dashboard({ session, org }) {
         </div>
 
         {/* USER PROFILE */}
-        <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, cursor: 'pointer' }} onClick={() => setShowProfile(true)}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}88, #6366F188)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff', flexShrink: 0, overflow: 'hidden', border: `2px solid ${primary}44` }}>
+        <div style={{ padding: '10px 10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <div
+            onClick={() => setShowProfile(true)}
+            title={sidebarCollapsed ? userName : undefined}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, cursor: 'pointer', marginBottom: 6, transition: 'background 0.15s', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}99, #6366F199)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff', flexShrink: 0, overflow: 'hidden', border: `1.5px solid ${primary}55` }}>
               {userProfile?.photo_url
                 ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : userName[0]?.toUpperCase() || '?'}
             </div>
-            {!sidebarCollapsed && <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail}</div>
-            </div>}
+            {!sidebarCollapsed && (
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userProfile?.role || userEmail}</div>
+              </div>
+            )}
+            {!sidebarCollapsed && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>›</span>}
           </div>
-          {!sidebarCollapsed && <button onClick={() => setDarkMode(d => !d)}
-            style={{ width: '100%', padding: '7px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 6, transition: 'all 0.15s' }}>
-            {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
-          </button>}
-          {!sidebarCollapsed && <button onClick={handleSignOut}
-            style={{ width: '100%', padding: '7px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#FCA5A5'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}>
-            Sign out
-          </button>}
+          {!sidebarCollapsed && (
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => setDarkMode(d => !d)}
+                style={{ flex: 1, padding: '6px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#fff' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = 'rgba(255,255,255,0.35)' }}>
+                {darkMode ? '☀️ Light' : '🌙 Dark'}
+              </button>
+              <button onClick={handleSignOut}
+                style={{ flex: 1, padding: '6px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#FCA5A5'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}>
+                Sign out
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
