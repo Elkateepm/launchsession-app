@@ -23,7 +23,6 @@ function KPICard({ icon, label, value, sub, color, trend }) {
 }
 
 function InsightCard({ icon, text, type }) {
-  const colors = { positive: '#22C55E', warning: '#F59E0B', info: '#3B82F6', celebrate: '#8B5CF6' }
   const bgs = { positive: 'rgba(34,197,94,0.06)', warning: 'rgba(245,158,11,0.06)', info: 'rgba(59,130,246,0.06)', celebrate: 'rgba(139,92,246,0.06)' }
   const borders = { positive: 'rgba(34,197,94,0.2)', warning: 'rgba(245,158,11,0.2)', info: 'rgba(59,130,246,0.2)', celebrate: 'rgba(139,92,246,0.2)' }
   return (
