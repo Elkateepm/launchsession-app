@@ -296,14 +296,10 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
 
           {/* Footer */}
           <div style={{ padding: '12px 28px', borderTop: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-            {hasEdits ? (
-              <button onClick={handleSaveAll} disabled={saving} style={{ padding: '9px 24px', borderRadius: 9, border: 'none', background: saved ? '#10B981' : '#4F6EF7', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer', transition: 'background 0.2s' }}>
-                {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Changes'}
-              </button>
-            ) : <div />}
-            <div style={{ fontSize: 11, color: '#d1d5db' }}>
-            LaunchSession · {role.badge} Account · {org?.name || ''}
-            </div>
+            {saved
+              ? <span style={{ fontSize: 13, fontWeight: 700, color: '#10B981' }}>✓ Saved!</span>
+              : <div style={{ fontSize: 11, color: '#d1d5db' }}>LaunchSession · {role.badge} Account · {org?.name || ''}</div>}
+            <button onClick={onClose} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#374151' }}>Close</button>
           </div>
         </div>
       </div>
