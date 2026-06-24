@@ -4,6 +4,13 @@ import { supabase } from "../../lib/supabase";
 export default function Hub({ org, session, setTab, onNavigate }) {
   const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
 
+  const getGreeting = () => {
+    const h = new Date().getHours()
+    if (h < 12) return 'Good morning'
+    if (h < 17) return 'Good afternoon'
+    return 'Good evening'
+  }
+
   React.useEffect(() => {
     if (!session?.user?.id) return
     import('../../lib/supabase').then(({ supabase }) => {
