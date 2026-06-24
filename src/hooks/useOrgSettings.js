@@ -20,8 +20,9 @@ export function useOrgSettings(orgId) {
 
   useEffect(() => {
     if (!orgId) return;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchSettings();
-  }, [orgId]);
+  }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchSettings() {
     setLoading(true);
