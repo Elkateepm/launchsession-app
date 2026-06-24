@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useOrg } from '../../context/OrgContext'
+import OrgSettingsPanel from './OrgSettingsPanel'
 
 const NAV = [
   { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform' },
@@ -409,6 +410,22 @@ function ComingSoon({ label }) {
   )
 }
 
+
+function GroupsSection({ org }) {
+  return (
+    <div>
+      <div style={{ background: 'linear-gradient(135deg, #0A0F1E, #1a2744)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ fontSize: 32 }}>👥</div>
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Groups & Locations</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>Define the groups and venues used across registers, sessions and reports</div>
+        </div>
+      </div>
+      <OrgSettingsPanel orgId={org?.id} />
+    </div>
+  )
+}
+
 export default function Settings({ org, session }) {
   const { refreshOrg } = useOrg()
   const brandingEnabled = org?.branding_enabled !== false
@@ -433,6 +450,7 @@ export default function Settings({ org, session }) {
       case 'notifications':  return <NotificationsSection />
       case 'integrations':   return <IntegrationsSection />
       case 'billing':        return <BillingSection org={org} />
+      case 'registers':      return <GroupsSection org={org} />
       case 'help':           return <HelpSection />
       default:               return <ComingSoon label={NAV.find(n => n.key === active)?.label || active} />
     }
