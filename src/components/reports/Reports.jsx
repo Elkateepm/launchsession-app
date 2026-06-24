@@ -358,14 +358,13 @@ export default function Reports({ org }) {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-    const [sessionsRes, upcomingRes, childrenRes, attRes, teamRes, safRes, mentoringRes] = await Promise.all([
+    const [sessionsRes, upcomingRes, childrenRes, attRes, teamRes, safRes] = await Promise.all([
       supabase.from('sessions').select('id, session_date, title').eq('org_id', orgId).lt('session_date', now.toISOString().split('T')[0]),
       supabase.from('sessions').select('id').eq('org_id', orgId).gte('session_date', now.toISOString().split('T')[0]),
       supabase.from('children').select('id, active, group_name, full_name, created_at').eq('org_id', orgId),
       supabase.from('attendance').select('id, status, signed_in_at, child_id, session_id, org_id').eq('org_id', orgId),
       supabase.from('user_profiles').select('id, role').eq('org_id', orgId),
       supabase.from('cause_for_concern').select('id, status, follow_up_required, created_at').eq('org_id', orgId),
-      supabase.from('mentoring_sessions').select('id, status, created_at').eq('org_id', orgId).limit(1).maybeSingle(),
     ])
 
     const sessions = sessionsRes.data || []
