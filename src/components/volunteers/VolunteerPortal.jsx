@@ -268,8 +268,8 @@ export default function VolunteerPortal() {
 
   // DASHBOARD
   const sports = (profileForm.skills||[]).filter(s => SPORTS.includes(s))
-  const languages = (profileForm.skills||[]).filter(s => LANGUAGES.includes(s))
-  const customSkills = (profileForm.skills||[]).filter(s => !SPORTS.includes(s) && !LANGUAGES.includes(s))
+  // const languages = (profileForm.skills||[]).filter(s => LANGUAGES.includes(s))
+  // const customSkills = (profileForm.skills||[]).filter(s => !SPORTS.includes(s) && !LANGUAGES.includes(s))
 
   const TABS = [
     { key:'home', icon:'ti-home', label:'Home' },
