@@ -816,7 +816,26 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
         <p id="signinSubtitle">Sign in to your organisation account</p>
       </div>
 
-      <div id="signinStepOrg">
+      <div id="signinStepRole">
+        <div onclick="signinSelectRole('staff')" class="signin-role-card" onmouseover="this.style.background='rgba(59,130,246,0.12)';this.style.borderColor='rgba(59,130,246,0.4)'" onmouseout="this.style.background='rgba(255,255,255,0.04)';this.style.borderColor='rgba(255,255,255,0.1)'">
+          <div class="signin-role-icon" style="background:rgba(59,130,246,0.15)">🛡️</div>
+          <div class="signin-role-text"><div class="signin-role-label">Staff</div><div class="signin-role-sub">Deliver safe and impactful sessions</div></div>
+          <div style="color:rgba(255,255,255,0.3);font-size:18px">›</div>
+        </div>
+        <div onclick="signinSelectRole('volunteer')" class="signin-role-card" onmouseover="this.style.background='rgba(27,154,170,0.12)';this.style.borderColor='rgba(27,154,170,0.4)'" onmouseout="this.style.background='rgba(255,255,255,0.04)';this.style.borderColor='rgba(255,255,255,0.1)'">
+          <div class="signin-role-icon" style="background:rgba(27,154,170,0.15)">❤️</div>
+          <div class="signin-role-text"><div class="signin-role-label">Volunteer</div><div class="signin-role-sub">Support activities and positive experiences</div></div>
+          <div style="color:rgba(255,255,255,0.3);font-size:18px">›</div>
+        </div>
+        <div onclick="signinSelectRole('admin')" class="signin-role-card" onmouseover="this.style.background='rgba(139,92,246,0.12)';this.style.borderColor='rgba(139,92,246,0.4)'" onmouseout="this.style.background='rgba(255,255,255,0.04)';this.style.borderColor='rgba(255,255,255,0.1)'">
+          <div class="signin-role-icon" style="background:rgba(139,92,246,0.15)">⚙️</div>
+          <div class="signin-role-text"><div class="signin-role-label">Admin</div><div class="signin-role-sub">Manage your organisation workspace</div></div>
+          <div style="color:rgba(255,255,255,0.3);font-size:18px">›</div>
+        </div>
+      </div>
+
+      <div id="signinStepOrg" style="display:none">
+        <button type="button" onclick="signinBackToRole()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:13px;cursor:pointer;margin-bottom:16px;padding:0">← Back</button>
         <label class="signin-label" style="margin-top:0">Organisation name</label>
         <input class="signin-input" id="signinOrgInput" type="text" placeholder="e.g. Solidarity Sports" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();signinSearchOrg()}">
         <div id="signinOrgError" style="display:none;color:#FB7185;font-size:13px;margin-top:10px"></div>
