@@ -28,7 +28,7 @@ function VolunteerProfileSetup({ user, org, onComplete }) {
   const [form, setForm] = useState({ full_name:'', phone:'' })
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
-  // const primary = org?.primary_color || '#1B9AAA'
+  const primary = org?.primary_color || '#1B9AAA'
   const handleSave = async () => {
     if (!form.full_name.trim()) return
     setSaving(true)
@@ -74,7 +74,7 @@ function VolunteerProfileTab({ user, profile, org, onRefresh }) {
   const [photoUrl, setPhotoUrl] = useState(profile?.photo_url||null)
   const photoInputRef = useRef(null)
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
-  // const primary = org?.primary_color || '#1B9AAA'
+  const primary = org?.primary_color || '#1B9AAA'
 
   useEffect(() => {
     setForm({ full_name:profile?.full_name||'', phone:profile?.phone||'', emergency_contact_name:profile?.emergency_contact_name||'', emergency_contact_phone:profile?.emergency_contact_phone||'', availability:profile?.availability||[], skills:profile?.skills||[], age_groups:profile?.age_groups||[] })
@@ -336,7 +336,7 @@ export default function VolunteerPortal() {
   const [showCFC, setShowCFC] = useState(false)
 
   const slug = window.location.pathname.split('/volunteer/')[1]?.split('/')[0]
-  // const primary = org?.primary_color || '#1B9AAA'
+  const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'Organisation'
   const today = new Date().toISOString().split('T')[0]
   const currentPhotoUrl = localPhotoUrl || profile?.photo_url
