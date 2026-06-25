@@ -31,10 +31,6 @@ function AuthedApp({ session, org }) {
 
 function AppContent() {
   const pathname = window.location.pathname
-
-  // Volunteer portal bypasses org context entirely
-  if (pathname.startsWith('/volunteer')) return <VolunteerPortal />
-
   const { org, loading: orgLoading, error: orgError, noOrg } = useOrg()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -82,6 +78,8 @@ function AppContent() {
 }
 
 export default function App() {
+  const pathname = window.location.pathname
+  if (pathname.startsWith('/volunteer')) return <VolunteerPortal />
   return (
     <OrgProvider>
       <AppContent />
