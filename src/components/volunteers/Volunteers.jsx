@@ -60,12 +60,8 @@ export default function Volunteers({ org, session }) {
   async function removeVolunteer(id) {
     if (!window.confirm('Permanently delete this volunteer? This cannot be undone.')) return
     try {
-      const { createClient } = await import('@supabase/supabase-js')
-      const adminClient = createClient(
-        process.env.REACT_APP_SUPABASE_URL,
-        process.env.REACT_APP_SUPABASE_SERVICE_KEY
-      )
-      const { error } = await adminClient.auth.admin.deleteUser(id)
+      const { supabaseAdmin } = await import('../../lib/supabase')
+      const { error } = await supabaseAdmin.auth.admin.deleteUser(id)
       if (error) throw error
       loadAll()
     } catch (err) {
