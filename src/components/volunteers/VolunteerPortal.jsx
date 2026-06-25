@@ -325,7 +325,7 @@ export default function VolunteerPortal() {
     return () => subscription.unsubscribe()
   }, [])
 
-  useEffect(() => { if(authUser && org) validateAndLoad() }, [authUser, org])
+  useEffect(() => { if(authUser && org) validateAndLoad() }, [authUser, org]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function validateAndLoad() {
     setView('loading')
