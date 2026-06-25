@@ -5,9 +5,9 @@ import { supabase } from '../../lib/supabase'
 
 const SESSION_TYPES = [
   { key: 'activity',  label: 'Activity',  icon: '🏃', color: '#1B9AAA' },
-  { key: 'workshop',  label: 'Workshop',  icon: '🛠', color: '#417505' },
+  { key: 'workshop',  label: 'Workshop',  icon: '🛠',  color: '#417505' },
   { key: 'trip',      label: 'Day Trip',  icon: '🚌', color: '#F0A500' },
-  { key: 'holiday',   label: 'Holiday',   icon: '🏖', color: '#9B59B6' },
+  { key: 'holiday',   label: 'Holiday',   icon: '🏖',  color: '#9B59B6' },
   { key: 'mentoring', label: 'Mentoring', icon: '🤝', color: '#E91E8C' },
 ]
 
@@ -20,16 +20,7 @@ const DEFAULT_BUBBLE_DEFS = [
   { key: 'teens',  label: 'Teens',  color: '#1A1A1A' },
 ]
 
-function normaliseBubbleDefs(groups) {
-  if (!groups || groups.length === 0) return DEFAULT_BUBBLE_DEFS
-  return groups.map(g => ({
-    key:   (g.id || g.label).toString(),
-    label: g.label,
-    color: g.color || '#1B9AAA',
-  }))
-}
-
-const ACTIVITIES = ['Football', 'Basketball', 'Tennis', 'Athletics', 'Arts & Crafts', 'Swimming', 'Dance', 'Boxing', 'Cricket', 'Dodgeball', 'Free Play', 'Workshop']
+const ACTIVITIES = ['Football','Basketball','Tennis','Athletics','Arts & Crafts','Swimming','Dance','Boxing','Cricket','Dodgeball','Free Play','Workshop']
 
 const EMPTY_FORM = {
   title: '', session_date: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
@@ -40,8 +31,13 @@ const EMPTY_FORM = {
   consent_required: false, volunteer_limit: '', rotation_slots: [],
 }
 
-const inp = { width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface2)', boxSizing: 'border-box' }
+const inp = { width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface2)', boxSizing: 'border-box', color: 'var(--text)' }
 const lbl = { fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }
+
+function normaliseBubbleDefs(groups) {
+  if (!groups || groups.length === 0) return DEFAULT_BUBBLE_DEFS
+  return groups.map(g => ({ key: (g.id || g.label).toString(), label: g.label, color: g.color || '#1B9AAA' }))
+}
 
 function Field({ label, children }) {
   return <div style={{ marginBottom: 14 }}><label style={lbl}>{label}</label>{children}</div>
@@ -113,7 +109,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs }) {
           {SESSION_TYPES.map(t => {
             const active = form.session_type === t.key
             return (
-              <button key={t.key} onClick={() => set('session_type', t.key)} style={{ padding: '12px 10px', borderRadius: 12, border: `2px solid ${active ? t.color : '#e5e7eb'}`, background: active ? t.color : '#fff', color: active ? '#fff' : '#6b7280', cursor: 'pointer', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <button key={t.key} onClick={() => set('session_type', t.key)} style={{ padding: '12px 10px', borderRadius: 12, border: `2px solid ${active ? t.color : '#e5e7eb'}`, background: active ? t.color : 'var(--surface)', color: active ? '#fff' : 'var(--text3)', cursor: 'pointer', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 {t.icon} {t.label}
               </button>
             )
@@ -139,22 +135,19 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs }) {
         <input value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Jubilee Park" style={inp} />
       </Field>
 
-      <Field label="Max Capacity">
-        <input type="number" value={form.max_capacity} onChange={e => set('max_capacity', e.target.value)} placeholder="30" style={inp} />
-      </Field>
-
-      <Field label="Volunteers Needed">
-        <input type="number" value={form.volunteer_limit} onChange={e => set('volunteer_limit', e.target.value)} placeholder="e.g. 4" style={inp} />
-      </Field>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+        <div><label style={lbl}>Max Capacity</label><input type="number" value={form.max_capacity} onChange={e => set('max_capacity', e.target.value)} placeholder="30" style={inp} /></div>
+        <div><label style={lbl}>Volunteers Needed</label><input type="number" value={form.volunteer_limit} onChange={e => set('volunteer_limit', e.target.value)} placeholder="4" style={inp} /></div>
+      </div>
 
       <div style={{ marginBottom: 14 }}>
-        <label style={lbl}>Bubbles</label>
+        <label style={lbl}>Groups / Bubbles</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
           {(bubbleDefs || DEFAULT_BUBBLE_DEFS).map(b => {
             const active = (form.bubbles || []).includes(b.label)
             return (
               <button key={b.key} onClick={() => set('bubbles', active ? form.bubbles.filter(x => x !== b.label) : [...(form.bubbles || []), b.label])}
-                style={{ padding: '6px 14px', borderRadius: 20, border: `2px solid ${active ? b.color : '#e5e7eb'}`, background: active ? b.color : '#fff', color: active ? '#fff' : '#6b7280', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                style={{ padding: '6px 14px', borderRadius: 20, border: `2px solid ${active ? b.color : '#e5e7eb'}`, background: active ? b.color : 'var(--surface)', color: active ? '#fff' : 'var(--text3)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
                 {b.label}
               </button>
             )
@@ -169,10 +162,10 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs }) {
             <input value={form.meeting_point || ''} onChange={e => set('meeting_point', e.target.value)} placeholder="e.g. Outside community centre" style={{ ...inp, background: 'var(--surface)' }} />
           </Field>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <button onClick={() => set('packed_lunch', !form.packed_lunch)} style={{ padding: 10, borderRadius: 10, border: `2px solid ${form.packed_lunch ? '#417505' : '#e5e7eb'}`, background: form.packed_lunch ? '#EDFAED' : '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 800, color: form.packed_lunch ? '#417505' : '#6b7280' }}>
+            <button onClick={() => set('packed_lunch', !form.packed_lunch)} style={{ padding: 10, borderRadius: 10, border: `2px solid ${form.packed_lunch ? '#417505' : '#e5e7eb'}`, background: form.packed_lunch ? '#EDFAED' : 'var(--surface)', cursor: 'pointer', fontSize: 12, fontWeight: 800, color: form.packed_lunch ? '#417505' : 'var(--text3)' }}>
               🥪 Packed Lunch
             </button>
-            <button onClick={() => set('consent_required', !form.consent_required)} style={{ padding: 10, borderRadius: 10, border: `2px solid ${form.consent_required ? '#1B9AAA' : '#e5e7eb'}`, background: form.consent_required ? '#E8F7F9' : '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 800, color: form.consent_required ? '#1B9AAA' : '#6b7280' }}>
+            <button onClick={() => set('consent_required', !form.consent_required)} style={{ padding: 10, borderRadius: 10, border: `2px solid ${form.consent_required ? '#1B9AAA' : '#e5e7eb'}`, background: form.consent_required ? '#E8F7F9' : 'var(--surface)', cursor: 'pointer', fontSize: 12, fontWeight: 800, color: form.consent_required ? '#1B9AAA' : 'var(--text3)' }}>
               📋 Consent Form
             </button>
           </div>
@@ -189,201 +182,12 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 10, marginTop: 4 }}>
         <button onClick={onCancel} style={{ padding: 13, borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3)' }}>Cancel</button>
-        <button onClick={() => onSave(form)} disabled={saving || !form.title} style={{ padding: 13, borderRadius: 12, border: 'none', background: saving || !form.title ? '#9ca3af' : type?.color || '#111', color: '#fff', fontSize: 14, fontWeight: 800, cursor: saving || !form.title ? 'default' : 'pointer' }}>
+        <button onClick={() => onSave(form)} disabled={saving || !form.title} style={{ padding: 13, borderRadius: 12, border: 'none', background: saving || !form.title ? '#9ca3af' : type?.color || '#1B9AAA', color: '#fff', fontSize: 14, fontWeight: 800, cursor: saving || !form.title ? 'default' : 'pointer' }}>
           {saving ? 'Saving...' : initial?.id ? 'Save Changes' : 'Create Session'}
         </button>
       </div>
     </div>
   )
-}
-
-// ─── SESSION CARD ─────────────────────────────────────────────
-// eslint-disable-next-line no-unused-vars
-function LegacySessionCard({ session, onEdit, onDelete }) {
-  const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
-  const bubbles = session.bubbles || []
-  const isMultiDay = session.end_date && session.end_date !== session.session_date
-
-  return (
-    <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 12, background: type.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
-          {type.icon}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{session.title}</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 12, fontWeight: 600, color: 'var(--text3)' }}>
-            <span>📅 {format(parseISO(session.session_date), 'd MMM')}{isMultiDay ? ` – ${format(parseISO(session.end_date), 'd MMM yyyy')}` : ''}</span>
-            <span>🕐 {session.start_time} – {session.end_time}</span>
-            {session.location && <span>📍 {session.location.split(',')[0]}</span>}
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-          <button onClick={() => onEdit(session)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontSize: 13 }}>✏️</button>
-          <button onClick={() => onDelete(session.id)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid #FFE5E5', background: '#FFF0F0', cursor: 'pointer', fontSize: 13 }}>🗑</button>
-        </div>
-      </div>
-      {bubbles.length > 0 && (
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 10 }}>
-          {bubbles.map(b => {
-            const bd = DEFAULT_BUBBLE_DEFS.find(d => d.label === b) || DEFAULT_BUBBLE_DEFS[0]
-            return <span key={b} style={{ background: bd.color, color: '#fff', borderRadius: 20, padding: '2px 10px', fontSize: 10, fontWeight: 800 }}>{b}</span>
-          })}
-        </div>
-      )}
-      {session.session_type === 'trip' && (
-        <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-          {session.packed_lunch && <span style={{ background: '#EDFAED', color: '#417505', borderRadius: 20, padding: '2px 10px', fontSize: 10, fontWeight: 800 }}>🥪 Packed Lunch</span>}
-          {session.consent_required && <span style={{ background: '#FFF0F0', color: '#1B9AAA', borderRadius: 20, padding: '2px 10px', fontSize: 10, fontWeight: 800 }}>📋 Consent</span>}
-          {session.meeting_point && <span style={{ background: '#E8F7F9', color: '#1B9AAA', borderRadius: 20, padding: '2px 10px', fontSize: 10, fontWeight: 800 }}>📍 {session.meeting_point}</span>}
-        </div>
-      )}
-    </div>
-  )
-}
-
-
-function PlannerStat({ icon, label, value, sub, color }) {
-  return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16, boxShadow: '0 10px 24px rgba(15,23,42,0.05)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 38, height: 38, borderRadius: 12, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{icon}</div>
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 900, color, textTransform: 'uppercase' }}>{label}</div>
-          <div style={{ fontSize: 28, fontWeight: 950, color: '#0f172a', lineHeight: 1 }}>{value}</div>
-        </div>
-      </div>
-      <div style={{ marginTop: 10, fontSize: 11, color: '#059669', fontWeight: 800 }}>{sub}</div>
-    </div>
-  )
-}
-
-function PlannerHero({ primary }) {
-  return (
-    <div style={{ background: 'linear-gradient(135deg, #071126, #12245A)', color: '#fff', borderRadius: 20, padding: 26, minHeight: 180, display: 'flex', justifyContent: 'space-between', gap: 20, overflow: 'hidden', boxShadow: '0 18px 40px rgba(15,23,42,0.18)' }}>
-      <div>
-        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 950 }}>Plan with confidence. ✨</h2>
-        <p style={{ margin: '10px 0 24px', fontSize: 15, color: 'rgba(255,255,255,0.78)' }}>Everything you need to run unforgettable sessions.</p>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {['Engage young people', 'Keep them safe', 'Track your impact'].map(item => (
-            <span key={item} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999, padding: '9px 12px', fontSize: 12, fontWeight: 800 }}>
-              {item}
-            </span>
-          ))}
-        </div>
-      </div>
-      <div style={{ minWidth: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 86, background: `radial-gradient(circle, ${primary}55, transparent 65%)` }}>
-        ⚽🏃‍♀️
-      </div>
-    </div>
-  )
-}
-
-function HighlightCard({ sessions }) {
-  return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: 18, boxShadow: '0 10px 24px rgba(15,23,42,0.05)', height: '100%' }}>
-      <div style={{ fontSize: 16, fontWeight: 950, color: '#0f172a', marginBottom: 16 }}>Upcoming Highlights</div>
-      {sessions.length === 0 ? (
-        <div style={{ color: '#94a3b8', fontWeight: 800, textAlign: 'center', padding: 30 }}>No upcoming highlights yet</div>
-      ) : sessions.slice(0, 3).map(s => {
-        const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
-        return (
-          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-            <div style={{ width: 38, height: 38, borderRadius: 12, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{type.icon}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 900, color: '#111827' }}>{s.title}</div>
-              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{format(parseISO(s.session_date), 'EEE d MMM')} · {s.start_time || 'No time'}</div>
-            </div>
-            <span style={{ background: '#F3E8FF', color: '#7C3AED', borderRadius: 999, padding: '6px 10px', fontSize: 10, fontWeight: 900 }}>
-              {s.max_capacity ? `${s.max_capacity} spaces` : 'Planned'}
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-function WeekSessionCard({ session, onEdit, onDelete, onVolunteers }) {
-  const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
-  return (
-    <div style={{ background: type.color + '10', border: `1px solid ${type.color}35`, borderRadius: 14, padding: 12, marginBottom: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <span style={{ fontSize: 18 }}>{type.icon}</span>
-        <div style={{ fontSize: 13, fontWeight: 950, color: '#0f172a', flex: 1 }}>{session.title}</div>
-      </div>
-      <div style={{ fontSize: 11, color: '#475569', fontWeight: 700, lineHeight: 1.7 }}>
-        🕐 {session.start_time || 'No time'}{session.end_time ? ` – ${session.end_time}` : ''}<br />
-        {session.location ? `📍 ${session.location.split(',')[0]}` : '📍 No location'}<br />
-        👥 {session.max_capacity || '—'} young people
-        {session.volunteer_limit ? ` · ❤️ ${session.volunteer_limit} volunteers` : ''}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-        <button onClick={() => onVolunteers(session)} style={{ border: 'none', background: type.color + '20', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: type.color }}>❤️ Volunteers</button>
-        <div style={{ display: 'flex', gap: 4 }}>
-          <button onClick={() => onEdit(session)} style={{ border: 'none', background: '#fff', borderRadius: 8, width: 26, height: 26, cursor: 'pointer' }}>✏️</button>
-          <button onClick={() => onDelete(session.id)} style={{ border: 'none', background: '#fff', borderRadius: 8, width: 26, height: 26, cursor: 'pointer' }}>🗑</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function EmptyDay({ onAdd }) {
-  return (
-    <div style={{ border: '1.5px dashed #cbd5e1', borderRadius: 16, minHeight: 170, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b', padding: 14 }}>
-      <div style={{ fontSize: 34, marginBottom: 8 }}>🗓️</div>
-      <div style={{ fontSize: 13, fontWeight: 950, color: '#0f172a' }}>No sessions</div>
-      <div style={{ fontSize: 11, margin: '4px 0 12px' }}>Add a new session</div>
-      <button onClick={onAdd} style={{ border: 'none', background: '#0891B2', color: '#fff', borderRadius: 10, padding: '9px 12px', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>+ Add Session</button>
-    </div>
-  )
-}
-
-function upcomingSessions(list) {
-  return [...list].filter(s => s.session_date >= format(new Date(), 'yyyy-MM-dd')).sort((a, b) => `${a.session_date}${a.start_time || ''}`.localeCompare(`${b.session_date}${b.start_time || ''}`))
-}
-
-const toolbarBtn = {
-  border: '1px solid #dbe3ef',
-  background: '#fff',
-  color: '#334155',
-  borderRadius: 10,
-  padding: '10px 13px',
-  fontSize: 13,
-  fontWeight: 850,
-  cursor: 'pointer'
-}
-
-const footerCard = {
-  background: '#fff',
-  border: '1px solid #e5e7eb',
-  borderRadius: 18,
-  padding: 18,
-  boxShadow: '0 10px 24px rgba(15,23,42,0.05)'
-}
-
-const footerTitle = {
-  margin: '0 0 12px',
-  fontSize: 15,
-  fontWeight: 950,
-  color: '#0f172a'
-}
-
-const tip = {
-  margin: '8px 0',
-  color: '#334155',
-  fontSize: 13,
-  fontWeight: 700
-}
-
-const statLine = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  gap: 12,
-  margin: '8px 0',
-  color: '#334155',
-  fontSize: 13
 }
 
 // ─── VOLUNTEER PANEL ──────────────────────────────────────────
@@ -409,6 +213,7 @@ function VolunteerPanel({ session, org, onClose }) {
 
   const assignedIds = new Set(assigned.map(a => a.user_id))
   const unassigned = allVolunteers.filter(v => !assignedIds.has(v.id))
+  const covered = needed === 0 || assigned.length >= needed
 
   async function addVolunteer(vol) {
     setSaving(vol.id)
@@ -431,13 +236,10 @@ function VolunteerPanel({ session, org, onClose }) {
     setSaving(null)
   }
 
-  const covered = needed === 0 || assigned.length >= needed
-
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.4)' }} />
-      <div style={{ position: 'relative', width: 400, height: '100%', background: '#fff', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-        {/* Header */}
+      <div style={{ position: 'relative', width: 400, height: '100%', background: 'var(--surface, #fff)', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ background: `linear-gradient(135deg, ${primary}, #6366F1)`, padding: '20px 20px 16px', color: '#fff', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.8 }}>Volunteer Coverage</div>
@@ -447,7 +249,6 @@ function VolunteerPanel({ session, org, onClose }) {
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
             📅 {format(parseISO(session.session_date), 'EEE d MMM')} · 🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}{session.location ? ` · 📍 ${session.location.split(',')[0]}` : ''}
           </div>
-          {/* Coverage bar */}
           <div style={{ marginTop: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>{assigned.length} of {needed || '?'} volunteers</span>
@@ -464,12 +265,10 @@ function VolunteerPanel({ session, org, onClose }) {
             <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>Loading...</div>
           ) : (
             <>
-              {/* Assigned volunteers */}
               <div style={{ marginBottom: 24 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 12 }}>Assigned ({assigned.length})</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 12 }}>Assigned ({assigned.length})</div>
                 {assigned.length === 0 ? (
-                  <div style={{ background: '#FFF9E6', borderRadius: 12, padding: '16px', textAlign: 'center', border: '1.5px dashed #F5D000' }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>👋</div>
+                  <div style={{ background: '#FFFBEB', borderRadius: 12, padding: 16, textAlign: 'center', border: '1.5px dashed #F5D000' }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#92400E' }}>No volunteers assigned yet</div>
                     <div style={{ fontSize: 12, color: '#92400E', opacity: 0.7, marginTop: 4 }}>Add from the list below</div>
                   </div>
@@ -479,7 +278,7 @@ function VolunteerPanel({ session, org, onClose }) {
                       {a.volunteer?.photo_url ? <img src={a.volunteer.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, fontWeight: 900, color: primary }}>{(a.volunteer?.full_name || '?')[0]}</span>}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.volunteer?.full_name || 'Volunteer'}</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.volunteer?.full_name || 'Volunteer'}</div>
                       {a.volunteer?.phone && <div style={{ fontSize: 11, color: '#6B7280' }}>{a.volunteer.phone}</div>}
                     </div>
                     <select value={a.status || 'pending'} onChange={e => updateStatus(a, e.target.value)} disabled={saving === a.user_id}
@@ -492,28 +291,21 @@ function VolunteerPanel({ session, org, onClose }) {
                 ))}
               </div>
 
-              {/* Unassigned volunteers */}
               {unassigned.length > 0 && (
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 12 }}>Add Volunteers ({unassigned.length} available)</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 12 }}>Add Volunteers ({unassigned.length} available)</div>
                   {unassigned.map(v => (
-                    <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#F9FAFB', borderRadius: 12, border: '1.5px solid #E5E7EB', marginBottom: 8 }}>
+                    <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--surface2, #F9FAFB)', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', marginBottom: 8 }}>
                       <div style={{ width: 36, height: 36, borderRadius: 10, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                         {v.photo_url ? <img src={v.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, fontWeight: 900, color: '#6B7280' }}>{(v.full_name || '?')[0]}</span>}
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.full_name}</div>
-                      </div>
+                      <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: 'var(--text, #111)' }}>{v.full_name}</div>
                       <button onClick={() => addVolunteer(v)} disabled={saving === v.id} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: primary, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>
                         {saving === v.id ? '...' : '+ Add'}
                       </button>
                     </div>
                   ))}
                 </div>
-              )}
-
-              {unassigned.length === 0 && assigned.length > 0 && allVolunteers.length > 0 && (
-                <div style={{ textAlign: 'center', padding: '20px 0', color: '#6B7280', fontSize: 13 }}>All volunteers are assigned to this session 🎉</div>
               )}
 
               {allVolunteers.length === 0 && (
@@ -530,37 +322,98 @@ function VolunteerPanel({ session, org, onClose }) {
   )
 }
 
+// ─── SESSION CARD ─────────────────────────────────────────────
+function SessionCard({ session, onEdit, onDelete, onVolunteers, volCounts }) {
+  const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
+  const isMultiDay = session.end_date && session.end_date !== session.session_date
+  const volCount = volCounts?.[session.id] || 0
+  const needed = session.volunteer_limit || 0
+  const covered = needed === 0 || volCount >= needed
+
+  return (
+    <div style={{ background: 'var(--surface, #fff)', borderRadius: 14, border: '1.5px solid var(--border, #E5E7EB)', padding: '14px 16px', marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 11, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, border: `1.5px solid ${type.color}30` }}>
+          {type.icon}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 4 }}>{session.title}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 12, fontWeight: 600, color: 'var(--text3, #6B7280)' }}>
+            <span>📅 {format(parseISO(session.session_date), 'd MMM')}{isMultiDay ? ` – ${format(parseISO(session.end_date), 'd MMM')}` : ''}</span>
+            <span>🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}</span>
+            {session.location && <span>📍 {session.location.split(',')[0]}</span>}
+            {session.max_capacity && <span>👥 {session.max_capacity}</span>}
+          </div>
+          {(session.bubbles?.length > 0 || needed > 0) && (
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 8 }}>
+              {(session.bubbles || []).map(b => {
+                const bd = DEFAULT_BUBBLE_DEFS.find(d => d.label === b)
+                return <span key={b} style={{ background: (bd?.color || '#888') + '20', color: bd?.color || '#888', borderRadius: 99, padding: '2px 9px', fontSize: 10, fontWeight: 800, border: `1px solid ${(bd?.color || '#888')}40` }}>{b}</span>
+              })}
+              {needed > 0 && (
+                <span style={{ background: covered ? '#F0FDF4' : '#FFFBEB', color: covered ? '#16A34A' : '#92400E', borderRadius: 99, padding: '2px 9px', fontSize: 10, fontWeight: 800, border: `1px solid ${covered ? '#86EFAC' : '#FDE68A'}` }}>
+                  {covered ? `✓ ${volCount}/${needed} volunteers` : `⚠ ${volCount}/${needed} volunteers`}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <button onClick={() => onVolunteers(session)} title="Manage volunteers" style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${type.color}40`, background: type.color + '10', cursor: 'pointer', fontSize: 14 }}>❤️</button>
+          <button onClick={() => onEdit(session)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface2, #F9FAFB)', cursor: 'pointer', fontSize: 13 }}>✏️</button>
+          <button onClick={() => onDelete(session.id)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid #FFE5E5', background: '#FFF0F0', cursor: 'pointer', fontSize: 13 }}>🗑</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── MAIN PLANNER ─────────────────────────────────────────────
 export default function SessionPlanner({ org }) {
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const { groups: orgGroups } = useOrgSettings(orgId)
   const bubbleDefs = normaliseBubbleDefs(orgGroups)
+
   const [sessions, setSessions] = useState([])
+  const [volCounts, setVolCounts] = useState({})
   const [loading, setLoading] = useState(true)
-  const [view, setView] = useState('list')
-  const [tab, setTab] = useState('sessions')
+  const [view, setView] = useState('list') // 'list' | 'week' | 'form'
+  const [filter, setFilter] = useState('all') // 'all' | 'sessions' | 'trips'
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
 
-  useEffect(() => {
-    if (!orgId) return
-    const today = format(new Date(), 'yyyy-MM-dd')
-    supabase.from('sessions').select('*').eq('org_id', orgId).gte('session_date', today).order('session_date')
-      .then(({ data }) => { setSessions(data || []); setLoading(false) })
-  }, [orgId])
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
-  const trips   = sessions.filter(s => s.session_type === 'trip')
-  const nonTrips = sessions.filter(s => s.session_type !== 'trip')
-  const displayList = tab === 'trips' ? trips : nonTrips
+  async function loadData() {
+    if (!orgId) return
+    const [{ data: sess }, { data: staff }] = await Promise.all([
+      supabase.from('sessions').select('*').eq('org_id', orgId).gte('session_date', today).order('session_date').order('start_time'),
+      supabase.from('session_staff').select('session_id').eq('org_id', orgId),
+    ])
+    setSessions(sess || [])
+    const counts = {}
+    ;(staff || []).forEach(r => { counts[r.session_id] = (counts[r.session_id] || 0) + 1 })
+    setVolCounts(counts)
+    setLoading(false)
+  }
+
+  useEffect(() => { loadData() }, [orgId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const displayed = sessions.filter(s => {
+    if (filter === 'trips') return s.session_type === 'trip'
+    if (filter === 'sessions') return s.session_type !== 'trip'
+    return true
+  })
 
   const handleSave = async (form) => {
     setSaving(true)
     const data = {
-      org_id: orgId,
-      title: form.title, session_date: form.session_date,
-      end_date: form.end_date || form.session_date,
+      org_id: orgId, title: form.title,
+      session_date: form.session_date, end_date: form.end_date || form.session_date,
       start_time: form.start_time, end_time: form.end_time,
       location: form.location, session_type: form.session_type,
       description: form.description,
@@ -572,176 +425,150 @@ export default function SessionPlanner({ org }) {
     }
     if (editing?.id) {
       await supabase.from('sessions').update(data).eq('id', editing.id)
-      setSessions(prev => prev.map(s => s.id === editing.id ? { ...s, ...data } : s))
     } else {
       const { data: newSession } = await supabase.from('sessions').insert([data]).select().single()
-      if (newSession) {
-        setSessions(prev => [...prev, newSession])
-        if (form.bubbles?.length > 0) {
-          const { data: bc } = await supabase.from('children').select('id').eq('org_id', orgId).eq('active', true).in('group_name', form.bubbles)
-          if (bc?.length > 0) {
-            const records = bc.map(c => ({ session_id: newSession.id, child_id: c.id, org_id: orgId, status: 'expected' }))
-            await supabase.from('attendance').insert(records)
-          }
+      if (newSession && form.bubbles?.length > 0) {
+        const { data: bc } = await supabase.from('children').select('id').eq('org_id', orgId).eq('active', true).in('group_name', form.bubbles)
+        if (bc?.length > 0) {
+          await supabase.from('attendance').insert(bc.map(c => ({ session_id: newSession.id, child_id: c.id, org_id: orgId, status: 'expected' })))
         }
       }
     }
     setSaving(false)
     setEditing(null)
     setView('list')
+    loadData()
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this session? This cannot be undone.')) return
-
-    const { error: attendanceError } = await supabase
-      .from('attendance')
-      .delete()
-      .eq('session_id', id)
-      .eq('org_id', orgId)
-
-    if (attendanceError) {
-      alert('Failed to delete session attendance')
-      return
-    }
-
-    const { error } = await supabase
-      .from('sessions')
-      .delete()
-      .eq('id', id)
-      .eq('org_id', orgId)
-
-    if (error) {
-      alert('Failed to delete session')
-      return
-    }
-
+    if (!window.confirm('Delete this session?')) return
+    await supabase.from('attendance').delete().eq('session_id', id).eq('org_id', orgId)
+    await supabase.from('sessions').delete().eq('id', id).eq('org_id', orgId)
     setSessions(prev => prev.filter(s => s.id !== id))
-
-    alert('Session deleted')
   }
 
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
-  const monthSessions = sessions.filter(s => s.session_date?.slice(0, 7) === format(new Date(), 'yyyy-MM'))
-  const reflectionsDue = sessions.filter(s => new Date(`${s.session_date}T${s.end_time || '23:59'}`) < new Date()).length
-  const totalCapacity = sessions.reduce((sum, s) => sum + (Number(s.max_capacity) || 0), 0)
-  const avgAttendance = totalCapacity > 0 ? Math.min(100, Math.round((totalCapacity / Math.max(totalCapacity, totalCapacity + 8)) * 100)) : 0
-
-  const openNewSession = (date) => {
-    setEditing({ ...EMPTY_FORM, session_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), end_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), session_type: tab === 'trips' ? 'trip' : 'activity' })
+  const openNew = (date) => {
+    setEditing({ ...EMPTY_FORM, session_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), end_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), session_type: filter === 'trips' ? 'trip' : 'activity' })
     setView('form')
   }
 
+  // ── FORM VIEW ──
+  if (view === 'form') return (
+    <div style={{ height: '100%', overflowY: 'auto', padding: 24, maxWidth: 640 }}>
+      <button onClick={() => { setView('list'); setEditing(null) }} style={{ border: 'none', background: 'none', color: 'var(--text3, #6B7280)', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6, padding: 0 }}>
+        ← Back
+      </button>
+      <div style={{ background: 'var(--surface, #fff)', border: '1.5px solid var(--border, #E5E7EB)', borderRadius: 16, padding: 24 }}>
+        <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text, #111)', marginBottom: 20 }}>
+          {editing?.id ? 'Edit Session' : filter === 'trips' ? '🚌 Plan a Trip' : '📅 New Session'}
+        </div>
+        <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} />
+      </div>
+    </div>
+  )
+
+  // ── LIST / WEEK VIEW ──
   return (
-    <div style={{ height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg, #F8FBFF 0%, #EEF4FA 100%)' }}>
-      {view === 'form' ? (
-        <div style={{ padding: 22, maxWidth: 760 }}>
-          <button onClick={() => { setView('list'); setEditing(null) }} style={{ border: 'none', background: '#fff', color: '#64748b', borderRadius: 10, padding: '10px 14px', fontWeight: 800, cursor: 'pointer', marginBottom: 16 }}>
-            ← Back to planner
-          </button>
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: 20, boxShadow: '0 10px 24px rgba(15,23,42,0.06)' }}>
-            <div style={{ fontSize: 22, fontWeight: 950, marginBottom: 16 }}>
-              {editing?.id ? 'Edit Session' : tab === 'trips' ? '🚌 Plan a Trip' : '📅 New Session'}
-            </div>
-            <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} />
+    <div style={{ height: '100%', overflowY: 'auto', padding: 24 }}>
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text, #111)' }}>Sessions</div>
+          <div style={{ fontSize: 13, color: 'var(--text3, #6B7280)', marginTop: 2 }}>
+            {sessions.length} upcoming · {sessions.filter(s => s.volunteer_limit && (volCounts[s.id] || 0) < s.volunteer_limit).length} need volunteers
           </div>
         </div>
-      ) : (
-        <div style={{ padding: 22 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 170px)', gap: 14, alignItems: 'start', marginBottom: 20 }}>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 30, fontWeight: 950, color: '#0f172a' }}>Session Planner</h1>
-              <p style={{ margin: '8px 0 0', color: '#475569', fontSize: 15 }}>Plan, organise and deliver amazing sessions that change lives. 🚀</p>
-            </div>
-            <PlannerStat icon="🗓️" label="This Month" value={monthSessions.length} sub="+3 from last month ↑" color="#0891B2" />
-            <PlannerStat icon="👥" label="Capacity" value={totalCapacity || '—'} sub="Young people expected" color="#7C3AED" />
-            <PlannerStat icon="📈" label="Attendance" value={`${avgAttendance}%`} sub="+6% from last month ↑" color="#F97316" />
-            <PlannerStat icon="⭐" label="Reflection Due" value={reflectionsDue} sub={reflectionsDue > 0 ? 'Needs attention' : 'All clear'} color="#2563EB" />
-          </div>
+        <button onClick={() => openNew()} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+          + New Session
+        </button>
+      </div>
 
-          <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', borderRadius: 16, padding: '0 16px', display: 'flex', marginBottom: 16, boxShadow: '0 8px 20px rgba(15,23,42,0.04)' }}>
-            {[{ key: 'sessions', label: 'Sessions', icon: '📅' }, { key: 'trips', label: 'Trips', icon: '🚌', count: trips.length }].map(t => (
-              <button key={t.key} onClick={() => { setTab(t.key); setView('list'); setEditing(null) }}
-                style={{ padding: '14px 14px 12px', border: 'none', background: 'transparent', cursor: 'pointer', borderBottom: tab === t.key ? `3px solid ${primary}` : '3px solid transparent', marginBottom: -1, color: tab === t.key ? primary : '#64748b', fontSize: 14, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 7 }}>
-                {t.icon} {t.label}
-                {t.count > 0 && <span style={{ background: primary, color: '#fff', borderRadius: 20, padding: '1px 7px', fontSize: 10, fontWeight: 900 }}>{t.count}</span>}
-              </button>
-            ))}
-            <div style={{ flex: 1 }} />
-            <button onClick={() => openNewSession()} style={{ alignSelf: 'center', border: 'none', background: primary, color: '#fff', borderRadius: 12, padding: '10px 16px', fontSize: 13, fontWeight: 950, cursor: 'pointer' }}>
-              + New Session
+      {/* Toolbar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        {/* Filter tabs */}
+        <div style={{ display: 'flex', background: 'var(--surface2, #F3F4F6)', borderRadius: 10, padding: 3, gap: 2 }}>
+          {[{ key: 'all', label: 'All' }, { key: 'sessions', label: 'Sessions' }, { key: 'trips', label: '🚌 Trips' }].map(f => (
+            <button key={f.key} onClick={() => setFilter(f.key)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: filter === f.key ? '#fff' : 'transparent', color: filter === f.key ? 'var(--text, #111)' : 'var(--text3, #6B7280)', fontSize: 13, fontWeight: filter === f.key ? 800 : 600, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
+              {f.label}
             </button>
-          </div>
+          ))}
+        </div>
+        <div style={{ flex: 1 }} />
+        {/* View toggle */}
+        <div style={{ display: 'flex', background: 'var(--surface2, #F3F4F6)', borderRadius: 10, padding: 3, gap: 2 }}>
+          {[{ key: 'list', icon: '☰' }, { key: 'week', icon: '📅' }].map(v => (
+            <button key={v.key} onClick={() => setView(v.key)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: view === v.key ? '#fff' : 'transparent', fontSize: 14, cursor: 'pointer', boxShadow: view === v.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
+              {v.icon}
+            </button>
+          ))}
+        </div>
+      </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, marginBottom: 16 }}>
-            <PlannerHero primary={primary} />
-            <HighlightCard sessions={upcomingSessions(displayList)} />
-          </div>
-
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: 16, boxShadow: '0 10px 24px rgba(15,23,42,0.05)', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
-              <button style={toolbarBtn}>Week View⌄</button>
-              <button style={toolbarBtn}>Today</button>
-              <button style={toolbarBtn}>‹</button>
-              <button style={toolbarBtn}>›</button>
-              <div style={{ fontSize: 16, fontWeight: 950, color: '#0f172a' }}>
-                🗓️ {format(weekDays[0], 'd')} – {format(weekDays[6], 'd MMM yyyy')}
-              </div>
-              <div style={{ flex: 1 }} />
-              <button style={toolbarBtn}>All Locations⌄</button>
-              <button style={toolbarBtn}>All Types⌄</button>
-              <button style={toolbarBtn}>Filter</button>
-            </div>
-
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: 50, color: '#94a3b8', fontWeight: 800 }}>Loading planner...</div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(150px, 1fr))', gap: 10, overflowX: 'auto' }}>
-                {weekDays.map(day => {
-                  const daySessions = displayList.filter(s => isSameDay(parseISO(s.session_date), day))
-                  const isToday = isSameDay(day, new Date())
-                  return (
-                    <div key={day.toISOString()} style={{ minWidth: 150, borderRight: '1px solid #eef2f7', paddingRight: 8 }}>
-                      <div style={{ textAlign: 'center', padding: '10px 0 12px', borderBottom: `3px solid ${isToday ? primary : '#A78BFA'}`, marginBottom: 12 }}>
-                        <div style={{ fontSize: 16, fontWeight: 950, color: '#0f172a' }}>{format(day, 'EEE')} {format(day, 'd')}</div>
-                        <div style={{ fontSize: 11, color: '#64748b', fontWeight: 800 }}>{daySessions.length} session{daySessions.length !== 1 ? 's' : ''}</div>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--text3, #94a3b8)', fontWeight: 700 }}>Loading sessions...</div>
+      ) : displayed.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '48px 20px', background: 'var(--surface, #fff)', borderRadius: 16, border: '1.5px dashed var(--border, #E5E7EB)' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>📅</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 6 }}>No upcoming sessions</div>
+          <div style={{ fontSize: 13, color: 'var(--text3, #6B7280)', marginBottom: 20 }}>Create your first session to get started</div>
+          <button onClick={() => openNew()} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>+ New Session</button>
+        </div>
+      ) : view === 'list' ? (
+        <div>
+          {displayed.map(s => (
+            <SessionCard key={s.id} session={s} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} volCounts={volCounts} />
+          ))}
+        </div>
+      ) : (
+        /* WEEK VIEW */
+        <div style={{ overflowX: 'auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(140px, 1fr))', gap: 10, minWidth: 980 }}>
+            {weekDays.map(day => {
+              const dateStr = format(day, 'yyyy-MM-dd')
+              const daySessions = displayed.filter(s => s.session_date === dateStr)
+              const isToday = isSameDay(day, new Date())
+              return (
+                <div key={dateStr}>
+                  <div style={{ textAlign: 'center', padding: '10px 0 12px', borderBottom: `3px solid ${isToday ? primary : '#E5E7EB'}`, marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: isToday ? 900 : 700, color: isToday ? primary : 'var(--text, #111)' }}>{format(day, 'EEE d')}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text3, #6B7280)', fontWeight: 600, marginTop: 2 }}>{daySessions.length} session{daySessions.length !== 1 ? 's' : ''}</div>
+                  </div>
+                  {daySessions.length === 0 ? (
+                    <button onClick={() => openNew(dateStr)} style={{ width: '100%', border: '1.5px dashed var(--border, #E5E7EB)', borderRadius: 12, background: 'none', padding: '24px 0', cursor: 'pointer', color: 'var(--text3, #94a3b8)', fontSize: 12, fontWeight: 700 }}>+ Add</button>
+                  ) : daySessions.map(s => {
+                    const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
+                    const vc = volCounts[s.id] || 0
+                    const needed = s.volunteer_limit || 0
+                    const covered = needed === 0 || vc >= needed
+                    return (
+                      <div key={s.id} style={{ background: type.color + '12', border: `1.5px solid ${type.color}30`, borderRadius: 12, padding: 10, marginBottom: 8 }}>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 4 }}>{s.icon}{s.title}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text3, #475569)', fontWeight: 600, lineHeight: 1.6 }}>
+                          🕐 {s.start_time || '—'}{s.end_time ? `–${s.end_time}` : ''}<br />
+                          {s.location ? `📍 ${s.location.split(',')[0]}` : ''}
+                        </div>
+                        {needed > 0 && (
+                          <div style={{ fontSize: 10, fontWeight: 800, color: covered ? '#16A34A' : '#92400E', marginTop: 6 }}>
+                            {covered ? `✓ ${vc}/${needed} vols` : `⚠ ${vc}/${needed} vols`}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+                          <button onClick={() => setSelectedSession(s)} style={{ flex: 1, border: 'none', background: type.color + '20', borderRadius: 7, padding: '4px 0', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: type.color }}>❤️ Vols</button>
+                          <button onClick={() => { setEditing(s); setView('form') }} style={{ border: 'none', background: 'var(--surface2, #F9FAFB)', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>✏️</button>
+                          <button onClick={() => handleDelete(s.id)} style={{ border: 'none', background: '#FFF0F0', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>🗑</button>
+                        </div>
                       </div>
-                      {daySessions.length === 0 ? (
-                        <EmptyDay onAdd={() => openNewSession(format(day, 'yyyy-MM-dd'))} />
-                      ) : (
-                        daySessions.map(s => <WeekSessionCard key={s.id} session={s} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} />)
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-            <div style={footerCard}>
-              <h3 style={footerTitle}>💡 Session Planning Tips</h3>
-              <p style={tip}>✅ Plan sessions in advance to give families time to prepare.</p>
-              <p style={tip}>✅ Add clear objectives to maximise your impact.</p>
-              <p style={tip}>✅ Review and reflect after each session.</p>
-            </div>
-            <div style={footerCard}>
-              <h3 style={footerTitle}>Need ideas for your sessions?</h3>
-              <p style={{ color: '#64748b', fontSize: 13 }}>Explore reusable activities, mentoring ideas and workshop templates.</p>
-              <button style={{ ...toolbarBtn, width: '100%', marginTop: 10 }}>Browse Session Library</button>
-            </div>
-            <div style={footerCard}>
-              <h3 style={footerTitle}>📊 Quick Stats</h3>
-              <p style={statLine}><span>Total sessions this month</span><strong>{monthSessions.length}</strong></p>
-              <p style={statLine}><span>Attendance rate</span><strong>{avgAttendance}%</strong></p>
-              <p style={statLine}><span>Young people capacity</span><strong>{totalCapacity || '—'}</strong></p>
-              <p style={statLine}><span>Reflections due</span><strong>{reflectionsDue}</strong></p>
-            </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
-      {selectedSession && <VolunteerPanel session={selectedSession} org={org} onClose={() => setSelectedSession(null)} />}
+
+      {selectedSession && <VolunteerPanel session={selectedSession} org={org} onClose={() => { setSelectedSession(null); loadData() }} />}
     </div>
   )
 }
