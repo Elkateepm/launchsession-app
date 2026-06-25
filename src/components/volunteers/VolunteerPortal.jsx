@@ -46,6 +46,13 @@ export default function VolunteerPortal() {
   const [toast, setToast] = useState('')
   const photoInputRef = useRef(null)
 
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768)
+  React.useEffect(() => {
+    const handle = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handle)
+    return () => window.removeEventListener('resize', handle)
+  }, [])
+
   const slug = window.location.pathname.split('/volunteer/')[1]?.split('/')[0]
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'Organisation'
@@ -279,7 +286,7 @@ export default function VolunteerPortal() {
   ]
 
   return (
-    <div style={{ minHeight:'100vh', background:'#f8fafc', fontFamily:'system-ui,sans-serif', paddingBottom:80 }}>
+    <div style={{ minHeight:'100vh', background:'#f8fafc', fontFamily:'system-ui,sans-serif', paddingBottom:isMobile?80:0 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* HEADER */}
@@ -309,7 +316,46 @@ export default function VolunteerPortal() {
       )}
 
       {/* CONTENT */}
-      <div style={{ maxWidth:560, margin:'0 auto', padding:'20px 16px' }}>
+      <div style={{ display:'flex', maxWidth:isMobile?560:1100, margin:'0 auto', padding:isMobile?'20px 16px':'32px 24px', gap:32 }}>
+
+        {/* DESKTOP SIDEBAR */}
+        {!isMobile && (
+          <div style={{ width:220, flexShrink:0 }}>
+            {/* Profile card */}
+            <div style={{ background:'linear-gradient(135deg, #1B2A4A, #2D1B69)', borderRadius:16, padding:'20px 16px', marginBottom:16 }}>
+              <div style={{ width:56, height:56, borderRadius:16, background:'#9B59B6', border:'2px solid rgba(245,208,0,0.4)', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 10px' }}>
+                {profile?.photo_url ? <img src={profile.photo_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:20, fontWeight:900, color:'#fff' }}>{firstName[0]?.toUpperCase()}</span>}
+              </div>
+              <div style={{ textAlign:'center' }}>
+                <div style={{ fontSize:14, fontWeight:800, color:'#fff', marginBottom:2 }}>{profile?.full_name}</div>
+                <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)', marginBottom:8 }}>{profile?.email}</div>
+                <span style={{ background:'rgba(245,208,0,0.2)', borderRadius:99, padding:'3px 10px', fontSize:11, fontWeight:800, color:'#F5D000' }}>{tier}</span>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginTop:12 }}>
+                <div style={{ background:'rgba(255,255,255,0.07)', borderRadius:10, padding:'8px', textAlign:'center' }}>
+                  <div style={{ fontSize:18, fontWeight:900, color:primary }}>{hours.toFixed(1)}</div>
+                  <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:0.5 }}>Hours</div>
+                </div>
+                <div style={{ background:'rgba(255,255,255,0.07)', borderRadius:10, padding:'8px', textAlign:'center' }}>
+                  <div style={{ fontSize:18, fontWeight:900, color:'#F5D000' }}>{sessionCount}</div>
+                  <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:0.5 }}>Sessions</div>
+                </div>
+              </div>
+            </div>
+            {/* Nav items */}
+            <div style={{ background:'#fff', borderRadius:16, border:'1px solid #e8edf2', overflow:'hidden' }}>
+              {TABS.map((t, i) => (
+                <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'12px 16px', border:'none', borderBottom:i<TABS.length-1?'1px solid #f1f5f9':'none', background:activeTab===t.key?`${primary}10`:'transparent', color:activeTab===t.key?primary:'#64748b', fontSize:13, fontWeight:700, cursor:'pointer', textAlign:'left', transition:'all 0.15s', borderLeft:activeTab===t.key?`3px solid ${primary}`:'3px solid transparent' }}>
+                  <i className={'ti '+t.icon} style={{ fontSize:18 }} />{t.label}
+                </button>
+              ))}
+            </div>
+            <button onClick={handleSignOut} style={{ width:'100%', marginTop:12, padding:'10px', borderRadius:10, border:'1px solid #e8edf2', background:'transparent', color:'#94a3b8', fontSize:12, fontWeight:600, cursor:'pointer' }}>Sign out</button>
+          </div>
+        )}
+
+        {/* MAIN CONTENT */}
+        <div style={{ flex:1, minWidth:0 }}>
 
         {/* HOME TAB */}
         {activeTab === 'home' && (
@@ -609,16 +655,18 @@ export default function VolunteerPortal() {
           </div>
         )}
       </div>
+        </div>
+      </div>
 
-      {/* BOTTOM NAV */}
-      <div style={{ position:'fixed', bottom:0, left:0, right:0, background:'#fff', borderTop:'1px solid #e8edf2', display:'flex', padding:'8px 0 env(safe-area-inset-bottom)', zIndex:100 }}>
+      {/* BOTTOM NAV - mobile only */}
+      {isMobile && <div style={{ position:'fixed', bottom:0, left:0, right:0, background:'#fff', borderTop:'1px solid #e8edf2', display:'flex', padding:'8px 0 env(safe-area-inset-bottom)', zIndex:100 }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 0', border:'none', background:'transparent', cursor:'pointer' }}>
             <i className={'ti '+t.icon} style={{ fontSize:22, color:activeTab===t.key?primary:'#94a3b8' }} />
             <span style={{ fontSize:10, fontWeight:700, color:activeTab===t.key?primary:'#94a3b8' }}>{t.label}</span>
           </button>
         ))}
-      </div>
+      </div>}
     </div>
   )
 }
