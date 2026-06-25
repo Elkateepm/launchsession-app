@@ -83,12 +83,6 @@ function NavSection({ title, children, collapsed }) {
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState('home')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [darkMode, setDarkMode] = React.useState(() => localStorage.getItem('dark_mode') === 'true')
-
-  React.useEffect(() => {
-    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light')
-    localStorage.setItem('dark_mode', darkMode)
-  }, [darkMode])
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
   const [showMobileMore, setShowMobileMore] = React.useState(false);
 
@@ -251,12 +245,6 @@ export default function Dashboard({ session, org }) {
           </div>
           {!sidebarCollapsed && (
             <div style={{ display: 'flex', gap: 6 }}>
-              <button onClick={() => setDarkMode(d => !d)}
-                style={{ flex: 1, padding: '6px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#fff' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = 'rgba(255,255,255,0.35)' }}>
-                {darkMode ? '☀️ Light' : '🌙 Dark'}
-              </button>
               <button onClick={handleSignOut}
                 style={{ flex: 1, padding: '6px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#FCA5A5'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
