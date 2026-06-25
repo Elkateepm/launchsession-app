@@ -97,8 +97,19 @@ export default function TeamTab({ org, session }) {
   }
 
   const handleRemove = async (id) => {
-    if (!window.confirm('Remove this person from your team?')) return
-    await supabase.from('user_profiles').delete().eq('id', id)
+    if (!window.confirm('Permanently remove this person? This cannot be undone.')) return
+    try {
+      const { createClient } = await import('@supabase/supabase-js')
+      const adminClient = createClient(
+        process.env.REACT_APP_SUPABASE_URL,
+        process.env.REACT_APP_SUPABASE_SERVICE_KEY
+      )
+      const { error } = await adminClient.auth.admin.deleteUser(id)
+      if (error) throw error
+    } catch (err) {
+      alert('Failed to remove user: ' + err.message)
+      return
+    }
     setMembers(prev => prev.filter(m => m.id !== id))
   }
 
