@@ -337,7 +337,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'templates' && <Templates org={org} session={session} />}
           {tab === 'safeguarding' && <Safeguarding org={org} session={session} />}
           {tab === 'reports' && <Reports org={org} session={session} />}
-          {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && tab !== 'team' && tab !== 'settings' && tab !== 'templates' && tab !== 'mentoring' && tab !== 'calendar' && tab !== 'safeguarding' && tab !== 'reports' && (
+          {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && tab !== 'team' && tab !== 'settings' && tab !== 'templates' && tab !== 'mentoring' && tab !== 'calendar' && tab !== 'safeguarding' && tab !== 'reports' && tab !== 'volunteers' && (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center', padding: 40 }}>
                 <div style={{ fontSize: 40, marginBottom: 14 }}>{ALL_MODULES.find(m => m.key === tab)?.icon}</div>
