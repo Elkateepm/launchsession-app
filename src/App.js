@@ -31,6 +31,10 @@ function AuthedApp({ session, org }) {
 
 function AppContent() {
   const pathname = window.location.pathname
+
+  // Volunteer portal bypasses org context entirely
+  if (pathname.startsWith('/volunteer')) return <VolunteerPortal />
+
   const { org, loading: orgLoading, error: orgError, noOrg } = useOrg()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -60,7 +64,6 @@ function AppContent() {
   )
 
   if (pathname === '/create-password') return <CreatePassword />
-  if (pathname.startsWith('/volunteer')) return <VolunteerPortal />
   if (window.location.pathname === '/signup') return <Signup />
   if (noOrg) return <OrgLookup />
 
