@@ -248,7 +248,7 @@ export default function Volunteers({ org, session }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {sessions.map(s => {
               const assigned = sessionStaff.filter(ss => ss.session_id === s.id).length
-              const required = s.volunteer_count || 2
+              const required = s.volunteer_limit || 2
               const covered = assigned >= required
               const pct = Math.min(Math.round((assigned / required) * 100), 100)
               return (

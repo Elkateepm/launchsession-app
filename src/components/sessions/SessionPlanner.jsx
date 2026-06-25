@@ -143,6 +143,10 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs }) {
         <input type="number" value={form.max_capacity} onChange={e => set('max_capacity', e.target.value)} placeholder="30" style={inp} />
       </Field>
 
+      <Field label="Volunteers Needed">
+        <input type="number" value={form.volunteer_limit} onChange={e => set('volunteer_limit', e.target.value)} placeholder="e.g. 4" style={inp} />
+      </Field>
+
       <div style={{ marginBottom: 14 }}>
         <label style={lbl}>Bubbles</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
@@ -300,7 +304,7 @@ function HighlightCard({ sessions }) {
   )
 }
 
-function WeekSessionCard({ session, onEdit, onDelete }) {
+function WeekSessionCard({ session, onEdit, onDelete, onVolunteers }) {
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
   return (
     <div style={{ background: type.color + '10', border: `1px solid ${type.color}35`, borderRadius: 14, padding: 12, marginBottom: 10 }}>
@@ -312,9 +316,10 @@ function WeekSessionCard({ session, onEdit, onDelete }) {
         🕐 {session.start_time || 'No time'}{session.end_time ? ` – ${session.end_time}` : ''}<br />
         {session.location ? `📍 ${session.location.split(',')[0]}` : '📍 No location'}<br />
         👥 {session.max_capacity || '—'} young people
+        {session.volunteer_limit ? ` · ❤️ ${session.volunteer_limit} volunteers` : ''}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-        <span style={{ background: '#fff', color: type.color, borderRadius: 999, padding: '4px 9px', fontSize: 10, fontWeight: 900 }}>Planned</span>
+        <button onClick={() => onVolunteers(session)} style={{ border: 'none', background: type.color + '20', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: type.color }}>❤️ Volunteers</button>
         <div style={{ display: 'flex', gap: 4 }}>
           <button onClick={() => onEdit(session)} style={{ border: 'none', background: '#fff', borderRadius: 8, width: 26, height: 26, cursor: 'pointer' }}>✏️</button>
           <button onClick={() => onDelete(session.id)} style={{ border: 'none', background: '#fff', borderRadius: 8, width: 26, height: 26, cursor: 'pointer' }}>🗑</button>
@@ -381,6 +386,150 @@ const statLine = {
   fontSize: 13
 }
 
+// ─── VOLUNTEER PANEL ──────────────────────────────────────────
+function VolunteerPanel({ session, org, onClose }) {
+  const [assigned, setAssigned] = useState([])
+  const [allVolunteers, setAllVolunteers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(null)
+  const primary = org?.primary_color || '#1B9AAA'
+  const needed = session.volunteer_limit || 0
+
+  useEffect(() => {
+    if (!session?.id || !org?.id) return
+    Promise.all([
+      supabase.from('session_staff').select('*, volunteer:user_profiles(id,full_name,photo_url,phone)').eq('session_id', session.id).eq('org_id', org.id),
+      supabase.from('user_profiles').select('id,full_name,photo_url,phone').eq('org_id', org.id).eq('role', 'volunteer').eq('status', 'active').order('full_name'),
+    ]).then(([{ data: staff }, { data: vols }]) => {
+      setAssigned(staff || [])
+      setAllVolunteers(vols || [])
+      setLoading(false)
+    })
+  }, [session?.id, org?.id])
+
+  const assignedIds = new Set(assigned.map(a => a.user_id))
+  const unassigned = allVolunteers.filter(v => !assignedIds.has(v.id))
+
+  async function addVolunteer(vol) {
+    setSaving(vol.id)
+    await supabase.from('session_staff').insert({ session_id: session.id, user_id: vol.id, org_id: org.id, role: 'volunteer', status: 'confirmed' })
+    setAssigned(prev => [...prev, { user_id: vol.id, status: 'confirmed', volunteer: vol }])
+    setSaving(null)
+  }
+
+  async function removeVolunteer(staffRow) {
+    setSaving(staffRow.user_id)
+    await supabase.from('session_staff').delete().eq('session_id', session.id).eq('user_id', staffRow.user_id).eq('org_id', org.id)
+    setAssigned(prev => prev.filter(a => a.user_id !== staffRow.user_id))
+    setSaving(null)
+  }
+
+  async function updateStatus(staffRow, status) {
+    setSaving(staffRow.user_id)
+    await supabase.from('session_staff').update({ status }).eq('session_id', session.id).eq('user_id', staffRow.user_id).eq('org_id', org.id)
+    setAssigned(prev => prev.map(a => a.user_id === staffRow.user_id ? { ...a, status } : a))
+    setSaving(null)
+  }
+
+  const covered = needed === 0 || assigned.length >= needed
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.4)' }} />
+      <div style={{ position: 'relative', width: 400, height: '100%', background: '#fff', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+        {/* Header */}
+        <div style={{ background: `linear-gradient(135deg, ${primary}, #6366F1)`, padding: '20px 20px 16px', color: '#fff', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.8 }}>Volunteer Coverage</div>
+            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: '#fff', fontSize: 16 }}>✕</button>
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 4 }}>{session.title}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
+            📅 {format(parseISO(session.session_date), 'EEE d MMM')} · 🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}{session.location ? ` · 📍 ${session.location.split(',')[0]}` : ''}
+          </div>
+          {/* Coverage bar */}
+          <div style={{ marginTop: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>{assigned.length} of {needed || '?'} volunteers</span>
+              <span style={{ fontSize: 12, fontWeight: 800, color: covered ? '#4ADE80' : '#FDE68A' }}>{covered ? '✓ Covered' : `Needs ${needed - assigned.length} more`}</span>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 99, height: 6 }}>
+              <div style={{ background: covered ? '#4ADE80' : '#FDE68A', width: `${needed ? Math.min((assigned.length / needed) * 100, 100) : 0}%`, height: '100%', borderRadius: 99, transition: 'width 0.4s' }} />
+            </div>
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>Loading...</div>
+          ) : (
+            <>
+              {/* Assigned volunteers */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 12 }}>Assigned ({assigned.length})</div>
+                {assigned.length === 0 ? (
+                  <div style={{ background: '#FFF9E6', borderRadius: 12, padding: '16px', textAlign: 'center', border: '1.5px dashed #F5D000' }}>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>👋</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#92400E' }}>No volunteers assigned yet</div>
+                    <div style={{ fontSize: 12, color: '#92400E', opacity: 0.7, marginTop: 4 }}>Add from the list below</div>
+                  </div>
+                ) : assigned.map(a => (
+                  <div key={a.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: a.status === 'confirmed' ? '#F0FDF4' : '#FFFBEB', borderRadius: 12, border: `1.5px solid ${a.status === 'confirmed' ? '#86EFAC' : '#FDE68A'}`, marginBottom: 8 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: primary + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                      {a.volunteer?.photo_url ? <img src={a.volunteer.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, fontWeight: 900, color: primary }}>{(a.volunteer?.full_name || '?')[0]}</span>}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.volunteer?.full_name || 'Volunteer'}</div>
+                      {a.volunteer?.phone && <div style={{ fontSize: 11, color: '#6B7280' }}>{a.volunteer.phone}</div>}
+                    </div>
+                    <select value={a.status || 'pending'} onChange={e => updateStatus(a, e.target.value)} disabled={saving === a.user_id}
+                      style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 8, border: '1.5px solid #E5E7EB', background: '#fff', cursor: 'pointer', color: a.status === 'confirmed' ? '#16A34A' : '#92400E' }}>
+                      <option value="pending">Pending</option>
+                      <option value="confirmed">Confirmed</option>
+                    </select>
+                    <button onClick={() => removeVolunteer(a)} disabled={saving === a.user_id} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid #FFE5E5', background: '#FFF0F0', cursor: 'pointer', fontSize: 14, color: '#C00', flexShrink: 0 }}>×</button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Unassigned volunteers */}
+              {unassigned.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 12 }}>Add Volunteers ({unassigned.length} available)</div>
+                  {unassigned.map(v => (
+                    <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#F9FAFB', borderRadius: 12, border: '1.5px solid #E5E7EB', marginBottom: 8 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                        {v.photo_url ? <img src={v.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, fontWeight: 900, color: '#6B7280' }}>{(v.full_name || '?')[0]}</span>}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.full_name}</div>
+                      </div>
+                      <button onClick={() => addVolunteer(v)} disabled={saving === v.id} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: primary, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>
+                        {saving === v.id ? '...' : '+ Add'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {unassigned.length === 0 && assigned.length > 0 && allVolunteers.length > 0 && (
+                <div style={{ textAlign: 'center', padding: '20px 0', color: '#6B7280', fontSize: 13 }}>All volunteers are assigned to this session 🎉</div>
+              )}
+
+              {allVolunteers.length === 0 && (
+                <div style={{ background: '#F0F9FF', borderRadius: 12, padding: 16, textAlign: 'center', border: '1.5px solid #BAE6FD' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0369A1' }}>No volunteers in your workspace yet</div>
+                  <div style={{ fontSize: 12, color: '#0369A1', opacity: 0.7, marginTop: 4 }}>Invite volunteers from the Volunteers tab</div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── MAIN PLANNER ─────────────────────────────────────────────
 export default function SessionPlanner({ org }) {
   const orgId = org?.id
@@ -393,6 +542,7 @@ export default function SessionPlanner({ org }) {
   const [tab, setTab] = useState('sessions')
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [selectedSession, setSelectedSession] = useState(null)
 
   useEffect(() => {
     if (!orgId) return
@@ -415,6 +565,7 @@ export default function SessionPlanner({ org }) {
       location: form.location, session_type: form.session_type,
       description: form.description,
       max_capacity: form.max_capacity ? parseInt(form.max_capacity) : null,
+      volunteer_limit: form.volunteer_limit ? parseInt(form.volunteer_limit) : null,
       bubbles: form.bubbles, packed_lunch: form.packed_lunch,
       meeting_point: form.meeting_point, consent_required: form.consent_required,
       rotation_slots: form.rotation_slots?.length ? form.rotation_slots : null,
@@ -559,7 +710,7 @@ export default function SessionPlanner({ org }) {
                       {daySessions.length === 0 ? (
                         <EmptyDay onAdd={() => openNewSession(format(day, 'yyyy-MM-dd'))} />
                       ) : (
-                        daySessions.map(s => <WeekSessionCard key={s.id} session={s} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} />)
+                        daySessions.map(s => <WeekSessionCard key={s.id} session={s} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} />)
                       )}
                     </div>
                   )
@@ -590,6 +741,7 @@ export default function SessionPlanner({ org }) {
           </div>
         </div>
       )}
+      {selectedSession && <VolunteerPanel session={selectedSession} org={org} onClose={() => setSelectedSession(null)} />}
     </div>
   )
 }
