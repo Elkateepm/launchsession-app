@@ -26,14 +26,14 @@ export default function VolunteerPortal() {
 
   useEffect(() => {
     if (slug) loadOrg()
-  }, [slug])
+  }, [slug]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (session && org) {
       loadProfile()
       loadSessions()
     }
-  }, [session, org])
+  }, [session, org]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadOrg() {
     const { data } = await supabase.from('organisations').select('*').eq('slug', slug).single()
