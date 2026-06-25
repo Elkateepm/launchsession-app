@@ -1035,6 +1035,7 @@ async function signinSearchOrg() {
       headers: { apikey: SIGNIN_ANON_KEY, Authorization: 'Bearer ' + SIGNIN_ANON_KEY }
     })
     const orgs = await res.json()
+    console.log('Org search result:', orgs, 'URL:', url)
 
     if (orgs && orgs.length === 1) {
       signinShowCreds(orgs[0])
