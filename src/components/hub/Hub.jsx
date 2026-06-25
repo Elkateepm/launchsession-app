@@ -5,7 +5,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
   const [search, setSearch] = React.useState('')
   const [searchResults, setSearchResults] = React.useState(null)
-  const [searching, setSearching] = React.useState(false)
 
   const getGreeting = () => {
     const h = new Date().getHours()
@@ -82,7 +81,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   React.useEffect(() => {
     if (!search.trim()) { setSearchResults(null); return }
     const q = search.toLowerCase()
-    setSearching(true)
     const timer = setTimeout(() => {
       const matchedChildren = children.filter(c =>
         `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) || c.group_name?.toLowerCase().includes(q)
@@ -91,7 +89,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         s.title?.toLowerCase().includes(q) || s.location?.toLowerCase().includes(q)
       ).slice(0, 4)
       setSearchResults({ children: matchedChildren, sessions: matchedSessions })
-      setSearching(false)
     }, 250)
     return () => clearTimeout(timer)
   }, [search, children, sessions])
