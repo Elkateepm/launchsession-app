@@ -289,13 +289,20 @@ function OnboardingWizard({ user, org, onComplete }) {
   return (
     <div style={s.wrap}>
       <div style={s.card}>
-        <div style={s.head(primary)}>
-          {step > 0 && <button onClick={()=>setStep(s=>s-1)} style={s.back}>← Back</button>}
-          <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:0.8 }}>
-            {step === 0 ? org?.name : `Step ${step} of ${TOTAL - 1}`}
+        <div style={{ background:primary, padding:'22px 28px 18px', color:'#fff', position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', top:-30, right:-30, width:100, height:100, borderRadius:'50%', background:'rgba(255,255,255,0.08)', pointerEvents:'none' }} />
+          {/* Logo row */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, position:'relative', zIndex:1 }}>
+            {org?.logo_url ? (
+              <img src={org.logo_url} alt={org.name} style={{ height:28, maxWidth:120, objectFit:'contain', filter:'brightness(0) invert(1)', opacity:0.9 }} />
+            ) : (
+              <span style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.7)', textTransform:'uppercase', letterSpacing:0.8 }}>{org?.name}</span>
+            )}
+            <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.55)' }}>{step === 0 ? 'Volunteer Setup' : `Step ${step} of ${TOTAL - 1}`}</span>
           </div>
-          <div style={{ fontSize:20, fontWeight:900, marginTop:4 }}>
-            {['','About You','Emergency Contact','Your Address','Availability','Interests','Experience','Qualifications','Preferences','Health','Communication','Agreements'][step] || org?.name}
+          {step > 0 && <button onClick={()=>setStep(s=>s-1)} style={s.back}>← Back</button>}
+          <div style={{ fontSize:20, fontWeight:900, position:'relative', zIndex:1 }}>
+            {['Welcome','About You','Emergency Contact','Your Address','Availability','Interests','Experience','Qualifications','Preferences','Health','Communication','Agreements'][step]}
           </div>
           {step > 0 && <ProgressBar step={step} total={TOTAL - 1} color={primary} />}
         </div>
@@ -396,10 +403,27 @@ export default function VolunteerPortal() {
   if(view==='login') return (
     <div style={s.wrap}>
       <div style={s.card}>
-        <div style={s.head(primary)}>
-          <div style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:0.8 }}>{org?.name || 'LaunchSession'}</div>
-          <div style={{ fontSize:22, fontWeight:900, marginTop:4 }}>{isRegister ? 'Join as Volunteer' : 'Volunteer Sign In'}</div>
-          <div style={{ fontSize:13, color:'rgba(255,255,255,0.6)', marginTop:4 }}>{isRegister ? 'Create your volunteer account' : 'Welcome back'}</div>
+        <div style={{ background: primary, padding:'28px 28px 22px', color:'#fff', position:'relative', overflow:'hidden' }}>
+          {/* subtle background glow */}
+          <div style={{ position:'absolute', top:-40, right:-40, width:140, height:140, borderRadius:'50%', background:'rgba(255,255,255,0.08)', pointerEvents:'none' }} />
+          <div style={{ position:'absolute', bottom:-30, left:-20, width:100, height:100, borderRadius:'50%', background:'rgba(0,0,0,0.08)', pointerEvents:'none' }} />
+          {/* Org logo or name */}
+          <div style={{ position:'relative', zIndex:1, marginBottom:16 }}>
+            {org?.logo_url ? (
+              <img src={org.logo_url} alt={org.name} style={{ height:40, maxWidth:160, objectFit:'contain', display:'block', filter:'brightness(0) invert(1)', opacity:0.92 }} />
+            ) : (
+              <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.15)', borderRadius:10, padding:'6px 12px' }}>
+                <div style={{ width:26, height:26, borderRadius:7, background:'rgba(255,255,255,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900 }}>
+                  {(org?.name||'L')[0].toUpperCase()}
+                </div>
+                <span style={{ fontSize:13, fontWeight:800, letterSpacing:0.5, textTransform:'uppercase' }}>{org?.name || 'LaunchSession'}</span>
+              </div>
+            )}
+          </div>
+          <div style={{ position:'relative', zIndex:1 }}>
+            <div style={{ fontSize:22, fontWeight:900, marginBottom:4 }}>{isRegister ? 'Join as Volunteer' : 'Volunteer Sign In'}</div>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)', fontWeight:600 }}>{isRegister ? 'Create your volunteer account' : 'Welcome back'}</div>
+          </div>
         </div>
         <div style={s.body}>
           {error && <div style={{ background:'#FFF0F0', border:'1px solid #FFD0D0', color:'#C00', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:16, fontWeight:600 }}>{error}</div>}
