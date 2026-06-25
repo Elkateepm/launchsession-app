@@ -100,7 +100,7 @@ export default function TeamTab({ org, session }) {
     if (!window.confirm('Permanently remove this person? This cannot be undone.')) return
     try {
       const { supabaseAdmin } = await import('../../lib/supabase')
-      const { error } = await supabaseAdmin.auth.admin.deleteUser(id)
+      const { error } = await supabaseAdmin.rpc('delete_user', { user_id: id })
       if (error) throw error
     } catch (err) {
       alert('Failed to remove user: ' + err.message)

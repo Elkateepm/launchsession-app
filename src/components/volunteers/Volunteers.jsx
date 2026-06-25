@@ -61,7 +61,7 @@ export default function Volunteers({ org, session }) {
     if (!window.confirm('Permanently delete this volunteer? This cannot be undone.')) return
     try {
       const { supabaseAdmin } = await import('../../lib/supabase')
-      const { error } = await supabaseAdmin.auth.admin.deleteUser(id)
+      const { error } = await supabaseAdmin.rpc('delete_user', { user_id: id })
       if (error) throw error
       loadAll()
     } catch (err) {
