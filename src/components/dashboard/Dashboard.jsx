@@ -1,5 +1,6 @@
 // AUTH FLOW LOCK: sign out must clear Supabase session, local org slug, and return to landing.
 import Settings from '../settings/Settings'
+import Volunteers from '../volunteers/Volunteers'
 import ProfilePage from '../profile/ProfilePage'
 import TeamTab from '../team/TeamTab'
 import Mentoring from '../mentoring/Mentoring'
@@ -337,6 +338,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'templates' && <Templates org={org} session={session} />}
           {tab === 'safeguarding' && <Safeguarding org={org} session={session} />}
           {tab === 'reports' && <Reports org={org} session={session} />}
+          {tab === 'volunteers' && <Volunteers org={org} session={session} />}
           {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && tab !== 'team' && tab !== 'settings' && tab !== 'templates' && tab !== 'mentoring' && tab !== 'calendar' && tab !== 'safeguarding' && tab !== 'reports' && tab !== 'volunteers' && (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center', padding: 40 }}>
