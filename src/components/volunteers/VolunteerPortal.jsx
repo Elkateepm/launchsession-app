@@ -74,7 +74,6 @@ function VolunteerProfileTab({ user, profile, org, onRefresh }) {
   const [photoUrl, setPhotoUrl] = useState(profile?.photo_url||null)
   const photoInputRef = useRef(null)
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
-  const primary = org?.primary_color || '#1B9AAA'
 
   useEffect(() => {
     setForm({ full_name:profile?.full_name||'', phone:profile?.phone||'', emergency_contact_name:profile?.emergency_contact_name||'', emergency_contact_phone:profile?.emergency_contact_phone||'', availability:profile?.availability||[], skills:profile?.skills||[], age_groups:profile?.age_groups||[] })
