@@ -655,7 +655,6 @@ export default function VolunteerPortal() {
           </div>
         )}
       </div>
-        </div>
       </div>
 
       {/* BOTTOM NAV - mobile only */}
