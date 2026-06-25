@@ -7,6 +7,7 @@ import Signup from './components/auth/Signup'
 import OrgLookup from './components/auth/OrgLookup'
 import Dashboard from './components/dashboard/Dashboard'
 import Onboarding from './components/onboarding/Onboarding'
+import VolunteerPortal from './components/volunteers/VolunteerPortal'
 
 function AuthedApp({ session, org }) {
   const [onboardingDone, setOnboardingDone] = React.useState(null)
@@ -59,6 +60,7 @@ function AppContent() {
   )
 
   if (pathname === '/create-password') return <CreatePassword />
+  if (pathname.startsWith('/volunteer')) return <VolunteerPortal />
   if (window.location.pathname === '/signup') return <Signup />
   if (noOrg) return <OrgLookup />
 
