@@ -33,8 +33,27 @@ export default function VolunteerPortal() {
   }, [])
 
   useEffect(() => {
-    if (authUser && org) loadDashboard()
+    if (authUser && org) validateAndLoad()
   }, [authUser, org]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function validateAndLoad() {
+    // Check user belongs to this org as a volunteer
+    const { data: p } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', authUser.id)
+      .eq('org_id', org.id)
+      .eq('role', 'volunteer')
+      .single()
+    if (!p) {
+      // Wrong org or not a volunteer — sign out and show login
+      await supabase.auth.signOut()
+      setAuthUser(null)
+      setView('login')
+      return
+    }
+    loadDashboard()
+  }
 
   async function loadDashboard() {
     const { data: p } = await supabase.from('user_profiles').select('*').eq('id', authUser.id).single()
