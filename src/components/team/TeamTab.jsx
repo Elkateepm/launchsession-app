@@ -22,7 +22,7 @@ export default function TeamTab({ org, session }) {
   useEffect(() => {
     if (!org?.id) return
     Promise.all([
-      supabase.from('user_profiles').select('*').eq('org_id', org.id).order('created_at'),
+      supabase.rpc('get_org_members_with_auth', { org_uuid: org.id }),
       supabase.from('staff_invites').select('*').eq('org_id', org.id).order('created_at', { ascending: false })
     ]).then(([membersResult, invitesResult]) => {
       setMembers(membersResult.data || [])
@@ -344,6 +344,10 @@ export default function TeamTab({ org, session }) {
                 <span style={{ padding: '3px 10px', borderRadius: 99, background: roleColors[m.role] + '18' || '#f3f4f6', color: roleColors[m.role] || '#6b7280', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   {m.role || 'staff'}
                 </span>
+              </div>
+              <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>Joined {m.created_at ? new Date(m.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '—'}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>Last seen {m.last_sign_in_at ? new Date(m.last_sign_in_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : 'Never'}</div>
               </div>
               {m.email !== session?.user?.email && (
                 <button onClick={() => handleRemove(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e5e7eb', fontSize: 18, padding: '0 4px', transition: 'color 0.2s' }}
