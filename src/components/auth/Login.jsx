@@ -111,10 +111,11 @@ export default function Login({ org }) {
                 <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)' }}>Choose how you support {orgName}</div>
               </div>
               {[
-                { role: 'staff', icon: '🛡️', label: 'Staff', sub: 'Deliver safe and impactful sessions', color: '#3B82F6' },
-                { role: 'volunteer', icon: '❤️', label: 'Volunteer', sub: 'Support activities and positive experiences', color: '#1B9AAA' },
-                { role: 'admin', icon: '⚙️', label: 'Admin', sub: 'Manage your organisation workspace', color: '#8B5CF6' },
-              ].map(r => (
+                { role: 'staff',     icon: '🛡️', label: 'Staff',         sub: 'Deliver safe and impactful sessions',        color: '#3B82F6', always: true },
+                { role: 'volunteer', icon: '❤️', label: 'Volunteer',      sub: 'Support activities and positive experiences', color: '#1B9AAA', module: 'volunteers' },
+                { role: 'parent',    icon: '👨‍👧', label: 'Parent / Carer', sub: 'Stay connected to your child's journey',    color: '#F59E0B', module: 'parent_portal' },
+                { role: 'admin',     icon: '⚙️', label: 'Admin',          sub: 'Manage your organisation workspace',          color: '#8B5CF6', always: true },
+              ].filter(r => r.always || (org?.modules || []).includes(r.module)).map(r => (
                 <button key={r.role} onClick={() => {
                   if (r.role === 'volunteer') {
                     window.location.href = '/volunteer/' + (org?.slug || '')
