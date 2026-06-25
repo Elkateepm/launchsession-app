@@ -13,7 +13,7 @@ const inp = {
 
 export default function Login({ org }) {
   const [step, setStep] = useState(STEPS.ROLE)
-  const [selectedRole, setSelectedRole] = useState(null)
+  const [selectedRole] = useState(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
