@@ -58,8 +58,19 @@ export default function Volunteers({ org, session }) {
     await supabase.from('user_profiles').update({ status: 'rejected' }).eq('id', id); loadAll()
   }
   async function removeVolunteer(id) {
-    if (!window.confirm('Remove this volunteer?')) return
-    await supabase.from('user_profiles').update({ role: 'removed' }).eq('id', id); loadAll()
+    if (!window.confirm('Permanently delete this volunteer? This cannot be undone.')) return
+    try {
+      const { createClient } = await import('@supabase/supabase-js')
+      const adminClient = createClient(
+        process.env.REACT_APP_SUPABASE_URL,
+        process.env.REACT_APP_SUPABASE_SERVICE_KEY
+      )
+      const { error } = await adminClient.auth.admin.deleteUser(id)
+      if (error) throw error
+      loadAll()
+    } catch (err) {
+      alert('Failed to delete volunteer: ' + err.message)
+    }
   }
 
   function copyLink() { navigator.clipboard.writeText(portalUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) }
