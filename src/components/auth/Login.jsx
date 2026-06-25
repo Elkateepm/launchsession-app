@@ -117,7 +117,7 @@ export default function Login({ org }) {
                 { role: 'admin', icon: '⚙️', label: 'Admin', sub: 'Manage your organisation workspace', color: '#8B5CF6' },
               ].map(r => (
                 <button key={r.role} onClick={() => {
-                  setSelectedRole(r.role)
+                  //setSelectedRole(r.role)
                   if (r.role === 'volunteer') {
                     window.location.href = '/volunteer/' + (org?.slug || '')
                   } else {
