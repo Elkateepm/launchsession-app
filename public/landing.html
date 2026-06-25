@@ -1053,21 +1053,22 @@ function lsShowRoles() {
     '<div style="width:32px;height:32px;border-radius:8px;background:'+color+';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;flex-shrink:0">'+org.name[0]+'</div>'+
     '<div><div style="font-weight:700;font-size:14px">'+org.name+'</div><div style="font-size:11px;color:rgba(255,255,255,0.4)">'+org.slug+'.launchsession.co.uk</div></div>'
   const roles = [
-    { key:'staff',     label:'Staff',         sub:'Deliver safe and impactful sessions',        icon:'🛡️', color:'#3B82F6', show: true },
-    { key:'volunteer', label:'Volunteer',      sub:'Support activities and experiences',         icon:'❤️', color:'#1B9AAA', show: modules.includes('volunteers') },
-    { key:'parent',    label:'Parent / Carer', sub:'Stay connected to your child's journey',   icon:'👨‍👧', color:'#F59E0B', show: modules.includes('parent_portal') },
-    { key:'admin',     label:'Admin',          sub:'Manage your organisation workspace',         icon:'⚙️', color:'#8B5CF6', show: true },
+    { key:'staff',     label:'Staff',         sub:'Deliver safe and impactful sessions',  icon:'shield', color:'#3B82F6', show: true },
+    { key:'volunteer', label:'Volunteer',      sub:'Support activities and experiences',   icon:'heart',  color:'#1B9AAA', show: modules.includes('volunteers') },
+    { key:'parent',    label:'Parent / Carer', sub:'Stay connected to your child journey', icon:'family', color:'#F59E0B', show: modules.includes('parent_portal') },
+    { key:'admin',     label:'Admin',          sub:'Manage your organisation workspace',   icon:'cog',    color:'#8B5CF6', show: true },
   ]
-  document.getElementById('lsRoleCards').innerHTML = roles.filter(r=>r.show).map(r=>
-    '<div onclick="lsGoRole(''+r.key+'',''+org.slug+'')" '+
-    'onmouseover="this.style.background=''+r.color+'18';this.style.borderColor=''+r.color+'55'" '+
-    'onmouseout="this.style.background='rgba(255,255,255,0.04)';this.style.borderColor='rgba(255,255,255,0.1)'" '+
-    'style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;margin-bottom:10px;transition:all 0.2s">'+
-    '<div style="width:42px;height:42px;border-radius:11px;background:'+r.color+'22;border:1px solid '+r.color+'44;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+r.icon+'</div>'+
-    '<div style="flex:1"><div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:2px">'+r.label+'</div>'+
-    '<div style="font-size:12px;color:rgba(255,255,255,0.45)">'+r.sub+'</div></div>'+
-    '<div style="color:rgba(255,255,255,0.3);font-size:18px">›</div></div>'
-  ).join('')
+  const iconMap = { shield:'🛡️', heart:'❤️', family:'👨‍👧', cog:'⚙️' }
+  document.getElementById('lsRoleCards').innerHTML = roles.filter(function(r){return r.show}).map(function(r){
+    return '<div onclick="lsGoRole(\'' + r.key + '\',\'' + org.slug + '\')" ' +
+    'onmouseover="this.style.background=\'' + r.color + '18\';this.style.borderColor=\'' + r.color + '55\'" ' +
+    'onmouseout="this.style.background=\'rgba(255,255,255,0.04)\';this.style.borderColor=\'rgba(255,255,255,0.1)\'" ' +
+    'style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;margin-bottom:10px;transition:all 0.2s">' +
+    '<div style="width:42px;height:42px;border-radius:11px;background:' + r.color + '22;border:1px solid ' + r.color + '44;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">' + iconMap[r.icon] + '</div>' +
+    '<div style="flex:1"><div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:2px">' + r.label + '</div>' +
+    '<div style="font-size:12px;color:rgba(255,255,255,0.45)">' + r.sub + '</div></div>' +
+    '<div style="color:rgba(255,255,255,0.3);font-size:18px">&#8250;</div></div>'
+  }).join('')
   lsShowStep(2)
   document.getElementById('signinTitle').textContent = org.name
   document.getElementById('signinSubtitle').textContent = 'Choose how you access '+org.name
