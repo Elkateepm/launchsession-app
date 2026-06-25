@@ -113,7 +113,7 @@ export default function Login({ org }) {
               {[
                 { role: 'staff',     icon: '🛡️', label: 'Staff',         sub: 'Deliver safe and impactful sessions',        color: '#3B82F6', always: true },
                 { role: 'volunteer', icon: '❤️', label: 'Volunteer',      sub: 'Support activities and positive experiences', color: '#1B9AAA', module: 'volunteers' },
-                { role: 'parent',    icon: '👨‍👧', label: 'Parent / Carer', sub: 'Stay connected to your child's journey',    color: '#F59E0B', module: 'parent_portal' },
+                { role: 'parent',    icon: '👨‍👧', label: 'Parent / Carer', sub: 'Stay connected to your child journey',    color: '#F59E0B', module: 'parent_portal' },
                 { role: 'admin',     icon: '⚙️', label: 'Admin',          sub: 'Manage your organisation workspace',          color: '#8B5CF6', always: true },
               ].filter(r => r.always || (org?.modules || []).includes(r.module)).map(r => (
                 <button key={r.role} onClick={() => {
