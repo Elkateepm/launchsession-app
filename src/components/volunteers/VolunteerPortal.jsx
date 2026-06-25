@@ -85,7 +85,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       emergency_contact_relationship: f.emergency_contact_relationship,
       emergency_contact_phone: f.emergency_contact_phone,
       address: f.address, city: f.city, postcode: f.postcode,
-      availability: f.availability, interests: f.interests,
+      availability: f.availability, interests: f.interests, skills: f.interests,
       experience: f.experience, volunteered_before: f.volunteered_before,
       qualifications: f.qualifications, age_groups: f.age_groups, group_size: f.group_size,
       medical_conditions: f.medical_conditions, accessibility_requirements: f.accessibility_requirements,
