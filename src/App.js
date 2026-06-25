@@ -11,6 +11,7 @@ import VolunteerPortal from './components/volunteers/VolunteerPortal'
 
 function AuthedApp({ session, org }) {
   const [onboardingDone, setOnboardingDone] = React.useState(null)
+  const [userRole, setUserRole] = React.useState(null)
 
   React.useEffect(() => {
     supabase.from('user_profiles')
@@ -18,13 +19,22 @@ function AuthedApp({ session, org }) {
       .eq('id', session.user.id)
       .single()
       .then(({ data }) => {
+        setUserRole(data?.role || null)
         const isOwnerOrAdmin = data?.role === 'owner' || data?.role === 'admin'
         const needsOnboarding = data && !data.onboarding_complete && isOwnerOrAdmin
         setOnboardingDone(!needsOnboarding)
       })
   }, [session.user.id])
 
-  if (onboardingDone === null) return null
+  if (onboardingDone === null || userRole === null) return null
+
+  // Volunteers must use the volunteer portal, not the main dashboard
+  if (userRole === 'volunteer') {
+    const slug = org?.slug || ''
+    window.location.replace('/volunteer/' + slug)
+    return null
+  }
+
   if (!onboardingDone) return <Onboarding session={session} org={org} onComplete={() => setOnboardingDone(true)} />
   return <Dashboard session={session} org={org} />
 }

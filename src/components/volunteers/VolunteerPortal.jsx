@@ -350,6 +350,9 @@ export default function VolunteerPortal() {
 
   async function validateAndLoad() {
     const {data:p} = await supabase.from('user_profiles').select('*').eq('id',authUser.id).eq('org_id',org.id).eq('role','volunteer').single()
+    // Check if user exists in org but is not a volunteer (e.g. staff/admin) — redirect to main app
+    const {data:anyProfile} = await supabase.from('user_profiles').select('role').eq('id',authUser.id).eq('org_id',org.id).single()
+    if(anyProfile && anyProfile.role !== 'volunteer'){window.location.replace('/');return}
     if(!p){await supabase.auth.signOut();setAuthUser(null);setView('login');setError('This account does not have volunteer access for this organisation.');return}
     if(p.status==='pending'){setProfile(p);setView('pending');return}
     setProfile(p);setView('dashboard');loadDashboardData(p)
