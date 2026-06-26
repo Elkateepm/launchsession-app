@@ -94,13 +94,12 @@ function InlineChildImport({ org, onImported }) {
     setImporting(false)
     if (json.error) { setErrors([json.error]); setStep('preview'); return }
 
-    // Fetch the newly inserted children from DB with correct IDs
+    // Fetch all children for org after import
     const { data: newChildren } = await supabase
       .from('children')
       .select('*')
       .eq('org_id', org.id)
       .eq('active', true)
-      .in('first_name', records.map(r => r.first_name))
       .order('last_name')
 
     onImported(newChildren || [])
@@ -744,7 +743,7 @@ export default function Registers({ org }) {
               <InlineChildImport org={org} onImported={newChildren => {
                 setChildren(newChildren)
                 setShowImport(false)
-                showToast(`✅ ${newChildren.length} children now on register`)
+                showToast(`✅ Register updated — ${newChildren.length} children total`)
               }} />
             </div>
           )}

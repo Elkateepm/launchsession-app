@@ -20,9 +20,12 @@ export default async function handler(req, res) {
   const adminClient = createClient(SUPABASE_URL, SERVICE_KEY)
   const { data, error } = await adminClient
     .from('children')
-    .insert(records.map(r => ({ ...r, org_id })))
+    .upsert(records.map(r => ({ ...r, org_id })), { 
+      onConflict: 'org_id,first_name,last_name',
+      ignoreDuplicates: true 
+    })
     .select('id')
 
   if (error) return res.status(500).json({ error: error.message })
-  return res.status(200).json({ inserted: data.length, records: data })
+  return res.status(200).json({ inserted: data?.length || 0 })
 }
