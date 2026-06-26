@@ -97,6 +97,7 @@ export default function Dashboard({ session, org }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [registersKey, setRegistersKey] = useState(0)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
+  const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
 
   const handleSetTab = (t) => {
     if (t === 'registers') setRegistersKey(k => k + 1)
