@@ -16,7 +16,10 @@ export default async function handler(req, res) {
   if (authError || !user) return res.status(401).json({ error: 'Invalid session' })
 
   // Verify caller belongs to the org they're importing into
-  const { data: profile } = await anonClient
+  // Use service key to look up profile (anon client can't read user_profiles due to RLS)
+  const adminClient = createClient(SUPABASE_URL, SERVICE_KEY)
+
+  const { data: profile } = await adminClient
     .from('user_profiles')
     .select('org_id, role')
     .eq('id', user.id)
@@ -35,8 +38,7 @@ export default async function handler(req, res) {
   if (profile?.org_id !== org_id) return res.status(403).json({ error: 'Cannot import into another org' })
   if (!['admin', 'owner', 'staff'].includes(profile?.role)) return res.status(403).json({ error: 'Insufficient permissions' })
 
-  // Use service key to bypass RLS
-  const adminClient = createClient(SUPABASE_URL, SERVICE_KEY)
+  // Use service key to insert (bypasses RLS entirely)
   const { data, error } = await adminClient
     .from('children')
     .insert(records.map(r => ({ ...r, org_id })))

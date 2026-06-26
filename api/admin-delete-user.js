@@ -18,7 +18,12 @@ export default async function handler(req, res) {
   if (authError || !user) return res.status(401).json({ error: 'Invalid session' })
 
   // Verify caller is admin/owner in their org
-  const { data: profile } = await anonClient
+  // Use admin client to read profile (anon can't read user_profiles due to RLS)
+  const adminClientForLookup = createClient(
+    process.env.REACT_APP_SUPABASE_URL || 'https://ssahcqeqrxawmwtjpwvh.supabase.co',
+    process.env.SUPABASE_SERVICE_KEY || ''
+  )
+  const { data: profile } = await adminClientForLookup
     .from('user_profiles')
     .select('role, org_id')
     .eq('id', user.id)
