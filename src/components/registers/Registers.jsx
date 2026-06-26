@@ -29,6 +29,132 @@ function normaliseBubbles(groups) {
   })
 }
 
+const CSV_COLS = ['first_name','last_name','date_of_birth','group_name','allergies','medical_notes','emergency_contact_name','emergency_contact_phone']
+
+function InlineChildImport({ org, onImported }) {
+  const [step, setStep] = useState('upload') // 'upload' | 'preview' | 'importing'
+  const [csvText, setCsvText] = useState('')
+  const [rows, setRows] = useState([])
+  const [errors, setErrors] = useState([])
+  const [importing, setImporting] = useState(false)
+  const inputRef = React.useRef(null)
+  const primary = org?.primary_color || '#1B9AAA'
+
+  const parseCSV = (text) => {
+    const lines = text.trim().split('\n').filter(Boolean)
+    if (lines.length < 2) return { rows: [], errs: ['Need a header row and at least one data row'] }
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g,'_'))
+    const errs = [], parsed = []
+    lines.slice(1).forEach((line, i) => {
+      const vals = []; let cur = '', inQ = false
+      for (const ch of line) {
+        if (ch === '"') inQ = !inQ
+        else if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = '' }
+        else cur += ch
+      }
+      vals.push(cur.trim())
+      const row = {}
+      headers.forEach((h, j) => { row[h] = vals[j] || '' })
+      if (!row.first_name) errs.push(`Row ${i+2}: missing first_name`)
+      if (!row.last_name) errs.push(`Row ${i+2}: missing last_name`)
+      parsed.push(row)
+    })
+    return { rows: parsed, errs }
+  }
+
+  const handleFile = (file) => {
+    if (!file?.name.match(/\.(csv|txt)$/i)) return
+    const reader = new FileReader()
+    reader.onload = e => { setCsvText(e.target.result); handlePreview(e.target.result) }
+    reader.readAsText(file)
+  }
+
+  const handlePreview = (text = csvText) => {
+    const { rows: parsed, errs } = parseCSV(text)
+    setRows(parsed); setErrors(errs); setStep('preview')
+  }
+
+  const handleImport = async () => {
+    setImporting(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const records = rows.filter(r => r.first_name && r.last_name).map(r => ({
+      first_name: r.first_name.trim(), last_name: r.last_name.trim(),
+      date_of_birth: r.date_of_birth || null, group_name: r.group_name || null,
+      allergies: r.allergies || null, medical_notes: r.medical_notes || null,
+      emergency_contact_name: r.emergency_contact_name || null,
+      emergency_contact_phone: r.emergency_contact_phone || null,
+      active: true,
+    }))
+    const res = await fetch('/api/import-children', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ org_id: org.id, records }),
+    })
+    const json = await res.json()
+    setImporting(false)
+    if (json.error) { setErrors([json.error]); setStep('preview'); return }
+    onImported(records.map((r, i) => ({ ...r, id: json.ids?.[i] || `tmp-${i}`, org_id: org.id })))
+  }
+
+  const downloadTemplate = () => {
+    const header = CSV_COLS.join(',')
+    const example = 'Sarah,Jones,2015-06-14,Red,Nut allergy,Asthma,Jane Jones,07700900000'
+    const blob = new Blob([`${header}\n${example}\n`], { type: 'text/csv' })
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+    a.download = 'children-import.csv'; a.click()
+  }
+
+  const fi = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace', resize: 'vertical' }
+
+  if (step === 'preview') return (
+    <div>
+      {errors.length > 0 && (
+        <div style={{ background: '#FFF0F0', border: '1px solid #FFB3B3', borderRadius: 8, padding: '8px 10px', marginBottom: 10 }}>
+          {errors.map((e,i) => <div key={i} style={{ fontSize: 11, color: '#C00' }}>⚠ {e}</div>)}
+        </div>
+      )}
+      <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8 }}>{rows.length} records ready to import</div>
+      <div style={{ background: '#F9FAFB', borderRadius: 8, border: '1px solid #e5e7eb', overflow: 'hidden', marginBottom: 10, maxHeight: 160, overflowY: 'auto' }}>
+        {rows.slice(0,8).map((r,i) => (
+          <div key={i} style={{ display: 'flex', gap: 8, padding: '6px 10px', borderBottom: '1px solid #F3F4F6', fontSize: 11 }}>
+            <span style={{ fontWeight: 700, color: r.first_name ? '#111' : '#C00', minWidth: 80 }}>{r.first_name || '⚠'} {r.last_name || '⚠'}</span>
+            <span style={{ color: '#6B7280' }}>{r.group_name || '—'}</span>
+          </div>
+        ))}
+        {rows.length > 8 && <div style={{ padding: '6px 10px', fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>...and {rows.length - 8} more</div>}
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={() => setStep('upload')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', color: '#6B7280' }}>← Back</button>
+        <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ flex: 2, padding: '8px', borderRadius: 8, border: 'none', background: errors.length > 0 ? '#9CA3AF' : primary, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+          {importing ? 'Importing...' : `Import ${rows.filter(r=>r.first_name&&r.last_name).length} children`}
+        </button>
+      </div>
+    </div>
+  )
+
+  return (
+    <div>
+      {/* Drop zone */}
+      <div
+        onClick={() => inputRef.current?.click()}
+        onDragOver={e => e.preventDefault()}
+        onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }}
+        style={{ border: `2px dashed ${primary}50`, borderRadius: 10, padding: '16px 12px', textAlign: 'center', cursor: 'pointer', background: primary + '06', marginBottom: 10 }}
+      >
+        <input ref={inputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
+        <div style={{ fontSize: 22, marginBottom: 4 }}>📂</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#111', marginBottom: 2 }}>Drop CSV or click to browse</div>
+        <div style={{ fontSize: 11, color: '#9CA3AF' }}>or paste below</div>
+      </div>
+      <textarea value={csvText} onChange={e => setCsvText(e.target.value)} placeholder="first_name,last_name,..." rows={3} style={fi} />
+      <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: `1px solid ${primary}40`, background: primary + '10', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>⬇ Template</button>
+        <button onClick={() => handlePreview()} disabled={!csvText.trim()} style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: csvText.trim() ? primary : '#9CA3AF', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Preview →</button>
+      </div>
+    </div>
+  )
+}
+
 function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
   const [form, setForm] = useState({ first_name: '', last_name: '', date_of_birth: '', group_name: bubbles[0]?.label || '', allergies: '', medical_notes: '', emergency_contact_name: '', emergency_contact_phone: '' })
   const [saving, setSaving] = useState(false)
@@ -308,6 +434,7 @@ export default function Registers({ org }) {
   const [selectedIds, setSelectedIds] = useState([])
   const [note, setNote] = useState('')
   const [showExcelUpload, setShowExcelUpload] = useState(false)
+  const [showImport, setShowImport] = useState(false)
 
   const getAttRec = (childId) => attendance.find(a => a.child_id === childId)
   const getStatus = (childId) => getAttRec(childId)?.status || 'unmarked'
@@ -586,7 +713,7 @@ export default function Registers({ org }) {
               { icon: '➕', label: 'Add Walk-in', sub: 'Child not on list', action: () => setShowAdd(true) },
               { icon: '👤', label: 'Take Headcount', sub: 'Manual headcount' },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet' },
-              { icon: '📊', label: 'Import from Excel', sub: 'Bulk add children', action: () => setShowExcelUpload(true) },
+              { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => setShowImport(v => !v) },
             ].map(t => (
               <button key={t.label} onClick={t.action} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8, border: 'none', background: 'transparent', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 2, transition: 'background 0.1s' }}
                 onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
@@ -599,6 +726,18 @@ export default function Registers({ org }) {
               </button>
             ))}
           </div>
+
+          {/* Inline Import Panel */}
+          {showImport && (
+            <div style={{ padding: 16, borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 8 }}>📥 Import Children</div>
+              <InlineChildImport org={org} onImported={newChildren => {
+                setChildren(prev => [...prev, ...newChildren])
+                setShowImport(false)
+                showToast(`✅ ${newChildren.length} children imported!`)
+              }} />
+            </div>
+          )}
 
           {/* Register Notes */}
           <div style={{ padding: 16, borderBottom: '1px solid #e5e7eb' }}>
