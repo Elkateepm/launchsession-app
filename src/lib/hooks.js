@@ -53,8 +53,9 @@ export function useChildren(orgId) {
   const [children, setChildren] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const fetch = () => {
     if (!orgId) return
+    setLoading(true)
     supabase
       .from('children')
       .select('*')
@@ -62,7 +63,14 @@ export function useChildren(orgId) {
       .eq('active', true)
       .order('last_name')
       .then(({ data }) => { setChildren(data || []); setLoading(false) })
-  }, [orgId])
+  }
 
-  return { children, setChildren, loading }
+  useEffect(() => {
+    fetch()
+    // Refetch when window regains focus (e.g. after import on another tab)
+    window.addEventListener('focus', fetch)
+    return () => window.removeEventListener('focus', fetch)
+  }, [orgId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return { children, setChildren, loading, refetch: fetch }
 }

@@ -326,7 +326,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'calendar'    && <Calendar org={org} session={session} />}
           {tab === 'settings'    && <Settings org={org} session={session} />}
           {tab === 'mentoring'   && <Mentoring org={org} session={session} />}
-          {tab === 'templates'   && <Templates org={org} session={session} />}
+          {tab === 'templates'   && <Templates org={org} session={session} onNavigate={setTab} />}
           {tab === 'safeguarding'&& <Safeguarding org={org} session={session} />}
           {tab === 'reports'     && <Reports org={org} session={session} />}
           {tab === 'volunteers'  && <Volunteers org={org} session={session} />}

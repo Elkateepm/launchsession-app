@@ -192,7 +192,7 @@ const CSV_HEADER = CHILD_COLUMNS.map(c => c.key).join(',')
 const CSV_EXAMPLE = CHILD_COLUMNS.map(c => c.example).join(',')
 const CSV_TEMPLATE = `${CSV_HEADER}\n${CSV_EXAMPLE}\n`
 
-function ChildImportTool({ org, showToast }) {
+function ChildImportTool({ org, showToast, onNavigate }) {
   const primary = org?.primary_color || '#1B9AAA'
   const [tab, setTab] = useState('template') // 'template' | 'import' | 'history'
   const [csvText, setCsvText] = useState('')
@@ -389,9 +389,10 @@ function ChildImportTool({ org, showToast }) {
               </div>
               {importResult.failed > 0 && <div style={{ fontSize: 13, color: '#92400E', marginBottom: 8 }}>{importResult.failed} rows skipped — check for missing names.</div>}
               {importResult.error && <div style={{ fontSize: 12, color: '#C00', marginBottom: 12 }}>{importResult.error}</div>}
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => setImportResult(null)} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'transparent', color: primary, fontWeight: 700, cursor: 'pointer' }}>Import more</button>
-                <button onClick={() => setTab('history')} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>View history →</button>
+                {onNavigate && <button onClick={() => onNavigate('registers')} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>View in Registers →</button>}
+                <button onClick={() => setTab('history')} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid var(--border)`, background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>View history</button>
               </div>
             </div>
           ) : (
@@ -502,7 +503,7 @@ function ChildImportTool({ org, showToast }) {
   )
 }
 
-export default function Templates({ org }) {
+export default function Templates({ org, onNavigate }) {
   const [activeType, setActiveType] = useState('session_plan')
   const [globalTemplates, setGlobalTemplates] = useState([])
   const [ownTemplates, setOwnTemplates] = useState([])
@@ -637,7 +638,7 @@ export default function Templates({ org }) {
         </div>
       )}
       {activeType === 'import' ? (
-        <ChildImportTool org={org} showToast={showToast} />
+        <ChildImportTool org={org} showToast={showToast} onNavigate={onNavigate} />
       ) : loading ? (
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading templates...</div>
       ) : (
