@@ -742,6 +742,79 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 5
 @media(max-width:900px){
   .nav-wrapper{max-width:calc(100% - 24px)!important}
 }
+
+/* ── MOBILE POLISH ──────────────────────────────────────────── */
+@media(max-width:600px){
+
+  /* Typography scale */
+  .hero-title{font-size:clamp(30px,9vw,44px)!important;letter-spacing:-1.5px!important;line-height:1.08!important}
+  .hero-sub{font-size:15px!important;line-height:1.65!important;margin-bottom:28px!important}
+  .section-heading{font-size:clamp(24px,7vw,36px)!important;letter-spacing:-0.8px!important}
+  .section-sub{font-size:15px!important}
+  .cta-title{font-size:clamp(22px,7vw,34px)!important}
+
+  /* Hero */
+  #hero{padding:100px 5% 60px!important;min-height:auto!important}
+  .hero-eyebrow{font-size:10px!important;padding:5px 11px!important}
+  .hero-trust{gap:10px!important;margin-top:24px!important}
+  .trust-item{font-size:11px!important}
+
+  /* Sections */
+  section{padding:52px 5%!important}
+
+  /* Nav */
+  .nav-signin{min-width:auto!important;height:36px!important;font-size:12px!important;padding:0 14px!important}
+
+  /* Feature cards */
+  .feature-card{padding:20px!important}
+  .features-grid{gap:12px!important;margin-top:36px!important}
+
+  /* Why / problem grids */
+  .why-grid{gap:32px!important;margin-top:36px!important}
+  .problem-grid{gap:16px!important}
+
+  /* Pricing */
+  .pricing-card{padding:24px 20px!important}
+  .pricing-grid{gap:12px!important}
+
+  /* Impact grid — 2 cols on mobile is fine */
+  .impact-grid{gap:10px!important}
+
+  /* CTA box */
+  .cta-box{padding:36px 20px!important;border-radius:20px!important}
+  .cta-box .hero-ctas{flex-direction:column!important;width:100%!important}
+  .cta-box .btn-hero-primary,.cta-box .btn-hero-ghost{width:100%!important;justify-content:center!important}
+
+  /* Testimonials / cards with overflow */
+  [style*="overflow-x:auto"],[style*="overflow-x: auto"]{-webkit-overflow-scrolling:touch}
+
+  /* Real product mockup */
+  .real-product-mockup{width:100%!important;padding:14px!important}
+  .live-panel{padding:14px!important}
+
+  /* Sign in section */
+  .signin-card{padding:28px 20px!important;border-radius:20px!important}
+
+  /* Mobile menu CTA buttons */
+  .mobile-menu-cta .btn-ghost,.mobile-menu-cta .btn-demo{width:100%!important;justify-content:center!important;text-align:center!important}
+
+  /* Footer */
+  footer .container > div{flex-direction:column!important;gap:16px!important;text-align:center!important}
+
+  /* Remove hover transforms on touch */
+  .pricing-card:hover{transform:none!important}
+  .feature-card:hover{transform:none!important}
+}
+
+@media(max-width:380px){
+  .hero-title{font-size:28px!important}
+  .section-heading{font-size:22px!important}
+  nav{height:48px!important;padding:0 12px!important}
+  .logo img{height:28px!important;width:28px!important}
+  .logo-text{font-size:14px!important}
+}
+</style>
+
 </style>
 
 </head>
