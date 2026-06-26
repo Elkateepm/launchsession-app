@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify'
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 
@@ -74,7 +75,7 @@ function ViewModal({ template, onClose, onUse, onEdit, isOwn, using }) {
         {template.content?.body && (
           <div style={{ marginBottom: 20 }}>
             <div style={lbl}>Content</div>
-            <div style={{ padding: '14px 16px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)', fontSize: 14, lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: template.content.body }} />
+            <div style={{ padding: '14px 16px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)', fontSize: 14, lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(template.content.body || '') }} />
           </div>
         )}
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
@@ -226,7 +227,7 @@ export default function Templates({ org }) {
       </div>
       {t.content?.body && (
         <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5, maxHeight: 52, overflow: 'hidden', maskImage: 'linear-gradient(to bottom,black 50%,transparent 100%)' }}
-          dangerouslySetInnerHTML={{ __html: t.content.body }} />
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t.content.body || '') }} />
       )}
       <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
         <button onClick={() => setViewModal({ ...t, isOwn })} style={{ flex: 1, padding: '8px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text2)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View</button>

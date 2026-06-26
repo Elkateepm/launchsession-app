@@ -8,16 +8,20 @@ import React from 'react'
  *   title      — main heading
  *   subtitle   — supporting line
  *   primary    — brand colour
+ *   orgName    — org name shown as brand watermark
  *   stats      — array of { label, value, icon, color? }
  *   actions    — array of { label, icon, onClick, variant: 'primary'|'ghost' }
  *   badge      — { text, color? } small pill next to title
  *   gradient   — override gradient string
  */
-export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA', stats = [], actions = [], badge, gradient }) {
+export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA', orgName, stats = [], actions = [], badge, gradient }) {
   const grad = gradient || `linear-gradient(135deg, ${primary}18 0%, ${primary}08 60%, transparent 100%)`
 
   return (
-    <div className="ls-page-header" style={{ background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border, #e5e7eb)', padding: '0', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+    <div className="ls-page-header" style={{ background: 'var(--surface, #fff)', borderBottom: `2px solid ${primary}18`, padding: '0', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+
+      {/* Brand colour strip at top */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}66, transparent)` }} />
 
       {/* Background decorations */}
       <div style={{ position: 'absolute', inset: 0, background: grad, pointerEvents: 'none' }} />
@@ -44,6 +48,9 @@ export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA',
               </div>
               {subtitle && (
                 <p className="ls-header-sub" style={{ fontSize: 13, color: 'var(--text3, #6B7280)', margin: 0, fontWeight: 500, lineHeight: 1.4 }}>{subtitle}</p>
+              {orgName && (
+                <div style={{ fontSize: 10, fontWeight: 800, color: primary, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 4, opacity: 0.8 }}>{orgName}</div>
+              )}
               )}
             </div>
           </div>

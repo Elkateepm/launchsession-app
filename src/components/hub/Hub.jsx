@@ -127,32 +127,46 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   return (
     <div style={styles.page}>
       {/* ── HEADER ── */}
-      <header style={{ background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border, #e5e7eb)', padding: `0 ${pad}px`, flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border, #f1f5f9)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            {org?.logo_url ? (
-              <img src={org.logo_url} alt={orgName} style={{ width: 28, height: 28, borderRadius: 7, objectFit: 'contain' }} />
-            ) : (
-              <div style={{ width: 28, height: 28, borderRadius: 7, background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#fff' }}>{orgName[0]}</div>
-            )}
+      <header style={{ background: 'var(--surface, #fff)', borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+
+        {/* Subtle brand gradient top strip */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}88, transparent)` }} />
+
+        {/* Top bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0 12px', borderBottom: `1px solid ${primary}18` }}>
+
+          {/* Org identity */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <div style={{ position: 'relative' }}>
+              {org?.logo_url ? (
+                <img src={org.logo_url} alt={orgName} style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'contain', border: `1.5px solid ${primary}30`, background: '#fff', padding: 2 }} />
+              ) : (
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${primary}, ${primary}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#fff', boxShadow: `0 4px 12px ${primary}30` }}>
+                  {orgName[0]}
+                </div>
+              )}
+              <div style={{ position: 'absolute', bottom: -2, right: -2, width: 10, height: 10, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />
+            </div>
             {!isMobile && (
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text, #111)', lineHeight: 1.2 }}>{orgName}</div>
-                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: primary, background: primary + '18', borderRadius: 4, padding: '1px 6px' }}>{org?.plan || 'Starter'}</span>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text, #111)', lineHeight: 1.2, fontFamily: 'var(--font-display, sans-serif)' }}>{orgName}</div>
+                <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: primary, background: primary + '15', borderRadius: 4, padding: '2px 7px', border: `1px solid ${primary}30` }}>{org?.plan || 'Starter'} Plan</span>
               </div>
             )}
           </div>
 
-          {/* SEARCH — hidden on mobile */}
+          {/* Search */}
           {!isMobile && (
-            <div style={{ flex: 1, maxWidth: 480, position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 14 }}>🔍</span>
+            <div style={{ flex: 1, maxWidth: 440, position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.7 }}>🔍</span>
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 onKeyDown={e => e.key === 'Escape' && setSearch('')}
                 placeholder="Search young people, sessions..."
-                style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px 8px 36px', borderRadius: 10, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface2, #f9fafb)', fontSize: 13, color: 'var(--text, #111)', outline: 'none' }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '9px 14px 9px 36px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '08', fontSize: 13, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.2s' }}
+                onFocus={e => e.target.style.borderColor = primary}
+                onBlur={e => e.target.style.borderColor = primary + '25'}
               />
               {searchResults && (
                 <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 100, marginTop: 4, overflow: 'hidden' }}>
@@ -165,7 +179,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Young People</div>
                           {searchResults.children.map(c => (
                             <button key={c.id} onClick={() => { go('registers'); setSearch('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
-                              onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                              onMouseEnter={e => e.currentTarget.style.background = primary + '08'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                               <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{c.first_name} {c.last_name}</div>
@@ -180,8 +194,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
                           {searchResults.sessions.map(s => (
                             <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
-                              onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                              <div style={{ width: 30, height: 30, borderRadius: 8, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
+                              onMouseEnter={e => e.currentTarget.style.background = primary + '08'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                              <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
                                 <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time || 'No time'}</div>
@@ -192,45 +206,49 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       )}
                     </>
                   )}
-                  <div style={{ padding: '8px 14px', borderTop: '1px solid #F3F4F6' }}>
-                    <button onClick={() => setSearch('')} style={{ fontSize: 11, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer' }}>Press Esc to close</button>
+                  <div style={{ padding: '8px 14px', borderTop: `1px solid ${primary}15` }}>
+                    <button onClick={() => setSearch('')} style={{ fontSize: 11, color: primary, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Press Esc to close</button>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={onAvatarClick}>
-              <div style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, border: `2px solid ${primary}` }}>
+          {/* Right: avatar + date */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto', flexShrink: 0 }}>
+            {!isMobile && (
+              <div style={{ fontSize: 12, color: 'var(--text3, #6b7280)', fontWeight: 600, whiteSpace: 'nowrap', padding: '4px 10px', background: primary + '08', borderRadius: 8, border: `1px solid ${primary}20` }}>
+                {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+              </div>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 8px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', transition: 'all 0.2s' }}
+              onClick={onAvatarClick}
+              onMouseEnter={e => e.currentTarget.style.background = primary + '12'}
+              onMouseLeave={e => e.currentTarget.style.background = primary + '06'}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, ${primary}99)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, boxShadow: `0 2px 8px ${primary}40` }}>
                 {userProfile?.photo_url ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : hubUserName[0]?.toUpperCase() || '?'}
               </div>
-              {!isMobile && <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text, #111)' }}>{hubUserName}</div>}
+              {!isMobile && <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text, #111)', fontFamily: 'var(--font-display, sans-serif)' }}>{hubUserName.split(' ')[0]}</div>}
             </div>
-            {!isMobile && (
-              <>
-                <div style={{ width: 1, height: 20, background: 'var(--border, #e5e7eb)' }} />
-                <div style={{ fontSize: 12, color: 'var(--text3, #6b7280)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                  {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-                </div>
-              </>
-            )}
           </div>
         </div>
 
-        <div style={{ padding: '12px 0 10px' }}>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 18 : 22, fontWeight: 800, color: 'var(--text, #0f172a)', lineHeight: 1.2 }}>
-            {getGreeting()}, {hubUserName.split(' ')[0]}
+        {/* Greeting row */}
+        <div style={{ padding: '14px 0 12px' }}>
+          <h1 style={{ margin: 0, fontSize: isMobile ? 20 : 24, fontWeight: 900, color: 'var(--text, #0f172a)', lineHeight: 1.15, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.3px' }}>
+            {getGreeting()}, {hubUserName.split(' ')[0]}! 👋
           </h1>
-          <div style={{ marginTop: 5, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12, color: 'var(--text3, #64748b)', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ color: todaySessions.length > 0 ? '#10b981' : '#9ca3af', fontSize: 7 }}>●</span>
+          <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text3, #64748b)', fontWeight: 600, background: todaySessions.length > 0 ? '#DCFCE7' : '#F3F4F6', borderRadius: 99, padding: '3px 10px' }}>
+              <span style={{ color: todaySessions.length > 0 ? '#16A34A' : '#9ca3af', fontSize: 7 }}>●</span>
               {todaySessions.length} session{todaySessions.length !== 1 ? 's' : ''} today
             </span>
-            <span style={{ color: '#e5e7eb' }}>·</span>
-            <span style={{ fontSize: 12, color: concerns.length > 0 ? '#F59E0B' : '#10b981', fontWeight: 600 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, background: concerns.length > 0 ? '#FEF9C3' : '#DCFCE7', color: concerns.length > 0 ? '#92400E' : '#16A34A', borderRadius: 99, padding: '3px 10px' }}>
               {concerns.length > 0 ? `⚠ ${concerns.length} concern${concerns.length > 1 ? 's' : ''}` : '✓ All clear'}
             </span>
+            {!isMobile && children.length > 0 && (
+              <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>{children.length} young people</span>
+            )}
           </div>
         </div>
       </header>

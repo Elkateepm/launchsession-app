@@ -100,8 +100,14 @@ export default function TeamTab({ org, session }) {
   const handleRemove = async (id) => {
     if (!window.confirm('Permanently remove this person? This cannot be undone.')) return
     try {
-      const { supabaseAdmin } = await import('../../lib/supabase')
-      const { error } = await supabaseAdmin.rpc('delete_user', { user_id: id })
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin-delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ user_id: id, org_id: org.id })
+      })
+      const json = await res.json()
+      const error = json.error ? { message: json.error } : null
       if (error) throw error
     } catch (err) {
       alert('Failed to remove user: ' + err.message)
@@ -184,6 +190,7 @@ export default function TeamTab({ org, session }) {
       <PageHeader
         icon="👥"
         title="Team & Staff"
+        orgName={org?.name}
         subtitle="Invite staff, manage volunteers and build your team"
         primary={primary}
         stats={[

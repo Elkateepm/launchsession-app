@@ -448,6 +448,7 @@ export default function Reports({ org }) {
       <PageHeader
         icon="📊"
         title="Reports & Impact"
+        orgName={org?.name}
         subtitle={`Last updated ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}`}
         primary={primary}
         actions={[{ label: '↻ Refresh', onClick: load, variant: 'ghost' }]}

@@ -632,6 +632,7 @@ export default function SessionPlanner({ org }) {
       <PageHeader
         icon="📅"
         title="Sessions"
+        orgName={org?.name}
         subtitle={`${sessions.length} upcoming · ${needVolunteers} need volunteers`}
         primary={primary}
         stats={[

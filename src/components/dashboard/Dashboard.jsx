@@ -152,24 +152,24 @@ export default function Dashboard({ session, org }) {
         </button>
 
         {/* ORG HEADER */}
-        <div style={{ padding: '16px 12px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ padding: '16px 12px 14px', borderBottom: `1px solid ${primary}22`, background: `linear-gradient(180deg, ${primary}14, transparent)`, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}, ${primary}44)` }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {org?.logo_url ? (
-              <img src={org.logo_url} alt={orgName} style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain', flexShrink: 0 }} />
+              <img src={org.logo_url} alt={orgName} style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain', flexShrink: 0, background: 'rgba(255,255,255,0.95)', padding: 3, border: `1.5px solid ${primary}40` }} />
             ) : (
-              <div style={{ width: 38, height: 38, borderRadius: 10, background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: `linear-gradient(135deg, ${primary}, ${primary}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 900, color: '#fff', flexShrink: 0, boxShadow: `0 4px 12px ${primary}40` }}>
                 {orgName[0]}
               </div>
             )}
             {!sidebarCollapsed && <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{orgName}</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-display, sans-serif)' }}>{orgName}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', flexShrink: 0 }} />
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 0.8 }}>{plan} plan</span>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', flexShrink: 0, boxShadow: '0 0 4px #22C55E' }} />
+                <span style={{ fontSize: 10, color: primary, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700 }}>{plan} plan</span>
               </div>
             </div>}
           </div>
-
         </div>
 
         {!sidebarCollapsed && (
@@ -283,12 +283,20 @@ export default function Dashboard({ session, org }) {
       {/* MAIN CONTENT */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobileBottomNav ? 78 : 0 }}>
         {tab !== 'registers' && tab !== 'home' && (
-          <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
+          <div style={{ background: 'var(--surface)', borderBottom: `2px solid ${primary}18`, padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12, position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}60, transparent)` }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 18 }}>{ALL_MODULES.find(m => m.key === tab)?.icon || (tab === 'team' ? '👥' : tab === 'settings' ? '⚙️' : '📄')}</span>
-              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-display, sans-serif)' }}>{tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</span>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: `linear-gradient(135deg, ${primary}22, ${primary}10)`, border: `1.5px solid ${primary}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+                {ALL_MODULES.find(m => m.key === tab)?.icon || (tab === 'team' ? '👥' : tab === 'settings' ? '⚙️' : '📄')}
+              </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-display, sans-serif)', lineHeight: 1.1 }}>{tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</div>
+                <div style={{ fontSize: 10, color: primary, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 }}>{orgName}</div>
+              </div>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 500 }}>{new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600, background: primary + '10', padding: '4px 10px', borderRadius: 8, border: `1px solid ${primary}20` }}>
+              {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+            </div>
           </div>
         )}
 

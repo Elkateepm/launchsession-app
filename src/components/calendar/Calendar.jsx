@@ -53,7 +53,7 @@ export default function Calendar({ org, session }) {
       if (!alive) return;
 
       if (error) {
-        console.error("Calendar sessions error:", error);
+        
         setSessions([]);
       } else {
         setSessions(data || []);

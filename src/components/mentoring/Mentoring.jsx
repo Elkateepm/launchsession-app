@@ -136,6 +136,7 @@ export default function Mentoring({ org, session }) {
       <PageHeader
         icon="🤝"
         title="Mentoring"
+        orgName={org?.name}
         subtitle="Build long-term relationships, track outcomes and support every young person"
         primary={primary}
         stats={[

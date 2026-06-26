@@ -61,8 +61,14 @@ export default function Volunteers({ org, session }) {
   async function removeVolunteer(id) {
     if (!window.confirm('Permanently delete this volunteer? This cannot be undone.')) return
     try {
-      const { supabaseAdmin } = await import('../../lib/supabase')
-      const { error } = await supabaseAdmin.rpc('delete_user', { user_id: id })
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin-delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ user_id: id, org_id: org.id })
+      })
+      const json = await res.json()
+      const error = json.error ? { message: json.error } : null
       if (error) throw error
       loadAll()
     } catch (err) {
@@ -106,6 +112,7 @@ export default function Volunteers({ org, session }) {
       <PageHeader
         icon="❤️"
         title="Volunteers"
+        orgName={org?.name}
         subtitle="Manage your volunteer workforce and portal access"
         primary={primary}
         stats={kpis.map(k => ({ label: k.label, value: k.value, icon: k.icon, color: k.color }))}
