@@ -93,7 +93,17 @@ function InlineChildImport({ org, onImported }) {
     const json = await res.json()
     setImporting(false)
     if (json.error) { setErrors([json.error]); setStep('preview'); return }
-    onImported(records.map((r, i) => ({ ...r, id: json.ids?.[i] || `tmp-${i}`, org_id: org.id })))
+
+    // Fetch the newly inserted children from DB with correct IDs
+    const { data: newChildren } = await supabase
+      .from('children')
+      .select('*')
+      .eq('org_id', org.id)
+      .eq('active', true)
+      .in('first_name', records.map(r => r.first_name))
+      .order('last_name')
+
+    onImported(newChildren || [])
   }
 
   const downloadTemplate = () => {
@@ -732,9 +742,9 @@ export default function Registers({ org }) {
             <div style={{ padding: 16, borderBottom: '1px solid #e5e7eb' }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 8 }}>📥 Import Children</div>
               <InlineChildImport org={org} onImported={newChildren => {
-                setChildren(prev => [...prev, ...newChildren])
+                setChildren(newChildren)
                 setShowImport(false)
-                showToast(`✅ ${newChildren.length} children imported!`)
+                showToast(`✅ ${newChildren.length} children now on register`)
               }} />
             </div>
           )}

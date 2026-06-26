@@ -24,5 +24,5 @@ export default async function handler(req, res) {
     .select('id')
 
   if (error) return res.status(500).json({ error: error.message })
-  return res.status(200).json({ inserted: data.length })
+  return res.status(200).json({ inserted: data.length, records: data })
 }
