@@ -361,7 +361,6 @@ export default function TeamTab({ org, session }) {
         </div>
       </div>
       </div>
-      </div>
     </div>
   )
 }
