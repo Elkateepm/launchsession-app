@@ -261,6 +261,15 @@ function ChildImportTool({ org, showToast, onNavigate }) {
   const handleImport = async () => {
     if (!preview?.length) return
     setImporting(true)
+
+    // Verify we have an authenticated session
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      showToast('Session expired — please sign in again', '#EF4444')
+      setImporting(false)
+      return
+    }
+
     const records = preview.map(r => ({
       org_id: org.id,
       first_name: r.first_name?.trim() || '',
