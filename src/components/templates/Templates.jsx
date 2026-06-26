@@ -270,6 +270,13 @@ function ChildImportTool({ org, showToast, onNavigate }) {
       return
     }
 
+    // Debug: log what org_id we're trying to insert
+    console.log('Import debug:', { 
+      org_id: org.id, 
+      user_id: session.user.id,
+      role: session.user.role
+    })
+
     const records = preview.map(r => ({
       org_id: org.id,
       first_name: r.first_name?.trim() || '',
