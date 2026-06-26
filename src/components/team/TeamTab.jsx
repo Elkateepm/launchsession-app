@@ -366,18 +366,3 @@ export default function TeamTab({ org, session }) {
 }
 
 
-function TeamMetric({ icon, label, value, color }) {
-  return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 18, boxShadow: '0 10px 24px rgba(15,23,42,0.05)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 14, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
-          {icon}
-        </div>
-        <div>
-          <div style={{ fontSize: 26, fontWeight: 950, color }}>{value}</div>
-          <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 800 }}>{label}</div>
-        </div>
-      </div>
-    </div>
-  )
-}

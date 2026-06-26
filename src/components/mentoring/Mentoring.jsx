@@ -500,18 +500,6 @@ function PathwayStep({ number, title, text, color }) {
   )
 }
 
-function Metric({ icon, label, value, color }) {
-  return (
-    <div style={styles.metric}>
-      <div style={{ ...styles.metricIcon, background: color + '18' }}>{icon}</div>
-      <div>
-        <div style={styles.metricValue}>{value}</div>
-        <div style={styles.metricLabel}>{label}</div>
-      </div>
-    </div>
-  )
-}
-
 function Panel({ title, children }) {
   return (
     <div style={styles.panel}>
