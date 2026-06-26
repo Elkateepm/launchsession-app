@@ -361,7 +361,7 @@ export default function Reports({ org }) {
     const [sessionsRes, upcomingRes, childrenRes, attRes, teamRes, safRes] = await Promise.all([
       supabase.from('sessions').select('id, session_date, title').eq('org_id', orgId).lt('session_date', now.toISOString().split('T')[0]),
       supabase.from('sessions').select('id').eq('org_id', orgId).gte('session_date', now.toISOString().split('T')[0]),
-      supabase.from('children').select('id, active, group_name, full_name, created_at').eq('org_id', orgId),
+      supabase.from('children').select('id, active, group_name, first_name, last_name, created_at').eq('org_id', orgId),
       supabase.from('attendance').select('id, status, signed_in_at, child_id, session_id, org_id').eq('org_id', orgId),
       supabase.from('user_profiles').select('id, role').eq('org_id', orgId),
       supabase.from('cause_for_concern').select('id, status, follow_up_required, created_at').eq('org_id', orgId),
@@ -393,7 +393,7 @@ export default function Reports({ org }) {
       const rate = (childAttCount[c.id] || 0) / totalSessions
       return rate < 0.3 || !recentAtt.has(c.id)
     }).map(c => ({
-      name: c.full_name || 'Unknown',
+      name: c.first_name && c.last_name ? `${c.first_name} ${c.last_name}` : c.first_name || 'Unknown',
       reason: !recentAtt.has(c.id) ? 'No attendance in 30+ days' : `${Math.round(((childAttCount[c.id] || 0) / totalSessions) * 100)}% attendance rate`,
     }))
 

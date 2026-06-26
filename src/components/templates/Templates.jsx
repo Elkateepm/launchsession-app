@@ -270,6 +270,12 @@ function ChildImportTool({ org, showToast, onNavigate }) {
       return
     }
 
+    // Explicitly set the session so the client sends the JWT
+    await supabase.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    })
+
     const records = preview.map(r => ({
       org_id: org.id,
       first_name: r.first_name?.trim() || '',
@@ -283,15 +289,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
       active: true,
     })).filter(r => r.first_name && r.last_name)
 
-    // Use authed client with explicit token to ensure RLS sees correct user
-    const { createClient } = await import('@supabase/supabase-js')
-    const authedClient = createClient(
-      'https://ssahcqeqrxawmwtjpwvh.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzYWhjcWVxcnhhd213dGpwd3ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNDYyNTEsImV4cCI6MjA5MzcyMjI1MX0.HYCzuHe5C1cWoxh7yYUZuLWG0bxvy_9xTE1bmlwJweQ',
-      { global: { headers: { Authorization: `Bearer ${session.access_token}` } } }
-    )
-
-    const { data, error } = await authedClient.from('children').insert(records).select('id')
+    const { data, error } = await supabase.from('children').insert(records).select('id')
     setImporting(false)
     if (error) {
       showToast('Import failed: ' + error.message, '#EF4444')
