@@ -7,6 +7,7 @@ const TYPES = [
   { key: 'email',        label: 'Email Templates',    icon: '✉️',  color: '#8B5CF6', desc: 'Comms for parents, staff and volunteers' },
   { key: 'register',     label: 'Register Templates', icon: '📝', color: '#10B981', desc: 'Pre-configured attendance sheets' },
   { key: 'onboarding',   label: 'Onboarding',         icon: '🚀', color: '#F97316', desc: 'Org setup blueprints and welcome flows' },
+  { key: 'import',       label: 'Data Import',        icon: '📥', color: '#1B9AAA', desc: 'Import young people, sessions and more' },
 ]
 
 const lbl = { display: 'block', fontSize: 11, fontWeight: 900, color: 'var(--text3)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }
@@ -129,6 +130,321 @@ function EditModal({ template, onClose, onSave, saving }) {
         </div>
       </div>
     </>
+  )
+}
+
+// ─── CHILD IMPORT TOOL ────────────────────────────────────────
+const CHILD_COLUMNS = [
+  { key: 'first_name',              label: 'First Name',              required: true,  example: 'Sarah',        note: 'Required' },
+  { key: 'last_name',               label: 'Last Name',               required: true,  example: 'Jones',        note: 'Required' },
+  { key: 'date_of_birth',           label: 'Date of Birth',           required: false, example: '2015-06-14',   note: 'YYYY-MM-DD format' },
+  { key: 'group_name',              label: 'Group / Bubble',          required: false, example: 'Red',          note: 'Must match your group names' },
+  { key: 'allergies',               label: 'Allergies / Dietary',     required: false, example: 'Nut allergy',  note: '' },
+  { key: 'medical_notes',           label: 'Medical Notes',           required: false, example: 'Asthma',       note: '' },
+  { key: 'emergency_contact_name',  label: 'Emergency Contact Name',  required: false, example: 'Jane Jones',   note: '' },
+  { key: 'emergency_contact_phone', label: 'Emergency Contact Phone', required: false, example: '07700900000',  note: '' },
+]
+
+const CSV_HEADER = CHILD_COLUMNS.map(c => c.key).join(',')
+const CSV_EXAMPLE = CHILD_COLUMNS.map(c => c.example).join(',')
+const CSV_TEMPLATE = `${CSV_HEADER}\n${CSV_EXAMPLE}\n`
+
+function ChildImportTool({ org, showToast }) {
+  const primary = org?.primary_color || '#1B9AAA'
+  const [tab, setTab] = useState('template') // 'template' | 'import' | 'history'
+  const [csvText, setCsvText] = useState('')
+  const [preview, setPreview] = useState(null)
+  const [errors, setErrors] = useState([])
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState(null)
+  const [history, setHistory] = useState([])
+
+  // Load recent imports
+  useEffect(() => {
+    if (tab !== 'history') return
+    supabase.from('children').select('id,first_name,last_name,created_at').eq('org_id', org.id)
+      .order('created_at', { ascending: false }).limit(20)
+      .then(({ data }) => setHistory(data || []))
+  }, [tab, org.id])
+
+  const downloadTemplate = () => {
+    const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'launchsession-children-import.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+    showToast('Template downloaded!')
+  }
+
+  const parseCSV = (text) => {
+    const lines = text.trim().split('\n').filter(Boolean)
+    if (lines.length < 2) return { rows: [], errs: ['File must have a header row and at least one data row.'] }
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, '_'))
+    const errs = []
+    const rows = []
+    lines.slice(1).forEach((line, i) => {
+      // Handle quoted CSV fields
+      const vals = []
+      let cur = '', inQ = false
+      for (const ch of line) {
+        if (ch === '"') inQ = !inQ
+        else if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = '' }
+        else cur += ch
+      }
+      vals.push(cur.trim())
+
+      const row = {}
+      headers.forEach((h, j) => { row[h] = vals[j] || '' })
+      if (!row.first_name) errs.push(`Row ${i + 2}: missing first_name`)
+      if (!row.last_name) errs.push(`Row ${i + 2}: missing last_name`)
+      if (row.date_of_birth && !/^\d{4}-\d{2}-\d{2}$/.test(row.date_of_birth)) {
+        errs.push(`Row ${i + 2}: date_of_birth must be YYYY-MM-DD (got "${row.date_of_birth}")`)
+      }
+      rows.push(row)
+    })
+    return { rows, errs }
+  }
+
+  const handlePreview = () => {
+    if (!csvText.trim()) { setErrors(['Paste your CSV data first.']); return }
+    const { rows, errs } = parseCSV(csvText)
+    setErrors(errs)
+    setPreview(rows)
+    setImportResult(null)
+  }
+
+  const handleImport = async () => {
+    if (!preview?.length) return
+    setImporting(true)
+    const records = preview.map(r => ({
+      org_id: org.id,
+      first_name: r.first_name?.trim() || '',
+      last_name: r.last_name?.trim() || '',
+      date_of_birth: r.date_of_birth || null,
+      group_name: r.group_name || null,
+      allergies: r.allergies || null,
+      medical_notes: r.medical_notes || null,
+      emergency_contact_name: r.emergency_contact_name || null,
+      emergency_contact_phone: r.emergency_contact_phone || null,
+      active: true,
+    })).filter(r => r.first_name && r.last_name)
+
+    const { data, error } = await supabase.from('children').insert(records).select('id')
+    setImporting(false)
+    if (error) {
+      showToast('Import failed: ' + error.message, '#EF4444')
+      setImportResult({ success: 0, failed: records.length, error: error.message })
+    } else {
+      showToast(`✅ ${data.length} young people imported!`)
+      setImportResult({ success: data.length, failed: records.length - data.length })
+      setCsvText('')
+      setPreview(null)
+    }
+  }
+
+  const TABS = [
+    { key: 'template', label: '📄 Template', desc: 'Download the CSV template' },
+    { key: 'import',   label: '📥 Import',   desc: 'Paste and import your data' },
+    { key: 'history',  label: '📋 History',  desc: 'Recently imported records' },
+  ]
+
+  const fi = { width: '100%', padding: '10px 13px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }
+
+  return (
+    <div>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        {TABS.map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${tab === t.key ? primary : 'var(--border)'}`, background: tab === t.key ? primary + '12' : 'var(--surface)', color: tab === t.key ? primary : 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* TEMPLATE TAB */}
+      {tab === 'template' && (
+        <div>
+          {/* Hero */}
+          <div style={{ background: `linear-gradient(135deg, ${primary}18, ${primary}08)`, border: `1.5px solid ${primary}30`, borderRadius: 18, padding: '22px 24px', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, ${primary}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>📥</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>Children Import Template</div>
+                <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 14 }}>
+                  Download the CSV template, fill it in with your young people's details, then paste it back here to import. Takes about 2 minutes.
+                </div>
+                <button onClick={downloadTemplate} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  ⬇️ Download Template CSV
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Column guide */}
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', marginBottom: 20 }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>Column Reference</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Exactly these column names must appear in your CSV header row</div>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: 'var(--surface2)' }}>
+                    {['Column Name', 'Label', 'Required', 'Example', 'Notes'].map(h => (
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {CHILD_COLUMNS.map((col, i) => (
+                    <tr key={col.key} style={{ borderBottom: i < CHILD_COLUMNS.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontSize: 12, color: primary, fontWeight: 700 }}>{col.key}</td>
+                      <td style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text)' }}>{col.label}</td>
+                      <td style={{ padding: '10px 14px' }}>
+                        {col.required
+                          ? <span style={{ background: '#FEE2E2', color: '#C00', borderRadius: 99, padding: '2px 9px', fontSize: 11, fontWeight: 800 }}>Required</span>
+                          : <span style={{ background: '#F3F4F6', color: 'var(--text3)', borderRadius: 99, padding: '2px 9px', fontSize: 11, fontWeight: 600 }}>Optional</span>
+                        }
+                      </td>
+                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontSize: 12, color: 'var(--text3)' }}>{col.example}</td>
+                      <td style={{ padding: '10px 14px', fontSize: 11, color: 'var(--text3)' }}>{col.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Tips */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10 }}>
+            {[
+              { icon: '📊', title: 'Works with Excel', desc: 'Fill in Excel / Google Sheets, then export as CSV.' },
+              { icon: '🔤', title: 'Keep the header', desc: 'Don\'t delete or rename the first row — it maps columns.' },
+              { icon: '📅', title: 'Date format', desc: 'Use YYYY-MM-DD (e.g. 2015-06-14) for dates of birth.' },
+              { icon: '👥', title: 'Group names', desc: 'Must exactly match your group names in Settings.' },
+            ].map(t => (
+              <div key={t.title} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px' }}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{t.icon}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 3 }}>{t.title}</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5 }}>{t.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* IMPORT TAB */}
+      {tab === 'import' && (
+        <div>
+          {importResult ? (
+            <div style={{ background: importResult.failed === 0 ? '#F0FDF4' : '#FFFBEB', border: `1.5px solid ${importResult.failed === 0 ? '#86EFAC' : '#FDE68A'}`, borderRadius: 16, padding: '24px', textAlign: 'center', marginBottom: 20 }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>{importResult.failed === 0 ? '🎉' : '⚠️'}</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>
+                {importResult.success} young {importResult.success === 1 ? 'person' : 'people'} imported!
+              </div>
+              {importResult.failed > 0 && <div style={{ fontSize: 13, color: '#92400E', marginBottom: 8 }}>{importResult.failed} rows skipped — check for missing names.</div>}
+              {importResult.error && <div style={{ fontSize: 12, color: '#C00', marginBottom: 12 }}>{importResult.error}</div>}
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                <button onClick={() => setImportResult(null)} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'transparent', color: primary, fontWeight: 700, cursor: 'pointer' }}>Import more</button>
+                <button onClick={() => setTab('history')} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>View history →</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>Paste your CSV data</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 12 }}>Open your filled template in a text editor or copy from Excel, paste below.</div>
+                <textarea
+                  value={csvText}
+                  onChange={e => { setCsvText(e.target.value); setPreview(null); setErrors([]) }}
+                  placeholder={`first_name,last_name,date_of_birth,group_name,...\nSarah,Jones,2015-06-14,Red,...`}
+                  rows={8}
+                  style={{ ...fi, resize: 'vertical', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.6 }}
+                />
+                {errors.length > 0 && (
+                  <div style={{ background: '#FFF0F0', border: '1px solid #FFB3B3', borderRadius: 10, padding: '10px 14px', marginTop: 10 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#C00', marginBottom: 4 }}>⚠️ {errors.length} issue{errors.length > 1 ? 's' : ''} found:</div>
+                    {errors.map((e, i) => <div key={i} style={{ fontSize: 12, color: '#C00' }}>• {e}</div>)}
+                  </div>
+                )}
+                <button onClick={handlePreview} style={{ marginTop: 12, padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: primary + '12', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                  Preview →
+                </button>
+              </div>
+
+              {preview && preview.length > 0 && (
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Preview — {preview.length} record{preview.length !== 1 ? 's' : ''}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Showing first 5 rows</div>
+                    </div>
+                    <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: errors.length > 0 ? '#9ca3af' : `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontWeight: 800, fontSize: 13, cursor: errors.length > 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {importing ? 'Importing...' : `✓ Import ${preview.length} records`}
+                    </button>
+                  </div>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: 'var(--surface2)' }}>
+                          {['#', 'First Name', 'Last Name', 'DOB', 'Group', 'Allergies', 'Emergency Contact'].map(h => (
+                            <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {preview.slice(0, 5).map((row, i) => (
+                          <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                            <td style={{ padding: '9px 12px', color: 'var(--text3)', fontWeight: 600 }}>{i + 1}</td>
+                            <td style={{ padding: '9px 12px', fontWeight: 700, color: row.first_name ? 'var(--text)' : '#C00' }}>{row.first_name || '⚠ Missing'}</td>
+                            <td style={{ padding: '9px 12px', fontWeight: 700, color: row.last_name ? 'var(--text)' : '#C00' }}>{row.last_name || '⚠ Missing'}</td>
+                            <td style={{ padding: '9px 12px', color: 'var(--text3)' }}>{row.date_of_birth || '—'}</td>
+                            <td style={{ padding: '9px 12px', color: 'var(--text3)' }}>{row.group_name || '—'}</td>
+                            <td style={{ padding: '9px 12px', color: 'var(--text3)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.allergies || '—'}</td>
+                            <td style={{ padding: '9px 12px', color: 'var(--text3)' }}>{row.emergency_contact_name || '—'}</td>
+                          </tr>
+                        ))}
+                        {preview.length > 5 && (
+                          <tr><td colSpan={7} style={{ padding: '8px 12px', color: 'var(--text3)', fontSize: 11, fontStyle: 'italic' }}>...and {preview.length - 5} more</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* HISTORY TAB */}
+      {tab === 'history' && (
+        <div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Recently added young people (last 20)</div>
+          {history.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', background: 'var(--surface)', borderRadius: 16, border: '1px dashed var(--border)' }}>
+              <div style={{ fontSize: 32, marginBottom: 10 }}>📋</div>
+              <div style={{ fontWeight: 700, color: 'var(--text)' }}>No records yet</div>
+              <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>Import some young people to see them here.</div>
+            </div>
+          ) : (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+              {history.map((c, i) => (
+                <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < history.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)' }}>Added {new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -261,10 +577,14 @@ export default function Templates({ org }) {
           </button>
         ))}
       </div>
-      <div style={{ marginBottom: 20 }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={'Search ' + typeMeta.label.toLowerCase() + '...'} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
-      </div>
-      {loading ? (
+      {activeType !== 'import' && (
+        <div style={{ marginBottom: 20 }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={'Search ' + typeMeta.label.toLowerCase() + '...'} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+        </div>
+      )}
+      {activeType === 'import' ? (
+        <ChildImportTool org={org} showToast={showToast} />
+      ) : loading ? (
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading templates...</div>
       ) : (
         <>
