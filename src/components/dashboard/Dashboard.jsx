@@ -190,7 +190,7 @@ export default function Dashboard({ session, org }) {
               { icon: '👥', label: 'Add Staff', tab: 'team' },
               { icon: '📊', label: 'Reports', tab: 'reports' },
             ].map(a => (
-              <button key={a.tab} onClick={() => setTab(a.tab)} style={{ padding: '8px 6px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' }}
+              <button key={a.tab} onClick={() => handleSetTab(a.tab)} style={{ padding: '8px 6px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)' }}>
                 <span style={{ fontSize: 13 }}>{a.icon}</span> {a.label}
@@ -390,7 +390,7 @@ export default function Dashboard({ session, org }) {
                   <button
                     key={item.key}
                     onClick={() => {
-                      setTab(item.key);
+                      handleSetTab(item.key);
                       setShowMobileMore(false);
                     }}
                     style={{
@@ -434,7 +434,7 @@ export default function Dashboard({ session, org }) {
               { key: 'mentoring', label: 'Mentoring', icon: '🤝' },
               { key: 'more', label: 'More', icon: '⚙️' }
             ].map(item => (
-              <button key={item.key} onClick={() => item.key === 'more' ? setShowMobileMore(true) : setTab(item.key)} style={{
+              <button key={item.key} onClick={() => item.key === 'more' ? setShowMobileMore(true) : handleSetTab(item.key)} style={{
                 border: 'none',
                 borderRadius: 16,
                 background: tab === item.key ? `linear-gradient(135deg, ${primary}, #6366F1)` : 'transparent',
