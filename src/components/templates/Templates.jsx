@@ -133,6 +133,49 @@ function EditModal({ template, onClose, onSave, saving }) {
   )
 }
 
+// ─── FILE DROP ZONE ───────────────────────────────────────────
+function FileDropZone({ primary, onLoad, showToast }) {
+  const [dragging, setDragging] = useState(false)
+  const inputRef = React.useRef(null)
+
+  const readFile = (file) => {
+    if (!file) return
+    const name = file.name.toLowerCase()
+    if (!name.endsWith('.csv') && !name.endsWith('.txt')) {
+      showToast('Please upload a .csv file', '#EF4444')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = e => {
+      onLoad(e.target.result)
+      showToast(`✓ ${file.name} loaded — preview below`)
+    }
+    reader.readAsText(file)
+  }
+
+  return (
+    <div
+      onDragOver={e => { e.preventDefault(); setDragging(true) }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={e => { e.preventDefault(); setDragging(false); readFile(e.dataTransfer.files[0]) }}
+      onClick={() => inputRef.current?.click()}
+      style={{ border: `2px dashed ${dragging ? primary : 'var(--border)'}`, borderRadius: 16, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', background: dragging ? primary + '08' : 'var(--surface)', transition: 'all 0.2s' }}
+    >
+      <input ref={inputRef} type="file" accept=".csv,.txt" style={{ display: 'none' }} onChange={e => readFile(e.target.files[0])} />
+      <div style={{ fontSize: 36, marginBottom: 10 }}>📂</div>
+      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
+        {dragging ? 'Drop it!' : 'Drop your CSV file here'}
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14 }}>
+        or click to browse — accepts .csv files
+      </div>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 18px', borderRadius: 10, border: `1.5px solid ${primary}`, background: primary + '10', color: primary, fontSize: 13, fontWeight: 700 }}>
+        📁 Choose File
+      </div>
+    </div>
+  )
+}
+
 // ─── CHILD IMPORT TOOL ────────────────────────────────────────
 const CHILD_COLUMNS = [
   { key: 'first_name',              label: 'First Name',              required: true,  example: 'Sarah',        note: 'Required' },
@@ -273,7 +316,7 @@ function ChildImportTool({ org, showToast }) {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>Children Import Template</div>
                 <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 14 }}>
-                  Download the CSV template, fill it in with your young people's details, then paste it back here to import. Takes about 2 minutes.
+                  Download the CSV template, fill it in with your young people's details in Excel, Numbers or Google Sheets, then upload or paste it on the Import tab.
                 </div>
                 <button onClick={downloadTemplate} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   ⬇️ Download Template CSV
@@ -353,14 +396,22 @@ function ChildImportTool({ org, showToast }) {
             </div>
           ) : (
             <>
+              {/* File upload drop zone */}
+              <FileDropZone primary={primary} onLoad={text => { setCsvText(text); setPreview(null); setErrors([]) }} showToast={showToast} />
+
+              {/* Divider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0' }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6 }}>or paste CSV text</span>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              </div>
+
               <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 16 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>Paste your CSV data</div>
-                <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 12 }}>Open your filled template in a text editor or copy from Excel, paste below.</div>
                 <textarea
                   value={csvText}
                   onChange={e => { setCsvText(e.target.value); setPreview(null); setErrors([]) }}
                   placeholder={`first_name,last_name,date_of_birth,group_name,...\nSarah,Jones,2015-06-14,Red,...`}
-                  rows={8}
+                  rows={6}
                   style={{ ...fi, resize: 'vertical', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.6 }}
                 />
                 {errors.length > 0 && (
@@ -369,19 +420,22 @@ function ChildImportTool({ org, showToast }) {
                     {errors.map((e, i) => <div key={i} style={{ fontSize: 12, color: '#C00' }}>• {e}</div>)}
                   </div>
                 )}
-                <button onClick={handlePreview} style={{ marginTop: 12, padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: primary + '12', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-                  Preview →
-                </button>
+                <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+                  <button onClick={handlePreview} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: primary + '12', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                    Preview →
+                  </button>
+                  {csvText && <button onClick={() => { setCsvText(''); setPreview(null); setErrors([]) }} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text3)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Clear</button>}
+                </div>
               </div>
 
               {preview && preview.length > 0 && (
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Preview — {preview.length} record{preview.length !== 1 ? 's' : ''}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Showing first 5 rows</div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Showing first 5 rows · {errors.length > 0 ? `${errors.length} error${errors.length > 1 ? 's' : ''} found` : '✓ All clear'}</div>
                     </div>
-                    <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: errors.length > 0 ? '#9ca3af' : `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontWeight: 800, fontSize: 13, cursor: errors.length > 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: errors.length > 0 ? '#9ca3af' : `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontWeight: 800, fontSize: 13, cursor: errors.length > 0 ? 'default' : 'pointer' }}>
                       {importing ? 'Importing...' : `✓ Import ${preview.length} records`}
                     </button>
                   </div>
