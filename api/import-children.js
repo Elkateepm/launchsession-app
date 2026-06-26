@@ -22,6 +22,13 @@ export default async function handler(req, res) {
     .eq('id', user.id)
     .single()
 
+  console.log('Import auth debug:', { 
+    user_id: user.id, 
+    profile_org_id: profile?.org_id, 
+    requested_org_id: req.body?.org_id,
+    role: profile?.role 
+  })
+
   const { org_id, records } = req.body
 
   if (!org_id || !records?.length) return res.status(400).json({ error: 'org_id and records required' })
