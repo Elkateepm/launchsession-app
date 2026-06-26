@@ -48,9 +48,9 @@ export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA',
               </div>
               {subtitle && (
                 <p className="ls-header-sub" style={{ fontSize: 13, color: 'var(--text3, #6B7280)', margin: 0, fontWeight: 500, lineHeight: 1.4 }}>{subtitle}</p>
+              )}
               {orgName && (
                 <div style={{ fontSize: 10, fontWeight: 800, color: primary, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 4, opacity: 0.8 }}>{orgName}</div>
-              )}
               )}
             </div>
           </div>
