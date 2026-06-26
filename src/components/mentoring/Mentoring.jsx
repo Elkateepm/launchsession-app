@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import PageHeader from '../shared/PageHeader'
 
 const OUTCOMES = [
   'Improve confidence',
