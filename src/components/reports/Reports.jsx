@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
+import PageHeader from '../shared/PageHeader'
 import { supabase } from '../../lib/supabase'
 
 const TABS = [
@@ -441,16 +442,16 @@ export default function Reports({ org }) {
 
   useEffect(() => { load() }, [load])
 
+  const primary = org?.primary_color || '#1B9AAA'
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      {/* Sticky header */}
-      <div style={{ padding: '12px 24px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)' }}>Reports & Impact</div>
-          <div style={{ fontSize: 11, color: 'var(--text3)' }}>Last updated {new Date().toLocaleDateString('en-GB')}</div>
-        </div>
-        <button onClick={load} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text2)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>↻ Refresh</button>
-      </div>
+      <PageHeader
+        icon="📊"
+        title="Reports & Impact"
+        subtitle={`Last updated ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}`}
+        primary={primary}
+        actions={[{ label: '↻ Refresh', onClick: load, variant: 'ghost' }]}
+      />
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, padding: '10px 24px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', overflowX: 'auto', flexShrink: 0 }}>

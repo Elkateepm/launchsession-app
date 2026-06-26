@@ -131,22 +131,24 @@ export default function Mentoring({ org, session }) {
   }
 
   return (
-    <div style={styles.page}>
-      <div style={{ ...styles.hero, background: `linear-gradient(135deg, ${primary}, #7C3AED)` }}>
-        <div>
-          <div style={styles.kicker}>MENTORING HUB</div>
-          <h1 style={styles.title}>💜 Mentoring</h1>
-          <p style={styles.subtitle}>Build long-term relationships, track outcomes and support every young person.</p>
-        </div>
-        <div style={styles.heroEmoji}>🤝</div>
-      </div>
-
-      <div style={styles.statsGrid}>
-        <Metric icon="💚" label="Active Matches" value={activeMatches.length} color="#16A34A" />
-        <Metric icon="⏰" label="Awaiting Match" value={awaiting.length} color="#F59E0B" />
-        <Metric icon="⭐" label="Reviews Due" value={reviewsDue.length} color="#E91E63" />
-        <Metric icon="✨" label="New This Month" value={thisMonth.length} color="#7C3AED" />
-      </div>
+    <div style={{ ...styles.page, display: 'flex', flexDirection: 'column' }}>
+      <PageHeader
+        icon="🤝"
+        title="Mentoring"
+        subtitle="Build long-term relationships, track outcomes and support every young person"
+        primary={primary}
+        stats={[
+          { label: 'Active Matches', value: activeMatches.length, icon: '💚', color: '#16A34A' },
+          { label: 'Awaiting Match', value: awaiting.length, icon: '⏰', color: '#F59E0B' },
+          { label: 'Reviews Due', value: reviewsDue.length, icon: '⭐', color: '#E91E63' },
+          { label: 'New This Month', value: thisMonth.length, icon: '✨', color: '#7C3AED' },
+        ]}
+        actions={[
+          { label: '🌱 New Referral', onClick: () => setView('referral') },
+          { label: '💞 New Match', onClick: () => { setSelectedReferral(null); setView('match') }, variant: 'ghost' },
+        ]}
+      />
+      <div style={{ flex: 1, overflowY: 'auto' }}>
 
       <div style={styles.actionGrid}>
         <button style={{ ...styles.primaryAction, background: `linear-gradient(135deg, ${primary}, #7C3AED)` }} onClick={() => setView('referral')}>

@@ -282,13 +282,13 @@ export default function Dashboard({ session, org }) {
 
       {/* MAIN CONTENT */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobileBottomNav ? 78 : 0 }}>
-        {tab !== 'registers' && (
-          <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
-            <div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>{tab === 'home' ? 'Home' : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</div>
-              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>{orgName}</div>
+        {tab !== 'registers' && tab !== 'home' && (
+          <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 18 }}>{ALL_MODULES.find(m => m.key === tab)?.icon || (tab === 'team' ? '👥' : tab === 'settings' ? '⚙️' : '📄')}</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-display, sans-serif)' }}>{tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</span>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text3)' }}>{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 500 }}>{new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
           </div>
         )}
 

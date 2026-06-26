@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { format, addDays, parseISO, startOfWeek, isSameDay } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import PageHeader from '../shared/PageHeader'
 
 const SESSION_TYPES = [
   { key: 'activity',  label: 'Activity',  icon: '🏃', color: '#1B9AAA' },
@@ -623,22 +624,24 @@ export default function SessionPlanner({ org }) {
     </div>
   )
 
+  const needVolunteers = sessions.filter(s => s.volunteer_limit && (volCounts[s.id] || 0) < s.volunteer_limit).length
+
   // ── LIST / WEEK VIEW ──
   return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
-
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text, #111)' }}>Sessions</div>
-          <div style={{ fontSize: 13, color: 'var(--text3, #6B7280)', marginTop: 2 }}>
-            {sessions.length} upcoming · {sessions.filter(s => s.volunteer_limit && (volCounts[s.id] || 0) < s.volunteer_limit).length} need volunteers
-          </div>
-        </div>
-        <button onClick={() => openNew()} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-          + New Session
-        </button>
-      </div>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <PageHeader
+        icon="📅"
+        title="Sessions"
+        subtitle={`${sessions.length} upcoming · ${needVolunteers} need volunteers`}
+        primary={primary}
+        stats={[
+          { label: 'Upcoming', value: sessions.length, icon: '📅' },
+          { label: 'Need Volunteers', value: needVolunteers, icon: '❤️', color: needVolunteers > 0 ? '#F59E0B' : '#16A34A' },
+          { label: 'This Week', value: sessions.filter(s => { const d = new Date(s.session_date); const now = new Date(); return d >= now && d <= new Date(now.getTime() + 7*864e5) }).length, icon: '🗓️', color: primary },
+        ]}
+        actions={[{ label: '+ New Session', onClick: () => openNew() }]}
+      />
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
 
       {/* Toolbar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -725,6 +728,7 @@ export default function SessionPlanner({ org }) {
       )}
 
       {selectedSession && <VolunteerPanel session={selectedSession} org={org} onClose={() => { setSelectedSession(null); loadData() }} />}
+      </div>
     </div>
   )
 }

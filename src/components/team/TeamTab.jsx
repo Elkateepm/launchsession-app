@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import PageHeader from '../shared/PageHeader'
 import { supabase } from '../../lib/supabase'
 
 const ROLES = ['owner', 'admin', 'manager', 'staff', 'volunteer']
@@ -179,23 +180,22 @@ export default function TeamTab({ org, session }) {
   }
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <PageHeader
+        icon="👥"
+        title="Team & Staff"
+        subtitle="Invite staff, manage volunteers and build your team"
+        primary={primary}
+        stats={[
+          { label: 'Members', value: members.length, icon: '👥' },
+          { label: 'Admins', value: admins, icon: '🛡️', color: '#8B5CF6' },
+          { label: 'Staff', value: staff, icon: '💼', color: '#1B9AAA' },
+          { label: 'Volunteers', value: volunteers, icon: '❤️', color: '#417505' },
+          { label: 'Pending', value: pendingInvites, icon: '✉️', color: '#F59E0B' },
+        ]}
+      />
+      <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
       <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 30, fontWeight: 950, color: 'var(--text)' }}>👥 Team & Staff</div>
-          <div style={{ fontSize: 14, color: 'var(--text3)', marginTop: 4 }}>
-            Invite staff, manage volunteers and build your organisation team.
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14, marginBottom: 24 }}>
-          <TeamMetric icon="👥" label="Team Members" value={members.length} color={primary} />
-          <TeamMetric icon="🛡️" label="Admins" value={admins} color="#8B5CF6" />
-          <TeamMetric icon="💼" label="Staff / Managers" value={staff} color="#1B9AAA" />
-          <TeamMetric icon="❤️" label="Volunteers" value={volunteers} color="#417505" />
-          <TeamMetric icon="✉️" label="Pending Invites" value={pendingInvites} color="#F59E0B" />
-        </div>
 
         {/* Invite card */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 24 }}>
@@ -378,5 +378,7 @@ function TeamMetric({ icon, label, value, color }) {
         </div>
       </div>
     </div>
+      </div>
+      </div>
   )
 }

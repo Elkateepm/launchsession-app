@@ -101,39 +101,20 @@ export default function Volunteers({ org, session }) {
   const cardStyle = { background: 'var(--card-bg, #fff)', border: '1px solid var(--border, #e8edf2)', borderRadius: 16, padding: '20px 22px' }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-
-      {/* HEADER */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text)', margin: '0 0 4px', fontFamily: 'var(--font-display, sans-serif)' }}>Volunteers</h2>
-          <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>Manage your volunteer workforce and portal access.</p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={copyLink} style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card-bg, #fff)', color: 'var(--text)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-            {copied ? '✓ Copied' : 'Copy portal link'}
-          </button>
-          <button onClick={() => { setShowQR(true) }} style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card-bg, #fff)', color: 'var(--text)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-            QR Code
-          </button>
-          <button onClick={() => setShowInviteModal(true)} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
-            + Invite volunteer
-          </button>
-        </div>
-      </div>
-
-      {/* KPI CARDS */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
-        {kpis.map(k => (
-          <div key={k.label} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: k.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{k.icon}</div>
-            <div>
-              <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', lineHeight: 1 }}>{k.value}</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginTop: 3 }}>{k.label}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <PageHeader
+        icon="❤️"
+        title="Volunteers"
+        subtitle="Manage your volunteer workforce and portal access"
+        primary={primary}
+        stats={kpis.map(k => ({ label: k.label, value: k.value, icon: k.icon, color: k.color }))}
+        actions={[
+          { label: copied ? '✓ Copied' : 'Copy link', icon: '🔗', onClick: copyLink, variant: 'ghost' },
+          { label: 'QR Code', icon: '📲', onClick: () => setShowQR(true), variant: 'ghost' },
+          { label: '+ Invite', onClick: () => setShowInviteModal(true) },
+        ]}
+      />
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
 
       {/* PORTAL CARD */}
       <div style={{ ...cardStyle, background: `linear-gradient(135deg, ${primary}12, ${primary}06)`, border: `1px solid ${primary}30`, marginBottom: 20 }}>
@@ -345,5 +326,6 @@ export default function Volunteers({ org, session }) {
         </div>
       )}
     </div>
+      </div>
   )
 }
