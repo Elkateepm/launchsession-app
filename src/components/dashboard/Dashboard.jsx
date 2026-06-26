@@ -370,7 +370,7 @@ export default function Dashboard({ session, org }) {
                 {[
                   { key: 'calendar', label: 'Calendar', icon: '📅' },
                   { key: 'team', label: 'Team & Staff', icon: '👥' },
-                  { key: 'messaging', label: 'Messages', icon: '💬' },
+                  { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
                   { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
                   { key: 'reports', label: 'Reports', icon: '📊' },
                   { key: 'settings', label: 'Settings', icon: '⚙️' }

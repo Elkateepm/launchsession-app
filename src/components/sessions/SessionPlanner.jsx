@@ -2,6 +2,7 @@ import { useOrgSettings } from '../../hooks/useOrgSettings'
 import React, { useState, useEffect } from 'react'
 import { format, addDays, parseISO, startOfWeek, isSameDay } from 'date-fns'
 import { supabase } from '../../lib/supabase'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const SESSION_TYPES = [
   { key: 'activity',  label: 'Activity',  icon: '🏃', color: '#1B9AAA' },
@@ -105,7 +106,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs }) {
     <div>
       <div style={{ marginBottom: 18 }}>
         <label style={lbl}>Session Type</label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8 }}>
           {SESSION_TYPES.map(t => {
             const active = form.session_type === t.key
             return (
@@ -374,6 +375,7 @@ export default function SessionPlanner({ org }) {
   const primary = org?.primary_color || '#1B9AAA'
   const { groups: orgGroups } = useOrgSettings(orgId)
   const bubbleDefs = normaliseBubbleDefs(orgGroups)
+  const isMobile = useIsMobile()
 
   const [sessions, setSessions] = useState([])
   const [volCounts, setVolCounts] = useState({})
@@ -454,7 +456,7 @@ export default function SessionPlanner({ org }) {
 
   // ── FORM VIEW ──
   if (view === 'form') return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: 24, maxWidth: 640 }}>
+    <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? 16 : 24, maxWidth: isMobile ? '100%' : 640 }}>
       <button onClick={() => { setView('list'); setEditing(null) }} style={{ border: 'none', background: 'none', color: 'var(--text3, #6B7280)', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6, padding: 0 }}>
         ← Back
       </button>
@@ -469,7 +471,7 @@ export default function SessionPlanner({ org }) {
 
   // ── LIST / WEEK VIEW ──
   return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: 24 }}>
+    <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>

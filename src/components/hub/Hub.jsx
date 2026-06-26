@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 export default function Hub({ org, session, setTab, onNavigate, userProfile, onAvatarClick }) {
   const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
@@ -31,7 +32,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [children, setChildren] = useState([]);
   const [reflections, setReflections] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const isMobile = useIsMobile();
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -39,12 +40,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     if (typeof onNavigate === "function") onNavigate(tab);
     else if (typeof setTab === "function") setTab(tab);
   }
-
-  useEffect(() => {
-    const resize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
 
   useEffect(() => {
     if (!orgId) return;
@@ -127,115 +122,121 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   if (loading) return <div style={styles.page}><div style={styles.loading}>Loading...</div></div>;
 
+  const pad = isMobile ? 16 : 22;
+
   return (
     <div style={styles.page}>
       {/* ── HEADER ── */}
-      <header style={{ background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border, #e5e7eb)', padding: '0 28px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderBottom: '1px solid var(--border, #f1f5f9)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+      <header style={{ background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border, #e5e7eb)', padding: `0 ${pad}px`, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border, #f1f5f9)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             {org?.logo_url ? (
-              <img src={org.logo_url} alt={orgName} style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'contain' }} />
+              <img src={org.logo_url} alt={orgName} style={{ width: 28, height: 28, borderRadius: 7, objectFit: 'contain' }} />
             ) : (
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: '#fff' }}>{orgName[0]}</div>
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#fff' }}>{orgName[0]}</div>
             )}
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text, #111)', lineHeight: 1.2 }}>{orgName}</div>
-              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: primary, background: primary + '18', borderRadius: 4, padding: '1px 6px' }}>{org?.plan || 'Starter'}</span>
-            </div>
-          </div>
-
-          {/* SEARCH */}
-          <div style={{ flex: 1, maxWidth: 480, position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 14 }}>🔍</span>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => e.key === 'Escape' && setSearch('')}
-              placeholder="Search young people, sessions..."
-              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px 8px 36px', borderRadius: 10, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface2, #f9fafb)', fontSize: 13, color: 'var(--text, #111)', outline: 'none' }}
-            />
-            {/* Search dropdown */}
-            {searchResults && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 100, marginTop: 4, overflow: 'hidden' }}>
-                {searchResults.children.length === 0 && searchResults.sessions.length === 0 ? (
-                  <div style={{ padding: '14px 16px', fontSize: 13, color: '#6B7280', textAlign: 'center' }}>No results for "{search}"</div>
-                ) : (
-                  <>
-                    {searchResults.children.length > 0 && (
-                      <div>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Young People</div>
-                        {searchResults.children.map(c => (
-                          <button key={c.id} onClick={() => { go('registers'); setSearch('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
-                            onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                            <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{c.first_name} {c.last_name}</div>
-                              {c.group_name && <div style={{ fontSize: 11, color: '#6B7280' }}>{c.group_name}</div>}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {searchResults.sessions.length > 0 && (
-                      <div>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
-                        {searchResults.sessions.map(s => (
-                          <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
-                            onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                            <div style={{ width: 30, height: 30, borderRadius: 8, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
-                              <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time || 'No time'}</div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-                <div style={{ padding: '8px 14px', borderTop: '1px solid #F3F4F6' }}>
-                  <button onClick={() => setSearch('')} style={{ fontSize: 11, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer' }}>Press Esc to close</button>
-                </div>
+            {!isMobile && (
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text, #111)', lineHeight: 1.2 }}>{orgName}</div>
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: primary, background: primary + '18', borderRadius: 4, padding: '1px 6px' }}>{org?.plan || 'Starter'}</span>
               </div>
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto', flexShrink: 0 }}>
-            <div style={{ width: 1, height: 20, background: 'var(--border, #e5e7eb)' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={onAvatarClick}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, border: `2px solid ${primary}` }}>
+          {/* SEARCH — hidden on mobile */}
+          {!isMobile && (
+            <div style={{ flex: 1, maxWidth: 480, position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 14 }}>🔍</span>
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onKeyDown={e => e.key === 'Escape' && setSearch('')}
+                placeholder="Search young people, sessions..."
+                style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px 8px 36px', borderRadius: 10, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface2, #f9fafb)', fontSize: 13, color: 'var(--text, #111)', outline: 'none' }}
+              />
+              {searchResults && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 100, marginTop: 4, overflow: 'hidden' }}>
+                  {searchResults.children.length === 0 && searchResults.sessions.length === 0 ? (
+                    <div style={{ padding: '14px 16px', fontSize: 13, color: '#6B7280', textAlign: 'center' }}>No results for "{search}"</div>
+                  ) : (
+                    <>
+                      {searchResults.children.length > 0 && (
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Young People</div>
+                          {searchResults.children.map(c => (
+                            <button key={c.id} onClick={() => { go('registers'); setSearch('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                              <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
+                              <div>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{c.first_name} {c.last_name}</div>
+                                {c.group_name && <div style={{ fontSize: 11, color: '#6B7280' }}>{c.group_name}</div>}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {searchResults.sessions.length > 0 && (
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
+                          {searchResults.sessions.map(s => (
+                            <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                              <div style={{ width: 30, height: 30, borderRadius: 8, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
+                              <div>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
+                                <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time || 'No time'}</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div style={{ padding: '8px 14px', borderTop: '1px solid #F3F4F6' }}>
+                    <button onClick={() => setSearch('')} style={{ fontSize: 11, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer' }}>Press Esc to close</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={onAvatarClick}>
+              <div style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, border: `2px solid ${primary}` }}>
                 {userProfile?.photo_url ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : hubUserName[0]?.toUpperCase() || '?'}
               </div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text, #111)' }}>{hubUserName}</div>
+              {!isMobile && <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text, #111)' }}>{hubUserName}</div>}
             </div>
-            <div style={{ width: 1, height: 20, background: 'var(--border, #e5e7eb)' }} />
-            <div style={{ fontSize: 12, color: 'var(--text3, #6b7280)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-              {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-            </div>
+            {!isMobile && (
+              <>
+                <div style={{ width: 1, height: 20, background: 'var(--border, #e5e7eb)' }} />
+                <div style={{ fontSize: 12, color: 'var(--text3, #6b7280)', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                  {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        <div style={{ padding: '14px 0 12px' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: primary, marginBottom: 4 }}>{orgName}</div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--text, #0f172a)', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
-            {getGreeting()}, {hubUserName}
+        <div style={{ padding: '12px 0 10px' }}>
+          <h1 style={{ margin: 0, fontSize: isMobile ? 18 : 22, fontWeight: 800, color: 'var(--text, #0f172a)', lineHeight: 1.2 }}>
+            {getGreeting()}, {hubUserName.split(' ')[0]}
           </h1>
-          <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, color: 'var(--text3, #64748b)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ color: todaySessions.length > 0 ? '#10b981' : '#9ca3af', fontSize: 8 }}>●</span>
+          <div style={{ marginTop: 5, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, color: 'var(--text3, #64748b)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ color: todaySessions.length > 0 ? '#10b981' : '#9ca3af', fontSize: 7 }}>●</span>
               {todaySessions.length} session{todaySessions.length !== 1 ? 's' : ''} today
             </span>
-            <span style={{ color: 'var(--border, #e5e7eb)' }}>·</span>
-            <span style={{ fontSize: 13, color: 'var(--text3, #64748b)' }}>{children.length} young people</span>
-            <span style={{ color: 'var(--border, #e5e7eb)' }}>·</span>
-            <span style={{ fontSize: 13, color: concerns.length > 0 ? '#F59E0B' : '#10b981', fontWeight: 600 }}>
-              {concerns.length > 0 ? `⚠ ${concerns.length} open concern${concerns.length > 1 ? 's' : ''}` : '✓ No safeguarding concerns'}
+            <span style={{ color: '#e5e7eb' }}>·</span>
+            <span style={{ fontSize: 12, color: concerns.length > 0 ? '#F59E0B' : '#10b981', fontWeight: 600 }}>
+              {concerns.length > 0 ? `⚠ ${concerns.length} concern${concerns.length > 1 ? 's' : ''}` : '✓ All clear'}
             </span>
           </div>
         </div>
       </header>
 
       {/* ── LIVE SESSION HERO ── */}
+      <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
         <section style={styles.liveHero}>
           <div style={styles.liveHeroTop}>
@@ -298,12 +299,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           <div style={styles.confetti}>✨</div>
         </section>
       )}
+      </div>
 
-      <section style={styles.mainGrid}>
-        <div style={styles.leftColumn}>
+      <section style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) 320px', gap: 18, padding: pad }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
           <Panel title="🧭 Today at a glance">
-            <div style={{ ...styles.glanceGrid, ...(isMobile ? styles.mobileGrid : {}) }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)', gap: 12 }}>
               <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? "Ready for delivery" : "Plan something amazing"} button="Open Planner" onClick={() => go("planner")} colour={primary} />
               <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? "Upcoming" : "Plan now"} onClick={() => go("planner")} colour="#7C3AED" />
               <StatCard icon="✅" title={signedIn > 0 ? `${signedIn} signed in` : "Registers"} text={signedOut > 0 ? `${signedOut} signed out` : "Take today's register"} button="Take Register" onClick={() => go("registers")} colour="#16A34A" />
@@ -356,7 +358,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           )}
         </div>
 
-        <div style={styles.rightColumn}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* ATTENTION CENTRE */}
           <Panel title="🔔 Attention Centre">
             <AttentionRow icon="📋" label="Registers" value={signedIn > 0 ? `${signedIn} signed in today` : "No activity yet"} tone={signedIn > 0 ? "green" : "blue"} onClick={() => go("registers")} />
@@ -459,7 +461,7 @@ function formatDate(date) {
 }
 
 const styles = {
-  page: { minHeight: "100%", background: "linear-gradient(180deg, #F8FBFF 0%, #EEF4FA 100%)", padding: 22, color: "#0F172A", overflowY: "auto", boxSizing: "border-box" },
+  page: { minHeight: "100%", background: "linear-gradient(180deg, #F8FBFF 0%, #EEF4FA 100%)", padding: 0, color: "#0F172A", overflowY: "auto", boxSizing: "border-box" },
   loading: { padding: 50, textAlign: "center", color: "#64748B", fontWeight: 800 },
   liveHero: { background: "linear-gradient(135deg, #081226, #12235A)", borderRadius: 22, color: "#fff", padding: 24, marginBottom: 22, boxShadow: "0 18px 38px rgba(15,23,42,0.25)" },
   liveHeroTop: { display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 22 },
