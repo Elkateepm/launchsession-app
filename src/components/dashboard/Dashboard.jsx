@@ -95,8 +95,13 @@ function NavSection({ title, children, collapsed }) {
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState('home')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
+  const [registersKey, setRegistersKey] = useState(0)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
+
+  const handleSetTab = (t) => {
+    if (t === 'registers') setRegistersKey(k => k + 1)
+    setTab(t)
+  }
 
   React.useEffect(() => {
     const handleResize = () => setIsMobileBottomNav(window.innerWidth < 768);
@@ -199,20 +204,20 @@ export default function Dashboard({ session, org }) {
         {/* NAV */}
         <div style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
           <NavSection collapsed={sidebarCollapsed} title="">
-            <NavItem icon="🏠" label="Home" active={tab === 'home'} onClick={() => { setTab('home') }} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="🏠" label="Home" active={tab === 'home'} onClick={() => { handleSetTab('home') }} primary={primary} collapsed={sidebarCollapsed} />
           </NavSection>
 
           <NavSection collapsed={sidebarCollapsed} title="Delivery">
-            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => { setTab('calendar') }} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => { handleSetTab('calendar') }} primary={primary} collapsed={sidebarCollapsed} />
             {deliveryModules.map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
+              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { handleSetTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
             ))}
           </NavSection>
 
           {safetyModules.length > 0 && (
             <NavSection collapsed={sidebarCollapsed} title="Safety & Comms">
               {safetyModules.map(m => (
-                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary} collapsed={sidebarCollapsed}
+                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { handleSetTab(m.key) }} primary={primary} collapsed={sidebarCollapsed}
                   badge={m.key === 'safeguarding' ? { text: '1', color: '#F59E0B' } : null} />
               ))}
             </NavSection>
@@ -221,15 +226,15 @@ export default function Dashboard({ session, org }) {
           {insightModules.length > 0 && (
             <NavSection collapsed={sidebarCollapsed} title="Insights">
               {insightModules.map(m => (
-                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { setTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
+                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { handleSetTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
               ))}
             </NavSection>
           )}
 
           <NavSection collapsed={sidebarCollapsed} title="Organisation">
-            <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => { setTab('team') }} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="🗂" label="Templates" active={tab === 'templates'} onClick={() => { setTab('templates') }} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => { setTab('settings') }} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => { handleSetTab('team') }} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="🗂" label="Templates" active={tab === 'templates'} onClick={() => { handleSetTab('templates') }} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => { handleSetTab('settings') }} primary={primary} collapsed={sidebarCollapsed} />
           </NavSection>
         </div>
 
@@ -319,14 +324,14 @@ export default function Dashboard({ session, org }) {
               </div>
             )
           })()}
-          {tab === 'home'         && <Hub org={org} session={session} onNavigate={setTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
-          {tab === 'registers'   && <Registers org={org} session={session} />}
+          {tab === 'home'         && <Hub org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
+          {tab === 'registers'   && <Registers key={registersKey} org={org} session={session} />}
           {tab === 'planner'     && <SessionPlanner org={org} />}
           {tab === 'team'        && <TeamTab org={org} session={session} />}
           {tab === 'calendar'    && <Calendar org={org} session={session} />}
           {tab === 'settings'    && <Settings org={org} session={session} />}
           {tab === 'mentoring'   && <Mentoring org={org} session={session} />}
-          {tab === 'templates'   && <Templates org={org} session={session} onNavigate={setTab} />}
+          {tab === 'templates'   && <Templates org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'safeguarding'&& <Safeguarding org={org} session={session} />}
           {tab === 'reports'     && <Reports org={org} session={session} />}
           {tab === 'volunteers'  && <Volunteers org={org} session={session} />}

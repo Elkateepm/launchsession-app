@@ -67,10 +67,8 @@ export function useChildren(orgId) {
 
   useEffect(() => {
     fetch()
-    // Refetch when window regains focus (e.g. after import on another tab)
-    window.addEventListener('focus', fetch)
-    return () => window.removeEventListener('focus', fetch)
-  }, [orgId]) // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orgId])
 
   return { children, setChildren, loading, refetch: fetch }
 }
