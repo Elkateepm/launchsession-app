@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   // Verify caller's session using anon client
   const anonClient = createClient(
     process.env.REACT_APP_SUPABASE_URL || 'https://ssahcqeqrxawmwtjpwvh.supabase.co',
-    process.env.REACT_APP_SUPABASE_ANON_KEY || ''
+    process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || ''
   )
   const { data: { user }, error: authError } = await anonClient.auth.getUser(token)
   if (authError || !user) return res.status(401).json({ error: 'Invalid session' })
