@@ -33,6 +33,18 @@ const ALL_MODULES = [
   { key: 'gallery',       label: 'Gallery',      icon: '🖼', group: 'insights' },
 ]
 
+function ComingSoonModule({ icon, label, desc }) {
+  return (
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center', padding: 40, maxWidth: 360 }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>{icon}</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>{label}</div>
+        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>{desc}</div>
+      </div>
+    </div>
+  )
+}
+
 function NavItem({ icon, label, active, onClick, badge, primary, collapsed }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -272,23 +284,6 @@ export default function Dashboard({ session, org }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobileBottomNav ? 78 : 0 }}>
         {tab !== 'registers' && (
           <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
-            {false && (
-              <button
-                onClick={() => console.log('open mobile menu')}
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 12,
-                  border: "1px solid #e5e7eb",
-                  background: "#fff",
-                  fontSize: 22,
-                  cursor: "pointer",
-                  flexShrink: 0,
-                }}
-              >
-                ☰
-              </button>
-            )}
             <div>
               <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>{tab === 'home' ? 'Home' : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</div>
               <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>{orgName}</div>
@@ -316,25 +311,28 @@ export default function Dashboard({ session, org }) {
               </div>
             )
           })()}
-          {tab === 'home'      && <Hub org={org} session={session} onNavigate={setTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
-          {tab === 'registers' && <Registers org={org} session={session} />}
-          {tab === 'planner'   && <SessionPlanner org={org} />}
-          {tab === 'team'      && <TeamTab org={org} session={session} />}
-          {tab === 'calendar' && <Calendar org={org} session={session} />}
-          {tab === 'settings'  && <Settings org={org} session={session} />}
-          {tab === 'mentoring' && <Mentoring org={org} session={session} />}
-          {tab === 'templates' && <Templates org={org} session={session} />}
-          {tab === 'safeguarding' && <Safeguarding org={org} session={session} />}
-          {tab === 'reports' && <Reports org={org} session={session} />}
-          {tab === 'volunteers' && <Volunteers org={org} session={session} />}
-          {tab !== 'home' && tab !== 'registers' && tab !== 'planner' && tab !== 'team' && tab !== 'settings' && tab !== 'templates' && tab !== 'mentoring' && tab !== 'calendar' && tab !== 'safeguarding' && tab !== 'reports' && tab !== 'volunteers' && (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ textAlign: 'center', padding: 40 }}>
-                <div style={{ fontSize: 40, marginBottom: 14 }}>{ALL_MODULES.find(m => m.key === tab)?.icon}</div>
-                <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{ALL_MODULES.find(m => m.key === tab)?.label}</div>
-                <div style={{ fontSize: 14, color: 'var(--text3)' }}>This module is being built</div>
-              </div>
-            </div>
+          {tab === 'home'         && <Hub org={org} session={session} onNavigate={setTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
+          {tab === 'registers'   && <Registers org={org} session={session} />}
+          {tab === 'planner'     && <SessionPlanner org={org} />}
+          {tab === 'team'        && <TeamTab org={org} session={session} />}
+          {tab === 'calendar'    && <Calendar org={org} session={session} />}
+          {tab === 'settings'    && <Settings org={org} session={session} />}
+          {tab === 'mentoring'   && <Mentoring org={org} session={session} />}
+          {tab === 'templates'   && <Templates org={org} session={session} />}
+          {tab === 'safeguarding'&& <Safeguarding org={org} session={session} />}
+          {tab === 'reports'     && <Reports org={org} session={session} />}
+          {tab === 'volunteers'  && <Volunteers org={org} session={session} />}
+          {tab === 'parent_portal' && (
+            <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />
+          )}
+          {tab === 'messaging' && (
+            <ComingSoonModule icon="💬" label="Messaging" desc="Send messages to staff, volunteers and parents from one place. Coming soon." />
+          )}
+          {tab === 'gallery' && (
+            <ComingSoonModule icon="🖼" label="Gallery" desc="Store and share photos and memories from your sessions. Coming soon." />
+          )}
+          {!['home','registers','planner','team','settings','templates','mentoring','calendar','safeguarding','reports','volunteers','parent_portal','messaging','gallery'].includes(tab) && (
+            <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
 

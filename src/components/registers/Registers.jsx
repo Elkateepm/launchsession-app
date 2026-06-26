@@ -76,6 +76,67 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
   )
 }
 
+function EditChildForm({ child, onSaved }) {
+  const [form, setForm] = useState({
+    first_name: child.first_name || '',
+    last_name: child.last_name || '',
+    date_of_birth: child.date_of_birth || '',
+    group_name: child.group_name || '',
+    allergies: child.allergies || '',
+    medical_notes: child.medical_notes || '',
+    emergency_contact_name: child.emergency_contact_name || '',
+    emergency_contact_phone: child.emergency_contact_phone || '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+  const fi = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border, #e5e7eb)', fontSize: 13, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--surface, #fff)', color: 'var(--text, #111)', marginBottom: 10 }
+  const lb = { fontSize: 11, fontWeight: 700, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }
+
+  const handleSave = async () => {
+    if (!form.first_name.trim() || !form.last_name.trim()) { setError('First and last name required.'); return }
+    setSaving(true)
+    const { error: err } = await supabase.from('children').update({
+      first_name: form.first_name.trim(),
+      last_name: form.last_name.trim(),
+      date_of_birth: form.date_of_birth || null,
+      group_name: form.group_name || null,
+      allergies: form.allergies || null,
+      medical_notes: form.medical_notes || null,
+      emergency_contact_name: form.emergency_contact_name || null,
+      emergency_contact_phone: form.emergency_contact_phone || null,
+    }).eq('id', child.id)
+    setSaving(false)
+    if (err) { setError(err.message); return }
+    onSaved()
+  }
+
+  return (
+    <div style={{ padding: '16px 0 4px' }}>
+      {error && <div style={{ background: '#FFF0F0', border: '1px solid #FFB3B3', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#C00', marginBottom: 10 }}>{error}</div>}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div><label style={lb}>First Name *</label><input style={fi} value={form.first_name} onChange={e => set('first_name', e.target.value)} /></div>
+        <div><label style={lb}>Last Name *</label><input style={fi} value={form.last_name} onChange={e => set('last_name', e.target.value)} /></div>
+      </div>
+      <label style={lb}>Date of Birth</label>
+      <input style={fi} type="date" value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)} />
+      <label style={lb}>Group / Bubble</label>
+      <input style={fi} value={form.group_name} onChange={e => set('group_name', e.target.value)} placeholder="e.g. Red Bubble" />
+      <label style={lb}>Allergies / Dietary</label>
+      <input style={fi} value={form.allergies} onChange={e => set('allergies', e.target.value)} placeholder="e.g. Nut allergy, Halal" />
+      <label style={lb}>Medical Notes</label>
+      <input style={fi} value={form.medical_notes} onChange={e => set('medical_notes', e.target.value)} placeholder="e.g. Asthma — inhaler with staff" />
+      <label style={lb}>Emergency Contact Name</label>
+      <input style={fi} value={form.emergency_contact_name} onChange={e => set('emergency_contact_name', e.target.value)} placeholder="Parent / Guardian name" />
+      <label style={lb}>Emergency Contact Phone</label>
+      <input style={fi} value={form.emergency_contact_phone} onChange={e => set('emergency_contact_phone', e.target.value)} placeholder="07700 900000" type="tel" />
+      <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '12px', borderRadius: 10, border: 'none', background: saving ? '#9ca3af' : '#1B9AAA', color: '#fff', fontWeight: 800, fontSize: 14, cursor: saving ? 'default' : 'pointer', marginTop: 4 }}>
+        {saving ? 'Saving...' : 'Save Changes'}
+      </button>
+    </div>
+  )
+}
+
 function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdateStatus }) {
   const [absenceReason, setAbsenceReason] = useState('')
   const [tab, setTab] = useState('info')
@@ -213,9 +274,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
 
           {/* EDIT TAB */}
           {tab === 'edit' && (
-            <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text3)' }}>
-              <div style={{ fontSize: 13 }}>Edit profile coming soon</div>
-            </div>
+            <EditChildForm child={child} onSaved={onClose} />
           )}
 
           {/* NOTES TAB */}

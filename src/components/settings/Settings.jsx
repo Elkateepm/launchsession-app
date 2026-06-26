@@ -259,32 +259,34 @@ function BrandingSection({ org, refreshOrg }) {
 }
 
 function SecuritySection() {
-  const [scores] = useState({ mfa: false, strongPw: true, sessions: true })
-  const score = Object.values(scores).filter(Boolean).length
-  const scoreLabel = score === 3 ? 'Excellent' : score === 2 ? 'Good' : 'Needs Attention'
-  const scoreColor = score === 3 ? '#16A34A' : score === 2 ? '#D97706' : '#DC2626'
+  const [pwLoading, setPwLoading] = useState(false)
+  const [pwMsg, setPwMsg] = useState('')
+
+  const handleChangePassword = async () => {
+    setPwLoading(true)
+    setPwMsg('')
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user?.email) { setPwMsg('Could not find your email.'); setPwLoading(false); return }
+    const { error } = await supabase.auth.resetPasswordForEmail(session.user.email, { redirectTo: window.location.href })
+    setPwLoading(false)
+    setPwMsg(error ? 'Error: ' + error.message : '✅ Password reset email sent — check your inbox.')
+  }
 
   return (
     <div>
-      <SettingCard title="Security Score">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: scoreColor + '20', border: `3px solid ${scoreColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: scoreColor, flexShrink: 0 }}>{score}/3</div>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: scoreColor }}>{scoreLabel}</div>
-            <div style={{ fontSize: 13, color: 'var(--text3)' }}>Your account security rating</div>
-          </div>
-        </div>
-      </SettingCard>
       <SettingCard title="Password & Authentication">
-        <button style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 12 }}>Change Password</button>
-        <Toggle value={false} onChange={() => {}} label="Two-Factor Authentication (2FA)" />
+        <button onClick={handleChangePassword} disabled={pwLoading} style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 12 }}>
+          {pwLoading ? 'Sending...' : 'Change Password'}
+        </button>
+        {pwMsg && <div style={{ fontSize: 13, color: pwMsg.startsWith('✅') ? '#16A34A' : '#DC2626', marginBottom: 12, fontWeight: 600 }}>{pwMsg}</div>}
+        <Toggle value={false} onChange={() => {}} label="Two-Factor Authentication (2FA) — coming soon" />
         <Toggle value={true} onChange={() => {}} label="Email login notifications" />
       </SettingCard>
       <SettingCard title="Active Sessions" description="Devices currently logged in to your account">
         <div style={{ background: '#F0FFF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700 }}>Current Session</div>
-            <div style={{ fontSize: 11, color: 'var(--text3)' }}>Chrome · macOS · Now</div>
+            <div style={{ fontSize: 11, color: 'var(--text3)' }}>Browser · Now</div>
           </div>
           <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Active</span>
         </div>
@@ -294,17 +296,33 @@ function SecuritySection() {
 }
 
 function NotificationsSection() {
-  const [prefs, setPrefs] = useState({ messages: true, safeguarding: true, sessions: true, volunteers: false, attendance: true })
+  const [prefs, setPrefs] = useState({ safeguarding: true, sessions: true, attendance: true, volunteers: false })
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const toggle = (k) => setPrefs(p => ({ ...p, [k]: !p[k] }))
+
+  const handleSave = async () => {
+    setSaving(true)
+    // Save to user_profiles notification_prefs for current user
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.user) {
+      await supabase.from('user_profiles').update({ notification_prefs: prefs }).eq('id', session.user.id)
+    }
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
   return (
     <SettingCard title="Notification Preferences" description="Choose what you want to be notified about">
       <Toggle value={prefs.safeguarding} onChange={() => toggle('safeguarding')} label="🛡 Safeguarding alerts" />
-      <Toggle value={prefs.messages}     onChange={() => toggle('messages')}     label="💬 New messages" />
       <Toggle value={prefs.sessions}     onChange={() => toggle('sessions')}     label="📅 Session reminders" />
       <Toggle value={prefs.attendance}   onChange={() => toggle('attendance')}   label="📋 Attendance alerts" />
       <Toggle value={prefs.volunteers}   onChange={() => toggle('volunteers')}   label="❤️ Volunteer updates" />
       <div style={{ marginTop: 16 }}>
-        <button style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#1B9AAA', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Save Preferences</button>
+        <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: saving ? '#9ca3af' : '#1B9AAA', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+          {saving ? 'Saving...' : saved ? '✅ Saved!' : 'Save Preferences'}
+        </button>
       </div>
     </SettingCard>
   )
