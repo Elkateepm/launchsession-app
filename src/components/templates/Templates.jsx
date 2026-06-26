@@ -270,14 +270,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
       return
     }
 
-    // Explicitly set the session so the client sends the JWT
-    await supabase.auth.setSession({
-      access_token: session.access_token,
-      refresh_token: session.refresh_token,
-    })
-
     const records = preview.map(r => ({
-      org_id: org.id,
       first_name: r.first_name?.trim() || '',
       last_name: r.last_name?.trim() || '',
       date_of_birth: r.date_of_birth || null,
@@ -289,14 +282,23 @@ function ChildImportTool({ org, showToast, onNavigate }) {
       active: true,
     })).filter(r => r.first_name && r.last_name)
 
-    const { data, error } = await supabase.from('children').insert(records).select('id')
+    const res = await fetch('/api/import-children', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ org_id: org.id, records }),
+    })
+    const json = await res.json()
     setImporting(false)
-    if (error) {
-      showToast('Import failed: ' + error.message, '#EF4444')
-      setImportResult({ success: 0, failed: records.length, error: error.message })
+
+    if (json.error) {
+      showToast('Import failed: ' + json.error, '#EF4444')
+      setImportResult({ success: 0, failed: records.length, error: json.error })
     } else {
-      showToast(`✅ ${data.length} young people imported!`)
-      setImportResult({ success: data.length, failed: records.length - data.length })
+      showToast(`✅ ${json.inserted} young people imported!`)
+      setImportResult({ success: json.inserted, failed: records.length - json.inserted })
       setCsvText('')
       setPreview(null)
     }
@@ -536,6 +538,7 @@ export default function Templates({ org, onNavigate }) {
   }
 
   const load = useCallback(async () => {
+    if (activeType === 'import') return // import tab has its own UI, no DB templates
     setLoading(true)
     const [globalRes, ownRes] = await Promise.all([
       supabase.from('templates').select('*').eq('type', activeType).eq('is_global', true).eq('is_active', true).order('title'),
