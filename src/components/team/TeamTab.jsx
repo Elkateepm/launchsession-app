@@ -378,7 +378,5 @@ function TeamMetric({ icon, label, value, color }) {
         </div>
       </div>
     </div>
-      </div>
-      </div>
   )
 }
