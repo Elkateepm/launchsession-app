@@ -9,7 +9,6 @@ const SESSION_TYPES = [
   { key: 'workshop',  label: 'Workshop',  icon: '🛠',  color: '#417505' },
   { key: 'trip',      label: 'Day Trip',  icon: '🚌', color: '#F0A500' },
   { key: 'holiday',   label: 'Holiday',   icon: '🏖',  color: '#9B59B6' },
-  { key: 'mentoring', label: 'Mentoring', icon: '🤝', color: '#E91E8C' },
 ]
 
 const DEFAULT_BUBBLE_DEFS = [
@@ -98,95 +97,261 @@ function RotationPlanner({ slots, onChange, selectedBubbles, bubbleDefs }) {
 // ─── SESSION FORM ─────────────────────────────────────────────
 function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs }) {
   const [form, setForm] = useState(initial || EMPTY_FORM)
+  const [step, setStep] = useState(0)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const type = SESSION_TYPES.find(t => t.key === form.session_type)
+  const toggleBubble = (label) => set('bubbles', form.bubbles.includes(label) ? form.bubbles.filter(x => x !== label) : [...form.bubbles, label])
+  const type = SESSION_TYPES.find(t => t.key === form.session_type) || SESSION_TYPES[0]
   const isTrip = form.session_type === 'trip'
+  const isEditing = !!initial?.id
+
+  const STEPS = [
+    { label: 'Type & When', icon: '📅' },
+    { label: 'Groups',      icon: '👥' },
+    { label: 'Details',     icon: '📝' },
+  ]
+
+  const canNext0 = !!form.title.trim() && !!form.session_date
+  const canSave  = canNext0
+
+  const fi = { width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', fontSize: 15, outline: 'none', background: 'var(--surface, #fff)', boxSizing: 'border-box', color: 'var(--text, #111)', fontFamily: 'inherit' }
+  const lb = { fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, display: 'block' }
 
   return (
-    <div>
-      <div style={{ marginBottom: 18 }}>
-        <label style={lbl}>Session Type</label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8 }}>
-          {SESSION_TYPES.map(t => {
-            const active = form.session_type === t.key
-            return (
-              <button key={t.key} onClick={() => set('session_type', t.key)} style={{ padding: '12px 10px', borderRadius: 12, border: `2px solid ${active ? t.color : '#e5e7eb'}`, background: active ? t.color : 'var(--surface)', color: active ? '#fff' : 'var(--text3)', cursor: 'pointer', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                {t.icon} {t.label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
-      <Field label="Title">
-        <input value={form.title} onChange={e => set('title', e.target.value)} placeholder={isTrip ? 'e.g. Alton Towers Day Trip' : 'e.g. Multi-Sport Morning'} style={inp} />
-      </Field>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-        <div><label style={lbl}>From</label><input type="date" value={form.session_date} onChange={e => set('session_date', e.target.value)} style={inp} /></div>
-        <div><label style={lbl}>To</label><input type="date" value={form.end_date || form.session_date} onChange={e => set('end_date', e.target.value)} style={inp} /></div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-        <div><label style={lbl}>Start Time</label><input type="time" value={form.start_time} onChange={e => set('start_time', e.target.value)} style={inp} /></div>
-        <div><label style={lbl}>End Time</label><input type="time" value={form.end_time} onChange={e => set('end_time', e.target.value)} style={inp} /></div>
-      </div>
-
-      <Field label="Location">
-        <input value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Jubilee Park" style={inp} />
-      </Field>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-        <div><label style={lbl}>Max Capacity</label><input type="number" value={form.max_capacity} onChange={e => set('max_capacity', e.target.value)} placeholder="30" style={inp} /></div>
-        <div><label style={lbl}>Volunteers Needed</label><input type="number" value={form.volunteer_limit} onChange={e => set('volunteer_limit', e.target.value)} placeholder="4" style={inp} /></div>
-      </div>
-
-      <div style={{ marginBottom: 14 }}>
-        <label style={lbl}>Groups / Bubbles</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-          {(bubbleDefs || DEFAULT_BUBBLE_DEFS).map(b => {
-            const active = (form.bubbles || []).includes(b.label)
-            return (
-              <button key={b.key} onClick={() => set('bubbles', active ? form.bubbles.filter(x => x !== b.label) : [...(form.bubbles || []), b.label])}
-                style={{ padding: '6px 14px', borderRadius: 20, border: `2px solid ${active ? b.color : '#e5e7eb'}`, background: active ? b.color : 'var(--surface)', color: active ? '#fff' : 'var(--text3)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
-                {b.label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {isTrip && (
-        <div style={{ background: '#E8F7F9', borderRadius: 14, padding: 14, marginBottom: 14, border: '1.5px solid #B2E0E6' }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#1B9AAA', marginBottom: 12 }}>🚌 Trip Details</div>
-          <Field label="Meeting Point">
-            <input value={form.meeting_point || ''} onChange={e => set('meeting_point', e.target.value)} placeholder="e.g. Outside community centre" style={{ ...inp, background: 'var(--surface)' }} />
-          </Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <button onClick={() => set('packed_lunch', !form.packed_lunch)} style={{ padding: 10, borderRadius: 10, border: `2px solid ${form.packed_lunch ? '#417505' : '#e5e7eb'}`, background: form.packed_lunch ? '#EDFAED' : 'var(--surface)', cursor: 'pointer', fontSize: 12, fontWeight: 800, color: form.packed_lunch ? '#417505' : 'var(--text3)' }}>
-              🥪 Packed Lunch
-            </button>
-            <button onClick={() => set('consent_required', !form.consent_required)} style={{ padding: 10, borderRadius: 10, border: `2px solid ${form.consent_required ? '#1B9AAA' : '#e5e7eb'}`, background: form.consent_required ? '#E8F7F9' : 'var(--surface)', cursor: 'pointer', fontSize: 12, fontWeight: 800, color: form.consent_required ? '#1B9AAA' : 'var(--text3)' }}>
-              📋 Consent Form
-            </button>
+      {/* ── HEADER ── */}
+      <div style={{ background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, padding: '20px 24px 16px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{type.icon}</div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>{isEditing ? 'Edit Session' : 'New Session'}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{form.title || 'Untitled session'}</div>
+            </div>
           </div>
+          <button onClick={onCancel} style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}>✕</button>
         </div>
-      )}
 
-      <Field label="Bubble Rotation (optional)">
-        <RotationPlanner slots={form.rotation_slots || []} onChange={v => set('rotation_slots', v)} selectedBubbles={form.bubbles || []} bubbleDefs={bubbleDefs} />
-      </Field>
-
-      <Field label="Description">
-        <textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder="What's happening?" rows={2} style={{ ...inp, resize: 'none', lineHeight: 1.5 }} />
-      </Field>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 10, marginTop: 4 }}>
-        <button onClick={onCancel} style={{ padding: 13, borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3)' }}>Cancel</button>
-        <button onClick={() => onSave(form)} disabled={saving || !form.title} style={{ padding: 13, borderRadius: 12, border: 'none', background: saving || !form.title ? '#9ca3af' : type?.color || '#1B9AAA', color: '#fff', fontSize: 14, fontWeight: 800, cursor: saving || !form.title ? 'default' : 'pointer' }}>
-          {saving ? 'Saving...' : initial?.id ? 'Save Changes' : 'Create Session'}
-        </button>
+        {/* Step dots */}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {STEPS.map((s, i) => (
+            <React.Fragment key={i}>
+              <button onClick={() => i < step || (i === 1 && canNext0) ? setStep(i) : null}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 99, border: 'none', background: i === step ? 'rgba(255,255,255,0.9)' : i < step ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.12)', color: i === step ? type.color : '#fff', fontSize: 11, fontWeight: 800, cursor: i <= step ? 'pointer' : 'default', transition: 'all 0.2s' }}>
+                <span>{i < step ? '✓' : s.icon}</span>
+                <span style={{ display: i === step ? 'inline' : 'none' }}>{s.label}</span>
+              </button>
+              {i < STEPS.length - 1 && <div style={{ flex: 1, height: 2, borderRadius: 99, background: i < step ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)' }} />}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
+
+      {/* ── BODY ── */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 24px 0' }}>
+
+        {/* STEP 0 — TYPE & WHEN */}
+        {step === 0 && (
+          <div>
+            {/* Type picker */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={lb}>What type of session?</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {SESSION_TYPES.map(t => {
+                  const active = form.session_type === t.key
+                  return (
+                    <button key={t.key} onClick={() => set('session_type', t.key)}
+                      style={{ padding: '14px 12px', borderRadius: 14, border: `2px solid ${active ? t.color : 'var(--border, #e5e7eb)'}`, background: active ? t.color + '15' : 'var(--surface, #fff)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                      <div style={{ fontSize: 24, marginBottom: 4 }}>{t.icon}</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: active ? t.color : 'var(--text, #111)' }}>{t.label}</div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Title */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={lb}>Session name *</label>
+              <input value={form.title} onChange={e => set('title', e.target.value)}
+                placeholder={isTrip ? 'e.g. Alton Towers Trip' : 'e.g. Multi-Sport Morning'}
+                style={fi} autoFocus />
+            </div>
+
+            {/* Date */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={lb}>{isTrip ? 'Trip dates' : 'Date'}</label>
+              <div style={{ display: 'grid', gridTemplateColumns: isTrip ? '1fr 1fr' : '1fr', gap: 8 }}>
+                <div>
+                  {isTrip && <div style={{ fontSize: 11, color: 'var(--text3, #6B7280)', marginBottom: 4 }}>From</div>}
+                  <input type="date" value={form.session_date} onChange={e => set('session_date', e.target.value)} style={fi} />
+                </div>
+                {isTrip && (
+                  <div>
+                    <div style={{ fontSize: 11, color: 'var(--text3, #6B7280)', marginBottom: 4 }}>To</div>
+                    <input type="date" value={form.end_date || form.session_date} onChange={e => set('end_date', e.target.value)} style={fi} />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Time */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={lb}>Time</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: 'var(--text3, #6B7280)', marginBottom: 4 }}>Start</div>
+                  <input type="time" value={form.start_time} onChange={e => set('start_time', e.target.value)} style={fi} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: 'var(--text3, #6B7280)', marginBottom: 4 }}>End</div>
+                  <input type="time" value={form.end_time} onChange={e => set('end_time', e.target.value)} style={fi} />
+                </div>
+              </div>
+            </div>
+
+            {/* Location */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={lb}>Location</label>
+              <input value={form.location} onChange={e => set('location', e.target.value)}
+                placeholder="e.g. Jubilee Park, Watford" style={fi} />
+            </div>
+
+            {/* Trip extras */}
+            {isTrip && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={lb}>Meeting point</label>
+                <input value={form.meeting_point || ''} onChange={e => set('meeting_point', e.target.value)}
+                  placeholder="e.g. Outside community centre, 8:45am" style={fi} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* STEP 1 — GROUPS */}
+        {step === 1 && (
+          <div>
+            {/* Bubbles */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={lb}>Which groups are attending?</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                {(bubbleDefs || DEFAULT_BUBBLE_DEFS).map(b => {
+                  const active = (form.bubbles || []).includes(b.label)
+                  return (
+                    <button key={b.key} onClick={() => toggleBubble(b.label)}
+                      style={{ padding: '10px 18px', borderRadius: 99, border: `2px solid ${active ? b.color : 'var(--border, #e5e7eb)'}`, background: active ? b.color : 'var(--surface, #fff)', color: active ? '#fff' : 'var(--text, #111)', fontSize: 13, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {active && <span>✓</span>} {b.label}
+                    </button>
+                  )
+                })}
+              </div>
+              {form.bubbles.length === 0 && (
+                <div style={{ fontSize: 12, color: 'var(--text3, #9CA3AF)', marginTop: 4 }}>Leave blank to include all groups</div>
+              )}
+            </div>
+
+            {/* Capacity */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+              <div>
+                <label style={lb}>Max young people</label>
+                <input type="number" min="0" value={form.max_capacity} onChange={e => set('max_capacity', e.target.value)}
+                  placeholder="e.g. 30" style={fi} />
+              </div>
+              <div>
+                <label style={lb}>Volunteers needed</label>
+                <input type="number" min="0" value={form.volunteer_limit} onChange={e => set('volunteer_limit', e.target.value)}
+                  placeholder="e.g. 4" style={fi} />
+              </div>
+            </div>
+
+            {/* Rotation */}
+            <div style={{ marginBottom: 8 }}>
+              <label style={lb}>Activity rotation <span style={{ fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+              <RotationPlanner slots={form.rotation_slots || []} onChange={v => set('rotation_slots', v)} selectedBubbles={form.bubbles || []} bubbleDefs={bubbleDefs} />
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2 — DETAILS */}
+        {step === 2 && (
+          <div>
+            {/* Description */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={lb}>Description</label>
+              <textarea value={form.description} onChange={e => set('description', e.target.value)}
+                placeholder="What's happening at this session? Any special notes for staff..." rows={4}
+                style={{ ...fi, resize: 'none', lineHeight: 1.6 }} />
+            </div>
+
+            {/* Trip toggles */}
+            {isTrip && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={lb}>Trip requirements</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {[
+                    { key: 'packed_lunch', icon: '🥪', label: 'Packed Lunch' },
+                    { key: 'consent_required', icon: '📋', label: 'Consent Form' },
+                  ].map(opt => (
+                    <button key={opt.key} onClick={() => set(opt.key, !form[opt.key])}
+                      style={{ padding: '14px', borderRadius: 12, border: `2px solid ${form[opt.key] ? '#1B9AAA' : 'var(--border, #e5e7eb)'}`, background: form[opt.key] ? '#E8F7F9' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 13, fontWeight: 800, color: form[opt.key] ? '#1B9AAA' : 'var(--text3, #6B7280)', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.15s' }}>
+                      <span style={{ fontSize: 20 }}>{opt.icon}</span> {opt.label}
+                      {form[opt.key] && <span style={{ marginLeft: 'auto', fontSize: 16 }}>✓</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Summary card */}
+            <div style={{ background: 'var(--surface2, #F9FAFB)', borderRadius: 14, border: '1.5px solid var(--border, #e5e7eb)', padding: '16px' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>Summary</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {[
+                  { icon: type.icon, label: form.title || '—' },
+                  { icon: '📅', label: form.session_date ? `${form.session_date}${form.end_date && form.end_date !== form.session_date ? ` → ${form.end_date}` : ''}` : '—' },
+                  { icon: '🕐', label: form.start_time ? `${form.start_time}${form.end_time ? ` – ${form.end_time}` : ''}` : '—' },
+                  { icon: '📍', label: form.location || 'No location set' },
+                  { icon: '👥', label: form.bubbles?.length ? form.bubbles.join(', ') : 'All groups' },
+                  { icon: '🔢', label: `${form.max_capacity || '—'} young people · ${form.volunteer_limit || '—'} volunteers` },
+                ].map((row, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+                    <span style={{ fontSize: 16, flexShrink: 0 }}>{row.icon}</span>
+                    <span style={{ color: 'var(--text, #111)', fontWeight: 600 }}>{row.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── FOOTER ── */}
+      <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border, #e5e7eb)', flexShrink: 0, display: 'flex', gap: 10, background: 'var(--surface, #fff)' }}>
+        {step > 0 && (
+          <button onClick={() => setStep(s => s - 1)}
+            style={{ padding: '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
+            ← Back
+          </button>
+        )}
+        {step === 0 && (
+          <button onClick={onCancel}
+            style={{ padding: '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
+            Cancel
+          </button>
+        )}
+        {step < 2 ? (
+          <button onClick={() => setStep(s => s + 1)} disabled={step === 0 && !canNext0}
+            style={{ flex: 1, padding: '13px', borderRadius: 12, border: 'none', background: step === 0 && !canNext0 ? '#9ca3af' : type.color, color: '#fff', fontSize: 15, fontWeight: 900, cursor: step === 0 && !canNext0 ? 'default' : 'pointer', transition: 'all 0.15s' }}>
+            Continue →
+          </button>
+        ) : (
+          <button onClick={() => onSave(form)} disabled={saving || !canSave}
+            style={{ flex: 1, padding: '13px', borderRadius: 12, border: 'none', background: saving || !canSave ? '#9ca3af' : type.color, color: '#fff', fontSize: 15, fontWeight: 900, cursor: saving || !canSave ? 'default' : 'pointer' }}>
+            {saving ? 'Saving...' : isEditing ? '✓ Save Changes' : '🚀 Create Session'}
+          </button>
+        )}
+      </div>
+
     </div>
   )
 }
@@ -456,14 +621,9 @@ export default function SessionPlanner({ org }) {
 
   // ── FORM VIEW ──
   if (view === 'form') return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? 16 : 24, maxWidth: isMobile ? '100%' : 640 }}>
-      <button onClick={() => { setView('list'); setEditing(null) }} style={{ border: 'none', background: 'none', color: 'var(--text3, #6B7280)', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6, padding: 0 }}>
-        ← Back
-      </button>
-      <div style={{ background: 'var(--surface, #fff)', border: '1.5px solid var(--border, #E5E7EB)', borderRadius: 16, padding: 24 }}>
-        <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text, #111)', marginBottom: 20 }}>
-          {editing?.id ? 'Edit Session' : filter === 'trips' ? '🚌 Plan a Trip' : '📅 New Session'}
-        </div>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'stretch', justifyContent: 'flex-end' }}>
+      <div onClick={() => { setView('list'); setEditing(null) }} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(2px)' }} />
+      <div style={{ position: 'relative', width: '100%', maxWidth: 480, height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--surface, #fff)', boxShadow: '-8px 0 48px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
         <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} />
       </div>
     </div>
