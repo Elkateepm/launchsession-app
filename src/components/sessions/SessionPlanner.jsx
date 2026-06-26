@@ -31,16 +31,10 @@ const EMPTY_FORM = {
   consent_required: false, volunteer_limit: '', rotation_slots: [],
 }
 
-const inp = { width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface2)', boxSizing: 'border-box', color: 'var(--text)' }
-const lbl = { fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }
 
 function normaliseBubbleDefs(groups) {
   if (!groups || groups.length === 0) return DEFAULT_BUBBLE_DEFS
   return groups.map(g => ({ key: (g.id || g.label).toString(), label: g.label, color: g.color || '#1B9AAA' }))
-}
-
-function Field({ label, children }) {
-  return <div style={{ marginBottom: 14 }}><label style={lbl}>{label}</label>{children}</div>
 }
 
 // ─── ROTATION PLANNER ────────────────────────────────────────
