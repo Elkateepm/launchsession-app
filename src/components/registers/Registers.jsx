@@ -178,6 +178,7 @@ function InlineChildImport({ org, onImported }) {
 
 // ─── CHILD DRAWER ─────────────────────────────────────────────
 function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdateStatus, primary, hasSession }) {
+  const isMobile = useIsMobile()
   const [drawerTab, setDrawerTab] = useState(hasSession ? 'actions' : 'info')
   const [absenceReason, setAbsenceReason] = useState('')
   const name = `${child.first_name} ${child.last_name}`
@@ -193,11 +194,14 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
   }
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 400, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 600, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: isMobile ? '20px 20px 0 0' : 20, width: '100%', maxWidth: isMobile ? '100%' : 400, maxHeight: isMobile ? '92vh' : '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+
+        {/* Drag handle on mobile */}
+        {isMobile && <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 0' }}><div style={{ width: 36, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.15)' }} /></div>}
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(135deg, ${bColor}, ${bubble?.dark || bColor})`, padding: '20px 18px 16px', borderRadius: '20px 20px 0 0', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: `linear-gradient(135deg, ${bColor}, ${bubble?.dark || bColor})`, padding: isMobile ? '14px 16px 14px' : '20px 18px 16px', borderRadius: isMobile ? 0 : '20px 20px 0 0', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1 }}>Child Profile</div>
@@ -453,7 +457,7 @@ export default function Registers({ org }) {
         <div style={{ background: '#fff', borderBottom: `2px solid ${primary}18`, padding: '14px 20px 10px', flexShrink: 0, position: 'relative' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}44, transparent)` }} />
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                 <span style={{ fontSize: 18, fontWeight: 900, color: '#111', fontFamily: 'var(--font-display)' }}>
@@ -477,7 +481,7 @@ export default function Registers({ org }) {
           </div>
 
           {/* Stats strip */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 8, marginBottom: 12 }}>
             {[
               { label: 'Total', num: counts.total, color: '#374151', bg: '#F9FAFB' },
               { label: 'Signed In', num: counts.signed_in, color: '#15803D', bg: '#F0FDF4' },
@@ -511,7 +515,7 @@ export default function Registers({ org }) {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search by name..."
-              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 36px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
+              style={{ width: '100%', boxSizing: 'border-box', padding: isMobile ? '8px 10px 8px 32px' : '9px 12px 9px 36px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
               onFocus={e => e.target.style.borderColor = primary}
               onBlur={e => e.target.style.borderColor = primary + '25'}
             />
@@ -552,7 +556,7 @@ export default function Registers({ org }) {
             { key: 'absent', label: 'Absent', count: counts.absent },
             { key: 'signed_out', label: 'Out', count: counts.signed_out },
           ].map(t => (
-            <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ padding: '10px 12px', border: 'none', borderBottom: `2.5px solid ${activeTab === t.key ? primary : 'transparent'}`, background: 'transparent', color: activeTab === t.key ? primary : '#6B7280', fontSize: 13, fontWeight: activeTab === t.key ? 800 : 500, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ padding: isMobile ? '8px 8px' : '10px 12px', border: 'none', borderBottom: `2.5px solid ${activeTab === t.key ? primary : 'transparent'}`, background: 'transparent', color: activeTab === t.key ? primary : '#6B7280', fontSize: isMobile ? 11 : 13, fontWeight: activeTab === t.key ? 800 : 500, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}>
               {t.label}
               <span style={{ background: activeTab === t.key ? primary + '18' : '#F3F4F6', color: activeTab === t.key ? primary : '#9CA3AF', borderRadius: 99, padding: '1px 7px', fontSize: 11, fontWeight: 700 }}>{t.count}</span>
             </button>
@@ -587,10 +591,10 @@ export default function Registers({ org }) {
         </div>
 
         {/* FOOTER */}
-        <div style={{ background: '#fff', borderTop: '1px solid #F3F4F6', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <button onClick={() => setShowAdd(true)} style={{ padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${primary}30`, background: primary + '08', color: primary, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Walk-in</button>
-          <div style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600 }}>{filtered.length} of {children.length} shown</div>
-          <button style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: session ? `linear-gradient(135deg, ${primary}, #16A34A)` : '#F3F4F6', color: session ? '#fff' : '#9CA3AF', fontSize: 13, fontWeight: 800, cursor: session ? 'pointer' : 'default' }}>
+        <div style={{ background: '#fff', borderTop: '1px solid #F3F4F6', padding: isMobile ? '10px 12px' : '12px 16px', display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'space-between', gap: isMobile ? 8 : 0, flexWrap: isMobile ? 'wrap' : 'nowrap', flexShrink: 0 }}>
+          {!isMobile && <button onClick={() => setShowAdd(true)} style={{ padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${primary}30`, background: primary + '08', color: primary, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Walk-in</button>}
+          {!isMobile && <div style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600 }}>{filtered.length} of {children.length} shown</div>}
+          <button style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: session ? `linear-gradient(135deg, ${primary}, #16A34A)` : '#F3F4F6', color: session ? '#fff' : '#9CA3AF', fontSize: 13, fontWeight: 800, cursor: session ? 'pointer' : 'default', width: isMobile ? '100%' : 'auto' }}>
             {session ? `✓ Complete Register · ${counts.signed_in} in` : 'No Active Session'}
           </button>
         </div>

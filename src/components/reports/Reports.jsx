@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import PageHeader from '../shared/PageHeader'
 import { supabase } from '../../lib/supabase'
 
@@ -184,7 +185,7 @@ function DeliveryTab({ data }) {
       {programmes.length > 0 ? (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 20 }}>
           <SectionHeader title="Programme Performance" />
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr>
@@ -347,6 +348,7 @@ function SafeguardingTab({ data }) {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────
 export default function Reports({ org }) {
+  const isMobile = useIsMobile()
   const [tab, setTab] = useState('executive')
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
@@ -455,7 +457,7 @@ export default function Reports({ org }) {
       />
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, padding: '10px 24px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', overflowX: 'auto', flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 4, padding: isMobile ? '10px 12px' : '10px 24px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', overflowX: 'auto', flexShrink: 0, WebkitOverflowScrolling: 'touch' }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, border: tab === t.key ? '1px solid var(--org-primary,#1B9AAA)' : '1px solid transparent', background: tab === t.key ? 'rgba(27,154,170,0.1)' : 'transparent', color: tab === t.key ? 'var(--org-primary,#1B9AAA)' : 'var(--text3)', fontWeight: tab === t.key ? 800 : 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
             <span>{t.icon}</span><span>{t.label}</span>
@@ -464,7 +466,7 @@ export default function Reports({ org }) {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 24px 60px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 12px 80px' : '24px 24px 60px' }}>
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[1,2,3].map(i => <div key={i} style={{ height: 80, background: 'var(--surface)', borderRadius: 16, border: '1px solid var(--border)', animation: 'pulse 1.5s ease-in-out infinite' }} />)}

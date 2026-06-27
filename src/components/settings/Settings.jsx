@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { useOrg } from '../../context/OrgContext'
 import OrgSettingsPanel from './OrgSettingsPanel'
@@ -92,13 +93,13 @@ function OrgSection({ org }) {
         </div>
       </div>
       <SettingCard title="Organisation Profile" description="Basic information about your organisation">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
           <Field label="Organisation Name"><input style={inp} value={form.name} onChange={e => set('name', e.target.value)} /></Field>
           <Field label="Charity Number"><input style={inp} value={form.charity_number} onChange={e => set('charity_number', e.target.value)} placeholder="e.g. 1234567" /></Field>
         </div>
         <Field label="Website"><input style={inp} value={form.website} onChange={e => set('website', e.target.value)} placeholder="https://..." /></Field>
         <Field label="Address"><input style={inp} value={form.address} onChange={e => set('address', e.target.value)} placeholder="Full address" /></Field>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
           <Field label="Contact Email"><input style={inp} type="email" value={form.contact_email} onChange={e => set('contact_email', e.target.value)} /></Field>
           <Field label="Contact Phone"><input style={inp} value={form.contact_phone} onChange={e => set('contact_phone', e.target.value)} /></Field>
         </div>
@@ -184,7 +185,7 @@ function BrandingSection({ org, refreshOrg }) {
         <div style={{ fontSize: 36 }}>🎨</div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.1fr 0.9fr', gap: 16 }}>
         <div>
           <SettingCard title="Logo" description="Shown in the sidebar, login screen and workspace header">
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--surface2)', border: '1.5px dashed var(--border2)', borderRadius: 14, padding: 16, marginBottom: 4 }}>
@@ -339,7 +340,7 @@ function IntegrationsSection() {
   ]
   return (
     <SettingCard title="Integrations" description="Connect LaunchSession with your other tools">
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
         {integrations.map(i => (
           <div key={i.name} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -445,6 +446,8 @@ function GroupsSection({ org }) {
 }
 
 export default function Settings({ org, session }) {
+  const isMobile = useIsMobile()
+  const [showSidebar, setShowSidebar] = useState(false)
   const { refreshOrg } = useOrg()
   const brandingEnabled = org?.branding_enabled !== false
   const [active, setActive] = useState('organisation')
@@ -477,10 +480,20 @@ export default function Settings({ org, session }) {
   const current = NAV.find(n => n.key === active)
 
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#F8FAFC' }}>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%', overflow: 'hidden', background: '#F8FAFC' }}>
+
+      {/* MOBILE NAV TOGGLE */}
+      {isMobile && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#fff', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
+          <button onClick={() => setShowSidebar(!showSidebar)} style={{ padding: '7px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', background: '#F9FAFB', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#374151' }}>
+            {showSidebar ? '✕ Close' : '☰ Settings'}
+          </button>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{NAV.find(n => n.key === active)?.icon} {NAV.find(n => n.key === active)?.label}</div>
+        </div>
+      )}
 
       {/* SETTINGS SIDEBAR */}
-      <div style={{ width: 220, background: '#fff', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto' }}>
+      <div style={{ width: isMobile ? '100%' : 220, background: '#fff', borderRight: isMobile ? 'none' : '1px solid #e5e7eb', borderBottom: isMobile ? '1px solid #e5e7eb' : 'none', display: isMobile ? (showSidebar ? 'flex' : 'none') : 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto', maxHeight: isMobile ? 320 : 'none' }}>
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>⚙️ Settings</div>
           <div style={{ position: 'relative' }}>
@@ -494,7 +507,7 @@ export default function Settings({ org, session }) {
             <div key={group} style={{ marginBottom: 4 }}>
               <div style={{ fontSize: 10, fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, padding: '8px 10px 4px' }}>{group}</div>
               {items.map(n => (
-                <button key={n.key} onClick={() => setActive(n.key)}
+                <button key={n.key} onClick={() => { setActive(n.key); if (isMobile) setShowSidebar(false) }}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? '#EFF6FF' : 'transparent', color: active === n.key ? '#1D4ED8' : '#374151', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}
                   onMouseEnter={e => { if (active !== n.key) e.currentTarget.style.background = '#F9FAFB' }}
                   onMouseLeave={e => { if (active !== n.key) e.currentTarget.style.background = 'transparent' }}>
@@ -508,7 +521,7 @@ export default function Settings({ org, session }) {
       </div>
 
       {/* CONTENT */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '24px' }}>
         <div style={{ maxWidth: 700 }}>
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>{current?.icon} {current?.label}</div>

@@ -1,4 +1,5 @@
 
+import { useIsMobile } from '../../hooks/useIsMobile'
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -30,6 +31,7 @@ function endOfMonth(date) {
 
 export default function Calendar({ org, session }) {
   const orgId = org?.id;
+  const isMobile = useIsMobile();
 
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -110,9 +112,10 @@ export default function Calendar({ org, session }) {
     setCurrentMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + amount, 1));
   }
 
+  const calPad = isMobile ? 12 : 24
   return (
-    <div style={styles.page}>
-      <div style={styles.header}>
+    <div style={{...styles.page, padding: calPad}}>
+      <div style={{...styles.header, flexDirection: isMobile ? "column" : "row", gap: isMobile ? 12 : 20}}>
         <div>
           <div style={styles.eyebrow}>LaunchSession Calendar</div>
           <h1 style={styles.title}>Calendar</h1>
@@ -239,7 +242,7 @@ export default function Calendar({ org, session }) {
 
 const styles = {
   page: {
-    padding: 24,
+    padding: "var(--cal-pad, 24px)",
     background: "#f8fafc",
     minHeight: "100%",
     color: "#0f172a",
@@ -303,7 +306,7 @@ const styles = {
     marginBottom: 18,
   },
   monthButton: {
-    width: 42,
+    width: "clamp(28px, 8vw, 42px)",
     height: 42,
     borderRadius: 14,
     border: "1px solid #e5e7eb",

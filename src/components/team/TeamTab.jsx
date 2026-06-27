@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import PageHeader from '../shared/PageHeader'
 import { supabase } from '../../lib/supabase'
 
 const ROLES = ['owner', 'admin', 'manager', 'staff', 'volunteer']
 
 export default function TeamTab({ org, session }) {
+  const isMobile = useIsMobile()
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
   const [inviteEmail, setInviteEmail] = useState('')
@@ -213,7 +215,7 @@ export default function TeamTab({ org, session }) {
           {inviteSuccess && <div style={{ background: '#F0FFF4', border: '1px solid #B0E8C0', color: '#1A5C1A', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>✓ {inviteSuccess}</div>}
 
           <form onSubmit={handleInvite}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr auto auto', gap: 10, alignItems: 'flex-end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1.5fr auto auto', gap: 10, alignItems: 'flex-end' }}>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>First name</label>
                 <input value={inviteFirstName} onChange={e => setInviteFirstName(e.target.value)} placeholder="First name"
@@ -261,7 +263,7 @@ export default function TeamTab({ org, session }) {
             const fullName = `${invite.first_name || ''} ${invite.last_name || ''}`.trim() || invite.email
             const active = invite.status === 'pending'
             return (
-              <div key={invite.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: index < invites.length - 1 ? '1px solid #f3f4f6' : 'none', opacity: active ? 1 : 0.55 }}>
+              <div key={invite.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: index < invites.length - 1 ? '1px solid #f3f4f6' : 'none', opacity: active ? 1 : 0.55 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 12, background: roleColors[invite.role] || primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
                   {fullName[0]?.toUpperCase() || '?'}
                 </div>
@@ -298,7 +300,7 @@ export default function TeamTab({ org, session }) {
           </div>
 
           <form onSubmit={handleManualAdd}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr auto auto', gap: 10, alignItems: 'flex-end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.4fr auto auto', gap: 10, alignItems: 'flex-end' }}>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Full name</label>
                 <input value={manualName} onChange={e => setManualName(e.target.value)} placeholder="Full name"
@@ -339,7 +341,7 @@ export default function TeamTab({ org, session }) {
               <div style={{ fontSize: 13, marginTop: 4 }}>Invite your first staff member above</div>
             </div>
           ) : members.map((m, i) => (
-            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: i < members.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
+            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: i < members.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
               <div style={{ width: 40, height: 40, borderRadius: 12, background: roleColors[m.role] || primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
                 {(m.full_name || m.email || '?')[0].toUpperCase()}
               </div>
