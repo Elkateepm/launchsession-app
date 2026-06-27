@@ -164,6 +164,11 @@ section{padding:96px 5%}
 .plan-btn-outline:hover{background:var(--glass2)}
 .plan-btn-fill{background:linear-gradient(135deg,#3B82F6,#6366F1);border:none;color:#fff;box-shadow:0 4px 14px rgba(59,130,246,0.3)}
 .plan-btn-fill:hover{box-shadow:0 8px 28px rgba(59,130,246,0.5)}
+.module-addon-card{display:flex;align-items:flex-start;gap:12px;background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:16px;transition:all 0.2s}
+.module-addon-card:hover{border-color:rgba(255,255,255,0.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2)}
+.module-addon-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.module-addon-name{font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px}
+.module-addon-desc{font-size:12px;color:var(--text3);line-height:1.5}
 .plan-divider{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
 .plan-features{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:24px}
 .plan-features li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text2);line-height:1.4}
@@ -477,129 +482,47 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
 
 <!-- PRICING -->
 <section id="pricing">
-  <div class="container">
-    <div class="pricing-intro">
-      <div class="section-tag" style="margin:0 auto 18px">Pricing</div>
-      <h2 class="section-heading">Transparent packages.<br>No surprises.</h2>
-      <p class="section-sub">Start with a 7-day free trial on any plan. No credit card required. Cancel anytime.</p>
-      <div class="pricing-toggle">
-        <span class="toggle-label active" id="monthlyLabel">Monthly</span>
-        <div class="toggle-pill" id="billingToggle" onclick="toggleBilling()">
-          <div class="toggle-pill-inner" id="toggleInner"></div>
+  <div class="container" style="text-align:center">
+    <div class="section-tag">Pricing</div>
+    <h2 class="section-heading">Start free. Add what you need.</h2>
+    <p class="section-sub" style="margin:0 auto 48px">No bundles. No bloat. Pay only for the modules your organisation actually uses.</p>
+
+    <!-- Base plan -->
+    <div style="max-width:560px;margin:0 auto 48px;background:var(--glass);border:1px solid rgba(59,130,246,0.3);border-radius:20px;padding:36px 40px;text-align:left">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <div>
+          <div class="pricing-name" style="margin-bottom:4px">Base Platform</div>
+          <div style="font-size:36px;font-weight:900;letter-spacing:-1px">Free <span style="font-size:16px;font-weight:500;color:var(--text3)">forever</span></div>
         </div>
-        <span class="toggle-label" id="yearlyLabel">Annual</span>
-        <span class="save-badge" id="saveBadge">Save 20%</span>
+        <button class="plan-btn plan-btn-fill" style="width:auto;padding:12px 24px" onclick="window.location.href='/signup'">Start Free Trial →</button>
+      </div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:20px">Everything you need to run your programme. No credit card required.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600">📅 Session Planner</div>
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600">🗓 Calendar</div>
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600">🏠 Home Dashboard</div>
       </div>
     </div>
 
-    <div class="pricing-grid">
-      <!-- STARTER -->
-      <div class="pricing-card">
-        <div class="plan-name">Starter</div>
-        <div class="plan-price">£<span id="p1">29</span><span>/mo</span></div>
-        <div class="plan-period" id="pp1">billed monthly</div>
-        <div class="plan-tagline">Perfect for smaller clubs and charities taking their first steps with digital registers.</div>
-        <button class="plan-btn plan-btn-outline" onclick="window.location.href='/signup'">Start free trial</button>
-        <div class="plan-divider">What's included</div>
-        <ul class="plan-features">
-          <li><span class="chk">✓</span>Up to 60 young people</li>
-          <li><span class="chk">✓</span>Live registers & attendance</li>
-          <li><span class="chk">✓</span>Session planner</li>
-          <li><span class="chk">✓</span>Safeguarding module</li>
-          <li><span class="chk">✓</span>Basic impact reports</li>
-          <li><span class="chk">✓</span>Up to 5 staff accounts</li>
-          <li><span class="chk">✓</span>CSV import</li>
-          <li><span class="x">–</span><span style="color:var(--text3)">Volunteer management</span></li>
-          <li><span class="x">–</span><span style="color:var(--text3)">Parent portal</span></li>
-          <li><span class="x">–</span><span style="color:var(--text3)">Branding centre</span></li>
-        </ul>
+    <!-- Add-on modules -->
+    <div style="max-width:800px;margin:0 auto">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:20px">Add-on Modules — £9.99 / month each</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;text-align:left">
+        <div class="module-addon-card"><div class="module-addon-icon" style="background:rgba(236,72,153,0.12)">📋</div><div><div class="module-addon-name">Registers</div><div class="module-addon-desc">Digital sign-in, attendance tracking, medical alerts.</div></div></div>
+        <div class="module-addon-card"><div class="module-addon-icon" style="background:rgba(27,154,170,0.12)">❤️</div><div><div class="module-addon-name">Volunteers</div><div class="module-addon-desc">Portal, onboarding wizard, rota, availability &amp; hour tracking.</div></div></div>
+        <div class="module-addon-card"><div class="module-addon-icon" style="background:rgba(245,159,0,0.12)">👨‍👧</div><div><div class="module-addon-name">Parent Portal</div><div class="module-addon-desc">Keep parents connected, informed and engaged.</div></div></div>
+        <div class="module-addon-card"><div class="module-addon-icon" style="background:rgba(99,102,241,0.12)">🤝</div><div><div class="module-addon-name">Mentoring</div><div class="module-addon-desc">Match young people with mentors. Track goals and progress.</div></div></div>
+        <div class="module-addon-card"><div class="module-addon-icon" style="background:rgba(239,68,68,0.12)">🛡️</div><div><div class="module-addon-name">Safeguarding</div><div class="module-addon-desc">Cause for concern forms, audit trail, secure case log.</div></div></div>
+        <div class="module-addon-card"><div class="module-addon-icon" style="background:rgba(34,197,94,0.12)">💬</div><div><div class="module-addon-name">Messaging</div><div class="module-addon-desc">In-app messaging between staff, volunteers and parents.</div></div></div>
+        <div class="module-addon-card"><div class="module-addon-icon" style="background:rgba(59,130,246,0.12)">📊</div><div><div class="module-addon-name">Reports</div><div class="module-addon-desc">Impact dashboards, attendance trends and AI insights.</div></div></div>
+        <div class="module-addon-card"><div class="module-addon-icon" style="background:rgba(168,85,247,0.12)">🖼️</div><div><div class="module-addon-name">Gallery</div><div class="module-addon-desc">Media library for sessions, trips and programme moments.</div></div></div>
       </div>
-
-      <!-- PRO -->
-      <div class="pricing-card popular">
-        <div class="popular-badge">Most Popular</div>
-        <div class="plan-name">Pro</div>
-        <div class="plan-price">£<span id="p2">59</span><span>/mo</span></div>
-        <div class="plan-period" id="pp2">billed monthly</div>
-        <div class="plan-tagline">For growing organisations that need volunteers, parent comms and branded portals.</div>
-        <button class="plan-btn plan-btn-fill" onclick="window.location.href='/signup'">Start free trial</button>
-        <div class="plan-divider">Everything in Starter, plus</div>
-        <ul class="plan-features">
-          <li><span class="chk">✓</span>Up to 200 young people</li>
-          <li><span class="chk">✓</span>Unlimited staff accounts</li>
-          <li><span class="chk">✓</span>Volunteer management & QR check-in</li>
-          <li><span class="chk">✓</span>Parent portal</li>
-          <li><span class="chk">✓</span>Branding centre</li>
-          <li><span class="chk">✓</span>Advanced reports & insights</li>
-          <li><span class="chk">✓</span>Messaging module</li>
-          <li><span class="chk">✓</span>Priority support</li>
-          <li><span class="x">–</span><span style="color:var(--text3)">Mentoring module</span></li>
-          <li><span class="x">–</span><span style="color:var(--text3)">Multi-site management</span></li>
-        </ul>
-      </div>
-
-      <!-- ENTERPRISE -->
-      <div class="pricing-card">
-        <div class="plan-name">Enterprise</div>
-        <div class="plan-price">£<span id="p3">99</span><span>/mo</span></div>
-        <div class="plan-period" id="pp3">billed monthly</div>
-        <div class="plan-tagline">For larger organisations running multiple sites, mentoring programmes and complex reporting.</div>
-        <button class="plan-btn plan-btn-outline" onclick="window.location.href='/signup'">Start free trial</button>
-        <div class="plan-divider">Everything in Pro, plus</div>
-        <ul class="plan-features">
-          <li><span class="chk">✓</span>Unlimited young people</li>
-          <li><span class="chk">✓</span>Mentoring module</li>
-          <li><span class="chk">✓</span>Multi-site management</li>
-          <li><span class="chk">✓</span>Gallery module</li>
-          <li><span class="chk">✓</span>Custom funder reports</li>
-          <li><span class="chk">✓</span>API access</li>
-          <li><span class="chk">✓</span>Dedicated onboarding</li>
-          <li><span class="chk">✓</span>SLA & dedicated support</li>
-          <li><span class="chk">✓</span>Data export & backup</li>
-          <li><span class="chk">✓</span>SSO / custom auth</li>
-        </ul>
-      </div>
-    </div>
-
-    <p style="text-align:center;font-size:13px;color:var(--text3);margin-top:24px">All prices exclude VAT · Registered charity? <a href="mailto:hello@launchsession.co.uk" style="color:#60A5FA;font-weight:600">Ask about our charity discount →</a></p>
-  </div>
-</section>
-
-<!-- MODULE EXPLORER -->
-<section id="modules">
-  <div class="container">
-    <div class="section-tag">Module explorer</div>
-    <h2 class="section-heading">See exactly what's<br>in each plan</h2>
-    <p class="section-sub">Click a plan to see which modules are included, which are available as add-ons, and which require upgrading.</p>
-
-    <div class="modules-layout">
-      <div class="module-plan-tabs">
-        <div class="mod-tab active" onclick="selectPlan('starter',this)">
-          <div class="mod-tab-name">Starter</div>
-          <div class="mod-tab-desc">For smaller clubs</div>
-          <div class="mod-tab-price">from £29/mo</div>
-        </div>
-        <div class="mod-tab" onclick="selectPlan('pro',this)">
-          <div class="mod-tab-name">Pro</div>
-          <div class="mod-tab-desc">For growing orgs</div>
-          <div class="mod-tab-price">from £59/mo</div>
-        </div>
-        <div class="mod-tab" onclick="selectPlan('enterprise',this)">
-          <div class="mod-tab-name">Enterprise</div>
-          <div class="mod-tab-desc">Full suite</div>
-          <div class="mod-tab-price">from £99/mo</div>
-        </div>
-        <div style="margin-top:16px;padding:16px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:14px">
-          <div style="font-size:12px;color:var(--text3);line-height:1.6"><span style="color:#60A5FA;font-weight:700">✓ Included</span> — comes with the plan<br><span style="color:#60A5FA;font-weight:700">+ Add-on</span> — available on request<br><span style="color:var(--text3)">— Upgrade</span> — higher plan required</div>
-        </div>
-      </div>
-
-      <div class="modules-grid" id="modulesGrid">
-        <!-- Populated by JS -->
-      </div>
+      <p style="margin-top:28px;font-size:13px;color:var(--text3)">All modules include unlimited staff users and a 7-day free trial. No contracts. Registered charity? <a href="mailto:hello@launchsession.co.uk" style="color:#60A5FA;font-weight:600">Ask about our discount →</a></p>
     </div>
   </div>
 </section>
+
+
 
 <!-- WHY -->
 <section id="why">
