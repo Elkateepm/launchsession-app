@@ -9,6 +9,7 @@ import Hub from '../hub/Hub'
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import Registers from '../registers/Registers'
+import EventsTrips from '../events/EventsTrips'
 import Calendar from '../calendar/Calendar';
 import Templates from '../templates/Templates'
 import Safeguarding from '../safeguarding/Safeguarding'
@@ -31,6 +32,7 @@ const ALL_MODULES = [
   { key: 'messaging',     label: 'Messaging',    icon: '💬', group: 'safety' },
   { key: 'reports',       label: 'Reports',      icon: '📊', group: 'insights' },
   { key: 'gallery',       label: 'Gallery',      icon: '🖼', group: 'insights' },
+  { key: 'events_trips',   label: 'Events & Trips', icon: '🎟️', group: 'operations' },
 ]
 
 function ComingSoonModule({ icon, label, desc }) {
@@ -336,6 +338,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'safeguarding'&& <Safeguarding org={org} session={session} />}
           {tab === 'reports'     && <Reports org={org} session={session} />}
           {tab === 'volunteers'  && <Volunteers org={org} session={session} />}
+            {tab === 'events_trips' && <EventsTrips org={org} />}
           {tab === 'parent_portal' && (
             <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />
           )}
@@ -345,7 +348,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'gallery' && (
             <ComingSoonModule icon="🖼" label="Gallery" desc="Store and share photos and memories from your sessions. Coming soon." />
           )}
-          {!['home','registers','planner','team','settings','templates','mentoring','calendar','safeguarding','reports','volunteers','parent_portal','messaging','gallery'].includes(tab) && (
+          {!['home','registers','planner','team','settings','templates','mentoring','calendar','safeguarding','reports','volunteers','parent_portal','messaging','gallery','events_trips'].includes(tab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
