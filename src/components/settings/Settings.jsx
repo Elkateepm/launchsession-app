@@ -59,6 +59,7 @@ function Toggle({ value, onChange, label }) {
 // ─── SECTIONS ─────────────────────────────────────────────────
 
 function OrgSection({ org }) {
+  const isMobile = useIsMobile()
   const [form, setForm] = useState({
     name: org?.name || '',
     charity_number: org?.charity_number || '',
@@ -113,6 +114,7 @@ function OrgSection({ org }) {
 }
 
 function BrandingSection({ org, refreshOrg }) {
+  const isMobile = useIsMobile()
   const [color, setColor] = useState(org?.primary_color || '#1B9AAA')
   const [slogan, setSlogan] = useState(org?.slogan || '')
   const [logoPreview, setLogoPreview] = useState(org?.logo_url || '')
@@ -330,6 +332,7 @@ function NotificationsSection() {
 }
 
 function IntegrationsSection() {
+  const isMobile = useIsMobile()
   const integrations = [
     { name: 'Google Calendar', icon: '📅', status: 'available', desc: 'Sync sessions with Google Calendar' },
     { name: 'Microsoft Outlook', icon: '📧', status: 'connected', desc: 'Send emails via Outlook' },
