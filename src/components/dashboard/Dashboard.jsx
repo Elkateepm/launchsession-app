@@ -141,7 +141,7 @@ export default function Dashboard({ session, org }) {
   const userName = userProfile?.full_name || userEmail.split('@')[0]
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
 
       {/* SIDEBAR */}
       <div style={{ width: sidebarCollapsed ? 64 : 240, background: '#080D1A', transition: 'width 0.25s cubic-bezier(0.4,0,0.2,1)', display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.04)', position: 'relative' }}>
@@ -287,7 +287,7 @@ export default function Dashboard({ session, org }) {
       )}
 
       {/* MAIN CONTENT */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobileBottomNav ? 78 : 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobileBottomNav ? 'calc(78px + env(safe-area-inset-bottom, 0px))' : 0 }}>
         {tab !== 'registers' && tab !== 'home' && (
           <div style={{ background: 'var(--surface)', borderBottom: `2px solid ${primary}18`, padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12, position: 'relative' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}60, transparent)` }} />
@@ -416,7 +416,7 @@ export default function Dashboard({ session, org }) {
             position: 'fixed',
             left: 12,
             right: 12,
-            bottom: 12,
+            bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
             height: 68,
             background: 'rgba(10,15,30,0.96)',
             borderRadius: 20,

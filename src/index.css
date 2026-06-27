@@ -1,5 +1,22 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 :root {
   --org-primary: #1B9AAA;
   --org-primary-lt: #E8F7F9;
@@ -26,14 +43,6 @@
   --font-display: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
   --radius: 12px;
   --shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ── PAGE HEADER ANIMATIONS ──────────────────────────────────── */
