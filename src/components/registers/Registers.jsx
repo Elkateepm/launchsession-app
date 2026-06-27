@@ -177,8 +177,8 @@ function InlineChildImport({ org, onImported }) {
 }
 
 // ─── CHILD DRAWER ─────────────────────────────────────────────
-function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdateStatus, primary }) {
-  const [drawerTab, setDrawerTab] = useState('actions')
+function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdateStatus, primary, hasSession }) {
+  const [drawerTab, setDrawerTab] = useState(hasSession ? 'actions' : 'info')
   const [absenceReason, setAbsenceReason] = useState('')
   const name = `${child.first_name} ${child.last_name}`
   const age = child.date_of_birth ? new Date().getFullYear() - new Date(child.date_of_birth).getFullYear() : null
@@ -228,7 +228,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
 
         {/* Tabs */}
         <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 0, padding: '8px 12px', gap: 6 }}>
-          {[['actions','Sign In/Out'],['info','Info'],['edit','Edit']].map(([key, label]) => (
+          {[['actions','Sign In/Out'],['info','Info'],['edit','Edit']].filter(([key]) => key !== 'actions' || hasSession).map(([key, label]) => (
             <button key={key} onClick={() => setDrawerTab(key)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: drawerTab === key ? '#fff' : 'transparent', color: drawerTab === key ? '#111' : '#6B7280', fontWeight: drawerTab === key ? 700 : 500, fontSize: 12, cursor: 'pointer', boxShadow: drawerTab === key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>{label}</button>
           ))}
         </div>
@@ -258,6 +258,17 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
               <button onClick={() => handleAction('absent')} style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                 Mark Absent
               </button>
+            </div>
+          )}
+
+          {/* NO SESSION BANNER */}
+          {!hasSession && drawerTab === 'info' && (
+            <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 10, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 18 }}>📋</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#92400E' }}>No active session</div>
+                <div style={{ fontSize: 11, color: '#B45309' }}>Sign in/out is only available during a live session.</div>
+              </div>
             </div>
           )}
 
@@ -646,6 +657,7 @@ export default function Registers({ org }) {
           attendanceRecord={selectedChild.attRec}
           bubble={getBubble(selectedChild.child)}
           primary={primary}
+          hasSession={!!session}
           onClose={() => setSelectedChild(null)}
           onUpdateStatus={(id, status, extra) => { handleUpdateStatus(id, status, extra); setSelectedChild(null) }}
         />
