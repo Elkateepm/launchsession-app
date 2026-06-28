@@ -168,7 +168,6 @@ export default function Dashboard({ session, org }) {
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
   const hasModule = (key) => allowed.includes(key)
-  const availableModules = ALL_MODULES.filter(m => allowed.includes(m.key))
   const handleSignOut = () => supabase.auth.signOut()
   const userEmail = session?.user?.email || ''
   const [userProfile, setUserProfile] = useState(null)
