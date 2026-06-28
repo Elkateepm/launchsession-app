@@ -345,26 +345,87 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           </Panel>
 
           {/* COMING UP */}
-          <Panel title="📅 Coming Up">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}>📅 Upcoming Sessions</h3>
+              <button onClick={() => go('planner')} style={{ fontSize: 11, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ New session</button>
+            </div>
             {upcomingSessions.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: '#94a3b8' }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>📅</div>
-                <div style={{ fontWeight: 700, marginBottom: 12 }}>No upcoming sessions</div>
-                <button onClick={() => go('planner')} style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Plan a session →</button>
+              <div style={{ background: `linear-gradient(135deg, ${primary}10, ${primary}05)`, border: `1.5px dashed ${primary}30`, borderRadius: 20, padding: '36px 24px', textAlign: 'center' }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 6 }}>No sessions planned yet</div>
+                <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20 }}>Create your first session and it'll appear here instantly</div>
+                <button onClick={() => go('planner')} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 16px ${primary}40` }}>Plan a Session →</button>
               </div>
             ) : (
-              upcomingSessions.map(s => (
-                <button key={s.id} onClick={() => openRegisterForSession(s.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: '1px solid #EEF2F7', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>📅</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)' }}>{s.title}</div>
-                    <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time || "No time"}{s.location ? ` · ${s.location.split(',')[0]}` : ''}</div>
-                  </div>
-                  <span style={{ fontSize: 11, color: primary, fontWeight: 700 }}>→</span>
-                </button>
-              ))
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {upcomingSessions.map((s, idx) => {
+                  const isToday = s.session_date === today
+                  const typeColors = {
+                    activity:  { bg: '#EFF6FF', accent: '#3B82F6', icon: '🏃' },
+                    workshop:  { bg: '#F0FDF4', accent: '#16A34A', icon: '🛠️' },
+                    trip:      { bg: '#FFFBEB', accent: '#D97706', icon: '🚌' },
+                    sports:    { bg: '#F0FDF4', accent: '#16A34A', icon: '⚽' },
+                    arts:      { bg: '#FAF5FF', accent: '#7C3AED', icon: '🎨' },
+                    mentoring: { bg: '#EFF6FF', accent: '#2563EB', icon: '🤝' },
+                  }
+                  const tc = typeColors[s.session_type] || { bg: primary + '10', accent: primary, icon: '📅' }
+                  return (
+                    <button key={s.id} onClick={() => openRegisterForSession(s.id)}
+                      style={{ width: '100%', background: isToday ? `linear-gradient(135deg, ${primary}, ${primary}CC)` : '#fff', border: isToday ? 'none' : '1.5px solid #F1F5F9', borderRadius: 18, padding: '18px 18px', cursor: 'pointer', textAlign: 'left', boxShadow: isToday ? `0 8px 32px ${primary}35` : '0 2px 12px rgba(0,0,0,0.06)', transition: 'all 0.2s', position: 'relative', overflow: 'hidden' }}
+                      onMouseEnter={e => { if (!isToday) { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 4px 20px ${primary}20`; e.currentTarget.style.transform = 'translateY(-2px)' }}}
+                      onMouseLeave={e => { if (!isToday) { e.currentTarget.style.borderColor = '#F1F5F9'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; e.currentTarget.style.transform = 'none' }}}>
+
+                      {/* Background decoration */}
+                      {isToday && <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />}
+
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                        {/* Icon */}
+                        <div style={{ width: 46, height: 46, borderRadius: 13, background: isToday ? 'rgba(255,255,255,0.2)' : tc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, border: isToday ? '1px solid rgba(255,255,255,0.3)' : 'none' }}>
+                          {tc.icon}
+                        </div>
+
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <div style={{ fontSize: 15, fontWeight: 900, color: isToday ? '#fff' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                            {isToday && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>TODAY</span>}
+                            {idx === 0 && !isToday && <span style={{ background: primary + '15', color: primary, borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>NEXT</span>}
+                          </div>
+
+                          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <span>📅</span> {formatDate(s.session_date)}
+                            </span>
+                            {s.start_time && (
+                              <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <span>⏰</span> {s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}
+                              </span>
+                            )}
+                            {s.location && (
+                              <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <span>📍</span> {s.location.split(',')[0]}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: 18, color: isToday ? 'rgba(255,255,255,0.7)' : '#CBD5E1', flexShrink: 0 }}>→</div>
+                      </div>
+
+                      {/* Bottom action bar for today's session */}
+                      {isToday && (
+                        <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.2)', display: 'flex', gap: 8 }}>
+                          <div style={{ flex: 1, background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff' }}>
+                            🟢 Open Register
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
             )}
-          </Panel>
+          </div>
 
           {/* REFLECTIONS DUE */}
           {completedWithoutReflection.length > 0 && (
