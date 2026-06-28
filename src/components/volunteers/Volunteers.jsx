@@ -44,12 +44,32 @@ export default function Volunteers({ org, session }) {
   async function handleInvite(e) {
     e.preventDefault()
     setInviting(true); setInviteMsg('')
-    const { error } = await supabase.auth.admin.inviteUserByEmail(inviteEmail.trim(), { redirectTo: portalUrl })
-    if (error) { setInviteMsg('Error: ' + error.message); setInviting(false); return }
-    await supabase.from('user_profiles').upsert({ email: inviteEmail.trim(), full_name: inviteName.trim() || inviteEmail.split('@')[0], org_id: org.id, role: 'volunteer', status: 'active' })
-    setInviteMsg('✓ Invite sent to ' + inviteEmail.trim())
-    setInviteEmail(''); setInviteName('')
-    setInviting(false); loadAll()
+
+    try {
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      const res = await fetch('/api/invite-volunteer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authSession?.access_token}`
+        },
+        body: JSON.stringify({
+          email: inviteEmail.trim().toLowerCase(),
+          name: inviteName.trim() || inviteEmail.split('@')[0],
+          org_id: org.id,
+          org_slug: org.slug,
+          redirect_to: portalUrl,
+        })
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      setInviteMsg('✓ Invite sent to ' + inviteEmail.trim())
+      setInviteEmail(''); setInviteName('')
+      loadAll()
+    } catch (err) {
+      setInviteMsg('Error: ' + err.message)
+    }
+    setInviting(false)
   }
 
   async function approveVolunteer(id) {
