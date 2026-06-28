@@ -500,50 +500,70 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 
 // ─── CHILD CARD ───────────────────────────────────────────────
 function ChildCard({ child, status, bubble, onClick, primary }) {
-  const bColor = bubble?.color || '#e5e7eb'
+  const bColor = bubble?.color || primary || '#1B9AAA'
   const hasAlerts = child.allergies || child.medical_notes
-  const initials = `${child.first_name[0]}${child.last_name[0]}`
+  const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
+  const [hovered, setHovered] = React.useState(false)
 
   const statusConfig = {
-    signed_in:  { label: 'In',      bg: '#DCFCE7', color: '#15803D', dot: '#16A34A' },
-    signed_out: { label: 'Out',     bg: '#DBEAFE', color: '#1D4ED8', dot: '#2563EB' },
-    absent:     { label: 'Absent',  bg: '#FEE2E2', color: '#B91C1C', dot: '#DC2626' },
-    expected:   { label: 'Expected', bg: '#FEF9C3', color: '#92400E', dot: '#F59E0B' },
-    unmarked:   { label: '—',       bg: '#F3F4F6', color: '#6B7280', dot: '#9CA3AF' },
+    signed_in:  { label: 'In',      bg: '#DCFCE7', color: '#15803D', dot: '#16A34A', markBg: '#15803D', markColor: '#fff', markLabel: 'Signed In' },
+    signed_out: { label: 'Out',     bg: '#DBEAFE', color: '#1D4ED8', dot: '#2563EB', markBg: '#1D4ED8', markColor: '#fff', markLabel: 'Signed Out' },
+    absent:     { label: 'Absent',  bg: '#FEE2E2', color: '#B91C1C', dot: '#DC2626', markBg: '#DC2626', markColor: '#fff', markLabel: 'Absent' },
+    expected:   { label: 'Expected', bg: '#FEF9C3', color: '#92400E', dot: '#F59E0B', markBg: '#F3F4F6', markColor: '#6B7280', markLabel: 'MARK' },
+    unmarked:   { label: '—',       bg: '#F3F4F6', color: '#6B7280', dot: '#9CA3AF', markBg: '#F3F4F6', markColor: '#6B7280', markLabel: 'MARK' },
   }
   const sc = statusConfig[status] || statusConfig.unmarked
 
   return (
-    <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #F3F4F6', cursor: 'pointer', transition: 'background 0.1s' }}
-      onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
-      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-
-      {/* Avatar with bubble colour */}
-      <div style={{ width: 40, height: 40, borderRadius: '50%', background: bColor + '22', border: `2.5px solid ${bColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: bColor, flexShrink: 0, overflow: 'hidden' }}>
+    <div
+      style={{ display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #F3F4F6', cursor: 'pointer', background: hovered ? '#F8FAFC' : '#fff', transition: 'background 0.12s', minHeight: 64 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Avatar */}
+      <div style={{ width: 44, height: 44, borderRadius: 13, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', marginRight: 14, boxShadow: `0 2px 8px ${bColor}40` }}>
         {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
 
-      {/* Name + group */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{child.first_name} {child.last_name}</div>
-        <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+      {/* Name + sub */}
+      <div style={{ flex: 1, minWidth: 0 }} onClick={onClick}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {child.first_name} {child.last_name}
+        </div>
+        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
           {bubble && <span style={{ color: bColor, fontWeight: 700 }}>{bubble.label}</span>}
-          {hasAlerts && <span style={{ color: '#F59E0B', fontWeight: 700 }}>⚠ Alert</span>}
+          {!bubble && child.group_name && <span style={{ color: '#94A3B8', fontWeight: 600 }}>{child.group_name}</span>}
+          {child.allergies && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 6, padding: '1px 7px' }}>
+              ⚠ ALLERGY
+            </span>
+          )}
+          {child.medical_notes && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 6, padding: '1px 7px' }}>
+              ✚ MEDICAL
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Status badge */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-        {hasAlerts && (
-          <div style={{ display: 'flex', gap: 4 }}>
-            {child.allergies && <span style={{ fontSize: 10, fontWeight: 800, color: '#B45309', background: '#FEF3C7', borderRadius: 99, padding: '2px 7px' }}>ALLERGY</span>}
-            {child.medical_notes && <span style={{ fontSize: 10, fontWeight: 800, color: '#991B1B', background: '#FEE2E2', borderRadius: 99, padding: '2px 7px' }}>MEDICAL</span>}
+      {/* Status dot */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        {(status === 'signed_in' || status === 'signed_out' || status === 'absent') && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: sc.bg, borderRadius: 99, padding: '4px 10px' }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: sc.dot }} />
+            <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
           </div>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: sc.bg, borderRadius: 99, padding: '4px 10px' }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: sc.dot }} />
-          <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
-        </div>
+
+        {/* MARK button */}
+        <button
+          onClick={e => { e.stopPropagation(); onClick() }}
+          style={{ minWidth: 58, padding: '8px 12px', borderRadius: 10, border: 'none', background: status === 'expected' || status === 'unmarked' ? '#F1F5F9' : sc.markBg + '18', color: status === 'expected' || status === 'unmarked' ? '#64748B' : sc.color, fontSize: 11, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3, textTransform: 'uppercase', transition: 'all 0.15s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = bColor; e.currentTarget.style.color = '#fff' }}
+          onMouseLeave={e => { e.currentTarget.style.background = status === 'expected' || status === 'unmarked' ? '#F1F5F9' : sc.markBg + '18'; e.currentTarget.style.color = status === 'expected' || status === 'unmarked' ? '#64748B' : sc.color }}
+        >
+          {status === 'expected' || status === 'unmarked' ? 'MARK' : sc.label}
+        </button>
       </div>
     </div>
   )
