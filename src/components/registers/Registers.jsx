@@ -181,97 +181,191 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
   const isMobile = useIsMobile()
   const [drawerTab, setDrawerTab] = useState(hasSession ? 'actions' : 'info')
   const [absenceReason, setAbsenceReason] = useState('')
+  const [photoUrl, setPhotoUrl] = useState(child.photo_url || null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const photoInputRef = React.useRef()
+
   const name = `${child.first_name} ${child.last_name}`
-  const age = child.date_of_birth ? new Date().getFullYear() - new Date(child.date_of_birth).getFullYear() : null
+  const initials = `${child.first_name[0]}${child.last_name[0]}`
+  const age = child.date_of_birth ? Math.floor((new Date() - new Date(child.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : null
   const signedInTime = attendanceRecord?.signed_in_at ? format(new Date(attendanceRecord.signed_in_at), 'HH:mm') : null
   const signedOutTime = attendanceRecord?.signed_out_at ? format(new Date(attendanceRecord.signed_out_at), 'HH:mm') : null
   const hasAlerts = child.allergies || child.medical_notes
   const bColor = bubble?.color || primary || '#1B9AAA'
+
+  const statusCfg = {
+    signed_in:  { label: 'Signed In',  color: '#16A34A', bg: '#DCFCE7', icon: '✓' },
+    signed_out: { label: 'Signed Out', color: '#2563EB', bg: '#DBEAFE', icon: '↗' },
+    absent:     { label: 'Absent',     color: '#DC2626', bg: '#FEE2E2', icon: '✕' },
+    expected:   { label: 'Expected',   color: '#D97706', bg: '#FEF3C7', icon: '◌' },
+    unmarked:   { label: 'Not marked', color: '#6B7280', bg: '#F3F4F6', icon: '—' },
+  }
+  const sc = statusCfg[status] || statusCfg.unmarked
 
   const handleAction = (newStatus) => {
     onUpdateStatus(child.id, newStatus, newStatus === 'absent' ? { absence_reason: absenceReason } : {})
     onClose()
   }
 
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploadingPhoto(true)
+    const ext = file.name.split('.').pop()
+    const path = `children/${child.id}/photo.${ext}`
+    const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { upsert: true, contentType: file.type })
+    if (!upErr) {
+      const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(path)
+      const url = urlData.publicUrl
+      await supabase.from('children').update({ photo_url: url }).eq('id', child.id)
+      setPhotoUrl(url)
+    }
+    setUploadingPhoto(false)
+  }
+
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 600, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: isMobile ? '20px 20px 0 0' : 20, width: '100%', maxWidth: isMobile ? '100%' : 400, maxHeight: isMobile ? '92vh' : '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 600, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: isMobile ? '24px 24px 0 0' : 24, width: '100%', maxWidth: isMobile ? '100%' : 440, maxHeight: isMobile ? '94vh' : '92vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column' }}>
 
-        {/* Drag handle on mobile */}
-        {isMobile && <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 0' }}><div style={{ width: 36, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.15)' }} /></div>}
+        {/* Mobile drag handle */}
+        {isMobile && <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.12)' }} /></div>}
 
-        {/* Header */}
-        <div style={{ background: `linear-gradient(135deg, ${bColor}, ${bubble?.dark || bColor})`, padding: isMobile ? '14px 16px 14px' : '20px 18px 16px', borderRadius: isMobile ? 0 : '20px 20px 0 0', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1 }}>Child Profile</div>
-            <button onClick={onClose} style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+        {/* ── HERO HEADER ── */}
+        <div style={{ background: `linear-gradient(145deg, ${bColor}EE 0%, ${bColor} 100%)`, padding: '24px 20px 20px', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+          {/* Decorative circles */}
+          <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+          <div style={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+
+          {/* Top bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 1.5 }}>Child Profile</span>
+            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: '#fff', border: '2.5px solid rgba(255,255,255,0.4)', overflow: 'hidden', flexShrink: 0 }}>
-              {child.photo_url ? <img src={child.photo_url} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${child.first_name[0]}${child.last_name[0]}`}
+
+          {/* Avatar + info */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+            {/* Photo with upload */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div style={{ width: 80, height: 80, borderRadius: 20, background: 'rgba(255,255,255,0.22)', border: '3px solid rgba(255,255,255,0.5)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
+                {photoUrl
+                  ? <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontSize: 28 }}>{initials}</span>
+                }
+                {uploadingPhoto && (
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  </div>
+                )}
+              </div>
+              {/* Camera upload button */}
+              <button onClick={() => photoInputRef.current?.click()}
+                style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: '50%', background: '#fff', border: `2px solid ${bColor}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                📷
+              </button>
+              <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
             </div>
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', lineHeight: 1.15 }}>{name}</div>
-              <div style={{ display: 'flex', gap: 5, marginTop: 5, flexWrap: 'wrap' }}>
-                {bubble && <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>{bubble.label}</span>}
-                {age && <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>Age {age}</span>}
-                {signedInTime && <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>In {signedInTime}</span>}
+
+            {/* Name & badges */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.1, marginBottom: 8, letterSpacing: -0.3 }}>{name}</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {age !== null && (
+                  <span style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)', color: '#fff', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Age {age}</span>
+                )}
+                {bubble && (
+                  <span style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)', color: '#fff', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>{bubble.label}</span>
+                )}
+                <span style={{ background: sc.bg, color: sc.color, borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 800 }}>
+                  {sc.icon} {sc.label}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Alerts strip */}
+          {/* Alerts */}
           {hasAlerts && (
-            <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 12px', marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {child.allergies && <span style={{ fontSize: 12, color: '#fff', fontWeight: 700 }}>🟠 {child.allergies}</span>}
-              {child.medical_notes && <span style={{ fontSize: 12, color: '#fff', fontWeight: 700 }}>🔴 {child.medical_notes}</span>}
+            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {child.allergies && (
+                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 14 }}>🟠</span>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1 }}>Allergy</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{child.allergies}</div>
+                  </div>
+                </div>
+              )}
+              {child.medical_notes && (
+                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 14 }}>🔴</span>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1 }}>Medical</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{child.medical_notes}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Signed in/out times */}
+          {(signedInTime || signedOutTime) && (
+            <div style={{ marginTop: 14, display: 'flex', gap: 12 }}>
+              {signedInTime && (
+                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 14px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1 }}>Signed In</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{signedInTime}</div>
+                </div>
+              )}
+              {signedOutTime && (
+                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 14px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1 }}>Signed Out</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{signedOutTime}</div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 0, padding: '8px 12px', gap: 6 }}>
-          {[['actions','Sign In/Out'],['info','Info'],['edit','Edit']].filter(([key]) => key !== 'actions' || hasSession).map(([key, label]) => (
-            <button key={key} onClick={() => setDrawerTab(key)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: drawerTab === key ? '#fff' : 'transparent', color: drawerTab === key ? '#111' : '#6B7280', fontWeight: drawerTab === key ? 700 : 500, fontSize: 12, cursor: 'pointer', boxShadow: drawerTab === key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>{label}</button>
+        {/* ── TABS ── */}
+        <div style={{ display: 'flex', padding: '10px 12px', gap: 6, background: '#F8FAFC', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
+          {[
+            ...(hasSession ? [['actions', '✋ Sign In/Out']] : []),
+            ['info', '📋 Info'],
+            ['edit', '✏️ Edit'],
+          ].map(([key, label]) => (
+            <button key={key} onClick={() => setDrawerTab(key)}
+              style={{ flex: 1, padding: '8px 6px', borderRadius: 10, border: 'none', background: drawerTab === key ? '#fff' : 'transparent', color: drawerTab === key ? '#111' : '#9CA3AF', fontWeight: drawerTab === key ? 800 : 500, fontSize: 11, cursor: 'pointer', boxShadow: drawerTab === key ? '0 2px 8px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
+              {label}
+            </button>
           ))}
         </div>
 
-        <div style={{ padding: '14px 16px 20px' }}>
+        {/* ── CONTENT ── */}
+        <div style={{ padding: '16px 18px 24px', flex: 1 }}>
+
           {/* SIGN IN/OUT */}
           {drawerTab === 'actions' && (
-            <div>
-              {(signedInTime || signedOutTime) && (
-                <div style={{ display: 'flex', gap: 16, justifyContent: 'center', background: '#F9FAFB', borderRadius: 10, padding: 12, marginBottom: 14 }}>
-                  {signedInTime && <div style={{ textAlign: 'center' }}><div style={{ fontSize: 10, fontWeight: 800, color: '#16A34A', textTransform: 'uppercase', letterSpacing: 0.5 }}>In</div><div style={{ fontSize: 24, fontWeight: 900, color: '#16A34A' }}>{signedInTime}</div></div>}
-                  {signedOutTime && <div style={{ textAlign: 'center' }}><div style={{ fontSize: 10, fontWeight: 800, color: '#1B9AAA', textTransform: 'uppercase', letterSpacing: 0.5 }}>Out</div><div style={{ fontSize: 24, fontWeight: 900, color: '#1B9AAA' }}>{signedOutTime}</div></div>}
-                </div>
-              )}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <button onClick={() => handleAction('signed_in')} disabled={status === 'signed_in'}
-                  style={{ padding: '14px', borderRadius: 12, border: 'none', background: status === 'signed_in' ? '#DCFCE7' : '#16A34A', color: status === 'signed_in' ? '#16A34A' : '#fff', fontWeight: 800, fontSize: 15, cursor: status === 'signed_in' ? 'default' : 'pointer' }}>
-                  {status === 'signed_in' ? '✓ Signed In' : 'Sign In'}
+                  style={{ padding: '16px 12px', borderRadius: 14, border: 'none', background: status === 'signed_in' ? '#DCFCE7' : '#16A34A', color: status === 'signed_in' ? '#16A34A' : '#fff', fontWeight: 800, fontSize: 14, cursor: status === 'signed_in' ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
+                  <span style={{ fontSize: 18 }}>✅</span>
+                  {status === 'signed_in' ? 'Signed In' : 'Sign In'}
                 </button>
-                <button onClick={() => handleAction('signed_out')} disabled={!['signed_in'].includes(status)}
-                  style={{ padding: '14px', borderRadius: 12, border: 'none', background: status === 'signed_out' ? '#DBEAFE' : '#1B9AAA', color: status === 'signed_out' ? '#1D4ED8' : '#fff', fontWeight: 800, fontSize: 15, cursor: status === 'signed_in' ? 'pointer' : 'default', opacity: status === 'signed_in' ? 1 : 0.4 }}>
-                  {status === 'signed_out' ? '✓ Signed Out' : 'Sign Out'}
+                <button onClick={() => handleAction('signed_out')} disabled={status !== 'signed_in'}
+                  style={{ padding: '16px 12px', borderRadius: 14, border: 'none', background: status === 'signed_out' ? '#DBEAFE' : status === 'signed_in' ? bColor : '#F3F4F6', color: status === 'signed_out' ? '#1D4ED8' : status === 'signed_in' ? '#fff' : '#9CA3AF', fontWeight: 800, fontSize: 14, cursor: status === 'signed_in' ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
+                  <span style={{ fontSize: 18 }}>👋</span>
+                  {status === 'signed_out' ? 'Signed Out' : 'Sign Out'}
                 </button>
               </div>
-              <input placeholder="Absence reason (optional)" value={absenceReason} onChange={e => setAbsenceReason(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 13, marginBottom: 10, boxSizing: 'border-box', outline: 'none' }} />
-              <button onClick={() => handleAction('absent')} style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-                Mark Absent
-              </button>
-            </div>
-          )}
-
-          {/* NO SESSION BANNER */}
-          {!hasSession && drawerTab === 'info' && (
-            <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 10, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 18 }}>📋</span>
+              <div style={{ height: 1, background: '#F1F5F9', margin: '4px 0' }} />
               <div>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#92400E' }}>No active session</div>
-                <div style={{ fontSize: 11, color: '#B45309' }}>Sign in/out is only available during a live session.</div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Absence Reason</label>
+                <input placeholder="e.g. Sick, holiday, appointment..." value={absenceReason} onChange={e => setAbsenceReason(e.target.value)}
+                  style={{ width: '100%', padding: '10px 13px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, marginBottom: 8, boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }} />
+                <button onClick={() => handleAction('absent')}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid #FEE2E2', background: '#FFF5F5', color: '#DC2626', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <span>✕</span> Mark Absent
+                </button>
               </div>
             </div>
           )}
@@ -279,31 +373,89 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
           {/* INFO */}
           {drawerTab === 'info' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {!hasSession && (
+                <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                  <span style={{ fontSize: 20 }}>📋</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#92400E' }}>No active session</div>
+                    <div style={{ fontSize: 11, color: '#B45309', marginTop: 1 }}>Sign in/out is only available during a live session.</div>
+                  </div>
+                </div>
+              )}
+
+              {/* DOB + Age */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 12px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Date of Birth</div>
-                  <div style={{ fontSize: 14, fontWeight: 700 }}>{child.date_of_birth ? format(new Date(child.date_of_birth), 'd MMM yyyy') : '—'}</div>
+                <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', border: '1px solid #F1F5F9' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Date of Birth</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>{child.date_of_birth ? format(new Date(child.date_of_birth), 'd MMM yyyy') : '—'}</div>
                 </div>
-                <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 12px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Age</div>
-                  <div style={{ fontSize: 14, fontWeight: 700 }}>{age ? `${age} yrs` : '—'}</div>
+                <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', border: '1px solid #F1F5F9' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Age</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>{age !== null ? `${age} years old` : '—'}</div>
                 </div>
               </div>
-              <div style={{ background: child.emergency_contact_name ? '#EFF6FF' : '#F9FAFB', border: `1px solid ${child.emergency_contact_name ? '#BFDBFE' : '#e5e7eb'}`, borderRadius: 10, padding: '12px 14px' }}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: '#1E40AF', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>📞 Emergency Contact</div>
+
+              {/* Group */}
+              {bubble && (
+                <div style={{ background: bubble.color + '10', border: `1px solid ${bubble.color}30`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: bubble.color, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1 }}>Group</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: bubble.color, marginTop: 2 }}>{bubble.label}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Emergency contact */}
+              <div style={{ background: child.emergency_contact_name ? '#EFF6FF' : '#F8FAFC', border: `1px solid ${child.emergency_contact_name ? '#BFDBFE' : '#F1F5F9'}`, borderRadius: 12, padding: '14px 16px' }}>
+                <div style={{ fontSize: 9, fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>📞</span> Emergency Contact
+                </div>
                 {child.emergency_contact_name ? (
-                  <>
-                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{child.emergency_contact_name}</div>
-                    {child.emergency_contact_phone && <a href={`tel:${child.emergency_contact_phone}`} style={{ fontSize: 13, color: '#2563EB', textDecoration: 'none', fontWeight: 600 }}>{child.emergency_contact_phone}</a>}
-                  </>
-                ) : <div style={{ fontSize: 13, color: '#9CA3AF' }}>Not set</div>}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: '#111', marginBottom: 2 }}>{child.emergency_contact_name}</div>
+                      {child.emergency_contact_phone && (
+                        <a href={`tel:${child.emergency_contact_phone}`} style={{ fontSize: 14, color: '#2563EB', textDecoration: 'none', fontWeight: 700 }}>{child.emergency_contact_phone}</a>
+                      )}
+                    </div>
+                    {child.emergency_contact_phone && (
+                      <a href={`tel:${child.emergency_contact_phone}`}
+                        style={{ width: 40, height: 40, borderRadius: 12, background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, textDecoration: 'none', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}>
+                        📞
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, color: '#9CA3AF' }}>No emergency contact set</div>
+                )}
               </div>
+
+              {/* Alerts detail */}
+              {hasAlerts && (
+                <div style={{ background: '#FFF8F0', border: '1px solid #FED7AA', borderRadius: 12, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: '#D97706', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>⚠️ Health Alerts</div>
+                  {child.allergies && (
+                    <div style={{ marginBottom: child.medical_notes ? 8 : 0 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Allergies</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#92400E' }}>{child.allergies}</div>
+                    </div>
+                  )}
+                  {child.medical_notes && (
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Medical Notes</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#92400E' }}>{child.medical_notes}</div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
           {/* EDIT */}
           {drawerTab === 'edit' && <EditChildForm child={child} onSaved={onClose} />}
         </div>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     </div>
   )
