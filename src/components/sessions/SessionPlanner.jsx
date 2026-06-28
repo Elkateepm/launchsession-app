@@ -550,10 +550,10 @@ export default function SessionPlanner({ org, onSessionSaved }) {
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
-  async function loadData() {
+  const loadData = async () => {
     if (!orgId) return
     const [{ data: sess }, { data: staff }] = await Promise.all([
-      supabase.from('sessions').select('*').eq('org_id', orgId).gte('session_date', today).order('session_date').order('start_time'),
+      supabase.from('sessions').select('*').eq('org_id', orgId).order('session_date').order('start_time'),
       supabase.from('session_staff').select('session_id').eq('org_id', orgId),
     ])
     setSessions(sess || [])
@@ -586,9 +586,11 @@ export default function SessionPlanner({ org, onSessionSaved }) {
       rotation_slots: form.rotation_slots?.length ? form.rotation_slots : null,
     }
     if (editing?.id) {
-      await supabase.from('sessions').update(data).eq('id', editing.id)
+      const { error } = await supabase.from('sessions').update(data).eq('id', editing.id)
+      if (error) { console.error('Update error:', error); alert('Failed to update session: ' + error.message); setSaving(false); return }
     } else {
-      const { data: newSession } = await supabase.from('sessions').insert([data]).select().single()
+      const { data: newSession, error } = await supabase.from('sessions').insert([data]).select().single()
+      if (error) { console.error('Insert error:', error); alert('Failed to create session: ' + error.message); setSaving(false); return }
       if (newSession && form.bubbles?.length > 0) {
         const { data: bc } = await supabase.from('children').select('id').eq('org_id', orgId).eq('active', true).in('group_name', form.bubbles)
         if (bc?.length > 0) {
@@ -599,7 +601,7 @@ export default function SessionPlanner({ org, onSessionSaved }) {
     setSaving(false)
     setEditing(null)
     setView('list')
-    loadData()
+    await loadData()
     if (onSessionSaved) onSessionSaved()
   }
 
