@@ -43,5 +43,29 @@ export default async function handler(req, res) {
     status: 'pending_invite',
   }, { onConflict: 'id' })
 
+  // Get org details for the email
+  const { data: orgData } = await adminClient
+    .from('organisations')
+    .select('name, slug')
+    .eq('id', org_id)
+    .single()
+
+  // Send branded invite email via the send-invite-email Edge Function
+  try {
+    await adminClient.functions.invoke('send-invite-email', {
+      body: {
+        email: email.trim().toLowerCase(),
+        full_name: name || email.split('@')[0],
+        org_name: orgData?.name || 'your organisation',
+        org_slug: orgData?.slug || org_slug,
+        role: 'volunteer',
+        redirect_to: redirectUrl,
+      }
+    })
+  } catch (emailErr) {
+    // Non-fatal — invite was created, email just didn't send
+    console.error('send-invite-email failed:', emailErr)
+  }
+
   return res.status(200).json({ success: true, user_id: data.user.id })
 }
