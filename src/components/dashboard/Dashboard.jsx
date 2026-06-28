@@ -129,10 +129,11 @@ export default function Dashboard({ session, org }) {
   const allowed = org?.modules || PLAN_MODULES[plan] || PLAN_MODULES.starter
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
-  const availableModules = ALL_MODULES.filter(m => allowed.includes(m.key))
-  const deliveryModules  = availableModules.filter(m => m.group === 'delivery')
-  const safetyModules    = availableModules.filter(m => m.group === 'safety')
-  const insightModules   = availableModules.filter(m => m.group === 'insights')
+  const availableModules      = ALL_MODULES.filter(m => allowed.includes(m.key))
+  const deliveryModules       = availableModules.filter(m => m.group === 'delivery')
+  const safeguardingModules   = availableModules.filter(m => m.group === 'safeguarding')
+  const growthModules         = availableModules.filter(m => m.group === 'growth')
+  const operationsModules     = availableModules.filter(m => m.group === 'operations')
   const handleSignOut = () => supabase.auth.signOut()
   const userEmail = session?.user?.email || ''
   const [userProfile, setUserProfile] = useState(null)
@@ -231,18 +232,25 @@ export default function Dashboard({ session, org }) {
             ))}
           </NavSection>
 
-          {safetyModules.length > 0 && (
-            <NavSection collapsed={sidebarCollapsed} title="Safety & Comms">
-              {safetyModules.map(m => (
-                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { handleSetTab(m.key) }} primary={primary} collapsed={sidebarCollapsed}
-                  badge={m.key === 'safeguarding' ? { text: '1', color: '#F59E0B' } : null} />
+          {safeguardingModules.length > 0 && (
+            <NavSection collapsed={sidebarCollapsed} title="Safeguarding">
+              {safeguardingModules.map(m => (
+                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { handleSetTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
               ))}
             </NavSection>
           )}
 
-          {insightModules.length > 0 && (
-            <NavSection collapsed={sidebarCollapsed} title="Insights">
-              {insightModules.map(m => (
+          {growthModules.length > 0 && (
+            <NavSection collapsed={sidebarCollapsed} title="Growth">
+              {growthModules.map(m => (
+                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { handleSetTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
+              ))}
+            </NavSection>
+          )}
+
+          {operationsModules.length > 0 && (
+            <NavSection collapsed={sidebarCollapsed} title="Operations">
+              {operationsModules.map(m => (
                 <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { handleSetTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
               ))}
             </NavSection>
