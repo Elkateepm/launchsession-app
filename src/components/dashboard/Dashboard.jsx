@@ -23,10 +23,15 @@ import Fundraising from '../fundraising/Fundraising'
 import HR from '../hr/HR'
 import ResourceBooking from '../resources/ResourceBooking'
 
-const PLAN_MODULES = {
-  starter:    ['registers', 'planner', 'reports'],
-  pro:        ['registers', 'planner', 'reports', 'volunteers', 'parent_portal', 'messaging'],
-  enterprise: ['registers', 'planner', 'reports', 'volunteers', 'parent_portal', 'messaging', 'mentoring', 'safeguarding', 'gallery'],
+// Base modules always free — regardless of pack
+const BASE_MODULE_KEYS = ['home', 'calendar', 'planner', 'events_trips', 'team', 'settings', 'templates']
+
+// Pack definitions — mirrors Command Centre PACKS
+const PACK_MODULES = {
+  delivery:      ['registers', 'volunteers', 'messaging', 'gallery'],
+  safeguarding:  ['safeguarding', 'forms', 'case_management'],
+  growth:        ['reports', 'impact_outcomes', 'fundraising'],
+  operations:    ['hr', 'resource_booking', 'events_trips'],
 }
 
 const ALL_MODULES = [
@@ -49,6 +54,41 @@ const ALL_MODULES = [
   { key: 'mentoring',       label: 'Mentoring',        icon: '🤝', group: 'delivery' },
 ]
 
+
+const MODULE_TO_PACK = {
+  registers: 'Delivery', volunteers: 'Delivery', messaging: 'Delivery', gallery: 'Delivery',
+  safeguarding: 'Safeguarding', forms: 'Safeguarding', case_management: 'Safeguarding',
+  reports: 'Growth', impact_outcomes: 'Growth', fundraising: 'Growth',
+  hr: 'Operations', resource_booking: 'Operations',
+}
+const PACK_COLORS = { Delivery: '#3B82F6', Safeguarding: '#EF4444', Growth: '#22C55E', Operations: '#A855F7' }
+
+function LockedModule({ moduleKey, label, icon, onNavigate }) {
+  const pack = MODULE_TO_PACK[moduleKey] || 'a solution'
+  const color = PACK_COLORS[pack] || '#6366F1'
+  return (
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+      <div style={{ textAlign: 'center', padding: 40, maxWidth: 420 }}>
+        <div style={{ width: 80, height: 80, borderRadius: 24, background: color + '15', border: `2px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 20px' }}>{icon}</div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>{label}</div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: color + '15', border: `1px solid ${color}40`, borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700, color, marginBottom: 16 }}>
+          🔒 {pack} Pack required
+        </div>
+        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 24 }}>
+          This module is part of the <strong>{pack} Pack</strong> (£19.99/month). Enable it in the Command Centre to unlock full access.
+        </div>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <a href="mailto:hello@launchsession.co.uk?subject=Enable {pack} Pack" style={{ padding: '11px 22px', borderRadius: 12, border: 'none', background: color, color: '#fff', fontWeight: 800, fontSize: 13, textDecoration: 'none', display: 'inline-block' }}>
+            🚀 Enable {pack} Pack
+          </a>
+          <button onClick={() => onNavigate && onNavigate('home')} style={{ padding: '11px 22px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            ← Back to Home
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 function ComingSoonModule({ icon, label, desc }) {
   return (
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -61,7 +101,7 @@ function ComingSoonModule({ icon, label, desc }) {
   )
 }
 
-function NavItem({ icon, label, active, onClick, badge, primary, collapsed }) {
+function NavItem({ icon, label, active, onClick, badge, primary, collapsed, locked }) {
   const [hovered, setHovered] = useState(false)
   return (
     <button
@@ -76,22 +116,24 @@ function NavItem({ icon, label, active, onClick, badge, primary, collapsed }) {
         borderRadius: 10, border: 'none',
         background: active
           ? `linear-gradient(90deg, ${primary}28, ${primary}10)`
-          : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
-        color: active ? '#fff' : hovered ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.45)',
+          : hovered && !locked ? 'rgba(255,255,255,0.05)' : 'transparent',
+        color: locked ? 'rgba(255,255,255,0.2)' : active ? '#fff' : hovered ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.45)',
         fontSize: 13, fontWeight: active ? 700 : 500,
-        marginBottom: 1, cursor: 'pointer', textAlign: 'left',
+        marginBottom: 1, cursor: locked ? 'default' : 'pointer', textAlign: 'left',
         transition: 'all 0.15s ease', position: 'relative',
         borderLeft: active ? `3px solid ${primary}` : '3px solid transparent',
+        opacity: locked ? 0.5 : 1,
       }}
     >
-      <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0, transform: hovered && !active ? 'translateX(1px)' : 'none', transition: 'transform 0.15s' }}>{icon}</span>
+      <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0, transform: hovered && !active && !locked ? 'translateX(1px)' : 'none', transition: 'transform 0.15s' }}>{icon}</span>
       {!collapsed && <span style={{ flex: 1, fontSize: 13 }}>{label}</span>}
-      {!collapsed && badge && (
+      {!collapsed && locked && <span style={{ fontSize: 9, opacity: 0.6 }}>🔒</span>}
+      {!collapsed && !locked && badge && (
         <span style={{ background: badge.color || '#EF4444', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>
           {badge.text}
         </span>
       )}
-      {active && !collapsed && <div style={{ width: 6, height: 6, borderRadius: '50%', background: primary, boxShadow: `0 0 8px ${primary}`, flexShrink: 0 }} />}
+      {active && !collapsed && !locked && <div style={{ width: 6, height: 6, borderRadius: '50%', background: primary, boxShadow: `0 0 8px ${primary}`, flexShrink: 0 }} />}
     </button>
   )
 }
@@ -126,9 +168,12 @@ export default function Dashboard({ session, org }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   const plan    = org?.plan || 'starter'
-  const allowed = org?.modules || PLAN_MODULES[plan] || PLAN_MODULES.starter
+  // org.modules stores the paid module keys. Base modules are always accessible.
+  const paidModules = org?.modules || []
+  const allowed = [...BASE_MODULE_KEYS, ...paidModules]
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
+  const hasModule = (key) => allowed.includes(key)
   const availableModules      = ALL_MODULES.filter(m => allowed.includes(m.key))
   const deliveryModules       = availableModules.filter(m => m.group === 'delivery')
   const safeguardingModules   = availableModules.filter(m => m.group === 'safeguarding')
@@ -226,35 +271,55 @@ export default function Dashboard({ session, org }) {
           </NavSection>
 
           <NavSection collapsed={sidebarCollapsed} title="Delivery">
-            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => { handleSetTab('calendar') }} primary={primary} collapsed={sidebarCollapsed} />
-            {deliveryModules.map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { handleSetTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => handleSetTab('calendar')} primary={primary} collapsed={sidebarCollapsed} />
+            {/* Paid delivery modules — show all, locked ones navigate to locked screen */}
+            {[
+              { key: 'registers', label: 'Registers', icon: '📋' },
+              { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
+              { key: 'messaging', label: 'Messaging', icon: '💬' },
+              { key: 'gallery', label: 'Gallery', icon: '🖼️' },
+            ].map(m => (
+              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
+                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
+                locked={!hasModule(m.key)} />
             ))}
           </NavSection>
 
-          {safeguardingModules.length > 0 && (
-            <NavSection collapsed={sidebarCollapsed} title="Safeguarding">
-              {safeguardingModules.map(m => (
-                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { handleSetTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
-              ))}
-            </NavSection>
-          )}
+          <NavSection collapsed={sidebarCollapsed} title="Safeguarding">
+            {[
+              { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
+              { key: 'forms', label: 'Forms', icon: '📝' },
+              { key: 'case_management', label: 'Case Management', icon: '📁' },
+            ].map(m => (
+              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
+                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
+                locked={!hasModule(m.key)} />
+            ))}
+          </NavSection>
 
-          {growthModules.length > 0 && (
-            <NavSection collapsed={sidebarCollapsed} title="Growth">
-              {growthModules.map(m => (
-                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { handleSetTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
-              ))}
-            </NavSection>
-          )}
+          <NavSection collapsed={sidebarCollapsed} title="Growth">
+            {[
+              { key: 'reports', label: 'Reports', icon: '📊' },
+              { key: 'impact_outcomes', label: 'Impact & Outcomes', icon: '🌱' },
+              { key: 'fundraising', label: 'Fundraising', icon: '💷' },
+            ].map(m => (
+              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
+                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
+                locked={!hasModule(m.key)} />
+            ))}
+          </NavSection>
 
-          {operationsModules.length > 0 && (
-            <NavSection collapsed={sidebarCollapsed} title="Operations">
-              {operationsModules.map(m => (
-                <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key} onClick={() => { handleSetTab(m.key) }} primary={primary} collapsed={sidebarCollapsed} />
-              ))}
-            </NavSection>
-          )}
+          <NavSection collapsed={sidebarCollapsed} title="Operations">
+            {[
+              { key: 'hr', label: 'HR', icon: '🧑‍💼' },
+              { key: 'resource_booking', label: 'Resource Booking', icon: '🗓️' },
+              { key: 'events_trips', label: 'Events & Trips', icon: '✈️' },
+            ].map(m => (
+              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
+                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
+                locked={!hasModule(m.key)} />
+            ))}
+          </NavSection>
 
           <NavSection collapsed={sidebarCollapsed} title="Organisation">
             <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => { handleSetTab('team') }} primary={primary} collapsed={sidebarCollapsed} />
@@ -349,30 +414,41 @@ export default function Dashboard({ session, org }) {
               </div>
             )
           })()}
-          {tab === 'home'         && <Hub org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
-          {tab === 'registers'   && <Registers key={registersKey} org={org} session={session} />}
-          {tab === 'planner'     && <SessionPlanner org={org} />}
-          {tab === 'team'        && <TeamTab org={org} session={session} />}
-          {tab === 'calendar'    && <Calendar org={org} session={session} />}
-          {tab === 'settings'    && <Settings org={org} session={session} />}
-          {tab === 'mentoring'   && <Mentoring org={org} session={session} />}
-          {tab === 'templates'   && <Templates org={org} session={session} onNavigate={handleSetTab} />}
-          {tab === 'safeguarding'&& <Safeguarding org={org} session={session} />}
-          {tab === 'reports'     && <Reports org={org} session={session} />}
-          {tab === 'volunteers'  && <Volunteers org={org} session={session} />}
-            {tab === 'events_trips' && <EventsTrips org={org} />}
-          {tab === 'messaging'        && <Messaging org={org} session={session} />}
-          {tab === 'gallery'           && <Gallery org={org} session={session} />}
-          {tab === 'forms'             && <Forms org={org} session={session} />}
-          {tab === 'case_management'   && <CaseManagement org={org} session={session} />}
-          {tab === 'impact_outcomes'   && <ImpactOutcomes org={org} session={session} />}
-          {tab === 'fundraising'       && <Fundraising org={org} session={session} />}
-          {tab === 'hr'                && <HR org={org} session={session} />}
-          {tab === 'resource_booking'  && <ResourceBooking org={org} session={session} />}
-          {tab === 'parent_portal' && (
-            <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />
-          )}
-          {!['home','registers','planner','team','settings','templates','mentoring','calendar','safeguarding','reports','volunteers','parent_portal','messaging','gallery','forms','case_management','impact_outcomes','fundraising','hr','resource_booking','events_trips'].includes(tab) && (
+          {/* ── BASE MODULES — always free ── */}
+          {tab === 'home'       && <Hub org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
+          {tab === 'planner'    && <SessionPlanner org={org} />}
+          {tab === 'calendar'   && <Calendar org={org} session={session} />}
+          {tab === 'events_trips' && <EventsTrips org={org} />}
+          {tab === 'team'       && <TeamTab org={org} session={session} />}
+          {tab === 'templates'  && <Templates org={org} session={session} onNavigate={handleSetTab} />}
+          {tab === 'settings'   && <Settings org={org} session={session} />}
+
+          {/* ── DELIVERY PACK ── */}
+          {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
+          {tab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} />)}
+          {tab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} />)}
+          {tab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} />)}
+
+          {/* ── SAFEGUARDING PACK ── */}
+          {tab === 'safeguarding'    && (hasModule('safeguarding')    ? <Safeguarding org={org} session={session} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} />)}
+          {tab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} />)}
+          {tab === 'case_management' && (hasModule('case_management') ? <CaseManagement org={org} session={session} />                        : <LockedModule moduleKey="case_management" label="Case Management" icon="📁" onNavigate={handleSetTab} />)}
+
+          {/* ── GROWTH PACK ── */}
+          {tab === 'reports'         && (hasModule('reports')         ? <Reports org={org} session={session} />                                : <LockedModule moduleKey="reports"         label="Reports"           icon="📊" onNavigate={handleSetTab} />)}
+          {tab === 'impact_outcomes' && (hasModule('impact_outcomes') ? <ImpactOutcomes org={org} session={session} />                        : <LockedModule moduleKey="impact_outcomes" label="Impact & Outcomes" icon="🌱" onNavigate={handleSetTab} />)}
+          {tab === 'fundraising'     && (hasModule('fundraising')     ? <Fundraising org={org} session={session} />                           : <LockedModule moduleKey="fundraising"     label="Fundraising"       icon="💷" onNavigate={handleSetTab} />)}
+
+          {/* ── OPERATIONS PACK ── */}
+          {tab === 'hr'               && (hasModule('hr')               ? <HR org={org} session={session} />                                  : <LockedModule moduleKey="hr"               label="HR"               icon="🧑‍💼" onNavigate={handleSetTab} />)}
+          {tab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceBooking org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} />)}
+
+          {/* ── LEGACY / COMING SOON ── */}
+          {tab === 'mentoring'    && (hasModule('mentoring') ? <Mentoring org={org} session={session} /> : <LockedModule moduleKey="mentoring" label="Mentoring" icon="🤝" onNavigate={handleSetTab} />)}
+          {tab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
+
+          {/* ── CATCH-ALL ── */}
+          {!['home','planner','calendar','events_trips','team','templates','settings','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','reports','impact_outcomes','fundraising','hr','resource_booking','mentoring','parent_portal'].includes(tab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
