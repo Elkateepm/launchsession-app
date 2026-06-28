@@ -14,6 +14,14 @@ import Calendar from '../calendar/Calendar';
 import Templates from '../templates/Templates'
 import Safeguarding from '../safeguarding/Safeguarding'
 import Reports from '../reports/Reports'
+import Gallery from '../gallery/Gallery'
+import Messaging from '../messaging/Messaging'
+import Forms from '../forms/Forms'
+import CaseManagement from '../casemgmt/CaseManagement'
+import ImpactOutcomes from '../impact/ImpactOutcomes'
+import Fundraising from '../fundraising/Fundraising'
+import HR from '../hr/HR'
+import ResourceBooking from '../resources/ResourceBooking'
 
 const PLAN_MODULES = {
   starter:    ['registers', 'planner', 'reports'],
@@ -22,17 +30,23 @@ const PLAN_MODULES = {
 }
 
 const ALL_MODULES = [
-    { key: 'calendar', label: 'Calendar', icon: '📅', group: 'delivery' },
-  { key: 'registers',     label: 'Registers',    icon: '📋', group: 'delivery' },
-  { key: 'planner',       label: 'Sessions',     icon: '📅', group: 'delivery' },
-  { key: 'volunteers',    label: 'Volunteers',   icon: '❤️', group: 'delivery' },
-  { key: 'parent_portal', label: 'Parents',      icon: '👨‍👧', group: 'delivery' },
-  { key: 'mentoring',     label: 'Mentoring',    icon: '🤝', group: 'delivery' },
-  { key: 'safeguarding',  label: 'Safeguarding', icon: '🛡', group: 'safety' },
-  { key: 'messaging',     label: 'Messaging',    icon: '💬', group: 'safety' },
-  { key: 'reports',       label: 'Reports',      icon: '📊', group: 'insights' },
-  { key: 'gallery',       label: 'Gallery',      icon: '🖼', group: 'insights' },
-  { key: 'events_trips',   label: 'Events & Trips', icon: '🎟️', group: 'operations' },
+  { key: 'calendar',        label: 'Calendar',         icon: '📅', group: 'delivery' },
+  { key: 'registers',       label: 'Registers',        icon: '📋', group: 'delivery' },
+  { key: 'planner',         label: 'Sessions',         icon: '📅', group: 'delivery' },
+  { key: 'volunteers',      label: 'Volunteers',       icon: '❤️', group: 'delivery' },
+  { key: 'messaging',       label: 'Messaging',        icon: '💬', group: 'delivery' },
+  { key: 'gallery',         label: 'Gallery',          icon: '🖼️', group: 'delivery' },
+  { key: 'safeguarding',    label: 'Safeguarding',     icon: '🛡️', group: 'safeguarding' },
+  { key: 'forms',           label: 'Forms',            icon: '📝', group: 'safeguarding' },
+  { key: 'case_management', label: 'Case Management',  icon: '📁', group: 'safeguarding' },
+  { key: 'reports',         label: 'Reports',          icon: '📊', group: 'growth' },
+  { key: 'impact_outcomes', label: 'Impact & Outcomes',icon: '🌱', group: 'growth' },
+  { key: 'fundraising',     label: 'Fundraising',      icon: '💷', group: 'growth' },
+  { key: 'hr',              label: 'HR',               icon: '🧑‍💼', group: 'operations' },
+  { key: 'resource_booking',label: 'Resource Booking', icon: '🗓️', group: 'operations' },
+  { key: 'events_trips',    label: 'Events & Trips',   icon: '✈️', group: 'operations' },
+  { key: 'parent_portal',   label: 'Parents',          icon: '👨‍👧', group: 'delivery' },
+  { key: 'mentoring',       label: 'Mentoring',        icon: '🤝', group: 'delivery' },
 ]
 
 function ComingSoonModule({ icon, label, desc }) {
@@ -339,16 +353,18 @@ export default function Dashboard({ session, org }) {
           {tab === 'reports'     && <Reports org={org} session={session} />}
           {tab === 'volunteers'  && <Volunteers org={org} session={session} />}
             {tab === 'events_trips' && <EventsTrips org={org} />}
+          {tab === 'messaging'        && <Messaging org={org} session={session} />}
+          {tab === 'gallery'           && <Gallery org={org} session={session} />}
+          {tab === 'forms'             && <Forms org={org} session={session} />}
+          {tab === 'case_management'   && <CaseManagement org={org} session={session} />}
+          {tab === 'impact_outcomes'   && <ImpactOutcomes org={org} session={session} />}
+          {tab === 'fundraising'       && <Fundraising org={org} session={session} />}
+          {tab === 'hr'                && <HR org={org} session={session} />}
+          {tab === 'resource_booking'  && <ResourceBooking org={org} session={session} />}
           {tab === 'parent_portal' && (
             <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />
           )}
-          {tab === 'messaging' && (
-            <ComingSoonModule icon="💬" label="Messaging" desc="Send messages to staff, volunteers and parents from one place. Coming soon." />
-          )}
-          {tab === 'gallery' && (
-            <ComingSoonModule icon="🖼" label="Gallery" desc="Store and share photos and memories from your sessions. Coming soon." />
-          )}
-          {!['home','registers','planner','team','settings','templates','mentoring','calendar','safeguarding','reports','volunteers','parent_portal','messaging','gallery','events_trips'].includes(tab) && (
+          {!['home','registers','planner','team','settings','templates','mentoring','calendar','safeguarding','reports','volunteers','parent_portal','messaging','gallery','forms','case_management','impact_outcomes','fundraising','hr','resource_booking','events_trips'].includes(tab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
