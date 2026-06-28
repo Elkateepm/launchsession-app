@@ -88,8 +88,32 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     return () => clearTimeout(timer)
   }, [search, children, sessions])
 
-  const todaySessions = useMemo(() => sessions.filter(s => s.session_date === today), [sessions, today]);
-  const upcomingSessions = useMemo(() => sessions.filter(s => s.session_date >= today).slice(0, 4), [sessions, today]);
+  const todaySessions = useMemo(() => {
+    const now = new Date()
+    const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    const yesterdayStr = yesterday.toISOString().split('T')[0]
+    return sessions.filter(s => {
+      if (!s.session_date) return false
+      // Always include today's sessions
+      if (s.session_date === today) return true
+      // Include yesterday's sessions that haven't ended yet (within 24h window)
+      if (s.session_date === yesterdayStr && s.end_time) {
+        const endDateTime = new Date(`${s.session_date}T${s.end_time}`)
+        return endDateTime > yesterday && endDateTime > new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      }
+      // Include tomorrow's sessions starting within next 24h
+      const startDateTime = new Date(`${s.session_date}T${s.start_time || '00:00'}`)
+      return startDateTime <= in24h && startDateTime >= now
+    })
+  }, [sessions, today]);
+  const upcomingSessions = useMemo(() => {
+    // Show sessions not already in the 24h window, ordered by date
+    const todayIds = new Set(todaySessions.map(s => s.id))
+    return sessions
+      .filter(s => s.session_date >= today && !todayIds.has(s.id))
+      .slice(0, 4)
+  }, [sessions, today, todaySessions]);
   const completedWithoutReflection = useMemo(() => {
     const now = new Date();
     return sessions.filter(s => {
