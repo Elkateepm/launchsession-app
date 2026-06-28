@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, addDays, isSameMonth, isSameDay, parseISO, isToday, addWeeks, subWeeks, startOfWeek as startOfWeekFn } from 'date-fns'
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, addDays, isSameMonth, parseISO, isToday, addWeeks, subWeeks } from 'date-fns'
 
 const TYPE_CONFIG = {
   activity:  { label: 'Activity',  icon: '🏃', color: '#1B9AAA', bg: 'rgba(27,154,170,0.12)',  border: 'rgba(27,154,170,0.35)'  },
@@ -17,7 +17,6 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 
 function SessionModal({ session, org, onClose, onDelete }) {
   const cfg = getCfg(session.session_type)
-  const primary = org?.primary_color || '#1B9AAA'
   const [deleting, setDeleting] = useState(false)
 
   const handleDelete = async () => {
