@@ -530,7 +530,7 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, volCounts }) {
 }
 
 // ─── MAIN PLANNER ─────────────────────────────────────────────
-export default function SessionPlanner({ org }) {
+export default function SessionPlanner({ org, onSessionSaved }) {
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const { groups: orgGroups } = useOrgSettings(orgId)
@@ -600,6 +600,7 @@ export default function SessionPlanner({ org }) {
     setEditing(null)
     setView('list')
     loadData()
+    if (onSessionSaved) onSessionSaved()
   }
 
   const handleDelete = async (id) => {
@@ -607,6 +608,7 @@ export default function SessionPlanner({ org }) {
     await supabase.from('attendance').delete().eq('session_id', id).eq('org_id', orgId)
     await supabase.from('sessions').delete().eq('id', id).eq('org_id', orgId)
     setSessions(prev => prev.filter(s => s.id !== id))
+    if (onSessionSaved) onSessionSaved()
   }
 
   const openNew = (date) => {

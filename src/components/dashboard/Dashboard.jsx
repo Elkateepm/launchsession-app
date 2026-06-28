@@ -175,6 +175,8 @@ export default function Dashboard({ session, org }) {
   const userEmail = session?.user?.email || ''
   const [userProfile, setUserProfile] = useState(null)
   const [showProfile, setShowProfile] = useState(false)
+  const [sessionVersion, setSessionVersion] = useState(0)
+  const bumpSessions = () => setSessionVersion(v => v + 1)
 
   useEffect(() => {
     if (!session?.user?.id) return
@@ -410,9 +412,9 @@ export default function Dashboard({ session, org }) {
             )
           })()}
           {/* ── BASE MODULES — always free ── */}
-          {tab === 'home'       && <Hub org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
-          {tab === 'planner'    && <SessionPlanner org={org} />}
-          {tab === 'calendar'   && <Calendar org={org} session={session} />}
+          {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
+          {tab === 'planner'    && <SessionPlanner org={org} onSessionSaved={bumpSessions} />}
+          {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} />}
           {tab === 'events_trips' && <EventsTrips org={org} />}
           {tab === 'team'       && <TeamTab org={org} session={session} />}
           {tab === 'templates'  && <Templates org={org} session={session} onNavigate={handleSetTab} />}
