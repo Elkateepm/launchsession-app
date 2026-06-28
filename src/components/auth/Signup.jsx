@@ -262,7 +262,7 @@ function Glow() {
   )
 }
 
-const page     = { minHeight: '100vh', background: 'radial-gradient(circle at top left, #1a0b3b 0%, #07111f 42%, #020711 100%)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 20px', position: 'relative', overflow: 'hidden', fontFamily: "'Plus Jakarta Sans', sans-serif" }
+const page     = { minHeight: '100vh', background: 'radial-gradient(circle at top left, #1a0b3b 0%, #07111f 42%, #020711 100%)', color: '#fff', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '48px 20px', position: 'relative', overflowX: 'hidden', overflowY: 'auto', fontFamily: "'Plus Jakarta Sans', sans-serif" }
 const wrap     = { width: '100%', maxWidth: 520, position: 'relative', zIndex: 2, textAlign: 'center' }
 const title    = { fontSize: 'clamp(28px,5vw,46px)', lineHeight: 1.08, margin: '0 0 12px', fontWeight: 900, letterSpacing: -1.5 }
 const subtitle = { margin: '0 0 32px', color: 'rgba(255,255,255,0.65)', fontSize: 16, lineHeight: 1.6 }
