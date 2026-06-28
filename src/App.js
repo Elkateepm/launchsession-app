@@ -17,11 +17,25 @@ function AuthedApp({ session, org }) {
     supabase.from('user_profiles')
       .select('onboarding_complete, role')
       .eq('id', session.user.id)
-      .single()
-      .then(({ data }) => {
-        setUserRole(data?.role || null)
-        const isOwnerOrAdmin = data?.role === 'owner' || data?.role === 'admin'
-        const needsOnboarding = data && !data.onboarding_complete && isOwnerOrAdmin
+      .maybeSingle()
+      .then(async ({ data, error }) => {
+        if (error) console.warn('user_profiles fetch error:', error.message)
+
+        if (!data) {
+          // No profile row — create one so future queries work
+          await supabase.from('user_profiles').upsert({
+            id: session.user.id,
+            email: session.user.email,
+            org_id: org?.id || null,
+            role: 'admin',
+            onboarding_complete: false,
+          }, { onConflict: 'id', ignoreDuplicates: true })
+        }
+
+        const role = data?.role || 'admin'
+        setUserRole(role)
+        const isOwnerOrAdmin = role === 'owner' || role === 'admin'
+        const needsOnboarding = !data || (!data.onboarding_complete && isOwnerOrAdmin)
         setOnboardingDone(!needsOnboarding)
       })
   }, [session.user.id])
