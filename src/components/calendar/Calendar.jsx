@@ -1,450 +1,360 @@
+import React, { useEffect, useMemo, useState, useCallback } from 'react'
+import { supabase } from '../../lib/supabase'
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, addDays, isSameMonth, isSameDay, parseISO, isToday, addWeeks, subWeeks, startOfWeek as startOfWeekFn } from 'date-fns'
 
-import { useIsMobile } from '../../hooks/useIsMobile'
-import React, { useEffect, useMemo, useState } from "react";
-import { supabase } from "../../lib/supabase";
-
-const typeConfig = {
-  sports: { label: "Sport", emoji: "⚽", color: "#16a34a", bg: "#dcfce7" },
-  arts: { label: "Arts", emoji: "🎨", color: "#9333ea", bg: "#f3e8ff" },
-  mentoring: { label: "Mentoring", emoji: "🤝", color: "#7c3aed", bg: "#ede9fe" },
-  trip: { label: "Trip", emoji: "🚌", color: "#0891b2", bg: "#cffafe" },
-  workshop: { label: "Workshop", emoji: "🛠️", color: "#ea580c", bg: "#ffedd5" },
-  holiday: { label: "Holiday", emoji: "🏖️", color: "#db2777", bg: "#fce7f3" },
-  activity: { label: "Activity", emoji: "🏃", color: "#2563eb", bg: "#dbeafe" },
-};
-
-function getConfig(type) {
-  return typeConfig[type] || typeConfig.activity;
+const TYPE_CONFIG = {
+  activity:  { label: 'Activity',  icon: '🏃', color: '#1B9AAA', bg: 'rgba(27,154,170,0.12)',  border: 'rgba(27,154,170,0.35)'  },
+  workshop:  { label: 'Workshop',  icon: '🛠️', color: '#417505', bg: 'rgba(65,117,5,0.12)',   border: 'rgba(65,117,5,0.35)'   },
+  trip:      { label: 'Day Trip',  icon: '🚌', color: '#D97706', bg: 'rgba(217,119,6,0.12)',   border: 'rgba(217,119,6,0.35)'   },
+  holiday:   { label: 'Holiday',   icon: '🏖️', color: '#9B59B6', bg: 'rgba(155,89,182,0.12)',  border: 'rgba(155,89,182,0.35)'  },
+  sports:    { label: 'Sport',     icon: '⚽', color: '#16a34a', bg: 'rgba(22,163,74,0.12)',   border: 'rgba(22,163,74,0.35)'   },
+  arts:      { label: 'Arts',      icon: '🎨', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)',  border: 'rgba(124,58,237,0.35)'  },
+  mentoring: { label: 'Mentoring', icon: '🤝', color: '#2563eb', bg: 'rgba(37,99,235,0.12)',   border: 'rgba(37,99,235,0.35)'   },
 }
+const getCfg = (type) => TYPE_CONFIG[type] || TYPE_CONFIG.activity
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
-function toDateKey(date) {
-  return date.toISOString().split("T")[0];
-}
+function SessionModal({ session, org, onClose, onDelete }) {
+  const cfg = getCfg(session.session_type)
+  const primary = org?.primary_color || '#1B9AAA'
+  const [deleting, setDeleting] = useState(false)
 
-function startOfMonth(date) {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
-}
-
-function endOfMonth(date) {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
-}
-
-export default function Calendar({ org, session }) {
-  const orgId = org?.id;
-  const isMobile = useIsMobile();
-
-  const [sessions, setSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedSession, setSelectedSession] = useState(null);
-
-  useEffect(() => {
-    if (!orgId) return;
-
-    let alive = true;
-
-    async function loadSessions() {
-      setLoading(true);
-
-      const { data, error } = await supabase
-        .from("sessions")
-        .select("*")
-        .eq("org_id", orgId)
-        .order("session_date", { ascending: true });
-
-      if (!alive) return;
-
-      if (error) {
-        
-        setSessions([]);
-      } else {
-        setSessions(data || []);
-      }
-
-      setLoading(false);
-    }
-
-    loadSessions();
-
-    const interval = setInterval(loadSessions, 30000);
-
-    return () => {
-      alive = false;
-      clearInterval(interval);
-    };
-  }, [orgId]);
-
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-
-  const days = useMemo(() => {
-    const result = [];
-    const startPad = monthStart.getDay() === 0 ? 6 : monthStart.getDay() - 1;
-
-    for (let i = 0; i < startPad; i += 1) {
-      result.push(null);
-    }
-
-    for (let d = 1; d <= monthEnd.getDate(); d += 1) {
-      result.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d));
-    }
-
-    return result;
-  }, [currentMonth, monthEnd, monthStart]);
-
-  const sessionsByDate = useMemo(() => {
-    const grouped = {};
-
-    sessions.forEach((item) => {
-      if (!item.session_date) return;
-
-      const key = item.session_date;
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(item);
-    });
-
-    return grouped;
-  }, [sessions]);
-
-  const todayKey = toDateKey(new Date());
-
-  function changeMonth(amount) {
-    setCurrentMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + amount, 1));
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete "${session.title}"?`)) return
+    setDeleting(true)
+    await supabase.from('sessions').delete().eq('id', session.id)
+    onDelete(session.id)
+    onClose()
   }
 
-  const calPad = isMobile ? 12 : 24
   return (
-    <div style={{...styles.page, padding: calPad}}>
-      <div style={{...styles.header, flexDirection: isMobile ? "column" : "row", gap: isMobile ? 12 : 20}}>
-        <div>
-          <div style={styles.eyebrow}>LaunchSession Calendar</div>
-          <h1 style={styles.title}>Calendar</h1>
-          <p style={styles.subtitle}>
-            View sessions, trips, mentoring, workshops and key organisation dates.
-          </p>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
+        {/* Coloured header */}
+        <div style={{ background: `linear-gradient(135deg, ${cfg.color}22, ${cfg.color}08)`, borderBottom: `3px solid ${cfg.color}`, padding: '24px 24px 20px', position: 'relative' }}>
+          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.08)', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          <div style={{ fontSize: 36, marginBottom: 8 }}>{cfg.icon}</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: '#111', marginBottom: 4 }}>{session.title}</div>
+          <span style={{ background: cfg.color, color: '#fff', borderRadius: 99, padding: '3px 12px', fontSize: 11, fontWeight: 800 }}>{cfg.label}</span>
         </div>
-
-        <div style={styles.headerActions}>
-          <button style={styles.secondaryButton}>Today</button>
-          <button style={styles.primaryButton}>+ New Event</button>
-        </div>
-      </div>
-
-      <div style={styles.calendarShell}>
-        <div style={styles.calendarTop}>
-          <button style={styles.monthButton} onClick={() => changeMonth(-1)}>
-            ‹
-          </button>
-
-          <div style={{ textAlign: "center" }}>
-            <div style={styles.monthTitle}>
-              {currentMonth.toLocaleDateString("en-GB", { month: "long" })}
-            </div>
-            <div style={styles.monthYear}>{currentMonth.getFullYear()}</div>
+        {/* Details */}
+        <div style={{ padding: '20px 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+            {[
+              { icon: '📅', label: 'Date', value: session.session_date ? format(parseISO(session.session_date), 'EEEE, d MMMM yyyy') : '—' },
+              { icon: '⏰', label: 'Time', value: session.start_time ? `${session.start_time}${session.end_time ? ` – ${session.end_time}` : ''}` : '—' },
+              { icon: '📍', label: 'Location', value: session.location || '—' },
+              { icon: '👥', label: 'Capacity', value: session.max_capacity ? `${session.max_capacity} max` : '—' },
+            ].map(d => (
+              <div key={d.label} style={{ background: '#F8FAFC', borderRadius: 12, padding: '10px 14px' }}>
+                <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{d.icon} {d.label}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{d.value}</div>
+              </div>
+            ))}
           </div>
-
-          <button style={styles.monthButton} onClick={() => changeMonth(1)}>
-            ›
-          </button>
-        </div>
-
-        <div style={styles.daysHeader}>
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-            <div key={day} style={styles.dayName}>
-              {day}
+          {session.description && (
+            <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', marginBottom: 16, fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
+              {session.description}
             </div>
-          ))}
-        </div>
-
-        {loading ? (
-          <div style={styles.loading}>Loading calendar...</div>
-        ) : (
-          <div style={styles.grid}>
-            {days.map((day, index) => {
-              if (!day) return <div key={`empty-${index}`} style={styles.emptyCell} />;
-
-              const key = toDateKey(day);
-              const daySessions = sessionsByDate[key] || [];
-              const isToday = key === todayKey;
-
-              return (
-                <div key={key} style={{ ...styles.dayCell, ...(isToday ? styles.todayCell : {}) }}>
-                  <div style={styles.dayNumber}>{day.getDate()}</div>
-
-                  <div style={styles.eventList}>
-                    {daySessions.slice(0, 3).map((item) => {
-                      const cfg = getConfig(item.session_type);
-
-                      return (
-                        <button
-                          key={item.id}
-                          style={{
-                            ...styles.eventPill,
-                            background: cfg.bg,
-                            color: cfg.color,
-                            borderColor: `${cfg.color}33`,
-                          }}
-                          onClick={() => setSelectedSession(item)}
-                        >
-                          <span>{cfg.emoji}</span>
-                          <span style={styles.eventText}>{item.title}</span>
-                        </button>
-                      );
-                    })}
-
-                    {daySessions.length > 3 && (
-                      <div style={styles.moreEvents}>+{daySessions.length - 3} more</div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {selectedSession && (
-        <div style={styles.modalOverlay} onClick={() => setSelectedSession(null)}>
-          <div style={styles.modal} onClick={(event) => event.stopPropagation()}>
-            <button style={styles.closeButton} onClick={() => setSelectedSession(null)}>
-              ×
+          )}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, cursor: 'pointer' }}>Close</button>
+            <button onClick={handleDelete} disabled={deleting} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid rgba(220,38,38,0.3)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
+              {deleting ? 'Deleting...' : '🗑️ Delete'}
             </button>
-
-            <div style={styles.modalIcon}>
-              {getConfig(selectedSession.session_type).emoji}
-            </div>
-
-            <h2 style={styles.modalTitle}>{selectedSession.title}</h2>
-
-            <div style={styles.detailRow}>
-              <strong>Date:</strong> {selectedSession.session_date || "Not set"}
-            </div>
-
-            <div style={styles.detailRow}>
-              <strong>Time:</strong>{" "}
-              {selectedSession.start_time || "No start time"}
-              {selectedSession.end_time ? ` - ${selectedSession.end_time}` : ""}
-            </div>
-
-            <div style={styles.detailRow}>
-              <strong>Location:</strong> {selectedSession.location || "Not set"}
-            </div>
-
-            {selectedSession.description && (
-              <div style={styles.description}>{selectedSession.description}</div>
-            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
-  );
+  )
 }
 
-const styles = {
-  page: {
-    padding: "var(--cal-pad, 24px)",
-    background: "#f8fafc",
-    minHeight: "100%",
-    color: "#0f172a",
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 20,
-    alignItems: "flex-start",
-    marginBottom: 20,
-  },
-  eyebrow: {
-    fontSize: 13,
-    fontWeight: 800,
-    color: "#0891b2",
-    marginBottom: 6,
-  },
-  title: {
-    margin: 0,
-    fontSize: 30,
-    fontWeight: 900,
-  },
-  subtitle: {
-    margin: "8px 0 0",
-    color: "#64748b",
-    fontSize: 14,
-  },
-  headerActions: {
-    display: "flex",
-    gap: 10,
-  },
-  primaryButton: {
-    border: "none",
-    background: "linear-gradient(135deg, #0f766e, #0891b2)",
-    color: "#fff",
-    borderRadius: 14,
-    padding: "12px 16px",
-    fontWeight: 800,
-    cursor: "pointer",
-  },
-  secondaryButton: {
-    border: "1px solid #e5e7eb",
-    background: "#fff",
-    color: "#0f172a",
-    borderRadius: 14,
-    padding: "12px 16px",
-    fontWeight: 800,
-    cursor: "pointer",
-  },
-  calendarShell: {
-    background: "#fff",
-    border: "1px solid #e5e7eb",
-    borderRadius: 22,
-    padding: 18,
-    boxShadow: "0 20px 45px rgba(15, 23, 42, 0.06)",
-  },
-  calendarTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 18,
-  },
-  monthButton: {
-    width: "clamp(28px, 8vw, 42px)",
-    height: 42,
-    borderRadius: 14,
-    border: "1px solid #e5e7eb",
-    background: "#f8fafc",
-    fontSize: 28,
-    cursor: "pointer",
-  },
-  monthTitle: {
-    fontSize: 22,
-    fontWeight: 900,
-  },
-  monthYear: {
-    fontSize: 13,
-    color: "#64748b",
-    fontWeight: 700,
-  },
-  daysHeader: {
-    display: "grid",
-    gridTemplateColumns: "repeat(7, 1fr)",
-    marginBottom: 8,
-  },
-  dayName: {
-    textAlign: "center",
-    fontSize: 12,
-    fontWeight: 900,
-    color: "#64748b",
-    padding: 8,
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(7, 1fr)",
-    gap: 8,
-  },
-  emptyCell: {
-    minHeight: 118,
-  },
-  dayCell: {
-    minHeight: 118,
-    borderRadius: 16,
-    border: "1px solid #e5e7eb",
-    background: "#fff",
-    padding: 10,
-    overflow: "hidden",
-  },
-  todayCell: {
-    border: "2px solid #0891b2",
-    background: "#ecfeff",
-  },
-  dayNumber: {
-    fontSize: 13,
-    fontWeight: 900,
-    marginBottom: 8,
-  },
-  eventList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 6,
-  },
-  eventPill: {
-    border: "1px solid",
-    borderRadius: 10,
-    padding: "6px 8px",
-    fontSize: 11,
-    fontWeight: 800,
-    cursor: "pointer",
-    display: "flex",
-    gap: 5,
-    alignItems: "center",
-    width: "100%",
-    textAlign: "left",
-  },
-  eventText: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  moreEvents: {
-    fontSize: 11,
-    color: "#64748b",
-    fontWeight: 800,
-  },
-  loading: {
-    padding: 40,
-    textAlign: "center",
-    color: "#64748b",
-    fontWeight: 800,
-  },
-  modalOverlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(15, 23, 42, 0.55)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    zIndex: 999,
-  },
-  modal: {
-    width: "100%",
-    maxWidth: 460,
-    background: "#fff",
-    borderRadius: 24,
-    padding: 24,
-    position: "relative",
-    boxShadow: "0 30px 80px rgba(15, 23, 42, 0.35)",
-  },
-  closeButton: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    width: 34,
-    height: 34,
-    borderRadius: 999,
-    border: "none",
-    background: "#f1f5f9",
-    fontSize: 22,
-    cursor: "pointer",
-  },
-  modalIcon: {
-    fontSize: 40,
-    marginBottom: 12,
-  },
-  modalTitle: {
-    margin: "0 0 16px",
-    fontSize: 24,
-    fontWeight: 900,
-  },
-  detailRow: {
-    fontSize: 14,
-    marginBottom: 10,
-    color: "#334155",
-  },
-  description: {
-    marginTop: 14,
-    padding: 14,
-    background: "#f8fafc",
-    borderRadius: 14,
-    fontSize: 14,
-    lineHeight: 1.5,
-  },
-};
+export default function Calendar({ org }) {
+  const [sessions, setSessions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [viewMode, setViewMode] = useState('month') // 'month' | 'week'
+  const [selectedSession, setSelectedSession] = useState(null)
+  const [filterType, setFilterType] = useState('all')
+  const primary = org?.primary_color || '#1B9AAA'
+
+  const load = useCallback(async () => {
+    if (!org?.id) return
+    setLoading(true)
+    const { data } = await supabase.from('sessions').select('*').eq('org_id', org.id).order('session_date', { ascending: true })
+    setSessions(data || [])
+    setLoading(false)
+  }, [org?.id])
+
+  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    const interval = setInterval(load, 30000)
+    return () => clearInterval(interval)
+  }, [load])
+
+  const filtered = filterType === 'all' ? sessions : sessions.filter(s => s.session_type === filterType)
+
+  const sessionsByDate = useMemo(() => {
+    const map = {}
+    filtered.forEach(s => {
+      if (!s.session_date) return
+      if (!map[s.session_date]) map[s.session_date] = []
+      map[s.session_date].push(s)
+    })
+    return map
+  }, [filtered])
+
+  // ── Month view helpers ──
+  const monthDays = useMemo(() => {
+    const start = startOfMonth(currentDate)
+    const end = endOfMonth(currentDate)
+    const startPad = (start.getDay() + 6) % 7 // Mon=0
+    const days = []
+    for (let i = 0; i < startPad; i++) days.push(null)
+    for (let d = new Date(start); d <= end; d = addDays(d, 1)) days.push(new Date(d))
+    return days
+  }, [currentDate])
+
+  // ── Week view helpers ──
+  const weekDays = useMemo(() => {
+    const start = startOfWeek(currentDate, { weekStartsOn: 1 })
+    return Array.from({ length: 7 }, (_, i) => addDays(start, i))
+  }, [currentDate])
+
+  const upcomingSessions = useMemo(() => {
+    const today = format(new Date(), 'yyyy-MM-dd')
+    return sessions.filter(s => s.session_date >= today).slice(0, 5)
+  }, [sessions])
+
+  const thisMonthCount = useMemo(() => {
+    const m = format(currentDate, 'yyyy-MM')
+    return sessions.filter(s => s.session_date?.startsWith(m)).length
+  }, [sessions, currentDate])
+
+  const deleteSession = (id) => setSessions(s => s.filter(x => x.id !== id))
+
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
+
+  return (
+    <div style={{ display: 'flex', gap: 20, height: '100%', minHeight: 0 }}>
+      {/* ── MAIN CALENDAR ── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+
+        {/* Header */}
+        <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 24px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 900 }}>📅 Calendar</div>
+              <div style={{ fontSize: 13, color: '#6B7280', marginTop: 3 }}>{thisMonthCount} session{thisMonthCount !== 1 ? 's' : ''} this month · {sessions.length} total</div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* View toggle */}
+              <div style={{ display: 'flex', background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
+                {['month','week'].map(v => (
+                  <button key={v} onClick={() => setViewMode(v)} style={{ padding: '7px 14px', border: 'none', background: viewMode === v ? primary : 'transparent', color: viewMode === v ? '#fff' : '#6B7280', fontWeight: 700, fontSize: 12, cursor: 'pointer', textTransform: 'capitalize' }}>
+                    {v === 'month' ? '📅 Month' : '📋 Week'}
+                  </button>
+                ))}
+              </div>
+              {/* Today */}
+              <button onClick={() => setCurrentDate(new Date())} style={{ padding: '7px 14px', borderRadius: 10, border: `1.5px solid ${primary}`, background: '#fff', color: primary, fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>Today</button>
+            </div>
+          </div>
+
+          {/* Type filter */}
+          <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
+            <button onClick={() => setFilterType('all')} style={{ padding: '4px 12px', borderRadius: 99, border: `1.5px solid ${filterType === 'all' ? primary : '#e5e7eb'}`, background: filterType === 'all' ? primary + '15' : '#fff', color: filterType === 'all' ? primary : '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+              All
+            </button>
+            {Object.entries(TYPE_CONFIG).map(([key, cfg]) => (
+              <button key={key} onClick={() => setFilterType(key)} style={{ padding: '4px 12px', borderRadius: 99, border: `1.5px solid ${filterType === key ? cfg.color : '#e5e7eb'}`, background: filterType === key ? cfg.color + '15' : '#fff', color: filterType === key ? cfg.color : '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                {cfg.icon} {cfg.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Calendar shell */}
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', flex: 1 }}>
+          {/* Month/week nav */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F3F4F6' }}>
+            <button onClick={() => setCurrentDate(d => viewMode === 'month' ? subMonths(d, 1) : subWeeks(d, 1))}
+              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151' }}>‹</button>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5 }}>
+                {viewMode === 'month'
+                  ? `${MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
+                  : `${format(weekDays[0], 'd MMM')} – ${format(weekDays[6], 'd MMM yyyy')}`
+                }
+              </div>
+            </div>
+            <button onClick={() => setCurrentDate(d => viewMode === 'month' ? addMonths(d, 1) : addWeeks(d, 1))}
+              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151' }}>›</button>
+          </div>
+
+          {/* Day headers */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: '#F8FAFC', borderBottom: '1px solid #F3F4F6' }}>
+            {DAYS.map(d => (
+              <div key={d} style={{ padding: '10px 0', textAlign: 'center', fontSize: 11, fontWeight: 800, color: '#9CA3AF', letterSpacing: 0.5, textTransform: 'uppercase' }}>{d}</div>
+            ))}
+          </div>
+
+          {loading ? (
+            <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF' }}>Loading sessions...</div>
+          ) : viewMode === 'month' ? (
+            /* ── MONTH GRID ── */
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderLeft: '1px solid #F3F4F6' }}>
+              {monthDays.map((day, i) => {
+                if (!day) return <div key={`e${i}`} style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', background: '#FAFAFA' }} />
+                const key = format(day, 'yyyy-MM-dd')
+                const daySessions = sessionsByDate[key] || []
+                const today = isToday(day)
+                const inMonth = isSameMonth(day, currentDate)
+                return (
+                  <div key={key} style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}08` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.1s' }}>
+                    {/* Day number */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 4 }}>
+                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? '#374151' : '#D1D5DB' }}>
+                        {format(day, 'd')}
+                      </div>
+                    </div>
+                    {/* Sessions */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {daySessions.slice(0, 3).map(s => {
+                        const cfg = getCfg(s.session_type)
+                        return (
+                          <button key={s.id} onClick={() => setSelectedSession(s)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 6, border: `1px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', width: '100%', textAlign: 'left', fontSize: 11, fontWeight: 700, color: cfg.color, transition: 'all 0.1s', lineHeight: 1.3 }}
+                            onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.95)'}
+                            onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
+                            <span style={{ flexShrink: 0 }}>{cfg.icon}</span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
+                          </button>
+                        )
+                      })}
+                      {daySessions.length > 3 && (
+                        <div style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 700, paddingLeft: 4 }}>+{daySessions.length - 3} more</div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            /* ── WEEK VIEW ── */
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderLeft: '1px solid #F3F4F6' }}>
+              {weekDays.map(day => {
+                const key = format(day, 'yyyy-MM-dd')
+                const daySessions = sessionsByDate[key] || []
+                const today = isToday(day)
+                return (
+                  <div key={key} style={{ minHeight: 300, borderRight: '1px solid #F3F4F6', padding: '10px 8px', background: today ? `${primary}08` : '#fff' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: today ? 900 : 700, color: today ? '#fff' : '#374151' }}>
+                        {format(day, 'd')}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {daySessions.map(s => {
+                        const cfg = getCfg(s.session_type)
+                        return (
+                          <button key={s.id} onClick={() => setSelectedSession(s)}
+                            style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 9px', borderRadius: 9, border: `1.5px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.1s' }}
+                            onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.95)'}
+                            onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
+                            <div style={{ fontSize: 13 }}>{cfg.icon}</div>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: cfg.color, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{s.title}</div>
+                            {s.start_time && <div style={{ fontSize: 10, color: cfg.color, opacity: 0.8, fontWeight: 600 }}>{s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}</div>}
+                          </button>
+                        )
+                      })}
+                      {daySessions.length === 0 && (
+                        <div style={{ fontSize: 11, color: '#E5E7EB', textAlign: 'center', marginTop: 20 }}>—</div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── SIDEBAR ── */}
+      <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* Mini month stats */}
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 12 }}>This Month</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {[
+              { label: 'Sessions', value: thisMonthCount, color: primary },
+              { label: 'Types', value: [...new Set(sessions.filter(s => s.session_date?.startsWith(format(currentDate, 'yyyy-MM'))).map(s => s.session_type))].length, color: '#8B5CF6' },
+            ].map(s => (
+              <div key={s.label} style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color: s.color }}>{s.value}</div>
+                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Upcoming sessions */}
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16, flex: 1 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 12 }}>⏭ Upcoming</div>
+          {upcomingSessions.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '20px 0', color: '#9CA3AF', fontSize: 12 }}>
+              <div style={{ fontSize: 28, marginBottom: 6 }}>📅</div>
+              No upcoming sessions.<br />Plan one in the Session Planner.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {upcomingSessions.map(s => {
+                const cfg = getCfg(s.session_type)
+                const dateStr = s.session_date ? format(parseISO(s.session_date), 'EEE d MMM') : '—'
+                const isSessionToday = s.session_date === todayStr
+                return (
+                  <button key={s.id} onClick={() => setSelectedSession(s)}
+                    style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${isSessionToday ? cfg.color + '50' : '#F3F4F6'}`, background: isSessionToday ? cfg.bg : '#FAFAFA', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = cfg.color; e.currentTarget.style.background = cfg.bg }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = isSessionToday ? cfg.color + '50' : '#F3F4F6'; e.currentTarget.style.background = isSessionToday ? cfg.bg : '#FAFAFA' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{cfg.icon}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                      <div style={{ fontSize: 11, color: cfg.color, fontWeight: 700, marginTop: 2 }}>{dateStr}</div>
+                      {s.start_time && <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 1 }}>{s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}</div>}
+                      {isSessionToday && <div style={{ fontSize: 10, fontWeight: 800, color: cfg.color, marginTop: 2 }}>🔴 TODAY</div>}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Session type legend */}
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 10 }}>Legend</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {Object.entries(TYPE_CONFIG).map(([key, cfg]) => {
+              const count = sessions.filter(s => s.session_type === key).length
+              if (count === 0) return null
+              return (
+                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 3, background: cfg.color, flexShrink: 0 }} />
+                  <span style={{ flex: 1, color: '#374151', fontWeight: 600 }}>{cfg.icon} {cfg.label}</span>
+                  <span style={{ color: '#9CA3AF', fontWeight: 700 }}>{count}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Session detail modal */}
+      {selectedSession && (
+        <SessionModal session={selectedSession} org={org} onClose={() => setSelectedSession(null)} onDelete={deleteSession} />
+      )}
+    </div>
+  )
+}
