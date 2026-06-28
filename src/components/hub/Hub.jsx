@@ -2,6 +2,223 @@ import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useIsMobile } from "../../hooks/useIsMobile";
 
+
+// ── LIVE SESSION PANEL ─────────────────────────────────────────
+function LiveSessionPanel({ sessions, children, attendance, primary, orgId, onOpenRegister, onNavigate, getLiveSessionStats }) {
+  const [activeSession, setActiveSession] = useState(sessions[0])
+  const [localAttendance, setLocalAttendance] = useState(attendance)
+  const [updating, setUpdating] = useState(null)
+  const [search, setSearch] = useState('')
+  const [filterTab, setFilterTab] = useState('all')
+
+  // Keep local attendance in sync
+  React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
+  React.useEffect(() => { if (sessions.length) setActiveSession(sessions[0]) }, [sessions])
+
+  const sessionAttendance = localAttendance.filter(a => a.session_id === activeSession?.id)
+  const stats = getLiveSessionStats(activeSession)
+
+  const getChildStatus = (childId) => {
+    const rec = sessionAttendance.find(a => a.child_id === childId)
+    return rec?.status || 'expected'
+  }
+
+  const handleToggle = async (child) => {
+    if (!activeSession) return
+    const current = getChildStatus(child.id)
+    const next = current === 'signed_in' ? 'signed_out' : 'signed_in'
+    setUpdating(child.id)
+
+    const existing = sessionAttendance.find(a => a.child_id === child.id)
+    const now = new Date().toISOString()
+    const updates = next === 'signed_in'
+      ? { status: 'signed_in', signed_in_at: now, signed_out_at: null }
+      : { status: 'signed_out', signed_out_at: now }
+
+    if (existing) {
+      await supabase.from('attendance').update(updates).eq('id', existing.id)
+      setLocalAttendance(prev => prev.map(a => a.id === existing.id ? { ...a, ...updates } : a))
+    } else {
+      const { data } = await supabase.from('attendance').insert({
+        session_id: activeSession.id, child_id: child.id, org_id: orgId, ...updates
+      }).select().single()
+      if (data) setLocalAttendance(prev => [...prev, data])
+    }
+    setUpdating(null)
+  }
+
+  const handleAbsent = async (child) => {
+    if (!activeSession) return
+    setUpdating(child.id)
+    const existing = sessionAttendance.find(a => a.child_id === child.id)
+    const updates = { status: 'absent' }
+    if (existing) {
+      await supabase.from('attendance').update(updates).eq('id', existing.id)
+      setLocalAttendance(prev => prev.map(a => a.id === existing.id ? { ...a, ...updates } : a))
+    } else {
+      const { data } = await supabase.from('attendance').insert({
+        session_id: activeSession.id, child_id: child.id, org_id: orgId, ...updates
+      }).select().single()
+      if (data) setLocalAttendance(prev => [...prev, data])
+    }
+    setUpdating(null)
+  }
+
+  const statusCfg = {
+    signed_in:  { label: 'In',      color: '#16A34A', bg: '#DCFCE7', dot: '#16A34A' },
+    signed_out: { label: 'Out',     color: '#2563EB', bg: '#DBEAFE', dot: '#2563EB' },
+    absent:     { label: 'Absent',  color: '#DC2626', bg: '#FEE2E2', dot: '#DC2626' },
+    expected:   { label: 'Expected',color: '#D97706', bg: '#FEF3C7', dot: '#F59E0B' },
+  }
+
+  const filteredChildren = children.filter(ch => {
+    const name = `${ch.first_name} ${ch.last_name}`.toLowerCase()
+    const matchSearch = !search || name.includes(search.toLowerCase())
+    const status = getChildStatus(ch.id)
+    const matchTab = filterTab === 'all' || status === filterTab ||
+      (filterTab === 'expected' && (status === 'expected' || !sessionAttendance.find(a => a.child_id === ch.id)))
+    return matchSearch && matchTab
+  })
+
+  const pct = stats.percent || 0
+
+  return (
+    <div style={{ background: `linear-gradient(135deg, #0F172A 0%, #1E293B 100%)`, borderRadius: 20, overflow: 'hidden', boxShadow: `0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.06)`, marginBottom: 0 }}>
+
+      {/* Header */}
+      <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8 }}>
+                <span style={{ width: 5, height: 5, background: '#4ADE80', borderRadius: '50%', animation: 'pulse-live 1.5s infinite' }}></span>
+                LIVE SESSION
+              </span>
+              {sessions.length > 1 && (
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{sessions.length} active today</span>
+              )}
+            </div>
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: -0.4 }}>{activeSession?.title}</h2>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+              {activeSession?.start_time || ''}{activeSession?.end_time ? ` – ${activeSession.end_time}` : ''}
+              {activeSession?.location ? ` · ${activeSession.location}` : ''}
+            </p>
+          </div>
+          <button onClick={() => onOpenRegister(activeSession?.id)}
+            style={{ padding: '10px 16px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 4px 14px ${primary}50`, flexShrink: 0 }}>
+            Full Register →
+          </button>
+        </div>
+
+        {/* Session tabs if multiple */}
+        {sessions.length > 1 && (
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12, overflowX: 'auto' }}>
+            {sessions.map(s => (
+              <button key={s.id} onClick={() => setActiveSession(s)}
+                style={{ padding: '5px 12px', borderRadius: 99, border: `1px solid ${activeSession?.id === s.id ? primary : 'rgba(255,255,255,0.1)'}`, background: activeSession?.id === s.id ? primary + '25' : 'transparent', color: activeSession?.id === s.id ? primary : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                {s.title}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Stats row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
+          {[
+            { label: 'Signed In',  value: stats.signedIn,  color: '#4ADE80' },
+            { label: 'Expected',   value: stats.expected,  color: '#60A5FA' },
+            { label: 'Absent',     value: stats.absent,    color: '#FB923C' },
+            { label: 'Signed Out', value: stats.signedOut, color: '#C084FC' },
+          ].map(s => (
+            <div key={s.label} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '10px 12px', textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 900, color: s.color, letterSpacing: -0.5 }}>{s.value}</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ marginTop: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+            <span>Register progress</span>
+            <span style={{ color: pct === 100 ? '#4ADE80' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>{pct}%</span>
+          </div>
+          <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#4ADE80' : `linear-gradient(90deg, ${primary}, #8B5CF6)`, borderRadius: 99, transition: 'width 0.5s ease' }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Search + filter */}
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ flex: 1, position: 'relative' }}>
+          <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, opacity: 0.4 }}>🔍</span>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..."
+            style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px 8px 30px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {[['all','All'], ['signed_in','In'], ['expected','Expected'], ['absent','Absent']].map(([key, label]) => (
+            <button key={key} onClick={() => setFilterTab(key)}
+              style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${filterTab === key ? primary : 'rgba(255,255,255,0.1)'}`, background: filterTab === key ? primary + '25' : 'transparent', color: filterTab === key ? primary : 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Children list */}
+      <div style={{ maxHeight: 320, overflowY: 'auto', padding: '6px 0' }}>
+        {filteredChildren.length === 0 ? (
+          <div style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>No children found</div>
+        ) : filteredChildren.map(child => {
+          const status = getChildStatus(child.id)
+          const sc = statusCfg[status] || statusCfg.expected
+          const isUpdating = updating === child.id
+          const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
+          const hasAlert = child.allergies || child.medical_notes
+
+          return (
+            <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.1s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+
+              {/* Avatar */}
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: sc.bg, border: `2px solid ${sc.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: sc.color, flexShrink: 0, overflow: 'hidden' }}>
+                {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+              </div>
+
+              {/* Name */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {child.first_name} {child.last_name}
+                  {hasAlert && <span style={{ marginLeft: 6, fontSize: 10 }}>⚠️</span>}
+                </div>
+                {child.group_name && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{child.group_name}</div>}
+              </div>
+
+              {/* Status + actions */}
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                <span style={{ background: sc.bg, color: sc.color, borderRadius: 99, padding: '3px 9px', fontSize: 10, fontWeight: 800 }}>
+                  {sc.label}
+                </span>
+                <button onClick={() => handleToggle(child)} disabled={isUpdating}
+                  style={{ width: 32, height: 32, borderRadius: 9, border: 'none', background: status === 'signed_in' ? 'rgba(37,99,235,0.2)' : 'rgba(22,163,74,0.2)', color: status === 'signed_in' ? '#60A5FA' : '#4ADE80', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', fontWeight: 900 }}>
+                  {isUpdating ? '·' : status === 'signed_in' ? '↗' : '✓'}
+                </button>
+                <button onClick={() => handleAbsent(child)} disabled={isUpdating || status === 'absent'}
+                  style={{ width: 32, height: 32, borderRadius: 9, border: 'none', background: status === 'absent' ? 'rgba(220,38,38,0.2)' : 'rgba(255,255,255,0.06)', color: status === 'absent' ? '#FCA5A5' : 'rgba(255,255,255,0.3)', fontSize: 13, cursor: status === 'absent' ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
+                  ✕
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
+    </div>
+  )
+}
+
 export default function Hub({ org, session, setTab, onNavigate, userProfile, onAvatarClick }) {
   const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
   const [search, setSearch] = React.useState('')
@@ -281,57 +498,16 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       {/* ── LIVE SESSION HERO ── */}
       <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
-        <section style={styles.liveHero}>
-          <div style={styles.liveHeroTop}>
-            <span style={styles.liveBadge}>● LIVE SESSION TODAY</span>
-            <span style={styles.liveCount}>{todaySessions.length} active today</span>
-          </div>
-          {todaySessions.length > 1 ? (
-            <div style={styles.equalLiveGrid}>
-              {todaySessions.map(item => {
-                const itemStats = getLiveSessionStats(item);
-                return (
-                  <div key={item.id} style={styles.equalLiveCard}>
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
-                      <div>
-                        <div style={styles.equalLiveTitle}>{item.title}</div>
-                        <div style={styles.equalLiveMeta}>{item.start_time || "No time"}{item.end_time ? ` – ${item.end_time}` : ""}{item.location ? ` · ${item.location}` : ""}</div>
-                      </div>
-                      <span style={{ background: "#16A34A", color: "#fff", borderRadius: 999, padding: "5px 11px", fontSize: 11, fontWeight: 900 }}>LIVE</span>
-                    </div>
-                    <div style={styles.equalStatsGrid}>
-                      <div style={styles.equalStat}><strong style={{ fontSize: 22, color: "#34D399" }}>{itemStats.signedIn}</strong><span style={{ fontSize: 10, color: "#34D399", fontWeight: 900 }}>In</span></div>
-                      <div style={styles.equalStat}><strong style={{ fontSize: 22, color: "#60A5FA" }}>{itemStats.expected}</strong><span style={{ fontSize: 10, color: "#60A5FA", fontWeight: 900 }}>Expected</span></div>
-                      <div style={styles.equalStat}><strong style={{ fontSize: 22, color: "#FB923C" }}>{itemStats.absent}</strong><span style={{ fontSize: 10, color: "#FB923C", fontWeight: 900 }}>Absent</span></div>
-                      <div style={styles.equalStat}><strong style={{ fontSize: 22, color: "#C084FC" }}>{itemStats.signedOut}</strong><span style={{ fontSize: 10, color: "#C084FC", fontWeight: 900 }}>Out</span></div>
-                    </div>
-                    <div style={styles.progressLabel}><span>Register progress</span><span>{itemStats.percent}%</span></div>
-                    <div style={styles.progressBar}><div style={{ ...styles.progressFill, width: `${itemStats.percent}%`, background: primary }} /></div>
-                    <button style={{ ...styles.equalPrimaryButton, marginTop: 14, background: primary }} onClick={() => openRegisterForSession(item.id)}>Open Register →</button>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <>
-              <div style={styles.liveHeroBody}>
-                <div>
-                  <h2 style={styles.liveHeroTitle}>{liveHeroSession.title}</h2>
-                  <p style={styles.liveHeroMeta}>{liveHeroSession.start_time || "No time"}{liveHeroSession.end_time ? ` – ${liveHeroSession.end_time}` : ""}{liveHeroSession.location ? ` · ${liveHeroSession.location}` : ""}</p>
-                </div>
-                <button style={styles.liveHeroButton} onClick={() => openRegisterForSession(liveHeroSession.id)}>Open Live Register →</button>
-              </div>
-              <div style={styles.liveStatsGrid}>
-                <div style={styles.liveStat}><strong>{liveHeroStats.signedIn}</strong><span>Signed in</span></div>
-                <div style={styles.liveStat}><strong>{liveHeroStats.expected}</strong><span>Expected</span></div>
-                <div style={styles.liveStat}><strong>{liveHeroStats.absent}</strong><span>Absent</span></div>
-                <div style={styles.liveStat}><strong>{liveHeroStats.signedOut}</strong><span>Signed out</span></div>
-              </div>
-              <div style={styles.progressLabel}><span>Register progress</span><span>{liveHeroStats.percent}%</span></div>
-              <div style={styles.progressBar}><div style={{ ...styles.progressFill, width: `${liveHeroStats.percent}%`, background: primary }} /></div>
-            </>
-          )}
-        </section>
+        <LiveSessionPanel
+          sessions={todaySessions}
+          children={children}
+          attendance={attendance}
+          primary={primary}
+          orgId={org?.id}
+          onOpenRegister={openRegisterForSession}
+          onNavigate={go}
+          getLiveSessionStats={getLiveSessionStats}
+        />
       ) : (
         <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, #6D28D9)` }}>
           <div style={styles.trophy}>🏆</div>
