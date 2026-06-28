@@ -46,7 +46,7 @@ export default async function handler(req, res) {
   // Get org details for the email
   const { data: orgData } = await adminClient
     .from('organisations')
-    .select('name, slug')
+    .select('name, slug, primary_color, logo_url')
     .eq('id', org_id)
     .single()
 
@@ -58,6 +58,8 @@ export default async function handler(req, res) {
         full_name: name || email.split('@')[0],
         org_name: orgData?.name || 'your organisation',
         org_slug: orgData?.slug || org_slug,
+        org_color: orgData?.primary_color || '#3B82F6',
+        org_logo: orgData?.logo_url || null,
         role: 'volunteer',
         redirect_to: redirectUrl,
       }

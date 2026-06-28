@@ -73,7 +73,10 @@ export default function Signup() {
           full_name: approved.full_name,
           org_name: approved.organisation_name,
           org_slug: approved.generated_slug,
+          org_color: approved.primary_color || '#3B82F6',
+          org_logo: approved.logo_url || null,
           token: approved.admin_invite_token,
+          role: 'admin',
         }
       })
       if (emailError) {
