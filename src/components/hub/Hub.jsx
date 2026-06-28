@@ -71,7 +71,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
     expected:   { label: 'Expected',color: '#D97706', bg: '#FEF3C7', dot: '#F59E0B' },
   }
 
-  const filteredChildren = children.filter(ch => {
+  const filteredChildren = childList.filter(ch => {
     const name = `${ch.first_name} ${ch.last_name}`.toLowerCase()
     const matchSearch = !search || name.includes(search.toLowerCase())
     const status = getChildStatus(ch.id)
