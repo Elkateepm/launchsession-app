@@ -27,24 +27,7 @@ export default function Login({ org }) {
   const handleEmailContinue = async e => {
     e.preventDefault()
     if (!email.trim()) return
-
-    if (!org?.id) {
-      setError('Workspace is still loading — please wait a moment and try again.')
-      return
-    }
-
-    setLoading(true)
     setError('')
-
-    const { data: exists, error: rpcError } = await supabase
-      .rpc('check_user_in_org', { p_email: email.trim(), p_org_id: org.id })
-
-    if (rpcError || !exists) {
-      setError('No account found for this email in this workspace.')
-      setLoading(false)
-      return
-    }
-    setLoading(false)
     setStep(STEPS.PASSWORD)
   }
 
@@ -56,12 +39,15 @@ export default function Login({ org }) {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      setError(error.message)
+      setError(
+        error.message === 'Invalid login credentials'
+          ? 'Incorrect email or password. Please try again.'
+          : error.message
+      )
       setLoading(false)
       return
     }
-
-    window.location.href = '/hub'
+    // Auth state change is picked up by App.js — no redirect needed
   }
 
   const handleMagicLink = async () => {
