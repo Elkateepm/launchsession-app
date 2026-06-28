@@ -253,8 +253,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         </div>
       </header>
 
-      {/* ── SCROLLABLE BODY ── */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
       {/* ── LIVE SESSION HERO ── */}
       <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
@@ -462,7 +460,6 @@ function MiniRow({ icon, title, text, badge }) {
         <div style={{ fontSize: 11, color: '#6B7280' }}>{text}</div>
       </div>
       {badge && <span style={styles.dueBadge}>{badge}</span>}
-      </div>
     </div>
   );
 }
@@ -482,7 +479,7 @@ function formatDate(date) {
 }
 
 const styles = {
-  page: { height: "100%", background: "linear-gradient(180deg, #F8FBFF 0%, #EEF4FA 100%)", padding: 0, color: "#0F172A", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" },
+  page: { height: "100%", background: "linear-gradient(180deg, #F8FBFF 0%, #EEF4FA 100%)", padding: 0, color: "#0F172A", overflow: "hidden", boxSizing: "border-box" },
   loading: { padding: 50, textAlign: "center", color: "#64748B", fontWeight: 800 },
   liveHero: { background: "linear-gradient(135deg, #081226, #12235A)", borderRadius: 22, color: "#fff", padding: 24, marginBottom: 22, boxShadow: "0 18px 38px rgba(15,23,42,0.25)" },
   liveHeroTop: { display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 22 },
