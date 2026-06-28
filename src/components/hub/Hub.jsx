@@ -354,7 +354,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const expected = Math.max(children.length, records.length);
     return { signedIn: si, absent, signedOut: so, expected, percent: expected > 0 ? Math.round((si / expected) * 100) : 0 };
   };
-  const liveHeroStats = liveHeroSession ? getLiveSessionStats(liveHeroSession) : { signedIn: 0, absent: 0, signedOut: 0, expected: 0, percent: 0 };
 
   const openRegisterForSession = (sessionId) => {
     try { window.localStorage.setItem("launchsession_selected_session_id", sessionId); } catch (e) {}
