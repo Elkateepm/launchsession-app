@@ -26,14 +26,6 @@ import ResourceBooking from '../resources/ResourceBooking'
 // Base modules always free — regardless of pack
 const BASE_MODULE_KEYS = ['home', 'calendar', 'planner', 'events_trips', 'team', 'settings', 'templates']
 
-// Pack definitions — mirrors Command Centre PACKS
-const PACK_MODULES = {
-  delivery:      ['registers', 'volunteers', 'messaging', 'gallery'],
-  safeguarding:  ['safeguarding', 'forms', 'case_management'],
-  growth:        ['reports', 'impact_outcomes', 'fundraising'],
-  operations:    ['hr', 'resource_booking', 'events_trips'],
-}
-
 const ALL_MODULES = [
   { key: 'calendar',        label: 'Calendar',         icon: '📅', group: 'delivery' },
   { key: 'registers',       label: 'Registers',        icon: '📋', group: 'delivery' },
@@ -178,11 +170,7 @@ export default function Dashboard({ session, org }) {
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
   const hasModule = (key) => allowed.includes(key)
-  const availableModules      = ALL_MODULES.filter(m => allowed.includes(m.key))
-  const deliveryModules       = availableModules.filter(m => m.group === 'delivery')
-  const safeguardingModules   = availableModules.filter(m => m.group === 'safeguarding')
-  const growthModules         = availableModules.filter(m => m.group === 'growth')
-  const operationsModules     = availableModules.filter(m => m.group === 'operations')
+
   const handleSignOut = () => supabase.auth.signOut()
   const userEmail = session?.user?.email || ''
   const [userProfile, setUserProfile] = useState(null)
