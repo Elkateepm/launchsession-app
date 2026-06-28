@@ -177,13 +177,23 @@ function InlineChildImport({ org, onImported }) {
 }
 
 // ─── CHILD DRAWER ─────────────────────────────────────────────
-function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdateStatus, primary, hasSession }) {
+function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], onClose, onUpdateStatus, primary, hasSession, onGroupChange }) {
   const isMobile = useIsMobile()
   const [drawerTab, setDrawerTab] = useState(hasSession ? 'actions' : 'info')
   const [absenceReason, setAbsenceReason] = useState('')
   const [photoUrl, setPhotoUrl] = useState(child.photo_url || null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [assigningGroup, setAssigningGroup] = useState(false)
+  const [currentGroup, setCurrentGroup] = useState(child.group_name || '')
   const photoInputRef = React.useRef()
+
+  const handleGroupAssign = async (groupLabel) => {
+    setAssigningGroup(true)
+    await supabase.from('children').update({ group_name: groupLabel }).eq('id', child.id)
+    setCurrentGroup(groupLabel)
+    if (onGroupChange) onGroupChange(child.id, groupLabel)
+    setAssigningGroup(false)
+  }
 
   const name = `${child.first_name} ${child.last_name}`
   const initials = `${child.first_name[0]}${child.last_name[0]}`
@@ -192,6 +202,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
   const signedOutTime = attendanceRecord?.signed_out_at ? format(new Date(attendanceRecord.signed_out_at), 'HH:mm') : null
   const hasAlerts = child.allergies || child.medical_notes
   const bColor = bubble?.color || primary || '#1B9AAA'
+  const currentBubble = bubbles.find(b => b.label?.toLowerCase() === currentGroup?.toLowerCase()) || bubble
 
   const statusCfg = {
     signed_in:  { label: 'Signed In',  color: '#16A34A', bg: '#DCFCE7', icon: '✓' },
@@ -306,6 +317,32 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
             </div>
           )}
 
+          {/* Quick group assign */}
+          {bubbles.length > 0 && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 7 }}>Quick Assign Group</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {bubbles.map(b => {
+                  const isActive = currentGroup?.toLowerCase() === b.label?.toLowerCase()
+                  return (
+                    <button key={b.key} onClick={() => handleGroupAssign(b.label)} disabled={assigningGroup}
+                      style={{ padding: '5px 12px', borderRadius: 99, border: `1.5px solid ${isActive ? '#fff' : 'rgba(255,255,255,0.25)'}`, background: isActive ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 11, fontWeight: isActive ? 900 : 600, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: b.color, flexShrink: 0, boxShadow: isActive ? `0 0 6px ${b.color}` : 'none' }} />
+                      {b.label}
+                      {isActive && <span style={{ fontSize: 9 }}>✓</span>}
+                    </button>
+                  )
+                })}
+                {currentGroup && (
+                  <button onClick={() => handleGroupAssign('')} disabled={assigningGroup}
+                    style={{ padding: '5px 10px', borderRadius: 99, border: '1.5px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer' }}>
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Signed in/out times */}
           {(signedInTime || signedOutTime) && (
             <div style={{ marginTop: 14, display: 'flex', gap: 12 }}>
@@ -396,12 +433,12 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, onClose, onUpdat
               </div>
 
               {/* Group */}
-              {bubble && (
-                <div style={{ background: bubble.color + '10', border: `1px solid ${bubble.color}30`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: bubble.color, flexShrink: 0 }} />
+              {(currentGroup || bubble) && (
+                <div style={{ background: (currentBubble?.color || bColor) + '10', border: `1px solid ${(currentBubble?.color || bColor)}30`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: currentBubble?.color || bColor, flexShrink: 0 }} />
                   <div>
                     <div style={{ fontSize: 9, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1 }}>Group</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: bubble.color, marginTop: 2 }}>{bubble.label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: currentBubble?.color || bColor, marginTop: 2 }}>{currentGroup || bubble?.label || '—'}</div>
                   </div>
                 </div>
               )}
@@ -812,10 +849,14 @@ export default function Registers({ org }) {
           status={selectedChild.status}
           attendanceRecord={selectedChild.attRec}
           bubble={getBubble(selectedChild.child)}
+          bubbles={bubbles}
           primary={primary}
           hasSession={!!session}
           onClose={() => setSelectedChild(null)}
           onUpdateStatus={(id, status, extra) => { handleUpdateStatus(id, status, extra); setSelectedChild(null) }}
+          onGroupChange={(childId, groupName) => {
+            setChildren(prev => prev.map(ch => ch.id === childId ? { ...ch, group_name: groupName } : ch))
+          }}
         />
       )}
 
