@@ -46,18 +46,20 @@ function AppContent() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const hasOrg = new URLSearchParams(window.location.search).get('org')
-    const isDashboard = window.location.pathname === '/dashboard'
-    if (window.location.pathname === '/' && !hasOrg && !isDashboard) {
-      window.location.replace('/landing.html')
-      return
-    }
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
+
+      // Only redirect to landing if no session AND no org slug in URL
+      const hasOrg = new URLSearchParams(window.location.search).get('org')
+      const isDashboard = window.location.pathname === '/dashboard'
+      if (!session && window.location.pathname === '/' && !hasOrg && !isDashboard) {
+        window.location.replace('/landing.html')
+      }
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setSession(session))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, newSession) => {
+      setSession(newSession)
+    })
     return () => subscription.unsubscribe()
   }, [])
 
