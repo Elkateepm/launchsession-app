@@ -546,7 +546,6 @@ export default function SessionPlanner({ org, onSessionSaved }) {
   const [saving, setSaving] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
 
-  const today = format(new Date(), 'yyyy-MM-dd')
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
