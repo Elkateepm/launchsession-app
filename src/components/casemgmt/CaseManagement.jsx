@@ -160,7 +160,6 @@ export default function CaseManagement({ org, session: authSession }) {
   const [selectedCase, setSelectedCase] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
   const [filterStatus, setFilterStatus] = useState('all')
-  const [filterType, setFilterType] = useState('all')
   const [creating, setCreating] = useState(false)
   const [newCase, setNewCase] = useState({ child_name: '', case_type: 'Safeguarding', summary: '', assigned_to: '', priority: 'medium' })
   const primary = org?.primary_color || '#1B9AAA'
@@ -184,7 +183,6 @@ export default function CaseManagement({ org, session: authSession }) {
 
   let filtered = cases
   if (filterStatus !== 'all') filtered = filtered.filter(c => c.status === filterStatus)
-  if (filterType !== 'all') filtered = filtered.filter(c => c.case_type === filterType)
 
   const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
   const openCases = cases.filter(c => c.status === 'open' || c.status === 'in_progress').length

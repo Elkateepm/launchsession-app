@@ -73,7 +73,6 @@ export default function ResourceBooking({ org, session: authSession }) {
   const [bookingForm, setBookingForm] = useState({ resource_id: '', date: '', start_time: '09', end_time: '10', purpose: '' })
   const [newResource, setNewResource] = useState({ name: '', type: 'room', description: '', capacity: '', icon: '🚪' })
   const [saving, setSaving] = useState(false)
-  const [view, setView] = useState('week') // 'week' | 'list'
   const primary = org?.primary_color || '#1B9AAA'
 
   const load = useCallback(async () => {
