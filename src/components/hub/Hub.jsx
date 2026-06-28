@@ -4,7 +4,7 @@ import { useIsMobile } from "../../hooks/useIsMobile";
 
 
 // ── LIVE SESSION PANEL ─────────────────────────────────────────
-function LiveSessionPanel({ sessions, children, attendance, primary, orgId, onOpenRegister, onNavigate, getLiveSessionStats }) {
+function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onOpenRegister, onNavigate, getLiveSessionStats }) {
   const [activeSession, setActiveSession] = useState(sessions[0])
   const [localAttendance, setLocalAttendance] = useState(attendance)
   const [updating, setUpdating] = useState(null)
@@ -16,7 +16,7 @@ function LiveSessionPanel({ sessions, children, attendance, primary, orgId, onOp
   React.useEffect(() => { if (sessions.length) setActiveSession(sessions[0]) }, [sessions])
 
   const sessionAttendance = localAttendance.filter(a => a.session_id === activeSession?.id)
-  const stats = getLiveSessionStats(activeSession)
+  const stats = activeSession ? getLiveSessionStats(activeSession) : { signedIn: 0, expected: 0, absent: 0, signedOut: 0, percent: 0 }
 
   const getChildStatus = (childId) => {
     const rec = sessionAttendance.find(a => a.child_id === childId)
@@ -499,7 +499,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       {liveHeroSession ? (
         <LiveSessionPanel
           sessions={todaySessions}
-          children={children}
+          childList={children}
           attendance={attendance}
           primary={primary}
           orgId={org?.id}
