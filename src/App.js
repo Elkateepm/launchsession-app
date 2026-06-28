@@ -90,6 +90,8 @@ function AppContent() {
 export default function App() {
   const pathname = window.location.pathname
   if (pathname.startsWith('/volunteer')) return <VolunteerPortal />
+  if (pathname === '/signup') return <Signup />
+  if (pathname === '/create-password') return <CreatePassword />
   return (
     <OrgProvider>
       <AppContent />
