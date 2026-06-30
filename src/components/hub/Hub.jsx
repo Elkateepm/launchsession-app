@@ -389,6 +389,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const attendanceRate = children.length > 0 ? Math.round((signedIn / children.length) * 100) : 0;
   const nextSession = upcomingSessions[0];
   const liveHeroSession = todaySessions[0];
+  const trialDaysLeft = (org?.status === 'trial' && org?.created_at)
+    ? Math.max(0, 7 - Math.floor((Date.now() - new Date(org.created_at).getTime()) / 86400000))
+    : null;
 
   const getLiveSessionStats = (item) => {
     const records = attendance.filter(a => a.session_id === item.id);
@@ -411,7 +414,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   return (
     <div style={styles.page}>
       {/* ── HEADER ── */}
-      <header style={{ background: 'var(--surface, #fff)', borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+      <header style={{ background: `linear-gradient(135deg, ${primary}0A, var(--surface, #fff) 40%)`, borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
 
         {/* Subtle brand gradient top strip */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}88, transparent)` }} />
@@ -423,9 +426,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             <div style={{ position: 'relative' }}>
               {org?.logo_url ? (
-                <img src={org.logo_url} alt={orgName} style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'contain', border: `1.5px solid ${primary}30`, background: '#fff', padding: 2 }} />
+                <img src={org.logo_url} alt={orgName} style={{ width: 40, height: 40, borderRadius: 11, objectFit: 'contain', border: `1.5px solid ${primary}30`, background: '#fff', padding: 2, boxShadow: `0 4px 14px ${primary}25` }} />
               ) : (
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${primary}, ${primary}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#fff', boxShadow: `0 4px 12px ${primary}30` }}>
+                <div style={{ width: 40, height: 40, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, ${primary}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 900, color: '#fff', boxShadow: `0 4px 14px ${primary}35` }}>
                   {orgName[0]}
                 </div>
               )}
@@ -433,8 +436,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
             {!isMobile && (
               <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text, #111)', lineHeight: 1.2, fontFamily: 'var(--font-display, sans-serif)' }}>{orgName}</div>
-                <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: primary, background: primary + '15', borderRadius: 4, padding: '2px 7px', border: `1px solid ${primary}30` }}>{org?.plan || 'Starter'} Plan</span>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text, #111)', lineHeight: 1.2, fontFamily: 'var(--font-display, sans-serif)' }}>{orgName}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: primary, background: primary + '15', borderRadius: 4, padding: '2px 7px', border: `1px solid ${primary}30` }}>{org?.plan || 'Starter'} Plan</span>
+                  {org?.status === 'trial' && trialDaysLeft !== null && (
+                    <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', color: trialDaysLeft <= 2 ? '#DC2626' : '#B45309', background: trialDaysLeft <= 2 ? '#FEE2E2' : '#FEF3C7', borderRadius: 4, padding: '2px 7px', border: `1px solid ${trialDaysLeft <= 2 ? '#FCA5A5' : '#FDE68A'}` }}>
+                      ⭐ {trialDaysLeft}d left
+                    </span>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -512,7 +522,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, ${primary}99)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, boxShadow: `0 2px 8px ${primary}40` }}>
                 {userProfile?.photo_url ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : hubUserName[0]?.toUpperCase() || '?'}
               </div>
-              {!isMobile && <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text, #111)', fontFamily: 'var(--font-display, sans-serif)' }}>{hubUserName.split(' ')[0]}</div>}
+              {!isMobile && (
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text, #111)', fontFamily: 'var(--font-display, sans-serif)', lineHeight: 1.2 }}>{hubUserName.split(' ')[0]}</div>
+                  {userProfile?.role && (
+                    <div style={{ fontSize: 9, fontWeight: 700, color: primary, lineHeight: 1.2, textTransform: 'capitalize' }}>{userProfile.role}</div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
