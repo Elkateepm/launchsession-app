@@ -541,7 +541,7 @@ export default function SessionPlanner({ org, onSessionSaved }) {
   const [volCounts, setVolCounts] = useState({})
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('list') // 'list' | 'week' | 'form'
-  const [filter, setFilter] = useState('all') // 'all' | 'sessions' | 'trips'
+  const [filter, setFilter] = useState('all') // 'all' | 'sessions' | 'trips' | 'past'
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
@@ -564,7 +564,17 @@ export default function SessionPlanner({ org, onSessionSaved }) {
 
   useEffect(() => { loadData() }, [orgId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const isSessionPast = (s) => {
+    if (!s.session_date) return false
+    const endDateStr = s.end_date || s.session_date
+    const endTimeStr = s.end_time || '23:59'
+    const endDateTime = new Date(`${endDateStr}T${endTimeStr}`)
+    return endDateTime < new Date()
+  }
+
   const displayed = sessions.filter(s => {
+    if (filter === 'past') return isSessionPast(s)
+    if (isSessionPast(s)) return false // hide ended sessions from all other views
     if (filter === 'trips') return s.session_type === 'trip'
     if (filter === 'sessions') return s.session_type !== 'trip'
     return true
@@ -651,7 +661,7 @@ export default function SessionPlanner({ org, onSessionSaved }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
         {/* Filter tabs */}
         <div style={{ display: 'flex', background: 'var(--surface2, #F3F4F6)', borderRadius: 10, padding: 3, gap: 2 }}>
-          {[{ key: 'all', label: 'All' }, { key: 'sessions', label: 'Sessions' }, { key: 'trips', label: '🚌 Trips' }].map(f => (
+          {[{ key: 'all', label: 'All' }, { key: 'sessions', label: 'Sessions' }, { key: 'trips', label: '🚌 Trips' }, { key: 'past', label: '🗄️ Past' }].map(f => (
             <button key={f.key} onClick={() => setFilter(f.key)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: filter === f.key ? '#fff' : 'transparent', color: filter === f.key ? 'var(--text, #111)' : 'var(--text3, #6B7280)', fontSize: 13, fontWeight: filter === f.key ? 800 : 600, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
               {f.label}
             </button>
@@ -672,10 +682,10 @@ export default function SessionPlanner({ org, onSessionSaved }) {
         <div style={{ textAlign: 'center', padding: 60, color: 'var(--text3, #94a3b8)', fontWeight: 700 }}>Loading sessions...</div>
       ) : displayed.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 20px', background: 'var(--surface, #fff)', borderRadius: 16, border: '1.5px dashed var(--border, #E5E7EB)' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📅</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 6 }}>No upcoming sessions</div>
-          <div style={{ fontSize: 13, color: 'var(--text3, #6B7280)', marginBottom: 20 }}>Create your first session to get started</div>
-          <button onClick={() => openNew()} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>+ New Session</button>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>{filter === 'past' ? '🗄️' : '📅'}</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 6 }}>{filter === 'past' ? 'No past sessions yet' : 'No upcoming sessions'}</div>
+          <div style={{ fontSize: 13, color: 'var(--text3, #6B7280)', marginBottom: 20 }}>{filter === 'past' ? 'Sessions move here automatically once they end' : 'Create your first session to get started'}</div>
+          {filter !== 'past' && <button onClick={() => openNew()} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>+ New Session</button>}
         </div>
       ) : view === 'list' ? (
         <div>

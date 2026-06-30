@@ -312,8 +312,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const yesterdayStr = yesterday.toISOString().split('T')[0]
     return sessions.filter(s => {
       if (!s.session_date) return false
-      // Always include today's sessions
-      if (s.session_date === today) return true
+      // Today's sessions — only include if they haven't ended yet
+      if (s.session_date === today) {
+        const endDateStr = s.end_date || s.session_date
+        const endDateTime = new Date(`${endDateStr}T${s.end_time || '23:59'}`)
+        return endDateTime >= now
+      }
       // Include yesterday's sessions that haven't ended yet (within 24h window)
       if (s.session_date === yesterdayStr && s.end_time) {
         const endDateTime = new Date(`${s.session_date}T${s.end_time}`)
@@ -325,10 +329,20 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     })
   }, [sessions, today]);
   const upcomingSessions = useMemo(() => {
-    // Show sessions not already in the 24h window, ordered by date
+    // Show sessions not already in the 24h window, excluding ones that have ended
+    const now = new Date()
     const todayIds = new Set(todaySessions.map(s => s.id))
     return sessions
-      .filter(s => s.session_date >= today && !todayIds.has(s.id))
+      .filter(s => {
+        if (todayIds.has(s.id)) return false
+        if (s.session_date < today) return false
+        if (s.session_date === today) {
+          const endDateStr = s.end_date || s.session_date
+          const endDateTime = new Date(`${endDateStr}T${s.end_time || '23:59'}`)
+          return endDateTime >= now
+        }
+        return true
+      })
       .slice(0, 4)
   }, [sessions, today, todaySessions]);
   const completedWithoutReflection = useMemo(() => {
