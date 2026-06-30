@@ -59,6 +59,7 @@ export default function Onboarding({ session, org, onComplete }) {
         contact_name: contactName,
         contact_email: contactEmail,
         onboarding_data: { org_type: orgType, size, city, country, focus, contact_name: contactName, contact_email: contactEmail, completed_at: new Date().toISOString() },
+        onboarding_complete: true,
         ...(customGroups.length > 0 ? { custom_groups: customGroups } : {})
       })
       .eq('id', org.id)
