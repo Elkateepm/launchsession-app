@@ -53,21 +53,73 @@ function AuthedApp({ session, org }) {
   return <Dashboard session={session} org={org} />
 }
 
+// Decide up-front, before any rendering, whether this is a bare root visit
+// that should go straight to the marketing landing page.
+function shouldGoToLanding() {
+  const pathname = window.location.pathname
+  const hasOrg = new URLSearchParams(window.location.search).get('org')
+  const hasSavedOrg = (() => { try { return !!localStorage.getItem('launchsession_org_slug') } catch (e) { return false } })()
+  const isDashboard = pathname === '/dashboard'
+  const isSpecialRoute = ['/login', '/signup', '/create-password', '/org-search'].includes(pathname) || pathname.startsWith('/volunteer')
+  return pathname === '/' && !hasOrg && !hasSavedOrg && !isDashboard && !isSpecialRoute
+}
+
+function AutoResolveOrg({ session }) {
+  const [error, setError] = React.useState(false)
+
+  React.useEffect(() => {
+    let cancelled = false
+    supabase.from('user_profiles')
+      .select('org_id, organisations(slug)')
+      .eq('id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return
+        const slug = data?.organisations?.slug
+        if (slug) {
+          try { localStorage.setItem('launchsession_org_slug', slug) } catch (e) {}
+          window.location.replace(window.location.origin + '/dashboard?org=' + slug)
+        } else {
+          setError(true)
+        }
+      })
+    return () => { cancelled = true }
+  }, [session.user.id])
+
+  if (error) return <OrgLookup />
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0A0A1A', flexDirection: 'column', gap: 16 }}>
+      <div style={{ width: 44, height: 44, border: '3px solid #1B9AAA', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', letterSpacing: 1 }}>FINDING YOUR WORKSPACE...</div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
+}
+
 function AppContent() {
   const pathname = window.location.pathname
   const { org, loading: orgLoading, error: orgError, noOrg } = useOrg()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [checkedSession, setCheckedSession] = useState(false)
+
+  // Redirect to landing immediately if this looks like a bare/fresh visit —
+  // runs synchronously on first render, before OrgLookup ever gets a chance to show.
+  if (shouldGoToLanding() && !checkedSession) {
+    window.location.replace('/landing.html')
+    return null
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
+      setCheckedSession(true)
 
-      // Only redirect to landing if no session AND no org slug in URL
-      const hasOrg = new URLSearchParams(window.location.search).get('org')
-      const isDashboard = window.location.pathname === '/dashboard'
-      if (!session && window.location.pathname === '/' && !hasOrg && !isDashboard) {
+      // Secondary check once we know for sure there's no session — covers any
+      // edge case the synchronous check above might have missed.
+      if (!session && shouldGoToLanding()) {
         window.location.replace('/landing.html')
       }
     })
@@ -87,6 +139,13 @@ function AppContent() {
 
   if (pathname === '/create-password') return <CreatePassword />
   if (window.location.pathname === '/signup') return <Signup />
+
+  // If the user is already signed in but we have no org context yet,
+  // auto-resolve their org from their profile instead of making them
+  // search for it again — they've already proven who they are.
+  if (noOrg && session && checkedSession) {
+    return <AutoResolveOrg session={session} />
+  }
   if (noOrg) return <OrgLookup />
 
   if (orgError) return (
