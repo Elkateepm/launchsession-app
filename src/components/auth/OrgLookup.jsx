@@ -17,22 +17,27 @@ export default function OrgLookup() {
     setError('')
 
     const query = orgName.trim().toLowerCase()
+    const normalizedQuery = query.replace(/-/g, ' ')
 
-    // Search by name or slug
+    // Exact match only (hyphens treated as spaces)
     const { data: orgs } = await supabase
       .from('organisations')
       .select('*')
       .eq('status', 'active')
-      .or(`slug.ilike.%${query}%,name.ilike.%${query}%`)
-      .limit(5)
 
     setLoading(false)
 
-    if (orgs && orgs.length === 1) {
-      setOrg(orgs[0])
+    const matches = (orgs || []).filter(o => {
+      const normalizedName = (o.name || '').toLowerCase().replace(/-/g, ' ')
+      const normalizedSlug = (o.slug || '').toLowerCase().replace(/-/g, ' ')
+      return normalizedName === normalizedQuery || normalizedSlug === normalizedQuery
+    })
+
+    if (matches.length === 1) {
+      setOrg(matches[0])
       setStep('found')
-    } else if (orgs && orgs.length > 1) {
-      setOrg(orgs)
+    } else if (matches.length > 1) {
+      setOrg(matches)
       setStep('multiple')
     } else {
       setError('No organisation found. Check the name or contact your admin.')
