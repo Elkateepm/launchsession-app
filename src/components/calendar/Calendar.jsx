@@ -69,7 +69,7 @@ function SessionModal({ session, org, onClose, onDelete }) {
   )
 }
 
-export default function Calendar({ org }) {
+export default function Calendar({ org, onSessionChanged }) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -131,7 +131,10 @@ export default function Calendar({ org }) {
     return sessions.filter(s => s.session_date?.startsWith(m)).length
   }, [sessions, currentDate])
 
-  const deleteSession = (id) => setSessions(s => s.filter(x => x.id !== id))
+  const deleteSession = (id) => {
+    setSessions(s => s.filter(x => x.id !== id))
+    if (onSessionChanged) onSessionChanged()
+  }
 
   const todayStr = format(new Date(), 'yyyy-MM-dd')
 
