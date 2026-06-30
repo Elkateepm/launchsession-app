@@ -65,10 +65,12 @@ function AuthedApp({ session, org }) {
 function shouldGoToLanding() {
   const pathname = window.location.pathname
   const hasOrg = new URLSearchParams(window.location.search).get('org')
-  const hasSavedOrg = (() => { try { return !!localStorage.getItem('launchsession_org_slug') } catch (e) { return false } })()
   const isDashboard = pathname === '/dashboard'
   const isSpecialRoute = ['/login', '/signup', '/create-password', '/org-search'].includes(pathname) || pathname.startsWith('/volunteer')
-  return pathname === '/' && !hasOrg && !hasSavedOrg && !isDashboard && !isSpecialRoute
+  // The bare root path always shows the marketing landing page first —
+  // even for returning visitors with a previously saved org. A saved org
+  // only matters once they've actively chosen to go to /dashboard or /login.
+  return pathname === '/' && !hasOrg && !isDashboard && !isSpecialRoute
 }
 
 function AutoResolveOrg({ session }) {
