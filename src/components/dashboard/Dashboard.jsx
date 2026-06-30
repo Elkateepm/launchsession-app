@@ -414,7 +414,7 @@ export default function Dashboard({ session, org }) {
           {/* ── BASE MODULES — always free ── */}
           {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
           {tab === 'planner'    && <SessionPlanner org={org} onSessionSaved={bumpSessions} />}
-          {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} />}
+          {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} />}
           {tab === 'events_trips' && <EventsTrips org={org} />}
           {tab === 'team'       && <TeamTab org={org} session={session} />}
           {tab === 'templates'  && <Templates org={org} session={session} onNavigate={handleSetTab} />}
