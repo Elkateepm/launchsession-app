@@ -12,7 +12,7 @@ const inp = {
 }
 
 export default function Login({ org }) {
-  const [step, setStep] = useState(STEPS.ROLE)
+  const [step, setStep] = useState(STEPS.EMAIL)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -89,45 +89,10 @@ export default function Login({ org }) {
         {/* Card */}
         <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 32, backdropFilter: 'blur(12px)' }}>
 
-          {/* STEP: ROLE SELECTOR */}
-          {step === STEPS.ROLE && (
-            <div>
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Sign in to your Hub</div>
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)' }}>Choose how you support {orgName}</div>
-              </div>
-              {[
-                { role: 'staff',     icon: '🛡️', label: 'Staff',         sub: 'Deliver safe and impactful sessions',        color: '#3B82F6', always: true },
-                { role: 'volunteer', icon: '❤️', label: 'Volunteer',      sub: 'Support activities and positive experiences', color: '#1B9AAA', module: 'volunteers' },
-                { role: 'parent',    icon: '👨‍👧', label: 'Parent / Carer', sub: 'Stay connected to your child journey',    color: '#F59E0B', module: 'parent_portal' },
-              ].filter(r => r.always || (org?.modules || []).includes(r.module)).map(r => (
-                <button key={r.role} onClick={() => {
-                  if (r.role === 'volunteer') {
-                    window.location.href = '/volunteer/' + (org?.slug || '')
-                  } else {
-                    setStep(STEPS.EMAIL)
-                  }
-                }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', borderRadius: 14, border: `1px solid rgba(255,255,255,0.1)`, background: 'rgba(255,255,255,0.04)', cursor: 'pointer', marginBottom: 10, textAlign: 'left', transition: 'all 0.2s' }}
-                  onMouseOver={e => { e.currentTarget.style.background = `rgba(255,255,255,0.08)`; e.currentTarget.style.borderColor = r.color + '55' }}
-                  onMouseOut={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: r.color + '22', border: `1px solid ${r.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{r.icon}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 2 }}>{r.label}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.4 }}>{r.sub}</div>
-                  </div>
-                  <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 18 }}>›</div>
-                </button>
-              ))}
-            <div style={{ textAlign: 'center', marginTop: 8 }}>
-                <button onClick={() => setStep(STEPS.EMAIL)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: 12, cursor: 'pointer', padding: 0 }}>Admin access</button>
-              </div>
-            </div>
-          )}
 
-          {/* STEP: EMAIL */}
           {step === STEPS.EMAIL && (
             <div>
-              <button onClick={() => { setStep(STEPS.ROLE); setError('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, padding: 0 }}>← Back</button>
+              <button onClick={() => { try { localStorage.removeItem('launchsession_org_slug') } catch (e) {}; window.location.href = '/' }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, padding: 0 }}>← Back</button>
               <div style={{ marginBottom: 28 }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Welcome back</div>
                 <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)' }}>Sign in to your organisation workspace</div>
