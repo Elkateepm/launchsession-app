@@ -104,13 +104,6 @@ function AppContent() {
   const [loading, setLoading] = useState(true)
   const [checkedSession, setCheckedSession] = useState(false)
 
-  // Redirect to landing immediately if this looks like a bare/fresh visit —
-  // runs synchronously on first render, before OrgLookup ever gets a chance to show.
-  if (shouldGoToLanding() && !checkedSession) {
-    window.location.replace('/landing.html')
-    return null
-  }
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
@@ -128,6 +121,12 @@ function AppContent() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  // Redirect to landing immediately if this looks like a bare/fresh visit.
+  if (shouldGoToLanding() && !checkedSession) {
+    window.location.replace('/landing.html')
+    return null
+  }
 
   if (orgLoading || loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0A0A1A', flexDirection: 'column', gap: 16 }}>
