@@ -43,7 +43,13 @@ export function OrgProvider({ children }) {
 
       let slug = params.get('org')
 
-      if (!slug && pathname !== '/login') {
+      // Only fall back to a previously saved org when the user is returning
+      // to a route that implies "continue where I left off" (the dashboard,
+      // or a deep link other than the bare root). A bare '/' visit on the
+      // app subdomain — or the login screen — should always offer org
+      // search rather than silently re-entering the last workspace.
+      const isBareRoot = pathname === '/'
+      if (!slug && pathname !== '/login' && !isBareRoot) {
         slug = localStorage.getItem('launchsession_org_slug')
       }
 
