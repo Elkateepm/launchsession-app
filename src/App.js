@@ -49,6 +49,13 @@ function AuthedApp({ session, org }) {
     return null
   }
 
+  // Parents get their own dedicated portal (when it exists / module is enabled)
+  if (userRole === 'parent') {
+    const slug = org?.slug || ''
+    window.location.replace('/parent/' + slug)
+    return null
+  }
+
   if (!onboardingDone) return <Onboarding session={session} org={org} onComplete={() => setOnboardingDone(true)} />
   return <Dashboard session={session} org={org} />
 }
