@@ -64,13 +64,18 @@ function AuthedApp({ session, org }) {
 // that should go straight to the marketing landing page.
 function shouldGoToLanding() {
   const pathname = window.location.pathname
+  const hostname = window.location.hostname
   const hasOrg = new URLSearchParams(window.location.search).get('org')
   const isDashboard = pathname === '/dashboard'
   const isSpecialRoute = ['/login', '/signup', '/create-password', '/org-search'].includes(pathname) || pathname.startsWith('/volunteer')
-  // The bare root path always shows the marketing landing page first —
-  // even for returning visitors with a previously saved org. A saved org
-  // only matters once they've actively chosen to go to /dashboard or /login.
-  return pathname === '/' && !hasOrg && !isDashboard && !isSpecialRoute
+  // The app subdomain is the application itself — never redirect it to the
+  // marketing landing page, regardless of path or org context.
+  const isAppSubdomain = hostname.startsWith('app.')
+  // The bare root path on the marketing domain always shows the landing
+  // page first — even for returning visitors with a previously saved org.
+  // A saved org only matters once they've actively chosen to go to
+  // /dashboard or /login.
+  return pathname === '/' && !hasOrg && !isDashboard && !isSpecialRoute && !isAppSubdomain
 }
 
 function AutoResolveOrg({ session }) {

@@ -53,7 +53,8 @@ export function OrgProvider({ children }) {
 
       if (!slug && hostname.includes('.launchsession.co.uk')) {
         const subdomain = hostname.split('.')[0]
-        if (subdomain !== 'www' && subdomain !== 'launchsession') {
+        // 'app' and 'admin' are reserved subdomains, not org slugs
+        if (!['www', 'launchsession', 'app', 'admin'].includes(subdomain)) {
           slug = subdomain
         }
       }
