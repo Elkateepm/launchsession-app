@@ -501,7 +501,6 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 // ─── CHILD CARD ───────────────────────────────────────────────
 function ChildCard({ child, status, bubble, onClick, primary }) {
   const bColor = bubble?.color || primary || '#1B9AAA'
-  const hasAlerts = child.allergies || child.medical_notes
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const [hovered, setHovered] = React.useState(false)
 

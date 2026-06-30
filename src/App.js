@@ -38,7 +38,7 @@ function AuthedApp({ session, org }) {
         const needsOnboarding = !data || (!data.onboarding_complete && isOwnerOrAdmin)
         setOnboardingDone(!needsOnboarding)
       })
-  }, [session.user.id])
+  }, [session.user.id, session.user.email, org?.id])
 
   if (onboardingDone === null || userRole === null) return null
 
