@@ -10,6 +10,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
   const [updating, setUpdating] = useState(null)
   const [search, setSearch] = useState('')
   const [filterTab, setFilterTab] = useState('all')
+  const [bubbleFilter, setBubbleFilter] = useState('all')
 
   // Keep local attendance in sync
   React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
@@ -71,13 +72,22 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
     expected:   { label: 'Expected',color: '#D97706', bg: '#FEF3C7', dot: '#F59E0B' },
   }
 
+  const BUBBLE_COLORS = { red: '#D0021B', orange: '#F97316', yellow: '#F97316', blue: '#1B4FA8', purple: '#7B2D8B', teens: '#1A1A1A' }
+  const getBubbleColor = (groupName) => BUBBLE_COLORS[(groupName || '').toLowerCase()] || '#9CA3AF'
+
+  // Live group breakdown — derived from children actually in this session
+  const sessionChildIds = new Set(sessionAttendance.map(a => a.child_id))
+  const sessionChildren = childList.filter(ch => sessionChildIds.has(ch.id))
+  const bubbleGroups = [...new Set(sessionChildren.map(ch => (ch.group_name || '').trim()).filter(Boolean))]
+
   const filteredChildren = childList.filter(ch => {
     const name = `${ch.first_name} ${ch.last_name}`.toLowerCase()
     const matchSearch = !search || name.includes(search.toLowerCase())
     const status = getChildStatus(ch.id)
     const matchTab = filterTab === 'all' || status === filterTab ||
       (filterTab === 'expected' && (status === 'expected' || !sessionAttendance.find(a => a.child_id === ch.id)))
-    return matchSearch && matchTab
+    const matchBubble = bubbleFilter === 'all' || (ch.group_name || '').toLowerCase() === bubbleFilter.toLowerCase()
+    return matchSearch && matchTab && matchBubble
   })
 
   const pct = stats.percent || 0
@@ -119,6 +129,25 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
                 {s.title}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* Live group breakdown — clickable bubble filter pills */}
+        {bubbleGroups.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+            {bubbleGroups.map(g => {
+              const gColor = getBubbleColor(g)
+              const isActive = bubbleFilter === g
+              return (
+                <button key={g} onClick={() => setBubbleFilter(isActive ? 'all' : g)}
+                  style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: '#fff', background: isActive ? gColor : gColor + '30', border: `1px solid ${gColor}90`, borderRadius: 99, padding: '4px 11px', cursor: 'pointer', transition: 'all 0.15s' }}>
+                  {g}
+                </button>
+              )
+            })}
+            {bubbleFilter !== 'all' && (
+              <button onClick={() => setBubbleFilter('all')} style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 6px' }}>Clear ✕</button>
+            )}
           </div>
         )}
 
@@ -177,8 +206,9 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
           const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
           const hasAlert = child.allergies || child.medical_notes
 
+          const gColor = getBubbleColor(child.group_name)
           return (
-            <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.1s' }}
+            <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', borderLeft: `3px solid ${gColor}`, transition: 'background 0.1s' }}
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
 
