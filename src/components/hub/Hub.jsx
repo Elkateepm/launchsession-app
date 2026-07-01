@@ -7,9 +7,6 @@ import { useIsMobile } from "../../hooks/useIsMobile";
 function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onOpenRegister, onNavigate, getLiveSessionStats }) {
   const [activeSession, setActiveSession] = useState(sessions[0])
   const [localAttendance, setLocalAttendance] = useState(attendance)
-  const [updating, setUpdating] = useState(null)
-  const [search, setSearch] = useState('')
-  const [filterTab, setFilterTab] = useState('all')
   const [bubbleFilter, setBubbleFilter] = useState('all')
 
   // Keep local attendance in sync
@@ -19,59 +16,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
   const sessionAttendance = localAttendance.filter(a => a.session_id === activeSession?.id)
   const stats = activeSession ? getLiveSessionStats(activeSession) : { signedIn: 0, expected: 0, absent: 0, signedOut: 0, percent: 0 }
 
-  const getChildStatus = (childId) => {
-    const rec = sessionAttendance.find(a => a.child_id === childId)
-    return rec?.status || 'expected'
-  }
-
-  const handleToggle = async (child) => {
-    if (!activeSession) return
-    const current = getChildStatus(child.id)
-    const next = current === 'signed_in' ? 'signed_out' : 'signed_in'
-    setUpdating(child.id)
-
-    const existing = sessionAttendance.find(a => a.child_id === child.id)
-    const now = new Date().toISOString()
-    const updates = next === 'signed_in'
-      ? { status: 'signed_in', signed_in_at: now, signed_out_at: null }
-      : { status: 'signed_out', signed_out_at: now }
-
-    if (existing) {
-      await supabase.from('attendance').update(updates).eq('id', existing.id)
-      setLocalAttendance(prev => prev.map(a => a.id === existing.id ? { ...a, ...updates } : a))
-    } else {
-      const { data } = await supabase.from('attendance').insert({
-        session_id: activeSession.id, child_id: child.id, org_id: orgId, ...updates
-      }).select().single()
-      if (data) setLocalAttendance(prev => [...prev, data])
-    }
-    setUpdating(null)
-  }
-
-  const handleAbsent = async (child) => {
-    if (!activeSession) return
-    setUpdating(child.id)
-    const existing = sessionAttendance.find(a => a.child_id === child.id)
-    const updates = { status: 'absent' }
-    if (existing) {
-      await supabase.from('attendance').update(updates).eq('id', existing.id)
-      setLocalAttendance(prev => prev.map(a => a.id === existing.id ? { ...a, ...updates } : a))
-    } else {
-      const { data } = await supabase.from('attendance').insert({
-        session_id: activeSession.id, child_id: child.id, org_id: orgId, ...updates
-      }).select().single()
-      if (data) setLocalAttendance(prev => [...prev, data])
-    }
-    setUpdating(null)
-  }
-
-  const statusCfg = {
-    signed_in:  { label: 'In',      color: '#16A34A', bg: '#DCFCE7', dot: '#16A34A' },
-    signed_out: { label: 'Out',     color: '#2563EB', bg: '#DBEAFE', dot: '#2563EB' },
-    absent:     { label: 'Absent',  color: '#DC2626', bg: '#FEE2E2', dot: '#DC2626' },
-    expected:   { label: 'Expected',color: '#D97706', bg: '#FEF3C7', dot: '#F59E0B' },
-  }
-
   const BUBBLE_COLORS = { red: '#D0021B', orange: '#F97316', yellow: '#F97316', blue: '#1B4FA8', purple: '#7B2D8B', teens: '#1A1A1A' }
   const getBubbleColor = (groupName) => BUBBLE_COLORS[(groupName || '').toLowerCase()] || '#9CA3AF'
 
@@ -79,16 +23,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
   const sessionChildIds = new Set(sessionAttendance.map(a => a.child_id))
   const sessionChildren = childList.filter(ch => sessionChildIds.has(ch.id))
   const bubbleGroups = [...new Set(sessionChildren.map(ch => (ch.group_name || '').trim()).filter(Boolean))]
-
-  const filteredChildren = childList.filter(ch => {
-    const name = `${ch.first_name} ${ch.last_name}`.toLowerCase()
-    const matchSearch = !search || name.includes(search.toLowerCase())
-    const status = getChildStatus(ch.id)
-    const matchTab = filterTab === 'all' || status === filterTab ||
-      (filterTab === 'expected' && (status === 'expected' || !sessionAttendance.find(a => a.child_id === ch.id)))
-    const matchBubble = bubbleFilter === 'all' || (ch.group_name || '').toLowerCase() === bubbleFilter.toLowerCase()
-    return matchSearch && matchTab && matchBubble
-  })
 
   const pct = stats.percent || 0
 
@@ -176,73 +110,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
             <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#4ADE80' : `linear-gradient(90deg, ${primary}, #8B5CF6)`, borderRadius: 99, transition: 'width 0.5s ease' }} />
           </div>
         </div>
-      </div>
-
-      {/* Search + filter */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8, alignItems: 'center' }}>
-        <div style={{ flex: 1, position: 'relative' }}>
-          <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, opacity: 0.4 }}>🔍</span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..."
-            style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px 8px 30px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
-        </div>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {[['all','All'], ['signed_in','In'], ['expected','Expected'], ['absent','Absent']].map(([key, label]) => (
-            <button key={key} onClick={() => setFilterTab(key)}
-              style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${filterTab === key ? primary : 'rgba(255,255,255,0.1)'}`, background: filterTab === key ? primary + '25' : 'transparent', color: filterTab === key ? primary : 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Children list */}
-      <div style={{ maxHeight: 320, overflowY: 'auto', padding: '6px 0' }}>
-        {filteredChildren.length === 0 ? (
-          <div style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>No children found</div>
-        ) : filteredChildren.map(child => {
-          const status = getChildStatus(child.id)
-          const sc = statusCfg[status] || statusCfg.expected
-          const isUpdating = updating === child.id
-          const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
-          const hasAlert = child.allergies || child.medical_notes
-
-          const gColor = getBubbleColor(child.group_name)
-          return (
-            <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', borderLeft: `3px solid ${gColor}`, transition: 'background 0.1s' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-
-              {/* Avatar */}
-              <div style={{ width: 38, height: 38, borderRadius: 10, background: sc.bg, border: `2px solid ${sc.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: sc.color, flexShrink: 0, overflow: 'hidden' }}>
-                {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
-              </div>
-
-              {/* Name */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {child.first_name} {child.last_name}
-                  {hasAlert && <span style={{ marginLeft: 6, fontSize: 10 }}>⚠️</span>}
-                </div>
-                {child.group_name && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{child.group_name}</div>}
-              </div>
-
-              {/* Status + actions */}
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-                <span style={{ background: sc.bg, color: sc.color, borderRadius: 99, padding: '3px 9px', fontSize: 10, fontWeight: 800 }}>
-                  {sc.label}
-                </span>
-                <button onClick={() => handleToggle(child)} disabled={isUpdating}
-                  style={{ width: 32, height: 32, borderRadius: 9, border: 'none', background: status === 'signed_in' ? 'rgba(37,99,235,0.2)' : 'rgba(22,163,74,0.2)', color: status === 'signed_in' ? '#60A5FA' : '#4ADE80', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', fontWeight: 900 }}>
-                  {isUpdating ? '·' : status === 'signed_in' ? '↗' : '✓'}
-                </button>
-                <button onClick={() => handleAbsent(child)} disabled={isUpdating || status === 'absent'}
-                  style={{ width: 32, height: 32, borderRadius: 9, border: 'none', background: status === 'absent' ? 'rgba(220,38,38,0.2)' : 'rgba(255,255,255,0.06)', color: status === 'absent' ? '#FCA5A5' : 'rgba(255,255,255,0.3)', fontSize: 13, cursor: status === 'absent' ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
-                  ✕
-                </button>
-              </div>
-            </div>
-          )
-        })}
       </div>
       <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
     </div>
