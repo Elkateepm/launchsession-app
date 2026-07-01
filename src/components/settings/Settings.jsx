@@ -527,12 +527,12 @@ function GroupsSection({ org }) {
   )
 }
 
-export default function Settings({ org, session }) {
+export default function Settings({ org, session, initialSection }) {
   const isMobile = useIsMobile()
   const [showSidebar, setShowSidebar] = useState(false)
   const { refreshOrg } = useOrg()
   const brandingEnabled = org?.branding_enabled !== false
-  const [active, setActive] = useState('organisation')
+  const [active, setActive] = useState(initialSection || 'organisation')
   const [search, setSearch] = useState('')
 
   const filtered = NAV.filter(n => (!search || n.label.toLowerCase().includes(search.toLowerCase())) && (!n.requiresBranding || brandingEnabled))
