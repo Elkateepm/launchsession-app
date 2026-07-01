@@ -83,19 +83,19 @@ export default function Login({ org }) {
           ) : (
             <img src='/logo.png' alt='LaunchSession' style={{ width: 240, height: 240, objectFit: 'contain', margin: '0 auto 0px', display: 'block' }} />
           )}
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase' }}>{orgName}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: 0.5 }}>{orgName}</div>
         </div>
 
         {/* Card */}
-        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 32, backdropFilter: 'blur(12px)' }}>
+        <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${primary}30`, boxShadow: `0 0 0 1px ${primary}10, 0 20px 60px -20px ${primary}30`, borderRadius: 24, padding: 32, backdropFilter: 'blur(12px)' }}>
 
 
           {step === STEPS.EMAIL && (
             <div>
               <button onClick={() => { try { localStorage.removeItem('launchsession_org_slug') } catch (e) {}; window.location.href = '/' }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, padding: 0 }}>← Back</button>
               <div style={{ marginBottom: 28 }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Welcome back</div>
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)' }}>Sign in to your organisation workspace</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Sign in to {orgName}</div>
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)' }}>Your organisation workspace</div>
               </div>
               {error && <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#FCA5A5', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
               <form onSubmit={handleEmailContinue}>
