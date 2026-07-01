@@ -8,8 +8,9 @@ import OrgLookup from './components/auth/OrgLookup'
 import Dashboard from './components/dashboard/Dashboard'
 import Onboarding from './components/onboarding/Onboarding'
 import VolunteerPortal from './components/volunteers/VolunteerPortal'
+import SplashScreen from './components/common/SplashScreen'
 
-function AuthedApp({ session, org }) {
+function AuthedApp({ session, org, onReady }) {
   const [onboardingDone, setOnboardingDone] = React.useState(null)
   const [userRole, setUserRole] = React.useState(null)
 
@@ -40,6 +41,10 @@ function AuthedApp({ session, org }) {
         setOnboardingDone(!needsOnboarding)
       })
   }, [session.user.id, session.user.email, org?.id, org?.onboarding_complete])
+
+  React.useEffect(() => {
+    if (onboardingDone !== null && userRole !== null && onReady) onReady()
+  }, [onboardingDone, userRole, onReady])
 
   if (onboardingDone === null || userRole === null) return null
 
@@ -118,6 +123,8 @@ function AppContent() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [checkedSession, setCheckedSession] = useState(false)
+  const [authedAppReady, setAuthedAppReady] = useState(false)
+  const [splashGone, setSplashGone] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -143,37 +150,43 @@ function AppContent() {
     return null
   }
 
-  if (orgLoading || loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0A0A1A', flexDirection: 'column', gap: 16 }}>
-      <div style={{ width: 44, height: 44, border: '3px solid var(--org-primary, #1B9AAA)', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', letterSpacing: 1 }}>LOADING...</div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  )
-
+  // Special routes that bypass the org/session splash entirely.
   if (pathname === '/create-password') return <CreatePassword />
   if (window.location.pathname === '/signup') return <Signup />
 
-  // If the user is already signed in but we have no org context yet,
-  // auto-resolve their org from their profile instead of making them
-  // search for it again — they've already proven who they are.
-  if (noOrg && session && checkedSession) {
-    return <AutoResolveOrg session={session} />
+  const baseLoading = orgLoading || loading
+  const willShowAuthedApp = !baseLoading && !noOrg && !orgError && session
+  const appReady = !baseLoading && (!willShowAuthedApp || authedAppReady)
+
+  let body = null
+
+  if (!baseLoading) {
+    if (noOrg && session && checkedSession) {
+      body = <AutoResolveOrg session={session} />
+    } else if (noOrg) {
+      body = <OrgLookup />
+    } else if (orgError) {
+      body = (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0A0A1A', flexDirection: 'column', gap: 12 }}>
+          <div style={{ fontSize: 40 }}>🚀</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#fff' }}>Organisation Not Found</div>
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>{orgError}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', marginTop: 8 }}>Powered by LaunchSession</div>
+        </div>
+      )
+    } else if (session) {
+      body = <AuthedApp session={session} org={org} onReady={() => setAuthedAppReady(true)} />
+    } else {
+      body = <Login org={org} />
+    }
   }
-  if (noOrg) return <OrgLookup />
 
-  if (orgError) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0A0A1A', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontSize: 40 }}>🚀</div>
-      <div style={{ fontSize: 18, fontWeight: 700, color: '#fff' }}>Organisation Not Found</div>
-      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>{orgError}</div>
-      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', marginTop: 8 }}>Powered by LaunchSession</div>
-    </div>
+  return (
+    <>
+      {body}
+      {!splashGone && <SplashScreen ready={appReady} onExited={() => setSplashGone(true)} />}
+    </>
   )
-
-  return session
-    ? <AuthedApp session={session} org={org} />
-    : <Login org={org} />
 }
 
 export default function App() {
