@@ -322,12 +322,14 @@ function EventDetail({ event, org, onBack, onUpdate }) {
 }
 
 // ── CREATE EVENT MODAL ────────────────────────────────────────
-function CreateEventModal({ org, onClose, onCreate }) {
+function CreateEventModal({ org, onClose, onCreate, mode = 'create' }) {
   const primary = org?.primary_color || '#1B9AAA'
+  const isLog = mode === 'log'
+  const todayStr = new Date().toISOString().slice(0, 10)
   const [form, setForm] = useState({
-    title: '', event_type: 'trip', event_date: '', location: '',
+    title: '', event_type: 'trip', event_date: isLog ? todayStr : '', location: '',
     departure_time: '', return_time: '', max_participants: '',
-    cost_per_person: '', notes: '', status: 'planning',
+    cost_per_person: '', notes: '', status: isLog ? 'completed' : 'planning',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -353,7 +355,10 @@ function CreateEventModal({ org, onClose, onCreate }) {
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 540, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
-          <div style={{ fontSize: 17, fontWeight: 800 }}>New Event or Trip</div>
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 800 }}>{isLog ? 'Log a Past Event' : 'New Event or Trip'}</div>
+            {isLog && <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>Record something that already happened</div>}
+          </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, color: '#9CA3AF', cursor: 'pointer' }}>×</button>
         </div>
         <div style={{ padding: 24 }}>
@@ -375,7 +380,7 @@ function CreateEventModal({ org, onClose, onCreate }) {
             </div>
             <div>
               <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 5 }}>DATE *</label>
-              <input type="date" value={form.event_date} onChange={e => set('event_date', e.target.value)} style={inp} />
+              <input type="date" value={form.event_date} max={isLog ? todayStr : undefined} onChange={e => set('event_date', e.target.value)} style={inp} />
             </div>
             <div style={{ gridColumn: '1/-1' }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 5 }}>LOCATION</label>
@@ -390,7 +395,7 @@ function CreateEventModal({ org, onClose, onCreate }) {
               <input type="time" value={form.return_time} onChange={e => set('return_time', e.target.value)} style={inp} />
             </div>
             <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 5 }}>MAX PARTICIPANTS</label>
+              <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 5 }}>{isLog ? 'PARTICIPANTS' : 'MAX PARTICIPANTS'}</label>
               <input type="number" value={form.max_participants} onChange={e => set('max_participants', e.target.value)} placeholder="e.g. 30" style={inp} />
             </div>
             <div>
@@ -398,13 +403,13 @@ function CreateEventModal({ org, onClose, onCreate }) {
               <input type="number" step="0.01" value={form.cost_per_person} onChange={e => set('cost_per_person', e.target.value)} placeholder="0 = free" style={inp} />
             </div>
             <div style={{ gridColumn: '1/-1' }}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 5 }}>NOTES / RISK ASSESSMENT</label>
-              <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={3} placeholder="Risk assessment, special instructions..." style={{ ...inp, resize: 'none' }} />
+              <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 5 }}>NOTES {isLog ? '' : '/ RISK ASSESSMENT'}</label>
+              <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={3} placeholder={isLog ? 'How did it go? Anything worth remembering...' : 'Risk assessment, special instructions...'} style={{ ...inp, resize: 'none' }} />
             </div>
           </div>
           <div style={{ marginTop: 20, display: 'flex', gap: 10 }}>
             <button onClick={handleCreate} disabled={saving || !form.title || !form.event_date} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: saving || !form.title || !form.event_date ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
-              {saving ? 'Creating...' : '🎟️ Create Event'}
+              {saving ? 'Saving...' : isLog ? '📝 Log Event' : '🎟️ Create Event'}
             </button>
             <button onClick={onClose} style={{ padding: '12px 20px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
@@ -422,6 +427,8 @@ export default function EventsTrips({ org }) {
   const [showCreate, setShowCreate] = useState(false)
   const [filterStatus, setFilterStatus] = useState('all')
   const primary = org?.primary_color || '#1B9AAA'
+  const [search, setSearch] = useState('')
+  const [showLog, setShowLog] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -432,10 +439,18 @@ export default function EventsTrips({ org }) {
 
   useEffect(() => { load() }, [load])
 
-  const filtered = events.filter(e => filterStatus === 'all' || e.status === filterStatus)
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const filtered = events.filter(e => {
+    const matchStatus = filterStatus === 'all' || e.status === filterStatus
+    const matchSearch = !search || e.title?.toLowerCase().includes(search.toLowerCase()) || e.location?.toLowerCase().includes(search.toLowerCase())
+    return matchStatus && matchSearch
+  })
 
-  const upcoming = events.filter(e => e.event_date && new Date(e.event_date) >= new Date() && e.status !== 'cancelled' && e.status !== 'completed').length
+  const upcoming = events.filter(e => e.event_date && e.event_date >= todayStr && e.status !== 'cancelled' && e.status !== 'completed')
+  const liveToday = events.filter(e => e.status === 'live' || (e.event_date === todayStr && e.status !== 'cancelled' && e.status !== 'completed'))
+  const todayEvents = events.filter(e => e.event_date === todayStr && e.status !== 'cancelled')
   const totalParticipants = events.reduce((s, e) => s + (e.event_participants?.[0]?.count || 0), 0)
+  const usedTypes = [...new Set(events.map(e => e.event_type).filter(Boolean))]
 
   if (selectedEvent) return (
     <EventDetail
@@ -451,89 +466,187 @@ export default function EventsTrips({ org }) {
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      {/* Page header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, flexWrap: 'wrap', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: primary + '18', border: `1px solid ${primary}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19 }}>🎟️</div>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: '#111' }}>🎟️ Events & Trips</div>
-            <div style={{ fontSize: 13, color: '#6B7280', marginTop: 4 }}>{upcoming} upcoming · {totalParticipants} participants across all events</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: '#111' }}>Events & Trips</div>
+            <div style={{ fontSize: 12, color: '#6B7280' }}>Plan, manage and track all events and trips in one place.</div>
           </div>
-          <button onClick={() => setShowCreate(true)} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
-            + New Event
-          </button>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div style={{ background: `linear-gradient(135deg, ${primary}14, #F5F3FF 60%)`, border: `1px solid ${primary}25`, borderRadius: 20, padding: '22px 26px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 19, fontWeight: 900, color: '#111' }}>Plan unforgettable experiences ✨</div>
+            <div style={{ fontSize: 13, color: '#6B7280', marginTop: 4 }}>Create events and trips that inspire, engage and make a difference.</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button onClick={() => setShowLog(true)} style={{ padding: '10px 18px', borderRadius: 12, border: '1.5px solid ' + primary + '50', background: '#fff', color: primary, fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              📝 Log Event
+            </button>
+            <button onClick={() => setShowCreate(true)} style={{ padding: '10px 18px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: `0 6px 18px ${primary}40` }}>
+              + New Event
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginTop: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginTop: 18 }}>
           {[
-            { label: 'Total Events', value: events.length },
-            { label: 'Upcoming', value: upcoming, color: '#2563EB' },
-            { label: 'Live Now', value: events.filter(e => e.status === 'live').length, color: '#16A34A' },
-            { label: 'Participants', value: totalParticipants },
+            { label: 'Total Events', sub: 'All time', value: events.length, icon: '🎟️', color: primary },
+            { label: 'Upcoming', sub: 'Next 30 days', value: upcoming.length, icon: '📅', color: '#2563EB' },
+            { label: 'Live Now', sub: 'Happening today', value: events.filter(e => e.status === 'live').length, icon: '🟢', color: '#16A34A' },
+            { label: 'Participants', sub: 'Across all events', value: totalParticipants, icon: '👥', color: '#D97706' },
           ].map(s => (
-            <div key={s.label} style={{ background: '#fff', borderRadius: 12, padding: '10px 14px', border: '1px solid #e5e7eb' }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: s.color || '#111' }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{s.label}</div>
+            <div key={s.label} style={{ background: '#fff', borderRadius: 14, padding: '12px 14px', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: s.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{s.icon}</div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 20, fontWeight: 900, color: '#111', lineHeight: 1.1 }}>{s.value}</div>
+                <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Status filter */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto' }}>
-        {['all', ...Object.keys(STATUS_CONFIG)].map(s => (
-          <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${filterStatus === s ? primary : '#e5e7eb'}`, background: filterStatus === s ? primary + '12' : '#fff', color: filterStatus === s ? primary : '#6B7280', fontSize: 12, fontWeight: filterStatus === s ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            {s === 'all' ? `All (${events.length})` : `${STATUS_CONFIG[s].label} (${events.filter(e => e.status === s).length})`}
-          </button>
-        ))}
+      {/* Filters + search */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
+          {['all', ...Object.keys(STATUS_CONFIG)].map(s => (
+            <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '7px 14px', borderRadius: 99, border: `1.5px solid ${filterStatus === s ? primary : '#e5e7eb'}`, background: filterStatus === s ? primary : '#fff', color: filterStatus === s ? '#fff' : '#6B7280', fontSize: 12, fontWeight: filterStatus === s ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              {s === 'all' ? `All (${events.length})` : `${STATUS_CONFIG[s].label} (${events.filter(e => e.status === s).length})`}
+            </button>
+          ))}
+        </div>
+        <div style={{ position: 'relative', minWidth: 220 }}>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9CA3AF' }}>🔍</span>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search events..."
+            style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+        </div>
       </div>
 
-      {/* Events list */}
-      {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>Loading events...</div>
-      ) : filtered.length === 0 ? (
-        <div style={{ padding: 60, textAlign: 'center', background: '#F9FAFB', borderRadius: 16, border: '1.5px dashed #e5e7eb' }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🎟️</div>
-          <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>{filterStatus === 'all' ? 'No events yet' : `No ${STATUS_CONFIG[filterStatus]?.label} events`}</div>
-          <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 20 }}>Plan your first trip or event for your young people</div>
-          <button onClick={() => setShowCreate(true)} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>+ Create First Event</button>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {filtered.map(event => {
-            const typeCfg = TYPE_CONFIG[event.event_type] || TYPE_CONFIG.other
-            const participantCount = event.event_participants?.[0]?.count || 0
-            const isPast = event.event_date && new Date(event.event_date) < new Date()
-            return (
-              <div key={event.id} onClick={() => setSelectedEvent(event)} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '16px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 4px 16px ${primary}20` }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = 'none' }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
-                  {typeCfg.icon}
+      {/* Two-column: list + sidebar */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 20, alignItems: 'flex-start' }}>
+        <div>
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>Loading events...</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: 60, textAlign: 'center', background: '#F9FAFB', borderRadius: 16, border: '1.5px dashed #e5e7eb' }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>📅</div>
+              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>{events.length === 0 ? 'No events yet!' : 'No matching events'}</div>
+              <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 20 }}>{events.length === 0 ? 'Create your first event or trip and start making amazing memories.' : 'Try a different filter or search term.'}</div>
+              {events.length === 0 && (
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                  <button onClick={() => setShowCreate(true)} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>+ Create First Event</button>
+                  <button onClick={() => setShowLog(true)} style={{ padding: '11px 20px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>📝 Log an Event</button>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#111', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{event.title}</div>
-                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 12, color: '#9CA3AF' }}>
-                    {event.event_date && <span>📅 {format(parseISO(event.event_date), 'd MMM yyyy')}</span>}
-                    {event.location && <span>📍 {event.location}</span>}
-                    {event.departure_time && <span>🕐 {event.departure_time}</span>}
-                    <span>👥 {participantCount} {event.max_participants ? `/ ${event.max_participants}` : ''}</span>
-                    {event.cost_per_person > 0 && <span>💷 £{event.cost_per_person}/person</span>}
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {filtered.map(event => {
+                const typeCfg = TYPE_CONFIG[event.event_type] || TYPE_CONFIG.other
+                const participantCount = event.event_participants?.[0]?.count || 0
+                const isPast = event.event_date && event.event_date < todayStr
+                return (
+                  <div key={event.id} onClick={() => setSelectedEvent(event)} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '16px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 4px 16px ${primary}20` }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = 'none' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 12, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+                      {typeCfg.icon}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: '#111', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{event.title}</div>
+                      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 12, color: '#9CA3AF' }}>
+                        {event.event_date && <span>📅 {format(parseISO(event.event_date), 'd MMM yyyy')}</span>}
+                        {event.location && <span>📍 {event.location}</span>}
+                        {event.departure_time && <span>🕐 {event.departure_time}</span>}
+                        <span>👥 {participantCount} {event.max_participants ? `/ ${event.max_participants}` : ''}</span>
+                        {event.cost_per_person > 0 && <span>💷 £{event.cost_per_person}/person</span>}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+                      <StatusBadge status={event.status} />
+                      {isPast && event.status !== 'completed' && event.status !== 'cancelled' && (
+                        <span style={{ fontSize: 10, color: '#9CA3AF' }}>Past date</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-                  <StatusBadge status={event.status} />
-                  {isPast && event.status !== 'completed' && event.status !== 'cancelled' && (
-                    <span style={{ fontSize: 10, color: '#9CA3AF' }}>Past date</span>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+                )
+              })}
+            </div>
+          )}
         </div>
-      )}
 
-      {showCreate && <CreateEventModal org={org} onClose={() => setShowCreate(false)} onCreate={e => { setEvents(prev => [...prev, e].sort((a, b) => new Date(a.event_date) - new Date(b.event_date))); }} />}
+        {/* Sidebar */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Today at a glance */}
+          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 10 }}>☀️ Today at a glance</div>
+            {todayEvents.length === 0 ? (
+              <div style={{ background: '#F9FAFB', borderRadius: 12, padding: '14px', textAlign: 'center' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#374151' }}>No events today</div>
+                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>Enjoy the day! 🎉</div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {todayEvents.map(e => (
+                  <button key={e.id} onClick={() => setSelectedEvent(e)} style={{ textAlign: 'left', width: '100%', border: '1px solid #e5e7eb', borderRadius: 10, padding: '8px 10px', background: '#F9FAFB', cursor: 'pointer' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{TYPE_CONFIG[e.event_type]?.icon} {e.title}</div>
+                    {e.departure_time && <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>Departs {e.departure_time}</div>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Upcoming events */}
+          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}>📅 Upcoming Events</div>
+              {upcoming.length > 0 && <button onClick={() => setFilterStatus('all')} style={{ fontSize: 11, color: primary, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>View all</button>}
+            </div>
+            {upcoming.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#374151' }}>No upcoming events</div>
+                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2, marginBottom: 10 }}>Plan ahead and create something exciting.</div>
+                <button onClick={() => setShowCreate(true)} style={{ padding: '7px 14px', borderRadius: 8, border: `1.5px solid ${primary}40`, background: primary + '10', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>+ New Event</button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {upcoming.slice(0, 4).map(e => (
+                  <button key={e.id} onClick={() => setSelectedEvent(e)} style={{ textAlign: 'left', width: '100%', border: '1px solid #e5e7eb', borderRadius: 10, padding: '8px 10px', background: '#fff', cursor: 'pointer' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{TYPE_CONFIG[e.event_type]?.icon} {e.title}</div>
+                    <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{e.event_date ? format(parseISO(e.event_date), 'd MMM yyyy') : ''}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Event types legend */}
+          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 10 }}>🏷️ Event Types</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {Object.entries(TYPE_CONFIG).map(([k, v]) => {
+                const count = events.filter(e => e.event_type === k).length
+                return (
+                  <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 99, background: usedTypes.includes(k) ? primary + '10' : '#F9FAFB', border: `1px solid ${usedTypes.includes(k) ? primary + '30' : '#e5e7eb'}`, fontSize: 11, fontWeight: 700, color: usedTypes.includes(k) ? primary : '#9CA3AF' }}>
+                    <span>{v.icon}</span>{v.label}{count > 0 && <span style={{ opacity: 0.6 }}>· {count}</span>}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showCreate && <CreateEventModal org={org} mode="create" onClose={() => setShowCreate(false)} onCreate={e => { setEvents(prev => [...prev, e].sort((a, b) => new Date(a.event_date) - new Date(b.event_date))); }} />}
+      {showLog && <CreateEventModal org={org} mode="log" onClose={() => setShowLog(false)} onCreate={e => { setEvents(prev => [...prev, e].sort((a, b) => new Date(a.event_date) - new Date(b.event_date))); }} />}
     </div>
   )
 }
