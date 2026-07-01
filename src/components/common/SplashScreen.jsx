@@ -307,18 +307,24 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
           <div
             style={{
               position: 'relative',
-              width: 64,
-              height: 64,
-              borderRadius: 18,
+              width: 84,
+              height: 84,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'linear-gradient(135deg, #3B82F6, #6366F1 55%, #9B59B6)',
-              boxShadow: '0 8px 32px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.06)',
-              marginBottom: 18,
+              marginBottom: 14,
             }}
           >
-            <span style={{ fontSize: 28, lineHeight: 1 }}>🚀</span>
+            <img
+              src="/logo.png"
+              alt="LaunchSession"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 8px 24px rgba(99,102,241,0.45))',
+              }}
+            />
           </div>
 
           <div
