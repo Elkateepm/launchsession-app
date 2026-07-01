@@ -116,11 +116,13 @@ function OrgSection({ org }) {
 function BrandingSection({ org, refreshOrg }) {
   const isMobile = useIsMobile()
   const [color, setColor] = useState(org?.primary_color || '#1B9AAA')
+  const [secondaryColor, setSecondaryColor] = useState(org?.secondary_color || '#0EA5E9')
   const [slogan, setSlogan] = useState(org?.slogan || '')
   const [logoPreview, setLogoPreview] = useState(org?.logo_url || '')
   const [logoFile, setLogoFile] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [previewTab, setPreviewTab] = useState('workspace') // workspace | login
 
   const palettes = [
     { name: 'Ocean', color: '#1B9AAA' },
@@ -157,6 +159,7 @@ function BrandingSection({ org, refreshOrg }) {
 
     await supabase.from('organisations').update({
       primary_color: color,
+      secondary_color: secondaryColor,
       slogan,
       logo_url: logoUrl,
     }).eq('id', org?.id)
@@ -174,35 +177,60 @@ function BrandingSection({ org, refreshOrg }) {
     setTimeout(() => setSaved(false), 2500)
   }
 
+  const handleReset = () => {
+    if (!window.confirm('Reset branding to defaults? This clears your logo, colours and tagline in this form (not saved until you hit Save).')) return
+    setColor('#1B9AAA')
+    setSecondaryColor('#0EA5E9')
+    setSlogan('')
+    setLogoPreview('')
+    setLogoFile(null)
+  }
+
   const initials = (org?.name || 'LS').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+  const orgName = org?.name || 'Your Organisation'
 
   return (
     <div>
-      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 900, color: '#6366F1', letterSpacing: 2, textTransform: 'uppercase' }}>Branding Centre</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginTop: 4 }}>Make LaunchSession feel like {org?.name || 'your organisation'}</div>
-          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Logo, colour and tagline — all in one place.</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginTop: 4 }}>Make LaunchSession feel like {orgName} ✨</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Customise your organisation's look and create a consistent, professional experience.</div>
         </div>
-        <div style={{ fontSize: 36 }}>🎨</div>
+        <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+          <button onClick={handleReset} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            ↺ Reset to defaults
+          </button>
+          <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? '#9ca3af' : color, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 24px ${color}40`, display: 'flex', alignItems: 'center', gap: 6 }}>
+            {saving ? 'Saving...' : saved ? '✅ Saved!' : '💾 Save changes'}
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.1fr 0.9fr', gap: 16 }}>
         <div>
-          <SettingCard title="Logo" description="Shown in the sidebar, login screen and workspace header">
+          <SettingCard title="Logo" description="This logo will appear in the sidebar, login screen and workspace header.">
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--surface2)', border: '1.5px dashed var(--border2)', borderRadius: 14, padding: 16, marginBottom: 4 }}>
               <div style={{ width: 72, height: 72, borderRadius: 16, background: logoPreview ? '#fff' : color, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 22, color: '#fff', flexShrink: 0, boxShadow: `0 8px 24px ${color}40` }}>
                 {logoPreview ? <img src={logoPreview} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : initials}
               </div>
-              <div>
+              <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Upload your logo</div>
-                <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>PNG or SVG on transparent background works best.</div>
-                <input type="file" accept="image/*" onChange={handleLogoChange} style={{ fontSize: 12 }} />
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>PNG or SVG, recommended 512×512px, transparent background works best.</div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <label style={{ padding: '7px 14px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
+                    Change logo
+                    <input type="file" accept="image/*" onChange={handleLogoChange} style={{ display: 'none' }} />
+                  </label>
+                  {logoPreview && (
+                    <button onClick={() => { setLogoPreview(''); setLogoFile(null) }} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🗑</button>
+                  )}
+                </div>
               </div>
             </div>
           </SettingCard>
 
-          <SettingCard title="Primary Colour" description="Used for buttons, active states and highlights">
+          <SettingCard title="Primary Colour" description="Used for primary buttons, highlights and active states.">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
               <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ width: 52, height: 44, borderRadius: 10, border: '1.5px solid #e5e7eb', cursor: 'pointer', padding: 2 }} />
               <input style={{ ...inp, flex: 1 }} value={color} onChange={e => setColor(e.target.value)} placeholder="#1B9AAA" />
@@ -218,43 +246,94 @@ function BrandingSection({ org, refreshOrg }) {
             </div>
           </SettingCard>
 
-          <SettingCard title="Tagline" description="Shown on the login screen and workspace hub">
-            <Field label="Slogan"><input style={inp} value={slogan} onChange={e => setSlogan(e.target.value)} placeholder="e.g. Sport for every child" /></Field>
-            <button onClick={handleSave} disabled={saving} style={{ padding: '12px 28px', borderRadius: 10, border: 'none', background: saving ? '#9ca3af' : color, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 24px ${color}40` }}>
-              {saving ? 'Saving...' : saved ? '✅ Saved!' : 'Save Branding'}
-            </button>
+          <SettingCard title="Secondary Colour" description="Used for accents, links and secondary elements.">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} style={{ width: 52, height: 44, borderRadius: 10, border: '1.5px solid #e5e7eb', cursor: 'pointer', padding: 2 }} />
+              <input style={{ ...inp, flex: 1 }} value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} placeholder="#0EA5E9" />
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: secondaryColor, flexShrink: 0, boxShadow: `0 8px 20px ${secondaryColor}50` }} />
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Presets</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {palettes.map(p => (
+                <button key={p.color} onClick={() => setSecondaryColor(p.color)} style={{ border: secondaryColor === p.color ? `2px solid ${p.color}` : '1px solid var(--border)', background: 'var(--surface)', borderRadius: 999, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--text2)' }}>
+                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: p.color, display: 'inline-block' }} />{p.name}
+                </button>
+              ))}
+            </div>
+          </SettingCard>
+
+          <SettingCard title="Tagline" description="Shown on the login screen and workspace.">
+            <Field label="Tagline" hint={`${slogan.length}/80`}>
+              <input style={inp} value={slogan} onChange={e => setSlogan(e.target.value.slice(0, 80))} placeholder="e.g. Sport for every child" maxLength={80} />
+            </Field>
           </SettingCard>
         </div>
 
         <div>
-          <SettingCard title="Live Preview" description="How your workspace will look">
-            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB' }}>
-              <div style={{ background: `linear-gradient(135deg, ${color}, #0F172A)`, padding: 16, color: '#fff' }}>
-                <div style={{ fontSize: 10, opacity: 0.7, letterSpacing: 2, fontWeight: 800, marginBottom: 10 }}>WORKSPACE</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 14 }}>
-                    {logoPreview ? <img src={logoPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : initials}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 900 }}>{org?.name || 'Your Organisation'}</div>
-                    <div style={{ fontSize: 11, opacity: 0.7 }}>{slogan || 'Your tagline here'}</div>
-                  </div>
-                </div>
-              </div>
-              <div style={{ padding: 14, background: 'var(--surface2)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                  {['Sessions', 'Registers', 'Team', 'Reports'].map((item, i) => (
-                    <div key={item} style={{ borderRadius: 8, padding: 10, background: i === 0 ? `${color}14` : '#fff', border: `1px solid ${i === 0 ? color + '40' : '#E5E7EB'}` }}>
-                      <div style={{ width: 16, height: 3, borderRadius: 99, background: i === 0 ? color : '#CBD5E1', marginBottom: 6 }} />
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{item}</div>
-                    </div>
-                  ))}
-                </div>
-                <button style={{ width: '100%', border: 'none', borderRadius: 8, padding: 10, background: color, color: '#fff', fontWeight: 700, fontSize: 12 }}>Primary Action</button>
-                <div style={{ textAlign: 'center', fontSize: 10, color: 'var(--text3)', marginTop: 10 }}>Powered by LaunchSession</div>
-              </div>
+          <SettingCard title="Live Preview" description="This is how your brand will appear across LaunchSession.">
+            <div style={{ display: 'flex', gap: 6, marginBottom: 14, background: 'var(--surface2)', borderRadius: 10, padding: 4 }}>
+              {[
+                { key: 'workspace', label: '🖥 Workspace' },
+                { key: 'login', label: '🔐 Login Screen' },
+              ].map(t => (
+                <button key={t.key} onClick={() => setPreviewTab(t.key)} style={{ flex: 1, padding: '8px 10px', borderRadius: 7, border: 'none', background: previewTab === t.key ? 'var(--surface)' : 'transparent', color: previewTab === t.key ? color : 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: previewTab === t.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
+                  {t.label}
+                </button>
+              ))}
             </div>
+
+            {previewTab === 'workspace' && (
+              <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB' }}>
+                <div style={{ background: `linear-gradient(135deg, ${color}, #0F172A)`, padding: 16, color: '#fff' }}>
+                  <div style={{ fontSize: 10, opacity: 0.7, letterSpacing: 2, fontWeight: 800, marginBottom: 10 }}>WORKSPACE</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 14 }}>
+                      {logoPreview ? <img src={logoPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : initials}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 900 }}>{orgName}</div>
+                      <div style={{ fontSize: 11, opacity: 0.7 }}>{slogan || 'Your tagline here'}</div>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ padding: 14, background: 'var(--surface2)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                    {['Sessions', 'Registers', 'Team', 'Reports'].map((item, i) => (
+                      <div key={item} style={{ borderRadius: 8, padding: 10, background: i === 0 ? `${color}14` : '#fff', border: `1px solid ${i === 0 ? color + '40' : '#E5E7EB'}` }}>
+                        <div style={{ width: 16, height: 3, borderRadius: 99, background: i === 0 ? color : secondaryColor, marginBottom: 6 }} />
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{item}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <button style={{ width: '100%', border: 'none', borderRadius: 8, padding: 10, background: `linear-gradient(135deg, ${color}, ${secondaryColor})`, color: '#fff', fontWeight: 700, fontSize: 12 }}>Primary Action</button>
+                  <div style={{ textAlign: 'center', fontSize: 10, color: 'var(--text3)', marginTop: 10 }}>Powered by LaunchSession</div>
+                </div>
+              </div>
+            )}
+
+            {previewTab === 'login' && (
+              <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB', background: '#060B18', padding: '32px 20px', textAlign: 'center' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 14, margin: '0 auto 14px', background: logoPreview ? '#fff' : `linear-gradient(135deg, ${color}, ${secondaryColor})`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 18, color: '#fff', boxShadow: `0 8px 24px ${color}40` }}>
+                  {logoPreview ? <img src={logoPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : initials}
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>{orgName}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>{slogan || 'Your tagline here'}</div>
+                <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${color}30`, borderRadius: 14, padding: 18, textAlign: 'left' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 12 }}>Sign in to {orgName}</div>
+                  <div style={{ height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }} />
+                  <div style={{ height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${color}, ${secondaryColor})` }} />
+                </div>
+              </div>
+            )}
           </SettingCard>
+
+          <div style={{ background: `linear-gradient(135deg, ${color}12, ${secondaryColor}12)`, border: `1px solid ${color}30`, borderRadius: 14, padding: 16, marginTop: 16, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div style={{ fontSize: 22, flexShrink: 0 }}>🚀</div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: color }}>Your brand, your impact</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, lineHeight: 1.5 }}>A consistent brand builds confidence with parents, volunteers and partners.</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
