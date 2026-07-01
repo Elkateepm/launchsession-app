@@ -38,6 +38,7 @@ function EventDetail({ event, org, onBack, onUpdate }) {
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ ...event })
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const primary = org?.primary_color || '#1B9AAA'
 
   const typeCfg = TYPE_CONFIG[event.event_type] || TYPE_CONFIG.other
@@ -82,9 +83,11 @@ function EventDetail({ event, org, onBack, onUpdate }) {
 
   const handleSave = async () => {
     setSaving(true)
+    setSaveError('')
     const { data, error } = await supabase.from('events').update(editForm).eq('id', event.id).select().single()
     setSaving(false)
-    if (!error && data) { onUpdate(data); setEditing(false) }
+    if (error) { setSaveError(error.message); return }
+    if (data) { onUpdate(data); setEditing(false) }
   }
 
   const updateStatus = async (status) => {
@@ -152,6 +155,11 @@ function EventDetail({ event, org, onBack, onUpdate }) {
       {editing && (
         <div style={{ background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 16, padding: 20, marginBottom: 20 }}>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Edit Event</div>
+          {saveError && (
+            <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 14, fontWeight: 600 }}>
+              ⚠️ {saveError}
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Title</label><input value={editForm.title || ''} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} style={inp} /></div>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Location</label><input value={editForm.location || ''} onChange={e => setEditForm(f => ({ ...f, location: e.target.value }))} style={inp} /></div>
@@ -322,15 +330,23 @@ function CreateEventModal({ org, onClose, onCreate }) {
     cost_per_person: '', notes: '', status: 'planning',
   })
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', fontFamily: 'inherit' }
 
   const handleCreate = async () => {
     if (!form.title || !form.event_date) return
     setSaving(true)
-    const { data, error } = await supabase.from('events').insert({ ...form, org_id: org.id }).select().single()
+    setError('')
+    const cleanForm = {
+      ...form,
+      max_participants: form.max_participants ? parseInt(form.max_participants) : null,
+      cost_per_person: form.cost_per_person ? parseFloat(form.cost_per_person) : null,
+    }
+    const { data, error: err } = await supabase.from('events').insert({ ...cleanForm, org_id: org.id }).select().single()
     setSaving(false)
-    if (!error && data) { onCreate(data); onClose() }
+    if (err) { setError(err.message); return }
+    if (data) { onCreate(data); onClose() }
   }
 
   return (
@@ -341,6 +357,11 @@ function CreateEventModal({ org, onClose, onCreate }) {
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, color: '#9CA3AF', cursor: 'pointer' }}>×</button>
         </div>
         <div style={{ padding: 24 }}>
+          {error && (
+            <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>
+              ⚠️ {error}
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div style={{ gridColumn: '1/-1' }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 5 }}>EVENT TITLE *</label>
