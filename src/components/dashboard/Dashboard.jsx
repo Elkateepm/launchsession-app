@@ -316,6 +316,8 @@ export default function Dashboard({ session, org }) {
                 onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
                 locked={!hasModule(m.key)} />
             ))}
+            <NavItem icon="🎨" label="Branding" active={tab === 'branding'}
+              onClick={() => handleSetTab('branding')} primary={primary} collapsed={sidebarCollapsed} />
           </NavSection>
 
           <NavSection collapsed={sidebarCollapsed} title="Organisation" packColor="rgba(255,255,255,0.2)">
@@ -379,10 +381,10 @@ export default function Dashboard({ session, org }) {
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}60, transparent)` }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 32, height: 32, borderRadius: 9, background: `linear-gradient(135deg, ${primary}22, ${primary}10)`, border: `1.5px solid ${primary}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                {ALL_MODULES.find(m => m.key === tab)?.icon || (tab === 'team' ? '👥' : tab === 'settings' ? '⚙️' : '📄')}
+                {ALL_MODULES.find(m => m.key === tab)?.icon || (tab === 'team' ? '👥' : tab === 'settings' ? '⚙️' : tab === 'branding' ? '🎨' : '📄')}
               </div>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-display, sans-serif)', lineHeight: 1.1 }}>{tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-display, sans-serif)', lineHeight: 1.1 }}>{tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</div>
                 <div style={{ fontSize: 10, color: primary, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 }}>{orgName}</div>
               </div>
             </div>
@@ -419,6 +421,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'team'       && <TeamTab org={org} session={session} />}
           {tab === 'templates'  && <Templates org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'settings'   && <Settings org={org} session={session} />}
+          {tab === 'branding'   && <Settings org={org} session={session} initialSection="branding" />}
 
           {/* ── DELIVERY PACK ── */}
           {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
