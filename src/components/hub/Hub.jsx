@@ -435,7 +435,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       setLoading(false);
     }
     loadHub();
-    const interval = setInterval(loadHub, 1000);
+    const interval = setInterval(loadHub, 3000);
     return () => { alive = false; clearInterval(interval); };
   }, [orgId]);
 
