@@ -116,6 +116,35 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
   )
 }
 
+function DateTimePill({ primary }) {
+  const [now, setNow] = React.useState(new Date())
+
+  React.useEffect(() => {
+    const tick = () => setNow(new Date())
+    // Align to the next minute boundary, then tick every 60s
+    const msToNextMinute = 60000 - (Date.now() % 60000)
+    const timeout = setTimeout(() => {
+      tick()
+      const interval = setInterval(tick, 60000)
+      return () => clearInterval(interval)
+    }, msToNextMinute)
+    return () => clearTimeout(timeout)
+  }, [])
+
+  const dateStr = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+  const timeStr = now.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(/^0/, '')
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9, whiteSpace: 'nowrap', padding: '7px 13px', background: '#fff', borderRadius: 12, border: `1.5px solid ${primary}20`, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}30` }}>
+      <div style={{ width: 26, height: 26, borderRadius: 8, background: primary + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>📅</div>
+      <div style={{ lineHeight: 1.25 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text, #111)' }}>{dateStr}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text3, #9CA3AF)', letterSpacing: 0.2 }}>{timeStr}</div>
+      </div>
+    </div>
+  )
+}
+
 function NotificationBell({ primary, secondary, concernsCount, reflectionsCount, onGoConcerns, onGoReflections }) {
   const [open, setOpen] = React.useState(false)
   const ref = React.useRef(null)
@@ -461,11 +490,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               onGoConcerns={() => go('safeguarding')}
               onGoReflections={() => go('planner')}
             />
-            {!isMobile && (
-              <div style={{ fontSize: 12, color: 'var(--text3, #6b7280)', fontWeight: 700, whiteSpace: 'nowrap', padding: '7px 12px', background: '#fff', borderRadius: 10, border: `1.5px solid ${primary}20`, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}30` }}>
-                {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-              </div>
-            )}
+            {!isMobile && <DateTimePill primary={primary} />}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '5px 10px 5px 5px', borderRadius: 12, border: `1.5px solid ${primary}22`, background: '#fff', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` }}
               onClick={onAvatarClick}
               onMouseEnter={e => { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px ${primary}45` }}
