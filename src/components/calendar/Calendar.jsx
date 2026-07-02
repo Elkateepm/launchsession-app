@@ -36,9 +36,15 @@ const KEYFRAMES = `
   0%, 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
   50% { box-shadow: 0 0 0 6px var(--pulse-color, rgba(27,154,170,0.15)); }
 }
-@keyframes cal-confetti-fall {
-  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(140px) rotate(360deg); opacity: 0; }
+@keyframes cal-sparkle-burst {
+  0% { transform: translate(0, 0) scale(0); opacity: 0; }
+  15% { transform: translate(calc(var(--tx) * 0.3), calc(var(--ty) * 0.3)) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0.3); opacity: 0; }
+}
+@keyframes cal-sparkle-glow {
+  0% { transform: scale(0); opacity: 0; }
+  25% { transform: scale(1.4); opacity: 0.9; }
+  100% { transform: scale(2.2); opacity: 0; }
 }
 @keyframes cal-bounce-in {
   0% { opacity: 0; transform: scale(0.7); }
@@ -47,18 +53,35 @@ const KEYFRAMES = `
 }
 `
 
-function ConfettiBurst({ color }) {
-  const pieces = useMemo(() => Array.from({ length: 14 }, (_, i) => ({
-    left: `${8 + Math.random() * 84}%`,
-    delay: (Math.random() * 0.3).toFixed(2),
-    duration: (0.7 + Math.random() * 0.5).toFixed(2),
-    size: 4 + Math.random() * 4,
-    hue: [color, '#F59E0B', '#EC4899', '#8B5CF6', '#10B981'][i % 5],
-  })), [color])
+function ConfettiBurst({ color, secondary }) {
+  const tones = useMemo(() => [color, secondary || color, '#fff'], [color, secondary])
+  const particles = useMemo(() => Array.from({ length: 10 }, (_, i) => {
+    const angle = (Math.PI * 2 * i) / 10 + (Math.random() * 0.4 - 0.2)
+    const distance = 34 + Math.random() * 26
+    return {
+      tx: Math.cos(angle) * distance,
+      ty: Math.sin(angle) * distance - 8, // slight upward bias
+      delay: (Math.random() * 0.12).toFixed(2),
+      duration: (0.9 + Math.random() * 0.35).toFixed(2),
+      size: 3 + Math.random() * 3,
+      tone: tones[i % tones.length],
+    }
+  }), [tones])
+
   return (
-    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 5 }}>
-      {pieces.map((p, i) => (
-        <div key={i} style={{ position: 'absolute', left: p.left, top: 0, width: p.size, height: p.size, borderRadius: 2, background: p.hue, animation: `cal-confetti-fall ${p.duration}s ease-in ${p.delay}s forwards` }} />
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* Soft central glow flash */}
+      <div style={{ position: 'absolute', width: 26, height: 26, borderRadius: '50%', background: `radial-gradient(circle, ${color}55, transparent 70%)`, animation: 'cal-sparkle-glow 0.7s ease-out forwards' }} />
+      {/* Sparkle particles drifting outward */}
+      {particles.map((p, i) => (
+        <div key={i}
+          style={{
+            position: 'absolute', width: p.size, height: p.size, borderRadius: '50%',
+            background: p.tone, boxShadow: `0 0 4px ${p.tone}80`,
+            animation: `cal-sparkle-burst ${p.duration}s cubic-bezier(0.16, 1, 0.3, 1) ${p.delay}s forwards`,
+            '--tx': `${p.tx}px`, '--ty': `${p.ty}px`,
+          }}
+        />
       ))}
     </div>
   )
@@ -220,7 +243,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
 
   const handlePlanForDate = (dateStr) => {
     setShowConfettiFor(dateStr)
-    setTimeout(() => setShowConfettiFor(null), 1200)
+    setTimeout(() => setShowConfettiFor(null), 1400)
     if (onNavigate) setTimeout(() => onNavigate('planner'), 350)
   }
 
@@ -308,10 +331,10 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const isPastEmpty = !today && day < new Date() && daySessions.length === 0 && inMonth
                 return (
                   <div key={key} onClick={() => daySessions.length === 0 && inMonth && !isPastEmpty ? handlePlanForDate(key) : null}
-                    style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
+                    style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', ['--pulse-color']: primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
                     onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? `${primary}14` : '#FAFBFC' }}
                     onMouseLeave={e => { e.currentTarget.style.background = today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA' }}>
-                    {showConfettiFor === key && <ConfettiBurst color={primary} />}
+                    {showConfettiFor === key && <ConfettiBurst color={primary} secondary={org?.secondary_color} />}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 4 }}>
                       <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? '#374151' : '#D1D5DB', boxShadow: today ? `0 2px 8px ${primary}50` : 'none' }}>
                         {format(day, 'd')}
@@ -371,7 +394,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                           onMouseLeave={e => { e.currentTarget.style.color = '#E5E7EB'; e.currentTarget.style.transform = 'scale(1)' }}>+</div>
                       )}
                     </div>
-                    {showConfettiFor === key && <ConfettiBurst color={primary} />}
+                    {showConfettiFor === key && <ConfettiBurst color={primary} secondary={org?.secondary_color} />}
                   </div>
                 )
               })}
@@ -391,7 +414,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                   <button onClick={() => handlePlanForDate(dayKey)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px ${primary}40` }}>
                     + Plan a Session
                   </button>
-                  {showConfettiFor === dayKey && <ConfettiBurst color={primary} />}
+                  {showConfettiFor === dayKey && <ConfettiBurst color={primary} secondary={org?.secondary_color} />}
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
