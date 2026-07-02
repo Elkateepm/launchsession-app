@@ -451,7 +451,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                           <span title={bankHoliday} style={{ fontSize: 9, background: '#F59E0B26', color: '#B45309', borderRadius: 4, padding: '1px 4px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>🏵️ {bankHoliday}</span>
                         )}
                         {inMonth && !bankHoliday && novelty && (
-                          <span title={novelty.title} style={{ fontSize: 12, opacity: 0.75 }}>{novelty.icon}</span>
+                          <span title={novelty.title} style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', opacity: 0.65, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{novelty.title}</span>
                         )}
                       </div>
                       <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? '#374151' : '#D1D5DB', boxShadow: today ? `0 2px 8px ${primary}50` : 'none', flexShrink: 0 }}>
@@ -639,7 +639,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
               <span style={{ color: '#9CA3AF' }}>School Holiday (approx.)</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>
-              <span style={{ fontSize: 12 }}>🎉</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', opacity: 0.65 }}>Aa</span>
               <span style={{ color: '#9CA3AF' }}>Fun / awareness day</span>
             </div>
           </div>
