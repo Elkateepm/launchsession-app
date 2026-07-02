@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
@@ -498,161 +498,80 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   )
 }
 
-// ─── CIRCULAR PROGRESS RING ───────────────────────────────────
-function CircularProgress({ value, max, color, label, size = 92 }) {
-  const [animated, setAnimated] = useState(0)
-  const pct = max > 0 ? Math.min(1, value / max) : 0
-  const radius = (size - 10) / 2
-  const circumference = 2 * Math.PI * radius
-
-  useEffect(() => {
-    const t = setTimeout(() => setAnimated(pct), 80)
-    return () => clearTimeout(t)
-  }, [pct])
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-      <div style={{ position: 'relative', width: size, height: size }}>
-        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="7" />
-          <circle
-            cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth="7" strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={circumference * (1 - animated)}
-            style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1)', filter: `drop-shadow(0 0 6px ${color}80)` }}
-          />
-        </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <AnimatedNumber value={value} color="#fff" size={22} />
-        </div>
-      </div>
-      <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</div>
-    </div>
-  )
-}
-
-function AnimatedNumber({ value, color, size = 20 }) {
-  const [display, setDisplay] = useState(0)
-  useEffect(() => {
-    let raf
-    const start = display
-    const startTime = performance.now()
-    const duration = 500
-    const tick = (now) => {
-      const t = Math.min(1, (now - startTime) / duration)
-      const eased = 1 - Math.pow(1 - t, 3)
-      setDisplay(Math.round(start + (value - start) * eased))
-      if (t < 1) raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
-  return <div style={{ fontSize: size, fontWeight: 900, color, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{display}</div>
-}
-
-// ─── DOT GRID — ONE DOT PER CHILD ─────────────────────────────
-function DotGrid({ children, getStatus }) {
-  const STATUS_COLORS = { signed_in: '#22C55E', signed_out: '#3B82F6', absent: '#EF4444', expected: '#CBD5E1', unmarked: '#CBD5E1' }
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-      {children.map((c, i) => {
-        const s = getStatus(c.id)
-        const color = STATUS_COLORS[s] || STATUS_COLORS.unmarked
-        return (
-          <div key={c.id} title={`${c.first_name} ${c.last_name}`}
-            style={{ width: 9, height: 9, borderRadius: '50%', background: color, transition: 'background 0.4s ease, transform 0.2s ease', animation: `dotPop 0.3s ease ${Math.min(i * 0.006, 1)}s both`, boxShadow: s === 'signed_in' ? `0 0 5px ${color}90` : 'none' }} />
-        )
-      })}
-      <style>{`@keyframes dotPop { 0% { opacity: 0; transform: scale(0.4); } 100% { opacity: 1; transform: scale(1); } }`}</style>
-    </div>
-  )
-}
-
-// ─── CHILD ROW — FAST SIGN IN ──────────────────────────────────
-function ChildCard({ child, status, bubble, onClick, onSignIn, onSignOut, primary }) {
+// ─── CHILD CARD ───────────────────────────────────────────────
+function ChildCard({ child, status, bubble, onClick, primary }) {
   const bColor = bubble?.color || primary || '#1B9AAA'
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
-  const [busy, setBusy] = useState(false)
+  const [hovered, setHovered] = React.useState(false)
 
-  const signedInTime = child._signedInAt ? format(new Date(child._signedInAt), 'HH:mm') : null
-  const signedOutTime = child._signedOutAt ? format(new Date(child._signedOutAt), 'HH:mm') : null
-
-  const isExpected = status === 'expected' || status === 'unmarked'
-  const isIn = status === 'signed_in'
-  const isOut = status === 'signed_out'
-  const isAbsent = status === 'absent'
-
-  const handleButtonClick = async (e) => {
-    e.stopPropagation()
-    setBusy(true)
-    if (isIn) await onSignOut(child.id)
-    else await onSignIn(child.id)
-    setBusy(false)
+  const statusConfig = {
+    signed_in:  { label: 'In',      bg: '#DCFCE7', color: '#15803D', dot: '#16A34A', markBg: '#15803D', markColor: '#fff', markLabel: 'Signed In' },
+    signed_out: { label: 'Out',     bg: '#DBEAFE', color: '#1D4ED8', dot: '#2563EB', markBg: '#1D4ED8', markColor: '#fff', markLabel: 'Signed Out' },
+    absent:     { label: 'Absent',  bg: '#FEE2E2', color: '#B91C1C', dot: '#DC2626', markBg: '#DC2626', markColor: '#fff', markLabel: 'Absent' },
+    expected:   { label: 'Expected', bg: '#FEF9C3', color: '#92400E', dot: '#F59E0B', markBg: '#F3F4F6', markColor: '#6B7280', markLabel: 'MARK' },
+    unmarked:   { label: '—',       bg: '#F3F4F6', color: '#6B7280', dot: '#9CA3AF', markBg: '#F3F4F6', markColor: '#6B7280', markLabel: 'MARK' },
   }
+  const sc = statusConfig[status] || statusConfig.unmarked
 
   return (
     <div
-      onClick={onClick}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px', borderBottom: '1px solid #F1F5F9',
-        cursor: 'pointer', background: isIn ? '#F0FDF4' : isOut ? '#EFF6FF' : isAbsent ? '#FEF2F2' : '#fff',
-        transition: 'background 0.25s ease', minHeight: 68,
-      }}
-      onMouseEnter={e => { if (isExpected) e.currentTarget.style.background = '#FAFBFC' }}
-      onMouseLeave={e => { e.currentTarget.style.background = isIn ? '#F0FDF4' : isOut ? '#EFF6FF' : isAbsent ? '#FEF2F2' : '#fff' }}
+      style={{ display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #F3F4F6', cursor: 'pointer', background: hovered ? '#F8FAFC' : '#fff', transition: 'background 0.12s', minHeight: 64 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       {/* Avatar */}
-      <div style={{ position: 'relative', flexShrink: 0 }}>
-        <div style={{ width: 46, height: 46, borderRadius: 14, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', overflow: 'hidden', boxShadow: `0 3px 10px ${bColor}45` }}>
-          {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
-        </div>
-        {isIn && <div style={{ position: 'absolute', bottom: -2, right: -2, width: 15, height: 15, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: '#fff', fontWeight: 900 }}>✓</div>}
+      <div style={{ width: 44, height: 44, borderRadius: 13, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', marginRight: 14, boxShadow: `0 2px 8px ${bColor}40` }}>
+        {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
 
-      {/* Name + meta */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      {/* Name + sub */}
+      <div style={{ flex: 1, minWidth: 0 }} onClick={onClick}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {child.first_name} {child.last_name}
         </div>
-        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 3, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
           {bubble && <span style={{ color: bColor, fontWeight: 700 }}>{bubble.label}</span>}
-          {isExpected && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#94A3B8' }}>◌ Expected</span>}
-          {isIn && signedInTime && <span style={{ color: '#16A34A', fontWeight: 700 }}>In {signedInTime}</span>}
-          {isOut && signedOutTime && <span style={{ color: '#2563EB', fontWeight: 700 }}>Out {signedOutTime}</span>}
+          {!bubble && child.group_name && <span style={{ color: '#94A3B8', fontWeight: 600 }}>{child.group_name}</span>}
           {child.allergies && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 99, padding: '1px 8px' }}>⚠ Allergy</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 6, padding: '1px 7px' }}>
+              ⚠ ALLERGY
+            </span>
           )}
           {child.medical_notes && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 99, padding: '1px 8px' }}>✚ Medical</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 6, padding: '1px 7px' }}>
+              ✚ MEDICAL
+            </span>
           )}
         </div>
       </div>
 
-      {/* Morphing sign in/out button */}
-      <button
-        onClick={handleButtonClick}
-        disabled={busy || isOut || isAbsent}
-        style={{
-          minWidth: 96, padding: '10px 16px', borderRadius: 12, border: 'none', cursor: (isOut || isAbsent) ? 'default' : 'pointer',
-          fontSize: 12.5, fontWeight: 800, letterSpacing: 0.2, flexShrink: 0, transition: 'all 0.25s cubic-bezier(0.22, 1, 0.36, 1)',
-          background: isIn ? '#F97316' : isOut ? '#E2E8F0' : isAbsent ? '#FECACA' : '#16A34A',
-          color: isIn ? '#fff' : isOut ? '#64748B' : isAbsent ? '#991B1B' : '#fff',
-          boxShadow: isExpected ? '0 4px 14px rgba(22,163,74,0.35)' : isIn ? '0 4px 14px rgba(249,115,22,0.3)' : 'none',
-          transform: busy ? 'scale(0.95)' : 'scale(1)',
-        }}
-      >
-        {busy ? '···' : isIn ? '↗ Sign Out' : isOut ? '✓ Signed Out' : isAbsent ? '✕ Absent' : '✓ Sign In'}
-      </button>
+      {/* Status dot */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        {(status === 'signed_in' || status === 'signed_out' || status === 'absent') && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: sc.bg, borderRadius: 99, padding: '4px 10px' }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: sc.dot }} />
+            <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
+          </div>
+        )}
+
+        {/* MARK button */}
+        <button
+          onClick={e => { e.stopPropagation(); onClick() }}
+          style={{ minWidth: 58, padding: '8px 12px', borderRadius: 10, border: 'none', background: status === 'expected' || status === 'unmarked' ? '#F1F5F9' : sc.markBg + '18', color: status === 'expected' || status === 'unmarked' ? '#64748B' : sc.color, fontSize: 11, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3, textTransform: 'uppercase', transition: 'all 0.15s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = bColor; e.currentTarget.style.color = '#fff' }}
+          onMouseLeave={e => { e.currentTarget.style.background = status === 'expected' || status === 'unmarked' ? '#F1F5F9' : sc.markBg + '18'; e.currentTarget.style.color = status === 'expected' || status === 'unmarked' ? '#64748B' : sc.color }}
+        >
+          {status === 'expected' || status === 'unmarked' ? 'MARK' : sc.label}
+        </button>
+      </div>
     </div>
   )
 }
 
-// ─── MAIN REGISTER — LIVE REGISTER EXPERIENCE ──────────────────
+// ─── MAIN REGISTER ────────────────────────────────────────────
 export default function Registers({ org }) {
   const orgId  = org?.id
   const primary = org?.primary_color || '#1B9AAA'
-  const secondary = org?.secondary_color || '#0EA5E9'
   const isMobile = useIsMobile()
   const { groups: orgGroups } = useOrgSettings(orgId)
   const bubbles = normaliseBubbles(orgGroups)
@@ -668,8 +587,6 @@ export default function Registers({ org }) {
   const [showImport, setShowImport] = useState(false)
   const [toast, setToast] = useState('')
   const [note, setNote] = useState('')
-  const [activity, setActivity] = useState([])
-  const searchRef = useRef(null)
 
   const getAttRec = (id) => attendance.find(a => a.child_id === id)
   const getStatus = (id) => getAttRec(id)?.status || 'unmarked'
@@ -696,20 +613,9 @@ export default function Registers({ org }) {
       await supabase.from('attendance').insert([{ session_id: session.id, child_id: childId, ...updates }])
     }
     const t = format(new Date(), 'HH:mm')
-    const activityMsg = status === 'signed_in' ? `${name} signed in` : status === 'signed_out' ? `${name} signed out` : `${name} marked absent`
-    setActivity(prev => [{ id: Date.now(), time: t, msg: activityMsg, type: status }, ...prev].slice(0, 12))
     if (status === 'signed_in') showToast(`✓ ${name} signed in at ${t}`)
     else if (status === 'signed_out') showToast(`${name} signed out at ${t}`)
     else showToast(`${name} marked absent`)
-  }
-
-  // Keyboard-first quick sign-in: Enter signs in the top filtered match
-  const handleSearchKeyDown = (e) => {
-    if (e.key === 'Escape') { setSearch(''); return }
-    if (e.key === 'Enter' && search.trim()) {
-      const match = filtered.find(c => ['expected', 'unmarked'].includes(getStatus(c.id)))
-      if (match) { handleUpdateStatus(match.id, 'signed_in'); setSearch('') }
-    }
   }
 
   const counts = {
@@ -720,10 +626,12 @@ export default function Registers({ org }) {
     signed_out: children.filter(c => getStatus(c.id) === 'signed_out').length,
   }
 
+  // Available groups from org settings + any from children
   const availableGroups = React.useMemo(() => {
     const fromBubbles = bubbles.map(b => b.label)
     const fromChildren = [...new Set(children.map(c => c.group_name).filter(Boolean))]
-    return [...new Set([...fromBubbles, ...fromChildren])]
+    const all = [...new Set([...fromBubbles, ...fromChildren])]
+    return all
   }, [bubbles, children])
 
   const filtered = children.filter(c => {
@@ -738,242 +646,177 @@ export default function Registers({ org }) {
     return nameOk && tabOk && groupOk
   })
 
-  const medicalAlerts = children.filter(c => c.allergies || c.medical_notes)
   const attendanceRate = counts.total > 0 ? Math.round((counts.signed_in / counts.total) * 100) : 0
-
-  const childWithTimes = (child) => ({
-    ...child,
-    _signedInAt: getAttRec(child.id)?.signed_in_at,
-    _signedOutAt: getAttRec(child.id)?.signed_out_at,
-  })
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#F8FAFC' }}>
 
       {/* TOAST */}
       {toast && (
-        <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', borderRadius: 12, padding: '11px 20px', fontSize: 13, fontWeight: 700, zIndex: 900, boxShadow: '0 8px 24px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', animation: 'toastIn 0.3s cubic-bezier(0.22,1,0.36,1)' }}>
+        <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', borderRadius: 12, padding: '11px 20px', fontSize: 13, fontWeight: 700, zIndex: 900, boxShadow: '0 8px 24px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
           <span style={{ color: '#4ADE80' }}>✓</span> {toast}
         </div>
       )}
-      <style>{`@keyframes toastIn { 0% { opacity: 0; transform: translate(-50%, -10px); } 100% { opacity: 1; transform: translate(-50%, 0); } }`}</style>
 
       {/* MAIN PANEL */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
 
-          {/* ── HERO CARD ── */}
-          <div style={{ margin: isMobile ? 12 : '18px 20px 0', background: `linear-gradient(150deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 24, padding: isMobile ? '20px 18px' : '26px 30px', position: 'relative', overflow: 'hidden', boxShadow: '0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)' }}>
-            <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 200, borderRadius: '50%', background: `radial-gradient(circle, ${primary}25, transparent 70%)`, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: -50, left: -30, width: 220, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}1a, transparent 70%)`, pointerEvents: 'none' }} />
+        {/* HEADER */}
+        <div style={{ background: '#fff', borderBottom: `2px solid ${primary}18`, padding: '14px 20px 10px', flexShrink: 0, position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}44, transparent)` }} />
 
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 22 }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  {session ? (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8 }}>
-                      <span style={{ width: 5, height: 5, background: '#4ADE80', borderRadius: '50%', animation: 'pulseLive 1.5s infinite', boxShadow: '0 0 6px #4ADE80' }} />
-                      LIVE SESSION
-                    </span>
-                  ) : (
-                    <span style={{ fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.4)', letterSpacing: 0.8, background: 'rgba(255,255,255,0.08)', borderRadius: 99, padding: '3px 10px' }}>NO ACTIVE SESSION</span>
-                  )}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                <span style={{ fontSize: 18, fontWeight: 900, color: '#111', fontFamily: 'var(--font-display)' }}>
+                  {session?.title || 'Register'}
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 800, borderRadius: 99, padding: '3px 10px', background: session ? '#DCFCE7' : '#F3F4F6', color: session ? '#15803D' : '#9CA3AF' }}>
+                  {session ? '● Live' : 'No Session'}
+                </span>
+              </div>
+              {session && (
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 12, color: '#9CA3AF' }}>📅 {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                  {session.start_time && <span style={{ fontSize: 12, color: '#9CA3AF' }}>🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}</span>}
+                  {session.location && <span style={{ fontSize: 12, color: '#9CA3AF' }}>📍 {session.location.split(',')[0]}</span>}
                 </div>
-                <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 26, fontWeight: 900, color: '#fff', letterSpacing: -0.5, fontFamily: 'var(--font-display, sans-serif)' }}>{session?.title || 'Register'}</h1>
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 8, fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
-                  <span>📅 {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                  {session?.start_time && <span>🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}</span>}
-                  {session?.location && <span>📍 {session.location.split(',')[0]}</span>}
-                </div>
-              </div>
-              <button onClick={() => setShowAdd(true)}
-                style={{ padding: '12px 22px', borderRadius: 14, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 13.5, cursor: 'pointer', boxShadow: `0 1px 0 rgba(255,255,255,0.25) inset, 0 10px 26px -8px ${primary}70`, flexShrink: 0, transition: 'transform 0.12s' }}
-                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
-                Open Full Register →
-              </button>
+              )}
             </div>
-
-            {/* Circular progress rings */}
-            <div style={{ position: 'relative', display: 'flex', justifyContent: isMobile ? 'space-between' : 'flex-start', gap: isMobile ? 8 : 40, marginBottom: 24, flexWrap: 'wrap' }}>
-              <CircularProgress value={counts.expected} max={counts.total} color="#64748B" label="Expected" />
-              <CircularProgress value={counts.signed_in} max={counts.total} color="#22C55E" label="Signed In" />
-              <CircularProgress value={counts.signed_out} max={counts.total} color="#3B82F6" label="Signed Out" />
-            </div>
-
-            {/* Animated progress bar */}
-            <div style={{ position: 'relative', marginBottom: counts.total > 0 ? 18 : 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>
-                <span>{counts.signed_in} of {counts.total} checked in</span>
-                <span style={{ color: '#4ADE80', fontWeight: 800 }}>{attendanceRate}%</span>
-              </div>
-              <div style={{ height: 10, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden', position: 'relative' }}>
-                <div style={{ height: '100%', width: `${attendanceRate}%`, background: `linear-gradient(90deg, ${primary}, #22C55E)`, borderRadius: 99, transition: 'width 0.8s cubic-bezier(0.22,1,0.36,1)', boxShadow: attendanceRate > 0 ? '0 0 12px rgba(34,197,94,0.6)' : 'none' }} />
-              </div>
-            </div>
-
-            {/* Dot grid — one dot per child */}
-            {counts.total > 0 && (
-              <div style={{ position: 'relative' }}>
-                <DotGrid children={children} getStatus={getStatus} />
-              </div>
-            )}
-
-            <style>{`@keyframes pulseLive { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.6); } }`}</style>
+            <button onClick={() => setShowAdd(true)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+              + Add Child
+            </button>
           </div>
 
-          {/* ── QUICK REGISTER SEARCH ── */}
-          <div style={{ margin: isMobile ? '14px 12px 0' : '18px 20px 0' }}>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', fontSize: 18, color: primary }}>🔍</span>
-              <input
-                ref={searchRef}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                placeholder="Search child name... (Enter to sign in)"
-                style={{ width: '100%', boxSizing: 'border-box', padding: '16px 18px 16px 48px', borderRadius: 16, border: `1.5px solid ${primary}25`, background: '#fff', fontSize: 15, outline: 'none', fontFamily: 'inherit', fontWeight: 600, boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 8px 24px -12px ${primary}35`, transition: 'all 0.2s' }}
-                onFocus={e => { e.target.style.borderColor = primary; e.target.style.boxShadow = `0 0 0 4px ${primary}18, 0 8px 24px -10px ${primary}45` }}
-                onBlur={e => { e.target.style.borderColor = primary + '25'; e.target.style.boxShadow = `0 1px 0 rgba(255,255,255,0.8) inset, 0 8px 24px -12px ${primary}35` }}
-              />
-            </div>
+          {/* Stats strip */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 8, marginBottom: 12 }}>
+            {[
+              { label: 'Total', num: counts.total, color: '#374151', bg: '#F9FAFB' },
+              { label: 'Signed In', num: counts.signed_in, color: '#15803D', bg: '#F0FDF4' },
+              { label: 'Absent', num: counts.absent, color: '#B91C1C', bg: '#FEF2F2' },
+              { label: 'Yet to Arrive', num: counts.expected, color: '#D97706', bg: '#FFFBEB' },
+            ].map(s => (
+              <div key={s.label} style={{ background: s.bg, borderRadius: 10, padding: '8px 10px', textAlign: 'center', border: `1px solid ${s.color}18` }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.num}</div>
+                <div style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
           </div>
 
-          {/* ── GROUP CHIPS ── */}
-          {availableGroups.length > 1 && (
-            <div style={{ display: 'flex', gap: 7, padding: isMobile ? '14px 12px 0' : '16px 20px 0', overflowX: 'auto' }}>
-              {['all', ...availableGroups].map(g => {
-                const bubble = g === 'all' ? null : bubbles.find(b => b.label.toLowerCase() === g.toLowerCase())
-                const isActive = activeGroup === g
-                const gColor = bubble?.color || primary
-                return (
-                  <button key={g} onClick={() => setActiveGroup(g)} style={{
-                    padding: '7px 16px', borderRadius: 99, border: `1.5px solid ${isActive ? gColor : '#e5e7eb'}`,
-                    background: isActive ? gColor : '#fff', color: isActive ? '#fff' : '#6B7280',
-                    fontSize: 12.5, fontWeight: isActive ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                    display: 'flex', alignItems: 'center', gap: 6, boxShadow: isActive ? `0 4px 14px ${gColor}45` : 'none', transition: 'all 0.15s'
-                  }}>
-                    {bubble && <span style={{ width: 8, height: 8, borderRadius: '50%', background: isActive ? '#fff' : bubble.color, display: 'inline-block' }} />}
-                    {g === 'all' ? 'All Groups' : g}
-                    <span style={{ fontSize: 10, opacity: 0.75 }}>
-                      {g === 'all' ? children.length : children.filter(c => (c.group_name || '').toLowerCase() === g.toLowerCase()).length}
-                    </span>
-                  </button>
-                )
-              })}
+          {/* Attendance bar */}
+          {counts.total > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>Attendance</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: primary }}>{attendanceRate}%</span>
+              </div>
+              <div style={{ height: 6, background: '#F3F4F6', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${attendanceRate}%`, background: `linear-gradient(90deg, ${primary}, #16A34A)`, borderRadius: 99, transition: 'width 0.5s' }} />
+              </div>
             </div>
           )}
 
-          {/* ── STATUS CHIPS TABS ── */}
-          <div style={{ display: 'flex', gap: 8, padding: isMobile ? '12px 12px 0' : '14px 20px 0', overflowX: 'auto' }}>
-            {[
-              { key: 'all', label: 'All', count: counts.total, color: '#374151' },
-              { key: 'expected', label: 'Expected', count: counts.expected, color: '#64748B' },
-              { key: 'signed_in', label: 'Signed In', count: counts.signed_in, color: '#16A34A' },
-              { key: 'signed_out', label: 'Signed Out', count: counts.signed_out, color: '#2563EB' },
-              { key: 'absent', label: 'Absent', count: counts.absent, color: '#DC2626' },
-            ].map(t => {
-              const isActive = activeTab === t.key
+          {/* Search */}
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>🔍</span>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by name..."
+              style={{ width: '100%', boxSizing: 'border-box', padding: isMobile ? '8px 10px 8px 32px' : '9px 12px 9px 36px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
+              onFocus={e => e.target.style.borderColor = primary}
+              onBlur={e => e.target.style.borderColor = primary + '25'}
+            />
+          </div>
+        </div>
+
+        {/* GROUP FILTER */}
+        {availableGroups.length > 1 && (
+          <div style={{ display: 'flex', gap: 6, padding: '10px 16px', background: '#fff', borderBottom: '1px solid #F3F4F6', overflowX: 'auto', flexShrink: 0 }}>
+            {['all', ...availableGroups].map(g => {
+              const bubble = g === 'all' ? null : bubbles.find(b => b.label.toLowerCase() === g.toLowerCase())
+              const isActive = activeGroup === g
               return (
-                <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ padding: '7px 14px', borderRadius: 99, border: `1.5px solid ${isActive ? t.color : '#e5e7eb'}`, background: isActive ? t.color + '14' : '#fff', color: isActive ? t.color : '#6B7280', fontSize: 12.5, fontWeight: isActive ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {t.label}
-                  <span style={{ background: isActive ? t.color : '#F3F4F6', color: isActive ? '#fff' : '#9CA3AF', borderRadius: 99, padding: '1px 7px', fontSize: 10.5, fontWeight: 800 }}>{t.count}</span>
+                <button key={g} onClick={() => setActiveGroup(g)} style={{
+                  padding: '5px 14px', borderRadius: 99, border: `1.5px solid ${isActive ? (bubble?.color || primary) : '#e5e7eb'}`,
+                  background: isActive ? (bubble?.color || primary) + '18' : '#fff',
+                  color: isActive ? (bubble?.color || primary) : '#6B7280',
+                  fontSize: 12, fontWeight: isActive ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', gap: 5
+                }}>
+                  {bubble && <span style={{ width: 8, height: 8, borderRadius: '50%', background: bubble.color, display: 'inline-block' }} />}
+                  {g === 'all' ? 'All Groups' : g}
+                  <span style={{ fontSize: 10, opacity: 0.7 }}>
+                    {g === 'all' ? children.length : children.filter(c => (c.group_name || '').toLowerCase() === g.toLowerCase()).length}
+                  </span>
                 </button>
               )
             })}
           </div>
+        )}
 
-          {/* ── CHILDREN LIST ── */}
-          <div style={{ margin: isMobile ? '14px 12px' : '16px 20px', background: '#fff', borderRadius: 18, overflow: 'hidden', border: '1px solid #F1F5F9', boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 30px -18px rgba(15,23,42,0.25)' }}>
-            {loading ? (
-              <div style={{ padding: 50, textAlign: 'center', color: '#9CA3AF', fontWeight: 600 }}>Loading register...</div>
-            ) : filtered.length === 0 ? (
-              <div style={{ padding: 60, textAlign: 'center' }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>👧</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#374151', marginBottom: 6 }}>{children.length === 0 ? 'No children yet' : 'No matches'}</div>
-                <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 16 }}>{children.length === 0 ? 'Add or import children to get started' : 'Try a different search or filter'}</div>
-                {children.length === 0 && (
-                  <button onClick={() => setShowImport(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>📥 Import Children</button>
-                )}
-              </div>
-            ) : (
-              filtered.map(child => (
-                <ChildCard
-                  key={child.id}
-                  child={childWithTimes(child)}
-                  status={getStatus(child.id)}
-                  bubble={getBubble(child)}
-                  primary={primary}
-                  onClick={() => setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
-                  onSignIn={(id) => handleUpdateStatus(id, 'signed_in')}
-                  onSignOut={(id) => handleUpdateStatus(id, 'signed_out')}
-                />
-              ))
-            )}
-          </div>
+        {/* STATUS TABS */}
+        <div style={{ display: 'flex', background: '#fff', borderBottom: '1px solid #F3F4F6', padding: '0 16px', flexShrink: 0, overflowX: 'auto' }}>
+          {[
+            { key: 'all', label: 'All', count: counts.total },
+            { key: 'signed_in', label: 'In', count: counts.signed_in },
+            { key: 'expected', label: 'Yet to Arrive', count: counts.expected },
+            { key: 'absent', label: 'Absent', count: counts.absent },
+            { key: 'signed_out', label: 'Out', count: counts.signed_out },
+          ].map(t => (
+            <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ padding: isMobile ? '8px 8px' : '10px 12px', border: 'none', borderBottom: `2.5px solid ${activeTab === t.key ? primary : 'transparent'}`, background: 'transparent', color: activeTab === t.key ? primary : '#6B7280', fontSize: isMobile ? 11 : 13, fontWeight: activeTab === t.key ? 800 : 500, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}>
+              {t.label}
+              <span style={{ background: activeTab === t.key ? primary + '18' : '#F3F4F6', color: activeTab === t.key ? primary : '#9CA3AF', borderRadius: 99, padding: '1px 7px', fontSize: 11, fontWeight: 700 }}>{t.count}</span>
+            </button>
+          ))}
         </div>
 
-        {/* ── SESSION FOOTER ── */}
-        <div style={{ background: '#fff', borderTop: '1px solid #F1F5F9', padding: isMobile ? '12px' : '14px 20px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 10, flexShrink: 0 }}>
-          <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '10px 14px', textAlign: isMobile ? 'left' : 'center' }}>
-            <div style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Attendance</div>
-            <div style={{ fontSize: 16, fontWeight: 900, color: attendanceRate === 100 ? '#16A34A' : '#374151', marginTop: 2 }}>{attendanceRate}%</div>
-          </div>
-          <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '10px 14px', textAlign: isMobile ? 'left' : 'center' }}>
-            <div style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Missing</div>
-            <div style={{ fontSize: 16, fontWeight: 900, color: counts.expected > 0 ? '#D97706' : '#16A34A', marginTop: 2 }}>{counts.expected}</div>
-          </div>
-          <button onClick={() => setShowImport(v => !v)} style={{ background: primary + '0c', border: `1.5px solid ${primary}30`, borderRadius: 12, padding: '10px 14px', color: primary, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>🖨 Print Register</button>
-          <button style={{ padding: '10px 14px', borderRadius: 12, border: 'none', background: session ? `linear-gradient(135deg, ${primary}, #16A34A)` : '#F3F4F6', color: session ? '#fff' : '#9CA3AF', fontSize: 13, fontWeight: 800, cursor: session ? 'pointer' : 'default' }}>
-            {session ? `✓ Complete Register` : 'No Active Session'}
+        {/* CHILDREN LIST */}
+        <div style={{ flex: 1, overflowY: 'auto', background: '#fff' }}>
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontWeight: 600 }}>Loading register...</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: 60, textAlign: 'center' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>👧</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#374151', marginBottom: 6 }}>{children.length === 0 ? 'No children yet' : 'No matches'}</div>
+              <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 16 }}>{children.length === 0 ? 'Add or import children to get started' : 'Try a different search or filter'}</div>
+              {children.length === 0 && (
+                <button onClick={() => setShowImport(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>📥 Import Children</button>
+              )}
+            </div>
+          ) : (
+            filtered.map(child => (
+              <ChildCard
+                key={child.id}
+                child={child}
+                status={getStatus(child.id)}
+                bubble={getBubble(child)}
+                primary={primary}
+                onClick={() => setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
+              />
+            ))
+          )}
+        </div>
+
+        {/* FOOTER */}
+        <div style={{ background: '#fff', borderTop: '1px solid #F3F4F6', padding: isMobile ? '10px 12px' : '12px 16px', display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'space-between', gap: isMobile ? 8 : 0, flexWrap: isMobile ? 'wrap' : 'nowrap', flexShrink: 0 }}>
+          {!isMobile && <button onClick={() => setShowAdd(true)} style={{ padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${primary}30`, background: primary + '08', color: primary, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Walk-in</button>}
+          {!isMobile && <div style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600 }}>{filtered.length} of {children.length} shown</div>}
+          <button style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: session ? `linear-gradient(135deg, ${primary}, #16A34A)` : '#F3F4F6', color: session ? '#fff' : '#9CA3AF', fontSize: 13, fontWeight: 800, cursor: session ? 'pointer' : 'default', width: isMobile ? '100%' : 'auto' }}>
+            {session ? `✓ Complete Register · ${counts.signed_in} in` : 'No Active Session'}
           </button>
         </div>
       </div>
 
-      {/* ── RIGHT SIDEBAR — desktop only ── */}
+      {/* SIDEBAR TOOLS — desktop only */}
       {!isMobile && (
-        <div style={{ width: 260, background: '#fff', borderLeft: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
-
-          {/* Today's session */}
-          <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid #F3F4F6' }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 10 }}>📋 Today's Session</div>
-            {session ? (
-              <div style={{ background: primary + '0a', border: `1px solid ${primary}25`, borderRadius: 12, padding: '12px 14px' }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}>{session.title}</div>
-                {session.start_time && <div style={{ fontSize: 11, color: primary, fontWeight: 700, marginTop: 3 }}>{session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}</div>}
-                {session.location && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>📍 {session.location}</div>}
-              </div>
-            ) : (
-              <div style={{ fontSize: 12, color: '#9CA3AF' }}>No session scheduled today.</div>
-            )}
-          </div>
-
-          {/* Medical alerts panel */}
-          {medicalAlerts.length > 0 && (
-            <div style={{ padding: '14px 16px', borderBottom: '1px solid #F3F4F6' }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#DC2626', marginBottom: 10 }}>⚕️ Medical Alerts</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {medicalAlerts.slice(0, 6).map(c => (
-                  <button key={c.id} onClick={() => setSelectedChild({ child: c, status: getStatus(c.id), attRec: getAttRec(c.id) })}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, border: '1px solid #FEE2E2', background: '#FFF5F5', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
-                    <span style={{ fontSize: 13 }}>{c.allergies ? '🟠' : '🔴'}</span>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 11, fontWeight: 800, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.first_name} {c.last_name}</div>
-                      <div style={{ fontSize: 10, color: '#B91C1C', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.allergies || c.medical_notes}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Quick actions */}
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid #F3F4F6' }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}>⚡ Quick Actions</div>
+        <div style={{ width: 220, background: '#fff', borderLeft: '1px solid #F3F4F6', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
+          <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid #F3F4F6' }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Tools</div>
             {[
-              { icon: '🚶', label: 'Walk In', sub: 'Add & sign in now', action: () => setShowAdd(true) },
               { icon: '➕', label: 'Add Child', sub: 'Not on list', action: () => setShowAdd(true) },
               { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => setShowImport(v => !v) },
-              { icon: '🛡️', label: 'Log Concern', sub: 'Safeguarding', action: null },
+              { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: null },
             ].map(t => (
               <button key={t.label} onClick={t.action} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 8px', borderRadius: 8, border: 'none', background: 'transparent', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 2 }}
                 onMouseEnter={e => { if (t.action) e.currentTarget.style.background = '#F9FAFB' }}
@@ -998,30 +841,8 @@ export default function Registers({ org }) {
             </div>
           )}
 
-          {/* Live activity timeline */}
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid #F3F4F6' }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 10 }}>📡 Live Activity</div>
-            {activity.length === 0 ? (
-              <div style={{ fontSize: 11, color: '#9CA3AF' }}>No activity yet this session.</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {activity.map(a => (
-                  <div key={a.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', animation: 'toastIn 0.3s ease' }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', minWidth: 34, marginTop: 1 }}>{a.time}</div>
-                    <div style={{ fontSize: 11.5, color: '#374151', fontWeight: 600, lineHeight: 1.4 }}>
-                      {a.type === 'signed_in' && <span style={{ color: '#16A34A' }}>●</span>}
-                      {a.type === 'signed_out' && <span style={{ color: '#2563EB' }}>●</span>}
-                      {a.type === 'absent' && <span style={{ color: '#DC2626' }}>●</span>}
-                      {' '}{a.msg}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Session notes */}
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid #F3F4F6' }}>
+          {/* Register notes */}
+          <div style={{ padding: 14, borderBottom: '1px solid #F3F4F6' }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}>Session Notes</div>
             <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Add notes about this session..."
               style={{ width: '100%', height: 72, border: '1px solid #e5e7eb', borderRadius: 8, padding: 8, fontSize: 11, resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', color: '#374151' }} />
@@ -1032,7 +853,7 @@ export default function Registers({ org }) {
             <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}>🛡 Safeguarding</div>
             <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, padding: '10px 12px' }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: '#92400E', marginBottom: 3 }}>
-                {medicalAlerts.length} medical alert{medicalAlerts.length !== 1 ? 's' : ''} on register
+                {children.filter(c => c.allergies || c.medical_notes).length} medical alert{children.filter(c => c.allergies || c.medical_notes).length !== 1 ? 's' : ''} on register
               </div>
               <div style={{ fontSize: 11, color: '#92400E', lineHeight: 1.4, opacity: 0.8 }}>Log all concerns immediately.</div>
             </div>
