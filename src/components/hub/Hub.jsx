@@ -14,7 +14,19 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   // Keep local attendance in sync
   React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
-  React.useEffect(() => { if (sessions.length) setActiveSession(sessions[0]) }, [sessions])
+  const sessionIdsKey = sessions.map(s => s.id).join(',')
+  React.useEffect(() => {
+    if (!sessions.length) return
+    setActiveSession(prev => {
+      // Keep current selection if it's still present in the refreshed list (just update its data)
+      if (prev) {
+        const stillThere = sessions.find(s => s.id === prev.id)
+        if (stillThere) return stillThere
+      }
+      return sessions[0]
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionIdsKey])
 
   const sessionAttendance = localAttendance.filter(a => a.session_id === activeSession?.id)
   const stats = activeSession ? getLiveSessionStats(activeSession) : { signedIn: 0, expected: 0, absent: 0, signedOut: 0, percent: 0 }
@@ -411,8 +423,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   useEffect(() => {
     if (!orgId) return;
     let alive = true;
+    let isFirstLoad = true;
     async function loadHub() {
-      setLoading(true);
+      if (isFirstLoad) setLoading(true);
       const [
         { data: sessionData },
         { data: attendanceData },
@@ -432,7 +445,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       setConcerns(concernData || []);
       setChildren(childData || []);
       setReflections(reflectionData || []);
-      setLoading(false);
+      if (isFirstLoad) { setLoading(false); isFirstLoad = false; }
     }
     loadHub();
     const interval = setInterval(loadHub, 3000);
