@@ -224,7 +224,7 @@ function NotificationBell({ primary, secondary, concernsCount, reflectionsCount,
 }
 
 export default function Hub({ org, session, setTab, onNavigate, userProfile, onAvatarClick }) {
-  const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
+  const hubUserName = userProfile?.full_name || session?.user?.email?.split('@')[0] || 'there'
   const [search, setSearch] = React.useState('')
   const [searchResults, setSearchResults] = React.useState(null)
 
@@ -234,14 +234,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     if (h < 17) return 'Good afternoon'
     return 'Good evening'
   }
-
-  React.useEffect(() => {
-    if (!session?.user?.id) return
-    import('../../lib/supabase').then(({ supabase }) => {
-      supabase.from('user_profiles').select('full_name').eq('id', session.user.id).single()
-        .then(({ data }) => { if (data?.full_name) setHubUserName(data.full_name) })
-    })
-  }, [session?.user?.id])
 
   const orgId = org?.id;
   const primary = org?.primary_color || "#1B9AAA";
