@@ -4,7 +4,7 @@ import { useIsMobile } from "../../hooks/useIsMobile";
 
 
 // ── LIVE SESSION PANEL ─────────────────────────────────────────
-function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onOpenRegister, onNavigate, getLiveSessionStats }) {
+function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, onOpenRegister, onNavigate, getLiveSessionStats }) {
   const [activeSession, setActiveSession] = useState(sessions[0])
   const [localAttendance, setLocalAttendance] = useState(attendance)
   const [bubbleFilter, setBubbleFilter] = useState('all')
@@ -27,29 +27,35 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
   const pct = stats.percent || 0
 
   return (
-    <div style={{ background: `linear-gradient(135deg, #0F172A 0%, #1E293B 100%)`, borderRadius: 20, overflow: 'hidden', boxShadow: `0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.06)`, marginBottom: 0 }}>
+    <div style={{ background: `linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
+
+      {/* Ambient brand glow */}
+      <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 200, borderRadius: '50%', background: `radial-gradient(circle, ${primary}22, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: -50, left: -30, width: 220, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}18, transparent 70%)`, pointerEvents: 'none' }} />
 
       {/* Header */}
-      <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8 }}>
-                <span style={{ width: 5, height: 5, background: '#4ADE80', borderRadius: '50%', animation: 'pulse-live 1.5s infinite' }}></span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8, boxShadow: '0 2px 10px rgba(34,197,94,0.15)' }}>
+                <span style={{ width: 5, height: 5, background: '#4ADE80', borderRadius: '50%', animation: 'pulse-live 1.5s infinite', boxShadow: '0 0 6px #4ADE80' }}></span>
                 LIVE SESSION
               </span>
               {sessions.length > 1 && (
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{sessions.length} active today</span>
               )}
             </div>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: -0.4 }}>{activeSession?.title}</h2>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+            <h2 style={{ margin: 0, fontSize: 23, fontWeight: 900, color: '#fff', letterSpacing: -0.5, fontFamily: 'var(--font-display, sans-serif)' }}>{activeSession?.title}</h2>
+            <p style={{ margin: '5px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
               {activeSession?.start_time || ''}{activeSession?.end_time ? ` – ${activeSession.end_time}` : ''}
               {activeSession?.location ? ` · ${activeSession.location}` : ''}
             </p>
           </div>
           <button onClick={() => onOpenRegister(activeSession?.id)}
-            style={{ padding: '10px 16px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 4px 14px ${primary}50`, flexShrink: 0 }}>
+            style={{ padding: '11px 18px', borderRadius: 13, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 22px -6px ${primary}70`, flexShrink: 0, transition: 'transform 0.12s' }}
+            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
             Full Register →
           </button>
         </div>
@@ -68,7 +74,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
 
         {/* Live group breakdown — clickable bubble filter pills */}
         {bubbleGroups.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
             {bubbleGroups.map(g => {
               const gColor = getBubbleColor(g)
               const isActive = bubbleFilter === g
@@ -84,32 +90,40 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
             )}
           </div>
         )}
+      </div>
 
-        {/* Stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
-          {[
-            { label: 'Signed In',  value: stats.signedIn,  color: '#4ADE80' },
-            { label: 'Expected',   value: stats.expected,  color: '#60A5FA' },
-            { label: 'Absent',     value: stats.absent,    color: '#FB923C' },
-            { label: 'Signed Out', value: stats.signedOut, color: '#C084FC' },
-          ].map(s => (
-            <div key={s.label} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '10px 12px', textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 900, color: s.color, letterSpacing: -0.5 }}>{s.value}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 2 }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
+      {/* Stat boxes — clickable, navigate to filtered register */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 1, background: 'rgba(255,255,255,0.06)' }}>
+        {[
+          { key: 'signed_in',  label: 'Signed In',  value: stats.signedIn,  color: '#4ADE80', icon: '↪' },
+          { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#C084FC', icon: '↩' },
+          { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#60A5FA', icon: '👥' },
+        ].map(s => (
+          <button key={s.key} onClick={() => onOpenRegister(activeSession?.id, s.key)}
+            style={{ background: 'rgba(15,23,42,0.6)', border: 'none', padding: '18px 12px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(15,23,42,0.6)'}>
+            <div style={{ fontSize: 11, marginBottom: 4, opacity: 0.7 }}>{s.icon}</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: s.color, letterSpacing: -0.5, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.7, marginTop: 5 }}>{s.label}</div>
+          </button>
+        ))}
+      </div>
 
-        {/* Progress bar */}
-        <div style={{ marginTop: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
-            <span>Register progress</span>
-            <span style={{ color: pct === 100 ? '#4ADE80' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>{pct}%</span>
-          </div>
-          <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#4ADE80' : `linear-gradient(90deg, ${primary}, #8B5CF6)`, borderRadius: 99, transition: 'width 0.5s ease' }} />
-          </div>
+      {/* Progress + absent note */}
+      <div style={{ padding: '16px 22px 20px', position: 'relative' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+          <span>Register progress</span>
+          <span style={{ color: pct === 100 ? '#4ADE80' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>{pct}%</span>
         </div>
+        <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#4ADE80' : `linear-gradient(90deg, ${primary}, ${secondary})`, borderRadius: 99, transition: 'width 0.5s ease', boxShadow: pct > 0 ? `0 0 10px ${pct === 100 ? '#4ADE80' : primary}70` : 'none' }} />
+        </div>
+        {stats.absent > 0 && (
+          <div style={{ marginTop: 10, fontSize: 11, color: '#FB923C', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+            ⚠ {stats.absent} marked absent
+          </div>
+        )}
       </div>
       <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
     </div>
@@ -375,7 +389,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const si = records.filter(a => a.status === "signed_in").length;
     const absent = records.filter(a => a.status === "absent").length;
     const so = records.filter(a => a.status === "signed_out").length;
-    const expected = Math.max(children.length, records.length);
+    const targetGroups = Array.isArray(item?.bubbles) ? item.bubbles.map(g => (g || '').toLowerCase()) : [];
+    const targetedChildren = targetGroups.length > 0
+      ? children.filter(c => targetGroups.includes((c.group_name || '').toLowerCase()))
+      : children;
+    const expected = Math.max(targetedChildren.length, records.length);
     return { signedIn: si, absent, signedOut: so, expected, percent: expected > 0 ? Math.round((si / expected) * 100) : 0 };
   };
 
@@ -554,6 +572,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           childList={children}
           attendance={attendance}
           primary={primary}
+          secondary={secondary}
           orgId={org?.id}
           onOpenRegister={openRegisterForSession}
           onNavigate={go}
