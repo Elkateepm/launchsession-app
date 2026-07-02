@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format, formatDistanceToNow } from 'date-fns'
+import { useRealtimeTable } from '../../lib/useRealtimeTable'
 
 const AUDIENCES = [
   { key: 'all_staff',   label: 'All Staff',   icon: '👥', color: '#3B82F6' },
@@ -36,10 +37,7 @@ function ThreadView({ thread, org, session: authSession, onBack }) {
   }, [thread.id])
 
   useEffect(() => { load() }, [load])
-  useEffect(() => {
-    const interval = setInterval(load, 5000)
-    return () => clearInterval(interval)
-  }, [load])
+  useRealtimeTable('message_thread_messages', load, { filter: `thread_id=eq.${thread.id}`, pollInterval: 4000 })
 
   const send = async (body) => {
     const text = body || newMsg.trim()
@@ -131,14 +129,16 @@ export default function Messaging({ org, session: authSession }) {
   const [filterAudience, setFilterAudience] = useState('all')
   const primary = org?.primary_color || '#1B9AAA'
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (isBackground) => {
+    if (!isBackground) setLoading(true)
     const { data } = await supabase.from('message_threads').select('*, message_thread_messages(count)').eq('org_id', org.id).order('updated_at', { ascending: false })
     setThreads(data || [])
     setLoading(false)
   }, [org.id])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { load(false) }, [load])
+  useRealtimeTable('message_threads', () => load(true), { filter: `org_id=eq.${org.id}`, pollInterval: 4000 })
+  useRealtimeTable('message_thread_messages', () => load(true), { pollInterval: 4000 })
 
   const createThread = async () => {
     if (!newThread.subject) return
