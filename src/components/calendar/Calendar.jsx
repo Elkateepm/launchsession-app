@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react'
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, addDays, isSameMonth, parseISO, isToday, addWeeks, subWeeks } from 'date-fns'
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, addDays, subDays, isSameMonth, parseISO, isToday, addWeeks, subWeeks } from 'date-fns'
 
 const TYPE_CONFIG = {
   activity:  { label: 'Activity',  icon: '🏃', color: '#1B9AAA', bg: 'rgba(27,154,170,0.12)',  border: 'rgba(27,154,170,0.35)'  },
@@ -15,6 +15,55 @@ const getCfg = (type) => TYPE_CONFIG[type] || TYPE_CONFIG.activity
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
+const KEYFRAMES = `
+@keyframes cal-pop-in {
+  0% { opacity: 0; transform: translateY(4px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes cal-slide-in-right {
+  0% { opacity: 0; transform: translateX(14px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes cal-slide-in-left {
+  0% { opacity: 0; transform: translateX(-14px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes cal-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes cal-today-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+  50% { box-shadow: 0 0 0 6px var(--pulse-color, rgba(27,154,170,0.15)); }
+}
+@keyframes cal-confetti-fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(140px) rotate(360deg); opacity: 0; }
+}
+@keyframes cal-bounce-in {
+  0% { opacity: 0; transform: scale(0.7); }
+  60% { opacity: 1; transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+`
+
+function ConfettiBurst({ color }) {
+  const pieces = useMemo(() => Array.from({ length: 14 }, (_, i) => ({
+    left: `${8 + Math.random() * 84}%`,
+    delay: (Math.random() * 0.3).toFixed(2),
+    duration: (0.7 + Math.random() * 0.5).toFixed(2),
+    size: 4 + Math.random() * 4,
+    hue: [color, '#F59E0B', '#EC4899', '#8B5CF6', '#10B981'][i % 5],
+  })), [color])
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 5 }}>
+      {pieces.map((p, i) => (
+        <div key={i} style={{ position: 'absolute', left: p.left, top: 0, width: p.size, height: p.size, borderRadius: 2, background: p.hue, animation: `cal-confetti-fall ${p.duration}s ease-in ${p.delay}s forwards` }} />
+      ))}
+    </div>
+  )
+}
+
 function SessionModal({ session, org, onClose, onDelete }) {
   const cfg = getCfg(session.session_type)
   const [deleting, setDeleting] = useState(false)
@@ -28,16 +77,15 @@ function SessionModal({ session, org, onClose, onDelete }) {
   }
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
-        {/* Coloured header */}
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'cal-fade-in 0.2s ease' }}>
+      <style>{KEYFRAMES}</style>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)', animation: 'cal-bounce-in 0.35s cubic-bezier(0.22, 1, 0.36, 1)' }}>
         <div style={{ background: `linear-gradient(135deg, ${cfg.color}22, ${cfg.color}08)`, borderBottom: `3px solid ${cfg.color}`, padding: '24px 24px 20px', position: 'relative' }}>
           <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.08)', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
           <div style={{ fontSize: 36, marginBottom: 8 }}>{cfg.icon}</div>
           <div style={{ fontSize: 20, fontWeight: 900, color: '#111', marginBottom: 4 }}>{session.title}</div>
           <span style={{ background: cfg.color, color: '#fff', borderRadius: 99, padding: '3px 12px', fontSize: 11, fontWeight: 800 }}>{cfg.label}</span>
         </div>
-        {/* Details */}
         <div style={{ padding: '20px 24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
             {[
@@ -69,14 +117,17 @@ function SessionModal({ session, org, onClose, onDelete }) {
   )
 }
 
-export default function Calendar({ org, onSessionChanged }) {
+export default function Calendar({ org, onSessionChanged, onNavigate }) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [viewMode, setViewMode] = useState('month') // 'month' | 'week'
+  const [viewMode, setViewMode] = useState('month')
   const [selectedSession, setSelectedSession] = useState(null)
   const [filterType, setFilterType] = useState('all')
+  const [navDirection, setNavDirection] = useState('right')
+  const [showConfettiFor, setShowConfettiFor] = useState(null)
   const primary = org?.primary_color || '#1B9AAA'
+  const gridKey = useRef(0)
 
   const load = useCallback(async () => {
     if (!org?.id) return
@@ -92,6 +143,33 @@ export default function Calendar({ org, onSessionChanged }) {
     return () => clearInterval(interval)
   }, [load])
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      if (e.key === 'ArrowLeft') navigate(-1)
+      if (e.key === 'ArrowRight') navigate(1)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode])
+
+  const navigate = (dir) => {
+    setNavDirection(dir > 0 ? 'right' : 'left')
+    gridKey.current += 1
+    setCurrentDate(d => {
+      if (viewMode === 'month') return dir > 0 ? addMonths(d, 1) : subMonths(d, 1)
+      if (viewMode === 'week') return dir > 0 ? addWeeks(d, 1) : subWeeks(d, 1)
+      return dir > 0 ? addDays(d, 1) : subDays(d, 1)
+    })
+  }
+
+  const jumpToday = () => {
+    setNavDirection('right')
+    gridKey.current += 1
+    setCurrentDate(new Date())
+  }
+
   const filtered = filterType === 'all' ? sessions : sessions.filter(s => s.session_type === filterType)
 
   const sessionsByDate = useMemo(() => {
@@ -104,18 +182,16 @@ export default function Calendar({ org, onSessionChanged }) {
     return map
   }, [filtered])
 
-  // ── Month view helpers ──
   const monthDays = useMemo(() => {
     const start = startOfMonth(currentDate)
     const end = endOfMonth(currentDate)
-    const startPad = (start.getDay() + 6) % 7 // Mon=0
+    const startPad = (start.getDay() + 6) % 7
     const days = []
     for (let i = 0; i < startPad; i++) days.push(null)
     for (let d = new Date(start); d <= end; d = addDays(d, 1)) days.push(new Date(d))
     return days
   }, [currentDate])
 
-  // ── Week view helpers ──
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentDate, { weekStartsOn: 1 })
     return Array.from({ length: 7 }, (_, i) => addDays(start, i))
@@ -137,99 +213,118 @@ export default function Calendar({ org, onSessionChanged }) {
   }
 
   const todayStr = format(new Date(), 'yyyy-MM-dd')
+  const slideAnim = navDirection === 'right' ? 'cal-slide-in-right' : 'cal-slide-in-left'
+
+  const dayKey = format(currentDate, 'yyyy-MM-dd')
+  const daySessionsForDayView = sessionsByDate[dayKey] || []
+
+  const handlePlanForDate = (dateStr) => {
+    setShowConfettiFor(dateStr)
+    setTimeout(() => setShowConfettiFor(null), 1200)
+    if (onNavigate) setTimeout(() => onNavigate('planner'), 350)
+  }
 
   return (
     <div style={{ display: 'flex', gap: 20, height: '100%', minHeight: 0 }}>
-      {/* ── MAIN CALENDAR ── */}
+      <style>{KEYFRAMES}</style>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
-        {/* Header */}
-        <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 24px', marginBottom: 16 }}>
+        <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 24px', marginBottom: 16, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 -1px 0 ${primary}14 inset, 0 18px 40px -18px ${primary}35` }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
               <div style={{ fontSize: 22, fontWeight: 900 }}>📅 Calendar</div>
               <div style={{ fontSize: 13, color: '#6B7280', marginTop: 3 }}>{thisMonthCount} session{thisMonthCount !== 1 ? 's' : ''} this month · {sessions.length} total</div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              {/* View toggle */}
               <div style={{ display: 'flex', background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
-                {['month','week'].map(v => (
-                  <button key={v} onClick={() => setViewMode(v)} style={{ padding: '7px 14px', border: 'none', background: viewMode === v ? primary : 'transparent', color: viewMode === v ? '#fff' : '#6B7280', fontWeight: 700, fontSize: 12, cursor: 'pointer', textTransform: 'capitalize' }}>
-                    {v === 'month' ? '📅 Month' : '📋 Week'}
+                {['month','week','day'].map(v => (
+                  <button key={v} onClick={() => { setNavDirection('right'); gridKey.current += 1; setViewMode(v) }} style={{ padding: '7px 12px', border: 'none', background: viewMode === v ? primary : 'transparent', color: viewMode === v ? '#fff' : '#6B7280', fontWeight: 700, fontSize: 12, cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
+                    {v === 'month' ? '📅 Month' : v === 'week' ? '📋 Week' : '☀️ Day'}
                   </button>
                 ))}
               </div>
-              {/* Today */}
-              <button onClick={() => setCurrentDate(new Date())} style={{ padding: '7px 14px', borderRadius: 10, border: `1.5px solid ${primary}`, background: '#fff', color: primary, fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>Today</button>
+              <button onClick={jumpToday} style={{ padding: '7px 14px', borderRadius: 10, border: `1.5px solid ${primary}`, background: '#fff', color: primary, fontWeight: 800, fontSize: 12, cursor: 'pointer', transition: 'transform 0.1s' }}
+                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
+                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>Today</button>
             </div>
           </div>
 
-          {/* Type filter */}
           <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
-            <button onClick={() => setFilterType('all')} style={{ padding: '4px 12px', borderRadius: 99, border: `1.5px solid ${filterType === 'all' ? primary : '#e5e7eb'}`, background: filterType === 'all' ? primary + '15' : '#fff', color: filterType === 'all' ? primary : '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={() => setFilterType('all')} style={{ padding: '4px 12px', borderRadius: 99, border: `1.5px solid ${filterType === 'all' ? primary : '#e5e7eb'}`, background: filterType === 'all' ? primary + '15' : '#fff', color: filterType === 'all' ? primary : '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s' }}>
               All
             </button>
             {Object.entries(TYPE_CONFIG).map(([key, cfg]) => (
-              <button key={key} onClick={() => setFilterType(key)} style={{ padding: '4px 12px', borderRadius: 99, border: `1.5px solid ${filterType === key ? cfg.color : '#e5e7eb'}`, background: filterType === key ? cfg.color + '15' : '#fff', color: filterType === key ? cfg.color : '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+              <button key={key} onClick={() => setFilterType(key)} style={{ padding: '4px 12px', borderRadius: 99, border: `1.5px solid ${filterType === key ? cfg.color : '#e5e7eb'}`, background: filterType === key ? cfg.color + '15' : '#fff', color: filterType === key ? cfg.color : '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s' }}>
                 {cfg.icon} {cfg.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Calendar shell */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', flex: 1 }}>
-          {/* Month/week nav */}
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', flex: 1, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F3F4F6' }}>
-            <button onClick={() => setCurrentDate(d => viewMode === 'month' ? subMonths(d, 1) : subWeeks(d, 1))}
-              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151' }}>‹</button>
-            <div style={{ textAlign: 'center' }}>
+            <button onClick={() => navigate(-1)}
+              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', transition: 'all 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = primary + '12'; e.currentTarget.style.borderColor = primary + '40' }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.borderColor = '#e5e7eb' }}>‹</button>
+            <div key={gridKey.current + '-label'} style={{ textAlign: 'center', animation: `${slideAnim} 0.25s ease` }}>
               <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5 }}>
                 {viewMode === 'month'
                   ? `${MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
-                  : `${format(weekDays[0], 'd MMM')} – ${format(weekDays[6], 'd MMM yyyy')}`
+                  : viewMode === 'week'
+                  ? `${format(weekDays[0], 'd MMM')} – ${format(weekDays[6], 'd MMM yyyy')}`
+                  : format(currentDate, 'EEEE, d MMMM yyyy')
                 }
               </div>
             </div>
-            <button onClick={() => setCurrentDate(d => viewMode === 'month' ? addMonths(d, 1) : addWeeks(d, 1))}
-              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151' }}>›</button>
+            <button onClick={() => navigate(1)}
+              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', transition: 'all 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = primary + '12'; e.currentTarget.style.borderColor = primary + '40' }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.borderColor = '#e5e7eb' }}>›</button>
           </div>
 
-          {/* Day headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: '#F8FAFC', borderBottom: '1px solid #F3F4F6' }}>
-            {DAYS.map(d => (
-              <div key={d} style={{ padding: '10px 0', textAlign: 'center', fontSize: 11, fontWeight: 800, color: '#9CA3AF', letterSpacing: 0.5, textTransform: 'uppercase' }}>{d}</div>
-            ))}
-          </div>
+          {viewMode !== 'day' && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: '#F8FAFC', borderBottom: '1px solid #F3F4F6' }}>
+              {DAYS.map(d => (
+                <div key={d} style={{ padding: '10px 0', textAlign: 'center', fontSize: 11, fontWeight: 800, color: '#9CA3AF', letterSpacing: 0.5, textTransform: 'uppercase' }}>{d}</div>
+              ))}
+            </div>
+          )}
 
           {loading ? (
-            <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF' }}>Loading sessions...</div>
+            <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF' }}>
+              <div style={{ width: 32, height: 32, border: `3px solid ${primary}30`, borderTopColor: primary, borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 0.7s linear infinite' }} />
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              Loading sessions...
+            </div>
           ) : viewMode === 'month' ? (
-            /* ── MONTH GRID ── */
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderLeft: '1px solid #F3F4F6' }}>
+            <div key={gridKey.current} style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderLeft: '1px solid #F3F4F6', animation: `${slideAnim} 0.28s ease` }}>
               {monthDays.map((day, i) => {
                 if (!day) return <div key={`e${i}`} style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', background: '#FAFAFA' }} />
                 const key = format(day, 'yyyy-MM-dd')
                 const daySessions = sessionsByDate[key] || []
                 const today = isToday(day)
                 const inMonth = isSameMonth(day, currentDate)
+                const isPastEmpty = !today && day < new Date() && daySessions.length === 0 && inMonth
                 return (
-                  <div key={key} style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}08` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.1s' }}>
-                    {/* Day number */}
+                  <div key={key} onClick={() => daySessions.length === 0 && inMonth && !isPastEmpty ? handlePlanForDate(key) : null}
+                    style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', ['--pulse-color']: primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
+                    onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? `${primary}14` : '#FAFBFC' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA' }}>
+                    {showConfettiFor === key && <ConfettiBurst color={primary} />}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 4 }}>
-                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? '#374151' : '#D1D5DB' }}>
+                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? '#374151' : '#D1D5DB', boxShadow: today ? `0 2px 8px ${primary}50` : 'none' }}>
                         {format(day, 'd')}
                       </div>
                     </div>
-                    {/* Sessions */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      {daySessions.slice(0, 3).map(s => {
+                      {daySessions.slice(0, 3).map((s, si) => {
                         const cfg = getCfg(s.session_type)
                         return (
-                          <button key={s.id} onClick={() => setSelectedSession(s)}
-                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 6, border: `1px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', width: '100%', textAlign: 'left', fontSize: 11, fontWeight: 700, color: cfg.color, transition: 'all 0.1s', lineHeight: 1.3 }}
-                            onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.95)'}
-                            onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
+                          <button key={s.id} onClick={(e) => { e.stopPropagation(); setSelectedSession(s) }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 6, border: `1px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', width: '100%', textAlign: 'left', fontSize: 11, fontWeight: 700, color: cfg.color, transition: 'all 0.1s', lineHeight: 1.3, animation: `cal-pop-in 0.25s ease ${si * 0.04}s both` }}
+                            onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.95)'; e.currentTarget.style.transform = 'translateX(1px)' }}
+                            onMouseLeave={e => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'none' }}>
                             <span style={{ flexShrink: 0 }}>{cfg.icon}</span>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
                           </button>
@@ -243,28 +338,27 @@ export default function Calendar({ org, onSessionChanged }) {
                 )
               })}
             </div>
-          ) : (
-            /* ── WEEK VIEW ── */
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderLeft: '1px solid #F3F4F6' }}>
+          ) : viewMode === 'week' ? (
+            <div key={gridKey.current} style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderLeft: '1px solid #F3F4F6', animation: `${slideAnim} 0.28s ease` }}>
               {weekDays.map(day => {
                 const key = format(day, 'yyyy-MM-dd')
                 const daySessions = sessionsByDate[key] || []
                 const today = isToday(day)
                 return (
-                  <div key={key} style={{ minHeight: 300, borderRight: '1px solid #F3F4F6', padding: '10px 8px', background: today ? `${primary}08` : '#fff' }}>
+                  <div key={key} style={{ minHeight: 300, borderRight: '1px solid #F3F4F6', padding: '10px 8px', background: today ? `${primary}08` : '#fff', position: 'relative' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: today ? 900 : 700, color: today ? '#fff' : '#374151' }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: today ? 900 : 700, color: today ? '#fff' : '#374151', boxShadow: today ? `0 2px 8px ${primary}50` : 'none' }}>
                         {format(day, 'd')}
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {daySessions.map(s => {
+                      {daySessions.map((s, si) => {
                         const cfg = getCfg(s.session_type)
                         return (
                           <button key={s.id} onClick={() => setSelectedSession(s)}
-                            style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 9px', borderRadius: 9, border: `1.5px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.1s' }}
-                            onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.95)'}
-                            onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
+                            style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 9px', borderRadius: 9, border: `1.5px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.1s', animation: `cal-pop-in 0.25s ease ${si * 0.05}s both` }}
+                            onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.95)'; e.currentTarget.style.transform = 'scale(1.02)' }}
+                            onMouseLeave={e => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'scale(1)' }}>
                             <div style={{ fontSize: 13 }}>{cfg.icon}</div>
                             <div style={{ fontSize: 11, fontWeight: 800, color: cfg.color, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{s.title}</div>
                             {s.start_time && <div style={{ fontSize: 10, color: cfg.color, opacity: 0.8, fontWeight: 600 }}>{s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}</div>}
@@ -272,21 +366,67 @@ export default function Calendar({ org, onSessionChanged }) {
                         )
                       })}
                       {daySessions.length === 0 && (
-                        <div style={{ fontSize: 11, color: '#E5E7EB', textAlign: 'center', marginTop: 20 }}>—</div>
+                        <div onClick={() => handlePlanForDate(key)} style={{ fontSize: 20, color: '#E5E7EB', textAlign: 'center', marginTop: 20, cursor: 'pointer', transition: 'all 0.15s' }}
+                          onMouseEnter={e => { e.currentTarget.style.color = primary + '80'; e.currentTarget.style.transform = 'scale(1.15)' }}
+                          onMouseLeave={e => { e.currentTarget.style.color = '#E5E7EB'; e.currentTarget.style.transform = 'scale(1)' }}>+</div>
                       )}
                     </div>
+                    {showConfettiFor === key && <ConfettiBurst color={primary} />}
                   </div>
                 )
               })}
+            </div>
+          ) : (
+            <div key={gridKey.current} style={{ padding: '24px 28px', flex: 1, animation: `${slideAnim} 0.28s ease`, position: 'relative' }}>
+              {isToday(currentDate) && (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: primary, background: primary + '12', borderRadius: 99, padding: '4px 12px', marginBottom: 16 }}>
+                  🔴 TODAY
+                </div>
+              )}
+              {daySessionsForDayView.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+                  <div style={{ fontSize: 48, marginBottom: 12, animation: 'cal-bounce-in 0.4s ease' }}>🌤️</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#374151', marginBottom: 6 }}>Nothing planned for this day</div>
+                  <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20 }}>A free day — or the perfect time to plan something new.</div>
+                  <button onClick={() => handlePlanForDate(dayKey)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px ${primary}40` }}>
+                    + Plan a Session
+                  </button>
+                  {showConfettiFor === dayKey && <ConfettiBurst color={primary} />}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {daySessionsForDayView
+                    .slice()
+                    .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''))
+                    .map((s, si) => {
+                      const cfg = getCfg(s.session_type)
+                      return (
+                        <button key={s.id} onClick={() => setSelectedSession(s)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', borderRadius: 16, border: `1.5px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', animation: `cal-pop-in 0.3s ease ${si * 0.06}s both` }}
+                          onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(3px)'; e.currentTarget.style.boxShadow = `0 8px 20px ${cfg.color}25` }}
+                          onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}>
+                          <div style={{ width: 52, height: 52, borderRadius: 14, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>{cfg.icon}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>{s.title}</div>
+                            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4, fontSize: 12, color: cfg.color, fontWeight: 700 }}>
+                              {s.start_time && <span>⏰ {s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}</span>}
+                              {s.location && <span>📍 {s.location}</span>}
+                              {s.max_capacity && <span>👥 {s.max_capacity} max</span>}
+                            </div>
+                          </div>
+                          <span style={{ background: cfg.color, color: '#fff', borderRadius: 99, padding: '4px 12px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{cfg.label}</span>
+                        </button>
+                      )
+                    })}
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
-      {/* ── SIDEBAR ── */}
       <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {/* Mini month stats */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 12 }}>This Month</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[
@@ -301,8 +441,7 @@ export default function Calendar({ org, onSessionChanged }) {
           </div>
         </div>
 
-        {/* Upcoming sessions */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16, flex: 1 }}>
+        <div style={{ background: '#fff', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, flex: 1, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 12 }}>⏭ Upcoming</div>
           {upcomingSessions.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '20px 0', color: '#9CA3AF', fontSize: 12 }}>
@@ -334,8 +473,7 @@ export default function Calendar({ org, onSessionChanged }) {
           )}
         </div>
 
-        {/* Session type legend */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 10 }}>Legend</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {Object.entries(TYPE_CONFIG).map(([key, cfg]) => {
@@ -353,7 +491,6 @@ export default function Calendar({ org, onSessionChanged }) {
         </div>
       </div>
 
-      {/* Session detail modal */}
       {selectedSession && (
         <SessionModal session={selectedSession} org={org} onClose={() => setSelectedSession(null)} onDelete={deleteSession} />
       )}
