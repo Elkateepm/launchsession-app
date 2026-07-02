@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useRealtimeTable } from '../../lib/useRealtimeTable'
 
 const SLUG = window.location.pathname.split('/volunteer/')[1]?.split('/')[0]
 
@@ -487,9 +488,11 @@ function VolunteerDashboard({ user, profile, org, onSignOut }) {
 
   useEffect(() => {
     loadData()
-    const t = setInterval(loadData, 10000)
-    return () => clearInterval(t)
   }, [org?.id, user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useRealtimeTable('sessions', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 6000 })
+  useRealtimeTable('session_staff', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 6000 })
+  useRealtimeTable('volunteer_attendance', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 6000 })
 
   async function handleBook(session) {
     setSaving(session.id)
