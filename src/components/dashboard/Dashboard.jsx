@@ -424,7 +424,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'branding'   && <Settings org={org} session={session} initialSection="branding" />}
 
           {/* ── DELIVERY PACK ── */}
-          {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
+          {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
           {tab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} />)}
           {tab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} />)}
           {tab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} />)}
