@@ -87,6 +87,46 @@ function ConfettiBurst({ color, secondary }) {
   )
 }
 
+function PlanPickerModal({ date, org, onClose, onNavigate }) {
+  const primary = org?.primary_color || '#1B9AAA'
+  const activeModules = org?.modules || []
+  const hasModule = (key) => activeModules.includes(key)
+  const dateLabel = date ? format(parseISO(date), 'EEEE, d MMMM yyyy') : ''
+
+  const options = [
+    { key: 'planner', icon: '📅', title: 'Session', desc: 'Plan a regular activity, workshop or club session', colour: '#8B5CF6', always: true },
+    { key: 'events_trips', icon: '✈️', title: 'Event or Trip', desc: 'Day trip, holiday, or one-off special event', colour: '#D97706', always: true },
+    { key: 'resource_booking', icon: '🗓️', title: 'Resource Booking', desc: 'Reserve a room, vehicle or piece of equipment', colour: '#2563EB', module: 'resource_booking' },
+  ].filter(o => o.always || hasModule(o.module))
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'cal-fade-in 0.2s ease' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 420, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)', animation: 'cal-bounce-in 0.3s cubic-bezier(0.22, 1, 0.36, 1)' }}>
+        <div style={{ padding: '22px 24px 16px', borderBottom: '1px solid #F3F4F6', position: 'relative' }}>
+          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}>×</button>
+          <div style={{ fontSize: 17, fontWeight: 900, color: '#111' }}>What would you like to plan?</div>
+          {dateLabel && <div style={{ fontSize: 12.5, color: '#9CA3AF', fontWeight: 600, marginTop: 4 }}>{dateLabel}</div>}
+        </div>
+        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {options.map((o, i) => (
+            <button key={o.key} onClick={() => { onClose(); if (onNavigate) onNavigate(o.key) }}
+              style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${o.colour}25`, background: o.colour + '08', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', animation: `cal-pop-in 0.25s ease ${i * 0.05}s both` }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = o.colour + '60'; e.currentTarget.style.background = o.colour + '14'; e.currentTarget.style.transform = 'translateX(2px)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = o.colour + '25'; e.currentTarget.style.background = o.colour + '08'; e.currentTarget.style.transform = 'none' }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: o.colour + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{o.icon}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{o.title}</div>
+                <div style={{ fontSize: 12, color: '#6B7280', marginTop: 1, lineHeight: 1.3 }}>{o.desc}</div>
+              </div>
+              <div style={{ color: o.colour, fontSize: 16 }}>›</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SessionModal({ session, org, onClose, onDelete }) {
   const cfg = getCfg(session.session_type)
   const [deleting, setDeleting] = useState(false)
@@ -241,10 +281,12 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
   const dayKey = format(currentDate, 'yyyy-MM-dd')
   const daySessionsForDayView = sessionsByDate[dayKey] || []
 
+  const [planPickerDate, setPlanPickerDate] = useState(null)
+
   const handlePlanForDate = (dateStr) => {
     setShowConfettiFor(dateStr)
     setTimeout(() => setShowConfettiFor(null), 1400)
-    if (onNavigate) setTimeout(() => onNavigate('planner'), 350)
+    setPlanPickerDate(dateStr)
   }
 
   return (
@@ -331,7 +373,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const isPastEmpty = !today && day < new Date() && daySessions.length === 0 && inMonth
                 return (
                   <div key={key} onClick={() => daySessions.length === 0 && inMonth && !isPastEmpty ? handlePlanForDate(key) : null}
-                    style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
+                    style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', ['--pulse-color']: primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
                     onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? `${primary}14` : '#FAFBFC' }}
                     onMouseLeave={e => { e.currentTarget.style.background = today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA' }}>
                     {showConfettiFor === key && <ConfettiBurst color={primary} secondary={org?.secondary_color} />}
@@ -516,6 +558,10 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
 
       {selectedSession && (
         <SessionModal session={selectedSession} org={org} onClose={() => setSelectedSession(null)} onDelete={deleteSession} />
+      )}
+
+      {planPickerDate && (
+        <PlanPickerModal date={planPickerDate} org={org} onClose={() => setPlanPickerDate(null)} onNavigate={onNavigate} />
       )}
     </div>
   )
