@@ -108,7 +108,7 @@ function EventDetail({ event, org, onBack, onUpdate }) {
       </button>
 
       {/* Header */}
-      <div style={{ background: `linear-gradient(135deg, ${primary}, ${primary}99)`, borderRadius: 20, padding: '24px 28px', marginBottom: 20, color: '#fff', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: `linear-gradient(135deg, ${primary}, ${primary}99)`, borderRadius: 20, padding: '24px 28px', marginBottom: 20, color: '#fff', position: 'relative', overflow: 'hidden', boxShadow: `0 1px 0 rgba(255,255,255,0.25) inset, 0 -2px 0 rgba(0,0,0,0.12) inset, 0 20px 48px -16px ${primary}55, 0 6px 14px -6px rgba(15,23,42,0.15)` }}>
         <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
@@ -478,7 +478,7 @@ export default function EventsTrips({ org }) {
       </div>
 
       {/* Hero */}
-      <div style={{ background: `linear-gradient(135deg, ${primary}14, #F5F3FF 60%)`, border: `1px solid ${primary}25`, borderRadius: 20, padding: '22px 26px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: `linear-gradient(135deg, ${primary}14, #F5F3FF 60%)`, border: `1px solid ${primary}25`, borderRadius: 20, padding: '22px 26px', marginBottom: 20, position: 'relative', overflow: 'hidden', boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 -1px 0 ${primary}14 inset, 0 18px 40px -18px ${primary}35, 0 4px 10px -4px rgba(15,23,42,0.06)` }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <div style={{ fontSize: 19, fontWeight: 900, color: '#111' }}>Plan unforgettable experiences ✨</div>
@@ -502,7 +502,7 @@ export default function EventsTrips({ org }) {
             { label: 'Live Now', sub: 'Happening today', value: events.filter(e => e.status === 'live').length, icon: '🟢', color: '#16A34A' },
             { label: 'Participants', sub: 'Across all events', value: totalParticipants, icon: '👥', color: '#D97706' },
           ].map(s => (
-            <div key={s.label} style={{ background: '#fff', borderRadius: 14, padding: '12px 14px', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div key={s.label} style={{ background: '#fff', borderRadius: 14, padding: '12px 14px', border: '1px solid #EEF0F3', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18), 0 2px 5px -2px rgba(15,23,42,0.05)' }}>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: s.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{s.icon}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 20, fontWeight: 900, color: '#111', lineHeight: 1.1 }}>{s.value}</div>
