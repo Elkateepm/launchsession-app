@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { useRealtimeTable } from "../../lib/useRealtimeTable";
 
 
 // ── LIVE SESSION PANEL ─────────────────────────────────────────
@@ -14,19 +15,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   // Keep local attendance in sync
   React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
-  const sessionIdsKey = sessions.map(s => s.id).join(',')
-  React.useEffect(() => {
-    if (!sessions.length) return
-    setActiveSession(prev => {
-      // Keep current selection if it's still present in the refreshed list (just update its data)
-      if (prev) {
-        const stillThere = sessions.find(s => s.id === prev.id)
-        if (stillThere) return stillThere
-      }
-      return sessions[0]
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionIdsKey])
+  React.useEffect(() => { if (sessions.length) setActiveSession(sessions[0]) }, [sessions])
 
   const sessionAttendance = localAttendance.filter(a => a.session_id === activeSession?.id)
   const stats = activeSession ? getLiveSessionStats(activeSession) : { signedIn: 0, expected: 0, absent: 0, signedOut: 0, percent: 0 }
@@ -420,37 +409,40 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     else if (typeof setTab === "function") setTab(tab);
   }
 
+  const loadHub = React.useCallback(async () => {
+    if (!orgId) return;
+    const [
+      { data: sessionData },
+      { data: attendanceData },
+      { data: concernData },
+      { data: childData },
+      { data: reflectionData },
+    ] = await Promise.all([
+      supabase.from("sessions").select("*").eq("org_id", orgId).order("session_date", { ascending: true }).order("start_time", { ascending: true }),
+      supabase.from("attendance").select("*").eq("org_id", orgId),
+      supabase.from("safeguarding_concerns").select("*").eq("org_id", orgId).eq("status", "open"),
+      supabase.from("children").select("*").eq("org_id", orgId).eq("active", true).order("first_name", { ascending: true }),
+      supabase.from("session_reflections").select("*").eq("org_id", orgId),
+    ]);
+    setSessions(sessionData || []);
+    setAttendance(attendanceData || []);
+    setConcerns(concernData || []);
+    setChildren(childData || []);
+    setReflections(reflectionData || []);
+  }, [orgId]);
+
   useEffect(() => {
     if (!orgId) return;
     let alive = true;
-    let isFirstLoad = true;
-    async function loadHub() {
-      if (isFirstLoad) setLoading(true);
-      const [
-        { data: sessionData },
-        { data: attendanceData },
-        { data: concernData },
-        { data: childData },
-        { data: reflectionData },
-      ] = await Promise.all([
-        supabase.from("sessions").select("*").eq("org_id", orgId).order("session_date", { ascending: true }).order("start_time", { ascending: true }),
-        supabase.from("attendance").select("*").eq("org_id", orgId),
-        supabase.from("safeguarding_concerns").select("*").eq("org_id", orgId).eq("status", "open"),
-        supabase.from("children").select("*").eq("org_id", orgId).eq("active", true).order("first_name", { ascending: true }),
-        supabase.from("session_reflections").select("*").eq("org_id", orgId),
-      ]);
-      if (!alive) return;
-      setSessions(sessionData || []);
-      setAttendance(attendanceData || []);
-      setConcerns(concernData || []);
-      setChildren(childData || []);
-      setReflections(reflectionData || []);
-      if (isFirstLoad) { setLoading(false); isFirstLoad = false; }
-    }
-    loadHub();
-    const interval = setInterval(loadHub, 3000);
-    return () => { alive = false; clearInterval(interval); };
-  }, [orgId]);
+    setLoading(true);
+    loadHub().finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [orgId, loadHub]);
+
+  // Live updates: Realtime on desktop/Android, polling fallback on iOS (WebKit crash risk)
+  useRealtimeTable("attendance", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
+  useRealtimeTable("sessions", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
+  useRealtimeTable("safeguarding_concerns", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
 
   // ── SEARCH ──────────────────────────────────────────────────
   React.useEffect(() => {
