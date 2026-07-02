@@ -308,7 +308,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const isPastEmpty = !today && day < new Date() && daySessions.length === 0 && inMonth
                 return (
                   <div key={key} onClick={() => daySessions.length === 0 && inMonth && !isPastEmpty ? handlePlanForDate(key) : null}
-                    style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', ['--pulse-color']: primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
+                    style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
                     onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? `${primary}14` : '#FAFBFC' }}
                     onMouseLeave={e => { e.currentTarget.style.background = today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA' }}>
                     {showConfettiFor === key && <ConfettiBurst color={primary} />}
