@@ -109,6 +109,164 @@ function OrgSection({ org }) {
           {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Changes'}
         </button>
       </SettingCard>
+
+      <GroupsSection org={org} />
+    </div>
+  )
+}
+
+const GROUP_COLOR_PRESETS = ['#E53935', '#1B9AAA', '#417505', '#B8860B', '#7B2D8B', '#1A1A1A', '#F97316', '#0EA5E9', '#EC4899', '#64748B']
+
+function GroupsSection({ org }) {
+  const orgId = org?.id
+  const [groups, setGroups] = useState([])
+  const [counts, setCounts] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [adding, setAdding] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [error, setError] = useState('')
+
+  const loadGroups = React.useCallback(async () => {
+    if (!orgId) return
+    setLoading(true)
+    try {
+      const { data: orgRow, error: orgErr } = await supabase.from('organisations').select('custom_groups').eq('id', orgId).single()
+      if (orgErr) throw orgErr
+      const g = orgRow?.custom_groups || []
+      setGroups(g)
+
+      const { data: childRows, error: childErr } = await supabase.from('children').select('group_name').eq('org_id', orgId).eq('active', true)
+      if (childErr) throw childErr
+      const countMap = {}
+      ;(childRows || []).forEach(c => {
+        const key = (c.group_name || '').trim().toLowerCase()
+        if (!key) return
+        countMap[key] = (countMap[key] || 0) + 1
+      })
+      setCounts(countMap)
+    } catch (e) {
+      setError(e.message || 'Failed to load groups')
+    }
+    setLoading(false)
+  }, [orgId])
+
+  React.useEffect(() => { loadGroups() }, [loadGroups])
+
+  const persistGroups = async (updated) => {
+    setGroups(updated)
+    try {
+      const { error: err } = await supabase.from('organisations').update({ custom_groups: updated }).eq('id', orgId)
+      if (err) throw err
+    } catch (e) {
+      setError(e.message || 'Failed to save groups')
+    }
+  }
+
+  const handleAdd = async () => {
+    const label = newName.trim()
+    if (!label) return
+    if (groups.some(g => g.label.toLowerCase() === label.toLowerCase())) { setError('That group already exists.'); return }
+    const color = GROUP_COLOR_PRESETS[groups.length % GROUP_COLOR_PRESETS.length]
+    const updated = [...groups, { id: `group-${Date.now()}`, label, color }]
+    setError('')
+    setNewName('')
+    setAdding(false)
+    await persistGroups(updated)
+  }
+
+  const handleRename = async (id, newLabel) => {
+    if (!newLabel.trim()) return
+    await persistGroups(groups.map(g => g.id === id ? { ...g, label: newLabel.trim() } : g))
+  }
+
+  const handleColorChange = async (id, color) => {
+    await persistGroups(groups.map(g => g.id === id ? { ...g, color } : g))
+  }
+
+  const handleDelete = async (id) => {
+    const group = groups.find(g => g.id === id)
+    const count = counts[(group?.label || '').toLowerCase()] || 0
+    const msg = count > 0
+      ? `Delete "${group.label}"? ${count} ${count === 1 ? 'child is' : 'children are'} currently in this group — they will keep the group name on their record, but it will no longer appear as a managed group.`
+      : `Delete "${group?.label}"?`
+    if (!window.confirm(msg)) return
+    await persistGroups(groups.filter(g => g.id !== id))
+  }
+
+  return (
+    <SettingCard title="Groups" description="Organise your register into groups like Red, Blue, Juniors or Teens">
+      {error && (
+        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>
+      )}
+
+      {loading ? (
+        <div style={{ fontSize: 13, color: 'var(--text3)', padding: '12px 0' }}>Loading groups...</div>
+      ) : groups.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '30px 16px', background: 'var(--surface2)', borderRadius: 14, border: '1.5px dashed var(--border2)' }}>
+          <div style={{ fontSize: 32, marginBottom: 10 }}>🏷️</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>No groups yet</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Create groups like Red, Blue, Juniors or Teens to organise your register.</div>
+          <button onClick={() => setAdding(true)} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: org?.primary_color || '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>+ Add Group</button>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10, marginBottom: 12 }}>
+          {groups.map(g => (
+            <GroupCard key={g.id} group={g} count={counts[g.label.toLowerCase()] || 0} onRename={handleRename} onColorChange={handleColorChange} onDelete={handleDelete} />
+          ))}
+        </div>
+      )}
+
+      {groups.length > 0 && !adding && (
+        <button onClick={() => setAdding(true)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${org?.primary_color || '#1B9AAA'}40`, background: (org?.primary_color || '#1B9AAA') + '0c', color: org?.primary_color || '#1B9AAA', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+          + Add Group
+        </button>
+      )}
+
+      {adding && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+          <input autoFocus value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdd()}
+            placeholder="e.g. Red, Juniors, Coach A..." style={{ ...inp, flex: 1 }} />
+          <button onClick={handleAdd} style={{ padding: '0 18px', borderRadius: 8, border: 'none', background: org?.primary_color || '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Add</button>
+          <button onClick={() => { setAdding(false); setNewName(''); setError('') }} style={{ padding: '0 14px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+        </div>
+      )}
+    </SettingCard>
+  )
+}
+
+function GroupCard({ group, count, onRename, onColorChange, onDelete }) {
+  const [editing, setEditing] = useState(false)
+  const [label, setLabel] = useState(group.label)
+  const [showColors, setShowColors] = useState(false)
+
+  const saveRename = () => {
+    if (label.trim() && label.trim() !== group.label) onRename(group.id, label.trim())
+    setEditing(false)
+  }
+
+  return (
+    <div style={{ border: '1.5px solid var(--border)', borderRadius: 14, padding: '12px 14px', background: 'var(--surface)', position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <button onClick={() => setShowColors(v => !v)} title="Change colour"
+          style={{ width: 20, height: 20, borderRadius: '50%', background: group.color, border: '2px solid #fff', boxShadow: '0 0 0 1.5px ' + group.color, cursor: 'pointer', flexShrink: 0 }} />
+        {editing ? (
+          <input autoFocus value={label} onChange={e => setLabel(e.target.value)} onBlur={saveRename} onKeyDown={e => e.key === 'Enter' && saveRename()}
+            style={{ flex: 1, fontSize: 14, fontWeight: 800, border: 'none', borderBottom: `1.5px solid ${group.color}`, outline: 'none', padding: '2px 0', fontFamily: 'inherit', background: 'transparent', color: 'var(--text)' }} />
+        ) : (
+          <div onClick={() => setEditing(true)} style={{ flex: 1, fontSize: 14, fontWeight: 800, color: 'var(--text)', cursor: 'text' }}>{group.label}</div>
+        )}
+        <button onClick={() => onDelete(group.id)} title="Delete group" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#DC2626', opacity: 0.7, padding: 2 }}>🗑️</button>
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>{count} {count === 1 ? 'child' : 'children'}</div>
+
+      {showColors && (
+        <div style={{ position: 'absolute', top: '100%', left: 12, marginTop: 6, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, padding: 8, display: 'flex', gap: 5, flexWrap: 'wrap', width: 150, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 10 }}>
+          {GROUP_COLOR_PRESETS.map(c => (
+            <button key={c} onClick={() => { onColorChange(group.id, c); setShowColors(false) }}
+              style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: c === group.color ? '2px solid #111' : '2px solid #fff', boxShadow: '0 0 0 1px #E5E7EB', cursor: 'pointer' }} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
