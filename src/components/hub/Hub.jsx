@@ -116,7 +116,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
   )
 }
 
-function NotificationBell({ primary, concernsCount, reflectionsCount, onGoConcerns, onGoReflections }) {
+function NotificationBell({ primary, secondary, concernsCount, reflectionsCount, onGoConcerns, onGoReflections }) {
   const [open, setOpen] = React.useState(false)
   const ref = React.useRef(null)
   const total = concernsCount + reflectionsCount
@@ -132,9 +132,9 @@ function NotificationBell({ primary, concernsCount, reflectionsCount, onGoConcer
     <div ref={ref} style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(o => !o)}
-        style={{ position: 'relative', width: 38, height: 38, borderRadius: 10, border: `1.5px solid ${primary}25`, background: open ? primary + '12' : primary + '06', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, transition: 'all 0.2s' }}
-        onMouseEnter={e => { if (!open) e.currentTarget.style.background = primary + '12' }}
-        onMouseLeave={e => { if (!open) e.currentTarget.style.background = primary + '06' }}
+        style={{ position: 'relative', width: 40, height: 40, borderRadius: 12, border: `1.5px solid ${primary}22`, background: open ? primary + '10' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, transition: 'all 0.2s', boxShadow: open ? `0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 12px -4px ${primary}35` : `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` }}
+        onMouseEnter={e => { if (!open) { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px ${primary}45` } }}
+        onMouseLeave={e => { if (!open) { e.currentTarget.style.borderColor = primary + '22'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` } }}
         aria-label="Notifications"
       >
         🔔
@@ -205,6 +205,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   const orgId = org?.id;
   const primary = org?.primary_color || "#1B9AAA";
+  const secondary = org?.secondary_color || "#0EA5E9";
   const orgName = org?.name || "LaunchSession";
 
   const [sessions, setSessions] = useState([]);
@@ -348,21 +349,24 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   return (
     <div style={styles.page}>
       {/* ── HEADER ── */}
-      <header style={{ background: `linear-gradient(135deg, ${primary}10, var(--surface, #fff) 45%)`, borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 10px 24px -20px ${primary}45` }}>
+      <header style={{ background: `linear-gradient(120deg, ${primary}14 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px ${primary}50` }}>
 
-        {/* Subtle brand gradient top strip */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}88, transparent)` }} />
+        {/* Brand gradient top strip — two-tone */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${secondary}, ${primary}22, transparent)` }} />
+
+        {/* Ambient brand glow */}
+        <div style={{ position: 'absolute', top: -40, right: '15%', width: 260, height: 140, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}14, transparent 70%)`, pointerEvents: 'none' }} />
 
         {/* Top bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 0 12px', borderBottom: `1px solid ${primary}18` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 0 12px', borderBottom: `1px solid ${primary}18`, position: 'relative' }}>
 
           {/* Org identity */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
             <div style={{ position: 'relative' }}>
               {org?.logo_url ? (
-                <img src={org.logo_url} alt={orgName} style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'contain', border: `1.5px solid ${primary}30`, background: '#fff', padding: 3, boxShadow: `0 4px 16px ${primary}28` }} />
+                <img src={org.logo_url} alt={orgName} style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'contain', border: `1.5px solid ${primary}30`, background: '#fff', padding: 3, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -6px ${primary}45` }} />
               ) : (
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${primary}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 8px 20px -6px ${primary}55` }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 8px 20px -6px ${primary}55` }}>
                   {orgName[0]}
                 </div>
               )}
@@ -377,7 +381,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   </div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: primary, background: primary + '15', borderRadius: 4, padding: '2px 7px', border: `1px solid ${primary}30` }}>{org?.plan || 'Starter'} Plan</span>
+                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', background: `linear-gradient(90deg, ${primary}, ${secondary})`, borderRadius: 4, padding: '2px 8px', boxShadow: `0 2px 8px ${primary}35` }}>{org?.plan || 'Starter'} Plan</span>
                   {org?.status === 'trial' && trialDaysLeft !== null && (
                     <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', color: trialDaysLeft <= 2 ? '#DC2626' : '#B45309', background: trialDaysLeft <= 2 ? '#FEE2E2' : '#FEF3C7', borderRadius: 4, padding: '2px 7px', border: `1px solid ${trialDaysLeft <= 2 ? '#FCA5A5' : '#FDE68A'}` }}>
                       ⭐ {trialDaysLeft}d left
@@ -391,18 +395,18 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {/* Search */}
           {!isMobile && (
             <div style={{ flex: 1, maxWidth: 440, position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.7 }}>🔍</span>
+              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}>🔍</span>
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 onKeyDown={e => e.key === 'Escape' && setSearch('')}
                 placeholder="Search young people, sessions..."
-                style={{ width: '100%', boxSizing: 'border-box', padding: '9px 14px 9px 36px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '08', fontSize: 13, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.2s' }}
-                onFocus={e => e.target.style.borderColor = primary}
-                onBlur={e => e.target.style.borderColor = primary + '25'}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid ${primary}22`, background: '#fff', fontSize: 13, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px ${primary}25` }}
+                onFocus={e => { e.target.style.borderColor = primary; e.target.style.boxShadow = `0 0 0 3px ${primary}18, 0 2px 10px -4px ${primary}35` }}
+                onBlur={e => { e.target.style.borderColor = primary + '22'; e.target.style.boxShadow = `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px ${primary}25` }}
               />
               {searchResults && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 100, marginTop: 4, overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 16px 40px -8px rgba(0,0,0,0.18)', zIndex: 100, marginTop: 6, overflow: 'hidden' }}>
                   {searchResults.children.length === 0 && searchResults.sessions.length === 0 ? (
                     <div style={{ padding: '14px 16px', fontSize: 13, color: '#6B7280', textAlign: 'center' }}>No results for "{search}"</div>
                   ) : (
@@ -451,21 +455,22 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto', flexShrink: 0 }}>
             <NotificationBell
               primary={primary}
+              secondary={secondary}
               concernsCount={concerns.length}
               reflectionsCount={completedWithoutReflection.length}
               onGoConcerns={() => go('safeguarding')}
               onGoReflections={() => go('planner')}
             />
             {!isMobile && (
-              <div style={{ fontSize: 12, color: 'var(--text3, #6b7280)', fontWeight: 600, whiteSpace: 'nowrap', padding: '4px 10px', background: primary + '08', borderRadius: 8, border: `1px solid ${primary}20` }}>
+              <div style={{ fontSize: 12, color: 'var(--text3, #6b7280)', fontWeight: 700, whiteSpace: 'nowrap', padding: '7px 12px', background: '#fff', borderRadius: 10, border: `1.5px solid ${primary}20`, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}30` }}>
                 {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
               </div>
             )}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 8px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', transition: 'all 0.2s' }}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '5px 10px 5px 5px', borderRadius: 12, border: `1.5px solid ${primary}22`, background: '#fff', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` }}
               onClick={onAvatarClick}
-              onMouseEnter={e => e.currentTarget.style.background = primary + '12'}
-              onMouseLeave={e => e.currentTarget.style.background = primary + '06'}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, ${primary}99)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, boxShadow: `0 2px 8px ${primary}40` }}>
+              onMouseEnter={e => { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px ${primary}45` }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = primary + '22'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` }}>
+              <div style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 3px 10px -2px ${primary}50` }}>
                 {userProfile?.photo_url ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : hubUserName[0]?.toUpperCase() || '?'}
               </div>
               {!isMobile && (
