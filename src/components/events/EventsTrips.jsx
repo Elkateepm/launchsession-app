@@ -447,7 +447,6 @@ export default function EventsTrips({ org }) {
   })
 
   const upcoming = events.filter(e => e.event_date && e.event_date >= todayStr && e.status !== 'cancelled' && e.status !== 'completed')
-  const liveToday = events.filter(e => e.status === 'live' || (e.event_date === todayStr && e.status !== 'cancelled' && e.status !== 'completed'))
   const todayEvents = events.filter(e => e.event_date === todayStr && e.status !== 'cancelled')
   const totalParticipants = events.reduce((s, e) => s + (e.event_participants?.[0]?.count || 0), 0)
   const usedTypes = [...new Set(events.map(e => e.event_type).filter(Boolean))]
