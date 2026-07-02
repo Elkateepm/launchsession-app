@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, addDays, subDays, isSameMonth, parseISO, isToday, addWeeks, subWeeks } from 'date-fns'
+import { useRealtimeTable } from '../../lib/useRealtimeTable'
 
 const TYPE_CONFIG = {
   activity:  { label: 'Activity',  icon: '🏃', color: '#1B9AAA', bg: 'rgba(27,154,170,0.12)',  border: 'rgba(27,154,170,0.35)'  },
@@ -253,19 +254,16 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
     return NOVELTY_DAYS[dateStr.slice(5)] || null
   }, [])
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (isBackground) => {
     if (!org?.id) return
-    setLoading(true)
+    if (!isBackground) setLoading(true)
     const { data } = await supabase.from('sessions').select('*').eq('org_id', org.id).order('session_date', { ascending: true })
     setSessions(data || [])
     setLoading(false)
   }, [org?.id])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => {
-    const interval = setInterval(load, 30000)
-    return () => clearInterval(interval)
-  }, [load])
+  useEffect(() => { load(false) }, [load])
+  useRealtimeTable('sessions', () => load(true), { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 5000 })
 
   useEffect(() => {
     const handler = (e) => {
