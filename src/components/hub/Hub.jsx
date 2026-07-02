@@ -8,6 +8,9 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const [activeSession, setActiveSession] = useState(sessions[0])
   const [localAttendance, setLocalAttendance] = useState(attendance)
   const [bubbleFilter, setBubbleFilter] = useState('all')
+  const [showExpectedPopup, setShowExpectedPopup] = useState(false)
+  const [signingIn, setSigningIn] = useState(null)
+  const [popupSearch, setPopupSearch] = useState('')
 
   // Keep local attendance in sync
   React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
@@ -23,6 +26,38 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const sessionChildIds = new Set(sessionAttendance.map(a => a.child_id))
   const sessionChildren = childList.filter(ch => sessionChildIds.has(ch.id))
   const bubbleGroups = [...new Set(sessionChildren.map(ch => (ch.group_name || '').trim()).filter(Boolean))]
+
+  // Children expected for this session (respects group targeting, same logic as stats)
+  const expectedChildren = useMemo(() => {
+    if (!activeSession) return []
+    const targetGroups = Array.isArray(activeSession?.bubbles) ? activeSession.bubbles.map(g => (g || '').toLowerCase()) : []
+    const base = targetGroups.length > 0
+      ? childList.filter(c => targetGroups.includes((c.group_name || '').toLowerCase()))
+      : childList
+    return base.filter(c => !popupSearch || `${c.first_name} ${c.last_name}`.toLowerCase().includes(popupSearch.toLowerCase()))
+  }, [activeSession, childList, popupSearch])
+
+  const getChildStatus = (childId) => {
+    const rec = sessionAttendance.find(a => a.child_id === childId)
+    return rec?.status || 'expected'
+  }
+
+  const handleSignIn = async (child) => {
+    if (!activeSession) return
+    setSigningIn(child.id)
+    const existing = sessionAttendance.find(a => a.child_id === child.id)
+    const now = new Date().toISOString()
+    if (existing) {
+      await supabase.from('attendance').update({ status: 'signed_in', signed_in_at: now, signed_out_at: null }).eq('id', existing.id)
+      setLocalAttendance(prev => prev.map(a => a.id === existing.id ? { ...a, status: 'signed_in', signed_in_at: now, signed_out_at: null } : a))
+    } else {
+      const { data } = await supabase.from('attendance').insert({
+        session_id: activeSession.id, child_id: child.id, org_id: orgId, status: 'signed_in', signed_in_at: now
+      }).select().single()
+      if (data) setLocalAttendance(prev => [...prev, data])
+    }
+    setSigningIn(null)
+  }
 
   const pct = stats.percent || 0
 
@@ -99,7 +134,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#C084FC', icon: '↩' },
           { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#60A5FA', icon: '👥' },
         ].map(s => (
-          <button key={s.key} onClick={() => onOpenRegister(activeSession?.id, s.key)}
+          <button key={s.key} onClick={() => s.key === 'expected' ? setShowExpectedPopup(true) : onOpenRegister(activeSession?.id, s.key)}
             style={{ background: 'rgba(15,23,42,0.6)', border: 'none', padding: '18px 12px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(15,23,42,0.6)'}>
@@ -126,6 +161,61 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         )}
       </div>
       <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
+
+      {showExpectedPopup && (
+        <div onClick={() => setShowExpectedPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 460, maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.35)' }}>
+            {/* Header */}
+            <div style={{ padding: '18px 20px', borderBottom: '1px solid #F3F4F6', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#111' }}>👥 Expected Children</div>
+                  <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{activeSession?.title} · {expectedChildren.length} expected</div>
+                </div>
+                <button onClick={() => setShowExpectedPopup(false)} style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', fontSize: 16, color: '#6B7280' }}>×</button>
+              </div>
+              <input value={popupSearch} onChange={e => setPopupSearch(e.target.value)} placeholder="Search a child..."
+                style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+            </div>
+            {/* Child rows */}
+            <div style={{ overflowY: 'auto', flex: 1 }}>
+              {expectedChildren.length === 0 ? (
+                <div style={{ padding: 30, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>No children match.</div>
+              ) : expectedChildren.map(child => {
+                const status = getChildStatus(child.id)
+                const isIn = status === 'signed_in'
+                const isOut = status === 'signed_out'
+                const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
+                const gColor = getBubbleColor(child.group_name)
+                const isBusy = signingIn === child.id
+                return (
+                  <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid #F9FAFB', borderLeft: `3px solid ${gColor}` }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: gColor + '18', border: `1.5px solid ${gColor}35`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: gColor, flexShrink: 0, overflow: 'hidden' }}>
+                      {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{child.first_name} {child.last_name}</div>
+                      {child.group_name && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{child.group_name}</div>}
+                    </div>
+                    {isIn ? (
+                      <span style={{ fontSize: 11, fontWeight: 800, color: '#16A34A', background: '#DCFCE7', borderRadius: 99, padding: '5px 12px', flexShrink: 0 }}>✓ Signed In</span>
+                    ) : isOut ? (
+                      <span style={{ fontSize: 11, fontWeight: 800, color: '#2563EB', background: '#DBEAFE', borderRadius: 99, padding: '5px 12px', flexShrink: 0 }}>Signed Out</span>
+                    ) : (
+                      <button onClick={() => handleSignIn(child)} disabled={isBusy}
+                        style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: isBusy ? '#9CA3AF' : primary, border: 'none', borderRadius: 99, padding: '7px 14px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0, transition: 'transform 0.1s' }}
+                        onMouseDown={e => !isBusy && (e.currentTarget.style.transform = 'scale(0.95)')}
+                        onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                        {isBusy ? '···' : 'Sign In'}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
