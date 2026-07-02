@@ -18,7 +18,7 @@ export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA',
   const grad = gradient || `linear-gradient(135deg, ${primary}18 0%, ${primary}08 60%, transparent 100%)`
 
   return (
-    <div className="ls-page-header" style={{ background: 'var(--surface, #fff)', borderBottom: `2px solid ${primary}18`, padding: '0', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+    <div className="ls-page-header" style={{ background: 'var(--surface, #fff)', borderBottom: `2px solid ${primary}18`, padding: '0', position: 'relative', overflow: 'hidden', flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 12px 28px -20px ${primary}45` }}>
 
       {/* Brand colour strip at top */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}66, transparent)` }} />
@@ -33,7 +33,7 @@ export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA',
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: stats.length ? 16 : 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
             {/* Icon */}
-            <div className="ls-page-header-icon" style={{ width: 48, height: 48, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, ${primary}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: `0 8px 24px ${primary}30` }}>
+            <div className="ls-page-header-icon" style={{ width: 48, height: 48, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, ${primary}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 10px 22px -8px ${primary}55` }}>
               {icon}
             </div>
             {/* Title block */}
@@ -64,8 +64,8 @@ export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA',
                   display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
                   fontFamily: 'var(--font-display, sans-serif)',
                   ...(a.variant === 'ghost'
-                    ? { border: `1.5px solid var(--border, #e5e7eb)`, background: 'var(--surface, #fff)', color: 'var(--text, #111)' }
-                    : { border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', boxShadow: `0 4px 14px ${primary}30` }
+                    ? { border: `1.5px solid var(--border, #e5e7eb)`, background: 'var(--surface, #fff)', color: 'var(--text, #111)', boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -2px rgba(15,23,42,0.08)' }
+                    : { border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -1px 0 rgba(0,0,0,0.12) inset, 0 8px 20px -8px ${primary}55` }
                   )
                 }}>
                   {a.icon && <span>{a.icon}</span>}
