@@ -102,7 +102,7 @@ function PlanPickerModal({ date, org, onClose, onNavigate }) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'cal-fade-in 0.2s ease' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 420, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)', animation: 'cal-bounce-in 0.3s cubic-bezier(0.22, 1, 0.36, 1)' }}>
-        <div style={{ padding: '22px 24px 16px', borderBottom: '1px solid #F3F4F6', position: 'relative' }}>
+        <div style={{ padding: '22px 24px 16px', borderBottom: `1px solid ${primary}15`, position: 'relative' }}>
           <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}>×</button>
           <div style={{ fontSize: 17, fontWeight: 900, color: '#111' }}>What would you like to plan?</div>
           {dateLabel && <div style={{ fontSize: 12.5, color: '#9CA3AF', fontWeight: 600, marginTop: 4 }}>{dateLabel}</div>}
@@ -373,7 +373,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const isPastEmpty = !today && day < new Date() && daySessions.length === 0 && inMonth
                 return (
                   <div key={key} onClick={() => daySessions.length === 0 && inMonth && !isPastEmpty ? handlePlanForDate(key) : null}
-                    style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', ['--pulse-color']: primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
+                    style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
                     onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? `${primary}14` : '#FAFBFC' }}
                     onMouseLeave={e => { e.currentTarget.style.background = today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA' }}>
                     {showConfettiFor === key && <ConfettiBurst color={primary} secondary={org?.secondary_color} />}
