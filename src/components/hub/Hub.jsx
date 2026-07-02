@@ -116,7 +116,17 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, orgId, onO
   )
 }
 
-function DateTimePill({ primary }) {
+function ordinalSuffix(day) {
+  if (day > 3 && day < 21) return 'th'
+  switch (day % 10) {
+    case 1: return 'st'
+    case 2: return 'nd'
+    case 3: return 'rd'
+    default: return 'th'
+  }
+}
+
+function DateTimeInline({ primary }) {
   const [now, setNow] = React.useState(new Date())
 
   React.useEffect(() => {
@@ -131,16 +141,17 @@ function DateTimePill({ primary }) {
     return () => clearTimeout(timeout)
   }, [])
 
-  const dateStr = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+  const weekday = now.toLocaleDateString('en-GB', { weekday: 'long' })
+  const month = now.toLocaleDateString('en-GB', { month: 'long' })
+  const day = now.getDate()
+  const year = now.getFullYear()
+  const dateStr = `${weekday} ${day}${ordinalSuffix(day)} ${month} ${year}`
   const timeStr = now.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(/^0/, '')
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 9, whiteSpace: 'nowrap', padding: '7px 13px', background: '#fff', borderRadius: 12, border: `1.5px solid ${primary}20`, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}30` }}>
-      <div style={{ width: 26, height: 26, borderRadius: 8, background: primary + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>📅</div>
-      <div style={{ lineHeight: 1.25 }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text, #111)' }}>{dateStr}</div>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text3, #9CA3AF)', letterSpacing: 0.2 }}>{timeStr}</div>
-      </div>
+    <div style={{ textAlign: 'right', lineHeight: 1.3, whiteSpace: 'nowrap' }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text, #111)' }}>{dateStr}</div>
+      <div style={{ fontSize: 11, fontWeight: 600, color: primary, letterSpacing: 0.2 }}>{timeStr}</div>
     </div>
   )
 }
@@ -490,7 +501,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               onGoConcerns={() => go('safeguarding')}
               onGoReflections={() => go('planner')}
             />
-            {!isMobile && <DateTimePill primary={primary} />}
+            {!isMobile && <DateTimeInline primary={primary} />}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '5px 10px 5px 5px', borderRadius: 12, border: `1.5px solid ${primary}22`, background: '#fff', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` }}
               onClick={onAvatarClick}
               onMouseEnter={e => { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px ${primary}45` }}
