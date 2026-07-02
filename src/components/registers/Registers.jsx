@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { TemplatePicker } from './TemplateCreator'
 
 const DEFAULT_BUBBLES = [
   { key: 'red',    label: 'Red',    color: '#E53935', dark: '#B71C1C' },
@@ -67,7 +68,7 @@ function EditChildForm({ child, onSaved }) {
 // ─── INLINE IMPORT ────────────────────────────────────────────
 const CSV_COLS = ['first_name','last_name','date_of_birth','group_name','allergies','medical_notes','emergency_contact_name','emergency_contact_phone']
 
-function InlineChildImport({ org, onImported }) {
+function InlineChildImport({ org, template, onImported }) {
   const [step, setStep] = useState('upload')
   const [csvText, setCsvText] = useState('')
   const [rows, setRows] = useState([])
@@ -128,8 +129,11 @@ function InlineChildImport({ org, onImported }) {
   }
 
   const downloadTemplate = () => {
-    const blob = new Blob([`${CSV_COLS.join(',')}\nSarah,Jones,2015-06-14,Red,Nut allergy,Asthma,Jane Jones,07700900000\n`], { type: 'text/csv' })
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'children-import.csv'; a.click()
+    const sample = { first_name: 'Sarah', last_name: 'Jones', date_of_birth: '2015-06-14', group_name: 'Red', allergies: 'Nut allergy', medical_notes: 'Asthma', sen: '', emergency_contact_name: 'Jane Jones', emergency_contact_phone: '07700900000' }
+    const cols = template?.fields?.length ? template.fields.map(f => f.key) : CSV_COLS
+    const row = cols.map(c => sample[c] || '').join(',')
+    const blob = new Blob([`${cols.join(',')}\n${row}\n`], { type: 'text/csv' })
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${template?.name?.replace(/[^a-z0-9]+/gi,'-').toLowerCase() || 'children'}-import.csv`; a.click()
   }
 
   const fi = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 11, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace', resize: 'vertical' }
@@ -585,6 +589,8 @@ export default function Registers({ org }) {
   const [selectedChild, setSelectedChild] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [showTemplates, setShowTemplates] = useState(false)
+  const [activeImportTemplate, setActiveImportTemplate] = useState(null)
   const [toast, setToast] = useState('')
   const [note, setNote] = useState('')
 
@@ -816,6 +822,7 @@ export default function Registers({ org }) {
             {[
               { icon: '➕', label: 'Add Child', sub: 'Not on list', action: () => setShowAdd(true) },
               { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => setShowImport(v => !v) },
+              { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => setShowTemplates(v => !v) },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: null },
             ].map(t => (
               <button key={t.label} onClick={t.action} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 8px', borderRadius: 8, border: 'none', background: 'transparent', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 2 }}
@@ -830,12 +837,29 @@ export default function Registers({ org }) {
             ))}
           </div>
 
+          {/* Templates panel */}
+          {showTemplates && (
+            <div style={{ padding: 14, borderBottom: '1px solid #F3F4F6' }}>
+              <TemplatePicker org={org} onUseTemplate={(template) => {
+                setActiveImportTemplate(template)
+                setShowTemplates(false)
+                setShowImport(true)
+              }} />
+            </div>
+          )}
+
           {/* Import panel */}
           {showImport && (
             <div style={{ padding: 14, borderBottom: '1px solid #F3F4F6' }}>
-              <InlineChildImport org={org} onImported={newChildren => {
+              {activeImportTemplate && (
+                <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid ${primary}25`, borderRadius: 8, padding: '6px 10px' }}>
+                  🧩 Using "{activeImportTemplate.name}" template
+                </div>
+              )}
+              <InlineChildImport org={org} template={activeImportTemplate} onImported={newChildren => {
                 setChildren(newChildren)
                 setShowImport(false)
+                setActiveImportTemplate(null)
                 showToast(`✅ Register updated — ${newChildren.length} children total`)
               }} />
             </div>
