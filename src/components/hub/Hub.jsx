@@ -224,7 +224,7 @@ function NotificationBell({ primary, secondary, concernsCount, reflectionsCount,
 }
 
 export default function Hub({ org, session, setTab, onNavigate, userProfile, onAvatarClick }) {
-  const hubUserName = userProfile?.full_name || session?.user?.email?.split('@')[0] || 'there'
+  const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
   const [search, setSearch] = React.useState('')
   const [searchResults, setSearchResults] = React.useState(null)
 
@@ -235,9 +235,19 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     return 'Good evening'
   }
 
+  React.useEffect(() => {
+    if (!session?.user?.id) return
+    import('../../lib/supabase').then(({ supabase }) => {
+      supabase.from('user_profiles').select('full_name').eq('id', session.user.id).single()
+        .then(({ data }) => { if (data?.full_name) setHubUserName(data.full_name) })
+    })
+  }, [session?.user?.id])
+
   const orgId = org?.id;
   const primary = org?.primary_color || "#1B9AAA";
   const secondary = org?.secondary_color || "#0EA5E9";
+  const activeModules = org?.modules || [];
+  const hasModule = (key) => activeModules.includes(key);
   const orgName = org?.name || "LaunchSession";
 
   const [sessions, setSessions] = useState([]);
@@ -568,20 +578,34 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)', gap: 12 }}>
               <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? "Ready for delivery" : "Plan something amazing"} button="Open Planner" onClick={() => go("planner")} colour={primary} />
               <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? "Upcoming" : "Plan now"} onClick={() => go("planner")} colour="#7C3AED" />
-              <StatCard icon="✅" title={signedIn > 0 ? `${signedIn} signed in` : "Registers"} text={signedOut > 0 ? `${signedOut} signed out` : "Take today's register"} button="Take Register" onClick={() => go("registers")} colour="#16A34A" />
-              <StatCard icon="🛡️" title={concerns.length > 0 ? `${concerns.length} open concern${concerns.length > 1 ? 's' : ''}` : "Safeguarding"} text={concerns.length > 0 ? "Needs attention" : "All clear"} button="View concerns" onClick={() => go("safeguarding")} colour={concerns.length > 0 ? "#F59E0B" : "#2563EB"} />
+              {hasModule('registers') ? (
+                <StatCard icon="✅" title={signedIn > 0 ? `${signedIn} signed in` : "Registers"} text={signedOut > 0 ? `${signedOut} signed out` : "Take today's register"} button="Take Register" onClick={() => go("registers")} colour="#16A34A" />
+              ) : (
+                <StatCard icon="👥" title="Young People" text={`${children?.length || 0} on roll`} button="View roster" onClick={() => go("planner")} colour="#16A34A" />
+              )}
+              {hasModule('safeguarding') ? (
+                <StatCard icon="🛡️" title={concerns.length > 0 ? `${concerns.length} open concern${concerns.length > 1 ? 's' : ''}` : "Safeguarding"} text={concerns.length > 0 ? "Needs attention" : "All clear"} button="View concerns" onClick={() => go("safeguarding")} colour={concerns.length > 0 ? "#F59E0B" : "#2563EB"} />
+              ) : (
+                <StatCard icon="🚀" title="Grow your workspace" text="Unlock more modules" button="Explore plans" onClick={() => go("settings")} colour="#7C3AED" />
+              )}
             </div>
           </Panel>
 
           {/* ACTION CENTRE */}
           <Panel title="⚡ Quick Actions">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
-              <ActionCard icon="📋" title="Take Register" text="Sign young people in/out" onClick={() => go("registers")} colour="#10B981" />
               <ActionCard icon="📅" title="Plan a Session" text="Create or edit sessions" onClick={() => go("planner")} colour="#8B5CF6" />
-              <ActionCard icon="❤️" title="Volunteers" text="Manage volunteer cover" onClick={() => go("volunteers")} colour="#E91E63" />
-              <ActionCard icon="🛡️" title="Safeguarding" text="Concerns & alerts" onClick={() => go("safeguarding")} colour="#2563EB" />
-              <ActionCard icon="🤝" title="Mentoring" text="Track mentoring work" onClick={() => go("mentoring")} colour="#F59E0B" />
-              <ActionCard icon="📊" title="Reports" text="View impact & insights" onClick={() => go("reports")} colour="#0EA5E9" />
+              {hasModule('registers') && <ActionCard icon="📋" title="Take Register" text="Sign young people in/out" onClick={() => go("registers")} colour="#10B981" />}
+              {hasModule('volunteers') && <ActionCard icon="❤️" title="Volunteers" text="Manage volunteer cover" onClick={() => go("volunteers")} colour="#E91E63" />}
+              {hasModule('safeguarding') && <ActionCard icon="🛡️" title="Safeguarding" text="Concerns & alerts" onClick={() => go("safeguarding")} colour="#2563EB" />}
+              {hasModule('mentoring') && <ActionCard icon="🤝" title="Mentoring" text="Track mentoring work" onClick={() => go("mentoring")} colour="#F59E0B" />}
+              {hasModule('reports') && <ActionCard icon="📊" title="Reports" text="View impact & insights" onClick={() => go("reports")} colour="#0EA5E9" />}
+              {hasModule('messaging') && <ActionCard icon="💬" title="Messaging" text="Message your team" onClick={() => go("messaging")} colour="#0891B2" />}
+              {hasModule('gallery') && <ActionCard icon="🖼️" title="Gallery" text="Photos & moments" onClick={() => go("gallery")} colour="#DB2777" />}
+              {hasModule('fundraising') && <ActionCard icon="💷" title="Fundraising" text="Track donations" onClick={() => go("fundraising")} colour="#059669" />}
+              {activeModules.length < 3 && (
+                <ActionCard icon="✨" title="Unlock more" text="Explore add-on modules" onClick={() => go("settings")} colour="#9333EA" />
+              )}
             </div>
           </Panel>
 
@@ -681,22 +705,26 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* ATTENTION CENTRE */}
-          <Panel title="🔔 Attention Centre">
-            <AttentionRow icon="📋" label="Registers" value={signedIn > 0 ? `${signedIn} signed in today` : "No activity yet"} tone={signedIn > 0 ? "green" : "blue"} onClick={() => go("registers")} />
-            <AttentionRow icon="🛡️" label="Safeguarding" value={concerns.length > 0 ? `${concerns.length} open concern${concerns.length > 1 ? "s" : ""}` : "No open concerns"} tone={concerns.length > 0 ? "amber" : "green"} onClick={() => go("safeguarding")} />
-            <AttentionRow icon="❤️" label="Volunteers" value="Review session cover" tone="blue" onClick={() => go("volunteers")} />
-            <AttentionRow icon="🤝" label="Mentoring" value="View active matches" tone="blue" onClick={() => go("mentoring")} />
-            <AttentionRow icon="📊" label="Reports" value="View impact data" tone="blue" onClick={() => go("reports")} />
-          </Panel>
+          {(hasModule('registers') || hasModule('safeguarding') || hasModule('volunteers') || hasModule('mentoring') || hasModule('reports')) && (
+            <Panel title="🔔 Attention Centre">
+              {hasModule('registers') && <AttentionRow icon="📋" label="Registers" value={signedIn > 0 ? `${signedIn} signed in today` : "No activity yet"} tone={signedIn > 0 ? "green" : "blue"} onClick={() => go("registers")} />}
+              {hasModule('safeguarding') && <AttentionRow icon="🛡️" label="Safeguarding" value={concerns.length > 0 ? `${concerns.length} open concern${concerns.length > 1 ? "s" : ""}` : "No open concerns"} tone={concerns.length > 0 ? "amber" : "green"} onClick={() => go("safeguarding")} />}
+              {hasModule('volunteers') && <AttentionRow icon="❤️" label="Volunteers" value="Review session cover" tone="blue" onClick={() => go("volunteers")} />}
+              {hasModule('mentoring') && <AttentionRow icon="🤝" label="Mentoring" value="View active matches" tone="blue" onClick={() => go("mentoring")} />}
+              {hasModule('reports') && <AttentionRow icon="📊" label="Reports" value="View impact data" tone="blue" onClick={() => go("reports")} />}
+            </Panel>
+          )}
 
           {/* SAFEGUARDING SNAPSHOT */}
-          <Panel title="🛡️ Safeguarding Snapshot">
-            <div style={styles.snapshotGrid}>
-              <SmallMetric label="Open Concerns" value={concerns.length} colour={concerns.length > 0 ? "#F59E0B" : "#059669"} onClick={() => go("safeguarding")} />
-              <SmallMetric label="Medical Alerts" value={medicalAlerts} colour="#F59E0B" onClick={() => go("registers")} />
-              <SmallMetric label="Reflections Due" value={completedWithoutReflection.length} colour={completedWithoutReflection.length > 0 ? "#DC2626" : "#059669"} onClick={() => go("planner")} />
-            </div>
-          </Panel>
+          {hasModule('safeguarding') && (
+            <Panel title="🛡️ Safeguarding Snapshot">
+              <div style={styles.snapshotGrid}>
+                <SmallMetric label="Open Concerns" value={concerns.length} colour={concerns.length > 0 ? "#F59E0B" : "#059669"} onClick={() => go("safeguarding")} />
+                <SmallMetric label="Medical Alerts" value={medicalAlerts} colour="#F59E0B" onClick={() => go("registers")} />
+                <SmallMetric label="Reflections Due" value={completedWithoutReflection.length} colour={completedWithoutReflection.length > 0 ? "#DC2626" : "#059669"} onClick={() => go("planner")} />
+              </div>
+            </Panel>
+          )}
 
           {/* IMPACT */}
           <Panel title="💎 Impact This Month">
