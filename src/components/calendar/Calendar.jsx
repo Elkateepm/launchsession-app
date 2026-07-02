@@ -15,6 +15,46 @@ const getCfg = (type) => TYPE_CONFIG[type] || TYPE_CONFIG.activity
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
+// Approximate England-wide school holiday windows (varies by local authority — shown as a general reference layer)
+const SCHOOL_HOLIDAYS = [
+  { start: '2025-10-27', end: '2025-10-31', label: 'Half Term' },
+  { start: '2025-12-22', end: '2026-01-02', label: 'Christmas Holidays' },
+  { start: '2026-02-16', end: '2026-02-20', label: 'Half Term' },
+  { start: '2026-04-06', end: '2026-04-17', label: 'Easter Holidays' },
+  { start: '2026-05-25', end: '2026-05-29', label: 'Half Term' },
+  { start: '2026-07-22', end: '2026-09-01', label: 'Summer Holidays' },
+  { start: '2026-10-26', end: '2026-10-30', label: 'Half Term' },
+  { start: '2026-12-21', end: '2027-01-01', label: 'Christmas Holidays' },
+]
+
+// A curated set of fun / novelty / awareness days worth celebrating with young people
+const NOVELTY_DAYS = {
+  '01-01': { title: "New Year's Day", icon: '🎉' },
+  '01-21': { title: 'National Hug Day', icon: '🤗' },
+  '02-09': { title: 'National Pizza Day', icon: '🍕' },
+  '03-14': { title: 'Pi Day', icon: '🥧' },
+  '03-20': { title: 'International Day of Happiness', icon: '😊' },
+  '04-01': { title: "April Fools' Day", icon: '🤪' },
+  '04-22': { title: 'Earth Day', icon: '🌍' },
+  '05-04': { title: 'Star Wars Day', icon: '⭐' },
+  '05-20': { title: 'World Bee Day', icon: '🐝' },
+  '06-08': { title: 'World Oceans Day', icon: '🌊' },
+  '06-21': { title: 'International Yoga Day', icon: '🧘' },
+  '07-17': { title: 'World Emoji Day', icon: '😄' },
+  '07-30': { title: 'International Day of Friendship', icon: '🤝' },
+  '08-08': { title: 'International Cat Day', icon: '🐱' },
+  '08-13': { title: 'International Left Handers Day', icon: '✋' },
+  '09-19': { title: 'Talk Like a Pirate Day', icon: '🏴‍☠️' },
+  '09-21': { title: 'International Day of Peace', icon: '🕊️' },
+  '10-04': { title: 'World Animal Day', icon: '🐾' },
+  '10-16': { title: 'World Food Day', icon: '🍎' },
+  '10-31': { title: 'Halloween', icon: '🎃' },
+  '11-05': { title: 'Bonfire Night', icon: '🎆' },
+  '11-14': { title: 'World Kindness Day', icon: '💛' },
+  '12-25': { title: 'Christmas Day', icon: '🎄' },
+}
+
+
 const KEYFRAMES = `
 @keyframes cal-pop-in {
   0% { opacity: 0; transform: translateY(4px) scale(0.96); }
@@ -189,8 +229,29 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
   const [filterType, setFilterType] = useState('all')
   const [navDirection, setNavDirection] = useState('right')
   const [showConfettiFor, setShowConfettiFor] = useState(null)
+  const [bankHolidays, setBankHolidays] = useState({})
   const primary = org?.primary_color || '#1B9AAA'
   const gridKey = useRef(0)
+
+  useEffect(() => {
+    fetch('https://www.gov.uk/bank-holidays.json')
+      .then(res => res.json())
+      .then(data => {
+        const events = data?.['england-and-wales']?.events || []
+        const map = {}
+        events.forEach(e => { map[e.date] = e.title })
+        setBankHolidays(map)
+      })
+      .catch(() => {})
+  }, [])
+
+  const getSchoolHoliday = useCallback((dateStr) => {
+    return SCHOOL_HOLIDAYS.find(h => dateStr >= h.start && dateStr <= h.end)
+  }, [])
+
+  const getNoveltyDay = useCallback((dateStr) => {
+    return NOVELTY_DAYS[dateStr.slice(5)] || null
+  }, [])
 
   const load = useCallback(async () => {
     if (!org?.id) return
@@ -371,18 +432,33 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const today = isToday(day)
                 const inMonth = isSameMonth(day, currentDate)
                 const isPastEmpty = !today && day < new Date() && daySessions.length === 0 && inMonth
+                const bankHoliday = bankHolidays[key]
+                const schoolHoliday = getSchoolHoliday(key)
+                const novelty = getNoveltyDay(key)
+                const specialBg = bankHoliday ? '#FEF3C799' : schoolHoliday ? `${primary}08` : 'transparent'
                 return (
                   <div key={key} onClick={() => daySessions.length === 0 && inMonth && !isPastEmpty ? handlePlanForDate(key) : null}
                     style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
                     onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? `${primary}14` : '#FAFBFC' }}
                     onMouseLeave={e => { e.currentTarget.style.background = today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA' }}>
+                    {inMonth && specialBg !== 'transparent' && (
+                      <div style={{ position: 'absolute', inset: 0, background: specialBg, pointerEvents: 'none' }} />
+                    )}
                     {showConfettiFor === key && <ConfettiBurst color={primary} secondary={org?.secondary_color} />}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 4 }}>
-                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? '#374151' : '#D1D5DB', boxShadow: today ? `0 2px 8px ${primary}50` : 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, position: 'relative' }}>
+                      <div style={{ display: 'flex', gap: 2, flex: 1, minWidth: 0, alignItems: 'center' }}>
+                        {inMonth && bankHoliday && (
+                          <span title={bankHoliday} style={{ fontSize: 9, background: '#F59E0B26', color: '#B45309', borderRadius: 4, padding: '1px 4px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>🏵️ {bankHoliday}</span>
+                        )}
+                        {inMonth && !bankHoliday && novelty && (
+                          <span title={novelty.title} style={{ fontSize: 12, opacity: 0.75 }}>{novelty.icon}</span>
+                        )}
+                      </div>
+                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? '#374151' : '#D1D5DB', boxShadow: today ? `0 2px 8px ${primary}50` : 'none', flexShrink: 0 }}>
                         {format(day, 'd')}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, position: 'relative' }}>
                       {daySessions.slice(0, 3).map((s, si) => {
                         const cfg = getCfg(s.session_type)
                         return (
@@ -552,6 +628,20 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 </div>
               )
             })}
+          </div>
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #F3F4F6', display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: '#FEF3C7', border: '1px solid #FDE68A', flexShrink: 0 }} />
+              <span style={{ color: '#9CA3AF' }}>🏵️ UK Bank Holiday</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: primary + '10', border: `1px solid ${primary}30`, flexShrink: 0 }} />
+              <span style={{ color: '#9CA3AF' }}>School Holiday (approx.)</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>
+              <span style={{ fontSize: 12 }}>🎉</span>
+              <span style={{ color: '#9CA3AF' }}>Fun / awareness day</span>
+            </div>
           </div>
         </div>
       </div>
