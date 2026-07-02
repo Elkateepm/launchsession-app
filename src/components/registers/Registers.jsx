@@ -66,7 +66,7 @@ function EditChildForm({ child, onSaved }) {
 }
 
 // ─── INLINE IMPORT ────────────────────────────────────────────
-const CSV_COLS = ['first_name','last_name','date_of_birth','group_name','allergies','medical_notes','emergency_contact_name','emergency_contact_phone']
+const CSV_COLS = ['first_name','last_name','date_of_birth','group_name','allergies','medical_notes','sen','emergency_contact_name','emergency_contact_phone']
 
 function InlineChildImport({ org, template, onImported }) {
   const [step, setStep] = useState('upload')
@@ -108,40 +108,24 @@ function InlineChildImport({ org, template, onImported }) {
 
   const handleImport = async () => {
     setImporting(true)
-    setErrors([])
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const records = rows.filter(r => r.first_name && r.last_name).map(r => ({
-        first_name: r.first_name.trim(), last_name: r.last_name.trim(),
-        date_of_birth: r.date_of_birth || null, group_name: r.group_name?.trim() || null,
-        allergies: r.allergies || null, medical_notes: r.medical_notes || null,
-        sen: r.sen || null,
-        emergency_contact_name: r.emergency_contact_name || null,
-        emergency_contact_phone: r.emergency_contact_phone || null, active: true,
-      }))
-      const res = await fetch('/api/import-children', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ org_id: org.id, records }),
-      })
-      const json = await res.json()
-      if (json.error) { setErrors([json.error]); setImporting(false); return }
-
-      const { data: all, error: fetchErr } = await supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).order('last_name')
-      if (fetchErr) throw fetchErr
-
-      // Detect any group names in the import that aren't yet managed groups
-      const { data: orgRow } = await supabase.from('organisations').select('custom_groups').eq('id', org.id).single()
-      const existingLabels = new Set((orgRow?.custom_groups || []).map(g => g.label.toLowerCase()))
-      const importedGroupNames = [...new Set(records.map(r => r.group_name).filter(Boolean))]
-      const newGroupNames = importedGroupNames.filter(g => !existingLabels.has(g.toLowerCase()))
-
-      setImporting(false)
-      onImported(all || [], newGroupNames)
-    } catch (e) {
-      setErrors([e.message || 'Import failed. Please try again.'])
-      setImporting(false)
-    }
+    const { data: { session } } = await supabase.auth.getSession()
+    const records = rows.filter(r => r.first_name && r.last_name).map(r => ({
+      first_name: r.first_name.trim(), last_name: r.last_name.trim(),
+      date_of_birth: r.date_of_birth || null, group_name: r.group_name || null,
+      allergies: r.allergies || null, medical_notes: r.medical_notes || null,
+      emergency_contact_name: r.emergency_contact_name || null,
+      emergency_contact_phone: r.emergency_contact_phone || null, active: true,
+    }))
+    const res = await fetch('/api/import-children', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ org_id: org.id, records }),
+    })
+    const json = await res.json()
+    setImporting(false)
+    if (json.error) { setErrors([json.error]); return }
+    const { data: all } = await supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).order('last_name')
+    onImported(all || [])
   }
 
   const downloadTemplate = () => {
@@ -589,7 +573,7 @@ function ChildCard({ child, status, bubble, onClick, primary }) {
 }
 
 // ─── MAIN REGISTER ────────────────────────────────────────────
-export default function Registers({ org, onNavigate }) {
+export default function Registers({ org }) {
   const orgId  = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const isMobile = useIsMobile()
@@ -607,8 +591,6 @@ export default function Registers({ org, onNavigate }) {
   const [showImport, setShowImport] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
   const [activeImportTemplate, setActiveImportTemplate] = useState(null)
-  const [suggestedGroups, setSuggestedGroups] = useState(null)
-  const [creatingGroups, setCreatingGroups] = useState(false)
   const [toast, setToast] = useState('')
   const [note, setNote] = useState('')
 
@@ -620,25 +602,6 @@ export default function Registers({ org, onNavigate }) {
   }) || null
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
-
-  const handleCreateSuggestedGroups = async () => {
-    if (!suggestedGroups?.length) return
-    setCreatingGroups(true)
-    try {
-      const { data: orgRow, error: fetchErr } = await supabase.from('organisations').select('custom_groups').eq('id', orgId).single()
-      if (fetchErr) throw fetchErr
-      const existing = orgRow?.custom_groups || []
-      const colors = ['#E53935', '#1B9AAA', '#417505', '#B8860B', '#7B2D8B', '#1A1A1A', '#F97316', '#0EA5E9', '#EC4899', '#64748B']
-      const newOnes = suggestedGroups.map((name, i) => ({ id: `group-${Date.now()}-${i}`, label: name, color: colors[(existing.length + i) % colors.length] }))
-      const { error: saveErr } = await supabase.from('organisations').update({ custom_groups: [...existing, ...newOnes] }).eq('id', orgId)
-      if (saveErr) throw saveErr
-      showToast(`✅ Created ${newOnes.length} group${newOnes.length > 1 ? 's' : ''}`)
-      setSuggestedGroups(null)
-    } catch (e) {
-      showToast(`⚠️ Could not create groups: ${e.message || 'unknown error'}`)
-    }
-    setCreatingGroups(false)
-  }
 
   const handleUpdateStatus = async (childId, status, extra = {}) => {
     const existing = attendance.find(a => a.child_id === childId)
@@ -774,7 +737,7 @@ export default function Registers({ org, onNavigate }) {
         </div>
 
         {/* GROUP FILTER */}
-        {availableGroups.length > 1 ? (
+        {availableGroups.length > 1 && (
           <div style={{ display: 'flex', gap: 6, padding: '10px 16px', background: '#fff', borderBottom: '1px solid #F3F4F6', overflowX: 'auto', flexShrink: 0 }}>
             {['all', ...availableGroups].map(g => {
               const bubble = g === 'all' ? null : bubbles.find(b => b.label.toLowerCase() === g.toLowerCase())
@@ -795,17 +758,6 @@ export default function Registers({ org, onNavigate }) {
                 </button>
               )
             })}
-          </div>
-        ) : children.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', background: '#F8FAFC', borderBottom: '1px solid #F3F4F6', flexShrink: 0, flexWrap: 'wrap' }}>
-            <div>
-              <div style={{ fontSize: 12.5, fontWeight: 800, color: '#374151' }}>No groups yet</div>
-              <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>Create groups like Red, Blue, Juniors or Teens to organise your register.</div>
-            </div>
-            <button onClick={() => onNavigate && onNavigate('settings')}
-              style={{ padding: '6px 14px', borderRadius: 8, border: `1.5px solid ${primary}40`, background: primary + '0c', color: primary, fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              + Add Group
-            </button>
           </div>
         )}
 
@@ -904,12 +856,11 @@ export default function Registers({ org, onNavigate }) {
                   🧩 Using "{activeImportTemplate.name}" template
                 </div>
               )}
-              <InlineChildImport org={org} template={activeImportTemplate} onImported={(newChildren, newGroupNames) => {
+              <InlineChildImport org={org} template={activeImportTemplate} onImported={newChildren => {
                 setChildren(newChildren)
                 setShowImport(false)
                 setActiveImportTemplate(null)
                 showToast(`✅ Register updated — ${newChildren.length} children total`)
-                if (newGroupNames && newGroupNames.length > 0) setSuggestedGroups(newGroupNames)
               }} />
             </div>
           )}
@@ -956,30 +907,6 @@ export default function Registers({ org, onNavigate }) {
       {showAdd && (
         <AddChildModal orgId={orgId} bubbles={bubbles} onClose={() => setShowAdd(false)}
           onAdded={child => { setChildren(prev => [...prev, child]); setShowAdd(false); showToast(`✓ ${child.first_name} added`) }} />
-      )}
-
-      {/* NEW GROUPS SUGGESTION MODAL */}
-      {suggestedGroups && suggestedGroups.length > 0 && (
-        <div onClick={() => setSuggestedGroups(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', padding: '24px 24px 20px' }}>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>🏷️</div>
-            <div style={{ fontSize: 17, fontWeight: 900, color: '#111', marginBottom: 6 }}>
-              We found {suggestedGroups.length} new group{suggestedGroups.length > 1 ? 's' : ''} in your import.
-            </div>
-            <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 14 }}>These group names appeared on imported children but aren't set up yet. Create them now to manage colours and see them as filters?</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
-              {suggestedGroups.map(name => (
-                <span key={name} style={{ background: '#F3F4F6', color: '#374151', borderRadius: 99, padding: '5px 12px', fontSize: 12, fontWeight: 700 }}>{name}</span>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setSuggestedGroups(null)} style={{ flex: 1, padding: 11, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Skip for now</button>
-              <button onClick={handleCreateSuggestedGroups} disabled={creatingGroups} style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: creatingGroups ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
-                {creatingGroups ? 'Creating...' : 'Create groups'}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   )
