@@ -348,7 +348,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   return (
     <div style={styles.page}>
       {/* ── HEADER ── */}
-      <header style={{ background: `linear-gradient(135deg, ${primary}10, var(--surface, #fff) 45%)`, borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible' }}>
+      <header style={{ background: `linear-gradient(135deg, ${primary}10, var(--surface, #fff) 45%)`, borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 10px 24px -20px ${primary}45` }}>
 
         {/* Subtle brand gradient top strip */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}88, transparent)` }} />
@@ -362,7 +362,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               {org?.logo_url ? (
                 <img src={org.logo_url} alt={orgName} style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'contain', border: `1.5px solid ${primary}30`, background: '#fff', padding: 3, boxShadow: `0 4px 16px ${primary}28` }} />
               ) : (
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${primary}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff', boxShadow: `0 4px 16px ${primary}38` }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${primary}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 8px 20px -6px ${primary}55` }}>
                   {orgName[0]}
                 </div>
               )}
