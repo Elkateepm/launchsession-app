@@ -45,7 +45,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     let base = targetedChildren
     if (popupMode === 'signed_in') base = base.filter(c => getChildStatus(c.id) === 'signed_in')
     else if (popupMode === 'signed_out') base = base.filter(c => getChildStatus(c.id) === 'signed_out')
-    else if (popupMode === 'expected') base = base.filter(c => getChildStatus(c.id) === 'expected')
+    // 'expected' shows everyone targeted, regardless of current status
     return base.filter(c => !popupSearch || `${c.first_name} ${c.last_name}`.toLowerCase().includes(popupSearch.toLowerCase()))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetedChildren, popupMode, popupSearch, sessionAttendance])
@@ -435,7 +435,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       setLoading(false);
     }
     loadHub();
-    const interval = setInterval(loadHub, 30000);
+    const interval = setInterval(loadHub, 1000);
     return () => { alive = false; clearInterval(interval); };
   }, [orgId]);
 
@@ -522,9 +522,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const targetedChildren = targetGroups.length > 0
       ? children.filter(c => targetGroups.includes((c.group_name || '').toLowerCase()))
       : children;
-    const totalRoster = Math.max(targetedChildren.length, records.length);
-    const pending = Math.max(0, totalRoster - si - so - absent);
-    return { signedIn: si, absent, signedOut: so, expected: pending, totalRoster, percent: totalRoster > 0 ? Math.round((si / totalRoster) * 100) : 0 };
+    const expected = Math.max(targetedChildren.length, records.length);
+    return { signedIn: si, absent, signedOut: so, expected, percent: expected > 0 ? Math.round((si / expected) * 100) : 0 };
   };
 
   const openRegisterForSession = (sessionId) => {
