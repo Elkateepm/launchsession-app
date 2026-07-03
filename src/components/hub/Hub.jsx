@@ -87,17 +87,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   const pct = stats.percent || 0
 
-  const sessionTimePct = React.useMemo(() => {
-    if (!activeSession?.start_time || !activeSession?.end_time || !activeSession?.session_date) return 0
-    const now = new Date()
-    const start = new Date(`${activeSession.session_date}T${activeSession.start_time}`)
-    const end = new Date(`${activeSession.session_date}T${activeSession.end_time}`)
-    const total = end - start
-    if (total <= 0) return 0
-    const elapsed = now - start
-    return Math.round((elapsed / total) * 100)
-  }, [activeSession])
-
   return (
     <div style={{ background: `linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
 
@@ -107,34 +96,33 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
       {/* Header */}
       <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8, boxShadow: '0 2px 10px rgba(34,197,94,0.15)' }}>
-                <span style={{ width: 5, height: 5, background: '#4ADE80', borderRadius: '50%', animation: 'pulse-live 1.5s infinite', boxShadow: '0 0 6px #4ADE80' }}></span>
-                LIVE SESSION
-              </span>
-              {sessions.length > 1 && (
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{sessions.length} active today</span>
-              )}
-            </div>
-            <h2 style={{ margin: 0, fontSize: 23, fontWeight: 900, color: '#fff', letterSpacing: -0.5, fontFamily: 'var(--font-display, sans-serif)' }}>{activeSession?.title}</h2>
-            <p style={{ margin: '5px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
-              {activeSession?.start_time || ''}{activeSession?.end_time ? ` – ${activeSession.end_time}` : ''}
-              {activeSession?.location ? ` · ${activeSession.location}` : ''}
-            </p>
+        <button onClick={() => onOpenRegister(activeSession?.id)}
+          style={{ position: 'absolute', top: 20, right: 22, padding: '11px 18px', borderRadius: 13, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 22px -6px ${primary}70`, transition: 'transform 0.12s', zIndex: 1 }}
+          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+          Full Register →
+        </button>
+
+        <div style={{ textAlign: 'center', marginBottom: 14, padding: '0 130px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 7 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8, boxShadow: '0 2px 10px rgba(34,197,94,0.15)' }}>
+              <span style={{ width: 5, height: 5, background: '#4ADE80', borderRadius: '50%', animation: 'pulse-live 1.5s infinite', boxShadow: '0 0 6px #4ADE80' }}></span>
+              LIVE SESSION
+            </span>
+            {sessions.length > 1 && (
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{sessions.length} active today</span>
+            )}
           </div>
-          <button onClick={() => onOpenRegister(activeSession?.id)}
-            style={{ padding: '11px 18px', borderRadius: 13, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 22px -6px ${primary}70`, flexShrink: 0, transition: 'transform 0.12s' }}
-            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
-            Full Register →
-          </button>
+          <h2 style={{ margin: 0, fontSize: 23, fontWeight: 900, color: '#fff', letterSpacing: -0.5, fontFamily: 'var(--font-display, sans-serif)' }}>{activeSession?.title}</h2>
+          <p style={{ margin: '5px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+            {activeSession?.start_time || ''}{activeSession?.end_time ? ` – ${activeSession.end_time}` : ''}
+            {activeSession?.location ? ` · ${activeSession.location}` : ''}
+          </p>
         </div>
 
         {/* Session tabs if multiple */}
         {sessions.length > 1 && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 12, overflowX: 'auto' }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12, justifyContent: 'center', overflowX: 'auto' }}>
             {sessions.map(s => (
               <button key={s.id} onClick={() => setActiveSession(s)}
                 style={{ padding: '5px 12px', borderRadius: 99, border: `1px solid ${activeSession?.id === s.id ? primary : 'rgba(255,255,255,0.1)'}`, background: activeSession?.id === s.id ? primary + '25' : 'transparent', color: activeSession?.id === s.id ? primary : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
@@ -146,7 +134,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
         {/* Live group breakdown — clickable bubble filter pills */}
         {bubbleGroups.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
             {bubbleGroups.map(g => {
               const gColor = getBubbleColor(g)
               const isActive = bubbleFilter === g
@@ -191,21 +179,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#4ADE80' : `linear-gradient(90deg, ${primary}, ${secondary})`, borderRadius: 99, transition: 'width 0.5s ease', boxShadow: pct > 0 ? `0 0 10px ${pct === 100 ? '#4ADE80' : primary}70` : 'none' }} />
         </div>
-
-        {activeSession?.start_time && activeSession?.end_time && (
-          <div style={{ marginTop: 14 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
-              <span>Session progress</span>
-              <span style={{ color: sessionTimePct >= 100 ? '#F87171' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>
-                {sessionTimePct >= 100 ? 'Ended' : sessionTimePct <= 0 ? 'Not started' : `${sessionTimePct}%`}
-              </span>
-            </div>
-            <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, sessionTimePct))}%`, background: sessionTimePct >= 100 ? '#F87171' : `linear-gradient(90deg, #F59E0B, #F97316)`, borderRadius: 99, transition: 'width 0.5s ease', boxShadow: sessionTimePct > 0 ? `0 0 10px ${sessionTimePct >= 100 ? '#F87171' : '#F59E0B'}70` : 'none' }} />
-            </div>
-          </div>
-        )}
-
         {stats.absent > 0 && (
           <div style={{ marginTop: 10, fontSize: 11, color: '#FB923C', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
             ⚠ {stats.absent} marked absent
