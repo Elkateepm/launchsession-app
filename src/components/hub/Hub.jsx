@@ -920,17 +920,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {/* ATTENTION CENTRE */}
-          {(hasModule('registers') || hasModule('safeguarding') || hasModule('volunteers') || hasModule('mentoring') || hasModule('reports')) && (
-            <Panel title="🔔 Attention Centre">
-              {hasModule('registers') && <AttentionRow icon="📋" label="Registers" value={signedIn > 0 ? `${signedIn} signed in today` : "No activity yet"} tone={signedIn > 0 ? "green" : "blue"} onClick={() => go("registers")} />}
-              {hasModule('safeguarding') && <AttentionRow icon="🛡️" label="Safeguarding" value={concerns.length > 0 ? `${concerns.length} open concern${concerns.length > 1 ? "s" : ""}` : "No open concerns"} tone={concerns.length > 0 ? "amber" : "green"} onClick={() => go("safeguarding")} />}
-              {hasModule('volunteers') && <AttentionRow icon="❤️" label="Volunteers" value="Review session cover" tone="blue" onClick={() => go("volunteers")} />}
-              {hasModule('mentoring') && <AttentionRow icon="🤝" label="Mentoring" value="View active matches" tone="blue" onClick={() => go("mentoring")} />}
-              {hasModule('reports') && <AttentionRow icon="📊" label="Reports" value="View impact data" tone="blue" onClick={() => go("reports")} />}
-            </Panel>
-          )}
-
           {/* SAFEGUARDING SNAPSHOT */}
           {hasModule('safeguarding') && (
             <Panel title="🛡️ Safeguarding Snapshot">
@@ -982,20 +971,6 @@ function StatCard({ icon, title, text, button, badge, onClick, colour }) {
           {button || badge}
         </div>
       )}
-    </button>
-  );
-}
-
-function AttentionRow({ icon, label, value, tone, onClick }) {
-  const colour = tone === "green" ? "#16A34A" : tone === "amber" ? "#F59E0B" : "#0EA5E9";
-  return (
-    <button style={styles.attentionRow} onClick={onClick}>
-      <span style={{ ...styles.attentionIcon, fontSize: 18 }}>{icon}</span>
-      <div style={{ flex: 1, textAlign: 'left' }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)' }}>{label}</div>
-        <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>{value}</div>
-      </div>
-      <span style={{ ...styles.dot, background: colour }} />
     </button>
   );
 }
