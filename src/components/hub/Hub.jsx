@@ -514,22 +514,26 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     })
   }, [sessions, today]);
   const upcomingSessions = useMemo(() => {
-    // Show sessions not already in the 24h window, excluding ones that have ended
     const now = new Date()
-    const todayIds = new Set(todaySessions.map(s => s.id))
+    const sevenDaysOut = new Date(now)
+    sevenDaysOut.setDate(sevenDaysOut.getDate() + 7)
+    const sevenDaysStr = sevenDaysOut.toISOString().slice(0, 10)
+
     return sessions
       .filter(s => {
-        if (todayIds.has(s.id)) return false
-        if (s.session_date < today) return false
+        if (!s.session_date) return false
         if (s.session_date === today) {
+          const startDateTime = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
           const endDateStr = s.end_date || s.session_date
           const endDateTime = new Date(`${endDateStr}T${s.end_time || '23:59'}`)
-          return endDateTime >= now
+          const hasStarted = !startDateTime || startDateTime <= now
+          return hasStarted && endDateTime >= now
         }
-        return true
+        return s.session_date > today && s.session_date <= sevenDaysStr
       })
-      .slice(0, 4)
-  }, [sessions, today, todaySessions]);
+      .sort((a, b) => (a.session_date + (a.start_time || '')).localeCompare(b.session_date + (b.start_time || '')))
+      .slice(0, 6)
+  }, [sessions, today]);
   const completedWithoutReflection = useMemo(() => {
     const now = new Date();
     return sessions.filter(s => {
@@ -807,21 +811,28 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
           {/* COMING UP */}
           <div>
+            <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}>📅 Upcoming Sessions</h3>
-              <button onClick={() => go('planner')} style={{ fontSize: 11, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ New session</button>
+              <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}>📅 Live &amp; Upcoming (next 7 days)</h3>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button onClick={() => go('calendar')} style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>📆 Calendar</button>
+                <button onClick={() => go('planner')} style={{ fontSize: 11, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ New session</button>
+              </div>
             </div>
             {upcomingSessions.length === 0 ? (
               <div style={{ background: `linear-gradient(135deg, ${primary}10, ${primary}05)`, border: `1.5px dashed ${primary}30`, borderRadius: 20, padding: '36px 24px', textAlign: 'center' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 6 }}>No sessions planned yet</div>
-                <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20 }}>Create your first session and it'll appear here instantly</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 6 }}>Nothing running or planned in the next 7 days</div>
+                <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20 }}>Create a session and it'll appear here instantly</div>
                 <button onClick={() => go('planner')} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 16px ${primary}40` }}>Plan a Session →</button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {upcomingSessions.map((s, idx) => {
                   const isToday = s.session_date === today
+                  const now = new Date()
+                  const startDateTime = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
+                  const isLiveNow = isToday && (!startDateTime || startDateTime <= now)
                   const typeColors = {
                     activity:  { bg: '#EFF6FF', accent: '#3B82F6', icon: '🏃' },
                     workshop:  { bg: '#F0FDF4', accent: '#16A34A', icon: '🛠️' },
@@ -832,13 +843,20 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   }
                   const tc = typeColors[s.session_type] || { bg: primary + '10', accent: primary, icon: '📅' }
                   return (
-                    <button key={s.id} onClick={() => openRegisterForSession(s.id)}
+                    <div key={s.id}
                       style={{ width: '100%', background: isToday ? `linear-gradient(135deg, ${primary}, ${primary}CC)` : '#fff', border: isToday ? 'none' : '1.5px solid #F1F5F9', borderRadius: 18, padding: '18px 18px', cursor: 'pointer', textAlign: 'left', boxShadow: isToday ? `0 8px 32px ${primary}35` : '0 2px 12px rgba(0,0,0,0.06)', transition: 'all 0.2s', position: 'relative', overflow: 'hidden' }}
+                      onClick={() => go('planner')}
                       onMouseEnter={e => { if (!isToday) { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 4px 20px ${primary}20`; e.currentTarget.style.transform = 'translateY(-2px)' }}}
                       onMouseLeave={e => { if (!isToday) { e.currentTarget.style.borderColor = '#F1F5F9'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; e.currentTarget.style.transform = 'none' }}}>
 
                       {/* Background decoration */}
                       {isToday && <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />}
+
+                      {/* Calendar jump icon */}
+                      <button onClick={e => { e.stopPropagation(); go('calendar') }} title="View in Calendar"
+                        style={{ position: 'absolute', top: 14, right: 14, width: 30, height: 30, borderRadius: 9, border: 'none', background: isToday ? 'rgba(255,255,255,0.2)' : '#F8FAFC', color: isToday ? '#fff' : '#6B7280', fontSize: 13, cursor: 'pointer', zIndex: 2 }}>
+                        📆
+                      </button>
 
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                         {/* Icon */}
@@ -846,10 +864,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           {tc.icon}
                         </div>
 
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <div style={{ flex: 1, minWidth: 0, paddingRight: 30 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                             <div style={{ fontSize: 15, fontWeight: 900, color: isToday ? '#fff' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-                            {isToday && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>TODAY</span>}
+                            {isLiveNow && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', animation: 'pulse-live 1.5s infinite' }} />LIVE NOW</span>}
+                            {isToday && !isLiveNow && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>TODAY</span>}
                             {idx === 0 && !isToday && <span style={{ background: primary + '15', color: primary, borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>NEXT</span>}
                           </div>
 
@@ -874,14 +893,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       </div>
 
                       {/* Bottom action bar for today's session */}
-                      {isToday && (
+                      {isToday && hasModule('registers') && (
                         <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.2)', display: 'flex', gap: 8 }}>
-                          <div style={{ flex: 1, background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff' }}>
+                          <button onClick={e => { e.stopPropagation(); openRegisterForSession(s.id) }}
+                            style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
                             🟢 Open Register
-                          </div>
+                          </button>
                         </div>
                       )}
-                    </button>
+                    </div>
                   )
                 })}
               </div>
