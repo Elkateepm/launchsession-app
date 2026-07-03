@@ -88,14 +88,11 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const pct = stats.percent || 0
 
   return (
-    <div style={{ background: `linear-gradient(160deg, ${primary}E6 0%, #0B1023 45%, ${secondary}CC 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px ${primary}66, 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
-
-      {/* Dark overlay for legibility over brand colours */}
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(5,8,20,0.55) 0%, rgba(5,8,20,0.75) 100%)', pointerEvents: 'none' }} />
+    <div style={{ background: `linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
 
       {/* Ambient brand glow */}
-      <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 200, borderRadius: '50%', background: `radial-gradient(circle, ${primary}44, transparent 70%)`, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: -50, left: -30, width: 220, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}33, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 200, borderRadius: '50%', background: `radial-gradient(circle, ${primary}22, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: -50, left: -30, width: 220, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}18, transparent 70%)`, pointerEvents: 'none' }} />
 
       {/* Header */}
       <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
@@ -157,19 +154,19 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       </div>
 
       {/* Stat boxes — clickable, navigate to filtered register */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 1, background: 'rgba(255,255,255,0.06)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, padding: '0 22px 4px', position: 'relative' }}>
         {[
-          { key: 'signed_in',  label: 'Signed In',  value: stats.signedIn,  color: '#4ADE80', icon: '↪' },
-          { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#C084FC', icon: '↩' },
-          { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#60A5FA', icon: '👥' },
+          { key: 'signed_in',  label: 'Signed In',  value: stats.signedIn,  color: '#16A34A', icon: '↪' },
+          { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#7C3AED', icon: '↩' },
+          { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#2563EB', icon: '👥' },
         ].map(s => (
           <button key={s.key} onClick={() => setPopupMode(s.key)}
-            style={{ background: 'rgba(15,23,42,0.6)', border: 'none', padding: '18px 12px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.15s' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(15,23,42,0.6)'}>
-            <div style={{ fontSize: 11, marginBottom: 4, opacity: 0.7 }}>{s.icon}</div>
-            <div style={{ fontSize: 28, fontWeight: 900, color: s.color, letterSpacing: -0.5, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.7, marginTop: 5 }}>{s.label}</div>
+            style={{ background: '#fff', border: 'none', borderRadius: 14, padding: '14px 10px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.15s', boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 24px -10px rgba(0,0,0,0.35)' }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
+            <div style={{ width: 26, height: 26, borderRadius: 8, background: s.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, margin: '0 auto 6px', color: s.color }}>{s.icon}</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: s.color, letterSpacing: -0.5, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
+            <div style={{ fontSize: 10, color: '#64748B', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 5 }}>{s.label}</div>
           </button>
         ))}
       </div>
