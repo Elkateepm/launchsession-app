@@ -398,6 +398,36 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [attendance, setAttendance] = useState([]);
   const [concerns, setConcerns] = useState([]);
   const [children, setChildren] = useState([]);
+  const [weather, setWeather] = useState(null);
+  const [weatherError, setWeatherError] = useState(false);
+
+  useEffect(() => {
+    const city = org?.city
+    if (!city) { setWeatherError(true); return }
+    let alive = true
+    fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`)
+      .then(r => r.json())
+      .then(geo => {
+        const loc = geo?.results?.[0]
+        if (!loc || !alive) { if (alive) setWeatherError(true); return }
+        return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1`)
+          .then(r => r.json())
+          .then(data => {
+            if (!alive || !data?.current) { if (alive) setWeatherError(true); return }
+            setWeather({
+              city: loc.name,
+              temp: Math.round(data.current.temperature_2m),
+              code: data.current.weather_code,
+              wind: Math.round(data.current.wind_speed_10m),
+              high: data.daily?.temperature_2m_max?.[0] != null ? Math.round(data.daily.temperature_2m_max[0]) : null,
+              low: data.daily?.temperature_2m_min?.[0] != null ? Math.round(data.daily.temperature_2m_min[0]) : null,
+              rainChance: data.daily?.precipitation_probability_max?.[0] ?? null,
+            })
+          })
+      })
+      .catch(() => { if (alive) setWeatherError(true) })
+    return () => { alive = false }
+  }, [org?.city]);
   const [reflections, setReflections] = useState([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
@@ -728,7 +758,38 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
           <Panel title="🧭 Today at a glance">
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.1fr 1fr 1fr 1fr', gap: 12 }}>
+
+              {/* WEATHER CARD */}
+              <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)' }}>
+                <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
+                {weatherError ? (
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ fontSize: 22, marginBottom: 6 }}>🌡️</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.9 }}>Weather unavailable</div>
+                    <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>Add a city in Settings</div>
+                  </div>
+                ) : !weather ? (
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.85 }}>Loading weather...</div>
+                  </div>
+                ) : (
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, opacity: 0.85, textTransform: 'uppercase', letterSpacing: 0.5 }}>{weather.city}</div>
+                      <div style={{ fontSize: 26 }}>{weatherFromCode(weather.code).icon}</div>
+                    </div>
+                    <div style={{ fontSize: 34, fontWeight: 900, lineHeight: 1.1, marginTop: 4, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°<span style={{ fontSize: 16, fontWeight: 700, opacity: 0.8 }}>C</span></div>
+                    <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.9, marginTop: 2 }}>{weatherFromCode(weather.code).label}</div>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 8, fontSize: 11, opacity: 0.85, fontWeight: 600 }}>
+                      {weather.high != null && <span>↑{weather.high}° ↓{weather.low}°</span>}
+                      {weather.rainChance != null && <span>💧 {weather.rainChance}%</span>}
+                      <span>💨 {weather.wind}mph</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? "Ready for delivery" : "Plan something amazing"} button="Open Planner" onClick={() => go("planner")} colour={primary} />
               <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? "Upcoming" : "Plan now"} onClick={() => go("planner")} colour="#7C3AED" />
               {hasModule('registers') ? (
@@ -956,6 +1017,22 @@ function SmallMetric({ label, value, colour, onClick }) {
       <span style={{ fontSize: 11, color: '#6B7280', marginTop: 4 }}>{label}</span>
     </button>
   );
+}
+
+function weatherFromCode(code) {
+  const map = {
+    0: { icon: '☀️', label: 'Clear sky' },
+    1: { icon: '🌤️', label: 'Mostly clear' },
+    2: { icon: '⛅', label: 'Partly cloudy' },
+    3: { icon: '☁️', label: 'Overcast' },
+    45: { icon: '🌫️', label: 'Fog' }, 48: { icon: '🌫️', label: 'Fog' },
+    51: { icon: '🌦️', label: 'Light drizzle' }, 53: { icon: '🌦️', label: 'Drizzle' }, 55: { icon: '🌦️', label: 'Heavy drizzle' },
+    61: { icon: '🌧️', label: 'Light rain' }, 63: { icon: '🌧️', label: 'Rain' }, 65: { icon: '🌧️', label: 'Heavy rain' },
+    71: { icon: '🌨️', label: 'Light snow' }, 73: { icon: '🌨️', label: 'Snow' }, 75: { icon: '❄️', label: 'Heavy snow' },
+    80: { icon: '🌦️', label: 'Rain showers' }, 81: { icon: '🌧️', label: 'Rain showers' }, 82: { icon: '⛈️', label: 'Violent showers' },
+    95: { icon: '⛈️', label: 'Thunderstorm' }, 96: { icon: '⛈️', label: 'Thunderstorm' }, 99: { icon: '⛈️', label: 'Severe storm' },
+  }
+  return map[code] || { icon: '🌡️', label: 'Weather' }
 }
 
 function formatDate(date) {
