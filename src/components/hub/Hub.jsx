@@ -762,10 +762,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
           <Panel title="🧭 Today at a glance">
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.1fr 1fr 1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
 
               {/* WEATHER CARD */}
-              <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)' }}>
+              <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', flex: '1 1 220px', minWidth: 200 }}>
                 <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
                 {weatherError ? (
                   <div style={{ position: 'relative' }}>
@@ -920,6 +920,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* ATTENTION CENTRE */}
+          {(hasModule('registers') || hasModule('safeguarding') || hasModule('volunteers') || hasModule('mentoring') || hasModule('reports')) && (
+            <Panel title="🔔 Attention Centre">
+              {hasModule('registers') && <AttentionRow icon="📋" label="Registers" value={signedIn > 0 ? `${signedIn} signed in today` : "No activity yet"} tone={signedIn > 0 ? "green" : "blue"} onClick={() => go("registers")} />}
+              {hasModule('safeguarding') && <AttentionRow icon="🛡️" label="Safeguarding" value={concerns.length > 0 ? `${concerns.length} open concern${concerns.length > 1 ? "s" : ""}` : "No open concerns"} tone={concerns.length > 0 ? "amber" : "green"} onClick={() => go("safeguarding")} />}
+              {hasModule('volunteers') && <AttentionRow icon="❤️" label="Volunteers" value="Review session cover" tone="blue" onClick={() => go("volunteers")} />}
+              {hasModule('mentoring') && <AttentionRow icon="🤝" label="Mentoring" value="View active matches" tone="blue" onClick={() => go("mentoring")} />}
+              {hasModule('reports') && <AttentionRow icon="📊" label="Reports" value="View impact data" tone="blue" onClick={() => go("reports")} />}
+            </Panel>
+          )}
+
           {/* SAFEGUARDING SNAPSHOT */}
           {hasModule('safeguarding') && (
             <Panel title="🛡️ Safeguarding Snapshot">
@@ -956,7 +967,8 @@ function StatCard({ icon, title, text, button, badge, onClick, colour }) {
       background: `linear-gradient(135deg, ${colour}, ${colour}CC)`,
       borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden',
       minHeight: 128, boxShadow: `0 10px 28px -10px ${colour}80`, textAlign: 'left', cursor: 'pointer',
-      border: 'none', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+      border: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+      flex: '1 1 190px', minWidth: 180,
     }}>
       <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
       <div style={{ position: 'relative' }}>
@@ -971,6 +983,20 @@ function StatCard({ icon, title, text, button, badge, onClick, colour }) {
           {button || badge}
         </div>
       )}
+    </button>
+  );
+}
+
+function AttentionRow({ icon, label, value, tone, onClick }) {
+  const colour = tone === "green" ? "#16A34A" : tone === "amber" ? "#F59E0B" : "#0EA5E9";
+  return (
+    <button style={styles.attentionRow} onClick={onClick}>
+      <span style={{ ...styles.attentionIcon, fontSize: 18 }}>{icon}</span>
+      <div style={{ flex: 1, textAlign: 'left' }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)' }}>{label}</div>
+        <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>{value}</div>
+      </div>
+      <span style={{ ...styles.dot, background: colour }} />
     </button>
   );
 }
