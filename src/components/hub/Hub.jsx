@@ -98,6 +98,13 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     return Math.round((elapsed / total) * 100)
   }, [activeSession])
 
+  const isSessionEnded = React.useMemo(() => {
+    if (!activeSession?.session_date) return false
+    const endDateStr = activeSession.end_date || activeSession.session_date
+    const endDateTime = new Date(`${endDateStr}T${activeSession.end_time || '23:59'}`)
+    return endDateTime < new Date()
+  }, [activeSession])
+
   return (
     <div style={{ background: `linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
 
@@ -116,10 +123,17 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
         <div style={{ textAlign: 'center', marginBottom: 14, padding: '0 130px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 7 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8, boxShadow: '0 2px 10px rgba(34,197,94,0.15)' }}>
-              <span style={{ width: 5, height: 5, background: '#4ADE80', borderRadius: '50%', animation: 'pulse-live 1.5s infinite', boxShadow: '0 0 6px #4ADE80' }}></span>
-              LIVE SESSION
-            </span>
+            {isSessionEnded ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#CBD5E1', letterSpacing: 0.8 }}>
+                <span style={{ width: 5, height: 5, background: '#94A3B8', borderRadius: '50%' }}></span>
+                SESSION ENDED
+              </span>
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8, boxShadow: '0 2px 10px rgba(34,197,94,0.15)' }}>
+                <span style={{ width: 5, height: 5, background: '#4ADE80', borderRadius: '50%', animation: 'pulse-live 1.5s infinite', boxShadow: '0 0 6px #4ADE80' }}></span>
+                LIVE SESSION
+              </span>
+            )}
             {sessions.length > 1 && (
               <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{sessions.length} active today</span>
             )}
@@ -522,12 +536,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const yesterdayStr = yesterday.toISOString().split('T')[0]
     return sessions.filter(s => {
       if (!s.session_date) return false
-      // Today's sessions — only include if they haven't ended yet
-      if (s.session_date === today) {
-        const endDateStr = s.end_date || s.session_date
-        const endDateTime = new Date(`${endDateStr}T${s.end_time || '23:59'}`)
-        return endDateTime >= now
-      }
+      // Today's sessions — stay visible all day, even after they've ended, until midnight
+      if (s.session_date === today) return true
       // Include yesterday's sessions that haven't ended yet (within 24h window)
       if (s.session_date === yesterdayStr && s.end_time) {
         const endDateTime = new Date(`${s.session_date}T${s.end_time}`)
@@ -536,7 +546,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       // Include tomorrow's sessions starting within next 24h
       const startDateTime = new Date(`${s.session_date}T${s.start_time || '00:00'}`)
       return startDateTime <= in24h && startDateTime >= now
-    })
+    }).sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''))
   }, [sessions, today]);
   const upcomingSessions = useMemo(() => {
     const now = new Date()
