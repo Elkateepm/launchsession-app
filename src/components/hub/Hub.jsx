@@ -88,11 +88,14 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const pct = stats.percent || 0
 
   return (
-    <div style={{ background: `linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
+    <div style={{ background: `linear-gradient(160deg, ${primary}E6 0%, #0B1023 45%, ${secondary}CC 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px ${primary}66, 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
+
+      {/* Dark overlay for legibility over brand colours */}
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(5,8,20,0.55) 0%, rgba(5,8,20,0.75) 100%)', pointerEvents: 'none' }} />
 
       {/* Ambient brand glow */}
-      <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 200, borderRadius: '50%', background: `radial-gradient(circle, ${primary}22, transparent 70%)`, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: -50, left: -30, width: 220, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}18, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 200, borderRadius: '50%', background: `radial-gradient(circle, ${primary}44, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: -50, left: -30, width: 220, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}33, transparent 70%)`, pointerEvents: 'none' }} />
 
       {/* Header */}
       <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
