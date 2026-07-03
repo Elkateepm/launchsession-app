@@ -174,12 +174,12 @@ function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 28px -12px rgba(0,0,0,0.18)' }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: sc.color, background: sc.bg, padding: '2px 8px', borderRadius: 999 }}>{sc.label}</span>
                     {pc && <span style={{ fontSize: 11, fontWeight: 700, color: pc.color, background: pc.bg, padding: '2px 8px', borderRadius: 999 }}>{pc.label}</span>}
                   </div>
-                  <div style={{ width: 32, height: 32, borderRadius: 10, background: sc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>🚨</div>
+                  <div style={{ width: 30, height: 30, borderRadius: 9, background: sc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>🚨</div>
                 </div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)', marginBottom: 2 }}>{c.concern_type || 'Concern'} — {c.child_name}</div>
@@ -534,7 +534,7 @@ function Sidebar({ org, cases }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ ...card, padding: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>Today's Follow-Ups</div>
+        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>🟠 Today's Follow-Ups</div>
         {followUps.length === 0 ? (
           <div style={{ fontSize: 12, color: 'var(--text3)' }}>Nothing pending 🎉</div>
         ) : followUps.slice(0, 5).map(c => (
@@ -545,12 +545,12 @@ function Sidebar({ org, cases }) {
       </div>
 
       <div style={{ ...card, padding: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>DSL Contact</div>
+        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>🛡️ DSL Contact</div>
         {org.dsl_name ? (
           <>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{org.dsl_name}</div>
-            {org.dsl_phone && <div style={{ fontSize: 12, color: 'var(--text3)' }}>{org.dsl_phone}</div>}
-            {org.dsl_email && <div style={{ fontSize: 12, color: 'var(--text3)' }}>{org.dsl_email}</div>}
+            {org.dsl_phone && <a href={`tel:${org.dsl_phone}`} style={{ fontSize: 12, color: PRIMARY, fontWeight: 600, textDecoration: 'none', display: 'block' }}>{org.dsl_phone}</a>}
+            {org.dsl_email && <a href={`mailto:${org.dsl_email}`} style={{ fontSize: 12, color: 'var(--text3)', textDecoration: 'none', display: 'block' }}>{org.dsl_email}</a>}
           </>
         ) : (
           <div style={{ fontSize: 12, color: 'var(--text3)' }}>Not set — add in Organisation Settings</div>
@@ -558,7 +558,7 @@ function Sidebar({ org, cases }) {
       </div>
 
       <div style={{ ...card, padding: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>Emergency Contacts</div>
+        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>🚨 Emergency Contacts</div>
         <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 6 }}><b>Emergency:</b> 999</div>
         <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 6 }}><b>NSPCC Helpline:</b> 0808 800 5000</div>
         <div style={{ fontSize: 12, color: 'var(--text)' }}><b>Police (non-emergency):</b> 101</div>
@@ -641,6 +641,7 @@ export default function SafeguardingDashboard({ org, session, onReportConcern })
         subtitle="Manage concerns, incidents and child wellbeing."
         primary={PRIMARY}
         orgName={org?.name}
+        gradient={`linear-gradient(135deg, ${PRIMARY}0C 0%, ${PRIMARY}04 60%, transparent 100%)`}
         stats={[
           { label: 'Open Cases', value: stats.open, icon: '🔴', color: '#EF4444' },
           { label: 'Follow-ups Due', value: stats.followUp, icon: '🟠', color: '#F59E0B' },
@@ -656,11 +657,11 @@ export default function SafeguardingDashboard({ org, session, onReportConcern })
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${QUICK_ACTIONS.length}, 1fr)`, gap: 10, marginBottom: 24 }}>
           {QUICK_ACTIONS.map(qa => (
             <button key={qa.label} onClick={qa.onClick}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, padding: 16, borderRadius: 16, border: 'none', background: `linear-gradient(135deg, ${qa.color}, ${qa.color}CC)`, color: '#fff', cursor: 'pointer', textAlign: 'left', boxShadow: `0 10px 24px -12px ${qa.color}80`, transition: 'transform 0.15s' }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-3px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
-              <span style={{ fontSize: 22 }}>{qa.icon}</span>
-              <span style={{ fontSize: 12, fontWeight: 800 }}>{qa.label}</span>
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12, padding: '18px 16px', borderRadius: 16, border: 'none', background: `linear-gradient(135deg, ${qa.color}, ${qa.color}CC)`, color: '#fff', cursor: 'pointer', textAlign: 'left', boxShadow: `0 10px 24px -12px ${qa.color}80`, transition: 'transform 0.15s, box-shadow 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 16px 32px -12px ${qa.color}90` }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 10px 24px -12px ${qa.color}80` }}>
+              <span style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{qa.icon}</span>
+              <span style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2 }}>{qa.label}</span>
             </button>
           ))}
         </div>
