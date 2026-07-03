@@ -246,7 +246,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         )}
 
         {isSessionEnded && !hasReflection && (
-          <button onClick={() => onNavigate('planner')}
+          <button onClick={() => onNavigate('planner', { reflectSessionId: activeSession?.id })}
             style={{ marginTop: 14, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.12)', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(245,158,11,0.2)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(245,158,11,0.12)'}>
@@ -509,8 +509,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   const today = new Date().toISOString().split("T")[0];
 
-  function go(tab) {
-    if (typeof onNavigate === "function") onNavigate(tab);
+  function go(tab, payload) {
+    if (typeof onNavigate === "function") onNavigate(tab, payload);
     else if (typeof setTab === "function") setTab(tab);
   }
 
@@ -984,9 +984,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {completedWithoutReflection.length > 0 && (
             <Panel title={`⭐ Reflection Due (${completedWithoutReflection.length})`}>
               {completedWithoutReflection.map(s => (
-                <MiniRow key={s.id} icon="📝" title={s.title} text={formatDate(s.session_date)} badge="Due" />
+                <MiniRow key={s.id} icon="📝" title={s.title} text={formatDate(s.session_date)} badge="Due" onClick={() => go("planner", { reflectSessionId: s.id })} />
               ))}
-              <button style={styles.yellowButton} onClick={() => go("planner")}>Complete reflections →</button>
+              <button style={styles.yellowButton} onClick={() => go("planner", { reflectSessionId: completedWithoutReflection[0]?.id })}>Complete reflections →</button>
             </Panel>
           )}
         </div>
@@ -1073,9 +1073,9 @@ function AttentionRow({ icon, label, value, tone, onClick }) {
   );
 }
 
-function MiniRow({ icon, title, text, badge }) {
+function MiniRow({ icon, title, text, badge, onClick }) {
   return (
-    <div style={styles.miniRow}>
+    <div style={{ ...styles.miniRow, cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
       <span>{icon}</span>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text, #111)' }}>{title}</div>
