@@ -20,6 +20,107 @@ function normaliseBubbles(groups) {
   return groups.map(g => ({ key: String(g.id || g.label).toLowerCase(), label: g.label, color: g.color || '#1B9AAA', dark: g.dark || g.color || '#0D6B78' }))
 }
 
+// ─── GROUPS QUICK SETUP ───────────────────────────────────────
+// Reuses the same preset-chip pattern as the onboarding "Set up your groups"
+// step, but as a standalone modal reachable from the Register at any time —
+// not just during first-time onboarding.
+const GROUP_PRESETS = ['Under 7s','Under 10s','Under 12s','Under 14s','Under 16s','Beginners','Intermediate','Advanced','Team A','Team B']
+const GROUP_COLOR_SWATCHES = ['#4F6EF7','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4','#F97316','#EC4899']
+
+function GroupsQuickSetupModal({ org, onClose, onSaved }) {
+  const primary = org?.primary_color || '#1B9AAA'
+  const [groups, setGroups] = useState(org?.custom_groups || [])
+  const [newLabel, setNewLabel] = useState('')
+  const [newColor, setNewColor] = useState(GROUP_COLOR_SWATCHES[0])
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const hasGroup = (label) => groups.some(g => g.label.toLowerCase() === label.toLowerCase())
+
+  const addPreset = (label) => {
+    if (hasGroup(label)) return
+    setGroups(prev => [...prev, { id: 'g-' + Date.now() + label, label, color: newColor }])
+  }
+
+  const addCustom = () => {
+    const label = newLabel.trim()
+    if (!label || hasGroup(label)) return
+    setGroups(prev => [...prev, { id: 'g-' + Date.now(), label, color: newColor }])
+    setNewLabel('')
+  }
+
+  const removeGroup = (id) => setGroups(prev => prev.filter(g => g.id !== id))
+
+  const handleSave = async () => {
+    setSaving(true)
+    setError('')
+    try {
+      const { error: err } = await supabase.from('organisations').update({ custom_groups: groups }).eq('id', org.id)
+      if (err) throw err
+      onSaved(groups)
+    } catch (e) {
+      setError(e.message || 'Could not save groups')
+    }
+    setSaving(false)
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(160deg, #0B1023 0%, #131B33 100%)', borderRadius: 22, width: '100%', maxWidth: 480, maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', padding: '26px 28px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+          <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>🏷️ Set up your groups</div>
+          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.1)', color: '#fff', cursor: 'pointer', fontSize: 15 }}>×</button>
+        </div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5, marginBottom: 20 }}>
+          Add the groups your participants are organised into — like "Under 10s" or "Beginners".
+        </div>
+
+        {error && <div style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12 }}>⚠️ {error}</div>}
+
+        {/* Presets */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 20 }}>
+          {GROUP_PRESETS.map(label => (
+            <button key={label} onClick={() => addPreset(label)}
+              style={{ padding: '5px 12px', borderRadius: 20, border: '1.5px solid rgba(255,255,255,0.15)', background: hasGroup(label) ? primary + '4d' : 'rgba(255,255,255,0.05)', color: hasGroup(label) ? '#fff' : 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              + {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Added groups */}
+        {groups.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            {groups.map(g => (
+              <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ width: 12, height: 12, borderRadius: '50%', background: g.color, flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: 14, color: '#fff' }}>{g.label}</span>
+                <button onClick={() => removeGroup(g.id)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 16 }}>✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Custom add */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 22 }}>
+          <input value={newLabel} onChange={e => setNewLabel(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCustom()}
+            placeholder="Custom group name..."
+            style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, outline: 'none' }} />
+          <div style={{ display: 'flex', gap: 4 }}>
+            {GROUP_COLOR_SWATCHES.map(c => (
+              <button key={c} onClick={() => setNewColor(c)} style={{ width: 20, height: 20, borderRadius: '50%', background: c, border: c === newColor ? '2px solid #fff' : '2px solid transparent', cursor: 'pointer' }} />
+            ))}
+          </div>
+          <button onClick={addCustom} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add</button>
+        </div>
+
+        <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 13, borderRadius: 12, border: 'none', background: saving ? '#6B7280' : `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+          {saving ? 'Saving...' : `Save ${groups.length} Group${groups.length !== 1 ? 's' : ''} →`}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── EDIT FORM ────────────────────────────────────────────────
 function EditChildForm({ child, onSaved }) {
   const [form, setForm] = useState({
@@ -573,11 +674,11 @@ function ChildCard({ child, status, bubble, onClick, primary }) {
 }
 
 // ─── MAIN REGISTER ────────────────────────────────────────────
-export default function Registers({ org }) {
+export default function Registers({ org, onNavigate }) {
   const orgId  = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const isMobile = useIsMobile()
-  const { groups: orgGroups } = useOrgSettings(orgId)
+  const { groups: orgGroups, refetch: refetchOrgSettings } = useOrgSettings(orgId)
   const bubbles = normaliseBubbles(orgGroups)
   const { session } = useTodaySession(orgId)
   const { children, setChildren, loading } = useChildren(orgId)
@@ -590,6 +691,7 @@ export default function Registers({ org }) {
   const [showAdd, setShowAdd] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
+  const [showGroupsSetup, setShowGroupsSetup] = useState(false)
   const [activeImportTemplate, setActiveImportTemplate] = useState(null)
   const [toast, setToast] = useState('')
   const [note, setNote] = useState('')
@@ -821,6 +923,7 @@ export default function Registers({ org }) {
             <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Tools</div>
             {[
               { icon: '➕', label: 'Add Child', sub: 'Not on list', action: () => setShowAdd(true) },
+              { icon: '🏷️', label: 'Manage Groups', sub: 'Quick add & colours', action: () => setShowGroupsSetup(true) },
               { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => setShowImport(v => !v) },
               { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => setShowTemplates(v => !v) },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: null },
@@ -835,6 +938,11 @@ export default function Registers({ org }) {
                 </div>
               </button>
             ))}
+            {onNavigate && (
+              <button onClick={() => onNavigate('settings')} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: primary, padding: '8px 8px 2px' }}>
+                Full Groups Settings →
+              </button>
+            )}
           </div>
 
           {/* Templates panel */}
@@ -907,6 +1015,16 @@ export default function Registers({ org }) {
       {showAdd && (
         <AddChildModal orgId={orgId} bubbles={bubbles} onClose={() => setShowAdd(false)}
           onAdded={child => { setChildren(prev => [...prev, child]); setShowAdd(false); showToast(`✓ ${child.first_name} added`) }} />
+      )}
+
+      {/* GROUPS QUICK SETUP MODAL */}
+      {showGroupsSetup && (
+        <GroupsQuickSetupModal org={org} onClose={() => setShowGroupsSetup(false)}
+          onSaved={(savedGroups) => {
+            setShowGroupsSetup(false)
+            refetchOrgSettings()
+            showToast(`✅ Saved ${savedGroups.length} group${savedGroups.length !== 1 ? 's' : ''}`)
+          }} />
       )}
     </div>
   )
