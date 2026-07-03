@@ -604,7 +604,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 }
 
 // ─── CHILD CARD ───────────────────────────────────────────────
-function ChildCard({ child, status, bubble, onClick, primary }) {
+function ChildCard({ child, status, bubble, onClick, primary, selected, onToggleSelect }) {
   const bColor = bubble?.color || primary || '#1B9AAA'
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const [hovered, setHovered] = React.useState(false)
@@ -620,10 +620,16 @@ function ChildCard({ child, status, bubble, onClick, primary }) {
 
   return (
     <div
-      style={{ display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #F3F4F6', cursor: 'pointer', background: hovered ? '#F8FAFC' : '#fff', transition: 'background 0.12s', minHeight: 64 }}
+      style={{ display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #F3F4F6', cursor: 'pointer', background: selected ? '#EFF6FF' : hovered ? '#F8FAFC' : '#fff', transition: 'background 0.12s', minHeight: 64 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {/* Selection checkbox */}
+      <button onClick={e => { e.stopPropagation(); onToggleSelect(child.id) }}
+        style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${selected ? primary : '#D1D5DB'}`, background: selected ? primary : '#fff', cursor: 'pointer', flexShrink: 0, marginRight: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
+        {selected ? '✓' : ''}
+      </button>
+
       {/* Avatar */}
       <div style={{ width: 44, height: 44, borderRadius: 13, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', marginRight: 14, boxShadow: `0 2px 8px ${bColor}40` }}>
         {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
@@ -688,6 +694,9 @@ export default function Registers({ org, onNavigate }) {
   const [activeTab, setActiveTab] = useState('all')
   const [activeGroup, setActiveGroup] = useState('all')
   const [selectedChild, setSelectedChild] = useState(null)
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [bulkAssigning, setBulkAssigning] = useState(false)
+  const [showBulkGroupPicker, setShowBulkGroupPicker] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
@@ -704,6 +713,34 @@ export default function Registers({ org, onNavigate }) {
   }) || null
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
+  const toggleSelect = (childId) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(childId)) next.delete(childId)
+      else next.add(childId)
+      return next
+    })
+  }
+
+  const clearSelection = () => setSelectedIds(new Set())
+
+  const handleBulkAssignGroup = async (groupLabel) => {
+    if (selectedIds.size === 0) return
+    setBulkAssigning(true)
+    try {
+      const ids = [...selectedIds]
+      const { error: err } = await supabase.from('children').update({ group_name: groupLabel }).in('id', ids)
+      if (err) throw err
+      setChildren(prev => prev.map(c => ids.includes(c.id) ? { ...c, group_name: groupLabel } : c))
+      showToast(`✅ Moved ${ids.length} ${ids.length === 1 ? 'child' : 'children'} to ${groupLabel}`)
+      clearSelection()
+      setShowBulkGroupPicker(false)
+    } catch (e) {
+      showToast(`⚠️ Could not assign group: ${e.message || 'unknown error'}`)
+    }
+    setBulkAssigning(false)
+  }
 
   const handleUpdateStatus = async (childId, status, extra = {}) => {
     const existing = attendance.find(a => a.child_id === childId)
@@ -900,6 +937,8 @@ export default function Registers({ org, onNavigate }) {
                 status={getStatus(child.id)}
                 bubble={getBubble(child)}
                 primary={primary}
+                selected={selectedIds.has(child.id)}
+                onToggleSelect={toggleSelect}
                 onClick={() => setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
               />
             ))
@@ -990,6 +1029,39 @@ export default function Registers({ org, onNavigate }) {
               <div style={{ fontSize: 11, color: '#92400E', lineHeight: 1.4, opacity: 0.8 }}>Log all concerns immediately.</div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* BULK ASSIGN ACTION BAR */}
+      {selectedIds.size > 0 && (
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: '#111827', borderRadius: 16, padding: '12px 16px', boxShadow: '0 20px 50px rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap' }}>
+            {selectedIds.size} selected
+          </div>
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setShowBulkGroupPicker(v => !v)} disabled={bulkAssigning}
+              style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              {bulkAssigning ? 'Assigning...' : '🏷️ Assign to Group ▾'}
+            </button>
+            {showBulkGroupPicker && (
+              <div style={{ position: 'absolute', bottom: '110%', left: 0, background: '#fff', borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,0.25)', padding: 8, minWidth: 180, maxHeight: 240, overflowY: 'auto' }}>
+                {bubbles.length === 0 ? (
+                  <div style={{ fontSize: 12, color: '#9CA3AF', padding: '8px 10px' }}>No groups set up yet.</div>
+                ) : bubbles.map(b => (
+                  <button key={b.key} onClick={() => handleBulkAssignGroup(b.label)}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#111' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: b.color, flexShrink: 0 }} />
+                    {b.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <button onClick={clearSelection} style={{ padding: '9px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Cancel
+          </button>
         </div>
       )}
 
