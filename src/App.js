@@ -8,6 +8,7 @@ import OrgLookup from './components/auth/OrgLookup'
 import Dashboard from './components/dashboard/Dashboard'
 import Onboarding from './components/onboarding/Onboarding'
 import VolunteerPortal from './components/volunteers/VolunteerPortal'
+import VolunteerAcceptInvite from './components/volunteers/VolunteerAcceptInvite'
 import SplashScreen from './components/common/SplashScreen'
 
 function AuthedApp({ session, org, onReady }) {
@@ -191,6 +192,7 @@ function AppContent() {
 
 export default function App() {
   const pathname = window.location.pathname
+  if (pathname === '/volunteer/accept-invite') return <VolunteerAcceptInvite />
   if (pathname.startsWith('/volunteer')) return <VolunteerPortal />
   if (pathname === '/signup') return <Signup />
   if (pathname === '/create-password') return <CreatePassword />
