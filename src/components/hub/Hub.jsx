@@ -87,6 +87,17 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   const pct = stats.percent || 0
 
+  const sessionTimePct = React.useMemo(() => {
+    if (!activeSession?.start_time || !activeSession?.end_time || !activeSession?.session_date) return 0
+    const now = new Date()
+    const start = new Date(`${activeSession.session_date}T${activeSession.start_time}`)
+    const end = new Date(`${activeSession.session_date}T${activeSession.end_time}`)
+    const total = end - start
+    if (total <= 0) return 0
+    const elapsed = now - start
+    return Math.round((elapsed / total) * 100)
+  }, [activeSession])
+
   return (
     <div style={{ background: `linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
 
@@ -180,6 +191,21 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#4ADE80' : `linear-gradient(90deg, ${primary}, ${secondary})`, borderRadius: 99, transition: 'width 0.5s ease', boxShadow: pct > 0 ? `0 0 10px ${pct === 100 ? '#4ADE80' : primary}70` : 'none' }} />
         </div>
+
+        {activeSession?.start_time && activeSession?.end_time && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+              <span>Session progress</span>
+              <span style={{ color: sessionTimePct >= 100 ? '#F87171' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>
+                {sessionTimePct >= 100 ? 'Ended' : sessionTimePct <= 0 ? 'Not started' : `${sessionTimePct}%`}
+              </span>
+            </div>
+            <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, sessionTimePct))}%`, background: sessionTimePct >= 100 ? '#F87171' : `linear-gradient(90deg, #F59E0B, #F97316)`, borderRadius: 99, transition: 'width 0.5s ease', boxShadow: sessionTimePct > 0 ? `0 0 10px ${sessionTimePct >= 100 ? '#F87171' : '#F59E0B'}70` : 'none' }} />
+            </div>
+          </div>
+        )}
+
         {stats.absent > 0 && (
           <div style={{ marginTop: 10, fontSize: 11, color: '#FB923C', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
             ⚠ {stats.absent} marked absent
