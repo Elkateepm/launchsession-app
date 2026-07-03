@@ -3,6 +3,161 @@ import { supabase } from "../../lib/supabase";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { useRealtimeTable } from "../../lib/useRealtimeTable";
 
+const ANNOUNCEMENT_EMOJIS = ['📣', '🎉', '⭐', '🔥', '💡', '📌', '🚨', '🙌', '❤️', '🏆']
+
+// ── ANNOUNCEMENTS PANEL ─────────────────────────────────────────
+// Staff/admin only — visibility is enforced both here (UI) and via RLS
+// (see announcements table policies), so this is defense in depth, not
+// the only guard.
+function AnnouncementsPanel({ orgId, primary, userId }) {
+  const [announcements, setAnnouncements] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [composing, setComposing] = useState(false)
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [emoji, setEmoji] = useState(ANNOUNCEMENT_EMOJIS[0])
+  const [pinned, setPinned] = useState(false)
+  const [posting, setPosting] = useState(false)
+  const [error, setError] = useState('')
+  const [expanded, setExpanded] = useState(false)
+
+  const load = React.useCallback(() => {
+    if (!orgId) return
+    supabase.from('announcements')
+      .select('*')
+      .eq('org_id', orgId)
+      .order('pinned', { ascending: false })
+      .order('created_at', { ascending: false })
+      .then(({ data, error: err }) => {
+        if (!err) setAnnouncements(data || [])
+        setLoading(false)
+      })
+  }, [orgId])
+
+  useEffect(() => { load() }, [load])
+  useRealtimeTable('announcements', load, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 15000 })
+
+  const post = async () => {
+    if (!title.trim() || !content.trim()) { setError('Add a title and a message.'); return }
+    setPosting(true); setError('')
+    const { error: err } = await supabase.from('announcements').insert({
+      org_id: orgId, title: title.trim(), content: content.trim(), emoji, pinned, created_by: userId,
+    })
+    if (err) { setError(err.message); setPosting(false); return }
+    setTitle(''); setContent(''); setEmoji(ANNOUNCEMENT_EMOJIS[0]); setPinned(false)
+    setComposing(false); setPosting(false)
+    load()
+  }
+
+  const remove = async id => {
+    await supabase.from('announcements').delete().eq('id', id)
+    load()
+  }
+
+  const timeAgo = ts => {
+    const diffMs = Date.now() - new Date(ts).getTime()
+    const mins = Math.floor(diffMs / 60000)
+    if (mins < 1) return 'just now'
+    if (mins < 60) return `${mins}m ago`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return `${hrs}h ago`
+    const days = Math.floor(hrs / 24)
+    if (days < 7) return `${days}d ago`
+    return new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  }
+
+  if (loading) return null // avoid a flash of empty state before first load
+
+  const visible = expanded ? announcements : announcements.slice(0, 3)
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}>📣 Announcements</h3>
+        <button onClick={() => setComposing(c => !c)} style={{ fontSize: 11, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          {composing ? 'Cancel' : '+ Post announcement'}
+        </button>
+      </div>
+
+      {composing && (
+        <div style={{ background: '#F9FAFB', border: '1.5px solid #F1F5F9', borderRadius: 16, padding: 16, marginBottom: 14 }}>
+          {error && (
+            <div style={{ background: '#FFF0F0', border: '1px solid #FFD0D0', color: '#C00', borderRadius: 8, padding: '8px 12px', fontSize: 12, marginBottom: 10, fontWeight: 600 }}>
+              {error}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+            {ANNOUNCEMENT_EMOJIS.map(e => (
+              <button key={e} onClick={() => setEmoji(e)}
+                style={{ fontSize: 18, width: 34, height: 34, borderRadius: 9, border: `1.5px solid ${emoji === e ? primary : '#E5E7EB'}`, background: emoji === e ? primary + '15' : '#fff', cursor: 'pointer' }}>
+                {e}
+              </button>
+            ))}
+          </div>
+
+          <input
+            value={title} onChange={e => setTitle(e.target.value)} placeholder="Give it a headline..."
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 14, fontWeight: 700, outline: 'none', marginBottom: 8 }}
+          />
+          <textarea
+            value={content} onChange={e => setContent(e.target.value)} placeholder="What's the news? Keep it short and sweet 🎉"
+            rows={3}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, outline: 'none', marginBottom: 10, fontFamily: 'inherit', resize: 'vertical' }}
+          />
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#6B7280', cursor: 'pointer' }}>
+              <input type="checkbox" checked={pinned} onChange={e => setPinned(e.target.checked)} />
+              📌 Pin to top
+            </label>
+            <button onClick={post} disabled={posting} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: posting ? '#E5E7EB' : primary, color: posting ? '#9CA3AF' : '#fff', fontSize: 13, fontWeight: 800, cursor: posting ? 'default' : 'pointer' }}>
+              {posting ? 'Posting...' : 'Post →'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {announcements.length === 0 && !composing ? (
+        <div style={{ background: `linear-gradient(135deg, ${primary}10, ${primary}05)`, border: `1.5px dashed ${primary}30`, borderRadius: 20, padding: '28px 24px', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>📣</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 4 }}>No announcements yet</div>
+          <div style={{ fontSize: 12, color: '#9CA3AF' }}>Share news, shout-outs, or reminders with your team</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {visible.map(a => (
+            <div key={a.id} style={{ background: '#fff', border: '1.5px solid #F1F5F9', borderRadius: 16, padding: '14px 16px', position: 'relative' }}>
+              {a.pinned && (
+                <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 11 }}>📌</div>
+              )}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <div style={{ fontSize: 22, flexShrink: 0, lineHeight: 1 }}>{a.emoji || '📣'}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: '#0F172A', marginBottom: 3, paddingRight: a.pinned ? 20 : 0 }}>{a.title}</div>
+                  <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{a.content}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                    <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{timeAgo(a.created_at)}</span>
+                    {a.created_by === userId && (
+                      <button onClick={() => remove(a.id)} style={{ fontSize: 11, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {announcements.length > 3 && (
+            <button onClick={() => setExpanded(e => !e)} style={{ fontSize: 12, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', textAlign: 'left' }}>
+              {expanded ? 'Show less ↑' : `Show ${announcements.length - 3} more →`}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ── LIVE SESSION PANEL ─────────────────────────────────────────
 function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, reflections, onOpenRegister, onNavigate, getLiveSessionStats }) {
@@ -979,6 +1134,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               </div>
             )}
           </div>
+
+          {/* ANNOUNCEMENTS — staff/admin only */}
+          {['admin', 'owner', 'staff'].includes(userProfile?.role) && (
+            <AnnouncementsPanel orgId={orgId} primary={primary} userId={session?.user?.id} />
+          )}
 
           {/* REFLECTIONS DUE */}
           {completedWithoutReflection.length > 0 && (
