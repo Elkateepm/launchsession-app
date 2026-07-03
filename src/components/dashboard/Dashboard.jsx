@@ -150,11 +150,13 @@ export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState('home')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [registersKey, setRegistersKey] = useState(0)
+  const [reflectSessionId, setReflectSessionId] = useState(null)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
 
-  const handleSetTab = (t) => {
+  const handleSetTab = (t, payload) => {
     if (t === 'registers') setRegistersKey(k => k + 1)
+    setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
     setTab(t)
   }
 
@@ -392,7 +394,7 @@ export default function Dashboard({ session, org }) {
           })()}
           {/* ── BASE MODULES — always free ── */}
           {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
-          {tab === 'planner'    && <SessionPlanner org={org} onSessionSaved={bumpSessions} />}
+          {tab === 'planner'    && <SessionPlanner org={org} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} />}
           {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
           {tab === 'events_trips' && <EventsTrips org={org} />}
           {tab === 'team'       && <TeamTab org={org} session={session} />}
