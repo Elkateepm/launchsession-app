@@ -484,12 +484,154 @@ function VolunteerPanel({ session, org, onClose }) {
 }
 
 // ─── SESSION CARD ─────────────────────────────────────────────
-function SessionCard({ session, onEdit, onDelete, onVolunteers, volCounts }) {
+function ReflectionModal({ session, org, onClose, existing, onSaved }) {
+  const primary = org?.primary_color || '#1B9AAA'
+  const [form, setForm] = useState({
+    overall_rating: existing?.overall_rating || 0,
+    what_went_well: existing?.what_went_well || '',
+    what_could_improve: existing?.what_could_improve || '',
+    attendance_notes: existing?.attendance_notes || '',
+    behaviour_notes: existing?.behaviour_notes || '',
+    staffing_notes: existing?.staffing_notes || '',
+    would_repeat: existing?.would_repeat ?? null,
+    safeguarding_flag: existing?.safeguarding_flag || false,
+    reflection: existing?.reflection || '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleSave = async () => {
+    setSaving(true)
+    setError('')
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const payload = { ...form, session_id: session.id, org_id: org.id, created_by: user?.id, updated_at: new Date().toISOString() }
+      const { error: err } = existing
+        ? await supabase.from('session_reflections').update(payload).eq('id', existing.id)
+        : await supabase.from('session_reflections').insert(payload)
+      if (err) throw err
+      onSaved()
+    } catch (e) {
+      setError(e.message || 'Failed to save reflection')
+    }
+    setSaving(false)
+  }
+
+  const ta = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border, #E5E7EB)', fontSize: 13, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70 }
+  const label = { fontSize: 12, fontWeight: 800, color: 'var(--text, #111)', display: 'block', marginBottom: 6 }
+  const hint = { fontSize: 11, color: 'var(--text3, #9CA3AF)', marginBottom: 8, lineHeight: 1.4 }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface, #fff)', borderRadius: 20, width: '100%', maxWidth: 560, maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
+        {/* Header */}
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border, #F3F4F6)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text, #111)' }}>⭐ Session Reflection</div>
+              <div style={{ fontSize: 12, color: 'var(--text3, #9CA3AF)', marginTop: 2 }}>{session.title} · {format(parseISO(session.session_date), 'd MMM yyyy')}</div>
+            </div>
+            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: 'var(--surface2, #F3F4F6)', cursor: 'pointer', fontSize: 16, color: 'var(--text3, #6B7280)' }}>×</button>
+          </div>
+        </div>
+
+        {/* Scrollable form */}
+        <div style={{ overflowY: 'auto', flex: 1, padding: 24 }}>
+          {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 16, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>}
+
+          {/* Overall rating */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={label}>How did the session go overall?</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[1,2,3,4,5].map(n => (
+                <button key={n} onClick={() => set('overall_rating', n)}
+                  style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1.5px solid ${form.overall_rating >= n ? '#F59E0B' : 'var(--border, #E5E7EB)'}`, background: form.overall_rating >= n ? '#FEF3C7' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 18 }}>
+                  ⭐
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* What went well */}
+          <div style={{ marginBottom: 18 }}>
+            <label style={label}>What went well?</label>
+            <div style={hint}>Activities, engagement, moments worth repeating.</div>
+            <textarea style={ta} value={form.what_went_well} onChange={e => set('what_went_well', e.target.value)} placeholder="e.g. The warm-up game got everyone involved straight away..." />
+          </div>
+
+          {/* What could improve */}
+          <div style={{ marginBottom: 18 }}>
+            <label style={label}>What could be improved next time?</label>
+            <div style={hint}>Timing, equipment, structure, anything that didn't quite land.</div>
+            <textarea style={ta} value={form.what_could_improve} onChange={e => set('what_could_improve', e.target.value)} placeholder="e.g. We ran short on footballs for the group size..." />
+          </div>
+
+          {/* Attendance notes */}
+          <div style={{ marginBottom: 18 }}>
+            <label style={label}>Attendance notes</label>
+            <div style={hint}>Anything worth flagging about who came, who didn't, or patterns to watch.</div>
+            <textarea style={ta} value={form.attendance_notes} onChange={e => set('attendance_notes', e.target.value)} placeholder="e.g. Two regulars missing without notice — worth a follow-up call." />
+          </div>
+
+          {/* Behaviour notes */}
+          <div style={{ marginBottom: 18 }}>
+            <label style={label}>Behaviour & group dynamics</label>
+            <div style={hint}>How the group got on together, any friction, standout moments.</div>
+            <textarea style={ta} value={form.behaviour_notes} onChange={e => set('behaviour_notes', e.target.value)} placeholder="e.g. A couple of the younger ones needed extra encouragement to join in." />
+          </div>
+
+          {/* Staffing notes */}
+          <div style={{ marginBottom: 18 }}>
+            <label style={label}>Staffing & volunteer cover</label>
+            <div style={hint}>Was there enough cover? Anyone who went above and beyond?</div>
+            <textarea style={ta} value={form.staffing_notes} onChange={e => set('staffing_notes', e.target.value)} placeholder="e.g. Could have used one more volunteer for the smaller groups." />
+          </div>
+
+          {/* Would repeat */}
+          <div style={{ marginBottom: 18 }}>
+            <label style={label}>Would you run this session again as-is?</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => set('would_repeat', true)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1.5px solid ${form.would_repeat === true ? '#16A34A' : 'var(--border, #E5E7EB)'}`, background: form.would_repeat === true ? '#F0FDF4' : 'var(--surface, #fff)', color: form.would_repeat === true ? '#16A34A' : 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>👍 Yes</button>
+              <button onClick={() => set('would_repeat', false)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1.5px solid ${form.would_repeat === false ? '#DC2626' : 'var(--border, #E5E7EB)'}`, background: form.would_repeat === false ? '#FEF2F2' : 'var(--surface, #fff)', color: form.would_repeat === false ? '#DC2626' : 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>👎 Needs changes</button>
+            </div>
+          </div>
+
+          {/* Safeguarding flag */}
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, border: `1.5px solid ${form.safeguarding_flag ? '#DC2626' : 'var(--border, #E5E7EB)'}`, background: form.safeguarding_flag ? '#FEF2F2' : 'var(--surface2, #F9FAFB)', cursor: 'pointer', marginBottom: 18 }}>
+            <input type="checkbox" checked={form.safeguarding_flag} onChange={e => set('safeguarding_flag', e.target.checked)} style={{ width: 16, height: 16 }} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: form.safeguarding_flag ? '#DC2626' : 'var(--text, #111)' }}>🛡️ Flag for safeguarding follow-up</div>
+              <div style={{ fontSize: 11, color: 'var(--text3, #9CA3AF)' }}>Tick if anything here needs a safeguarding lead's attention — log the actual concern separately.</div>
+            </div>
+          </label>
+
+          {/* Free-form summary (backwards-compatible with original 'reflection' field) */}
+          <div style={{ marginBottom: 4 }}>
+            <label style={label}>Anything else?</label>
+            <textarea style={ta} value={form.reflection} onChange={e => set('reflection', e.target.value)} placeholder="Any other thoughts for next time..." />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 10, flexShrink: 0 }}>
+          <button onClick={onClose} style={{ padding: '12px 18px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+            {saving ? 'Saving...' : existing ? '💾 Update Reflection' : '✅ Complete Reflection'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, volCounts, hasReflection }) {
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
   const isMultiDay = session.end_date && session.end_date !== session.session_date
   const volCount = volCounts?.[session.id] || 0
   const needed = session.volunteer_limit || 0
   const covered = needed === 0 || volCount >= needed
+  const isPast = session.session_date < format(new Date(), 'yyyy-MM-dd')
 
   return (
     <div style={{ background: 'var(--surface, #fff)', borderRadius: 14, border: '1.5px solid var(--border, #E5E7EB)', padding: '14px 16px', marginBottom: 10 }}>
@@ -516,10 +658,19 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, volCounts }) {
                   {covered ? `✓ ${volCount}/${needed} volunteers` : `⚠ ${volCount}/${needed} volunteers`}
                 </span>
               )}
+              {isPast && (
+                <span style={{ background: hasReflection ? '#F0FDF4' : '#FEF3C7', color: hasReflection ? '#16A34A' : '#92400E', borderRadius: 99, padding: '2px 9px', fontSize: 10, fontWeight: 800, border: `1px solid ${hasReflection ? '#86EFAC' : '#FDE68A'}` }}>
+                  {hasReflection ? '⭐ Reflected' : '⭐ Reflection due'}
+                </span>
+              )}
             </div>
           )}
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          {isPast && (
+            <button onClick={() => onReflect(session)} title={hasReflection ? 'View/edit reflection' : 'Complete reflection'}
+              style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${hasReflection ? '#86EFAC' : '#FDE68A'}`, background: hasReflection ? '#F0FDF4' : '#FFFBEB', cursor: 'pointer', fontSize: 14 }}>⭐</button>
+          )}
           <button onClick={() => onVolunteers(session)} title="Manage volunteers" style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${type.color}40`, background: type.color + '10', cursor: 'pointer', fontSize: 14 }}>❤️</button>
           <button onClick={() => onEdit(session)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface2, #F9FAFB)', cursor: 'pointer', fontSize: 13 }}>✏️</button>
           <button onClick={() => onDelete(session.id)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid #FFE5E5', background: '#FFF0F0', cursor: 'pointer', fontSize: 13 }}>🗑</button>
@@ -539,6 +690,8 @@ export default function SessionPlanner({ org, onSessionSaved }) {
 
   const [sessions, setSessions] = useState([])
   const [volCounts, setVolCounts] = useState({})
+  const [reflections, setReflections] = useState({}) // session_id -> reflection row
+  const [reflectingSession, setReflectingSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('list') // 'list' | 'week' | 'form'
   const [filter, setFilter] = useState('all') // 'all' | 'sessions' | 'trips' | 'past'
@@ -551,14 +704,18 @@ export default function SessionPlanner({ org, onSessionSaved }) {
 
   const loadData = async () => {
     if (!orgId) return
-    const [{ data: sess }, { data: staff }] = await Promise.all([
+    const [{ data: sess }, { data: staff }, { data: refl }] = await Promise.all([
       supabase.from('sessions').select('*').eq('org_id', orgId).order('session_date').order('start_time'),
       supabase.from('session_staff').select('session_id').eq('org_id', orgId),
+      supabase.from('session_reflections').select('*').eq('org_id', orgId),
     ])
     setSessions(sess || [])
     const counts = {}
     ;(staff || []).forEach(r => { counts[r.session_id] = (counts[r.session_id] || 0) + 1 })
     setVolCounts(counts)
+    const reflMap = {}
+    ;(refl || []).forEach(r => { reflMap[r.session_id] = r })
+    setReflections(reflMap)
     setLoading(false)
   }
 
@@ -690,7 +847,7 @@ export default function SessionPlanner({ org, onSessionSaved }) {
       ) : view === 'list' ? (
         <div>
           {displayed.map(s => (
-            <SessionCard key={s.id} session={s} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} volCounts={volCounts} />
+            <SessionCard key={s.id} session={s} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} onReflect={setReflectingSession} volCounts={volCounts} hasReflection={!!reflections[s.id]} />
           ))}
         </div>
       ) : (
@@ -742,6 +899,15 @@ export default function SessionPlanner({ org, onSessionSaved }) {
       )}
 
       {selectedSession && <VolunteerPanel session={selectedSession} org={org} onClose={() => { setSelectedSession(null); loadData() }} />}
+      {reflectingSession && (
+        <ReflectionModal
+          session={reflectingSession}
+          org={org}
+          existing={reflections[reflectingSession.id]}
+          onClose={() => setReflectingSession(null)}
+          onSaved={() => { setReflectingSession(null); loadData() }}
+        />
+      )}
       </div>
     </div>
   )
