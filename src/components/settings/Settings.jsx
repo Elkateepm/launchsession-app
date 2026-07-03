@@ -6,7 +6,7 @@ import OrgSettingsPanel from './OrgSettingsPanel'
 
 const NAV = [
   { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform', requiresAdmin: true },
-  { key: 'users',        icon: '👥', label: 'Users & Permissions', group: 'Platform' },
+  { key: 'users',        icon: '👥', label: 'Admin', group: 'Platform' },
   { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform', requiresBranding: true },
   { key: 'safeguarding', icon: '🛡', label: 'Safeguarding', group: 'Operations' },
   { key: 'registers',    icon: '📋', label: 'Registers', group: 'Operations' },
@@ -685,6 +685,213 @@ function GroupsSection({ org }) {
   )
 }
 
+const ROLE_CONFIG = {
+  admin:     { label: 'Admin',     color: '#7C3AED', bg: '#F3E8FF' },
+  staff:     { label: 'Staff',     color: '#2563EB', bg: '#DBEAFE' },
+  volunteer: { label: 'Volunteer', color: '#059669', bg: '#D1FAE5' },
+}
+
+function UsersSection({ org, session, isAdmin, currentUserId }) {
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [showInvite, setShowInvite] = useState(false)
+  const [busyId, setBusyId] = useState(null)
+
+  const loadUsers = React.useCallback(async () => {
+    if (!org?.id) return
+    setLoading(true)
+    try {
+      const { data, error: err } = await supabase.from('user_profiles').select('*').eq('org_id', org.id).order('created_at', { ascending: true })
+      if (err) throw err
+      setUsers(data || [])
+    } catch (e) {
+      setError(e.message || 'Failed to load users')
+    }
+    setLoading(false)
+  }, [org?.id])
+
+  React.useEffect(() => { loadUsers() }, [loadUsers])
+
+  const handleRoleChange = async (userId, newRole) => {
+    setBusyId(userId)
+    try {
+      const { error: err } = await supabase.from('user_profiles').update({ role: newRole }).eq('id', userId)
+      if (err) throw err
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
+    } catch (e) {
+      setError(e.message || 'Failed to update role')
+    }
+    setBusyId(null)
+  }
+
+  const handleRemove = async (user) => {
+    if (user.id === currentUserId) { setError("You can't remove your own account."); return }
+    if (!window.confirm(`Remove ${user.full_name || user.email} from ${org?.name}? They will lose access immediately.`)) return
+    setBusyId(user.id)
+    try {
+      const { error: err } = await supabase.from('user_profiles').delete().eq('id', user.id)
+      if (err) throw err
+      setUsers(prev => prev.filter(u => u.id !== user.id))
+    } catch (e) {
+      setError(e.message || 'Failed to remove user')
+    }
+    setBusyId(null)
+  }
+
+  const admins = users.filter(u => u.role === 'admin')
+  const others = users.filter(u => u.role !== 'admin')
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)' }}>👥 Admin</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Manage who has access to {org?.name || 'your organisation'} and what they can do.</div>
+        </div>
+        {isAdmin && (
+          <button onClick={() => setShowInvite(true)} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: org?.primary_color || '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            + Invite Person
+          </button>
+        )}
+      </div>
+
+      {error && (
+        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>
+      )}
+
+      {/* Admins */}
+      <SettingCard title={`Admin accounts (${admins.length})`} description="Full access to organisation settings, branding, billing, and user management">
+        {loading ? (
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Loading...</div>
+        ) : admins.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>No admin accounts yet.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {admins.map(u => (
+              <UserRow key={u.id} user={u} isAdmin={isAdmin} isSelf={u.id === currentUserId} busy={busyId === u.id}
+                onRoleChange={handleRoleChange} onRemove={handleRemove} />
+            ))}
+          </div>
+        )}
+      </SettingCard>
+
+      {/* Everyone else */}
+      <SettingCard title={`Staff & Volunteers (${others.length})`} description="Day-to-day access without organisation-level settings">
+        {loading ? (
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Loading...</div>
+        ) : others.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>No other accounts yet.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {others.map(u => (
+              <UserRow key={u.id} user={u} isAdmin={isAdmin} isSelf={u.id === currentUserId} busy={busyId === u.id}
+                onRoleChange={handleRoleChange} onRemove={handleRemove} />
+            ))}
+          </div>
+        )}
+      </SettingCard>
+
+      {showInvite && (
+        <InviteUserModal org={org} session={session} onClose={() => setShowInvite(false)}
+          onInvited={() => { setShowInvite(false); loadUsers() }} />
+      )}
+    </div>
+  )
+}
+
+function UserRow({ user, isAdmin, isSelf, busy, onRoleChange, onRemove }) {
+  const rc = ROLE_CONFIG[user.role] || ROLE_CONFIG.volunteer
+  const initials = (user.full_name || user.email || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)' }}>
+      <div style={{ width: 36, height: 36, borderRadius: 10, background: rc.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
+        {user.photo_url ? <img src={user.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          {user.full_name || user.email}
+          {isSelf && <span style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 600 }}>(you)</span>}
+          {user.status === 'pending_invite' && <span style={{ fontSize: 9, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 99, padding: '1px 7px' }}>PENDING</span>}
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--text3)' }}>{user.email}</div>
+      </div>
+      {isAdmin ? (
+        <select value={user.role} disabled={busy || isSelf} onChange={e => onRoleChange(user.id, e.target.value)}
+          style={{ fontSize: 12, fontWeight: 700, padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', cursor: isSelf ? 'default' : 'pointer' }}>
+          <option value="admin">Admin</option>
+          <option value="staff">Staff</option>
+          <option value="volunteer">Volunteer</option>
+        </select>
+      ) : (
+        <span style={{ fontSize: 11, fontWeight: 800, color: rc.color, background: rc.bg, borderRadius: 99, padding: '4px 10px' }}>{rc.label}</span>
+      )}
+      {isAdmin && (
+        <button onClick={() => onRemove(user)} disabled={busy || isSelf} title={isSelf ? "You can't remove yourself" : 'Remove'}
+          style={{ border: 'none', background: 'none', cursor: isSelf ? 'default' : 'pointer', fontSize: 14, opacity: isSelf ? 0.3 : 0.7, padding: 4 }}>
+          🗑️
+        </button>
+      )}
+    </div>
+  )
+}
+
+function InviteUserModal({ org, session, onClose, onInvited }) {
+  const primary = org?.primary_color || '#1B9AAA'
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [role, setRole] = useState('staff')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleInvite = async () => {
+    if (!email.trim()) { setError('Enter an email address.'); return }
+    setSending(true)
+    setError('')
+    try {
+      const res = await fetch('/api/invite-volunteer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ email: email.trim(), name: name.trim(), org_id: org.id, org_slug: org.slug, role }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      onInvited()
+    } catch (e) {
+      setError(e.message || 'Failed to send invite')
+    }
+    setSending(false)
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 400, padding: 24, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+        <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>Invite to {org?.name}</div>
+        <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 18 }}>They'll get a branded email with a link to set up their account.</div>
+
+        {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>}
+
+        <Field label="Full Name"><input style={inp} value={name} onChange={e => setName(e.target.value)} placeholder="Jane Smith" /></Field>
+        <Field label="Email"><input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@example.com" /></Field>
+        <Field label="Role">
+          <select style={inp} value={role} onChange={e => setRole(e.target.value)}>
+            <option value="admin">Admin — full access</option>
+            <option value="staff">Staff — day-to-day access</option>
+            <option value="volunteer">Volunteer — limited access</option>
+          </select>
+        </Field>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: 11, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={handleInvite} disabled={sending} style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: sending ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+            {sending ? 'Sending...' : 'Send Invite'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Settings({ org, session, userProfile, initialSection }) {
   const isMobile = useIsMobile()
   const [showSidebar, setShowSidebar] = useState(false)
@@ -714,6 +921,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
           <a href="mailto:hello@launchsession.co.uk" style={{ padding: '12px 28px', borderRadius: 10, background: '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Contact Support</a>
         </div>
       )
+      case 'users':           return <UsersSection org={org} session={session} isAdmin={isAdmin} currentUserId={session?.user?.id} />
       case 'security':       return <SecuritySection />
       case 'notifications':  return <NotificationsSection />
       case 'integrations':   return <IntegrationsSection />
