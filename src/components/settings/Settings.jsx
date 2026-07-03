@@ -118,6 +118,13 @@ function OrgSection({ org }) {
 const GROUP_COLOR_PRESETS = ['#E53935', '#1B9AAA', '#417505', '#B8860B', '#7B2D8B', '#1A1A1A', '#F97316', '#0EA5E9', '#EC4899', '#64748B']
 
 function RegisterGroupsManager({ org }) {
+  const orgId = org?.id
+  const [groups, setGroups] = useState([])
+  const [counts, setCounts] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [adding, setAdding] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [error, setError] = useState('')
 
   const loadGroups = React.useCallback(async () => {
     if (!orgId) return
