@@ -153,20 +153,20 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         )}
       </div>
 
-      {/* Stat boxes — clickable, navigate to filtered register */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, padding: '0 22px 4px', position: 'relative' }}>
+      {/* Stat row — single glass container, subtle dividers, legible colour-coded numbers */}
+      <div style={{ margin: '0 22px 4px', background: 'rgba(255,255,255,0.94)', borderRadius: 14, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', boxShadow: '0 10px 24px -12px rgba(0,0,0,0.4)', overflow: 'hidden' }}>
         {[
           { key: 'signed_in',  label: 'Signed In',  value: stats.signedIn,  color: '#16A34A', icon: '↪' },
           { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#7C3AED', icon: '↩' },
           { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#2563EB', icon: '👥' },
-        ].map(s => (
+        ].map((s, i) => (
           <button key={s.key} onClick={() => setPopupMode(s.key)}
-            style={{ background: '#fff', border: 'none', borderRadius: 14, padding: '14px 10px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.15s', boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 24px -10px rgba(0,0,0,0.35)' }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
-            <div style={{ width: 26, height: 26, borderRadius: 8, background: s.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, margin: '0 auto 6px', color: s.color }}>{s.icon}</div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: s.color, letterSpacing: -0.5, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: '#64748B', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 5 }}>{s.label}</div>
+            style={{ background: 'transparent', border: 'none', borderRight: i < 2 ? '1px solid rgba(15,23,42,0.08)' : 'none', padding: '11px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(15,23,42,0.03)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+            <span style={{ fontSize: 12, color: s.color, opacity: 0.85 }}>{s.icon}</span>
+            <span style={{ fontSize: 19, fontWeight: 900, color: s.color, letterSpacing: -0.3, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</span>
+            <span style={{ fontSize: 10, color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.label}</span>
           </button>
         ))}
       </div>
