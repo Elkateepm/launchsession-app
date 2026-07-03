@@ -736,12 +736,19 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
   }
 
   const displayed = sessions.filter(s => {
+    if (filter === 'reflections') return false // handled separately below
     if (filter === 'past') return isSessionPast(s)
     if (isSessionPast(s)) return false // hide ended sessions from all other views
     if (filter === 'trips') return s.session_type === 'trip'
     if (filter === 'sessions') return s.session_type !== 'trip'
     return true
   })
+
+  const reflectedSessions = React.useMemo(() => {
+    return sessions
+      .filter(s => reflections[s.id])
+      .sort((a, b) => (b.session_date || '').localeCompare(a.session_date || ''))
+  }, [sessions, reflections])
 
   const handleSave = async (form) => {
     setSaving(true)
@@ -824,7 +831,7 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
         {/* Filter tabs */}
         <div style={{ display: 'flex', background: 'var(--surface2, #F3F4F6)', borderRadius: 10, padding: 3, gap: 2 }}>
-          {[{ key: 'all', label: 'All' }, { key: 'sessions', label: 'Sessions' }, { key: 'trips', label: '🚌 Trips' }, { key: 'past', label: '🗄️ Past' }].map(f => (
+          {[{ key: 'all', label: 'All' }, { key: 'sessions', label: 'Sessions' }, { key: 'trips', label: '🚌 Trips' }, { key: 'past', label: '🗄️ Past' }, { key: 'reflections', label: `⭐ Reflections${reflectedSessions.length ? ` (${reflectedSessions.length})` : ''}` }].map(f => (
             <button key={f.key} onClick={() => setFilter(f.key)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: filter === f.key ? '#fff' : 'transparent', color: filter === f.key ? 'var(--text, #111)' : 'var(--text3, #6B7280)', fontSize: 13, fontWeight: filter === f.key ? 800 : 600, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
               {f.label}
             </button>
@@ -843,6 +850,52 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 60, color: 'var(--text3, #94a3b8)', fontWeight: 700 }}>Loading sessions...</div>
+      ) : filter === 'reflections' ? (
+        reflectedSessions.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 20px', background: 'var(--surface, #fff)', borderRadius: 16, border: '1.5px dashed var(--border, #E5E7EB)' }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>⭐</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 6 }}>No reflections yet</div>
+            <div style={{ fontSize: 13, color: 'var(--text3, #6B7280)' }}>Completed reflections on past sessions will show up here.</div>
+          </div>
+        ) : (
+          <div>
+            {reflectedSessions.map(s => {
+              const r = reflections[s.id]
+              const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
+              return (
+                <button key={s.id} onClick={() => setReflectingSession(s)}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--surface, #fff)', borderRadius: 14, border: '1.5px solid var(--border, #E5E7EB)', padding: '14px 16px', marginBottom: 10, cursor: 'pointer' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 11, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, border: `1.5px solid ${type.color}30` }}>
+                      {type.icon}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text, #111)' }}>{s.title}</div>
+                        <span style={{ fontSize: 11, color: 'var(--text3, #6B7280)', fontWeight: 600 }}>{format(parseISO(s.session_date), 'd MMM yyyy')}</span>
+                        {r.overall_rating > 0 && (
+                          <span style={{ fontSize: 11, fontWeight: 800, color: '#D97706' }}>{'⭐'.repeat(r.overall_rating)}</span>
+                        )}
+                        {r.safeguarding_flag && (
+                          <span style={{ fontSize: 10, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 99, padding: '2px 8px', border: '1px solid #FECACA' }}>🛡️ Flagged</span>
+                        )}
+                        {r.would_repeat === false && (
+                          <span style={{ fontSize: 10, fontWeight: 800, color: '#92400E', background: '#FEF3C7', borderRadius: 99, padding: '2px 8px', border: '1px solid #FDE68A' }}>Needs changes</span>
+                        )}
+                      </div>
+                      {r.what_went_well && (
+                        <div style={{ fontSize: 12.5, color: 'var(--text2, #374151)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                          <span style={{ fontWeight: 700 }}>Went well:</span> {r.what_went_well}
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: primary, flexShrink: 0, whiteSpace: 'nowrap' }}>View →</span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )
       ) : displayed.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 20px', background: 'var(--surface, #fff)', borderRadius: 16, border: '1.5px dashed var(--border, #E5E7EB)' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>{filter === 'past' ? '🗄️' : '📅'}</div>
