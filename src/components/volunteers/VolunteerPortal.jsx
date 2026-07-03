@@ -323,7 +323,6 @@ export default function VolunteerPortal() {
   const [error, setError] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isRegister, setIsRegister] = useState(false)
   const primary = org?.primary_color || '#1B9AAA'
 
   useEffect(() => {
@@ -354,17 +353,8 @@ export default function VolunteerPortal() {
 
   async function handleAuth(e) {
     e.preventDefault(); setAuthLoading(true); setError('')
-    if(isRegister) {
-      const {data,error:err} = await supabase.auth.signUp({email,password})
-      if(err){setError(err.message);setAuthLoading(false);return}
-      if(data.user) {
-        await supabase.from('user_profiles').insert({ id:data.user.id, email, org_id:org.id, role:'volunteer', status:'pending', full_name:email.split('@')[0] })
-        setView('pending')
-      }
-    } else {
-      const {error:err} = await supabase.auth.signInWithPassword({email,password})
-      if(err){setError(err.message);setAuthLoading(false);return}
-    }
+    const {error:err} = await supabase.auth.signInWithPassword({email,password})
+    if(err){setError(err.message);setAuthLoading(false);return}
     setAuthLoading(false)
   }
 
@@ -422,8 +412,8 @@ export default function VolunteerPortal() {
             )}
           </div>
           <div style={{ position:'relative', zIndex:1 }}>
-            <div style={{ fontSize:22, fontWeight:900, marginBottom:4 }}>{isRegister ? 'Join as Volunteer' : 'Volunteer Sign In'}</div>
-            <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)', fontWeight:600 }}>{isRegister ? 'Create your volunteer account' : 'Welcome back'}</div>
+            <div style={{ fontSize:22, fontWeight:900, marginBottom:4 }}>Volunteer Sign In</div>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)', fontWeight:600 }}>Welcome back</div>
           </div>
         </div>
         <div style={s.body}>
@@ -433,12 +423,10 @@ export default function VolunteerPortal() {
             <input style={s.inp} type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" required autoFocus />
             <label style={s.label}>Password</label>
             <input style={s.inp} type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" required />
-            <button type="submit" disabled={authLoading} style={s.btn(primary)}>{authLoading?(isRegister?'Creating account...':'Signing in...'):(isRegister?'Create account →':'Sign in →')}</button>
+            <button type="submit" disabled={authLoading} style={s.btn(primary)}>{authLoading?'Signing in...':'Sign in →'}</button>
           </form>
-          <div style={{ textAlign:'center', marginTop:16 }}>
-            <button onClick={()=>{setIsRegister(r=>!r);setError('')}} style={{ background:'none', border:'none', color:primary, fontSize:13, fontWeight:700, cursor:'pointer' }}>
-              {isRegister?'Already have an account? Sign in':'New volunteer? Register here'}
-            </button>
+          <div style={{ textAlign:'center', marginTop:16, fontSize:12, color:'#9CA3AF', lineHeight:1.5 }}>
+            New volunteer? Ask {org?.name || 'your organisation'} to send you an invite.
           </div>
         </div>
       </div>
