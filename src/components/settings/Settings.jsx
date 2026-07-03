@@ -5,7 +5,7 @@ import { useOrg } from '../../context/OrgContext'
 import OrgSettingsPanel from './OrgSettingsPanel'
 
 const NAV = [
-  { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform' },
+  { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform', requiresAdmin: true },
   { key: 'users',        icon: '👥', label: 'Users & Permissions', group: 'Platform' },
   { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform', requiresBranding: true },
   { key: 'safeguarding', icon: '🛡', label: 'Safeguarding', group: 'Operations' },
@@ -685,20 +685,27 @@ function GroupsSection({ org }) {
   )
 }
 
-export default function Settings({ org, session, initialSection }) {
+export default function Settings({ org, session, userProfile, initialSection }) {
   const isMobile = useIsMobile()
   const [showSidebar, setShowSidebar] = useState(false)
   const { refreshOrg } = useOrg()
   const brandingEnabled = org?.branding_enabled !== false
-  const [active, setActive] = useState(initialSection || 'organisation')
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'owner'
+  const [active, setActive] = useState((initialSection === 'organisation' && !isAdmin) ? 'users' : (initialSection || (isAdmin ? 'organisation' : 'users')))
   const [search, setSearch] = useState('')
 
-  const filtered = NAV.filter(n => (!search || n.label.toLowerCase().includes(search.toLowerCase())) && (!n.requiresBranding || brandingEnabled))
+  const filtered = NAV.filter(n => (!search || n.label.toLowerCase().includes(search.toLowerCase())) && (!n.requiresBranding || brandingEnabled) && (!n.requiresAdmin || isAdmin))
   const groups = GROUPS.map(g => ({ group: g, items: filtered.filter(n => n.group === g) })).filter(g => g.items.length > 0)
 
   const renderContent = () => {
     switch(active) {
-      case 'organisation':   return <OrgSection org={org} />
+      case 'organisation':   return isAdmin ? <OrgSection org={org} /> : (
+        <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Admins only</div>
+          <div style={{ fontSize: 14, color: '#64748B' }}>Organisation settings can only be changed by an admin. Ask your organisation's admin if you need something updated here.</div>
+        </div>
+      )
       case 'branding':       return brandingEnabled ? <BrandingSection org={org} refreshOrg={refreshOrg} /> : (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎨</div>
