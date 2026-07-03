@@ -237,30 +237,6 @@ export default function Dashboard({ session, org }) {
           </div>
         </div>
 
-        {!sidebarCollapsed && (
-        <>
-        {/* QUICK ACTIONS */}
-        <div style={{ padding: '10px 10px 4px' }}>
-          <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: 1.5, padding: '4px 12px 6px' }}>Quick Actions</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, padding: '0 2px' }}>
-            {[
-              { icon: '📅', label: 'New Session', tab: 'planner' },
-              { icon: '📋', label: 'Register', tab: 'registers' },
-              { icon: '👥', label: 'Add Staff', tab: 'team' },
-              { icon: '📊', label: 'Reports', tab: 'reports' },
-            ].map(a => (
-              <button key={a.tab} onClick={() => handleSetTab(a.tab)} style={{ padding: '8px 6px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)' }}>
-                <span style={{ fontSize: 13 }}>{a.icon}</span> {a.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        </>
-        )}
-
         {/* NAV */}
         <div className="sb-nav" style={{ flex: 1, padding: '6px 8px 8px', overflowY: 'auto' }}>
           <NavSection collapsed={sidebarCollapsed} packColor={primary}>
