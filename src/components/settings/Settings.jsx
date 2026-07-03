@@ -659,6 +659,148 @@ function HelpSection() {
   )
 }
 
+function SafeguardingSection({ org }) {
+  const isMobile = useIsMobile()
+  const [form, setForm] = useState({
+    dsl_name: org?.dsl_name || '',
+    dsl_phone: org?.dsl_phone || '',
+    dsl_email: org?.dsl_email || '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [policyUrl, setPolicyUrl] = useState(org?.safeguarding_policy_url || '')
+  const [uploading, setUploading] = useState(false)
+  const [uploadErr, setUploadErr] = useState('')
+  const [reviewFreq, setReviewFreq] = useState(org?.safeguarding_review_freq || 'annually')
+  const [alerts, setAlerts] = useState({ new_concern: true, dsl_only: false, ...(org?.safeguarding_alert_prefs || {}) })
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleSave = async () => {
+    setSaving(true)
+    await supabase.from('organisations').update({
+      dsl_name: form.dsl_name || null,
+      dsl_phone: form.dsl_phone || null,
+      dsl_email: form.dsl_email || null,
+    }).eq('id', org?.id)
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2500)
+  }
+
+  const handlePolicyUpload = async (file) => {
+    if (!file) return
+    setUploadErr(''); setUploading(true)
+    const path = `${org.id}/safeguarding-policy_${Date.now()}.${file.name.split('.').pop()}`
+    const { error: upErr } = await supabase.storage.from('safeguarding-docs').upload(path, file)
+    if (upErr) { setUploadErr(upErr.message); setUploading(false); return }
+    const { data: { publicUrl } } = supabase.storage.from('safeguarding-docs').getPublicUrl(path)
+    await supabase.from('organisations').update({ safeguarding_policy_url: publicUrl }).eq('id', org?.id)
+    setPolicyUrl(publicUrl)
+    setUploading(false)
+  }
+
+  return (
+    <div>
+      {/* Header banner */}
+      <div style={{ background: 'linear-gradient(135deg, #7f1d1d, #991b1b)', borderRadius: 12, padding: '20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>🛡️</div>
+        <div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#fff' }}>Safeguarding Settings</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Configure your DSL contact, policy documents and alert preferences.</div>
+        </div>
+      </div>
+
+      {/* DSL Contact */}
+      <SettingCard title="Designated Safeguarding Lead (DSL)" description="This contact is shown to staff in the Safeguarding dashboard sidebar and on emergency guidance screens.">
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
+          <Field label="DSL Full Name">
+            <input style={inp} value={form.dsl_name} onChange={e => set('dsl_name', e.target.value)} placeholder="e.g. Sarah Johnson" />
+          </Field>
+          <Field label="DSL Phone Number" hint="Staff can tap to call directly from the dashboard.">
+            <input style={inp} type="tel" value={form.dsl_phone} onChange={e => set('dsl_phone', e.target.value)} placeholder="e.g. 07700 900 000" />
+          </Field>
+        </div>
+        <Field label="DSL Email Address">
+          <input style={inp} type="email" value={form.dsl_email} onChange={e => set('dsl_email', e.target.value)} placeholder="dsl@yourorg.org.uk" />
+        </Field>
+        <button onClick={handleSave} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: saving ? '#9ca3af' : '#DC2626', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
+          {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save DSL Details'}
+        </button>
+      </SettingCard>
+
+      {/* Safeguarding Policy */}
+      <SettingCard title="Safeguarding Policy Document" description="Upload your organisation's safeguarding policy. Staff can access it directly from the dashboard.">
+        {policyUrl ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(220,38,38,0.06)', borderRadius: 10, padding: '12px 14px', border: '1px solid rgba(220,38,38,0.15)', marginBottom: 14 }}>
+            <span style={{ fontSize: 22 }}>📄</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Policy document uploaded</div>
+              <a href={policyUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#DC2626', fontWeight: 600, textDecoration: 'none' }}>View / Download ↗</a>
+            </div>
+            <button onClick={() => setPolicyUrl('')} style={{ background: 'none', border: 'none', color: '#9ca3af', fontSize: 18, cursor: 'pointer', padding: 4 }}>×</button>
+          </div>
+        ) : (
+          <div style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: '28px 20px', textAlign: 'center', marginBottom: 14 }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>No policy uploaded yet</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 12 }}>PDF or Word document</div>
+            <label style={{ padding: '9px 20px', borderRadius: 8, background: '#DC2626', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'inline-block' }}>
+              {uploading ? 'Uploading...' : 'Upload Policy'}
+              <input type="file" hidden accept=".pdf,.doc,.docx" onChange={e => handlePolicyUpload(e.target.files[0])} disabled={uploading} />
+            </label>
+            {uploadErr && <div style={{ marginTop: 8, fontSize: 12, color: '#DC2626', fontWeight: 600 }}>{uploadErr}</div>}
+          </div>
+        )}
+        {policyUrl && (
+          <label style={{ padding: '9px 20px', borderRadius: 8, background: 'var(--surface2)', border: '1.5px solid var(--border)', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'inline-block' }}>
+            {uploading ? 'Uploading...' : 'Replace document'}
+            <input type="file" hidden accept=".pdf,.doc,.docx" onChange={e => handlePolicyUpload(e.target.files[0])} disabled={uploading} />
+          </label>
+        )}
+      </SettingCard>
+
+      {/* Review cycle */}
+      <SettingCard title="Policy Review Cycle" description="How often your safeguarding policy and procedures are formally reviewed.">
+        <Field label="Review frequency">
+          <select style={{ ...inp, maxWidth: 280 }} value={reviewFreq} onChange={e => setReviewFreq(e.target.value)}>
+            <option value="termly">Termly (3× per year)</option>
+            <option value="biannually">Bi-annually (2× per year)</option>
+            <option value="annually">Annually (recommended minimum)</option>
+            <option value="custom">Custom / as needed</option>
+          </select>
+        </Field>
+        <div style={{ fontSize: 12, color: 'var(--text3)', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 8, padding: '10px 12px' }}>
+          ⚠️ Ofsted and the NSPCC recommend reviewing safeguarding policies at least annually, or following any concern or legislative change.
+        </div>
+      </SettingCard>
+
+      {/* Alert preferences */}
+      <SettingCard title="Alert Preferences" description="Who gets notified when a new cause for concern is submitted.">
+        <Toggle value={alerts.new_concern} onChange={v => setAlerts(a => ({ ...a, new_concern: v }))} label="🛡 Notify all admins when a new concern is submitted" />
+        <Toggle value={alerts.dsl_only} onChange={v => setAlerts(a => ({ ...a, dsl_only: v }))} label="📧 Send concern summary email to DSL only" />
+        <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text3)' }}>Email notification settings require your DSL email address to be set above.</div>
+      </SettingCard>
+
+      {/* Emergency contacts reference */}
+      <SettingCard title="Emergency Reference Numbers" description="These are shown to all staff in the Safeguarding dashboard. They cannot be edited.">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[
+            ['Emergency services', '999'],
+            ['NSPCC Helpline', '0808 800 5000'],
+            ['Police (non-emergency)', '101'],
+            ['Childline', '0800 1111'],
+            ['LADO referral', 'via your Local Authority'],
+          ].map(([label, value]) => (
+            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+              <span style={{ fontSize: 13, color: 'var(--text2)' }}>{label}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{value}</span>
+            </div>
+          ))}
+        </div>
+      </SettingCard>
+    </div>
+  )
+}
+
 function ComingSoon({ label }) {
   return (
     <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9ca3af' }}>
@@ -927,6 +1069,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
       case 'integrations':   return <IntegrationsSection />
       case 'billing':        return <BillingSection org={org} />
       case 'registers':      return <GroupsSection org={org} />
+      case 'safeguarding':   return <SafeguardingSection org={org} />
       case 'help':           return <HelpSection />
       default:               return <ComingSoon label={NAV.find(n => n.key === active)?.label || active} />
     }
