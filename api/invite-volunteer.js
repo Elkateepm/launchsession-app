@@ -15,8 +15,9 @@ export default async function handler(req, res) {
   const { data: { user }, error: userErr } = await anonClient.auth.getUser(token)
   if (userErr || !user) return res.status(401).json({ error: 'Invalid session' })
 
-  const { email, name, org_id, org_slug, redirect_to } = req.body
+  const { email, name, org_id, org_slug, redirect_to, role } = req.body
   if (!email || !org_id) return res.status(400).json({ error: 'Missing email or org_id' })
+  const inviteRole = ['admin', 'staff', 'volunteer'].includes(role) ? role : 'volunteer'
 
   // Use service role to invite
   const adminClient = createClient(
@@ -24,11 +25,13 @@ export default async function handler(req, res) {
     process.env.REACT_APP_SUPABASE_SERVICE_KEY
   )
 
-  const redirectUrl = redirect_to || `https://app.launchsession.co.uk/volunteer/${org_slug || ''}`
+  const redirectUrl = redirect_to || (inviteRole === 'volunteer'
+    ? `https://app.launchsession.co.uk/volunteer/${org_slug || ''}`
+    : `https://app.launchsession.co.uk/create-password`)
 
   const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
     redirectTo: redirectUrl,
-    data: { org_id, role: 'volunteer', full_name: name || email.split('@')[0] }
+    data: { org_id, role: inviteRole, full_name: name || email.split('@')[0] }
   })
 
   if (error) return res.status(400).json({ error: error.message })
@@ -39,7 +42,7 @@ export default async function handler(req, res) {
     email: email.trim().toLowerCase(),
     full_name: name || email.split('@')[0],
     org_id,
-    role: 'volunteer',
+    role: inviteRole,
     status: 'pending_invite',
   }, { onConflict: 'id' })
 
@@ -60,7 +63,7 @@ export default async function handler(req, res) {
         org_slug: orgData?.slug || org_slug,
         org_color: orgData?.primary_color || '#3B82F6',
         org_logo: orgData?.logo_url || null,
-        role: 'volunteer',
+        role: inviteRole,
         redirect_to: redirectUrl,
       }
     })
