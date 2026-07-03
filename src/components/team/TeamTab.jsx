@@ -16,10 +16,6 @@ export default function TeamTab({ org, session }) {
   const [inviting, setInviting] = useState(false)
   const [inviteSuccess, setInviteSuccess] = useState('')
   const [error, setError] = useState('')
-  const [manualEmail, setManualEmail] = useState('')
-  const [manualName, setManualName] = useState('')
-  const [manualRole, setManualRole] = useState('staff')
-  const [manualSaving, setManualSaving] = useState(false)
 
   const loadMembers = React.useCallback(() => {
     if (!org?.id) return
@@ -97,51 +93,6 @@ export default function TeamTab({ org, session }) {
       return
     }
     setMembers(prev => prev.filter(m => m.id !== id))
-  }
-
-  const handleManualAdd = async e => {
-    e.preventDefault()
-    if (!manualEmail.trim()) return
-
-    setManualSaving(true)
-    setError('')
-    setInviteSuccess('')
-
-    const email = manualEmail.trim().toLowerCase()
-
-    const { data: existing } = await supabase
-      .from('user_profiles')
-      .select('id')
-      .eq('email', email)
-      .eq('org_id', org.id)
-      .maybeSingle()
-
-    if (existing) {
-      setError('This person is already in your team.')
-      setManualSaving(false)
-      return
-    }
-
-    const { data, error: addError } = await supabase
-      .rpc('manual_add_user_profile', {
-        p_email: email,
-        p_full_name: manualName.trim() || email.split('@')[0],
-        p_role: manualRole,
-        p_org_id: org.id
-      })
-
-    if (addError) {
-      setError(addError.message)
-      setManualSaving(false)
-      return
-    }
-
-    setMembers(prev => [...prev, data])
-    setManualEmail('')
-    setManualName('')
-    setManualRole('staff')
-    setInviteSuccess(`${data.full_name || data.email} added to the team.`)
-    setManualSaving(false)
   }
 
   const primary = org?.primary_color || '#1B9AAA'
@@ -271,43 +222,6 @@ export default function TeamTab({ org, session }) {
               </button>
             </div>
           ))}
-        </div>
-
-
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontSize: 18 }}>➕</span>
-            <div style={{ fontSize: 16, fontWeight: 800 }}>Manual Add</div>
-          </div>
-          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>
-            Add someone directly to this organisation without sending an invite.
-          </div>
-
-          <form onSubmit={handleManualAdd}>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.4fr auto auto', gap: 10, alignItems: 'flex-end' }}>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Full name</label>
-                <input value={manualName} onChange={e => setManualName(e.target.value)} placeholder="Full name"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Email address</label>
-                <input type="email" value={manualEmail} onChange={e => setManualEmail(e.target.value)} required placeholder="staff@organisation.com"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Role</label>
-                <select value={manualRole} onChange={e => setManualRole(e.target.value)}
-                  style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface)', cursor: 'pointer' }}>
-                  {ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
-                </select>
-              </div>
-              <button type="submit" disabled={manualSaving || !manualEmail.trim()}
-                style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#111827', color: '#fff', fontSize: 14, fontWeight: 800, cursor: manualSaving || !manualEmail.trim() ? 'default' : 'pointer', opacity: manualSaving || !manualEmail.trim() ? 0.6 : 1, whiteSpace: 'nowrap' }}>
-                {manualSaving ? 'Adding...' : 'Add Manually'}
-              </button>
-            </div>
-          </form>
         </div>
 
         {/* Team list */}
