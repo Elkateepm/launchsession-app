@@ -421,8 +421,8 @@ export default function Dashboard({ session, org }) {
           {tab === 'events_trips' && <EventsTrips org={org} />}
           {tab === 'team'       && <TeamTab org={org} session={session} />}
           {tab === 'templates'  && <Templates org={org} session={session} onNavigate={handleSetTab} />}
-          {tab === 'settings'   && <Settings org={org} session={session} />}
-          {tab === 'branding'   && <Settings org={org} session={session} initialSection="branding" />}
+          {tab === 'settings'   && <Settings org={org} session={session} userProfile={userProfile} />}
+          {tab === 'branding'   && <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" />}
 
           {/* ── DELIVERY PACK ── */}
           {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
