@@ -153,20 +153,20 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         )}
       </div>
 
-      {/* Stat row — single glass container, subtle dividers, legible colour-coded numbers */}
-      <div style={{ margin: '0 22px 4px', background: 'rgba(255,255,255,0.94)', borderRadius: 14, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', boxShadow: '0 10px 24px -12px rgba(0,0,0,0.4)', overflow: 'hidden' }}>
+      {/* Stat row — single gradient strip, subtle dividers, legible colour-coded numbers */}
+      <div style={{ margin: '0 22px 4px', background: `linear-gradient(90deg, #16A34A15, #7C3AED15, #2563EB15)`, borderRadius: 14, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', boxShadow: '0 1px 0 rgba(255,255,255,0.08) inset, 0 10px 24px -12px rgba(0,0,0,0.4)', overflow: 'hidden', backdropFilter: 'blur(6px)' }}>
         {[
-          { key: 'signed_in',  label: 'Signed In',  value: stats.signedIn,  color: '#16A34A', icon: '↪' },
-          { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#7C3AED', icon: '↩' },
-          { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#2563EB', icon: '👥' },
+          { key: 'signed_in',  label: 'Signed In',  value: stats.signedIn,  color: '#4ADE80', icon: '↪' },
+          { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#C084FC', icon: '↩' },
+          { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#60A5FA', icon: '👥' },
         ].map((s, i) => (
           <button key={s.key} onClick={() => setPopupMode(s.key)}
-            style={{ background: 'transparent', border: 'none', borderRight: i < 2 ? '1px solid rgba(15,23,42,0.08)' : 'none', padding: '11px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(15,23,42,0.03)'}
+            style={{ background: 'transparent', border: 'none', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.12)' : 'none', padding: '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-            <span style={{ fontSize: 12, color: s.color, opacity: 0.85 }}>{s.icon}</span>
-            <span style={{ fontSize: 19, fontWeight: 900, color: s.color, letterSpacing: -0.3, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</span>
-            <span style={{ fontSize: 10, color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.label}</span>
+            <span style={{ fontSize: 12, color: s.color }}>{s.icon}</span>
+            <span style={{ fontSize: 19, fontWeight: 900, color: s.color, letterSpacing: -0.3, fontFamily: 'var(--font-display, sans-serif)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>{s.value}</span>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.label}</span>
           </button>
         ))}
       </div>
