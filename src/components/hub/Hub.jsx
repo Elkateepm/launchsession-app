@@ -805,24 +805,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           </Panel>
 
-          {/* ACTION CENTRE */}
-          <Panel title="⚡ Quick Actions">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
-              <ActionCard icon="📅" title="Plan a Session" text="Create or edit sessions" onClick={() => go("planner")} colour="#8B5CF6" />
-              {hasModule('registers') && <ActionCard icon="📋" title="Take Register" text="Sign young people in/out" onClick={() => go("registers")} colour="#10B981" />}
-              {hasModule('volunteers') && <ActionCard icon="❤️" title="Volunteers" text="Manage volunteer cover" onClick={() => go("volunteers")} colour="#E91E63" />}
-              {hasModule('safeguarding') && <ActionCard icon="🛡️" title="Safeguarding" text="Concerns & alerts" onClick={() => go("safeguarding")} colour="#2563EB" />}
-              {hasModule('mentoring') && <ActionCard icon="🤝" title="Mentoring" text="Track mentoring work" onClick={() => go("mentoring")} colour="#F59E0B" />}
-              {hasModule('reports') && <ActionCard icon="📊" title="Reports" text="View impact & insights" onClick={() => go("reports")} colour="#0EA5E9" />}
-              {hasModule('messaging') && <ActionCard icon="💬" title="Messaging" text="Message your team" onClick={() => go("messaging")} colour="#0891B2" />}
-              {hasModule('gallery') && <ActionCard icon="🖼️" title="Gallery" text="Photos & moments" onClick={() => go("gallery")} colour="#DB2777" />}
-              {hasModule('fundraising') && <ActionCard icon="💷" title="Fundraising" text="Track donations" onClick={() => go("fundraising")} colour="#059669" />}
-              {activeModules.length < 3 && (
-                <ActionCard icon="✨" title="Unlock more" text="Explore add-on modules" onClick={() => go("settings")} colour="#9333EA" />
-              )}
-            </div>
-          </Panel>
-
           {/* COMING UP */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
