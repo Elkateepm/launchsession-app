@@ -5,7 +5,7 @@ import { useRealtimeTable } from "../../lib/useRealtimeTable";
 
 
 // ── LIVE SESSION PANEL ─────────────────────────────────────────
-function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, onOpenRegister, onNavigate, getLiveSessionStats }) {
+function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, reflections, onOpenRegister, onNavigate, getLiveSessionStats }) {
   const [activeSession, setActiveSession] = useState(sessions[0])
   const [localAttendance, setLocalAttendance] = useState(attendance)
   const [bubbleFilter, setBubbleFilter] = useState('all')
@@ -104,6 +104,8 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     const endDateTime = new Date(`${endDateStr}T${activeSession.end_time || '23:59'}`)
     return endDateTime < new Date()
   }, [activeSession])
+
+  const hasReflection = (reflections || []).some(r => r.session_id === activeSession?.id)
 
   return (
     <div style={{ background: `linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
@@ -223,6 +225,22 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           <div style={{ marginTop: 10, fontSize: 11, color: '#FB923C', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
             ⚠ {stats.absent} marked absent
           </div>
+        )}
+
+        {isSessionEnded && !hasReflection && (
+          <button onClick={() => onNavigate('planner')}
+            style={{ marginTop: 14, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.12)', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(245,158,11,0.2)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(245,158,11,0.12)'}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 18 }}>⭐</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#FCD34D' }}>Complete Reflection</div>
+                <div style={{ fontSize: 11, color: 'rgba(252,211,77,0.75)', marginTop: 1 }}>This session has ended — capture what went well while it's fresh</div>
+              </div>
+            </div>
+            <span style={{ color: '#FCD34D', fontSize: 16 }}>→</span>
+          </button>
         )}
       </div>
       <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
@@ -777,6 +795,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           primary={primary}
           secondary={secondary}
           orgId={org?.id}
+          reflections={reflections}
           onOpenRegister={openRegisterForSession}
           onNavigate={go}
           getLiveSessionStats={getLiveSessionStats}
