@@ -3,7 +3,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import PageHeader from '../shared/PageHeader'
 import { supabase } from '../../lib/supabase'
 
-const ROLES = ['owner', 'admin', 'manager', 'staff', 'volunteer']
+const ROLES = ['admin', 'staff', 'volunteer']
 
 export default function TeamTab({ org, session }) {
   const isMobile = useIsMobile()
@@ -12,7 +12,6 @@ export default function TeamTab({ org, session }) {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteFirstName, setInviteFirstName] = useState('')
   const [inviteLastName, setInviteLastName] = useState('')
-  const [invites, setInvites] = useState([])
   const [inviteRole, setInviteRole] = useState('staff')
   const [inviting, setInviting] = useState(false)
   const [inviteSuccess, setInviteSuccess] = useState('')
@@ -22,17 +21,15 @@ export default function TeamTab({ org, session }) {
   const [manualRole, setManualRole] = useState('staff')
   const [manualSaving, setManualSaving] = useState(false)
 
-  useEffect(() => {
+  const loadMembers = React.useCallback(() => {
     if (!org?.id) return
-    Promise.all([
-      supabase.rpc('get_org_members_with_auth', { org_uuid: org.id }),
-      supabase.from('staff_invites').select('*').eq('org_id', org.id).order('created_at', { ascending: false })
-    ]).then(([membersResult, invitesResult]) => {
-      setMembers(membersResult.data || [])
-      setInvites(invitesResult.data || [])
+    supabase.rpc('get_org_members_with_auth', { org_uuid: org.id }).then(({ data }) => {
+      setMembers(data || [])
       setLoading(false)
     })
   }, [org?.id])
+
+  useEffect(() => { loadMembers() }, [loadMembers])
 
   const handleInvite = async e => {
     e.preventDefault()
@@ -42,6 +39,7 @@ export default function TeamTab({ org, session }) {
     setInviteSuccess('')
 
     const email = inviteEmail.trim().toLowerCase()
+    const fullName = `${inviteFirstName.trim()} ${inviteLastName.trim()}`.trim()
 
     const { data: existingMember } = await supabase
       .from('user_profiles')
@@ -56,46 +54,29 @@ export default function TeamTab({ org, session }) {
       return
     }
 
-    const { data: existingInvite } = await supabase
-      .from('staff_invites')
-      .select('id')
-      .eq('email', email)
-      .eq('org_id', org.id)
-      .eq('status', 'pending')
-      .maybeSingle()
+    try {
+      const { data: { session: liveSession } } = await supabase.auth.getSession()
+      const res = await fetch('/api/invite-volunteer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${liveSession?.access_token}` },
+        body: JSON.stringify({ email, name: fullName, org_id: org.id, org_slug: org.slug, role: inviteRole }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
 
-    if (existingInvite) {
-      setError('This person already has a pending invite.')
-      setInviting(false)
-      return
+      setInviteSuccess(
+        json.existing_user
+          ? `${email} already had an account — added to ${org?.name} and notified by email.`
+          : `Invite sent to ${email}. They'll get a branded email to set up their account.`
+      )
+      setInviteEmail('')
+      setInviteFirstName('')
+      setInviteLastName('')
+      setInviteRole('staff')
+      loadMembers()
+    } catch (err) {
+      setError(err.message || 'Failed to send invite')
     }
-
-    const { data: newInvite, error: inviteError } = await supabase
-      .from('staff_invites')
-      .insert([{
-        org_id: org.id,
-        first_name: inviteFirstName.trim(),
-        last_name: inviteLastName.trim(),
-        email,
-        role: inviteRole,
-        status: 'pending',
-        invited_by: session?.user?.id || null
-      }])
-      .select()
-      .single()
-
-    if (inviteError) {
-      setError(inviteError.message)
-      setInviting(false)
-      return
-    }
-
-    setInvites(prev => [newInvite, ...prev])
-    setInviteSuccess(`Invite created for ${email}. Copy their invite link below.`)
-    setInviteEmail('')
-    setInviteFirstName('')
-    setInviteLastName('')
-    setInviteRole('staff')
     setInviting(false)
   }
 
@@ -168,23 +149,25 @@ export default function TeamTab({ org, session }) {
   const admins = members.filter(m => ['owner', 'admin'].includes(m.role)).length
   const staff = members.filter(m => m.role === 'staff' || m.role === 'manager').length
   const volunteers = members.filter(m => m.role === 'volunteer').length
-  const pendingInvites = invites.filter(i => i.status === 'pending').length
+  const pendingMembers = members.filter(m => m.status === 'pending_invite')
+  const activeMembers = members.filter(m => m.status !== 'pending_invite')
+  const pendingInvites = pendingMembers.length
 
-  const inviteLink = (invite) => `${window.location.origin}/?org=${org?.slug || ''}&invite=${invite.invite_token}`
-
-  const copyInvite = async (invite) => {
+  const resendInvite = async (member) => {
+    setError(''); setInviteSuccess('')
     try {
-      await navigator.clipboard.writeText(inviteLink(invite))
-      setInviteSuccess('Invite link copied')
+      const { data: { session: liveSession } } = await supabase.auth.getSession()
+      const res = await fetch('/api/invite-volunteer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${liveSession?.access_token}` },
+        body: JSON.stringify({ email: member.email, name: member.full_name, org_id: org.id, org_slug: org.slug, role: member.role }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      setInviteSuccess(`Invite re-sent to ${member.email}.`)
     } catch (err) {
-      setError('Could not copy invite link')
+      setError(err.message || 'Failed to resend invite')
     }
-  }
-
-  const cancelInvite = async (id) => {
-    if (!window.confirm('Cancel this invite?')) return
-    await supabase.from('staff_invites').update({ status: 'cancelled' }).eq('id', id).eq('org_id', org.id)
-    setInvites(prev => prev.map(i => i.id === id ? { ...i, status: 'cancelled' } : i))
   }
 
   return (
@@ -207,9 +190,12 @@ export default function TeamTab({ org, session }) {
       <div style={{ maxWidth: 1120, margin: '0 auto' }}>
 
         {/* Invite card */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 24 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Invite Staff</div>
-          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Send a magic link invite — they'll be added to {org?.name} automatically.</div>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 24, borderTop: `3px solid ${primary}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 18 }}>✉️</span>
+            <div style={{ fontSize: 16, fontWeight: 800 }}>Invite Staff</div>
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Send a branded email invite — they'll set their own password and be added to {org?.name} automatically.</div>
 
           {error && <div style={{ background: '#FFF0F0', border: '1px solid #FFD0D0', color: '#C00', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>{error}</div>}
           {inviteSuccess && <div style={{ background: '#F0FFF4', border: '1px solid #B0E8C0', color: '#1A5C1A', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>✓ {inviteSuccess}</div>}
@@ -249,52 +235,50 @@ export default function TeamTab({ org, session }) {
 
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', marginBottom: 24 }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>Pending Invites</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 16 }}>⏳</span>
+              <div style={{ fontSize: 15, fontWeight: 800 }}>Pending Invites</div>
+            </div>
             <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>{pendingInvites} pending</div>
           </div>
 
-          {invites.length === 0 ? (
+          {pendingMembers.length === 0 ? (
             <div style={{ padding: 30, textAlign: 'center', color: 'var(--text3)' }}>
               <div style={{ fontSize: 30, marginBottom: 8 }}>✉️</div>
               <div style={{ fontSize: 14, fontWeight: 800 }}>No invites yet</div>
               <div style={{ fontSize: 13, marginTop: 4 }}>Invite staff and volunteers using the form above.</div>
             </div>
-          ) : invites.map((invite, index) => {
-            const fullName = `${invite.first_name || ''} ${invite.last_name || ''}`.trim() || invite.email
-            const active = invite.status === 'pending'
-            return (
-              <div key={invite.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: index < invites.length - 1 ? '1px solid #f3f4f6' : 'none', opacity: active ? 1 : 0.55 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: roleColors[invite.role] || primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
-                  {fullName[0]?.toUpperCase() || '?'}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{fullName}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text3)' }}>{invite.email}</div>
-                </div>
-                <span style={{ padding: '3px 10px', borderRadius: 99, background: (roleColors[invite.role] || primary) + '18', color: roleColors[invite.role] || primary, fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
-                  {invite.role || 'staff'}
-                </span>
-                <span style={{ padding: '3px 10px', borderRadius: 99, background: active ? '#FEF3C7' : '#F3F4F6', color: active ? '#B45309' : '#6b7280', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
-                  {invite.status}
-                </span>
-                {active && (
-                  <>
-                    <button onClick={() => copyInvite(invite)} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
-                      Copy Link
-                    </button>
-                    <button onClick={() => cancelInvite(invite.id)} style={{ border: '1px solid #FECACA', background: '#FFF7F7', color: '#DC2626', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
-                      Cancel
-                    </button>
-                  </>
-                )}
+          ) : pendingMembers.map((member, index) => (
+            <div key={member.id}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: index < pendingMembers.length - 1 ? '1px solid #f3f4f6' : 'none', transition: 'background 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#FAFBFC'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: roleColors[member.role] || primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                {(member.full_name || member.email || '?')[0].toUpperCase()}
               </div>
-            )
-          })}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{member.full_name || member.email}</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)' }}>{member.email}</div>
+              </div>
+              <span style={{ padding: '3px 10px', borderRadius: 99, background: (roleColors[member.role] || primary) + '18', color: roleColors[member.role] || primary, fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+                {member.role || 'staff'}
+              </span>
+              <span style={{ padding: '3px 10px', borderRadius: 99, background: '#FEF3C7', color: '#B45309', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+                pending
+              </span>
+              <button onClick={() => resendInvite(member)} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                Resend
+              </button>
+            </div>
+          ))}
         </div>
 
 
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 24 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Manual Add</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 18 }}>➕</span>
+            <div style={{ fontSize: 16, fontWeight: 800 }}>Manual Add</div>
+          </div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>
             Add someone directly to this organisation without sending an invite.
           </div>
@@ -329,19 +313,25 @@ export default function TeamTab({ org, session }) {
         {/* Team list */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>Team Members</div>
-            <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>{members.length} {members.length === 1 ? 'person' : 'people'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 16 }}>👥</span>
+              <div style={{ fontSize: 15, fontWeight: 800 }}>Team Members</div>
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>{activeMembers.length} {activeMembers.length === 1 ? 'person' : 'people'}</div>
           </div>
           {loading ? (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading...</div>
-          ) : members.length === 0 ? (
+          ) : activeMembers.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>👥</div>
               <div style={{ fontSize: 14, fontWeight: 700 }}>No team members yet</div>
               <div style={{ fontSize: 13, marginTop: 4 }}>Invite your first staff member above</div>
             </div>
-          ) : members.map((m, i) => (
-            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: i < members.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
+          ) : activeMembers.map((m, i) => (
+            <div key={m.id}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: i < activeMembers.length - 1 ? '1px solid #f3f4f6' : 'none', transition: 'background 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#FAFBFC'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               <div style={{ width: 40, height: 40, borderRadius: 12, background: roleColors[m.role] || primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
                 {(m.full_name || m.email || '?')[0].toUpperCase()}
               </div>
