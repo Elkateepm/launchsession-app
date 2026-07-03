@@ -37,6 +37,9 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
   const [sessionSearch, setSessionSearch] = useState('')
   const [showSessionPicker, setShowSessionPicker] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
+  const [children, setChildren] = useState([])
+  const [childSearch, setChildSearch] = useState('')
+  const [showChildPicker, setShowChildPicker] = useState(false)
   const [form, setForm] = useState({
     submitter_name: authSession?.user?.email?.split('@')[0] || '',
     child_name: '',
@@ -62,6 +65,10 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
       .eq('org_id', org.id)
       .order('session_date', { ascending: false }).limit(60)
       .then(({ data }) => setSessions(data || []))
+    supabase.from('children').select('id, first_name, last_name, group_name, allergies, has_epipen, has_asthma, has_diabetes, has_behaviour_plan')
+      .eq('org_id', org.id).eq('active', true)
+      .order('first_name')
+      .then(({ data }) => setChildren(data || []))
   }, [org.id])
 
   const filteredSessions = sessions.filter(s =>
@@ -69,7 +76,22 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
     (s.session_date || '').includes(sessionSearch)
   )
 
+  const filteredChildren = children.filter(c =>
+    `${c.first_name} ${c.last_name}`.toLowerCase().includes(childSearch.toLowerCase())
+  )
+
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  const addChildToForm = (child) => {
+    const fullName = `${child.first_name} ${child.last_name}`.trim()
+    const current = form.child_name.trim()
+    // Avoid adding the same name twice if picked more than once
+    const already = current.split(',').map(n => n.trim().toLowerCase()).includes(fullName.toLowerCase())
+    const next = !current ? fullName : already ? current : `${current}, ${fullName}`
+    set('child_name', next)
+    setChildSearch('')
+    setShowChildPicker(false)
+  }
 
   const handleSubmit = async () => {
     if (!form.submitter_name.trim()) { setError('Please enter your full name.'); return }
@@ -154,6 +176,30 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
       </div>
       <div style={{ marginBottom: 14 }}>
         <label style={lStyle}>2. Names of people involved *</label>
+        <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 8 }}>Search the register to add a child, or type names directly below (children, staff, volunteers or members of the public).</div>
+        <div style={{ position: 'relative', marginBottom: 8 }}>
+          <input style={iStyle} placeholder="🔍 Search register to add a child..." value={childSearch}
+            onChange={e => { setChildSearch(e.target.value); setShowChildPicker(true) }}
+            onFocus={() => setShowChildPicker(true)} />
+          {showChildPicker && childSearch.length > 0 && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--surface)', borderRadius: 10, border: '1px solid var(--border)', marginTop: 4, maxHeight: 220, overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 20 }}>
+              {filteredChildren.length === 0
+                ? <div style={{ padding: '12px 14px', fontSize: 13, color: 'var(--text3)' }}>No children found</div>
+                : filteredChildren.slice(0, 20).map(c => (
+                  <button key={c.id} onClick={() => addChildToForm(c)}
+                    style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
+                      {c.group_name && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{c.group_name}</div>}
+                    </div>
+                    {(c.allergies || c.has_epipen || c.has_asthma || c.has_diabetes || c.has_behaviour_plan) && (
+                      <span title="Has medical or behaviour flags" style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999, flexShrink: 0 }}>⚠️ Flags</span>
+                    )}
+                  </button>
+                ))}
+            </div>
+          )}
+        </div>
         <textarea style={taStyle} value={form.child_name} onChange={e => set('child_name', e.target.value)} placeholder="Names of children, staff, volunteers or members of the public involved" />
       </div>
       <div style={{ marginBottom: 14 }}>
