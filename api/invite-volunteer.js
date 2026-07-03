@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
 
     const redirectUrl = redirect_to || (inviteRole === 'volunteer'
-      ? `https://app.launchsession.co.uk/volunteer/${org_slug || ''}`
+      ? `https://app.launchsession.co.uk/volunteer/accept-invite`
       : `https://app.launchsession.co.uk/create-password`)
 
     const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
