@@ -532,7 +532,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         return s.session_date > today && s.session_date <= sevenDaysStr
       })
       .sort((a, b) => (a.session_date + (a.start_time || '')).localeCompare(b.session_date + (b.start_time || '')))
-      .slice(0, 20)
+      .slice(0, 6)
   }, [sessions, today]);
   const completedWithoutReflection = useMemo(() => {
     const now = new Date();
@@ -827,7 +827,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 <button onClick={() => go('planner')} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 16px ${primary}40` }}>Plan a Session →</button>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: upcomingSessions.length > 6 ? 720 : 'none', overflowY: upcomingSessions.length > 6 ? 'auto' : 'visible', paddingRight: upcomingSessions.length > 6 ? 4 : 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {upcomingSessions.map((s, idx) => {
                   const isToday = s.session_date === today
                   const now = new Date()
@@ -963,11 +963,25 @@ function Panel({ title, children }) {
 
 function StatCard({ icon, title, text, button, badge, onClick, colour }) {
   return (
-    <button style={styles.statCard} onClick={onClick}>
-      <div style={styles.bigIcon}>{icon}</div>
-      <h3 style={{ ...styles.statTitle, color: colour }}>{title}</h3>
-      <p style={styles.cardText}>{text}</p>
-      {(button || badge) && <div style={{ ...styles.softBadge, color: colour }}>{button || badge}</div>}
+    <button onClick={onClick} style={{
+      background: `linear-gradient(135deg, ${colour}, ${colour}CC)`,
+      borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden',
+      minHeight: 128, boxShadow: `0 10px 28px -10px ${colour}80`, textAlign: 'left', cursor: 'pointer',
+      border: 'none', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+    }}>
+      <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
+      <div style={{ position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontSize: 26 }}>{icon}</div>
+        </div>
+        <h3 style={{ fontSize: 15, fontWeight: 900, color: '#fff', margin: '10px 0 4px', lineHeight: 1.25 }}>{title}</h3>
+        <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0 }}>{text}</p>
+      </div>
+      {(button || badge) && (
+        <div style={{ position: 'relative', marginTop: 10, display: 'inline-block', background: 'rgba(255,255,255,0.2)', borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 800, color: '#fff', alignSelf: 'flex-start' }}>
+          {button || badge}
+        </div>
+      )}
     </button>
   );
 }
