@@ -317,13 +317,13 @@ export default function Dashboard({ session, org }) {
                 onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
                 locked={!hasModule(m.key)} />
             ))}
-            <NavItem icon="🎨" label="Branding" active={tab === 'branding'}
-              onClick={() => handleSetTab('branding')} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="🗂" label="Templates" active={tab === 'templates'}
+              onClick={() => handleSetTab('templates')} primary={primary} collapsed={sidebarCollapsed} />
           </NavSection>
 
           <NavSection collapsed={sidebarCollapsed} title="Organisation" packColor="rgba(255,255,255,0.2)">
             <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => { handleSetTab('team') }} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="🗂" label="Templates" active={tab === 'templates'} onClick={() => { handleSetTab('templates') }} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="🎨" label="Branding" active={tab === 'branding'} onClick={() => { handleSetTab('branding') }} primary={primary} collapsed={sidebarCollapsed} />
             <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => { handleSetTab('settings') }} primary={primary} collapsed={sidebarCollapsed} />
           </NavSection>
         </div>
@@ -421,8 +421,8 @@ export default function Dashboard({ session, org }) {
           {tab === 'events_trips' && <EventsTrips org={org} />}
           {tab === 'team'       && <TeamTab org={org} session={session} />}
           {tab === 'templates'  && <Templates org={org} session={session} onNavigate={handleSetTab} />}
-          {tab === 'settings'   && <Settings org={org} session={session} userProfile={userProfile} />}
-          {tab === 'branding'   && <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" />}
+          {tab === 'settings'   && <Settings org={org} session={session} />}
+          {tab === 'branding'   && <Settings org={org} session={session} initialSection="branding" />}
 
           {/* ── DELIVERY PACK ── */}
           {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
