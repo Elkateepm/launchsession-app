@@ -681,7 +681,7 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, volCo
 }
 
 // ─── MAIN PLANNER ─────────────────────────────────────────────
-export default function SessionPlanner({ org, onSessionSaved }) {
+export default function SessionPlanner({ org, onSessionSaved, initialReflectSessionId }) {
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const { groups: orgGroups } = useOrgSettings(orgId)
@@ -720,6 +720,12 @@ export default function SessionPlanner({ org, onSessionSaved }) {
   }
 
   useEffect(() => { loadData() }, [orgId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!initialReflectSessionId || sessions.length === 0) return
+    const target = sessions.find(s => s.id === initialReflectSessionId)
+    if (target) setReflectingSession(target)
+  }, [initialReflectSessionId, sessions])
 
   const isSessionPast = (s) => {
     if (!s.session_date) return false
