@@ -532,7 +532,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         return s.session_date > today && s.session_date <= sevenDaysStr
       })
       .sort((a, b) => (a.session_date + (a.start_time || '')).localeCompare(b.session_date + (b.start_time || '')))
-      .slice(0, 6)
+      .slice(0, 20)
   }, [sessions, today]);
   const completedWithoutReflection = useMemo(() => {
     const now = new Date();
@@ -827,7 +827,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 <button onClick={() => go('planner')} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 16px ${primary}40` }}>Plan a Session →</button>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: upcomingSessions.length > 6 ? 720 : 'none', overflowY: upcomingSessions.length > 6 ? 'auto' : 'visible', paddingRight: upcomingSessions.length > 6 ? 4 : 0 }}>
                 {upcomingSessions.map((s, idx) => {
                   const isToday = s.session_date === today
                   const now = new Date()
