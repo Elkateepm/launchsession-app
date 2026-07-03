@@ -269,6 +269,7 @@ export default function Dashboard({ session, org }) {
 
           <NavSection collapsed={sidebarCollapsed} title="Delivery" packColor="#3B82F6">
             <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => handleSetTab('calendar')} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="🗓️" label="Sessions" active={tab === 'planner'} onClick={() => handleSetTab('planner')} primary={primary} collapsed={sidebarCollapsed} />
             {/* Paid delivery modules — show all, locked ones navigate to locked screen */}
             {[
               { key: 'registers', label: 'Registers', icon: '📋' },
