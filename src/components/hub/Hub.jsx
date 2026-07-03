@@ -87,23 +87,35 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   const pct = stats.percent || 0
 
-  const sessionTimePct = React.useMemo(() => {
-    if (!activeSession?.start_time || !activeSession?.end_time || !activeSession?.session_date) return 0
-    const now = new Date()
+  const [nowTick, setNowTick] = React.useState(() => new Date())
+  React.useEffect(() => {
+    const interval = setInterval(() => setNowTick(new Date()), 30000) // tick every 30s, enough for a minutes-based display
+    return () => clearInterval(interval)
+  }, [])
+
+  const sessionTimeInfo = React.useMemo(() => {
+    if (!activeSession?.start_time || !activeSession?.end_time || !activeSession?.session_date) {
+      return { pct: 0, minutesLeft: null, hasEnded: false }
+    }
     const start = new Date(`${activeSession.session_date}T${activeSession.start_time}`)
     const end = new Date(`${activeSession.session_date}T${activeSession.end_time}`)
     const total = end - start
-    if (total <= 0) return 0
-    const elapsed = now - start
-    return Math.round((elapsed / total) * 100)
-  }, [activeSession])
+    if (total <= 0) return { pct: 0, minutesLeft: null, hasEnded: false }
+    const elapsed = nowTick - start
+    const pct = Math.round((elapsed / total) * 100)
+    const msLeft = end - nowTick
+    const hasEnded = msLeft <= 0
+    const minutesLeft = hasEnded ? 0 : Math.max(0, Math.round(msLeft / 60000))
+    return { pct, minutesLeft, hasEnded }
+  }, [activeSession, nowTick])
+  const sessionTimePct = sessionTimeInfo.pct
 
   const isSessionEnded = React.useMemo(() => {
     if (!activeSession?.session_date) return false
     const endDateStr = activeSession.end_date || activeSession.session_date
     const endDateTime = new Date(`${endDateStr}T${activeSession.end_time || '23:59'}`)
-    return endDateTime < new Date()
-  }, [activeSession])
+    return endDateTime < nowTick
+  }, [activeSession, nowTick])
 
   const hasReflection = (reflections || []).some(r => r.session_id === activeSession?.id)
 
@@ -211,12 +223,18 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           <div style={{ marginTop: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
               <span>Session progress</span>
-              <span style={{ color: sessionTimePct >= 100 ? '#F87171' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>
-                {sessionTimePct >= 100 ? 'Ended' : sessionTimePct <= 0 ? 'Not started' : `${sessionTimePct}%`}
+              <span style={{ color: sessionTimeInfo.hasEnded ? '#F87171' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>
+                {sessionTimeInfo.hasEnded
+                  ? 'Ended'
+                  : sessionTimePct <= 0
+                  ? 'Not started'
+                  : sessionTimeInfo.minutesLeft != null
+                  ? `${sessionTimePct}% · ${sessionTimeInfo.minutesLeft >= 60 ? `${Math.floor(sessionTimeInfo.minutesLeft / 60)}h ${sessionTimeInfo.minutesLeft % 60}m left` : `${sessionTimeInfo.minutesLeft}m left`}`
+                  : `${sessionTimePct}%`}
               </span>
             </div>
             <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, sessionTimePct))}%`, background: sessionTimePct >= 100 ? '#F87171' : `linear-gradient(90deg, #F59E0B, #F97316)`, borderRadius: 99, transition: 'width 0.5s ease', boxShadow: sessionTimePct > 0 ? `0 0 10px ${sessionTimePct >= 100 ? '#F87171' : '#F59E0B'}70` : 'none' }} />
+              <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, sessionTimePct))}%`, background: sessionTimeInfo.hasEnded ? '#F87171' : `linear-gradient(90deg, #F59E0B, #F97316)`, borderRadius: 99, transition: 'width 0.5s ease', boxShadow: sessionTimePct > 0 ? `0 0 10px ${sessionTimeInfo.hasEnded ? '#F87171' : '#F59E0B'}70` : 'none' }} />
             </div>
           </div>
         )}
