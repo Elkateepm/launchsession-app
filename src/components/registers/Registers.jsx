@@ -881,19 +881,16 @@ export default function Registers({ org, onNavigate }) {
             </button>
           </div>
 
-          {/* Stats strip */}
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 8, marginBottom: 12 }}>
-            {[
-              { label: 'Total', num: counts.total, color: '#374151', bg: '#F9FAFB' },
-              { label: 'Signed In', num: counts.signed_in, color: '#15803D', bg: '#F0FDF4' },
-              { label: 'Absent', num: counts.absent, color: '#B91C1C', bg: '#FEF2F2' },
-              { label: 'Yet to Arrive', num: counts.expected, color: '#D97706', bg: '#FFFBEB' },
-            ].map(s => (
-              <div key={s.label} style={{ background: s.bg, borderRadius: 10, padding: '8px 10px', textAlign: 'center', border: `1px solid ${s.color}18` }}>
-                <div style={{ fontSize: 22, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.num}</div>
-                <div style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 600, marginTop: 2 }}>{s.label}</div>
-              </div>
-            ))}
+          {/* Stats strip — just two numbers */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+            <div style={{ background: '#F8FAFC', borderRadius: 14, padding: '14px 16px', border: '1.5px solid #E2E8F0', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, fontWeight: 900, color: '#0F172A', lineHeight: 1 }}>{counts.total}</div>
+              <div style={{ fontSize: 12, color: '#64748B', fontWeight: 600, marginTop: 4 }}>On Register</div>
+            </div>
+            <div style={{ background: '#F0FDF4', borderRadius: 14, padding: '14px 16px', border: '1.5px solid #BBF7D0', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, fontWeight: 900, color: '#15803D', lineHeight: 1 }}>{counts.signed_in}</div>
+              <div style={{ fontSize: 12, color: '#16A34A', fontWeight: 600, marginTop: 4 }}>Signed In</div>
+            </div>
           </div>
 
           {/* Attendance bar */}
