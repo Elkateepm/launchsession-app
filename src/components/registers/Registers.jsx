@@ -610,11 +610,11 @@ function ChildCard({ child, status, bubble, onClick, primary, selected, onToggle
   const [hovered, setHovered] = React.useState(false)
 
   const statusConfig = {
-    signed_in:  { label: 'In',       bg: '#DCFCE7', color: '#15803D', dot: '#16A34A', ring: '#16A34A' },
-    signed_out: { label: 'Out',      bg: '#DBEAFE', color: '#1D4ED8', dot: '#2563EB', ring: '#2563EB' },
-    absent:     { label: 'Absent',   bg: '#FEE2E2', color: '#B91C1C', dot: '#DC2626', ring: '#DC2626' },
-    expected:   { label: 'Expected', bg: '#F8FAFC', color: '#94A3B8', dot: '#CBD5E1', ring: 'transparent' },
-    unmarked:   { label: 'Not marked', bg: '#F8FAFC', color: '#94A3B8', dot: '#CBD5E1', ring: 'transparent' },
+    signed_in:  { label: 'In',          bg: '#DCFCE7', color: '#15803D', dot: '#16A34A' },
+    signed_out: { label: 'Out',         bg: '#DBEAFE', color: '#1D4ED8', dot: '#2563EB' },
+    absent:     { label: 'Absent',      bg: '#FEE2E2', color: '#B91C1C', dot: '#DC2626' },
+    expected:   { label: 'Expected',    bg: '#F1F5F9', color: '#94A3B8', dot: '#CBD5E1' },
+    unmarked:   { label: 'Not marked',  bg: '#F1F5F9', color: '#94A3B8', dot: '#CBD5E1' },
   }
   const sc = statusConfig[status] || statusConfig.unmarked
   const isMarked = status === 'signed_in' || status === 'signed_out' || status === 'absent'
@@ -625,70 +625,50 @@ function ChildCard({ child, status, bubble, onClick, primary, selected, onToggle
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        position: 'relative',
-        background: '#fff',
-        border: selected ? `2px solid ${primary}` : isMarked ? `2px solid ${sc.ring}30` : '2px solid #F1F5F9',
-        borderRadius: 20,
-        padding: '18px 12px 12px',
-        cursor: 'pointer',
-        textAlign: 'center',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
-        gap: 8,
-        transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
-        transform: hovered ? 'translateY(-3px)' : 'none',
-        boxShadow: hovered ? `0 14px 28px -14px ${bColor}50` : '0 1px 3px rgba(0,0,0,0.04)',
+        gap: 12,
+        padding: '10px 14px',
+        background: selected ? `${primary}08` : hovered ? '#F8FAFC' : '#fff',
+        border: `1.5px solid ${selected ? primary + '40' : hovered ? '#E2E8F0' : '#F1F5F9'}`,
+        borderRadius: 16,
+        cursor: 'pointer',
+        transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
+        boxShadow: hovered ? `0 4px 14px -8px ${bColor}40` : '0 1px 3px rgba(0,0,0,0.03)',
       }}
     >
-      {/* Selection checkbox — top-left corner */}
+      {/* Checkbox */}
       <button onClick={e => { e.stopPropagation(); onToggleSelect(child.id) }}
-        style={{ position: 'absolute', top: 10, left: 10, width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : '#E2E8F0'}`, background: selected ? primary : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900, zIndex: 2 }}>
+        style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : '#D1D5DB'}`, background: selected ? primary : '#fff', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
         {selected ? '✓' : ''}
       </button>
 
-      {/* Status dot — top-right corner */}
-      {isMarked && (
-        <div style={{ position: 'absolute', top: 12, right: 12, width: 10, height: 10, borderRadius: '50%', background: sc.dot, boxShadow: `0 0 0 3px ${sc.bg}` }} />
-      )}
-
       {/* Avatar */}
-      <div style={{ width: 60, height: 60, borderRadius: 18, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: '#fff', overflow: 'hidden', boxShadow: `0 6px 16px -6px ${bColor}80`, transition: 'transform 0.18s ease', transform: hovered ? 'scale(1.06)' : 'none' }}>
+      <div style={{ width: 42, height: 42, borderRadius: 14, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 3px 10px -4px ${bColor}80`, transition: 'transform 0.15s', transform: hovered ? 'scale(1.05)' : 'none' }}>
         {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
 
-      {/* Name */}
-      <div style={{ minWidth: 0, width: '100%' }}>
+      {/* Name + badges */}
+      <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {child.first_name}
+          {child.first_name} {child.last_name}
         </div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {child.last_name}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
+          {(bubble || child.group_name) && (
+            <span style={{ fontSize: 11, fontWeight: 700, color: bColor }}>{bubble?.label || child.group_name}</span>
+          )}
+          {child.allergies && (
+            <span style={{ fontSize: 10, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
+          )}
+          {child.medical_notes && (
+            <span style={{ fontSize: 10, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
+          )}
         </div>
       </div>
 
-      {/* Group pill */}
-      {(bubble || child.group_name) && (
-        <span style={{ fontSize: 10, fontWeight: 800, color: bColor, background: bColor + '14', borderRadius: 99, padding: '2px 10px', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {bubble?.label || child.group_name}
-        </span>
-      )}
-
-      {/* Alert badges */}
-      {(child.allergies || child.medical_notes) && (
-        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {child.allergies && (
-            <span style={{ fontSize: 9, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
-          )}
-          {child.medical_notes && (
-            <span style={{ fontSize: 9, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
-          )}
-        </div>
-      )}
-
-      {/* Status footer — indicator only, card click opens the mark modal */}
-      <div style={{ width: '100%', marginTop: 'auto', borderRadius: 12, padding: '6px 8px', background: sc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-        {isMarked && <div style={{ width: 6, height: 6, borderRadius: '50%', background: sc.dot }} />}
+      {/* Status badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: sc.bg, borderRadius: 99, padding: '5px 12px', flexShrink: 0 }}>
+        <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.dot }} />
         <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
       </div>
     </div>
@@ -932,8 +912,8 @@ export default function Registers({ org, onNavigate }) {
           ))}
         </div>
 
-        {/* CHILDREN GRID */}
-        <div style={{ flex: 1, overflowY: 'auto', background: '#F8FAFC', padding: isMobile ? 12 : 16 }}>
+        {/* CHILDREN LIST */}
+        <div style={{ flex: 1, overflowY: 'auto', background: '#F8FAFC', padding: isMobile ? '10px 10px' : '12px 14px' }}>
           {loading ? (
             <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontWeight: 600 }}>Loading register...</div>
           ) : filtered.length === 0 ? (
@@ -946,7 +926,7 @@ export default function Registers({ org, onNavigate }) {
               )}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(150px, 1fr))', gap: isMobile ? 10 : 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {filtered.map(child => (
                 <ChildCard
                   key={child.id}
