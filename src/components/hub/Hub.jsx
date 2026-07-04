@@ -356,9 +356,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                 LIVE SESSION
               </span>
             )}
-            {sessions.length > 1 && (
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{sessions.length} active today</span>
-            )}
           </div>
           <h2 style={{ margin: 0, fontSize: 23, fontWeight: 900, color: '#fff', letterSpacing: -0.5, fontFamily: 'var(--font-display, sans-serif)' }}>{activeSession?.title}</h2>
           <p style={{ margin: '5px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
@@ -366,18 +363,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             {activeSession?.location ? ` · ${activeSession.location}` : ''}
           </p>
         </div>
-
-        {/* Session tabs if multiple */}
-        {sessions.length > 1 && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 12, justifyContent: 'center', overflowX: 'auto' }}>
-            {sessions.map(s => (
-              <button key={s.id} onClick={() => setActiveSession(s)}
-                style={{ padding: '5px 12px', borderRadius: 99, border: `1px solid ${activeSession?.id === s.id ? primary : 'rgba(255,255,255,0.1)'}`, background: activeSession?.id === s.id ? primary + '25' : 'transparent', color: activeSession?.id === s.id ? primary : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                {s.title}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* Live group breakdown — clickable bubble filter pills */}
         {bubbleGroups.length > 0 && (
@@ -1037,18 +1022,23 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       {/* ── LIVE SESSION HERO ── */}
       <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
-        <LiveSessionPanel
-          sessions={todaySessions}
-          childList={children}
-          attendance={attendance}
-          primary={primary}
-          secondary={secondary}
-          orgId={org?.id}
-          reflections={reflections}
-          onOpenRegister={openRegisterForSession}
-          onNavigate={go}
-          getLiveSessionStats={getLiveSessionStats}
-        />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, padding: '0 0 8px' }}>
+          {todaySessions.slice(0, 20).map(s => (
+            <LiveSessionPanel
+              key={s.id}
+              sessions={[s]}
+              childList={children}
+              attendance={attendance}
+              primary={primary}
+              secondary={secondary}
+              orgId={org?.id}
+              reflections={reflections}
+              onOpenRegister={openRegisterForSession}
+              onNavigate={go}
+              getLiveSessionStats={getLiveSessionStats}
+            />
+          ))}
+        </div>
       ) : (
         <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, #6D28D9)` }}>
           <div style={styles.trophy}>🏆</div>
