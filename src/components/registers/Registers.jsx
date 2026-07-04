@@ -384,7 +384,7 @@ function InlineChildImport({ org, template, onImported }) {
 }
 
 // ─── CHILD DRAWER ─────────────────────────────────────────────
-function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], onClose, onUpdateStatus, primary, hasSession, onGroupChange }) {
+function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], onClose, onUpdateStatus, primary, hasSession, onGroupChange, onChildUpdated }) {
   const isMobile = useIsMobile()
   const [drawerTab, setDrawerTab] = useState(hasSession ? 'actions' : 'info')
   const [absenceReason, setAbsenceReason] = useState('')
@@ -707,7 +707,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
           )}
 
           {/* EDIT */}
-          {drawerTab === 'edit' && <EditChildForm child={child} onSaved={onClose} />}
+          {drawerTab === 'edit' && <EditChildForm child={child} onSaved={() => onChildUpdated ? onChildUpdated(child.id) : onClose()} />}
         </div>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
@@ -1204,6 +1204,11 @@ export default function Registers({ org, onNavigate }) {
           onUpdateStatus={(id, status, extra) => { handleUpdateStatus(id, status, extra); setSelectedChild(null) }}
           onGroupChange={(childId, groupName) => {
             setChildren(prev => prev.map(ch => ch.id === childId ? { ...ch, group_name: groupName } : ch))
+          }}
+          onChildUpdated={async (childId) => {
+            const { data } = await supabase.from('children').select('*').eq('id', childId).single()
+            if (data) setChildren(prev => prev.map(ch => ch.id === childId ? data : ch))
+            setSelectedChild(null)
           }}
         />
       )}
