@@ -742,7 +742,7 @@ function EncouragementPanel({ org, primary }) {
     { text: `What ${orgName} is building here is bigger than any one session.`, emoji: '🏗️' },
     { text: 'Someone in this room today will remember this moment for the rest of their life.', emoji: '✨' },
     { text: 'You chose the hardest and most important job there is. Thank you.', emoji: '🙏' },
-    { text: `${orgName} — turning up, every time, for every child. That\'s the work.`, emoji: '💪' },
+    { text: `${orgName} — turning up, every time, for every child. That's the work.`, emoji: '💪' },
   ]
 
   // Seed by day so it changes daily but is consistent within a session
