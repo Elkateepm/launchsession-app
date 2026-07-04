@@ -935,9 +935,16 @@ export default function Registers({ org, onNavigate }) {
                 </div>
               )}
             </div>
-            <button onClick={() => setShowAdd(true)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-              + Add Child
-            </button>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              {session && (
+                <button onClick={() => setShowAdd(true)} style={{ padding: '8px 14px', borderRadius: 10, border: `1.5px solid ${primary}40`, background: primary + '10', color: primary, fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  + Walk-in
+                </button>
+              )}
+              <button onClick={() => setShowAdd(true)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                + Add Child
+              </button>
+            </div>
           </div>
 
           {/* Stats strip — just two numbers */}
@@ -1037,7 +1044,6 @@ export default function Registers({ org, onNavigate }) {
 
         {/* FOOTER */}
         <div style={{ background: '#fff', borderTop: '1px solid #F3F4F6', padding: isMobile ? '10px 12px' : '12px 16px', display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'space-between', gap: isMobile ? 8 : 0, flexWrap: isMobile ? 'wrap' : 'nowrap', flexShrink: 0 }}>
-          {!isMobile && <button onClick={() => setShowAdd(true)} style={{ padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${primary}30`, background: primary + '08', color: primary, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Walk-in</button>}
           {!isMobile && <div style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600 }}>{filtered.length} of {children.length} shown</div>}
           <button style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: session ? `linear-gradient(135deg, ${primary}, #16A34A)` : '#F3F4F6', color: session ? '#fff' : '#9CA3AF', fontSize: 13, fontWeight: 800, cursor: session ? 'pointer' : 'default', width: isMobile ? '100%' : 'auto' }}>
             {session ? `✓ Complete Register · ${counts.signed_in} in` : 'No Active Session'}
