@@ -1090,20 +1090,11 @@ export default function Registers({ org, onNavigate }) {
         </div>
 
         {/* FOOTER */}
-        <div style={{ background: '#fff', borderTop: '1px solid #F3F4F6', padding: isMobile ? '10px 12px' : '12px 16px', display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'space-between', gap: 10, flexShrink: 0 }}>
+        <div style={{ background: '#fff', borderTop: '1px solid #F3F4F6', padding: isMobile ? '10px 12px' : '12px 16px', display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'space-between', gap: isMobile ? 8 : 0, flexWrap: isMobile ? 'wrap' : 'nowrap', flexShrink: 0 }}>
           {!isMobile && <div style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600 }}>{filtered.length} of {children.length} shown</div>}
-          <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : 'auto' }}>
-            <button onClick={() => setShowAdd(true)}
-              style={{ flex: isMobile ? 1 : 'none', padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: '#fff', color: primary, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
-              + Add Child
-            </button>
-            {session && (
-              <button onClick={() => setShowAdd(true)}
-                style={{ flex: isMobile ? 1 : 'none', padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
-                + Walk-in
-              </button>
-            )}
-          </div>
+          <button style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: session ? `linear-gradient(135deg, ${primary}, #16A34A)` : '#F3F4F6', color: session ? '#fff' : '#9CA3AF', fontSize: 13, fontWeight: 800, cursor: session ? 'pointer' : 'default', width: isMobile ? '100%' : 'auto' }}>
+            {session ? `✓ Complete Register · ${counts.signed_in} in` : 'No Active Session'}
+          </button>
         </div>
       </div>
 
