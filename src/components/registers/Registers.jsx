@@ -383,6 +383,48 @@ function InlineChildImport({ org, template, onImported }) {
   )
 }
 
+// ─── NOTES TAB ────────────────────────────────────────────────
+function NotesTab({ child }) {
+  const [notes, setNotes] = useState(child.notes || '')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const timerRef = React.useRef(null)
+
+  const save = React.useCallback(async (value) => {
+    setSaving(true)
+    await supabase.from('children').update({ notes: value || null }).eq('id', child.id)
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }, [child.id])
+
+  const handleChange = (e) => {
+    const value = e.target.value
+    setNotes(value)
+    setSaved(false)
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => save(value), 1200)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>Private notes about {child.first_name}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: saving ? '#F59E0B' : saved ? '#16A34A' : 'transparent' }}>
+          {saving ? 'Saving...' : '✓ Saved'}
+        </div>
+      </div>
+      <textarea
+        value={notes}
+        onChange={handleChange}
+        placeholder={`Add notes about ${child.first_name} — behaviour, progress, parent conversations, anything relevant...`}
+        style={{ width: '100%', minHeight: 200, padding: '12px 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', fontSize: 13, lineHeight: 1.7, color: '#0F172A', outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', background: '#FAFBFC' }}
+      />
+      <div style={{ fontSize: 11, color: '#94A3B8' }}>Auto-saves as you type. Visible to admins and staff only.</div>
+    </div>
+  )
+}
+
 // ─── CHILD DRAWER ─────────────────────────────────────────────
 function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], onClose, primary, hasSession, onGroupChange, onChildUpdated }) {
   const isMobile = useIsMobile()
@@ -522,6 +564,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         <div style={{ display: 'flex', padding: '8px 12px', gap: 4, background: '#fff', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
           {[
             ['info', 'Info'],
+            ['notes', 'Notes'],
             ['edit', 'Edit'],
           ].map(([key, label]) => (
             <button key={key} onClick={() => setDrawerTab(key)}
@@ -601,6 +644,8 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
               )}
             </div>
           )}
+
+          {drawerTab === 'notes' && <NotesTab child={child} />}
 
           {/* EDIT */}
           {drawerTab === 'edit' && <EditChildForm child={child} onSaved={() => onChildUpdated ? onChildUpdated(child.id) : onClose()} />}
