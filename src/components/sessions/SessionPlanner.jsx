@@ -799,9 +799,9 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
 
   // ── FORM VIEW ──
   if (view === 'form') return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'stretch', justifyContent: 'flex-end' }}>
-      <div onClick={() => { setView('list'); setEditing(null) }} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(2px)' }} />
-      <div style={{ position: 'relative', width: '100%', maxWidth: 480, height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--surface, #fff)', boxShadow: '-8px 0 48px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={() => { setView('list'); setEditing(null) }} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)' }} />
+      <div style={{ position: 'relative', width: '100%', maxWidth: 560, maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: 'var(--surface, #fff)', borderRadius: 24, boxShadow: '0 32px 80px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
         <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} />
       </div>
     </div>
