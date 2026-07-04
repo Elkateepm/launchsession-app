@@ -45,7 +45,11 @@ export function useAttendance(sessionId) {
     setAttendance(prev => prev.map(a => a.id === attendanceId ? { ...a, ...updates } : a))
   }
 
-  return { attendance, loading, updateStatus }
+  const addAttendanceRow = (row) => {
+    setAttendance(prev => [...prev, row])
+  }
+
+  return { attendance, loading, updateStatus, addAttendanceRow }
 }
 
 // ─── CHILDREN ────────────────────────────────────────────────
