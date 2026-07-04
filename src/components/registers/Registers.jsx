@@ -124,43 +124,140 @@ function GroupsQuickSetupModal({ org, onClose, onSaved }) {
 // ─── EDIT FORM ────────────────────────────────────────────────
 function EditChildForm({ child, onSaved }) {
   const [form, setForm] = useState({
-    first_name: child.first_name || '', last_name: child.last_name || '',
-    date_of_birth: child.date_of_birth || '', group_name: child.group_name || '',
-    allergies: child.allergies || '', medical_notes: child.medical_notes || '',
+    first_name: child.first_name || '',
+    last_name: child.last_name || '',
+    date_of_birth: child.date_of_birth || '',
+    group_name: child.group_name || '',
+    school: child.school || '',
+    // Medical
+    has_asthma: child.has_asthma || false,
+    has_diabetes: child.has_diabetes || false,
+    has_epipen: child.has_epipen || false,
+    has_medication: child.has_medication || false,
+    allergies: child.allergies || '',
+    medical_notes: child.medical_notes || '',
+    // SEN
+    sen: child.sen || '',
+    has_behaviour_plan: child.has_behaviour_plan || false,
+    behaviour_plan_notes: child.behaviour_plan_notes || '',
+    // Travel
+    travel_consent: child.travel_consent || false,
+    // Emergency + Parent
     emergency_contact_name: child.emergency_contact_name || '',
     emergency_contact_phone: child.emergency_contact_phone || '',
+    parent_name: child.parent_name || '',
+    parent_phone: child.parent_phone || '',
   })
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
-  const fi = { width: '100%', padding: '9px 11px', borderRadius: 9, border: '1.5px solid #e5e7eb', fontSize: 13, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }
+
+  const fi = { width: '100%', padding: '9px 11px', borderRadius: 9, border: '1.5px solid #e5e7eb', fontSize: 13, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: '#fff' }
   const lb = { fontSize: 10, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }
+
+  const Section = ({ icon, title, color, children: kids }) => (
+    <div style={{ background: color + '08', border: `1px solid ${color}25`, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+      <div style={{ fontSize: 11, fontWeight: 800, color, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+        <span>{icon}</span>{title}
+      </div>
+      {kids}
+    </div>
+  )
+
+  const Check = ({ label, value, onChange }) => (
+    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151', fontWeight: 500, marginBottom: 8, cursor: 'pointer' }}>
+      <input type="checkbox" checked={value} onChange={e => onChange(e.target.checked)}
+        style={{ width: 16, height: 16, borderRadius: 4, accentColor: '#1B9AAA', cursor: 'pointer' }} />
+      {label}
+    </label>
+  )
 
   const handleSave = async () => {
     setSaving(true)
     await supabase.from('children').update({
       first_name: form.first_name.trim(), last_name: form.last_name.trim(),
       date_of_birth: form.date_of_birth || null, group_name: form.group_name || null,
+      school: form.school || null,
+      has_asthma: form.has_asthma, has_diabetes: form.has_diabetes,
+      has_epipen: form.has_epipen, has_medication: form.has_medication,
       allergies: form.allergies || null, medical_notes: form.medical_notes || null,
+      sen: form.sen || null, has_behaviour_plan: form.has_behaviour_plan,
+      behaviour_plan_notes: form.behaviour_plan_notes || null,
+      travel_consent: form.travel_consent,
       emergency_contact_name: form.emergency_contact_name || null,
       emergency_contact_phone: form.emergency_contact_phone || null,
+      parent_name: form.parent_name || null, parent_phone: form.parent_phone || null,
     }).eq('id', child.id)
     setSaving(false)
     onSaved()
   }
+
   return (
     <div style={{ padding: '4px 0' }}>
+      {/* Basic info */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
         <div><label style={lb}>First Name *</label><input style={fi} value={form.first_name} onChange={e => set('first_name', e.target.value)} /></div>
         <div><label style={lb}>Last Name *</label><input style={fi} value={form.last_name} onChange={e => set('last_name', e.target.value)} /></div>
       </div>
-      <div style={{ marginBottom: 8 }}><label style={lb}>Date of Birth</label><input style={fi} type="date" value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)} /></div>
-      <div style={{ marginBottom: 8 }}><label style={lb}>Group</label><input style={fi} value={form.group_name} onChange={e => set('group_name', e.target.value)} placeholder="e.g. Red" /></div>
-      <div style={{ marginBottom: 8 }}><label style={lb}>Allergies</label><input style={fi} value={form.allergies} onChange={e => set('allergies', e.target.value)} /></div>
-      <div style={{ marginBottom: 8 }}><label style={lb}>Medical Notes</label><input style={fi} value={form.medical_notes} onChange={e => set('medical_notes', e.target.value)} /></div>
-      <div style={{ marginBottom: 8 }}><label style={lb}>Emergency Contact Name</label><input style={fi} value={form.emergency_contact_name} onChange={e => set('emergency_contact_name', e.target.value)} /></div>
-      <div style={{ marginBottom: 12 }}><label style={lb}>Emergency Contact Phone</label><input style={fi} value={form.emergency_contact_phone} onChange={e => set('emergency_contact_phone', e.target.value)} type="tel" /></div>
-      <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: saving ? '#9ca3af' : '#1B9AAA', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
-        {saving ? 'Saving...' : 'Save Changes'}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+        <div><label style={lb}>Date of Birth</label><input style={fi} type="date" value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)} /></div>
+        <div><label style={lb}>Group</label><input style={fi} value={form.group_name} onChange={e => set('group_name', e.target.value)} placeholder="e.g. Blues" /></div>
+      </div>
+      <div style={{ marginBottom: 10 }}><label style={lb}>School</label><input style={fi} value={form.school} onChange={e => set('school', e.target.value)} placeholder="e.g. Ark Burlington Danes" /></div>
+
+      {/* Medical */}
+      <Section icon="⚕️" title="Medical Conditions" color="#0891B2">
+        <Check label="Asthma" value={form.has_asthma} onChange={v => set('has_asthma', v)} />
+        <Check label="Diabetes" value={form.has_diabetes} onChange={v => set('has_diabetes', v)} />
+        <Check label="Severe Allergy (EpiPen)" value={form.has_epipen} onChange={v => set('has_epipen', v)} />
+        <Check label="Takes regular medication" value={form.has_medication} onChange={v => set('has_medication', v)} />
+        <div style={{ marginTop: 6 }}>
+          <label style={lb}>Allergies / Other Medical Condition</label>
+          <input style={fi} value={form.allergies} onChange={e => set('allergies', e.target.value)} placeholder="Describe any allergies or conditions..." />
+        </div>
+        <div style={{ marginTop: 6 }}>
+          <label style={lb}>Medical Notes</label>
+          <input style={fi} value={form.medical_notes} onChange={e => set('medical_notes', e.target.value)} placeholder="Any further medical detail..." />
+        </div>
+      </Section>
+
+      {/* SEN */}
+      <Section icon="🧩" title="SEN Needs" color="#059669">
+        <div style={{ marginBottom: 8 }}>
+          <label style={lb}>SEN Details</label>
+          <input style={fi} value={form.sen} onChange={e => set('sen', e.target.value)} placeholder="e.g. ADHD, Autism Spectrum, Learning Difficulties..." />
+        </div>
+        <Check label="Has a Behaviour Support Plan" value={form.has_behaviour_plan} onChange={v => set('has_behaviour_plan', v)} />
+        {form.has_behaviour_plan && (
+          <div style={{ marginTop: 6 }}>
+            <label style={lb}>Behaviour Plan Notes</label>
+            <input style={fi} value={form.behaviour_plan_notes} onChange={e => set('behaviour_plan_notes', e.target.value)} placeholder="Key details of the plan..." />
+          </div>
+        )}
+      </Section>
+
+      {/* Travel */}
+      <Section icon="🚶" title="Travel Consent" color="#D97706">
+        <Check label="This child has consent to travel home alone" value={form.travel_consent} onChange={v => set('travel_consent', v)} />
+      </Section>
+
+      {/* Emergency Contact */}
+      <Section icon="📞" title="Emergency Contact" color="#7C3AED">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div><label style={lb}>Name</label><input style={fi} value={form.emergency_contact_name} onChange={e => set('emergency_contact_name', e.target.value)} placeholder="Full name" /></div>
+          <div><label style={lb}>Phone</label><input style={fi} type="tel" value={form.emergency_contact_phone} onChange={e => set('emergency_contact_phone', e.target.value)} placeholder="07700 900 000" /></div>
+        </div>
+      </Section>
+
+      {/* Parent / Carer */}
+      <Section icon="❤️" title="Parent / Carer" color="#DB2777">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div><label style={lb}>Parent Name</label><input style={fi} value={form.parent_name} onChange={e => set('parent_name', e.target.value)} placeholder="Full name" /></div>
+          <div><label style={lb}>Parent Phone</label><input style={fi} type="tel" value={form.parent_phone} onChange={e => set('parent_phone', e.target.value)} placeholder="07700 900 000" /></div>
+        </div>
+      </Section>
+
+      <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', background: saving ? '#9ca3af' : '#111', color: '#fff', fontWeight: 800, fontSize: 14, cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        {saving ? 'Saving...' : '⊙ Save Changes'}
       </button>
     </div>
   )
@@ -354,7 +451,8 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 
           {/* Top bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 1.5 }}>Child Profile</span>
+            <button onClick={async e => { e.stopPropagation(); if (!window.confirm(`Remove ${name} from the register?`)) return; await supabase.from('children').update({ active: false }).eq('id', child.id); onClose() }}
+              style={{ padding: '5px 12px', borderRadius: 99, background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 12, fontWeight: 700 }}>Remove</button>
             <button onClick={e => { e.stopPropagation(); onClose() }} style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
           </div>
 
@@ -516,7 +614,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
           {drawerTab === 'info' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {!hasSession && (
-                <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: 20 }}>📋</span>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 800, color: '#92400E' }}>No active session</div>
@@ -525,70 +623,80 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                 </div>
               )}
 
-              {/* DOB + Age */}
+              {/* Basic */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', border: '1px solid #F1F5F9' }}>
                   <div style={{ fontSize: 9, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Date of Birth</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>{child.date_of_birth ? format(new Date(child.date_of_birth), 'd MMM yyyy') : '—'}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{child.date_of_birth ? format(new Date(child.date_of_birth), 'd MMM yyyy') : '—'}</div>
                 </div>
                 <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', border: '1px solid #F1F5F9' }}>
                   <div style={{ fontSize: 9, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Age</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>{age !== null ? `${age} years old` : '—'}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{age !== null ? `${age} years old` : '—'}</div>
                 </div>
               </div>
-
-              {/* Group */}
-              {(currentGroup || bubble) && (
-                <div style={{ background: (currentBubble?.color || bColor) + '10', border: `1px solid ${(currentBubble?.color || bColor)}30`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: currentBubble?.color || bColor, flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontSize: 9, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1 }}>Group</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: currentBubble?.color || bColor, marginTop: 2 }}>{currentGroup || bubble?.label || '—'}</div>
-                  </div>
+              {child.school && (
+                <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '10px 14px', border: '1px solid #F1F5F9', fontSize: 13, color: '#374151' }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 2 }}>School</span>
+                  {child.school}
                 </div>
               )}
 
-              {/* Emergency contact */}
-              <div style={{ background: child.emergency_contact_name ? '#EFF6FF' : '#F8FAFC', border: `1px solid ${child.emergency_contact_name ? '#BFDBFE' : '#F1F5F9'}`, borderRadius: 12, padding: '14px 16px' }}>
-                <div style={{ fontSize: 9, fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>📞</span> Emergency Contact
+              {/* Medical */}
+              {(child.has_asthma || child.has_diabetes || child.has_epipen || child.has_medication || child.allergies || child.medical_notes) && (
+                <div style={{ background: 'rgba(8,145,178,0.06)', border: '1px solid rgba(8,145,178,0.2)', borderRadius: 14, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#0891B2', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>⚕️ Medical Conditions</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: (child.allergies || child.medical_notes) ? 10 : 0 }}>
+                    {child.has_asthma && <span style={{ fontSize: 11, fontWeight: 700, color: '#0891B2', background: 'rgba(8,145,178,0.1)', borderRadius: 8, padding: '2px 8px' }}>Asthma</span>}
+                    {child.has_diabetes && <span style={{ fontSize: 11, fontWeight: 700, color: '#0891B2', background: 'rgba(8,145,178,0.1)', borderRadius: 8, padding: '2px 8px' }}>Diabetes</span>}
+                    {child.has_epipen && <span style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: '#FEE2E2', borderRadius: 8, padding: '2px 8px' }}>💉 EpiPen</span>}
+                    {child.has_medication && <span style={{ fontSize: 11, fontWeight: 700, color: '#0891B2', background: 'rgba(8,145,178,0.1)', borderRadius: 8, padding: '2px 8px' }}>Medication</span>}
+                  </div>
+                  {child.allergies && <div style={{ fontSize: 12, color: '#374151', marginBottom: 4 }}><b>Allergies:</b> {child.allergies}</div>}
+                  {child.medical_notes && <div style={{ fontSize: 12, color: '#374151' }}><b>Notes:</b> {child.medical_notes}</div>}
                 </div>
+              )}
+
+              {/* SEN */}
+              {(child.sen || child.has_behaviour_plan) && (
+                <div style={{ background: 'rgba(5,150,105,0.06)', border: '1px solid rgba(5,150,105,0.2)', borderRadius: 14, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#059669', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>🧩 SEN Needs</div>
+                  {child.sen && <div style={{ fontSize: 12, color: '#374151', marginBottom: 4 }}>{child.sen}</div>}
+                  {child.has_behaviour_plan && <span style={{ fontSize: 11, fontWeight: 700, color: '#059669', background: 'rgba(5,150,105,0.1)', borderRadius: 8, padding: '2px 8px' }}>Behaviour Plan</span>}
+                </div>
+              )}
+
+              {/* Travel consent */}
+              {child.travel_consent && (
+                <div style={{ background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>🚶</span>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#D97706' }}>Consent to travel home alone</div>
+                </div>
+              )}
+
+              {/* Emergency Contact */}
+              <div style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 14, padding: '14px 16px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#7C3AED', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>📞 Emergency Contact</div>
                 {child.emergency_contact_name ? (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: '#111', marginBottom: 2 }}>{child.emergency_contact_name}</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#111', marginBottom: 2 }}>{child.emergency_contact_name}</div>
                       {child.emergency_contact_phone && (
-                        <a href={`tel:${child.emergency_contact_phone}`} style={{ fontSize: 14, color: '#2563EB', textDecoration: 'none', fontWeight: 700 }}>{child.emergency_contact_phone}</a>
+                        <a href={`tel:${child.emergency_contact_phone}`} style={{ fontSize: 13, color: '#7C3AED', textDecoration: 'none', fontWeight: 700 }}>{child.emergency_contact_phone}</a>
                       )}
                     </div>
                     {child.emergency_contact_phone && (
-                      <a href={`tel:${child.emergency_contact_phone}`}
-                        style={{ width: 40, height: 40, borderRadius: 12, background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, textDecoration: 'none', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}>
-                        📞
-                      </a>
+                      <a href={`tel:${child.emergency_contact_phone}`} style={{ width: 38, height: 38, borderRadius: 11, background: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, textDecoration: 'none', boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}>📞</a>
                     )}
                   </div>
-                ) : (
-                  <div style={{ fontSize: 13, color: '#9CA3AF' }}>No emergency contact set</div>
-                )}
+                ) : <div style={{ fontSize: 12, color: '#9CA3AF' }}>No emergency contact set</div>}
               </div>
 
-              {/* Alerts detail */}
-              {hasAlerts && (
-                <div style={{ background: '#FFF8F0', border: '1px solid #FED7AA', borderRadius: 12, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#D97706', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>⚠️ Health Alerts</div>
-                  {child.allergies && (
-                    <div style={{ marginBottom: child.medical_notes ? 8 : 0 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Allergies</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#92400E' }}>{child.allergies}</div>
-                    </div>
-                  )}
-                  {child.medical_notes && (
-                    <div>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Medical Notes</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#92400E' }}>{child.medical_notes}</div>
-                    </div>
-                  )}
+              {/* Parent / Carer */}
+              {(child.parent_name || child.parent_phone) && (
+                <div style={{ background: 'rgba(219,39,119,0.06)', border: '1px solid rgba(219,39,119,0.2)', borderRadius: 14, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#DB2777', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>❤️ Parent / Carer</div>
+                  {child.parent_name && <div style={{ fontSize: 14, fontWeight: 800, color: '#111', marginBottom: 2 }}>{child.parent_name}</div>}
+                  {child.parent_phone && <a href={`tel:${child.parent_phone}`} style={{ fontSize: 13, color: '#DB2777', textDecoration: 'none', fontWeight: 700 }}>{child.parent_phone}</a>}
                 </div>
               )}
             </div>
