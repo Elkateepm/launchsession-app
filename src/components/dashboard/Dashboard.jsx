@@ -240,10 +240,15 @@ export default function Dashboard({ session, org }) {
         </div>
 
         {/* NAV */}
-        <div className="sb-nav" style={{ flex: 1, padding: '6px 8px 8px', overflowY: 'auto' }}>
+        {/* Home — sticky, always visible */}
+        <div style={{ padding: '4px 8px 0', flexShrink: 0 }}>
           <NavSection collapsed={sidebarCollapsed} packColor={primary}>
             <NavItem icon="🏠" label="Home" active={tab === 'home'} onClick={() => { handleSetTab('home') }} primary={primary} collapsed={sidebarCollapsed} />
           </NavSection>
+        </div>
+        <div style={{ height: 1, margin: '0 12px', background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
+
+        <div className="sb-nav" style={{ flex: 1, padding: '4px 8px 8px', overflowY: 'auto' }}>
 
           <NavSection collapsed={sidebarCollapsed} title="Delivery" packColor="#3B82F6">
             <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => handleSetTab('calendar')} primary={primary} collapsed={sidebarCollapsed} />
