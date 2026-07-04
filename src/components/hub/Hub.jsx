@@ -173,7 +173,23 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   React.useEffect(() => { if (sessions.length) setActiveSession(sessions[0]) }, [sessions])
 
   const sessionAttendance = localAttendance.filter(a => a.session_id === activeSession?.id)
-  const stats = activeSession ? getLiveSessionStats(activeSession) : { signedIn: 0, expected: 0, absent: 0, signedOut: 0, percent: 0 }
+
+  // Compute stats from local state so they update immediately on sign-in
+  const stats = React.useMemo(() => {
+    if (!activeSession) return { signedIn: 0, expected: 0, absent: 0, signedOut: 0, percent: 0 }
+    const targetGroups = Array.isArray(activeSession.bubbles) ? activeSession.bubbles.map(g => (g || '').toLowerCase()) : []
+    const targetedChildren = targetGroups.length > 0
+      ? childList.filter(c => targetGroups.includes((c.group_name || '').toLowerCase()))
+      : childList
+    const si = sessionAttendance.filter(a => a.status === 'signed_in').length
+    const so = sessionAttendance.filter(a => a.status === 'signed_out').length
+    const absent = sessionAttendance.filter(a => a.status === 'absent').length
+    const signedInIds = new Set(sessionAttendance.filter(a => a.status === 'signed_in').map(a => a.child_id))
+    const expected = targetedChildren.filter(c => !signedInIds.has(c.id)).length
+      + sessionAttendance.filter(a => a.status === 'signed_in' && !targetedChildren.find(c => c.id === a.child_id)).length
+    const total = Math.max(targetedChildren.length, sessionAttendance.length)
+    return { signedIn: si, absent, signedOut: so, expected, percent: total > 0 ? Math.round((si / total) * 100) : 0 }
+  }, [activeSession, sessionAttendance, childList])
 
   const BUBBLE_COLORS = { red: '#D0021B', orange: '#F97316', yellow: '#F97316', blue: '#1B4FA8', purple: '#7B2D8B', teens: '#1A1A1A' }
   const getBubbleColor = (groupName) => BUBBLE_COLORS[(groupName || '').toLowerCase()] || '#9CA3AF'
