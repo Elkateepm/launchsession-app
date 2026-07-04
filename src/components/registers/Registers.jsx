@@ -617,7 +617,6 @@ function ChildCard({ child, status, bubble, onClick, primary, selected, onToggle
     unmarked:   { label: 'Not marked',  bg: '#F1F5F9', color: '#94A3B8', dot: '#CBD5E1' },
   }
   const sc = statusConfig[status] || statusConfig.unmarked
-  const isMarked = status === 'signed_in' || status === 'signed_out' || status === 'absent'
 
   return (
     <div
