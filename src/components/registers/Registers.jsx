@@ -739,7 +739,6 @@ export default function Registers({ org, onNavigate }) {
   const { attendance, updateStatus } = useAttendance(session?.id)
 
   const [search, setSearch] = useState('')
-  const [activeTab, setActiveTab] = useState('all')
   const [activeGroup, setActiveGroup] = useState('all')
   const [selectedChild, setSelectedChild] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -861,14 +860,8 @@ export default function Registers({ org, onNavigate }) {
 
   const filtered = children.filter(c => {
     const nameOk = !search.trim() || `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase())
-    const s = getStatus(c.id)
-    const tabOk = activeTab === 'all'
-      || (activeTab === 'signed_in' && s === 'signed_in')
-      || (activeTab === 'absent' && s === 'absent')
-      || (activeTab === 'expected' && ['expected','unmarked'].includes(s))
-      || (activeTab === 'signed_out' && s === 'signed_out')
     const groupOk = activeGroup === 'all' || (c.group_name || '').toLowerCase() === activeGroup.toLowerCase()
-    return nameOk && tabOk && groupOk
+    return nameOk && groupOk
   })
 
   const attendanceRate = counts.total > 0 ? Math.round((counts.signed_in / counts.total) * 100) : 0
@@ -976,22 +969,6 @@ export default function Registers({ org, onNavigate }) {
             })}
           </div>
         )}
-
-        {/* STATUS TABS */}
-        <div style={{ display: 'flex', background: '#fff', borderBottom: '1px solid #F3F4F6', padding: '0 16px', flexShrink: 0, overflowX: 'auto' }}>
-          {[
-            { key: 'all', label: 'All', count: counts.total },
-            { key: 'signed_in', label: 'In', count: counts.signed_in },
-            { key: 'expected', label: 'Yet to Arrive', count: counts.expected },
-            { key: 'absent', label: 'Absent', count: counts.absent },
-            { key: 'signed_out', label: 'Out', count: counts.signed_out },
-          ].map(t => (
-            <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ padding: isMobile ? '8px 8px' : '10px 12px', border: 'none', borderBottom: `2.5px solid ${activeTab === t.key ? primary : 'transparent'}`, background: 'transparent', color: activeTab === t.key ? primary : '#6B7280', fontSize: isMobile ? 11 : 13, fontWeight: activeTab === t.key ? 800 : 500, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}>
-              {t.label}
-              <span style={{ background: activeTab === t.key ? primary + '18' : '#F3F4F6', color: activeTab === t.key ? primary : '#9CA3AF', borderRadius: 99, padding: '1px 7px', fontSize: 11, fontWeight: 700 }}>{t.count}</span>
-            </button>
-          ))}
-        </div>
 
         {/* CHILDREN LIST */}
         <div style={{ flex: 1, overflowY: 'auto', background: '#F8FAFC', padding: isMobile ? '10px 10px' : '12px 14px' }}>
