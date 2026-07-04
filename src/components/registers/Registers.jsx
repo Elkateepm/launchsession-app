@@ -389,7 +389,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   const [drawerTab, setDrawerTab] = useState('info')
   const [photoUrl, setPhotoUrl] = useState(child.photo_url || null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
-  const [currentGroup, setCurrentGroup] = useState(child.group_name || '')
+  const currentGroup = child.group_name || ''
   const photoInputRef = React.useRef()
 
   const name = `${child.first_name} ${child.last_name}`
