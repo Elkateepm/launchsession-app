@@ -9,6 +9,159 @@ const ANNOUNCEMENT_EMOJIS = ['📣', '🎉', '⭐', '🔥', '💡', '📌', '�
 // Staff/admin only — visibility is enforced both here (UI) and via RLS
 // (see announcements table policies), so this is defense in depth, not
 // the only guard.
+// ─── PHOTO CAROUSEL ──────────────────────────────────────────
+function PhotoCarousel({ orgId, primary, userId }) {
+  const [photos, setPhotos] = React.useState([])
+  const [current, setCurrent] = React.useState(0)
+  const [uploading, setUploading] = React.useState(false)
+  const [lightbox, setLightbox] = React.useState(null)
+  const [paused, setPaused] = React.useState(false)
+  const [loaded, setLoaded] = React.useState({})
+  const intervalRef = React.useRef(null)
+  const inputRef = React.useRef(null)
+
+  const load = React.useCallback(() => {
+    supabase.from('gallery_photos').select('*').eq('org_id', orgId).order('created_at', { ascending: false }).limit(30)
+      .then(({ data }) => setPhotos(data || []))
+  }, [orgId])
+
+  React.useEffect(() => { load() }, [load])
+
+  // Auto-advance
+  React.useEffect(() => {
+    if (photos.length <= 1 || paused) { clearInterval(intervalRef.current); return }
+    intervalRef.current = setInterval(() => setCurrent(c => (c + 1) % photos.length), 4000)
+    return () => clearInterval(intervalRef.current)
+  }, [photos.length, paused])
+
+  const prev = () => { clearInterval(intervalRef.current); setCurrent(c => (c - 1 + photos.length) % photos.length) }
+  const next = () => { clearInterval(intervalRef.current); setCurrent(c => (c + 1) % photos.length) }
+
+  const handleUpload = async (files) => {
+    setUploading(true)
+    for (const file of Array.from(files)) {
+      const path = `${orgId}/${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`
+      const { error } = await supabase.storage.from('gallery').upload(path, file)
+      if (!error) {
+        const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(path)
+        await supabase.from('gallery_photos').insert({ org_id: orgId, url: publicUrl, path, uploaded_by: userId })
+      }
+    }
+    setUploading(false)
+    load()
+  }
+
+  if (photos.length === 0 && !uploading) return (
+    <div style={{ marginBottom: 22, borderRadius: 20, border: '2px dashed #E2E8F0', padding: '40px 24px', textAlign: 'center', cursor: 'pointer', background: '#FAFBFC' }}
+      onClick={() => inputRef.current?.click()}>
+      <input ref={inputRef} type="file" multiple accept="image/*" hidden onChange={e => handleUpload(e.target.files)} />
+      <div style={{ fontSize: 36, marginBottom: 10 }}>📸</div>
+      <div style={{ fontSize: 15, fontWeight: 800, color: '#374151', marginBottom: 4 }}>Add your first photos</div>
+      <div style={{ fontSize: 13, color: '#9CA3AF' }}>Capture your sessions, trips and moments</div>
+    </div>
+  )
+
+  const photo = photos[current]
+
+  return (
+    <div style={{ marginBottom: 22 }}>
+      <input ref={inputRef} type="file" multiple accept="image/*" hidden onChange={e => handleUpload(e.target.files)} />
+
+      {/* Main carousel */}
+      <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', background: '#000', aspectRatio: '16/9', cursor: 'pointer' }}
+        onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
+        onClick={() => setLightbox(photo)}>
+
+        {/* Photos — preload all, fade active */}
+        {photos.map((p, i) => (
+          <img key={p.id} src={p.url} alt={p.caption || ''}
+            onLoad={() => setLoaded(l => ({ ...l, [p.id]: true }))}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: i === current ? 1 : 0, transition: 'opacity 0.7s ease', display: 'block' }} />
+        ))}
+
+        {/* Loading shimmer */}
+        {!loaded[photo?.id] && (
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #1a1a2e 0%, #2d2d44 50%, #1a1a2e 100%)', backgroundSize: '200%', animation: 'shimmer 1.5s infinite' }} />
+        )}
+
+        {/* Gradient overlays */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 50%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent)', pointerEvents: 'none' }} />
+
+        {/* Caption */}
+        {photo?.caption && (
+          <div style={{ position: 'absolute', bottom: 52, left: 18, right: 60, fontSize: 13, fontWeight: 600, color: '#fff', textShadow: '0 1px 6px rgba(0,0,0,0.8)', lineHeight: 1.4 }}>
+            {photo.caption}
+          </div>
+        )}
+
+        {/* Dot indicators */}
+        {photos.length > 1 && (
+          <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 5 }}>
+            {photos.map((_, i) => (
+              <div key={i} onClick={e => { e.stopPropagation(); clearInterval(intervalRef.current); setCurrent(i) }}
+                style={{ width: i === current ? 20 : 6, height: 6, borderRadius: 99, background: i === current ? '#fff' : 'rgba(255,255,255,0.35)', transition: 'all 0.3s ease', cursor: 'pointer' }} />
+            ))}
+          </div>
+        )}
+
+        {/* Prev/Next */}
+        {photos.length > 1 && (
+          <>
+            <button onClick={e => { e.stopPropagation(); prev() }}
+              style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}>‹</button>
+            <button onClick={e => { e.stopPropagation(); next() }}
+              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}>›</button>
+          </>
+        )}
+
+        {/* Upload + counter */}
+        <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)', background: 'rgba(0,0,0,0.35)', borderRadius: 99, padding: '3px 8px', backdropFilter: 'blur(4px)' }}>
+            {current + 1} / {photos.length}
+          </span>
+          <button onClick={e => { e.stopPropagation(); inputRef.current?.click() }} disabled={uploading}
+            style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: uploading ? 'rgba(0,0,0,0.35)' : primary, borderRadius: 99, padding: '3px 10px', border: 'none', cursor: uploading ? 'default' : 'pointer', backdropFilter: 'blur(4px)', transition: 'background 0.15s' }}>
+            {uploading ? '⏳' : '+ Photo'}
+          </button>
+        </div>
+      </div>
+
+      {/* Thumbnail strip */}
+      {photos.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, marginTop: 8, overflowX: 'auto', paddingBottom: 4 }}>
+          {photos.map((p, i) => (
+            <div key={p.id} onClick={() => { clearInterval(intervalRef.current); setCurrent(i) }}
+              style={{ flexShrink: 0, width: 56, height: 40, borderRadius: 10, overflow: 'hidden', cursor: 'pointer', border: `2px solid ${i === current ? primary : 'transparent'}`, opacity: i === current ? 1 : 0.55, transition: 'all 0.2s ease' }}>
+              <img src={p.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightbox && (
+        <>
+          <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 900, backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={lightbox.url} alt={lightbox.caption || ''} style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 12, boxShadow: '0 32px 80px rgba(0,0,0,0.6)' }} />
+            {lightbox.caption && (
+              <div style={{ position: 'absolute', bottom: 40, left: '50%', transform: 'translateX(-50%)', fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.85)', background: 'rgba(0,0,0,0.5)', borderRadius: 99, padding: '6px 16px', backdropFilter: 'blur(4px)', whiteSpace: 'nowrap' }}>
+                {lightbox.caption}
+              </div>
+            )}
+            <button onClick={() => setLightbox(null)} style={{ position: 'absolute', top: 20, right: 20, width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer' }}>×</button>
+          </div>
+        </>
+      )}
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+    </div>
+  )
+}
+
 function AnnouncementsPanel({ orgId, primary, userId }) {
   const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1200,6 +1353,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               </div>
             )}
           </div>
+
+          {/* PHOTO CAROUSEL */}
+          <PhotoCarousel orgId={orgId} primary={primary} userId={session?.user?.id} />
 
           {/* ANNOUNCEMENTS — staff/admin only */}
           {['admin', 'owner', 'staff'].includes(userProfile?.role) && (
