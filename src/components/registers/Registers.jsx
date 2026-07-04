@@ -448,10 +448,10 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
           </div>
 
           {/* Identity row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px 12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '14px 16px 12px' }}>
             {/* Avatar */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <div style={{ width: 72, height: 72, borderRadius: 20, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 900, color: '#fff', overflow: 'hidden', boxShadow: `0 6px 18px -6px ${bColor}90` }}>
+              <div style={{ width: 80, height: 80, borderRadius: 24, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 900, color: '#fff', overflow: 'hidden', boxShadow: `0 8px 24px -8px ${bColor}90` }}>
                 {photoUrl
                   ? <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : <span>{initials}</span>
@@ -468,9 +468,9 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
             </div>
 
             {/* Name + key facts */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', letterSpacing: -0.3, lineHeight: 1.15, marginBottom: 6 }}>{name}</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', letterSpacing: -0.3, lineHeight: 1.15, marginBottom: 8 }}>{name}</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
                 {age !== null && (
                   <span style={{ fontSize: 12, fontWeight: 700, color: '#475569', background: '#F1F5F9', borderRadius: 99, padding: '2px 9px' }}>Age {age}</span>
                 )}
