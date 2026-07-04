@@ -613,8 +613,8 @@ function ChildCard({ child, status, bubble, onClick, primary, selected, onToggle
     signed_in:  { label: 'In',       bg: '#DCFCE7', color: '#15803D', dot: '#16A34A', ring: '#16A34A' },
     signed_out: { label: 'Out',      bg: '#DBEAFE', color: '#1D4ED8', dot: '#2563EB', ring: '#2563EB' },
     absent:     { label: 'Absent',   bg: '#FEE2E2', color: '#B91C1C', dot: '#DC2626', ring: '#DC2626' },
-    expected:   { label: 'Tap to mark', bg: '#F8FAFC', color: '#64748B', dot: '#CBD5E1', ring: 'transparent' },
-    unmarked:   { label: 'Tap to mark', bg: '#F8FAFC', color: '#64748B', dot: '#CBD5E1', ring: 'transparent' },
+    expected:   { label: 'Expected', bg: '#F8FAFC', color: '#94A3B8', dot: '#CBD5E1', ring: 'transparent' },
+    unmarked:   { label: 'Not marked', bg: '#F8FAFC', color: '#94A3B8', dot: '#CBD5E1', ring: 'transparent' },
   }
   const sc = statusConfig[status] || statusConfig.unmarked
   const isMarked = status === 'signed_in' || status === 'signed_out' || status === 'absent'
@@ -686,10 +686,10 @@ function ChildCard({ child, status, bubble, onClick, primary, selected, onToggle
         </div>
       )}
 
-      {/* Status footer */}
-      <div style={{ width: '100%', marginTop: 'auto', borderRadius: 12, padding: '6px 8px', background: hovered && !isMarked ? bColor + '10' : sc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, transition: 'background 0.18s ease' }}>
+      {/* Status footer — indicator only, card click opens the mark modal */}
+      <div style={{ width: '100%', marginTop: 'auto', borderRadius: 12, padding: '6px 8px', background: sc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
         {isMarked && <div style={{ width: 6, height: 6, borderRadius: '50%', background: sc.dot }} />}
-        <span style={{ fontSize: 11, fontWeight: 800, color: hovered && !isMarked ? bColor : sc.color }}>{sc.label}</span>
+        <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
       </div>
     </div>
   )
