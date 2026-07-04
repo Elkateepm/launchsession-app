@@ -122,6 +122,28 @@ function GroupsQuickSetupModal({ org, onClose, onSaved }) {
 }
 
 // ─── EDIT FORM ────────────────────────────────────────────────
+// ─── EDIT FORM HELPERS (must be outside EditChildForm to avoid remount on every keystroke) ───
+function FormSection({ icon, title, color, children }) {
+  return (
+    <div style={{ background: color + '08', border: `1px solid ${color}25`, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+      <div style={{ fontSize: 11, fontWeight: 800, color, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+        <span>{icon}</span>{title}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function FormCheck({ label, value, onChange }) {
+  return (
+    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151', fontWeight: 500, marginBottom: 8, cursor: 'pointer' }}>
+      <input type="checkbox" checked={value} onChange={e => onChange(e.target.checked)}
+        style={{ width: 16, height: 16, borderRadius: 4, accentColor: '#1B9AAA', cursor: 'pointer' }} />
+      {label}
+    </label>
+  )
+}
+
 function EditChildForm({ child, onSaved }) {
   const [form, setForm] = useState({
     first_name: child.first_name || '',
@@ -153,23 +175,6 @@ function EditChildForm({ child, onSaved }) {
 
   const fi = { width: '100%', padding: '9px 11px', borderRadius: 9, border: '1.5px solid #e5e7eb', fontSize: 13, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: '#fff' }
   const lb = { fontSize: 10, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }
-
-  const Section = ({ icon, title, color, children: kids }) => (
-    <div style={{ background: color + '08', border: `1px solid ${color}25`, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
-      <div style={{ fontSize: 11, fontWeight: 800, color, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-        <span>{icon}</span>{title}
-      </div>
-      {kids}
-    </div>
-  )
-
-  const Check = ({ label, value, onChange }) => (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151', fontWeight: 500, marginBottom: 8, cursor: 'pointer' }}>
-      <input type="checkbox" checked={value} onChange={e => onChange(e.target.checked)}
-        style={{ width: 16, height: 16, borderRadius: 4, accentColor: '#1B9AAA', cursor: 'pointer' }} />
-      {label}
-    </label>
-  )
 
   const handleSave = async () => {
     setSaving(true)
@@ -205,11 +210,11 @@ function EditChildForm({ child, onSaved }) {
       <div style={{ marginBottom: 10 }}><label style={lb}>School</label><input style={fi} value={form.school} onChange={e => set('school', e.target.value)} placeholder="e.g. Ark Burlington Danes" /></div>
 
       {/* Medical */}
-      <Section icon="⚕️" title="Medical Conditions" color="#0891B2">
-        <Check label="Asthma" value={form.has_asthma} onChange={v => set('has_asthma', v)} />
-        <Check label="Diabetes" value={form.has_diabetes} onChange={v => set('has_diabetes', v)} />
-        <Check label="Severe Allergy (EpiPen)" value={form.has_epipen} onChange={v => set('has_epipen', v)} />
-        <Check label="Takes regular medication" value={form.has_medication} onChange={v => set('has_medication', v)} />
+      <FormSection icon="⚕️" title="Medical Conditions" color="#0891B2">
+        <FormCheck label="Asthma" value={form.has_asthma} onChange={v => set('has_asthma', v)} />
+        <FormCheck label="Diabetes" value={form.has_diabetes} onChange={v => set('has_diabetes', v)} />
+        <FormCheck label="Severe Allergy (EpiPen)" value={form.has_epipen} onChange={v => set('has_epipen', v)} />
+        <FormCheck label="Takes regular medication" value={form.has_medication} onChange={v => set('has_medication', v)} />
         <div style={{ marginTop: 6 }}>
           <label style={lb}>Allergies / Other Medical Condition</label>
           <input style={fi} value={form.allergies} onChange={e => set('allergies', e.target.value)} placeholder="Describe any allergies or conditions..." />
@@ -218,43 +223,43 @@ function EditChildForm({ child, onSaved }) {
           <label style={lb}>Medical Notes</label>
           <input style={fi} value={form.medical_notes} onChange={e => set('medical_notes', e.target.value)} placeholder="Any further medical detail..." />
         </div>
-      </Section>
+      </FormSection>
 
       {/* SEN */}
-      <Section icon="🧩" title="SEN Needs" color="#059669">
+      <FormSection icon="🧩" title="SEN Needs" color="#059669">
         <div style={{ marginBottom: 8 }}>
           <label style={lb}>SEN Details</label>
           <input style={fi} value={form.sen} onChange={e => set('sen', e.target.value)} placeholder="e.g. ADHD, Autism Spectrum, Learning Difficulties..." />
         </div>
-        <Check label="Has a Behaviour Support Plan" value={form.has_behaviour_plan} onChange={v => set('has_behaviour_plan', v)} />
+        <FormCheck label="Has a Behaviour Support Plan" value={form.has_behaviour_plan} onChange={v => set('has_behaviour_plan', v)} />
         {form.has_behaviour_plan && (
           <div style={{ marginTop: 6 }}>
             <label style={lb}>Behaviour Plan Notes</label>
             <input style={fi} value={form.behaviour_plan_notes} onChange={e => set('behaviour_plan_notes', e.target.value)} placeholder="Key details of the plan..." />
           </div>
         )}
-      </Section>
+      </FormSection>
 
       {/* Travel */}
-      <Section icon="🚶" title="Travel Consent" color="#D97706">
-        <Check label="This child has consent to travel home alone" value={form.travel_consent} onChange={v => set('travel_consent', v)} />
-      </Section>
+      <FormSection icon="🚶" title="Travel Consent" color="#D97706">
+        <FormCheck label="This child has consent to travel home alone" value={form.travel_consent} onChange={v => set('travel_consent', v)} />
+      </FormSection>
 
       {/* Emergency Contact */}
-      <Section icon="📞" title="Emergency Contact" color="#7C3AED">
+      <FormSection icon="📞" title="Emergency Contact" color="#7C3AED">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <div><label style={lb}>Name</label><input style={fi} value={form.emergency_contact_name} onChange={e => set('emergency_contact_name', e.target.value)} placeholder="Full name" /></div>
           <div><label style={lb}>Phone</label><input style={fi} type="tel" value={form.emergency_contact_phone} onChange={e => set('emergency_contact_phone', e.target.value)} placeholder="07700 900 000" /></div>
         </div>
-      </Section>
+      </FormSection>
 
       {/* Parent / Carer */}
-      <Section icon="❤️" title="Parent / Carer" color="#DB2777">
+      <FormSection icon="❤️" title="Parent / Carer" color="#DB2777">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <div><label style={lb}>Parent Name</label><input style={fi} value={form.parent_name} onChange={e => set('parent_name', e.target.value)} placeholder="Full name" /></div>
           <div><label style={lb}>Parent Phone</label><input style={fi} type="tel" value={form.parent_phone} onChange={e => set('parent_phone', e.target.value)} placeholder="07700 900 000" /></div>
         </div>
-      </Section>
+      </FormSection>
 
       <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', background: saving ? '#9ca3af' : '#111', color: '#fff', fontWeight: 800, fontSize: 14, cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         {saving ? 'Saving...' : '⊙ Save Changes'}
