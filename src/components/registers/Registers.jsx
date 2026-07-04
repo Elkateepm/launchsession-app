@@ -967,10 +967,26 @@ export default function Registers({ org, onNavigate }) {
               { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => setShowTemplates(v => !v) },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: null },
             ].map(t => (
-              <button key={t.label} onClick={t.action} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 8px', borderRadius: 8, border: 'none', background: 'transparent', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 2 }}
-                onMouseEnter={e => { if (t.action) e.currentTarget.style.background = '#F9FAFB' }}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>{t.icon}</div>
+              <button key={t.label} onClick={t.action}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 6, transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease' }}
+                onMouseEnter={e => {
+                  if (!t.action) return
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 8px 18px -8px rgba(0,0,0,0.14)'
+                  e.currentTarget.style.borderColor = primary + '40'
+                  e.currentTarget.style.background = '#fff'
+                  const badge = e.currentTarget.querySelector('.tool-icon')
+                  if (badge) { badge.style.transform = 'scale(1.12)'; badge.style.background = primary + '14' }
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'none'
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.borderColor = '#F3F4F6'
+                  e.currentTarget.style.background = '#FAFBFC'
+                  const badge = e.currentTarget.querySelector('.tool-icon')
+                  if (badge) { badge.style.transform = 'none'; badge.style.background = '#F3F4F6' }
+                }}>
+                <div className="tool-icon" style={{ width: 32, height: 32, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, transition: 'transform 0.18s ease, background 0.18s ease' }}>{t.icon}</div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{t.label}</div>
                   <div style={{ fontSize: 10, color: '#9CA3AF' }}>{t.sub}</div>
