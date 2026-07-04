@@ -656,43 +656,9 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   )
 }
 
-// ─── MARK MODAL ───────────────────────────────────────────────
-function MarkModal({ child, status, bColor, onClose, onMark }) {
-  const [absenceReason, setAbsenceReason] = useState('')
-  const name = `${child.first_name} ${child.last_name}`
-
-  return (
-    <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 700, backdropFilter: 'blur(3px)' }} />
-      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 'min(420px, 100vw)', background: '#fff', borderRadius: '20px 20px 0 0', padding: '20px 20px 32px', zIndex: 701, boxShadow: '0 -8px 40px rgba(0,0,0,0.2)' }}>
-        <div style={{ width: 36, height: 4, borderRadius: 99, background: '#E5E7EB', margin: '0 auto 18px' }} />
-        <div style={{ fontSize: 16, fontWeight: 900, color: '#111', marginBottom: 4 }}>{name}</div>
-        <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 18 }}>Mark attendance for this session</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-          <button onClick={() => onMark('signed_in')} disabled={status === 'signed_in'}
-            style={{ padding: '16px 12px', borderRadius: 14, border: 'none', background: status === 'signed_in' ? '#DCFCE7' : '#16A34A', color: status === 'signed_in' ? '#16A34A' : '#fff', fontWeight: 800, fontSize: 14, cursor: status === 'signed_in' ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <span>✅</span>{status === 'signed_in' ? 'Signed In' : 'Sign In'}
-          </button>
-          <button onClick={() => onMark('signed_out')} disabled={status !== 'signed_in'}
-            style={{ padding: '16px 12px', borderRadius: 14, border: 'none', background: status === 'signed_out' ? '#DBEAFE' : status === 'signed_in' ? bColor : '#F3F4F6', color: status === 'signed_out' ? '#1D4ED8' : status === 'signed_in' ? '#fff' : '#9CA3AF', fontWeight: 800, fontSize: 14, cursor: status === 'signed_in' ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <span>👋</span>{status === 'signed_out' ? 'Signed Out' : 'Sign Out'}
-          </button>
-        </div>
-        <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 14 }}>
-          <input value={absenceReason} onChange={e => setAbsenceReason(e.target.value)} placeholder="Absence reason (optional)..."
-            style={{ width: '100%', padding: '10px 13px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, marginBottom: 8, boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }} />
-          <button onClick={() => onMark('absent', { absence_reason: absenceReason })}
-            style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid #FEE2E2', background: '#FFF5F5', color: '#DC2626', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            ✕ Mark Absent
-          </button>
-        </div>
-      </div>
-    </>
-  )
-}
 
 // ─── CHILD CARD ───────────────────────────────────────────────
-function ChildCard({ child, status, bubble, onClick, onMark, hasSession, primary, selected, onToggleSelect }) {
+function ChildCard({ child, status, bubble, onClick, primary, selected, onToggleSelect }) {
   const bColor = bubble?.color || primary || '#1B9AAA'
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const [hovered, setHovered] = React.useState(false)
@@ -752,19 +718,8 @@ function ChildCard({ child, status, bubble, onClick, onMark, hasSession, primary
         </div>
       </div>
 
-      {/* Status badge — tappable only when session is live */}
-      <div
-        onClick={e => { e.stopPropagation(); if (hasSession && onMark) onMark() }}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 5,
-          background: sc.bg, borderRadius: 99, padding: '5px 12px', flexShrink: 0,
-          cursor: hasSession ? 'pointer' : 'default',
-          transition: 'transform 0.12s, opacity 0.12s',
-          opacity: !hasSession ? 0.7 : 1,
-        }}
-        onMouseEnter={e => { if (hasSession) e.currentTarget.style.transform = 'scale(1.06)' }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
-      >
+      {/* Status badge — indicator only */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: sc.bg, borderRadius: 99, padding: '5px 12px', flexShrink: 0 }}>
         <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.dot }} />
         <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
       </div>
@@ -787,7 +742,6 @@ export default function Registers({ org, onNavigate }) {
   const [activeTab, setActiveTab] = useState('all')
   const [activeGroup, setActiveGroup] = useState('all')
   const [selectedChild, setSelectedChild] = useState(null)
-  const [markChild, setMarkChild] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkAssigning, setBulkAssigning] = useState(false)
   const [showBulkGroupPicker, setShowBulkGroupPicker] = useState(false)
@@ -1032,11 +986,9 @@ export default function Registers({ org, onNavigate }) {
                   status={getStatus(child.id)}
                   bubble={getBubble(child)}
                   primary={primary}
-                  hasSession={!!session}
                   selected={selectedIds.has(child.id)}
                   onToggleSelect={toggleSelect}
                   onClick={() => setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
-                  onMark={!!session ? () => setMarkChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) }) : null}
                 />
               ))}
             </div>
@@ -1177,17 +1129,6 @@ export default function Registers({ org, onNavigate }) {
             Cancel
           </button>
         </div>
-      )}
-
-      {/* MARK MODAL */}
-      {markChild && (
-        <MarkModal
-          child={markChild.child}
-          status={markChild.status}
-          bColor={getBubble(markChild.child)?.color || primary}
-          onClose={() => setMarkChild(null)}
-          onMark={(newStatus, extra = {}) => { handleUpdateStatus(markChild.child.id, newStatus, extra); setMarkChild(null) }}
-        />
       )}
 
       {/* CHILD DRAWER */}
