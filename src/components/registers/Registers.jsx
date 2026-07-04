@@ -384,10 +384,9 @@ function InlineChildImport({ org, template, onImported }) {
 }
 
 // ─── CHILD DRAWER ─────────────────────────────────────────────
-function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], onClose, onUpdateStatus, primary, hasSession, onGroupChange, onChildUpdated }) {
+function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], onClose, primary, hasSession, onGroupChange, onChildUpdated }) {
   const isMobile = useIsMobile()
-  const [drawerTab, setDrawerTab] = useState(hasSession ? 'actions' : 'info')
-  const [absenceReason, setAbsenceReason] = useState('')
+  const [drawerTab, setDrawerTab] = useState('info')
   const [photoUrl, setPhotoUrl] = useState(child.photo_url || null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [assigningGroup, setAssigningGroup] = useState(false)
@@ -418,11 +417,6 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
     unmarked:   { label: 'Not marked', color: '#6B7280', bg: '#F3F4F6', icon: '—' },
   }
   const sc = statusCfg[status] || statusCfg.unmarked
-
-  const handleAction = (newStatus) => {
-    onUpdateStatus(child.id, newStatus, newStatus === 'absent' ? { absence_reason: absenceReason } : {})
-    onClose()
-  }
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0]
@@ -572,7 +566,6 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         {/* ── TABS ── */}
         <div style={{ display: 'flex', padding: '10px 12px', gap: 6, background: '#F8FAFC', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
           {[
-            ...(hasSession ? [['actions', '✋ Sign In/Out']] : []),
             ['info', '📋 Info'],
             ['edit', '✏️ Edit'],
           ].map(([key, label]) => (
@@ -585,34 +578,6 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 
         {/* ── CONTENT ── */}
         <div style={{ padding: '16px 18px 24px', flex: 1 }}>
-
-          {/* SIGN IN/OUT */}
-          {drawerTab === 'actions' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <button onClick={() => handleAction('signed_in')} disabled={status === 'signed_in'}
-                  style={{ padding: '16px 12px', borderRadius: 14, border: 'none', background: status === 'signed_in' ? '#DCFCE7' : '#16A34A', color: status === 'signed_in' ? '#16A34A' : '#fff', fontWeight: 800, fontSize: 14, cursor: status === 'signed_in' ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
-                  <span style={{ fontSize: 18 }}>✅</span>
-                  {status === 'signed_in' ? 'Signed In' : 'Sign In'}
-                </button>
-                <button onClick={() => handleAction('signed_out')} disabled={status !== 'signed_in'}
-                  style={{ padding: '16px 12px', borderRadius: 14, border: 'none', background: status === 'signed_out' ? '#DBEAFE' : status === 'signed_in' ? bColor : '#F3F4F6', color: status === 'signed_out' ? '#1D4ED8' : status === 'signed_in' ? '#fff' : '#9CA3AF', fontWeight: 800, fontSize: 14, cursor: status === 'signed_in' ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
-                  <span style={{ fontSize: 18 }}>👋</span>
-                  {status === 'signed_out' ? 'Signed Out' : 'Sign Out'}
-                </button>
-              </div>
-              <div style={{ height: 1, background: '#F1F5F9', margin: '4px 0' }} />
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Absence Reason</label>
-                <input placeholder="e.g. Sick, holiday, appointment..." value={absenceReason} onChange={e => setAbsenceReason(e.target.value)}
-                  style={{ width: '100%', padding: '10px 13px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, marginBottom: 8, boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }} />
-                <button onClick={() => handleAction('absent')}
-                  style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid #FEE2E2', background: '#FFF5F5', color: '#DC2626', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <span>✕</span> Mark Absent
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* INFO */}
           {drawerTab === 'info' && (
@@ -715,8 +680,43 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   )
 }
 
+// ─── MARK MODAL ───────────────────────────────────────────────
+function MarkModal({ child, status, bColor, onClose, onMark }) {
+  const [absenceReason, setAbsenceReason] = useState('')
+  const name = `${child.first_name} ${child.last_name}`
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 700, backdropFilter: 'blur(3px)' }} />
+      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 'min(420px, 100vw)', background: '#fff', borderRadius: '20px 20px 0 0', padding: '20px 20px 32px', zIndex: 701, boxShadow: '0 -8px 40px rgba(0,0,0,0.2)' }}>
+        <div style={{ width: 36, height: 4, borderRadius: 99, background: '#E5E7EB', margin: '0 auto 18px' }} />
+        <div style={{ fontSize: 16, fontWeight: 900, color: '#111', marginBottom: 4 }}>{name}</div>
+        <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 18 }}>Mark attendance for this session</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+          <button onClick={() => onMark('signed_in')} disabled={status === 'signed_in'}
+            style={{ padding: '16px 12px', borderRadius: 14, border: 'none', background: status === 'signed_in' ? '#DCFCE7' : '#16A34A', color: status === 'signed_in' ? '#16A34A' : '#fff', fontWeight: 800, fontSize: 14, cursor: status === 'signed_in' ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span>✅</span>{status === 'signed_in' ? 'Signed In' : 'Sign In'}
+          </button>
+          <button onClick={() => onMark('signed_out')} disabled={status !== 'signed_in'}
+            style={{ padding: '16px 12px', borderRadius: 14, border: 'none', background: status === 'signed_out' ? '#DBEAFE' : status === 'signed_in' ? bColor : '#F3F4F6', color: status === 'signed_out' ? '#1D4ED8' : status === 'signed_in' ? '#fff' : '#9CA3AF', fontWeight: 800, fontSize: 14, cursor: status === 'signed_in' ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span>👋</span>{status === 'signed_out' ? 'Signed Out' : 'Sign Out'}
+          </button>
+        </div>
+        <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 14 }}>
+          <input value={absenceReason} onChange={e => setAbsenceReason(e.target.value)} placeholder="Absence reason (optional)..."
+            style={{ width: '100%', padding: '10px 13px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, marginBottom: 8, boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }} />
+          <button onClick={() => onMark('absent', { absence_reason: absenceReason })}
+            style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid #FEE2E2', background: '#FFF5F5', color: '#DC2626', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            ✕ Mark Absent
+          </button>
+        </div>
+      </div>
+    </>
+  )
+}
+
 // ─── CHILD CARD ───────────────────────────────────────────────
-function ChildCard({ child, status, bubble, onClick, primary, selected, onToggleSelect }) {
+function ChildCard({ child, status, bubble, onClick, onMark, hasSession, primary, selected, onToggleSelect }) {
   const bColor = bubble?.color || primary || '#1B9AAA'
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const [hovered, setHovered] = React.useState(false)
@@ -732,7 +732,6 @@ function ChildCard({ child, status, bubble, onClick, primary, selected, onToggle
 
   return (
     <div
-      onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -754,31 +753,42 @@ function ChildCard({ child, status, bubble, onClick, primary, selected, onToggle
         {selected ? '✓' : ''}
       </button>
 
-      {/* Avatar */}
-      <div style={{ width: 42, height: 42, borderRadius: 14, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 3px 10px -4px ${bColor}80`, transition: 'transform 0.15s', transform: hovered ? 'scale(1.05)' : 'none' }}>
-        {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+      {/* Avatar + name — opens info drawer */}
+      <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+        <div style={{ width: 42, height: 42, borderRadius: 14, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 3px 10px -4px ${bColor}80`, transition: 'transform 0.15s', transform: hovered ? 'scale(1.05)' : 'none' }}>
+          {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {child.first_name} {child.last_name}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
+            {(bubble || child.group_name) && (
+              <span style={{ fontSize: 11, fontWeight: 700, color: bColor }}>{bubble?.label || child.group_name}</span>
+            )}
+            {child.allergies && (
+              <span style={{ fontSize: 10, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
+            )}
+            {child.medical_notes && (
+              <span style={{ fontSize: 10, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Name + badges */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {child.first_name} {child.last_name}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
-          {(bubble || child.group_name) && (
-            <span style={{ fontSize: 11, fontWeight: 700, color: bColor }}>{bubble?.label || child.group_name}</span>
-          )}
-          {child.allergies && (
-            <span style={{ fontSize: 10, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
-          )}
-          {child.medical_notes && (
-            <span style={{ fontSize: 10, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
-          )}
-        </div>
-      </div>
-
-      {/* Status badge */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: sc.bg, borderRadius: 99, padding: '5px 12px', flexShrink: 0 }}>
+      {/* Status badge — tappable only when session is live */}
+      <div
+        onClick={e => { e.stopPropagation(); if (hasSession && onMark) onMark() }}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 5,
+          background: sc.bg, borderRadius: 99, padding: '5px 12px', flexShrink: 0,
+          cursor: hasSession ? 'pointer' : 'default',
+          transition: 'transform 0.12s, opacity 0.12s',
+          opacity: !hasSession ? 0.7 : 1,
+        }}
+        onMouseEnter={e => { if (hasSession) e.currentTarget.style.transform = 'scale(1.06)' }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
+      >
         <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.dot }} />
         <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
       </div>
@@ -801,6 +811,7 @@ export default function Registers({ org, onNavigate }) {
   const [activeTab, setActiveTab] = useState('all')
   const [activeGroup, setActiveGroup] = useState('all')
   const [selectedChild, setSelectedChild] = useState(null)
+  const [markChild, setMarkChild] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkAssigning, setBulkAssigning] = useState(false)
   const [showBulkGroupPicker, setShowBulkGroupPicker] = useState(false)
@@ -1045,9 +1056,11 @@ export default function Registers({ org, onNavigate }) {
                   status={getStatus(child.id)}
                   bubble={getBubble(child)}
                   primary={primary}
+                  hasSession={!!session}
                   selected={selectedIds.has(child.id)}
                   onToggleSelect={toggleSelect}
                   onClick={() => setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
+                  onMark={!!session ? () => setMarkChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) }) : null}
                 />
               ))}
             </div>
@@ -1188,6 +1201,17 @@ export default function Registers({ org, onNavigate }) {
             Cancel
           </button>
         </div>
+      )}
+
+      {/* MARK MODAL */}
+      {markChild && (
+        <MarkModal
+          child={markChild.child}
+          status={markChild.status}
+          bColor={getBubble(markChild.child)?.color || primary}
+          onClose={() => setMarkChild(null)}
+          onMark={(newStatus, extra = {}) => { handleUpdateStatus(markChild.child.id, newStatus, extra); setMarkChild(null) }}
+        />
       )}
 
       {/* CHILD DRAWER */}
