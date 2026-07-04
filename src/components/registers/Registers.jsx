@@ -760,6 +760,37 @@ export default function Registers({ org, onNavigate }) {
     return g === b.key || g === b.label.toLowerCase()
   }) || null
 
+  const handlePrint = () => {
+    const rows = children.map(c => {
+      const status = getStatus(c.id)
+      const bubble = getBubble(c)
+      const statusLabel = { signed_in: 'In', signed_out: 'Out', absent: 'Absent', expected: 'Expected', unmarked: '—' }[status] || '—'
+      const alerts = [c.allergies && '⚠ Allergy', c.medical_notes && '✚ Medical', c.has_epipen && '💉 EpiPen'].filter(Boolean).join('  ')
+      return `<tr>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:700">${c.first_name} ${c.last_name}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:${bubble?.color || '#64748b'};font-weight:700">${bubble?.label || c.group_name || '—'}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#dc2626">${alerts}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:800;color:${status === 'signed_in' ? '#16a34a' : status === 'absent' ? '#dc2626' : '#64748b'}">${statusLabel}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:#94a3b8;font-size:12px">_______________</td>
+      </tr>`
+    }).join('')
+
+    const html = `<!DOCTYPE html><html><head><title>Register — ${org?.name || ''}</title>
+    <style>body{font-family:system-ui,sans-serif;color:#111;padding:24px}h1{font-size:20px;font-weight:900;margin:0 0 4px}p{margin:0 0 16px;color:#64748b;font-size:13px}table{width:100%;border-collapse:collapse}th{padding:8px 10px;text-align:left;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;border-bottom:2px solid #e5e7eb}@media print{button{display:none}}</style>
+    </head><body>
+    <h1>${session?.title || 'Register'} — ${org?.name || ''}</h1>
+    <p>${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} &nbsp;·&nbsp; ${children.length} children</p>
+    <table><thead><tr>
+      <th>Name</th><th>Group</th><th>Alerts</th><th>Status</th><th>Signature</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    <script>window.onload=()=>{window.print()}<\/script>
+    </body></html>`
+
+    const w = window.open('', '_blank')
+    w.document.write(html)
+    w.document.close()
+  }
+
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const toggleSelect = (childId) => {
@@ -1012,7 +1043,7 @@ export default function Registers({ org, onNavigate }) {
               { icon: '🏷️', label: 'Manage Groups', sub: 'Quick add & colours', action: () => setShowGroupsSetup(true) },
               { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => setShowImport(v => !v) },
               { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => setShowTemplates(v => !v) },
-              { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: null },
+              { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => handlePrint() },
             ].map(t => (
               <button key={t.label} onClick={t.action}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 6, transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease' }}
