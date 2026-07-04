@@ -783,7 +783,7 @@ export default function Registers({ org, onNavigate }) {
     <table><thead><tr>
       <th>Name</th><th>Group</th><th>Alerts</th><th>Status</th><th>Signature</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <script>window.onload=()=>{window.print()}<\/script>
+    <script>window.onload=()=>{window.print()}</` + `script>
     </body></html>`
 
     const w = window.open('', '_blank')
