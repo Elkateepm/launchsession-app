@@ -507,8 +507,16 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                     ) : popupMode === 'expected' ? (
                       isIn ? (
                         <span style={{ fontSize: 11, fontWeight: 700, color: '#16A34A', background: '#DCFCE7', borderRadius: 99, padding: '5px 12px' }}>✓ In</span>
+                      ) : isOut ? (
+                        <button onClick={() => handleSignIn(child)} disabled={isBusy}
+                          style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: isBusy ? '#9CA3AF' : primary, border: 'none', borderRadius: 99, padding: '7px 14px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
+                          {isBusy ? '···' : 'Sign In'}
+                        </button>
                       ) : isExpected ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#64748B', background: '#F1F5F9', borderRadius: 99, padding: '5px 12px' }}>Expected</span>
+                        <button onClick={() => handleSignIn(child)} disabled={isBusy}
+                          style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: isBusy ? '#9CA3AF' : primary, border: 'none', borderRadius: 99, padding: '7px 14px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
+                          {isBusy ? '···' : 'Sign In'}
+                        </button>
                       ) : (
                         <button onClick={() => handleAddToExpected(child)} disabled={isBusy}
                           style={{ fontSize: 11, fontWeight: 800, color: primary, background: 'transparent', border: `1.5px solid ${primary}`, borderRadius: 99, padding: '6px 12px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
