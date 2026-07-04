@@ -610,70 +610,86 @@ function ChildCard({ child, status, bubble, onClick, primary, selected, onToggle
   const [hovered, setHovered] = React.useState(false)
 
   const statusConfig = {
-    signed_in:  { label: 'In',      bg: '#DCFCE7', color: '#15803D', dot: '#16A34A', markBg: '#15803D', markColor: '#fff', markLabel: 'Signed In' },
-    signed_out: { label: 'Out',     bg: '#DBEAFE', color: '#1D4ED8', dot: '#2563EB', markBg: '#1D4ED8', markColor: '#fff', markLabel: 'Signed Out' },
-    absent:     { label: 'Absent',  bg: '#FEE2E2', color: '#B91C1C', dot: '#DC2626', markBg: '#DC2626', markColor: '#fff', markLabel: 'Absent' },
-    expected:   { label: 'Expected', bg: '#FEF9C3', color: '#92400E', dot: '#F59E0B', markBg: '#F3F4F6', markColor: '#6B7280', markLabel: 'MARK' },
-    unmarked:   { label: '—',       bg: '#F3F4F6', color: '#6B7280', dot: '#9CA3AF', markBg: '#F3F4F6', markColor: '#6B7280', markLabel: 'MARK' },
+    signed_in:  { label: 'In',       bg: '#DCFCE7', color: '#15803D', dot: '#16A34A', ring: '#16A34A' },
+    signed_out: { label: 'Out',      bg: '#DBEAFE', color: '#1D4ED8', dot: '#2563EB', ring: '#2563EB' },
+    absent:     { label: 'Absent',   bg: '#FEE2E2', color: '#B91C1C', dot: '#DC2626', ring: '#DC2626' },
+    expected:   { label: 'Tap to mark', bg: '#F8FAFC', color: '#64748B', dot: '#CBD5E1', ring: 'transparent' },
+    unmarked:   { label: 'Tap to mark', bg: '#F8FAFC', color: '#64748B', dot: '#CBD5E1', ring: 'transparent' },
   }
   const sc = statusConfig[status] || statusConfig.unmarked
+  const isMarked = status === 'signed_in' || status === 'signed_out' || status === 'absent'
 
   return (
     <div
-      style={{ display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #F3F4F6', cursor: 'pointer', background: selected ? '#EFF6FF' : hovered ? '#F8FAFC' : '#fff', transition: 'background 0.12s', minHeight: 64 }}
+      onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      style={{
+        position: 'relative',
+        background: '#fff',
+        border: selected ? `2px solid ${primary}` : isMarked ? `2px solid ${sc.ring}30` : '2px solid #F1F5F9',
+        borderRadius: 20,
+        padding: '18px 12px 12px',
+        cursor: 'pointer',
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
+        transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
+        transform: hovered ? 'translateY(-3px)' : 'none',
+        boxShadow: hovered ? `0 14px 28px -14px ${bColor}50` : '0 1px 3px rgba(0,0,0,0.04)',
+      }}
     >
-      {/* Selection checkbox */}
+      {/* Selection checkbox — top-left corner */}
       <button onClick={e => { e.stopPropagation(); onToggleSelect(child.id) }}
-        style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${selected ? primary : '#D1D5DB'}`, background: selected ? primary : '#fff', cursor: 'pointer', flexShrink: 0, marginRight: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
+        style={{ position: 'absolute', top: 10, left: 10, width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : '#E2E8F0'}`, background: selected ? primary : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900, zIndex: 2 }}>
         {selected ? '✓' : ''}
       </button>
 
+      {/* Status dot — top-right corner */}
+      {isMarked && (
+        <div style={{ position: 'absolute', top: 12, right: 12, width: 10, height: 10, borderRadius: '50%', background: sc.dot, boxShadow: `0 0 0 3px ${sc.bg}` }} />
+      )}
+
       {/* Avatar */}
-      <div style={{ width: 44, height: 44, borderRadius: 13, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', marginRight: 14, boxShadow: `0 2px 8px ${bColor}40` }}>
+      <div style={{ width: 60, height: 60, borderRadius: 18, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: '#fff', overflow: 'hidden', boxShadow: `0 6px 16px -6px ${bColor}80`, transition: 'transform 0.18s ease', transform: hovered ? 'scale(1.06)' : 'none' }}>
         {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
 
-      {/* Name + sub */}
-      <div style={{ flex: 1, minWidth: 0 }} onClick={onClick}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {child.first_name} {child.last_name}
+      {/* Name */}
+      <div style={{ minWidth: 0, width: '100%' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {child.first_name}
         </div>
-        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
-          {bubble && <span style={{ color: bColor, fontWeight: 700 }}>{bubble.label}</span>}
-          {!bubble && child.group_name && <span style={{ color: '#94A3B8', fontWeight: 600 }}>{child.group_name}</span>}
-          {child.allergies && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 6, padding: '1px 7px' }}>
-              ⚠ ALLERGY
-            </span>
-          )}
-          {child.medical_notes && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 6, padding: '1px 7px' }}>
-              ✚ MEDICAL
-            </span>
-          )}
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {child.last_name}
         </div>
       </div>
 
-      {/* Status dot */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        {(status === 'signed_in' || status === 'signed_out' || status === 'absent') && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: sc.bg, borderRadius: 99, padding: '4px 10px' }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: sc.dot }} />
-            <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
-          </div>
-        )}
+      {/* Group pill */}
+      {(bubble || child.group_name) && (
+        <span style={{ fontSize: 10, fontWeight: 800, color: bColor, background: bColor + '14', borderRadius: 99, padding: '2px 10px', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {bubble?.label || child.group_name}
+        </span>
+      )}
 
-        {/* MARK button */}
-        <button
-          onClick={e => { e.stopPropagation(); onClick() }}
-          style={{ minWidth: 58, padding: '8px 12px', borderRadius: 10, border: 'none', background: status === 'expected' || status === 'unmarked' ? '#F1F5F9' : sc.markBg + '18', color: status === 'expected' || status === 'unmarked' ? '#64748B' : sc.color, fontSize: 11, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3, textTransform: 'uppercase', transition: 'all 0.15s' }}
-          onMouseEnter={e => { e.currentTarget.style.background = bColor; e.currentTarget.style.color = '#fff' }}
-          onMouseLeave={e => { e.currentTarget.style.background = status === 'expected' || status === 'unmarked' ? '#F1F5F9' : sc.markBg + '18'; e.currentTarget.style.color = status === 'expected' || status === 'unmarked' ? '#64748B' : sc.color }}
-        >
-          {status === 'expected' || status === 'unmarked' ? 'MARK' : sc.label}
-        </button>
+      {/* Alert badges */}
+      {(child.allergies || child.medical_notes) && (
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {child.allergies && (
+            <span style={{ fontSize: 9, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
+          )}
+          {child.medical_notes && (
+            <span style={{ fontSize: 9, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
+          )}
+        </div>
+      )}
+
+      {/* Status footer */}
+      <div style={{ width: '100%', marginTop: 'auto', borderRadius: 12, padding: '6px 8px', background: hovered && !isMarked ? bColor + '10' : sc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, transition: 'background 0.18s ease' }}>
+        {isMarked && <div style={{ width: 6, height: 6, borderRadius: '50%', background: sc.dot }} />}
+        <span style={{ fontSize: 11, fontWeight: 800, color: hovered && !isMarked ? bColor : sc.color }}>{sc.label}</span>
       </div>
     </div>
   )
@@ -916,8 +932,8 @@ export default function Registers({ org, onNavigate }) {
           ))}
         </div>
 
-        {/* CHILDREN LIST */}
-        <div style={{ flex: 1, overflowY: 'auto', background: '#fff' }}>
+        {/* CHILDREN GRID */}
+        <div style={{ flex: 1, overflowY: 'auto', background: '#F8FAFC', padding: isMobile ? 12 : 16 }}>
           {loading ? (
             <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontWeight: 600 }}>Loading register...</div>
           ) : filtered.length === 0 ? (
@@ -930,18 +946,20 @@ export default function Registers({ org, onNavigate }) {
               )}
             </div>
           ) : (
-            filtered.map(child => (
-              <ChildCard
-                key={child.id}
-                child={child}
-                status={getStatus(child.id)}
-                bubble={getBubble(child)}
-                primary={primary}
-                selected={selectedIds.has(child.id)}
-                onToggleSelect={toggleSelect}
-                onClick={() => setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
-              />
-            ))
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(150px, 1fr))', gap: isMobile ? 10 : 12 }}>
+              {filtered.map(child => (
+                <ChildCard
+                  key={child.id}
+                  child={child}
+                  status={getStatus(child.id)}
+                  bubble={getBubble(child)}
+                  primary={primary}
+                  selected={selectedIds.has(child.id)}
+                  onToggleSelect={toggleSelect}
+                  onClick={() => setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
+                />
+              ))}
+            </div>
           )}
         </div>
 
