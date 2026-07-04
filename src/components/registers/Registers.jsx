@@ -442,121 +442,85 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         {isMobile && <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.12)' }} /></div>}
 
         {/* ── HERO HEADER ── */}
-        <div style={{ background: `linear-gradient(145deg, ${bColor}EE 0%, ${bColor} 100%)`, padding: '24px 20px 20px', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-          {/* Decorative circles */}
-          <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-          <div style={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+        <div style={{ background: '#fff', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
+          {/* Coloured accent bar */}
+          <div style={{ height: 5, background: `linear-gradient(90deg, ${bColor}, ${bColor}99)`, borderRadius: '0 0 0 0' }} />
 
-          {/* Top bar */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          {/* Top controls */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px 0' }}>
             <button onClick={async e => { e.stopPropagation(); if (!window.confirm(`Remove ${name} from the register?`)) return; await supabase.from('children').update({ active: false }).eq('id', child.id); onClose() }}
-              style={{ padding: '5px 12px', borderRadius: 99, background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 12, fontWeight: 700 }}>Remove</button>
-            <button onClick={e => { e.stopPropagation(); onClose() }} style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
+              style={{ padding: '5px 12px', borderRadius: 99, background: '#FEF2F2', border: '1px solid #FECACA', cursor: 'pointer', color: '#DC2626', fontSize: 11, fontWeight: 700 }}>
+              Remove
+            </button>
+            <button onClick={e => { e.stopPropagation(); onClose() }}
+              style={{ width: 28, height: 28, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
           </div>
 
-          {/* Avatar + info */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
-            {/* Photo with upload */}
+          {/* Identity row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px 12px' }}>
+            {/* Avatar */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <div style={{ width: 80, height: 80, borderRadius: 20, background: 'rgba(255,255,255,0.22)', border: '3px solid rgba(255,255,255,0.5)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
+              <div style={{ width: 72, height: 72, borderRadius: 20, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 900, color: '#fff', overflow: 'hidden', boxShadow: `0 6px 18px -6px ${bColor}90` }}>
                 {photoUrl
                   ? <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: 28 }}>{initials}</span>
+                  : <span>{initials}</span>
                 }
                 {uploadingPhoto && (
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                   </div>
                 )}
               </div>
-              {/* Camera upload button */}
               <button onClick={e => { e.stopPropagation(); photoInputRef.current?.click() }}
-                style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: '50%', background: '#fff', border: `2px solid ${bColor}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                📷
-              </button>
+                style={{ position: 'absolute', bottom: -3, right: -3, width: 22, height: 22, borderRadius: '50%', background: '#fff', border: `2px solid ${bColor}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }}>📷</button>
               <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
             </div>
 
-            {/* Name & badges */}
+            {/* Name + key facts */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.1, marginBottom: 8, letterSpacing: -0.3 }}>{name}</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', letterSpacing: -0.3, lineHeight: 1.15, marginBottom: 6 }}>{name}</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                 {age !== null && (
-                  <span style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)', color: '#fff', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Age {age}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#475569', background: '#F1F5F9', borderRadius: 99, padding: '2px 9px' }}>Age {age}</span>
                 )}
-                {bubble && (
-                  <span style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)', color: '#fff', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>{bubble.label}</span>
+                {(bubble || currentGroup) && (
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: bColor, borderRadius: 99, padding: '2px 9px' }}>{bubble?.label || currentGroup}</span>
                 )}
-                <span style={{ background: sc.bg, color: sc.color, borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 800 }}>
-                  {sc.icon} {sc.label}
-                </span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: sc.color, background: sc.bg, borderRadius: 99, padding: '2px 9px' }}>{sc.icon} {sc.label}</span>
               </div>
             </div>
           </div>
 
-          {/* Alerts */}
-          {hasAlerts && (
-            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {child.allergies && (
-                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 14 }}>🟠</span>
-                  <div>
-                    <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1 }}>Allergy</div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{child.allergies}</div>
-                  </div>
-                </div>
-              )}
-              {child.medical_notes && (
-                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 14 }}>🔴</span>
-                  <div>
-                    <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1 }}>Medical</div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{child.medical_notes}</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Quick group assign */}
-          {bubbles.length > 0 && (
-            <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 7 }}>Quick Assign Group</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {bubbles.map(b => {
-                  const isActive = currentGroup?.toLowerCase() === b.label?.toLowerCase()
-                  return (
-                    <button key={b.key} onClick={() => handleGroupAssign(b.label)} disabled={assigningGroup}
-                      style={{ padding: '5px 12px', borderRadius: 99, border: `1.5px solid ${isActive ? '#fff' : 'rgba(255,255,255,0.25)'}`, background: isActive ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 11, fontWeight: isActive ? 900 : 600, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: b.color, flexShrink: 0, boxShadow: isActive ? `0 0 6px ${b.color}` : 'none' }} />
-                      {b.label}
-                      {isActive && <span style={{ fontSize: 9 }}>✓</span>}
-                    </button>
-                  )
-                })}
-                {currentGroup && (
-                  <button onClick={() => handleGroupAssign('')} disabled={assigningGroup}
-                    style={{ padding: '5px 10px', borderRadius: 99, border: '1.5px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer' }}>
-                    ✕
-                  </button>
-                )}
+          {/* ── ALERT STRIP — prominent, can't miss it ── */}
+          {(hasAlerts || child.has_epipen || child.has_asthma || child.has_diabetes || child.has_medication) && (
+            <div style={{ margin: '0 16px 12px', background: '#FFF7ED', border: '1.5px solid #FED7AA', borderRadius: 12, padding: '10px 12px' }}>
+              <div style={{ fontSize: 10, fontWeight: 900, color: '#D97706', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
+                ⚠️ Medical Alerts
               </div>
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: (child.allergies || child.medical_notes) ? 8 : 0 }}>
+                {child.has_epipen && <span style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: '#FEE2E2', borderRadius: 8, padding: '2px 8px' }}>💉 EpiPen</span>}
+                {child.has_asthma && <span style={{ fontSize: 11, fontWeight: 700, color: '#0891B2', background: '#E0F2FE', borderRadius: 8, padding: '2px 8px' }}>🫁 Asthma</span>}
+                {child.has_diabetes && <span style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', background: '#EDE9FE', borderRadius: 8, padding: '2px 8px' }}>💊 Diabetes</span>}
+                {child.has_medication && <span style={{ fontSize: 11, fontWeight: 700, color: '#D97706', background: '#FEF3C7', borderRadius: 8, padding: '2px 8px' }}>💊 Medication</span>}
+              </div>
+              {child.allergies && <div style={{ fontSize: 12, fontWeight: 700, color: '#92400E' }}>Allergies: {child.allergies}</div>}
+              {child.medical_notes && <div style={{ fontSize: 12, color: '#92400E', marginTop: 2 }}>Notes: {child.medical_notes}</div>}
             </div>
           )}
 
-          {/* Signed in/out times */}
+          {/* Sign in/out times if applicable */}
           {(signedInTime || signedOutTime) && (
-            <div style={{ marginTop: 14, display: 'flex', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 8, margin: '0 16px 12px' }}>
               {signedInTime && (
-                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 14px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1 }}>Signed In</div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{signedInTime}</div>
+                <div style={{ flex: 1, background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '8px 12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: '#16A34A', textTransform: 'uppercase', letterSpacing: 1 }}>Signed In</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#15803D' }}>{signedInTime}</div>
                 </div>
               )}
               {signedOutTime && (
-                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 14px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1 }}>Signed Out</div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{signedOutTime}</div>
+                <div style={{ flex: 1, background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: '8px 12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', letterSpacing: 1 }}>Signed Out</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#1D4ED8' }}>{signedOutTime}</div>
                 </div>
               )}
             </div>
@@ -564,13 +528,13 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         </div>
 
         {/* ── TABS ── */}
-        <div style={{ display: 'flex', padding: '10px 12px', gap: 6, background: '#F8FAFC', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
+        <div style={{ display: 'flex', padding: '8px 12px', gap: 4, background: '#fff', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
           {[
-            ['info', '📋 Info'],
-            ['edit', '✏️ Edit'],
+            ['info', 'Info'],
+            ['edit', 'Edit'],
           ].map(([key, label]) => (
             <button key={key} onClick={() => setDrawerTab(key)}
-              style={{ flex: 1, padding: '8px 6px', borderRadius: 10, border: 'none', background: drawerTab === key ? '#fff' : 'transparent', color: drawerTab === key ? '#111' : '#9CA3AF', fontWeight: drawerTab === key ? 800 : 500, fontSize: 11, cursor: 'pointer', boxShadow: drawerTab === key ? '0 2px 8px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
+              style={{ flex: 1, padding: '8px 6px', borderRadius: 10, border: 'none', background: drawerTab === key ? bColor : 'transparent', color: drawerTab === key ? '#fff' : '#94A3B8', fontWeight: drawerTab === key ? 800 : 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s' }}>
               {label}
             </button>
           ))}
@@ -582,15 +546,6 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
           {/* INFO */}
           {drawerTab === 'info' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {!hasSession && (
-                <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 20 }}>📋</span>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: '#92400E' }}>No active session</div>
-                    <div style={{ fontSize: 11, color: '#B45309', marginTop: 1 }}>Sign in/out is only available during a live session.</div>
-                  </div>
-                </div>
-              )}
 
               {/* Basic */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -607,21 +562,6 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                 <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '10px 14px', border: '1px solid #F1F5F9', fontSize: 13, color: '#374151' }}>
                   <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 2 }}>School</span>
                   {child.school}
-                </div>
-              )}
-
-              {/* Medical */}
-              {(child.has_asthma || child.has_diabetes || child.has_epipen || child.has_medication || child.allergies || child.medical_notes) && (
-                <div style={{ background: 'rgba(8,145,178,0.06)', border: '1px solid rgba(8,145,178,0.2)', borderRadius: 14, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#0891B2', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>⚕️ Medical Conditions</div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: (child.allergies || child.medical_notes) ? 10 : 0 }}>
-                    {child.has_asthma && <span style={{ fontSize: 11, fontWeight: 700, color: '#0891B2', background: 'rgba(8,145,178,0.1)', borderRadius: 8, padding: '2px 8px' }}>Asthma</span>}
-                    {child.has_diabetes && <span style={{ fontSize: 11, fontWeight: 700, color: '#0891B2', background: 'rgba(8,145,178,0.1)', borderRadius: 8, padding: '2px 8px' }}>Diabetes</span>}
-                    {child.has_epipen && <span style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: '#FEE2E2', borderRadius: 8, padding: '2px 8px' }}>💉 EpiPen</span>}
-                    {child.has_medication && <span style={{ fontSize: 11, fontWeight: 700, color: '#0891B2', background: 'rgba(8,145,178,0.1)', borderRadius: 8, padding: '2px 8px' }}>Medication</span>}
-                  </div>
-                  {child.allergies && <div style={{ fontSize: 12, color: '#374151', marginBottom: 4 }}><b>Allergies:</b> {child.allergies}</div>}
-                  {child.medical_notes && <div style={{ fontSize: 12, color: '#374151' }}><b>Notes:</b> {child.medical_notes}</div>}
                 </div>
               )}
 
