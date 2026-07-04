@@ -30,7 +30,7 @@ function PhotoCarousel({ orgId, primary, userId }) {
       const { error } = await supabase.storage.from('gallery').upload(path, file)
       if (!error) {
         const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(path)
-        await supabase.from('gallery_photos').insert({ org_id: orgId, url: publicUrl, path, uploaded_by: userId })
+        await supabase.from('gallery_photos').insert({ org_id: orgId, url: publicUrl, path })
       }
     }
     setUploading(false)
