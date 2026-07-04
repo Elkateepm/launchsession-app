@@ -727,6 +727,40 @@ function ChildCard({ child, status, bubble, onClick, primary, selected, onToggle
   )
 }
 
+// ─── ENCOURAGEMENT PANEL ─────────────────────────────────────
+function EncouragementPanel({ org, primary }) {
+  const orgName = org?.name || 'your team'
+  const quotes = [
+    { text: `Every child who walks through that door is lucky to have ${orgName} in their corner.`, emoji: '⭐' },
+    { text: 'You\'re not just running a session. You\'re building someone\'s highlight reel.', emoji: '🌟' },
+    { text: `The work ${orgName} does today will stay with these young people for life.`, emoji: '💛' },
+    { text: 'Small moments of connection matter more than you know. Keep showing up.', emoji: '🤝' },
+    { text: `${orgName} is the reason some of these kids get out of bed on a Saturday.`, emoji: '🚀' },
+    { text: 'You are the constant in someone\'s inconsistent world. That\'s everything.', emoji: '🏡' },
+    { text: 'Every register signed is a young person who chose to be here. That\'s because of you.', emoji: '✅' },
+    { text: 'The best youth workers don\'t just teach skills — they teach kids they matter.', emoji: '❤️' },
+    { text: `What ${orgName} is building here is bigger than any one session.`, emoji: '🏗️' },
+    { text: 'Someone in this room today will remember this moment for the rest of their life.', emoji: '✨' },
+    { text: 'You chose the hardest and most important job there is. Thank you.', emoji: '🙏' },
+    { text: `${orgName} — turning up, every time, for every child. That\'s the work.`, emoji: '💪' },
+  ]
+
+  // Seed by day so it changes daily but is consistent within a session
+  const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24))
+  const quote = quotes[dayIndex % quotes.length]
+
+  return (
+    <div style={{ padding: '12px 14px', borderTop: '1px solid #F3F4F6', marginTop: 'auto' }}>
+      <div style={{ background: `linear-gradient(135deg, ${primary}10, ${primary}06)`, border: `1px solid ${primary}20`, borderRadius: 12, padding: '12px 14px' }}>
+        <div style={{ fontSize: 20, marginBottom: 8 }}>{quote.emoji}</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', lineHeight: 1.6, fontStyle: 'italic' }}>
+          "{quote.text}"
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── MAIN REGISTER ────────────────────────────────────────────
 export default function Registers({ org, onNavigate }) {
   const orgId  = org?.id
@@ -1101,6 +1135,9 @@ export default function Registers({ org, onNavigate }) {
               <div style={{ fontSize: 11, color: '#92400E', lineHeight: 1.4, opacity: 0.8 }}>Log all concerns immediately.</div>
             </div>
           </div>
+
+          {/* Encouragement */}
+          <EncouragementPanel org={org} primary={primary} />
         </div>
       )}
 
