@@ -770,7 +770,7 @@ export default function Registers({ org, onNavigate }) {
   const bubbles = normaliseBubbles(orgGroups)
   const { session } = useTodaySession(orgId)
   const { children, setChildren, loading } = useChildren(orgId)
-  const { attendance, updateStatus } = useAttendance(session?.id)
+  const { attendance, updateStatus, addAttendanceRow } = useAttendance(session?.id)
 
   const [search, setSearch] = useState('')
   const [activeGroup, setActiveGroup] = useState('all')
@@ -868,7 +868,9 @@ export default function Registers({ org, onNavigate }) {
     } else if (session?.id) {
       const updates = { status, org_id: orgId, ...extra }
       if (status === 'signed_in') updates.signed_in_at = now
-      await supabase.from('attendance').insert([{ session_id: session.id, child_id: childId, ...updates }])
+      const newRow = { session_id: session.id, child_id: childId, ...updates }
+      const { data } = await supabase.from('attendance').insert([newRow]).select().single()
+      if (data) addAttendanceRow(data)
     }
     const t = format(new Date(), 'HH:mm')
     if (status === 'signed_in') showToast(`✓ ${name} signed in at ${t}`)
