@@ -947,15 +947,19 @@ export default function Registers({ org, onNavigate }) {
             </div>
           </div>
 
-          {/* Stats strip — just two numbers */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-            <div style={{ background: '#F8FAFC', borderRadius: 14, padding: '14px 16px', border: '1.5px solid #E2E8F0', textAlign: 'center' }}>
-              <div style={{ fontSize: 32, fontWeight: 900, color: '#0F172A', lineHeight: 1 }}>{counts.total}</div>
-              <div style={{ fontSize: 12, color: '#64748B', fontWeight: 600, marginTop: 4 }}>On Register</div>
+          {/* Stats strip */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+            <div style={{ background: '#F8FAFC', borderRadius: 14, padding: '12px 10px', border: '1.5px solid #E2E8F0', textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: '#0F172A', lineHeight: 1 }}>{counts.total}</div>
+              <div style={{ fontSize: 11, color: '#64748B', fontWeight: 600, marginTop: 4 }}>On Register</div>
             </div>
-            <div style={{ background: '#F0FDF4', borderRadius: 14, padding: '14px 16px', border: '1.5px solid #BBF7D0', textAlign: 'center' }}>
-              <div style={{ fontSize: 32, fontWeight: 900, color: '#15803D', lineHeight: 1 }}>{counts.signed_in}</div>
-              <div style={{ fontSize: 12, color: '#16A34A', fontWeight: 600, marginTop: 4 }}>Signed In</div>
+            <div style={{ background: '#F0FDF4', borderRadius: 14, padding: '12px 10px', border: '1.5px solid #BBF7D0', textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: '#15803D', lineHeight: 1 }}>{counts.signed_in}</div>
+              <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 600, marginTop: 4 }}>Signed In</div>
+            </div>
+            <div style={{ background: '#FFFBEB', borderRadius: 14, padding: '12px 10px', border: '1.5px solid #FDE68A', textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: '#D97706', lineHeight: 1 }}>{counts.expected}</div>
+              <div style={{ fontSize: 11, color: '#D97706', fontWeight: 600, marginTop: 4 }}>Yet to Arrive</div>
             </div>
           </div>
 
