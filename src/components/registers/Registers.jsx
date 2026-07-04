@@ -404,7 +404,6 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   const signedOutTime = attendanceRecord?.signed_out_at ? format(new Date(attendanceRecord.signed_out_at), 'HH:mm') : null
   const hasAlerts = child.allergies || child.medical_notes
   const bColor = bubble?.color || primary || '#1B9AAA'
-  const currentBubble = bubbles.find(b => b.label?.toLowerCase() === currentGroup?.toLowerCase()) || bubble
 
   const statusCfg = {
     signed_in:  { label: 'Signed In',  color: '#16A34A', bg: '#DCFCE7', icon: '✓' },
