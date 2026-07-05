@@ -53,6 +53,8 @@ const CATEGORY_COLOR = {
   volunteers: '#F16063', staff: '#7C3AED', trips: '#D97706', organisation: '#059669',
 }
 
+const FORM_ACCENTS = ['#6D5DF6', '#2563EB', '#059669', '#D97706', '#DB2777', '#0EA5E9', '#7C3AED']
+
 const TEMPLATES = [
   // ── YOUTH ──
   { name: 'Youth Registration', icon: '📋', category: 'youth', desc: 'Collect participant information for new members', fields: [
@@ -881,42 +883,77 @@ export default function Forms({ org }) {
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {forms.map(form => {
-            const subCount = form.form_submissions?.[0]?.count || 0
-            return (
-              <motion.div key={form.id} whileHover={{ y: -2 }}
-                style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.7)', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 4px 16px -10px rgba(30,41,59,0.15)' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>📝</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>{form.name}</div>
-                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>{form.description || 'No description'} · {(form.fields || []).length} fields · {subCount} submission{subCount !== 1 ? 's' : ''}</div>
-                </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' }}>
-                  <button onClick={() => toggleActive(form)} style={{ padding: '5px 12px', borderRadius: 8, border: `1px solid ${form.is_active ? '#16A34A40' : '#e5e7eb'}`, background: form.is_active ? '#F0FDF4' : '#F9FAFB', color: form.is_active ? '#16A34A' : '#9CA3AF', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                    {form.is_active ? '✅ Active' : '⏸ Inactive'}
-                  </button>
-                  <button onClick={() => copyFormLink(form)} disabled={!form.is_active} title={form.is_active ? 'Copy the public link to share with parents/staff' : 'Activate this form to get a shareable link'}
-                    style={{ padding: '5px 12px', borderRadius: 8, border: `1px solid ${copiedId === form.id ? '#16A34A40' : '#e5e7eb'}`, background: copiedId === form.id ? '#F0FDF4' : '#F9FAFB', color: !form.is_active ? '#D1D5DB' : copiedId === form.id ? '#16A34A' : '#374151', fontSize: 11, fontWeight: 700, cursor: form.is_active ? 'pointer' : 'default' }}>
-                    {copiedId === form.id ? '✅ Copied!' : '🔗 Share'}
-                  </button>
-                  <button onClick={() => setEmailModalFor(form)} disabled={!form.is_active} title={form.is_active ? 'Email this form to one or more people' : 'Activate this form to email it'}
-                    style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#F9FAFB', color: !form.is_active ? '#D1D5DB' : '#374151', fontSize: 11, fontWeight: 700, cursor: form.is_active ? 'pointer' : 'default' }}>
-                    ✉️ Email
-                  </button>
-                  <button onClick={() => { setSelectedForm(form); setView('submissions') }} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#F9FAFB', color: '#374151', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                    📬 {subCount}
-                  </button>
-                  <button onClick={() => { setSelectedForm({ ...form, fields: form.fields || [] }); setView('builder') }} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#F9FAFB', color: '#374151', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                    ✏️ Edit
-                  </button>
-                  <button onClick={() => deleteForm(form)} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid rgba(220,38,38,0.2)', background: 'rgba(220,38,38,0.05)', color: '#DC2626', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                    🗑️
-                  </button>
-                </div>
-              </motion.div>
-            )
-          })}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 14 }}>
+            <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>Your Forms</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#94A3B8' }}>{forms.length}</div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+            {forms.map((form, i) => {
+              const subCount = form.form_submissions?.[0]?.count || 0
+              const accent = FORM_ACCENTS[i % FORM_ACCENTS.length]
+              const fieldCount = (form.fields || []).length
+              return (
+                <motion.div key={form.id}
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.3) }}
+                  whileHover={{ y: -4, boxShadow: `0 20px 40px -18px ${accent}55` }}
+                  onClick={() => { setSelectedForm({ ...form, fields: form.fields || [] }); setView('builder') }}
+                  style={{ position: 'relative', cursor: 'pointer', overflow: 'hidden', background: `linear-gradient(150deg, ${accent}0E, rgba(255,255,255,0.85) 60%)`, backdropFilter: 'blur(14px)', border: `1px solid ${accent}25`, borderRadius: 20, padding: 18, boxShadow: '0 6px 20px -14px rgba(30,41,59,0.18)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                  <div style={{ position: 'absolute', top: -30, right: -30, width: 110, height: 110, borderRadius: '50%', background: `radial-gradient(circle, ${accent}22, transparent 70%)`, pointerEvents: 'none' }} />
+
+                  {/* Top row: icon + status */}
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 13, background: `linear-gradient(135deg, ${accent}, ${accent}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, boxShadow: `0 8px 18px -8px ${accent}70` }}>📝</div>
+                    <button onClick={e => { e.stopPropagation(); toggleActive(form) }}
+                      style={{ padding: '4px 10px', borderRadius: 99, border: `1px solid ${form.is_active ? '#16A34A40' : '#e5e7eb'}`, background: form.is_active ? '#F0FDF4' : '#F9FAFB', color: form.is_active ? '#16A34A' : '#9CA3AF', fontSize: 10.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                      {form.is_active ? '● Active' : '⏸ Inactive'}
+                    </button>
+                  </div>
+
+                  {/* Name + description */}
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 4, lineHeight: 1.25 }}>{form.name}</div>
+                    <div style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {form.description || 'No description'}
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div style={{ position: 'relative', display: 'flex', gap: 14, fontSize: 12, fontWeight: 700, color: '#475569' }}>
+                    <span>📋 {fieldCount} field{fieldCount !== 1 ? 's' : ''}</span>
+                    <span>📬 {subCount} submission{subCount !== 1 ? 's' : ''}</span>
+                  </div>
+
+                  <div style={{ position: 'relative', height: 1, background: 'rgba(15,23,42,0.07)', margin: '2px 0' }} />
+
+                  {/* Actions */}
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button onClick={e => { e.stopPropagation(); setSelectedForm({ ...form, fields: form.fields || [] }); setView('builder') }}
+                      style={{ flex: 1, padding: '8px 12px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                      ✏️ Edit
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); setSelectedForm(form); setView('submissions') }} title="View submissions"
+                      style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', color: '#374151', fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
+                      📬
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); copyFormLink(form) }} disabled={!form.is_active} title={form.is_active ? 'Copy public link' : 'Activate to get a link'}
+                      style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${copiedId === form.id ? '#16A34A40' : 'rgba(0,0,0,0.08)'}`, background: copiedId === form.id ? '#F0FDF4' : '#fff', color: !form.is_active ? '#D1D5DB' : copiedId === form.id ? '#16A34A' : '#374151', fontSize: 13, cursor: form.is_active ? 'pointer' : 'default', flexShrink: 0 }}>
+                      {copiedId === form.id ? '✅' : '🔗'}
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); setEmailModalFor(form) }} disabled={!form.is_active} title={form.is_active ? 'Email this form' : 'Activate to email it'}
+                      style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', color: !form.is_active ? '#D1D5DB' : '#374151', fontSize: 13, cursor: form.is_active ? 'pointer' : 'default', flexShrink: 0 }}>
+                      ✉️
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); deleteForm(form) }} title="Delete form"
+                      style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid rgba(220,38,38,0.2)', background: 'rgba(220,38,38,0.05)', color: '#DC2626', fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
+                      🗑️
+                    </button>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
         </div>
       )}
 
