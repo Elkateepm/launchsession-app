@@ -294,8 +294,8 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: 140,
-              height: 140,
+              width: 340,
+              height: 160,
               borderRadius: '50%',
               background: 'radial-gradient(circle, rgba(99,102,241,0.35) 0%, transparent 70%)',
               filter: 'blur(6px)',
@@ -307,43 +307,30 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
           <div
             style={{
               position: 'relative',
-              width: 84,
-              height: 84,
+              width: 300,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: 14,
+              marginBottom: 4,
             }}
           >
             <img
-              src="/logo.png"
-              alt="LaunchSession"
+              src="/assets/logo-lockup.png"
+              alt="LaunchSession — Empowering Youth. Every Session."
               style={{
                 width: '100%',
-                height: '100%',
+                height: 'auto',
                 objectFit: 'contain',
                 filter: 'drop-shadow(0 8px 24px rgba(99,102,241,0.45))',
               }}
             />
-          </div>
-
-          <div
-            style={{
-              fontSize: 26,
-              fontWeight: 800,
-              letterSpacing: -0.4,
-              color: '#fff',
-              fontFamily: 'var(--font-display, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif)',
-            }}
-          >
-            Launch<span style={{ color: '#9B8CFF' }}>Session</span>
           </div>
         </div>
 
         {/* Tagline */}
         <div
           style={{
-            marginTop: 12,
+            marginTop: 24,
             fontSize: 13,
             fontWeight: 500,
             color: 'rgba(255,255,255,0.38)',
