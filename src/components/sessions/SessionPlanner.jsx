@@ -898,10 +898,12 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
 
   useEffect(() => { loadData() }, [orgId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const autoReflectOpenedRef = React.useRef(false)
   useEffect(() => {
     if (!initialReflectSessionId || sessions.length === 0) return
+    if (autoReflectOpenedRef.current) return
     const target = sessions.find(s => s.id === initialReflectSessionId)
-    if (target) setReflectingSession(target)
+    if (target) { setReflectingSession(target); autoReflectOpenedRef.current = true }
   }, [initialReflectSessionId, sessions])
 
   const isSessionPast = (s) => {
