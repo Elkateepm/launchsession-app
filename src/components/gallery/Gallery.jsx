@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const CATEGORIES = ['All', 'Sessions', 'Trips', 'Milestones', 'Volunteers', 'Celebrations', 'Other']
 
 export default function Gallery({ org }) {
+  const isMobile = useIsMobile()
   const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
@@ -90,7 +92,7 @@ export default function Gallery({ org }) {
           <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleFiles} style={{ display: 'none' }} />
         </div>
         {/* Stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
           {[
             { label: 'Total Photos', value: photos.length, icon: '🖼️' },
             { label: 'Categories', value: CATEGORIES.slice(1).filter(c => counts[c] > 0).length, icon: '🗂️' },
@@ -123,7 +125,7 @@ export default function Gallery({ org }) {
               <img key={i} src={pf.preview} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, flexShrink: 0, border: '2px solid #fff' }} />
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
             <div>
               <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>CATEGORY</label>
               <select value={uploadMeta.category} onChange={e => setUploadMeta(m => ({ ...m, category: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit' }}>
@@ -181,7 +183,7 @@ export default function Gallery({ org }) {
           <div onClick={e => e.stopPropagation()} style={{ marginTop: 16, textAlign: 'center', maxWidth: 480 }}>
             {editingPhoto === lightbox.id ? (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
-                <input defaultValue={lightbox.caption || ''} id="lightbox-caption-input" style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, outline: 'none', width: 260 }} />
+                <input defaultValue={lightbox.caption || ''} id="lightbox-caption-input" style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, outline: 'none', width: '100%', maxWidth: 260, boxSizing: 'border-box' }} />
                 <button onClick={() => saveCaption(lightbox, document.getElementById('lightbox-caption-input').value)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}>Save</button>
               </div>
             ) : (
