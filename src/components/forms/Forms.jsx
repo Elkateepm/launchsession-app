@@ -540,7 +540,7 @@ export default function Forms({ org }) {
     return matchCategory && matchSearch
   })
 
-  const useTemplate = (t) => {
+  const applyTemplate = (t) => {
     setSelectedForm({ name: t.name, description: t.desc, fields: t.fields.map((f, i) => ({ ...f, id: Date.now() + i })) })
     setView('builder')
   }
@@ -656,7 +656,7 @@ export default function Forms({ org }) {
                       <motion.button
                         key={t.name}
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: Math.min(i * 0.02, 0.3) }}
-                        onClick={() => useTemplate(t)}
+                        onClick={() => applyTemplate(t)}
                         whileHover={{ y: -4, boxShadow: `0 16px 32px -12px ${color}50` }}
                         style={{ padding: 16, borderRadius: 18, border: `1px solid ${color}25`, background: `linear-gradient(150deg, ${color}0C, rgba(255,255,255,0.8))`, cursor: 'pointer', textAlign: 'left' }}>
                         <div style={{ width: 36, height: 36, borderRadius: 11, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, marginBottom: 10, boxShadow: `0 6px 14px -6px ${color}70` }}>{t.icon}</div>
