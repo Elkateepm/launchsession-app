@@ -251,6 +251,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
 
 // ── LIVE SESSION PANEL ─────────────────────────────────────────
 function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, reflections, onOpenRegister, onNavigate, getLiveSessionStats }) {
+  const isMobile = useIsMobile()
   const [activeSession, setActiveSession] = useState(sessions[0])
   const [localAttendance, setLocalAttendance] = useState(attendance)
   const [bubbleFilter, setBubbleFilter] = useState('all')
@@ -420,20 +421,24 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
       {/* Header */}
       <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
-        <button onClick={() => onOpenRegister(activeSession?.id)}
-          style={{ position: 'absolute', top: 20, right: 22, padding: '11px 18px', borderRadius: 13, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 22px -6px ${primary}70`, transition: 'transform 0.12s', zIndex: 1 }}
-          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
-          Full Register →
-        </button>
-        <button onClick={() => { setPopupMode('walkin'); setPopupSearch('') }}
-          style={{ position: 'absolute', top: 20, right: 152, padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s', zIndex: 1 }}
-          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
-          + Walk-in
-        </button>
+        {!isMobile && (
+          <>
+            <button onClick={() => onOpenRegister(activeSession?.id)}
+              style={{ position: 'absolute', top: 20, right: 22, padding: '11px 18px', borderRadius: 13, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 22px -6px ${primary}70`, transition: 'transform 0.12s', zIndex: 1 }}
+              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+              onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+              Full Register →
+            </button>
+            <button onClick={() => { setPopupMode('walkin'); setPopupSearch('') }}
+              style={{ position: 'absolute', top: 20, right: 152, padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s', zIndex: 1 }}
+              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+              onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+              + Walk-in
+            </button>
+          </>
+        )}
 
-        <div style={{ textAlign: 'center', marginBottom: 14, padding: '0 130px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 14, padding: isMobile ? '0' : '0 130px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 7 }}>
             {isSessionEnded ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#CBD5E1', letterSpacing: 0.8 }}>
@@ -447,12 +452,25 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
               </span>
             )}
           </div>
-          <h2 style={{ margin: 0, fontSize: 23, fontWeight: 900, color: '#fff', letterSpacing: -0.5, fontFamily: 'var(--font-display, sans-serif)' }}>{activeSession?.title}</h2>
+          <h2 style={{ margin: 0, fontSize: isMobile ? 19 : 23, fontWeight: 900, color: '#fff', letterSpacing: -0.5, fontFamily: 'var(--font-display, sans-serif)' }}>{activeSession?.title}</h2>
           <p style={{ margin: '5px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
             {activeSession?.start_time || ''}{activeSession?.end_time ? ` – ${activeSession.end_time}` : ''}
             {activeSession?.location ? ` · ${activeSession.location}` : ''}
           </p>
         </div>
+
+        {isMobile && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+            <button onClick={() => { setPopupMode('walkin'); setPopupSearch('') }}
+              style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
+              + Walk-in
+            </button>
+            <button onClick={() => onOpenRegister(activeSession?.id)}
+              style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 22px -6px ${primary}70` }}>
+              Full Register →
+            </button>
+          </div>
+        )}
 
         {/* Live group breakdown — clickable bubble filter pills */}
         {bubbleGroups.length > 0 && (
@@ -482,12 +500,12 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#60A5FA', icon: '👥' },
         ].map((s, i) => (
           <button key={s.key} onClick={() => setPopupMode(s.key)}
-            style={{ background: 'transparent', border: 'none', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.12)' : 'none', padding: '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            style={{ background: 'transparent', border: 'none', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.12)' : 'none', padding: isMobile ? '10px 4px' : '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 8 }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
             <span style={{ fontSize: 12, color: s.color }}>{s.icon}</span>
-            <span style={{ fontSize: 19, fontWeight: 900, color: s.color, letterSpacing: -0.3, fontFamily: 'var(--font-display, sans-serif)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>{s.value}</span>
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.label}</span>
+            <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: s.color, letterSpacing: -0.3, fontFamily: 'var(--font-display, sans-serif)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>{s.value}</span>
+            <span style={{ fontSize: isMobile ? 9 : 10, color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.label}</span>
           </button>
         ))}
       </div>
