@@ -605,7 +605,19 @@ export default function Forms({ org }) {
   const [showTemplates, setShowTemplates] = useState(false)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('all')
+  const [copiedId, setCopiedId] = useState(null)
   const primary = org?.primary_color || '#1B9AAA'
+
+  const copyFormLink = async (form) => {
+    const link = `${window.location.origin}/forms/${org?.slug}/${form.id}`
+    try {
+      await navigator.clipboard.writeText(link)
+    } catch (e) {
+      window.prompt('Copy this link:', link)
+    }
+    setCopiedId(form.id)
+    setTimeout(() => setCopiedId(id => (id === form.id ? null : id)), 2000)
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -815,9 +827,13 @@ export default function Forms({ org }) {
                   <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>{form.name}</div>
                   <div style={{ fontSize: 12, color: '#9CA3AF' }}>{form.description || 'No description'} · {(form.fields || []).length} fields · {subCount} submission{subCount !== 1 ? 's' : ''}</div>
                 </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' }}>
                   <button onClick={() => toggleActive(form)} style={{ padding: '5px 12px', borderRadius: 8, border: `1px solid ${form.is_active ? '#16A34A40' : '#e5e7eb'}`, background: form.is_active ? '#F0FDF4' : '#F9FAFB', color: form.is_active ? '#16A34A' : '#9CA3AF', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     {form.is_active ? '✅ Active' : '⏸ Inactive'}
+                  </button>
+                  <button onClick={() => copyFormLink(form)} disabled={!form.is_active} title={form.is_active ? 'Copy the public link to share with parents/staff' : 'Activate this form to get a shareable link'}
+                    style={{ padding: '5px 12px', borderRadius: 8, border: `1px solid ${copiedId === form.id ? '#16A34A40' : '#e5e7eb'}`, background: copiedId === form.id ? '#F0FDF4' : '#F9FAFB', color: !form.is_active ? '#D1D5DB' : copiedId === form.id ? '#16A34A' : '#374151', fontSize: 11, fontWeight: 700, cursor: form.is_active ? 'pointer' : 'default' }}>
+                    {copiedId === form.id ? '✅ Copied!' : '🔗 Share'}
                   </button>
                   <button onClick={() => { setSelectedForm(form); setView('submissions') }} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#F9FAFB', color: '#374151', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     📬 {subCount}
