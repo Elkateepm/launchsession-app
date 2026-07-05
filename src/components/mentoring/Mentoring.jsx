@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import PageHeader from '../shared/PageHeader'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const OUTCOMES = [
   'Improve confidence',
@@ -23,6 +24,7 @@ const MOODS = [
 ]
 
 export default function Mentoring({ org, session }) {
+  const isMobile = useIsMobile()
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
 
@@ -164,7 +166,7 @@ export default function Mentoring({ org, session }) {
       {loading ? (
         <div style={styles.empty}>Loading mentoring...</div>
       ) : (
-        <div style={styles.grid}>
+        <div style={{ ...styles.grid, gridTemplateColumns: isMobile ? '1fr' : '1fr 360px' }}>
           <div style={styles.left}>
             <Panel title="📋 Awaiting Match">
               {awaiting.length === 0 ? (
