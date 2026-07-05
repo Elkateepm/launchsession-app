@@ -9,6 +9,7 @@ import Dashboard from './components/dashboard/Dashboard'
 import Onboarding from './components/onboarding/Onboarding'
 import VolunteerPortal from './components/volunteers/VolunteerPortal'
 import VolunteerAcceptInvite from './components/volunteers/VolunteerAcceptInvite'
+import PublicForm from './components/forms/PublicForm'
 import SplashScreen from './components/common/SplashScreen'
 
 function AuthedApp({ session, org, onReady }) {
@@ -74,7 +75,7 @@ function shouldGoToLanding() {
   const hostname = window.location.hostname
   const hasOrg = new URLSearchParams(window.location.search).get('org')
   const isDashboard = pathname === '/dashboard'
-  const isSpecialRoute = ['/login', '/signup', '/create-password', '/org-search'].includes(pathname) || pathname.startsWith('/volunteer')
+  const isSpecialRoute = ['/login', '/signup', '/create-password', '/org-search'].includes(pathname) || pathname.startsWith('/volunteer') || pathname.startsWith('/forms/')
   // The app subdomain is the application itself — never redirect it to the
   // marketing landing page, regardless of path or org context.
   const isAppSubdomain = hostname.startsWith('app.')
@@ -194,6 +195,7 @@ export default function App() {
   const pathname = window.location.pathname
   if (pathname === '/volunteer/accept-invite') return <VolunteerAcceptInvite />
   if (pathname.startsWith('/volunteer')) return <VolunteerPortal />
+  if (pathname.startsWith('/forms/')) return <PublicForm />
   if (pathname === '/signup') return <Signup />
   if (pathname === '/create-password') return <CreatePassword />
   return (
