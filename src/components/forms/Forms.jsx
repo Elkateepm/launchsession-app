@@ -191,7 +191,6 @@ function FormBuilder({ org, initial, onSave, onCancel }) {
 }
 
 function SubmissionsView({ form, org, onBack }) {
-  const isMobile = useIsMobile()
   const [submissions, setSubmissions] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
