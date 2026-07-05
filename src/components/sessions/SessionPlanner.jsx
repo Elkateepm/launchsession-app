@@ -979,14 +979,7 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
           <div style={{ position: 'absolute', top: -40, left: -30, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, #FFB64825, transparent 70%)', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <div style={{ position: 'relative', width: 32, height: 32 }}>
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.6, 0.9, 0.5], scaleY: [0.8, 1.15, 0.9, 1.1, 0.8], scaleX: [0.9, 1.05, 0.85, 1, 0.9] }}
-                  transition={{ duration: 0.5, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{ position: 'absolute', left: '50%', bottom: -4, transform: 'translateX(-50%)', width: 10, height: 14, borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%', background: 'radial-gradient(circle, #E9D5FF, #A78BFA 60%, transparent 80%)', filter: 'blur(2px)', zIndex: 0 }}
-                />
-                <motion.img src="/assets/rockets/rocket-icon.png" alt="" animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} style={{ height: 32, width: 'auto', display: 'block', position: 'relative', zIndex: 1 }} />
-              </div>
+              <motion.img src="/assets/rockets/rocket-icon.png" alt="" animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} style={{ height: 32, width: 'auto', display: 'block' }} />
               <span style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>Sessions</span>
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#64748B', marginBottom: 4 }}>{format(new Date(), 'EEEE d MMMM yyyy')} · {org?.name}</div>
@@ -1136,16 +1129,7 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
               style={{ position: 'absolute', top: `${10 + (i * 11) % 70}%`, left: `${5 + (i * 17) % 90}%`, fontSize: 10 }}>✨</motion.span>
           ))}
           <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} style={{ marginBottom: 14, position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'center' }}>
-            {filter === 'past' ? <span style={{ fontSize: 44 }}>🗄️</span> : (
-              <div style={{ position: 'relative', width: 96, height: 96 }}>
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.6, 0.95, 0.5], scaleY: [0.8, 1.25, 0.9, 1.15, 0.8], scaleX: [0.9, 1.1, 0.85, 1.05, 0.9] }}
-                  transition={{ duration: 0.45, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{ position: 'absolute', left: '50%', bottom: 4, transform: 'translateX(-50%)', width: 26, height: 36, borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%', background: 'radial-gradient(circle, #F5F3FF, #C4B5FD 55%, #A78BFA 75%, transparent 85%)', filter: 'blur(4px)', zIndex: 0 }}
-                />
-                <img src="/assets/rockets/rocket-hero.png" alt="" style={{ height: 96, width: 'auto', position: 'relative', zIndex: 1, display: 'block' }} />
-              </div>
-            )}
+            {filter === 'past' ? <span style={{ fontSize: 44 }}>🗄️</span> : <img src="/assets/rockets/rocket-hero.png" alt="" style={{ height: 96, width: 'auto' }} />}
           </motion.div>
           <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6, position: 'relative', zIndex: 1 }}>
             {filter === 'past' ? 'No past sessions yet' : 'Ready for your next mission?'}
