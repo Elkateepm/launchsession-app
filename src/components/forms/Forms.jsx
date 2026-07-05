@@ -629,11 +629,11 @@ export default function Forms({ org }) {
   useEffect(() => { load() }, [load])
 
   const saveForm = async (formData) => {
-    if (selectedForm) {
-      await supabase.from('org_forms').update({ name: formData.name, description: formData.description, fields: formData.fields }).eq('id', selectedForm.id)
-    } else {
-      await supabase.from('org_forms').insert({ org_id: org.id, name: formData.name, description: formData.description, fields: formData.fields })
-    }
+    const isEdit = !!selectedForm?.id
+    const { error } = isEdit
+      ? await supabase.from('org_forms').update({ name: formData.name, description: formData.description, fields: formData.fields }).eq('id', selectedForm.id)
+      : await supabase.from('org_forms').insert({ org_id: org.id, name: formData.name, description: formData.description, fields: formData.fields })
+    if (error) { window.alert('Could not save this form: ' + error.message); return }
     load()
     setView('list')
     setSelectedForm(null)
