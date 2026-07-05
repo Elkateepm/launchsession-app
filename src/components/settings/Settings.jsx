@@ -602,19 +602,127 @@ function IntegrationsSection() {
   )
 }
 
-function BillingSection({ org }) {
+const PLAN_DETAILS = [
+  { key: 'starter', label: 'Starter', price: '£29/mo', blurb: 'For a single site getting started' },
+  { key: 'pro', label: 'Pro', price: '£79/mo', blurb: 'For growing organisations with multiple sessions' },
+  { key: 'enterprise', label: 'Enterprise', price: 'Contact us', blurb: 'For large or multi-site organisations' },
+]
+
+const STATUS_STYLE = {
+  active:    { bg: '#DCFCE7', color: '#15803D', label: '● Active' },
+  trialing:  { bg: '#DBEAFE', color: '#1D4ED8', label: '● Trial' },
+  past_due:  { bg: '#FEF3C7', color: '#B45309', label: '● Payment overdue' },
+  canceled:  { bg: '#FEE2E2', color: '#B91C1C', label: '● Canceled' },
+  incomplete:{ bg: '#FEE2E2', color: '#B91C1C', label: '● Incomplete' },
+}
+
+function BillingSection({ org, session, isAdmin, refreshOrg }) {
+  const [loadingPlan, setLoadingPlan] = useState(null) // which plan button is spinning
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const status = org?.subscription_status
+  const statusStyle = STATUS_STYLE[status] || { bg: '#F1F5F9', color: '#475569', label: status ? `● ${status}` : '● No active subscription' }
+
+  const handleUpgrade = async (plan) => {
+    setError('')
+    setLoadingPlan(plan)
+    try {
+      const { data: { session: liveSession } } = await supabase.auth.getSession()
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${liveSession?.access_token}` },
+        body: JSON.stringify({ org_id: org.id, plan }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      window.location.href = json.url
+    } catch (err) {
+      setError(err.message || 'Failed to start checkout')
+      setLoadingPlan(null)
+    }
+  }
+
+  const handleManageBilling = async () => {
+    setError('')
+    setPortalLoading(true)
+    try {
+      const { data: { session: liveSession } } = await supabase.auth.getSession()
+      const res = await fetch('/api/create-portal-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${liveSession?.access_token}` },
+        body: JSON.stringify({ org_id: org.id }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      window.location.href = json.url
+    } catch (err) {
+      setError(err.message || 'Failed to open billing portal')
+      setPortalLoading(false)
+    }
+  }
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('checkout') === 'success' && refreshOrg) {
+      refreshOrg()
+    }
+  }, [refreshOrg])
+
   return (
     <div>
+      {error && (
+        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600 }}>⚠️ {error}</div>
+      )}
+
       <SettingCard title="Current Plan">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', textTransform: 'capitalize' }}>{org?.plan || 'Starter'}</div>
-            <div style={{ fontSize: 13, color: '#6b7280' }}>Contact us for pricing</div>
+            <div style={{ fontSize: 13, color: '#6b7280' }}>
+              {org?.current_period_end
+                ? `Renews ${new Date(org.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                : 'No billing history yet'}
+            </div>
           </div>
-          <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700 }}>Active</span>
+          <span style={{ background: statusStyle.bg, color: statusStyle.color, borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700 }}>{statusStyle.label}</span>
         </div>
-        <a href="mailto:hello@launchsession.co.uk?subject=Upgrade Plan" style={{ display: 'inline-block', padding: '10px 20px', borderRadius: 8, border: 'none', background: '#1B9AAA', color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Upgrade Plan</a>
+
+        {isAdmin && org?.stripe_customer_id && (
+          <button onClick={handleManageBilling} disabled={portalLoading}
+            style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            {portalLoading ? 'Opening...' : 'Manage Billing'}
+          </button>
+        )}
       </SettingCard>
+
+      {isAdmin && (
+        <SettingCard title="Plans" description="Upgrade or change your organisation's plan">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+            {PLAN_DETAILS.map(p => {
+              const isCurrent = (org?.plan || 'starter') === p.key
+              return (
+                <div key={p.key} style={{ border: isCurrent ? '2px solid #1B9AAA' : '1.5px solid var(--border)', borderRadius: 14, padding: '18px 16px', background: 'var(--surface)' }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{p.label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', margin: '4px 0' }}>{p.price}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14, minHeight: 32 }}>{p.blurb}</div>
+                  {isCurrent ? (
+                    <div style={{ textAlign: 'center', padding: '9px 0', borderRadius: 8, background: '#DCFCE7', color: '#15803D', fontWeight: 700, fontSize: 13 }}>Current Plan</div>
+                  ) : p.key === 'enterprise' ? (
+                    <a href="mailto:hello@launchsession.co.uk?subject=Enterprise%20Plan" style={{ display: 'block', textAlign: 'center', padding: '9px 0', borderRadius: 8, border: 'none', background: '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>Contact Us</a>
+                  ) : (
+                    <button onClick={() => handleUpgrade(p.key)} disabled={loadingPlan === p.key}
+                      style={{ width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', background: loadingPlan === p.key ? '#9ca3af' : '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                      {loadingPlan === p.key ? 'Redirecting...' : 'Upgrade'}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </SettingCard>
+      )}
+
       <SettingCard title="Usage">
         {[
           { label: 'Staff Users', value: '—', max: 'Unlimited' },
@@ -1067,7 +1175,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
       case 'security':       return <SecuritySection />
       case 'notifications':  return <NotificationsSection />
       case 'integrations':   return <IntegrationsSection />
-      case 'billing':        return <BillingSection org={org} />
+      case 'billing':        return <BillingSection org={org} session={session} isAdmin={isAdmin} refreshOrg={refreshOrg} />
       case 'registers':      return <GroupsSection org={org} />
       case 'safeguarding':   return <SafeguardingSection org={org} />
       case 'help':           return <HelpSection />
