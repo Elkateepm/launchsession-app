@@ -306,11 +306,44 @@ const TEMPLATES = [
   ]},
 ]
 
+function FieldPreview({ field }) {
+  const base = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'inherit', background: '#fff', color: '#94A3B8' }
+  switch (field.type) {
+    case 'textarea':
+      return <textarea disabled rows={3} placeholder="Long answer text" style={{ ...base, resize: 'none' }} />
+    case 'checkbox':
+      return <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151', cursor: 'default' }}><input type="checkbox" disabled /> {field.label}</label>
+    case 'select':
+      return (
+        <select disabled style={base}>
+          <option>Select an option...</option>
+          {(field.options || []).map((o, i) => <option key={i}>{o}</option>)}
+        </select>
+      )
+    case 'date':
+      return <input disabled type="date" style={base} />
+    case 'number':
+      return <input disabled type="number" placeholder="0" style={base} />
+    case 'email':
+      return <input disabled type="email" placeholder="name@example.com" style={base} />
+    case 'phone':
+      return <input disabled type="tel" placeholder="07123 456789" style={base} />
+    default:
+      return <input disabled type="text" placeholder="Short answer text" style={base} />
+  }
+}
+
 function FormBuilder({ org, initial, onSave, onCancel }) {
   const isMobile = useIsMobile()
-  const [form, setForm] = useState(initial || { name: '', description: '', fields: [] })
+  const [form, setForm] = useState(() => {
+    const base = initial || { name: '', description: '', fields: [] }
+    return { ...base, fields: (base.fields || []).map((f, i) => ({ ...f, id: f.id || (Date.now() + i) })) }
+  })
   const [saving, setSaving] = useState(false)
-  const [dragOver, setDragOver] = useState(null)
+  const [mode, setMode] = useState('edit') // 'edit' | 'preview'
+  const [dragIndex, setDragIndex] = useState(null)
+  const [dragOverIndex, setDragOverIndex] = useState(null)
+  const [triedSave, setTriedSave] = useState(false)
   const primary = org?.primary_color || '#1B9AAA'
 
   const addField = (type) => {
@@ -320,106 +353,184 @@ function FormBuilder({ org, initial, onSave, onCancel }) {
 
   const updateField = (id, changes) => setForm(f => ({ ...f, fields: f.fields.map(field => field.id === id ? { ...field, ...changes } : field) }))
   const removeField = (id) => setForm(f => ({ ...f, fields: f.fields.filter(field => field.id !== id) }))
+  const duplicateField = (id) => setForm(f => {
+    const idx = f.fields.findIndex(x => x.id === id)
+    if (idx === -1) return f
+    const copy = { ...f.fields[idx], id: Date.now() }
+    const fields = [...f.fields]
+    fields.splice(idx + 1, 0, copy)
+    return { ...f, fields }
+  })
   const moveField = (from, to) => {
-    const fields = [...form.fields]
-    const [moved] = fields.splice(from, 1)
-    fields.splice(to, 0, moved)
-    setForm(f => ({ ...f, fields }))
+    if (to < 0 || to >= form.fields.length) return
+    setForm(f => {
+      const fields = [...f.fields]
+      const [moved] = fields.splice(from, 1)
+      fields.splice(to, 0, moved)
+      return { ...f, fields }
+    })
+  }
+  const handleDrop = (idx) => {
+    if (dragIndex !== null && dragIndex !== idx) moveField(dragIndex, idx)
+    setDragIndex(null)
+    setDragOverIndex(null)
   }
 
   const handleSave = async () => {
-    if (!form.name) return
+    if (!form.name) { setTriedSave(true); return }
     setSaving(true)
     await onSave(form)
     setSaving(false)
   }
 
-  const inp = { width: '100%', boxSizing: 'border-box', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, fontFamily: 'inherit', outline: 'none' }
+  const inp = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'inherit', outline: 'none', background: '#fff' }
+  const glass = { background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.7)' }
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+    <div style={{ background: 'radial-gradient(circle at 15% 0%, #6D5DF60C, transparent 40%), radial-gradient(circle at 85% 15%, #30C48D0C, transparent 40%), #F6F8FC', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
         <button onClick={onCancel} style={{ background: 'none', border: 'none', color: primary, fontWeight: 800, fontSize: 13, cursor: 'pointer', padding: 0 }}>← Back</button>
-        <div style={{ flex: 1, fontSize: 17, fontWeight: 900 }}>{initial ? 'Edit Form' : 'Build New Form'}</div>
-        <button onClick={handleSave} disabled={saving || !form.name} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: saving || !form.name ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+        <div style={{ flex: 1, fontSize: 19, fontWeight: 900, color: '#0F172A' }}>{initial ? 'Edit Form' : 'Build New Form'}</div>
+
+        <div style={{ display: 'flex', gap: 4, background: 'rgba(0,0,0,0.05)', borderRadius: 12, padding: 4 }}>
+          <button onClick={() => setMode('edit')} style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: mode === 'edit' ? '#fff' : 'transparent', color: mode === 'edit' ? '#0F172A' : '#64748B', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', boxShadow: mode === 'edit' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none' }}>✏️ Edit</button>
+          <button onClick={() => setMode('preview')} style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: mode === 'preview' ? '#fff' : 'transparent', color: mode === 'preview' ? '#0F172A' : '#64748B', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', boxShadow: mode === 'preview' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none' }}>👀 Preview</button>
+        </div>
+
+        <motion.button onClick={handleSave} disabled={saving} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+          style={{ padding: '11px 22px', borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13.5, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 10px 24px -8px rgba(109,93,246,0.45)' }}>
           {saving ? 'Saving...' : '💾 Save Form'}
-        </button>
+        </motion.button>
       </div>
 
       {/* Form meta */}
-      <div style={{ background: '#F9FAFB', border: '1px solid #e5e7eb', borderRadius: 14, padding: 18, marginBottom: 20 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
+      <div style={{ ...glass, borderRadius: 20, padding: 18, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
           <div>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>FORM NAME *</label>
-            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Trip Consent Form" style={inp} />
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 5, letterSpacing: 0.4 }}>FORM NAME *</label>
+            <input value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); if (triedSave) setTriedSave(false) }} placeholder="e.g. Trip Consent Form"
+              style={{ ...inp, border: triedSave && !form.name ? '1.5px solid #DC2626' : inp.border }} />
+            {triedSave && !form.name && <div style={{ fontSize: 11, color: '#DC2626', marginTop: 4, fontWeight: 600 }}>Give your form a name before saving</div>}
           </div>
           <div>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>DESCRIPTION</label>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 5, letterSpacing: 0.4 }}>DESCRIPTION</label>
             <input value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="What is this form for?" style={inp} />
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: 20 }}>
-        {/* Add fields panel */}
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Add Fields</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {FIELD_TYPES.map(ft => (
-              <button key={ft.key} onClick={() => addField(ft.key)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${primary}30`, background: primary + '08', color: '#374151', fontWeight: 600, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
-                onMouseEnter={e => { e.currentTarget.style.background = primary + '15'; e.currentTarget.style.borderColor = primary }}
-                onMouseLeave={e => { e.currentTarget.style.background = primary + '08'; e.currentTarget.style.borderColor = primary + '30' }}>
-                <span>{ft.icon}</span> {ft.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Fields canvas */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.6 }}>Form Fields ({form.fields.length})</div>
-          </div>
+      {mode === 'preview' ? (
+        <div style={{ ...glass, borderRadius: 24, padding: isMobile ? 20 : 32, maxWidth: 560 }}>
+          <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 4 }}>{form.name || 'Untitled Form'}</div>
+          {form.description && <div style={{ fontSize: 13, color: '#64748B', marginBottom: 20 }}>{form.description}</div>}
           {form.fields.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', background: '#F9FAFB', borderRadius: 14, border: '1.5px dashed #e5e7eb', color: '#9CA3AF' }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📝</div>
-              Add fields from the left to build your form
-            </div>
+            <div style={{ padding: 30, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>Add some fields to see a preview</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {form.fields.map((field, idx) => (
-                <div key={field.id} draggable onDragOver={e => { e.preventDefault(); setDragOver(idx) }} onDrop={() => { if (dragOver !== null && dragOver !== idx) moveField(dragOver > idx ? dragOver : dragOver, idx); setDragOver(null) }} onDragStart={() => setDragOver(idx)}
-                  style={{ background: '#fff', border: `1.5px solid ${dragOver === idx ? primary : '#e5e7eb'}`, borderRadius: 12, padding: '12px 14px', cursor: 'grab' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <div style={{ fontSize: 16, marginTop: 2, cursor: 'grab', opacity: 0.4 }}>⠿</div>
-                    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'start' }}>
-                      <div>
-                        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                          <input value={field.label} onChange={e => updateField(field.id, { label: e.target.value })} style={{ ...inp, flex: 1, fontSize: 13, fontWeight: 600 }} placeholder="Field label" />
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F3F4F6', borderRadius: 8, padding: '0 10px', fontSize: 11, fontWeight: 700, color: '#6B7280', flexShrink: 0 }}>
-                            {FIELD_TYPES.find(f => f.key === field.type)?.icon} {field.type}
-                          </div>
-                        </div>
-                        {field.type === 'select' && (
-                          <div>
-                            <div style={{ fontSize: 11, color: '#6B7280', fontWeight: 600, marginBottom: 4 }}>Options (one per line):</div>
-                            <textarea value={(field.options || []).join('\n')} onChange={e => updateField(field.id, { options: e.target.value.split('\n').filter(Boolean) })} rows={3} style={{ ...inp, resize: 'none', fontSize: 12 }} />
-                          </div>
-                        )}
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280', cursor: 'pointer', marginTop: 4 }}>
-                          <input type="checkbox" checked={field.required || false} onChange={e => updateField(field.id, { required: e.target.checked })} />
-                          Required field
-                        </label>
-                      </div>
-                      <button onClick={() => removeField(field.id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', fontSize: 18, padding: 0, marginTop: 2 }}>×</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {form.fields.map(field => (
+                <div key={field.id}>
+                  {field.type !== 'checkbox' && (
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 6 }}>
+                      {field.label}{field.required && <span style={{ color: '#DC2626' }}> *</span>}
                     </div>
-                  </div>
+                  )}
+                  <FieldPreview field={field} />
                 </div>
               ))}
+              <button disabled style={{ marginTop: 8, padding: '12px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, opacity: 0.6, cursor: 'default' }}>Submit</button>
             </div>
           )}
         </div>
-      </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: 20, alignItems: 'start' }}>
+          {/* Add fields panel */}
+          <div style={{ ...glass, borderRadius: 20, padding: 16, position: isMobile ? 'static' : 'sticky', top: 20 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>Add a field</div>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : '1fr', gap: 8 }}>
+              {FIELD_TYPES.map(ft => (
+                <motion.button key={ft.key} onClick={() => addField(ft.key)} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${primary}25`, background: primary + '0A', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}>
+                  <span style={{ fontSize: 15 }}>{ft.icon}</span> {ft.label}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Fields canvas */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.6 }}>Form Fields ({form.fields.length})</div>
+              {form.fields.length > 0 && <div style={{ fontSize: 11.5, color: '#94A3B8' }}>Drag ⠿ or use the arrows to reorder</div>}
+            </div>
+            {form.fields.length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center', ...glass, borderRadius: 20, border: '1.5px dashed rgba(0,0,0,0.1)', color: '#94A3B8' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>📝</div>
+                Add fields from the left to build your form
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <AnimatePresence initial={false}>
+                  {form.fields.map((field, idx) => (
+                    <motion.div key={field.id} layout
+                      initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
+                      draggable
+                      onDragStart={() => setDragIndex(idx)}
+                      onDragOver={e => { e.preventDefault(); setDragOverIndex(idx) }}
+                      onDrop={() => handleDrop(idx)}
+                      onDragEnd={() => { setDragIndex(null); setDragOverIndex(null) }}
+                      style={{ background: '#fff', border: `1.5px solid ${dragOverIndex === idx ? primary : '#E5E7EB'}`, borderRadius: 14, padding: '14px 16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, paddingTop: 4 }}>
+                          <div style={{ fontSize: 16, cursor: 'grab', opacity: 0.35 }}>⠿</div>
+                          <button onClick={() => moveField(idx, idx - 1)} disabled={idx === 0} style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? '#D1D5DB' : '#64748B', fontSize: 12, padding: 0 }}>▲</button>
+                          <button onClick={() => moveField(idx, idx + 1)} disabled={idx === form.fields.length - 1} style={{ background: 'none', border: 'none', cursor: idx === form.fields.length - 1 ? 'default' : 'pointer', color: idx === form.fields.length - 1 ? '#D1D5DB' : '#64748B', fontSize: 12, padding: 0 }}>▼</button>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                            <input value={field.label} onChange={e => updateField(field.id, { label: e.target.value })} style={{ ...inp, flex: 1, minWidth: 120, fontSize: 13, fontWeight: 700 }} placeholder="Field label" />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F1F5F9', borderRadius: 8, padding: '0 10px', fontSize: 11, fontWeight: 700, color: '#64748B', flexShrink: 0 }}>
+                              {FIELD_TYPES.find(f => f.key === field.type)?.icon} {FIELD_TYPES.find(f => f.key === field.type)?.label}
+                            </div>
+                          </div>
+
+                          {field.type === 'select' && (
+                            <div style={{ marginBottom: 8 }}>
+                              <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginBottom: 6 }}>OPTIONS</div>
+                              {(field.options || []).map((opt, oi) => (
+                                <div key={oi} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                                  <input value={opt} onChange={e => {
+                                    const options = [...field.options]; options[oi] = e.target.value
+                                    updateField(field.id, { options })
+                                  }} style={{ ...inp, flex: 1, fontSize: 12.5 }} />
+                                  <button onClick={() => updateField(field.id, { options: field.options.filter((_, i) => i !== oi) })}
+                                    style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', fontSize: 16, padding: '0 6px' }}>×</button>
+                                </div>
+                              ))}
+                              <button onClick={() => updateField(field.id, { options: [...(field.options || []), `Option ${(field.options || []).length + 1}`] })}
+                                style={{ padding: '6px 12px', borderRadius: 8, border: `1.5px dashed ${primary}40`, background: 'none', color: primary, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>+ Add option</button>
+                            </div>
+                          )}
+
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, flexWrap: 'wrap', gap: 8 }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748B', cursor: 'pointer' }}>
+                              <input type="checkbox" checked={field.required || false} onChange={e => updateField(field.id, { required: e.target.checked })} />
+                              Required field
+                            </label>
+                            <div style={{ display: 'flex', gap: 12 }}>
+                              <button onClick={() => duplicateField(field.id)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: 0 }}>⧉ Duplicate</button>
+                              <button onClick={() => removeField(field.id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: 0 }}>🗑 Remove</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
