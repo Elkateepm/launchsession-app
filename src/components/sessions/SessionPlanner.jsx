@@ -700,7 +700,7 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, volCo
         <motion.div
           animate={{ y: [0, -4, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: index * 0.15 }}
-          style={{ width: 48, height: 48, borderRadius: 16, background: `linear-gradient(135deg, ${type.color}25, ${type.color}10)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, border: `1px solid ${type.color}30` }}
+          style={{ width: 50, height: 50, borderRadius: 16, background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, boxShadow: `0 6px 16px -6px ${type.color}80`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}
         >
           {type.icon}
         </motion.div>
@@ -959,7 +959,7 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
 
   // ── LIST / WEEK VIEW ──
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F6F8FC' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'radial-gradient(circle at 15% 0%, #6D5DF60C, transparent 40%), radial-gradient(circle at 85% 15%, #30C48D0C, transparent 40%), #F6F8FC' }}>
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 28 }}>
 
         {/* HERO */}
@@ -974,7 +974,9 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
             marginBottom: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: isMobile ? 'wrap' : 'nowrap', gap: 16,
           }}
         >
-          <div style={{ position: 'absolute', top: -60, right: -40, width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, #6D5DF622, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, #6D5DF635, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: -70, left: '20%', width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, #30C48D28, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: -40, left: -30, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, #FFB64825, transparent 70%)', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
               <motion.span animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} style={{ fontSize: 26 }}>🚀</motion.span>
@@ -1003,15 +1005,15 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
               transition={{ duration: 0.4, delay: i * 0.06 }}
               whileHover={{ scale: 1.03, y: -3 }}
               style={{
-                background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-                borderRadius: 20, border: '1px solid rgba(255,255,255,0.7)', boxShadow: '0 8px 28px -12px rgba(30,41,59,0.1), inset 0 1px 0 rgba(255,255,255,0.85)',
+                background: `linear-gradient(150deg, ${s.color}14, rgba(255,255,255,0.65) 55%)`, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+                borderRadius: 20, border: `1px solid ${s.color}30`, boxShadow: `0 8px 28px -14px ${s.color}50, inset 0 1px 0 rgba(255,255,255,0.85)`,
                 padding: '18px 18px',
               }}
             >
               <motion.div
                 animate={s.pulse ? { scale: [1, 1.15, 1] } : s.glow ? { textShadow: ['0 0 0px #FFB64800', '0 0 14px #FFB64890', '0 0 0px #FFB64800'] } : {}}
                 transition={{ duration: s.pulse ? 1.6 : 2.2, repeat: Infinity }}
-                style={{ fontSize: 20, marginBottom: 8 }}
+                style={{ width: 38, height: 38, borderRadius: 12, background: `${s.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginBottom: 10 }}
               >
                 {s.icon}
               </motion.div>
@@ -1053,10 +1055,10 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(10px)', borderRadius: 14, padding: 4, border: '1px solid rgba(255,255,255,0.7)' }}>
             {filterTabs.map(f => (
               <motion.button key={f.key} onClick={() => setFilter(f.key)} whileHover={{ y: -1 }} whileTap={{ scale: 0.96 }}
-                style={{ position: 'relative', padding: '7px 15px', borderRadius: 11, border: 'none', background: 'transparent', color: filter === f.key ? '#0F172A' : '#64748B', fontSize: 13, fontWeight: filter === f.key ? 800 : 600, cursor: 'pointer', zIndex: 1 }}>
+                style={{ position: 'relative', padding: '7px 15px', borderRadius: 11, border: 'none', background: 'transparent', color: filter === f.key ? '#fff' : '#64748B', fontSize: 13, fontWeight: filter === f.key ? 800 : 600, cursor: 'pointer', zIndex: 1 }}>
                 {filter === f.key && (
                   <motion.div layoutId="filterPill" transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                    style={{ position: 'absolute', inset: 0, background: '#fff', borderRadius: 11, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', zIndex: -1 }} />
+                    style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', borderRadius: 11, boxShadow: '0 4px 14px -4px #6D5DF680', zIndex: -1 }} />
                 )}
                 {f.label}
               </motion.button>
