@@ -1,5 +1,6 @@
 // AUTH FLOW LOCK: sign out must clear Supabase session, local org slug, and return to landing.
 import Settings from '../settings/Settings'
+import { motion, AnimatePresence } from 'framer-motion'
 import Volunteers from '../volunteers/Volunteers'
 import ProfilePage from '../profile/ProfilePage'
 import TeamTab from '../team/TeamTab'
@@ -143,6 +144,199 @@ function NavSection({ title, children, collapsed, packColor }) {
       {collapsed && <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '6px 14px' }} />}
       {children}
     </div>
+  )
+}
+
+// ─── FLOATING GLASS HEADER ────────────────────────────────────
+function LiveClock() {
+  const [now, setNow] = useState(new Date())
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 14, background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>
+      <span style={{ fontSize: 14 }}>📅</span>
+      <span style={{ fontSize: 12.5, fontWeight: 700, color: '#334155' }}>{now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+      <span style={{ width: 1, height: 12, background: 'rgba(51,65,85,0.2)' }} />
+      <span style={{ fontSize: 12.5, fontWeight: 700, color: '#6D5DF6', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+        {now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+      </span>
+    </div>
+  )
+}
+
+function HeaderIconButton({ icon, label, onClick, badge, primary }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      title={label}
+      whileHover={{ y: -3, scale: 1.05, boxShadow: `0 8px 20px -6px ${primary}50` }}
+      whileTap={{ scale: 0.94 }}
+      style={{ position: 'relative', width: 44, height: 44, borderRadius: 14, border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+    >
+      <motion.span whileHover={{ rotate: 5 }}>{icon}</motion.span>
+      {badge && (
+        <motion.span
+          animate={{ scale: [1, 1.25, 1] }}
+          transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 3.6 }}
+          style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: '#F16063', border: '1.5px solid #fff' }}
+        />
+      )}
+    </motion.button>
+  )
+}
+
+function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, userProfile, onProfileClick, onNavigate, hasModule }) {
+  const [search, setSearch] = useState('')
+  const [searchFocused, setSearchFocused] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [showNotifs, setShowNotifs] = useState(false)
+
+  useEffect(() => {
+    const el = document.getElementById('ls-main-scroll')
+    if (!el) return
+    const onScroll = (e) => setScrolled((e.target.scrollTop || 0) > 4)
+    el.addEventListener('scroll', onScroll, true) // capture phase — catches scroll on descendant pages too
+    return () => el.removeEventListener('scroll', onScroll, true)
+  }, [])
+
+  const moduleLabel = tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : ALL_MODULES.find(m => m.key === tab)?.label || tab
+
+  const daysLeft = org?.trial_expires_at ? Math.max(0, Math.ceil((new Date(org.trial_expires_at) - new Date()) / (1000 * 60 * 60 * 24))) : null
+  const isTrial = org?.plan === 'starter' && daysLeft !== null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+      style={{
+        margin: '16px 20px 0', borderRadius: 24, padding: '16px 24px',
+        background: 'rgba(255,255,255,0.68)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)',
+        border: '1px solid rgba(255,255,255,0.55)',
+        boxShadow: scrolled ? '0 14px 46px rgba(15,23,42,0.14), inset 0 1px rgba(255,255,255,0.7)' : '0 10px 40px rgba(15,23,42,0.08), inset 0 1px rgba(255,255,255,0.7)',
+        display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0, transition: 'box-shadow 0.25s ease', position: 'relative', zIndex: 50,
+      }}
+    >
+      {/* LEFT — org card */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flexShrink: 0 }}>
+        <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }} style={{ flexShrink: 0 }}>
+          {org?.logo_url ? (
+            <img src={org.logo_url} alt={orgName} style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 3, border: `1.5px solid ${primary}30` }} />
+          ) : (
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 900, color: '#fff', boxShadow: `0 6px 16px -4px ${primary}60` }}>
+              {orgName[0]}
+            </div>
+          )}
+        </motion.div>
+        <div style={{ minWidth: 0, display: 'none' }} className="ls-header-org-text">
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{orgName}</div>
+          {isTrial ? (
+            <motion.div whileHover={{ scale: 1.05 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 2, background: `${primary}14`, borderRadius: 99, padding: '1.5px 8px', border: `1px solid ${primary}25` }}>
+              <span style={{ fontSize: 10 }}>🚀</span>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: primary }}>Trial · {daysLeft}d left</span>
+            </motion.div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E' }} />
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: '#64748B' }}>Active today</span>
+            </div>
+          )}
+        </div>
+        <div style={{ width: 1, height: 26, background: 'rgba(15,23,42,0.08)', flexShrink: 0 }} className="ls-header-divider" />
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{moduleLabel}</div>
+        </div>
+      </div>
+
+      {/* CENTRE — search */}
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', minWidth: 0 }} className="ls-header-search">
+        <motion.div
+          animate={{ width: searchFocused ? 500 : 440 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+          style={{ position: 'relative', maxWidth: '100%' }}
+        >
+          <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8' }}>🔍</span>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            placeholder="Search children, sessions, volunteers..."
+            style={{
+              width: '100%', padding: '10px 40px', borderRadius: 18, border: '1px solid rgba(255,255,255,0.6)',
+              background: 'rgba(255,255,255,0.55)', fontSize: 13.5, color: '#0F172A', outline: 'none', boxSizing: 'border-box',
+              boxShadow: searchFocused ? `0 0 0 3px ${primary}25` : 'none', transition: 'box-shadow 0.2s',
+            }}
+          />
+          <AnimatePresence>
+            {search ? (
+              <motion.button key="clear" initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.7 }}
+                onClick={() => setSearch('')}
+                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', border: 'none', background: '#F1F5F9', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 11, color: '#64748B' }}>×</motion.button>
+            ) : (
+              <motion.span key="kbd" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 10.5, fontWeight: 700, color: '#94A3B8', background: 'rgba(148,163,184,0.14)', borderRadius: 6, padding: '2px 6px' }}>⌘K</motion.span>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+
+      {/* RIGHT — quick actions + clock + profile */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 8 }} className="ls-header-actions">
+          <div style={{ position: 'relative' }}>
+            <HeaderIconButton icon="🔔" label="Notifications" primary={primary} badge onClick={() => setShowNotifs(v => !v)} />
+            <AnimatePresence>
+              {showNotifs && (
+                <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                  style={{ position: 'absolute', top: 52, right: 0, width: 240, background: '#fff', borderRadius: 16, boxShadow: '0 20px 50px rgba(15,23,42,0.18)', border: '1px solid rgba(0,0,0,0.06)', padding: 16, zIndex: 60 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>Notifications</div>
+                  <div style={{ fontSize: 12, color: '#94A3B8' }}>You're all caught up 🎉</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <HeaderIconButton icon="💬" label="Messages" primary={primary} onClick={() => onNavigate(hasModule('messaging') ? 'messaging' : 'messaging')} />
+          <HeaderIconButton icon="➕" label="Quick Add" primary={primary} onClick={() => onNavigate('planner')} />
+          <a href="mailto:hello@launchsession.co.uk?subject=Help" style={{ textDecoration: 'none' }}>
+            <HeaderIconButton icon="❓" label="Help" primary={primary} onClick={() => {}} />
+          </a>
+        </div>
+
+        <div className="ls-header-clock"><LiveClock /></div>
+
+        <motion.button
+          onClick={onProfileClick}
+          whileHover={{ y: -2, backgroundColor: 'rgba(255,255,255,0.75)' }}
+          whileTap={{ scale: 0.97 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px 6px 6px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.5)', cursor: 'pointer', flexShrink: 0 }}
+        >
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden' }}>
+              {userProfile?.photo_url ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (userName[0]?.toUpperCase() || '?')}
+            </div>
+            <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 2, repeat: Infinity }}
+              style={{ position: 'absolute', bottom: -1, right: -1, width: 9, height: 9, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />
+          </div>
+          <div className="ls-header-profile-text" style={{ textAlign: 'left', minWidth: 0 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 110 }}>{userName}</div>
+            <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 600, textTransform: 'capitalize' }}>{userProfile?.role || 'Member'}</div>
+          </div>
+          <span style={{ fontSize: 11, color: '#94A3B8' }}>▾</span>
+        </motion.button>
+      </div>
+
+      <style>{`
+        @media (min-width: 1201px) { .ls-header-org-text { display: block !important; } }
+        @media (max-width: 1200px) { .ls-header-org-text { display: none !important; } }
+        @media (max-width: 767px) {
+          .ls-header-org-text, .ls-header-divider, .ls-header-clock, .ls-header-profile-text { display: none !important; }
+          .ls-header-actions { gap: 6px !important; }
+        }
+      `}</style>
+    </motion.div>
   )
 }
 
@@ -361,24 +555,16 @@ export default function Dashboard({ session, org }) {
       {/* MAIN CONTENT */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobileBottomNav ? 'calc(78px + env(safe-area-inset-bottom, 0px))' : 0 }}>
         {tab !== 'registers' && tab !== 'home' && (
-          <div style={{ background: 'var(--surface)', borderBottom: `2px solid ${primary}18`, padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12, position: 'relative' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}60, transparent)` }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: `linear-gradient(135deg, ${primary}22, ${primary}10)`, border: `1.5px solid ${primary}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                {ALL_MODULES.find(m => m.key === tab)?.icon || (tab === 'team' ? '👥' : tab === 'settings' ? '⚙️' : tab === 'branding' ? '🎨' : '📄')}
-              </div>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-display, sans-serif)', lineHeight: 1.1 }}>{tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : ALL_MODULES.find(m => m.key === tab)?.label || tab}</div>
-                <div style={{ fontSize: 10, color: primary, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 }}>{orgName}</div>
-              </div>
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600, background: primary + '10', padding: '4px 10px', borderRadius: 8, border: `1px solid ${primary}20` }}>
-              {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-            </div>
-          </div>
+          <FloatingHeader
+            org={org} orgName={orgName} primary={primary} tab={tab} ALL_MODULES={ALL_MODULES}
+            userName={userName} userProfile={userProfile}
+            onProfileClick={() => setShowProfile(true)}
+            onNavigate={handleSetTab}
+            hasModule={hasModule}
+          />
         )}
 
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div id="ls-main-scroll" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {org?.trial_expires_at && org?.plan === 'starter' && (() => {
             const expires = new Date(org.trial_expires_at)
             const daysLeft = Math.max(0, Math.ceil((expires - new Date()) / (1000 * 60 * 60 * 24)))
