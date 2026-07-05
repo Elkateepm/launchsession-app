@@ -979,7 +979,7 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
           <div style={{ position: 'absolute', top: -40, left: -30, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, #FFB64825, transparent 70%)', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <motion.span animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} style={{ fontSize: 26 }}>🚀</motion.span>
+              <motion.img src="/assets/rockets/rocket-icon.png" alt="" animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} style={{ height: 32, width: 'auto', display: 'block' }} />
               <span style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>Sessions</span>
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#64748B', marginBottom: 4 }}>{format(new Date(), 'EEEE d MMMM yyyy')} · {org?.name}</div>
@@ -1128,8 +1128,8 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
             <motion.span key={i} animate={{ opacity: [0.2, 1, 0.2] }} transition={{ duration: 2 + (i % 3), repeat: Infinity, delay: i * 0.3 }}
               style={{ position: 'absolute', top: `${10 + (i * 11) % 70}%`, left: `${5 + (i * 17) % 90}%`, fontSize: 10 }}>✨</motion.span>
           ))}
-          <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} style={{ fontSize: 44, marginBottom: 14, position: 'relative', zIndex: 1 }}>
-            {filter === 'past' ? '🗄️' : '🚀'}
+          <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} style={{ marginBottom: 14, position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'center' }}>
+            {filter === 'past' ? <span style={{ fontSize: 44 }}>🗄️</span> : <img src="/assets/rockets/rocket-hero.png" alt="" style={{ height: 96, width: 'auto' }} />}
           </motion.div>
           <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6, position: 'relative', zIndex: 1 }}>
             {filter === 'past' ? 'No past sessions yet' : 'Ready for your next mission?'}
