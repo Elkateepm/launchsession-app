@@ -569,7 +569,7 @@ function VolunteerDashboard({ user, profile, org, onSignOut }) {
   ]
 
   return (
-    <div style={{ minHeight:'100vh', background:'#F5F5F5', display:'flex', flexDirection:'column', fontFamily:'Inter,sans-serif', paddingTop:'env(safe-area-inset-top)' }}>
+    <div style={{ height:'100%', background:'#F5F5F5', display:'flex', flexDirection:'column', fontFamily:'Inter,sans-serif', paddingTop:'env(safe-area-inset-top)', overflow:'hidden' }}>
 
       {/* ── HEADER ── */}
       <div style={{ background:'linear-gradient(160deg, #0D1B2A 0%, #14263a 100%)', padding:'12px 18px 0', position:'relative', overflow:'hidden', flexShrink:0 }}>
@@ -625,7 +625,7 @@ function VolunteerDashboard({ user, profile, org, onSignOut }) {
       </div>
 
       {/* ── CONTENT ── */}
-      <div style={{ flex:1, overflowY:'auto', padding:'16px 16px 110px' }}>
+      <div style={{ flex:1, minHeight:0, overflowY:'auto', WebkitOverflowScrolling:'touch', padding:'16px 16px 110px' }}>
       <AnimatePresence mode="wait">
       <motion.div key={tab} initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }} transition={{ duration:0.2, ease:'easeOut' }}>
 
