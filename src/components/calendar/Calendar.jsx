@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, addDays, subDays, isSameMonth, parseISO, isToday, addWeeks, subWeeks } from 'date-fns'
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const TYPE_CONFIG = {
   activity:  { label: 'Activity',  icon: '🏃', color: '#1B9AAA', bg: 'rgba(27,154,170,0.12)',  border: 'rgba(27,154,170,0.35)'  },
@@ -222,6 +223,7 @@ function SessionModal({ session, org, onClose, onDelete }) {
 }
 
 export default function Calendar({ org, onSessionChanged, onNavigate }) {
+  const isMobile = useIsMobile()
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -349,9 +351,9 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
   }
 
   return (
-    <div style={{ display: 'flex', gap: 20, height: '100%', minHeight: 0 }}>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 14 : 20, height: '100%', minHeight: 0, overflowY: isMobile ? 'auto' : 'visible' }}>
       <style>{KEYFRAMES}</style>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: isMobile ? 480 : 0 }}>
 
         <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 24px', marginBottom: 16, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 -1px 0 ${primary}14 inset, 0 18px 40px -18px ${primary}35` }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
@@ -564,7 +566,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
         </div>
       </div>
 
-      <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ width: isMobile ? '100%' : 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ background: '#fff', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 12 }}>This Month</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
