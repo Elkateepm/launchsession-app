@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format, parseISO } from 'date-fns'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const STATUS_CONFIG = {
   planning:   { label: 'Planning',   color: '#F59E0B', bg: 'rgba(245,158,11,0.1)'  },
@@ -31,6 +32,7 @@ function StatusBadge({ status }) {
 
 // ── EVENT DETAIL ──────────────────────────────────────────────
 function EventDetail({ event, org, onBack, onUpdate }) {
+  const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState('overview')
   const [participants, setParticipants] = useState([])
   const [children, setChildren] = useState([])
@@ -136,7 +138,7 @@ function EventDetail({ event, org, onBack, onUpdate }) {
         </div>
 
         {/* KPI strip */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginTop: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10, marginTop: 20 }}>
           {[
             { label: 'Participants', value: participants.length, icon: '👥' },
             { label: 'Consent', value: `${consentRate}%`, icon: '✅' },
@@ -160,7 +162,7 @@ function EventDetail({ event, org, onBack, onUpdate }) {
               ⚠️ {saveError}
             </div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Title</label><input value={editForm.title || ''} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} style={inp} /></div>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Location</label><input value={editForm.location || ''} onChange={e => setEditForm(f => ({ ...f, location: e.target.value }))} style={inp} /></div>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Date</label><input type="date" value={editForm.event_date || ''} onChange={e => setEditForm(f => ({ ...f, event_date: e.target.value }))} style={inp} /></div>
@@ -204,7 +206,7 @@ function EventDetail({ event, org, onBack, onUpdate }) {
 
       {/* Overview tab */}
       {activeTab === 'overview' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
           <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 18 }}>
             <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 12 }}>Event Details</div>
             {[
@@ -260,14 +262,14 @@ function EventDetail({ event, org, onBack, onUpdate }) {
           ) : (
             <div style={{ border: '1px solid #E5E7EB', borderRadius: 14, overflow: 'hidden' }}>
               {/* Header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px 40px', gap: 8, padding: '10px 16px', background: '#F9FAFB', fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              <div style={{ display: isMobile ? 'none' : 'grid', gridTemplateColumns: '1fr 80px 80px 80px 40px', gap: 8, padding: '10px 16px', background: '#F9FAFB', fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 <div>Name</div><div>Consent</div><div>Status</div><div>Alerts</div><div></div>
               </div>
               {participants.map((part, i) => {
                 const child = part.child || {}
                 const hasAlerts = child.allergies || child.medical_notes
                 return (
-                  <div key={part.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px 40px', gap: 8, padding: '12px 16px', alignItems: 'center', borderTop: i > 0 ? '1px solid #F3F4F6' : 'none', background: i % 2 === 0 ? '#fff' : '#FAFAFA' }}>
+                  <div key={part.id} style={{ display: isMobile ? 'flex' : 'grid', flexWrap: isMobile ? 'wrap' : undefined, gridTemplateColumns: '1fr 80px 80px 80px 40px', gap: 8, padding: '12px 16px', alignItems: 'center', borderTop: i > 0 ? '1px solid #F3F4F6' : 'none', background: i % 2 === 0 ? '#fff' : '#FAFAFA' }}>
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{child.first_name} {child.last_name}</div>
                     <button onClick={() => toggleConsent(part)} style={{ padding: '4px 10px', borderRadius: 6, border: `1px solid ${part.consent_given ? '#16A34A40' : '#e5e7eb'}`, background: part.consent_given ? '#F0FDF4' : '#fff', color: part.consent_given ? '#16A34A' : '#9CA3AF', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                       {part.consent_given ? '✓ Yes' : 'No'}
@@ -323,6 +325,7 @@ function EventDetail({ event, org, onBack, onUpdate }) {
 
 // ── CREATE EVENT MODAL ────────────────────────────────────────
 function CreateEventModal({ org, onClose, onCreate, mode = 'create' }) {
+  const isMobile = useIsMobile()
   const primary = org?.primary_color || '#1B9AAA'
   const isLog = mode === 'log'
   const todayStr = new Date().toISOString().slice(0, 10)
@@ -367,7 +370,7 @@ function CreateEventModal({ org, onClose, onCreate, mode = 'create' }) {
               ⚠️ {error}
             </div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
             <div style={{ gridColumn: '1/-1' }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 5 }}>EVENT TITLE *</label>
               <input value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Summer Football Trip to Wembley" style={inp} />
@@ -421,6 +424,7 @@ function CreateEventModal({ org, onClose, onCreate, mode = 'create' }) {
 
 // ── MAIN ──────────────────────────────────────────────────────
 export default function EventsTrips({ org }) {
+  const isMobile = useIsMobile()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedEvent, setSelectedEvent] = useState(null)
@@ -494,7 +498,7 @@ export default function EventsTrips({ org }) {
         </div>
 
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginTop: 18 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10, marginTop: 18 }}>
           {[
             { label: 'Total Events', sub: 'All time', value: events.length, icon: '🎟️', color: primary },
             { label: 'Upcoming', sub: 'Next 30 days', value: upcoming.length, icon: '📅', color: '#2563EB' },
@@ -529,7 +533,7 @@ export default function EventsTrips({ org }) {
       </div>
 
       {/* Two-column: list + sidebar */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 20, alignItems: 'flex-start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: 20, alignItems: 'flex-start' }}>
         <div>
           {loading ? (
             <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>Loading events...</div>
