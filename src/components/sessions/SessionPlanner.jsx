@@ -3,7 +3,29 @@ import React, { useState, useEffect } from 'react'
 import { format, addDays, parseISO, startOfWeek, isSameDay } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import PageHeader from '../shared/PageHeader'
+import { motion, AnimatePresence } from 'framer-motion'
+
+function CountUp({ value, duration = 0.6 }) {
+  const [display, setDisplay] = React.useState(value)
+  const prevRef = React.useRef(value)
+  React.useEffect(() => {
+    const start = prevRef.current
+    const end = value
+    if (start === end) return
+    const startTime = performance.now()
+    let raf
+    const tick = (now) => {
+      const t = Math.min(1, (now - startTime) / (duration * 1000))
+      const eased = 1 - Math.pow(1 - t, 3)
+      setDisplay(Math.round(start + (end - start) * eased))
+      if (t < 1) raf = requestAnimationFrame(tick)
+      else prevRef.current = end
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value, duration])
+  return <>{display}</>
+}
 
 const SESSION_TYPES = [
   { key: 'activity',  label: 'Activity',  icon: '🏃', color: '#1B9AAA' },
@@ -625,58 +647,137 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   )
 }
 
-function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, volCounts, hasReflection }) {
+function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, volCounts, hasReflection, attendanceCounts, index = 0 }) {
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
   const isMultiDay = session.end_date && session.end_date !== session.session_date
   const volCount = volCounts?.[session.id] || 0
   const needed = session.volunteer_limit || 0
   const covered = needed === 0 || volCount >= needed
   const isPast = session.session_date < format(new Date(), 'yyyy-MM-dd')
+  const isToday = session.session_date === format(new Date(), 'yyyy-MM-dd') && !isPast
+  const ac = attendanceCounts?.[session.id] || { total: 0, signedIn: 0 }
+
+  const dateLabel = isMultiDay
+    ? `${format(parseISO(session.session_date), 'd MMM')} – ${format(parseISO(session.end_date), 'd MMM')}`
+    : format(parseISO(session.session_date), 'EEE d MMM')
+
+  const statusChip = isPast
+    ? { label: 'Completed', bg: '#F1F5F9', color: '#64748B' }
+    : isToday
+      ? { label: 'Live', bg: '#DCFCE7', color: '#16A34A', pulse: true }
+      : { label: 'Upcoming', bg: type.color + '15', color: type.color }
+
+  const quickActions = [
+    { key: 'edit', icon: '✏️', onClick: () => onEdit(session), color: '#6D5DF6' },
+    { key: 'vol', icon: '❤️', onClick: () => onVolunteers(session), color: '#F16063' },
+    ...(isPast ? [{ key: 'reflect', icon: '⭐', onClick: () => onReflect(session), color: '#FFB648' }] : []),
+    { key: 'delete', icon: '🗑', onClick: () => onDelete(session.id), color: '#F16063' },
+  ]
 
   return (
-    <div style={{ background: 'var(--surface, #fff)', borderRadius: 14, border: '1.5px solid var(--border, #E5E7EB)', padding: '14px 16px', marginBottom: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 11, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, border: `1.5px solid ${type.color}30` }}>
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.35, delay: index * 0.02 }}
+      whileHover={{ y: -4, scale: 1.005 }}
+      style={{
+        position: 'relative',
+        background: 'rgba(255,255,255,0.7)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderRadius: 24,
+        border: '1px solid rgba(255,255,255,0.6)',
+        boxShadow: '0 8px 32px -12px rgba(30,41,59,0.12), inset 0 1px 0 rgba(255,255,255,0.8)',
+        marginBottom: 14,
+        overflow: 'hidden',
+        cursor: 'default',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '18px 20px' }}>
+        {/* Icon — gentle bob */}
+        <motion.div
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: index * 0.15 }}
+          style={{ width: 48, height: 48, borderRadius: 16, background: `linear-gradient(135deg, ${type.color}25, ${type.color}10)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, border: `1px solid ${type.color}30` }}
+        >
           {type.icon}
-        </div>
+        </motion.div>
+
+        {/* Centre content */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 4 }}>{session.title}</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 12, fontWeight: 600, color: 'var(--text3, #6B7280)' }}>
-            <span>📅 {format(parseISO(session.session_date), 'd MMM')}{isMultiDay ? ` – ${format(parseISO(session.end_date), 'd MMM')}` : ''}</span>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 6, letterSpacing: -0.2 }}>{session.title}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, fontSize: 12.5, fontWeight: 600, color: '#64748B', marginBottom: 8 }}>
+            <span>📅 {dateLabel}</span>
             <span>🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}</span>
             {session.location && <span>📍 {session.location.split(',')[0]}</span>}
-            {session.max_capacity && <span>👥 {session.max_capacity}</span>}
           </div>
-          {(session.bubbles?.length > 0 || needed > 0) && (
-            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 8 }}>
-              {(session.bubbles || []).map(b => {
-                const bd = DEFAULT_BUBBLE_DEFS.find(d => d.label === b)
-                return <span key={b} style={{ background: (bd?.color || '#888') + '20', color: bd?.color || '#888', borderRadius: 99, padding: '2px 9px', fontSize: 10, fontWeight: 800, border: `1px solid ${(bd?.color || '#888')}40` }}>{b}</span>
-              })}
-              {needed > 0 && (
-                <span style={{ background: covered ? '#F0FDF4' : '#FFFBEB', color: covered ? '#16A34A' : '#92400E', borderRadius: 99, padding: '2px 9px', fontSize: 10, fontWeight: 800, border: `1px solid ${covered ? '#86EFAC' : '#FDE68A'}` }}>
-                  {covered ? `✓ ${volCount}/${needed} volunteers` : `⚠ ${volCount}/${needed} volunteers`}
-                </span>
-              )}
-              {isPast && (
-                <span style={{ background: hasReflection ? '#F0FDF4' : '#FEF3C7', color: hasReflection ? '#16A34A' : '#92400E', borderRadius: 99, padding: '2px 9px', fontSize: 10, fontWeight: 800, border: `1px solid ${hasReflection ? '#86EFAC' : '#FDE68A'}` }}>
-                  {hasReflection ? '⭐ Reflected' : '⭐ Reflection due'}
-                </span>
-              )}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {(session.bubbles || []).map(b => {
+              const bd = DEFAULT_BUBBLE_DEFS.find(d => d.label === b)
+              return <span key={b} style={{ background: (bd?.color || '#888') + '18', color: bd?.color || '#888', borderRadius: 99, padding: '3px 10px', fontSize: 10.5, fontWeight: 800 }}>{b}</span>
+            })}
+            {needed > 0 && (
+              <span style={{ background: covered ? '#F0FDF4' : '#FFFBEB', color: covered ? '#16A34A' : '#92400E', borderRadius: 99, padding: '3px 10px', fontSize: 10.5, fontWeight: 800 }}>
+                {covered ? `✓ ${volCount}/${needed} vol` : `⚠ ${volCount}/${needed} vol`}
+              </span>
+            )}
+          </div>
+
+          {/* Progress bar — signed in / expected */}
+          {ac.total > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700, color: '#94A3B8', marginBottom: 4 }}>
+                <span>{ac.signedIn} / {ac.total} children signed in</span>
+              </div>
+              <div style={{ height: 6, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${ac.total > 0 ? (ac.signedIn / ac.total) * 100 : 0}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                  style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${type.color}, #30C48D)` }}
+                />
+              </div>
             </div>
           )}
         </div>
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+
+        {/* Right: status + actions */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, flexShrink: 0 }}>
+          <motion.span
+            animate={statusChip.pulse ? { opacity: [1, 0.6, 1] } : {}}
+            transition={{ duration: 1.8, repeat: Infinity }}
+            style={{ fontSize: 11, fontWeight: 800, color: statusChip.color, background: statusChip.bg, borderRadius: 99, padding: '4px 12px', whiteSpace: 'nowrap' }}
+          >
+            {statusChip.label}
+          </motion.span>
           {isPast && (
-            <button onClick={() => onReflect(session)} title={hasReflection ? 'View/edit reflection' : 'Complete reflection'}
-              style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${hasReflection ? '#86EFAC' : '#FDE68A'}`, background: hasReflection ? '#F0FDF4' : '#FFFBEB', cursor: 'pointer', fontSize: 14 }}>⭐</button>
+            <motion.span
+              animate={hasReflection ? {} : { boxShadow: ['0 0 0px #FFB64800', '0 0 12px #FFB64880', '0 0 0px #FFB64800'] }}
+              transition={{ duration: 2.4, repeat: Infinity }}
+              style={{ fontSize: 10.5, fontWeight: 800, color: hasReflection ? '#16A34A' : '#B45309', background: hasReflection ? '#F0FDF4' : '#FFF7ED', borderRadius: 99, padding: '3px 10px', whiteSpace: 'nowrap' }}
+            >
+              {hasReflection ? '⭐ Reflected' : '⭐ Reflection due'}
+            </motion.span>
           )}
-          <button onClick={() => onVolunteers(session)} title="Manage volunteers" style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${type.color}40`, background: type.color + '10', cursor: 'pointer', fontSize: 14 }}>❤️</button>
-          <button onClick={() => onEdit(session)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface2, #F9FAFB)', cursor: 'pointer', fontSize: 13 }}>✏️</button>
-          <button onClick={() => onDelete(session.id)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid #FFE5E5', background: '#FFF0F0', cursor: 'pointer', fontSize: 13 }}>🗑</button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {quickActions.map(a => (
+              <motion.button
+                key={a.key}
+                onClick={a.onClick}
+                whileHover={{ y: -2, rotate: 6, background: a.color + '22' }}
+                whileTap={{ scale: 0.92 }}
+                style={{ width: 34, height: 34, borderRadius: 11, border: 'none', background: a.color + '12', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                title={a.key}
+              >
+                {a.icon}
+              </motion.button>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -690,11 +791,13 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
 
   const [sessions, setSessions] = useState([])
   const [volCounts, setVolCounts] = useState({})
+  const [attendanceCounts, setAttendanceCounts] = useState({})
   const [reflections, setReflections] = useState({}) // session_id -> reflection row
   const [reflectingSession, setReflectingSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('list') // 'list' | 'week' | 'form'
   const [filter, setFilter] = useState('all') // 'all' | 'sessions' | 'trips' | 'past'
+  const [search, setSearch] = useState('')
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
@@ -716,6 +819,21 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
     const reflMap = {}
     ;(refl || []).forEach(r => { reflMap[r.session_id] = r })
     setReflections(reflMap)
+
+    // Attendance counts per session (for progress bars + Children Expected stat)
+    const sessionIds = (sess || []).map(s => s.id)
+    if (sessionIds.length > 0) {
+      const { data: att } = await supabase.from('attendance').select('session_id, status').in('session_id', sessionIds)
+      const acMap = {}
+      ;(att || []).forEach(a => {
+        if (!acMap[a.session_id]) acMap[a.session_id] = { total: 0, signedIn: 0 }
+        acMap[a.session_id].total += 1
+        if (a.status === 'signed_in' || a.status === 'signed_out') acMap[a.session_id].signedIn += 1
+      })
+      setAttendanceCounts(acMap)
+    } else {
+      setAttendanceCounts({})
+    }
     setLoading(false)
   }
 
@@ -737,12 +855,19 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
 
   const displayed = sessions.filter(s => {
     if (filter === 'reflections') return false // handled separately below
-    if (filter === 'past') return isSessionPast(s)
-    if (isSessionPast(s)) return false // hide ended sessions from all other views
-    if (filter === 'trips') return s.session_type === 'trip'
-    if (filter === 'sessions') return s.session_type !== 'trip'
+    if (filter === 'past') { if (!isSessionPast(s)) return false }
+    else { if (isSessionPast(s)) return false } // hide ended sessions from all other views
+    if (filter === 'trips' && s.session_type !== 'trip') return false
+    if (filter === 'sessions' && s.session_type === 'trip') return false
+    if (search.trim() && !(`${s.title} ${s.location || ''}`.toLowerCase().includes(search.trim().toLowerCase()))) return false
     return true
   })
+
+  const upcomingSessions = React.useMemo(() => sessions.filter(s => !isSessionPast(s)), [sessions]) // eslint-disable-line react-hooks/exhaustive-deps
+  const reflectionsDueCount = React.useMemo(() => sessions.filter(s => isSessionPast(s) && !reflections[s.id]).length, [sessions, reflections]) // eslint-disable-line react-hooks/exhaustive-deps
+  const childrenExpectedCount = React.useMemo(() => {
+    return upcomingSessions.reduce((sum, s) => sum + (attendanceCounts[s.id]?.total || 0), 0)
+  }, [upcomingSessions, attendanceCounts])
 
   const reflectedSessions = React.useMemo(() => {
     return sessions
@@ -817,44 +942,135 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
 
   const needVolunteers = sessions.filter(s => s.volunteer_limit && (volCounts[s.id] || 0) < s.volunteer_limit).length
 
+  const statCards = [
+    { key: 'upcoming', label: 'Upcoming Sessions', value: upcomingSessions.length, icon: '📅', color: '#5B8DEF' },
+    { key: 'volunteers', label: 'Need Volunteers', value: needVolunteers, icon: '❤️', color: '#F16063', pulse: needVolunteers > 0 },
+    { key: 'expected', label: 'Children Expected', value: childrenExpectedCount, icon: '👥', color: '#30C48D' },
+    { key: 'reflections', label: 'Reflections Due', value: reflectionsDueCount, icon: '⭐', color: '#FFB648', glow: reflectionsDueCount > 0 },
+  ]
+
+  const filterTabs = [
+    { key: 'all', label: 'All' },
+    { key: 'sessions', label: 'Sessions' },
+    { key: 'trips', label: '🚌 Trips' },
+    { key: 'past', label: '🗄️ Completed' },
+    { key: 'reflections', label: `⭐ Reflections${reflectedSessions.length ? ` (${reflectedSessions.length})` : ''}` },
+  ]
+
   // ── LIST / WEEK VIEW ──
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <PageHeader
-        icon="📅"
-        title="Sessions"
-        orgName={org?.name}
-        subtitle={`${sessions.length} upcoming · ${needVolunteers} need volunteers`}
-        primary={primary}
-        stats={[
-          { label: 'Upcoming', value: sessions.length, icon: '📅' },
-          { label: 'Need Volunteers', value: needVolunteers, icon: '❤️', color: needVolunteers > 0 ? '#F59E0B' : '#16A34A' },
-          { label: 'This Week', value: sessions.filter(s => { const d = new Date(s.session_date); const now = new Date(); return d >= now && d <= new Date(now.getTime() + 7*864e5) }).length, icon: '🗓️', color: primary },
-        ]}
-        actions={[{ label: '+ New Session', onClick: () => openNew() }]}
-      />
-      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F6F8FC' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 28 }}>
 
-      {/* Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        {/* Filter tabs */}
-        <div style={{ display: 'flex', background: 'var(--surface2, #F3F4F6)', borderRadius: 10, padding: 3, gap: 2 }}>
-          {[{ key: 'all', label: 'All' }, { key: 'sessions', label: 'Sessions' }, { key: 'trips', label: '🚌 Trips' }, { key: 'past', label: '🗄️ Past' }, { key: 'reflections', label: `⭐ Reflections${reflectedSessions.length ? ` (${reflectedSessions.length})` : ''}` }].map(f => (
-            <button key={f.key} onClick={() => setFilter(f.key)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: filter === f.key ? '#fff' : 'transparent', color: filter === f.key ? 'var(--text, #111)' : 'var(--text3, #6B7280)', fontSize: 13, fontWeight: filter === f.key ? 800 : 600, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
-              {f.label}
-            </button>
+        {/* HERO */}
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+          style={{
+            position: 'relative', overflow: 'hidden', borderRadius: 28, padding: isMobile ? '24px 20px' : '32px 36px',
+            background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.7)', boxShadow: '0 20px 60px -20px rgba(30,41,59,0.15), inset 0 1px 0 rgba(255,255,255,0.9)',
+            marginBottom: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: isMobile ? 'wrap' : 'nowrap', gap: 16,
+          }}
+        >
+          <div style={{ position: 'absolute', top: -60, right: -40, width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, #6D5DF622, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <motion.span animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} style={{ fontSize: 26 }}>🚀</motion.span>
+              <span style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>Sessions</span>
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#64748B', marginBottom: 4 }}>{format(new Date(), 'EEEE d MMMM yyyy')} · {org?.name}</div>
+            <div style={{ fontSize: 14, color: '#475569' }}>Manage sessions, trips and activities.</div>
+          </div>
+          <motion.button
+            onClick={() => openNew()}
+            whileHover={{ y: -3, boxShadow: '0 16px 40px -10px rgba(109,93,246,0.5)' }}
+            whileTap={{ scale: 0.97 }}
+            style={{ position: 'relative', zIndex: 1, padding: '14px 26px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 10px 30px -8px rgba(109,93,246,0.4)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}
+          >
+            <motion.span whileHover={{ rotate: 20 }}>➕</motion.span> New Session
+          </motion.button>
+        </motion.div>
+
+        {/* STATS */}
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14, marginBottom: 22 }}>
+          {statCards.map((s, i) => (
+            <motion.div
+              key={s.key}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: i * 0.06 }}
+              whileHover={{ scale: 1.03, y: -3 }}
+              style={{
+                background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+                borderRadius: 20, border: '1px solid rgba(255,255,255,0.7)', boxShadow: '0 8px 28px -12px rgba(30,41,59,0.1), inset 0 1px 0 rgba(255,255,255,0.85)',
+                padding: '18px 18px',
+              }}
+            >
+              <motion.div
+                animate={s.pulse ? { scale: [1, 1.15, 1] } : s.glow ? { textShadow: ['0 0 0px #FFB64800', '0 0 14px #FFB64890', '0 0 0px #FFB64800'] } : {}}
+                transition={{ duration: s.pulse ? 1.6 : 2.2, repeat: Infinity }}
+                style={{ fontSize: 20, marginBottom: 8 }}
+              >
+                {s.icon}
+              </motion.div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: s.color, letterSpacing: -0.5, lineHeight: 1 }}>
+                <CountUp value={s.value} />
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginTop: 6 }}>{s.label}</div>
+            </motion.div>
           ))}
         </div>
-        <div style={{ flex: 1 }} />
-        {/* View toggle */}
-        <div style={{ display: 'flex', background: 'var(--surface2, #F3F4F6)', borderRadius: 10, padding: 3, gap: 2 }}>
-          {[{ key: 'list', icon: '☰' }, { key: 'week', icon: '📅' }].map(v => (
-            <button key={v.key} onClick={() => setView(v.key)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: view === v.key ? '#fff' : 'transparent', fontSize: 14, cursor: 'pointer', boxShadow: view === v.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
-              {v.icon}
-            </button>
-          ))}
+
+        {/* SEARCH */}
+        <div style={{ position: 'relative', marginBottom: 14 }}>
+          <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: '#94A3B8' }}>🔍</span>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search sessions..."
+            style={{
+              width: '100%', padding: '12px 40px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.7)',
+              background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(12px)', fontSize: 14, color: '#0F172A',
+              outline: 'none', boxSizing: 'border-box', boxShadow: search ? '0 0 0 3px #6D5DF622' : '0 4px 16px -8px rgba(30,41,59,0.08)',
+              transition: 'box-shadow 0.2s',
+            }}
+          />
+          <AnimatePresence>
+            {search && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.7 }}
+                onClick={() => setSearch('')}
+                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', border: 'none', background: '#F1F5F9', borderRadius: '50%', width: 22, height: 22, cursor: 'pointer', fontSize: 12, color: '#64748B' }}
+              >×</motion.button>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+
+        {/* Toolbar: filter pills + view toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(10px)', borderRadius: 14, padding: 4, border: '1px solid rgba(255,255,255,0.7)' }}>
+            {filterTabs.map(f => (
+              <motion.button key={f.key} onClick={() => setFilter(f.key)} whileHover={{ y: -1 }} whileTap={{ scale: 0.96 }}
+                style={{ position: 'relative', padding: '7px 15px', borderRadius: 11, border: 'none', background: 'transparent', color: filter === f.key ? '#0F172A' : '#64748B', fontSize: 13, fontWeight: filter === f.key ? 800 : 600, cursor: 'pointer', zIndex: 1 }}>
+                {filter === f.key && (
+                  <motion.div layoutId="filterPill" transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    style={{ position: 'absolute', inset: 0, background: '#fff', borderRadius: 11, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', zIndex: -1 }} />
+                )}
+                {f.label}
+              </motion.button>
+            ))}
+          </div>
+          <div style={{ flex: 1 }} />
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(10px)', borderRadius: 14, padding: 4, gap: 2, border: '1px solid rgba(255,255,255,0.7)' }}>
+            {[{ key: 'list', icon: '☰' }, { key: 'week', icon: '📅' }].map(v => (
+              <button key={v.key} onClick={() => setView(v.key)} style={{ padding: '7px 14px', borderRadius: 11, border: 'none', background: view === v.key ? '#fff' : 'transparent', fontSize: 14, cursor: 'pointer', boxShadow: view === v.key ? '0 2px 8px rgba(0,0,0,0.08)' : 'none' }}>
+                {v.icon}
+              </button>
+            ))}
+          </div>
+        </div>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 60, color: 'var(--text3, #94a3b8)', fontWeight: 700 }}>Loading sessions...</div>
@@ -905,17 +1121,34 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
           </div>
         )
       ) : displayed.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '48px 20px', background: 'var(--surface, #fff)', borderRadius: 16, border: '1.5px dashed var(--border, #E5E7EB)' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>{filter === 'past' ? '🗄️' : '📅'}</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 6 }}>{filter === 'past' ? 'No past sessions yet' : 'No upcoming sessions'}</div>
-          <div style={{ fontSize: 13, color: 'var(--text3, #6B7280)', marginBottom: 20 }}>{filter === 'past' ? 'Sessions move here automatically once they end' : 'Create your first session to get started'}</div>
-          {filter !== 'past' && <button onClick={() => openNew()} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>+ New Session</button>}
+        <div style={{ textAlign: 'center', padding: '56px 20px', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(14px)', borderRadius: 24, border: '1px solid rgba(255,255,255,0.7)', position: 'relative', overflow: 'hidden' }}>
+          {filter !== 'past' && [...Array(8)].map((_, i) => (
+            <motion.span key={i} animate={{ opacity: [0.2, 1, 0.2] }} transition={{ duration: 2 + (i % 3), repeat: Infinity, delay: i * 0.3 }}
+              style={{ position: 'absolute', top: `${10 + (i * 11) % 70}%`, left: `${5 + (i * 17) % 90}%`, fontSize: 10 }}>✨</motion.span>
+          ))}
+          <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} style={{ fontSize: 44, marginBottom: 14, position: 'relative', zIndex: 1 }}>
+            {filter === 'past' ? '🗄️' : '🚀'}
+          </motion.div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6, position: 'relative', zIndex: 1 }}>
+            {filter === 'past' ? 'No past sessions yet' : 'Ready for your next mission?'}
+          </div>
+          <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 22, position: 'relative', zIndex: 1 }}>
+            {filter === 'past' ? 'Sessions move here automatically once they end' : 'Create your first session to start supporting young people.'}
+          </div>
+          {filter !== 'past' && (
+            <motion.button onClick={() => openNew()} whileHover={{ y: -2, boxShadow: '0 12px 32px -8px rgba(109,93,246,0.5)' }} whileTap={{ scale: 0.96 }}
+              style={{ padding: '12px 26px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', position: 'relative', zIndex: 1 }}>
+              + New Session
+            </motion.button>
+          )}
         </div>
       ) : view === 'list' ? (
         <div>
-          {displayed.map(s => (
-            <SessionCard key={s.id} session={s} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} onReflect={setReflectingSession} volCounts={volCounts} hasReflection={!!reflections[s.id]} />
-          ))}
+          <AnimatePresence>
+            {displayed.map((s, i) => (
+              <SessionCard key={s.id} session={s} index={i} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} onReflect={setReflectingSession} volCounts={volCounts} hasReflection={!!reflections[s.id]} attendanceCounts={attendanceCounts} />
+            ))}
+          </AnimatePresence>
         </div>
       ) : (
         /* WEEK VIEW */
