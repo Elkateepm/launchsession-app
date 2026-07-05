@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const OUTCOME_AREAS = [
   { key: 'confidence',   label: 'Confidence',      icon: '💪', color: '#F59E0B' },
@@ -27,6 +28,7 @@ function ScoreBar({ value, max = 10, color }) {
 }
 
 function PersonDetail({ child, scores, org, onBack, onScoreAdded }) {
+  const isMobile = useIsMobile()
   const [showAdd, setShowAdd] = useState(false)
   const [newScore, setNewScore] = useState({ area: 'confidence', score: 5, notes: '' })
   const [saving, setSaving] = useState(false)
@@ -91,7 +93,7 @@ function PersonDetail({ child, scores, org, onBack, onScoreAdded }) {
       {showAdd && (
         <div style={{ background: '#F0FDF4', border: '1.5px solid #BBF7D0', borderRadius: 16, padding: 20, marginBottom: 20 }}>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>📊 Record Outcome Score</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
             <div>
               <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>AREA</label>
               <select value={newScore.area} onChange={e => setNewScore(n => ({ ...n, area: e.target.value }))} style={inp}>
@@ -146,6 +148,7 @@ function PersonDetail({ child, scores, org, onBack, onScoreAdded }) {
 }
 
 export default function ImpactOutcomes({ org }) {
+  const isMobile = useIsMobile()
   const [children, setChildren] = useState([])
   const [scores, setScores] = useState([])
   const [loading, setLoading] = useState(true)
@@ -192,7 +195,7 @@ export default function ImpactOutcomes({ org }) {
           <div style={{ fontSize: 22, fontWeight: 900 }}>📈 Impact & Outcomes</div>
           <div style={{ fontSize: 13, color: '#6B7280', marginTop: 3 }}>Track wellbeing, confidence, attendance and more across your young people</div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
           {[
             { label: 'Young People', value: children.length, icon: '👥' },
             { label: 'Being Tracked', value: trackedCount, icon: '📊', color: '#2563EB' },
