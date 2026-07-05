@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const ROLE_CONFIG = {
   admin:     { label: 'Administrator', badge: 'Admin',     color: '#4F6EF7', light: '#EEF2FF' },
@@ -67,6 +68,7 @@ function ChangePasswordModal({ onClose }) {
 }
 
 export default function ProfilePage({ session, org, onClose, onSignOut, onProfileUpdate }) {
+  const isMobile = useIsMobile()
   const userId = session?.user?.id
   const userEmail = session?.user?.email || ''
   const [profile, setProfile] = useState(null)
@@ -141,11 +143,11 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
   const dbsWarning = daysUntilExpiry !== null && daysUntilExpiry < 60
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 860, maxHeight: '90vh', overflow: 'hidden', display: 'flex', boxShadow: '0 32px 80px rgba(0,0,0,0.25)' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 0 : 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: isMobile ? 0 : 20, width: '100%', maxWidth: isMobile ? '100%' : 860, height: isMobile ? '100%' : 'auto', maxHeight: isMobile ? '100%' : '90vh', overflow: 'hidden', display: 'flex', flexDirection: isMobile ? 'column' : 'row', boxShadow: '0 32px 80px rgba(0,0,0,0.25)' }}>
 
         {/* LEFT SIDEBAR */}
-        <div style={{ width: 260, background: '#fafafa', borderRight: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+        <div style={{ width: isMobile ? '100%' : 260, background: '#fafafa', borderRight: isMobile ? 'none' : '1px solid #f0f0f0', borderBottom: isMobile ? '1px solid #f0f0f0' : 'none', display: 'flex', flexDirection: 'column', flexShrink: 0, maxHeight: isMobile ? '40vh' : 'none', overflowY: isMobile ? 'auto' : 'visible' }}>
 
           {/* Avatar */}
           <div style={{ padding: '28px 20px 20px', borderBottom: '1px solid #f0f0f0', textAlign: 'center' }}>
