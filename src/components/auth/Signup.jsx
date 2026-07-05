@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const STEPS = [
   { id: 'insert',  label: 'Creating your workspace...' },
@@ -8,6 +9,7 @@ const STEPS = [
 ]
 
 export default function Signup() {
+  const isMobile = useIsMobile()
   const [organisationName, setOrganisationName] = useState('')
   const [fullName, setFullName]                 = useState('')
   const [email, setEmail]                       = useState('')
@@ -219,7 +221,7 @@ export default function Signup() {
             <span>What happens next?</span>
             <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 10 }}>
             {[
               { n: '1', title: 'Instant setup', desc: 'Workspace created in seconds' },
               { n: '2', title: 'Check email', desc: 'Login link sent immediately' },
@@ -234,7 +236,7 @@ export default function Signup() {
           </div>
         </form>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 20, flexWrap: 'wrap' }}>
           <button onClick={() => window.location.href = '/landing.html'} style={backBtn}>← Back to LaunchSession</button>
           <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
           <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>🔒 Secure & never shared</span>
