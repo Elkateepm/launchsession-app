@@ -4,17 +4,17 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 
-export const STATUSES = ['open', 'investigating', 'monitoring', 'awaiting_agency', 'strategy_discussion', 'child_protection', 'resolved', 'closed', 'archived']
+export const STATUSES = ['open', 'in_progress', 'monitoring', 'awaiting_agency', 'strategy_discussion', 'child_protection', 'resolved', 'closed', 'archived']
 
 export const STATUS_LABELS = {
-  open: 'Open', investigating: 'Investigating', monitoring: 'Monitoring',
+  open: 'Open', in_progress: 'Investigating', monitoring: 'Monitoring',
   awaiting_agency: 'Awaiting External Agency', strategy_discussion: 'Strategy Discussion',
   child_protection: 'Child Protection', resolved: 'Resolved', closed: 'Closed', archived: 'Archived',
 }
 
 export const STATUS_STYLE = {
   open: { bg: 'rgba(124,92,252,0.12)', color: '#6D3FD6' },
-  investigating: { bg: 'rgba(245,158,11,0.14)', color: '#B45309' },
+  in_progress: { bg: 'rgba(245,158,11,0.14)', color: '#B45309' },
   monitoring: { bg: 'rgba(59,130,246,0.12)', color: '#1D4ED8' },
   awaiting_agency: { bg: 'rgba(236,72,153,0.12)', color: '#BE185D' },
   strategy_discussion: { bg: 'rgba(139,92,246,0.14)', color: '#6D28D9' },
