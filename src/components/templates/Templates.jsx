@@ -1,6 +1,7 @@
 import DOMPurify from 'dompurify'
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const TYPES = [
   { key: 'session_plan', label: 'Session Plans',      icon: '📋', color: '#3B82F6', desc: 'Pre-built agendas and activity plans' },
@@ -93,6 +94,7 @@ function ViewModal({ template, onClose, onUse, onEdit, isOwn, using }) {
 }
 
 function EditModal({ template, onClose, onSave, saving }) {
+  const isMobile = useIsMobile()
   const [form, setForm] = useState({
     title: template?.title || '',
     description: template?.description || '',
@@ -112,7 +114,7 @@ function EditModal({ template, onClose, onSave, saving }) {
           </div>
           <button onClick={onClose} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, color: 'var(--text3)', width: 32, height: 32, cursor: 'pointer', fontSize: 16 }}>x</button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14, marginBottom: 14 }}>
           <div><label style={lbl}>Title</label><input value={form.title} onChange={e => set('title', e.target.value)} style={inp} /></div>
           <div><label style={lbl}>Category</label><input value={form.category} onChange={e => set('category', e.target.value)} style={inp} /></div>
         </div>
