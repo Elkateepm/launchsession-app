@@ -95,8 +95,6 @@ export default function VolunteersMain({ org }) {
 
   // ── KPIs ──────────────────────────────────────────────
   const today = new Date().toISOString().slice(0, 10)
-  const weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() + 7)
-  const weekEndStr = weekEnd.toISOString().slice(0, 10)
   const sessionsById = Object.fromEntries(sessions.map(s => [s.id, s]))
   const completedStaff = sessionStaff.filter(ss => sessionsById[ss.session_id]?.session_date <= today)
   const upcomingShifts = sessionStaff.filter(ss => sessionsById[ss.session_id]?.session_date >= today).length
