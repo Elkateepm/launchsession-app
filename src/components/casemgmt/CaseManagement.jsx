@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format, formatDistanceToNow } from 'date-fns'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const CASE_TYPES = [
   { key: 'Safeguarding',   icon: '🛡️', color: '#DC2626' },
@@ -25,6 +26,7 @@ const PRIORITY = {
 }
 
 function CaseDetail({ cas, org, session: authSession, onBack, onUpdate }) {
+  const isMobile = useIsMobile()
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
   const [loading, setLoading] = useState(true)
@@ -103,7 +105,7 @@ function CaseDetail({ cas, org, session: authSession, onBack, onUpdate }) {
       {/* Edit form */}
       {editing && (
         <div style={{ background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 18, marginBottom: 20 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Child Name</label><input value={editForm.child_name || ''} onChange={e => setEditForm(f => ({ ...f, child_name: e.target.value }))} style={inp} /></div>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Case Type</label>
               <select value={editForm.case_type || ''} onChange={e => setEditForm(f => ({ ...f, case_type: e.target.value }))} style={inp}>
@@ -155,6 +157,7 @@ function CaseDetail({ cas, org, session: authSession, onBack, onUpdate }) {
 }
 
 export default function CaseManagement({ org, session: authSession }) {
+  const isMobile = useIsMobile()
   const [cases, setCases] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedCase, setSelectedCase] = useState(null)
@@ -200,7 +203,7 @@ export default function CaseManagement({ org, session: authSession }) {
           </div>
           <button onClick={() => setShowCreate(true)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ Open New Case</button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(5,1fr)', gap: 10 }}>
           {Object.entries(STATUS_CONFIG).map(([k, v]) => (
             <div key={k} style={{ background: '#fff', borderRadius: 12, padding: '10px 14px', border: '1px solid #e5e7eb' }}>
               <div style={{ fontSize: 20, fontWeight: 900, color: v.color }}>{cases.filter(c => c.status === k).length}</div>
@@ -214,7 +217,7 @@ export default function CaseManagement({ org, session: authSession }) {
       {showCreate && (
         <div style={{ background: '#FFF7ED', border: '1.5px solid #FED7AA', borderRadius: 16, padding: 20, marginBottom: 20 }}>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>⚠️ Open New Case</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>CHILD / YOUNG PERSON *</label><input value={newCase.child_name} onChange={e => setNewCase(n => ({ ...n, child_name: e.target.value }))} placeholder="Full name" style={inp} /></div>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>CASE TYPE</label>
               <select value={newCase.case_type} onChange={e => setNewCase(n => ({ ...n, case_type: e.target.value }))} style={inp}>
