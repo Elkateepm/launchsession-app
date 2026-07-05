@@ -564,7 +564,7 @@ export default function Dashboard({ session, org }) {
           />
         )}
 
-        <div id="ls-main-scroll" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div id="ls-main-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', WebkitOverflowScrolling: 'touch' }}>
           {org?.trial_expires_at && org?.plan === 'starter' && (() => {
             const expires = new Date(org.trial_expires_at)
             const daysLeft = Math.max(0, Math.ceil((expires - new Date()) / (1000 * 60 * 60 * 24)))
