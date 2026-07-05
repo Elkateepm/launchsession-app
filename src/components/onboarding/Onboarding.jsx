@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const ORG_TYPES = [
   { value: 'charity', label: '❤️ Charity' },
@@ -27,6 +28,7 @@ const FOCUSES = [
 ]
 
 export default function Onboarding({ session, org, onComplete }) {
+  const isMobile = useIsMobile()
   const [step, setStep] = useState(0)
   const [orgType, setOrgType] = useState('')
   const [size, setSize] = useState('')
@@ -82,7 +84,7 @@ export default function Onboarding({ session, org, onComplete }) {
   const card = { width: '100%', maxWidth: 520, background: 'linear-gradient(145deg, rgba(15,23,42,0.96), rgba(2,6,23,0.98))', border: '1px solid rgba(96,165,250,0.18)', borderRadius: 24, padding: '40px 36px', boxShadow: '0 28px 80px rgba(0,0,0,0.35)' }
   const title = { fontSize: 26, fontWeight: 900, marginBottom: 8, letterSpacing: -0.5 }
   const sub = { fontSize: 15, color: 'rgba(255,255,255,0.5)', marginBottom: 32, lineHeight: 1.6 }
-  const grid = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }
+  const grid = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 28 }
   const opt = (sel) => ({ padding: '14px 16px', borderRadius: 12, border: sel ? '2px solid #3B82F6' : '1.5px solid rgba(255,255,255,0.1)', background: sel ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left', width: '100%' })
   const btn = (disabled) => ({ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.4 : 1 })
   const btnGhost = { width: '100%', padding: 14, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginTop: 10 }
