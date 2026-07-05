@@ -596,6 +596,70 @@ function SubmissionsView({ form, org, onBack }) {
   )
 }
 
+function EmailFormModal({ form, primary, onClose }) {
+  const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
+  const [result, setResult] = useState(null) // { sent, failed } | { error }
+
+  const handleSend = async () => {
+    const emails = input.split(/[,\n]/).map(e => e.trim()).filter(Boolean)
+    if (emails.length === 0) return
+    setSending(true)
+    setResult(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/send-form-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ form_id: form.id, emails }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setResult({ error: data?.error || 'Failed to send' }); setSending(false); return }
+      setResult({ sent: data.sent, failed: data.failed || [] })
+    } catch (e) {
+      setResult({ error: 'Network error — please try again' })
+    }
+    setSending(false)
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 440, boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>✉️ Email this form</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
+        </div>
+        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 16 }}>{form.name}</div>
+
+        <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 6, letterSpacing: 0.4 }}>RECIPIENT EMAIL(S)</label>
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="parent1@example.com, parent2@example.com"
+          rows={3}
+          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'inherit', outline: 'none', resize: 'vertical' }}
+        />
+        <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 6, marginBottom: 16 }}>Separate multiple addresses with commas or new lines.</div>
+
+        {result?.error && <div style={{ padding: '10px 14px', borderRadius: 10, background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', fontSize: 13, fontWeight: 600, marginBottom: 14 }}>{result.error}</div>}
+        {result && !result.error && (
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#F0FDF4', border: '1px solid #86EFAC', color: '#16A34A', fontSize: 13, fontWeight: 600, marginBottom: 14 }}>
+            Sent to {result.sent} recipient{result.sent !== 1 ? 's' : ''}{result.failed?.length ? ` — failed for: ${result.failed.join(', ')}` : ''}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Close</button>
+          <button onClick={handleSend} disabled={sending || !input.trim()}
+            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: sending || !input.trim() ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: sending || !input.trim() ? 'default' : 'pointer' }}>
+            {sending ? 'Sending...' : 'Send'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Forms({ org }) {
   const isMobile = useIsMobile()
   const [forms, setForms] = useState([])
@@ -606,6 +670,7 @@ export default function Forms({ org }) {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('all')
   const [copiedId, setCopiedId] = useState(null)
+  const [emailModalFor, setEmailModalFor] = useState(null)
   const primary = org?.primary_color || '#1B9AAA'
 
   const copyFormLink = async (form) => {
@@ -835,6 +900,10 @@ export default function Forms({ org }) {
                     style={{ padding: '5px 12px', borderRadius: 8, border: `1px solid ${copiedId === form.id ? '#16A34A40' : '#e5e7eb'}`, background: copiedId === form.id ? '#F0FDF4' : '#F9FAFB', color: !form.is_active ? '#D1D5DB' : copiedId === form.id ? '#16A34A' : '#374151', fontSize: 11, fontWeight: 700, cursor: form.is_active ? 'pointer' : 'default' }}>
                     {copiedId === form.id ? '✅ Copied!' : '🔗 Share'}
                   </button>
+                  <button onClick={() => setEmailModalFor(form)} disabled={!form.is_active} title={form.is_active ? 'Email this form to one or more people' : 'Activate this form to email it'}
+                    style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#F9FAFB', color: !form.is_active ? '#D1D5DB' : '#374151', fontSize: 11, fontWeight: 700, cursor: form.is_active ? 'pointer' : 'default' }}>
+                    ✉️ Email
+                  </button>
                   <button onClick={() => { setSelectedForm(form); setView('submissions') }} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#F9FAFB', color: '#374151', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     📬 {subCount}
                   </button>
@@ -849,6 +918,14 @@ export default function Forms({ org }) {
             )
           })}
         </div>
+      )}
+
+      {emailModalFor && (
+        <EmailFormModal
+          form={emailModalFor}
+          primary={primary}
+          onClose={() => setEmailModalFor(null)}
+        />
       )}
     </div>
   )
