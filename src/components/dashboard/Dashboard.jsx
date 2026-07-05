@@ -187,7 +187,18 @@ function HeaderIconButton({ icon, label, onClick, badge, primary }) {
   )
 }
 
-function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, userProfile, onProfileClick, onNavigate, hasModule }) {
+function timeAgo(dateStr) {
+  const diffMs = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diffMs / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return `${days}d ago`
+}
+
+function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, userProfile, onProfileClick, onNavigate, hasModule, unreadSubs = [] }) {
   const [search, setSearch] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -287,13 +298,32 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: 8 }} className="ls-header-actions">
           <div style={{ position: 'relative' }}>
-            <HeaderIconButton icon="🔔" label="Notifications" primary={primary} badge onClick={() => setShowNotifs(v => !v)} />
+            <HeaderIconButton icon="🔔" label="Notifications" primary={primary} badge={unreadSubs.length > 0} onClick={() => setShowNotifs(v => !v)} />
             <AnimatePresence>
               {showNotifs && (
                 <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                  style={{ position: 'absolute', top: 52, right: 0, width: 240, background: '#fff', borderRadius: 16, boxShadow: '0 20px 50px rgba(15,23,42,0.18)', border: '1px solid rgba(0,0,0,0.06)', padding: 16, zIndex: 60 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>Notifications</div>
-                  <div style={{ fontSize: 12, color: '#94A3B8' }}>You're all caught up 🎉</div>
+                  style={{ position: 'absolute', top: 52, right: 0, width: 280, background: '#fff', borderRadius: 16, boxShadow: '0 20px 50px rgba(15,23,42,0.18)', border: '1px solid rgba(0,0,0,0.06)', padding: 16, zIndex: 60, maxHeight: 360, overflowY: 'auto' }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: unreadSubs.length ? 10 : 4 }}>Notifications</div>
+                  {unreadSubs.length === 0 ? (
+                    <div style={{ fontSize: 12, color: '#94A3B8' }}>You're all caught up 🎉</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {unreadSubs.map(sub => (
+                        <button key={sub.id} onClick={() => { setShowNotifs(false); onNavigate('forms') }}
+                          style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 10, border: 'none', background: '#F8FAFC', textAlign: 'left', cursor: 'pointer' }}
+                          onMouseEnter={e => e.currentTarget.style.background = '#F1F5F9'}
+                          onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}>
+                          <span style={{ fontSize: 14, flexShrink: 0 }}>📬</span>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              New submission — {sub.org_forms?.name || 'Form'}
+                            </div>
+                            <div style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 1 }}>{timeAgo(sub.created_at)}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -392,6 +422,24 @@ export default function Dashboard({ session, org }) {
 
   const userName = userProfile?.full_name || userEmail.split('@')[0]
 
+  const [unreadSubs, setUnreadSubs] = useState([])
+  useEffect(() => {
+    if (!org?.id) return
+    let cancelled = false
+    const fetchUnread = () => {
+      supabase.from('form_submissions')
+        .select('id, created_at, org_forms(name)')
+        .eq('org_id', org.id)
+        .is('viewed_at', null)
+        .order('created_at', { ascending: false })
+        .limit(20)
+        .then(({ data }) => { if (!cancelled) setUnreadSubs(data || []) })
+    }
+    fetchUnread()
+    const interval = setInterval(fetchUnread, 45000) // no Realtime (iOS WebKit crash) — poll instead
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [org?.id])
+
   return (
     <div style={{ display: 'flex', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
 
@@ -468,7 +516,8 @@ export default function Dashboard({ session, org }) {
             ].map(m => (
               <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
                 onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
-                locked={!hasModule(m.key)} />
+                locked={!hasModule(m.key)}
+                badge={m.key === 'forms' && unreadSubs.length > 0 ? { text: unreadSubs.length > 9 ? '9+' : String(unreadSubs.length) } : undefined} />
             ))}
           </NavSection>
 
@@ -561,6 +610,7 @@ export default function Dashboard({ session, org }) {
             onProfileClick={() => setShowProfile(true)}
             onNavigate={handleSetTab}
             hasModule={hasModule}
+            unreadSubs={unreadSubs}
           />
         )}
 
