@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format, differenceInDays } from 'date-fns'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const ROLES = ['Programme Lead', 'Coach', 'Coordinator', 'Administrator', 'Volunteer Lead', 'Safeguarding Lead', 'Finance Manager', 'Outreach Worker', 'Youth Worker', 'Other']
 const CONTRACT_TYPES = ['Permanent', 'Fixed Term', 'Part Time', 'Zero Hours', 'Freelance', 'Volunteer']
@@ -20,6 +21,7 @@ const DBS_STATUS = {
 }
 
 function StaffDetail({ staff, org, onBack, onUpdate }) {
+  const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState('profile')
   const [leaveLog, setLeaveLog] = useState([])
   const [showLeave, setShowLeave] = useState(false)
@@ -77,7 +79,7 @@ function StaffDetail({ staff, org, onBack, onUpdate }) {
             {editing ? '✕ Cancel' : '✏️ Edit'}
           </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginTop: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10, marginTop: 16 }}>
           {[
             { label: 'Start Date', value: staff.start_date ? format(new Date(staff.start_date), 'd MMM yy') : '—' },
             { label: 'Annual Leave Used', value: `${annualLeave} days`, color: '#3B82F6' },
@@ -94,7 +96,7 @@ function StaffDetail({ staff, org, onBack, onUpdate }) {
 
       {editing && (
         <div style={{ background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 18, marginBottom: 20 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Full Name</label><input value={editForm.full_name || ''} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))} style={inp} /></div>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Role</label>
               <select value={editForm.role || ''} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))} style={inp}>{ROLES.map(r => <option key={r}>{r}</option>)}</select>
@@ -130,7 +132,7 @@ function StaffDetail({ staff, org, onBack, onUpdate }) {
       </div>
 
       {activeTab === 'profile' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
           <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 18 }}>
             <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 12 }}>Contact Info</div>
             {[['Email', staff.email], ['Phone', staff.phone], ['Role', staff.role], ['Contract', staff.contract_type]].map(([k, v]) => (
@@ -170,7 +172,7 @@ function StaffDetail({ staff, org, onBack, onUpdate }) {
           </div>
           {showLeave && (
             <div style={{ background: '#F0F9FF', border: '1.5px solid #BAE6FD', borderRadius: 14, padding: 16, marginBottom: 14 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
                 <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>TYPE</label>
                   <select value={newLeave.type} onChange={e => setNewLeave(n => ({ ...n, type: e.target.value }))} style={inp}>
                     {LEAVE_TYPES.map(t => <option key={t.key} value={t.key}>{t.icon} {t.label}</option>)}
@@ -210,6 +212,7 @@ function StaffDetail({ staff, org, onBack, onUpdate }) {
 }
 
 export default function HR({ org }) {
+  const isMobile = useIsMobile()
   const [staff, setStaff] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
@@ -259,7 +262,7 @@ export default function HR({ org }) {
           </div>
           <button onClick={() => setShowAdd(true)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ Add Staff Member</button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
           {[
             { label: 'Total Staff', value: staff.length, icon: '👥' },
             { label: 'Active', value: staff.filter(s => s.is_active !== false).length, icon: '✅', color: '#16A34A' },
@@ -278,7 +281,7 @@ export default function HR({ org }) {
       {showAdd && (
         <div style={{ background: '#F0F9FF', border: '1.5px solid #BAE6FD', borderRadius: 16, padding: 20, marginBottom: 20 }}>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>🧑‍💼 Add Staff Member</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>FULL NAME *</label><input value={newStaff.full_name} onChange={e => setNewStaff(n => ({ ...n, full_name: e.target.value }))} style={inp} /></div>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>ROLE</label>
               <select value={newStaff.role} onChange={e => setNewStaff(n => ({ ...n, role: e.target.value }))} style={inp}>{ROLES.map(r => <option key={r}>{r}</option>)}</select>
