@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const FIELD_TYPES = [
   { key: 'text',     label: 'Short Text',  icon: '📝' },
@@ -72,6 +73,7 @@ const TEMPLATES = [
 ]
 
 function FormBuilder({ org, initial, onSave, onCancel }) {
+  const isMobile = useIsMobile()
   const [form, setForm] = useState(initial || { name: '', description: '', fields: [] })
   const [saving, setSaving] = useState(false)
   const [dragOver, setDragOver] = useState(null)
@@ -112,7 +114,7 @@ function FormBuilder({ org, initial, onSave, onCancel }) {
 
       {/* Form meta */}
       <div style={{ background: '#F9FAFB', border: '1px solid #e5e7eb', borderRadius: 14, padding: 18, marginBottom: 20 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
           <div>
             <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>FORM NAME *</label>
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Trip Consent Form" style={inp} />
@@ -124,7 +126,7 @@ function FormBuilder({ org, initial, onSave, onCancel }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: 20 }}>
         {/* Add fields panel */}
         <div>
           <div style={{ fontSize: 12, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Add Fields</div>
@@ -189,6 +191,7 @@ function FormBuilder({ org, initial, onSave, onCancel }) {
 }
 
 function SubmissionsView({ form, org, onBack }) {
+  const isMobile = useIsMobile()
   const [submissions, setSubmissions] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
@@ -250,6 +253,7 @@ function SubmissionsView({ form, org, onBack }) {
 }
 
 export default function Forms({ org }) {
+  const isMobile = useIsMobile()
   const [forms, setForms] = useState([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('list') // 'list' | 'builder' | 'submissions'
@@ -310,7 +314,7 @@ export default function Forms({ org }) {
             </button>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 10 }}>
           {[
             { label: 'Total Forms', value: forms.length, icon: '📝' },
             { label: 'Active', value: forms.filter(f => f.is_active).length, icon: '✅', color: '#16A34A' },
