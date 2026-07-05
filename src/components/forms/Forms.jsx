@@ -544,7 +544,12 @@ function SubmissionsView({ form, org, onBack }) {
   const primary = org?.primary_color || '#1B9AAA'
 
   useEffect(() => {
-    supabase.from('form_submissions').select('*').eq('form_id', form.id).order('created_at', { ascending: false }).then(({ data }) => { setSubmissions(data || []); setLoading(false) })
+    supabase.from('form_submissions').select('*').eq('form_id', form.id).order('created_at', { ascending: false }).then(({ data }) => {
+      setSubmissions(data || [])
+      setLoading(false)
+      // Clear the unread badge/notification for this form's submissions now that they've been opened
+      supabase.from('form_submissions').update({ viewed_at: new Date().toISOString() }).eq('form_id', form.id).is('viewed_at', null).then(() => {})
+    })
   }, [form.id])
 
   return (
