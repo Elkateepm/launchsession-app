@@ -506,6 +506,19 @@ function VolunteerPanel({ session, org, onClose }) {
 }
 
 // ─── SESSION CARD ─────────────────────────────────────────────
+function ReflectionField({ i, children }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: Math.min(i * 0.04, 0.3) }}
+      style={{ marginBottom: 18 }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
 function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   const primary = org?.primary_color || '#1B9AAA'
   const [form, setForm] = useState({
@@ -552,17 +565,6 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   const label = { fontSize: 12, fontWeight: 800, color: 'var(--text, #111)', display: 'block', marginBottom: 6 }
   const hint = { fontSize: 11, color: 'var(--text3, #9CA3AF)', marginBottom: 8, lineHeight: 1.4 }
 
-  const Field = ({ i, children }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: Math.min(i * 0.04, 0.3) }}
-      style={{ marginBottom: 18 }}
-    >
-      {children}
-    </motion.div>
-  )
-
   return (
     <motion.div
       onClick={onClose}
@@ -595,7 +597,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
           {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 16, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>}
 
           {/* Overall rating */}
-          <Field i={0}>
+          <ReflectionField i={0}>
             <label style={label}>How did the session go overall?</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {[1,2,3,4,5].map(n => {
@@ -613,45 +615,45 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
                 )
               })}
             </div>
-          </Field>
+          </ReflectionField>
 
           {/* What went well */}
-          <Field i={1}>
+          <ReflectionField i={1}>
             <label style={label}>What went well?</label>
             <div style={hint}>Activities, engagement, moments worth repeating.</div>
             <textarea style={ta('www')} onFocus={() => setFocused('www')} onBlur={() => setFocused(null)} value={form.what_went_well} onChange={e => set('what_went_well', e.target.value)} placeholder="e.g. The warm-up game got everyone involved straight away..." />
-          </Field>
+          </ReflectionField>
 
           {/* What could improve */}
-          <Field i={2}>
+          <ReflectionField i={2}>
             <label style={label}>What could be improved next time?</label>
             <div style={hint}>Timing, equipment, structure, anything that didn't quite land.</div>
             <textarea style={ta('imp')} onFocus={() => setFocused('imp')} onBlur={() => setFocused(null)} value={form.what_could_improve} onChange={e => set('what_could_improve', e.target.value)} placeholder="e.g. We ran short on footballs for the group size..." />
-          </Field>
+          </ReflectionField>
 
           {/* Attendance notes */}
-          <Field i={3}>
+          <ReflectionField i={3}>
             <label style={label}>Attendance notes</label>
             <div style={hint}>Anything worth flagging about who came, who didn't, or patterns to watch.</div>
             <textarea style={ta('att')} onFocus={() => setFocused('att')} onBlur={() => setFocused(null)} value={form.attendance_notes} onChange={e => set('attendance_notes', e.target.value)} placeholder="e.g. Two regulars missing without notice — worth a follow-up call." />
-          </Field>
+          </ReflectionField>
 
           {/* Behaviour notes */}
-          <Field i={4}>
+          <ReflectionField i={4}>
             <label style={label}>Behaviour & group dynamics</label>
             <div style={hint}>How the group got on together, any friction, standout moments.</div>
             <textarea style={ta('beh')} onFocus={() => setFocused('beh')} onBlur={() => setFocused(null)} value={form.behaviour_notes} onChange={e => set('behaviour_notes', e.target.value)} placeholder="e.g. A couple of the younger ones needed extra encouragement to join in." />
-          </Field>
+          </ReflectionField>
 
           {/* Staffing notes */}
-          <Field i={5}>
+          <ReflectionField i={5}>
             <label style={label}>Staffing & volunteer cover</label>
             <div style={hint}>Was there enough cover? Anyone who went above and beyond?</div>
             <textarea style={ta('staff')} onFocus={() => setFocused('staff')} onBlur={() => setFocused(null)} value={form.staffing_notes} onChange={e => set('staffing_notes', e.target.value)} placeholder="e.g. Could have used one more volunteer for the smaller groups." />
-          </Field>
+          </ReflectionField>
 
           {/* Would repeat */}
-          <Field i={6}>
+          <ReflectionField i={6}>
             <label style={label}>Would you run this session again as-is?</label>
             <div style={{ display: 'flex', gap: 8, background: 'var(--surface2, #F3F4F6)', borderRadius: 12, padding: 4 }}>
               {[
@@ -669,10 +671,10 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
                 )
               })}
             </div>
-          </Field>
+          </ReflectionField>
 
           {/* Safeguarding flag */}
-          <Field i={7}>
+          <ReflectionField i={7}>
             <motion.label
               whileTap={{ scale: 0.99 }}
               style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${form.safeguarding_flag ? '#DC2626' : 'var(--border, #E5E7EB)'}`, background: form.safeguarding_flag ? '#FEF2F2' : 'var(--surface2, #F9FAFB)', cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s' }}
@@ -683,13 +685,13 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
                 <div style={{ fontSize: 11, color: 'var(--text3, #9CA3AF)' }}>Tick if anything here needs a safeguarding lead's attention — log the actual concern separately.</div>
               </div>
             </motion.label>
-          </Field>
+          </ReflectionField>
 
           {/* Free-form summary (backwards-compatible with original 'reflection' field) */}
-          <Field i={8}>
+          <ReflectionField i={8}>
             <label style={label}>Anything else?</label>
             <textarea style={ta('free')} onFocus={() => setFocused('free')} onBlur={() => setFocused(null)} value={form.reflection} onChange={e => set('reflection', e.target.value)} placeholder="Any other thoughts for next time..." />
-          </Field>
+          </ReflectionField>
         </div>
 
         {/* Footer */}
