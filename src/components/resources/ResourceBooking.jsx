@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format, parseISO, isSameDay, startOfWeek, addDays, isToday } from 'date-fns'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const RESOURCE_TYPES = [
   { key: 'room',       label: 'Room',          icon: '🚪' },
@@ -64,6 +65,7 @@ function WeekView({ date, bookings, resources, org, onBook, onDelete }) {
 }
 
 export default function ResourceBooking({ org, session: authSession }) {
+  const isMobile = useIsMobile()
   const [resources, setResources] = useState([])
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
@@ -153,7 +155,7 @@ export default function ResourceBooking({ org, session: authSession }) {
       {showAddResource && (
         <div style={{ background: '#F0F9FF', border: '1.5px solid #BAE6FD', borderRadius: 16, padding: 18, marginBottom: 20 }}>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>📦 Add Resource</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>NAME *</label><input value={newResource.name} onChange={e => setNewResource(n => ({ ...n, name: e.target.value }))} placeholder="e.g. Main Hall, Blue Minibus" style={inp} /></div>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>TYPE</label>
               <select value={newResource.type} onChange={e => setNewResource(n => ({ ...n, type: e.target.value }))} style={inp}>
@@ -186,7 +188,7 @@ export default function ResourceBooking({ org, session: authSession }) {
                 </select>
               </div>
               <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>DATE</label><input type="date" value={bookingForm.date} onChange={e => setBookingForm(f => ({ ...f, date: e.target.value }))} style={inp} /></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                 <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>START</label>
                   <select value={bookingForm.start_time} onChange={e => setBookingForm(f => ({ ...f, start_time: e.target.value }))} style={inp}>
                     {Array.from({ length: 14 }, (_, i) => i + 8).map(h => <option key={h} value={String(h).padStart(2,'0')}>{String(h).padStart(2,'0')}:00</option>)}
