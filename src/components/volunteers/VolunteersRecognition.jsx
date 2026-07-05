@@ -13,7 +13,6 @@ function totalHours(v, sessionStaff, sessions) {
 
 export default function VolunteersRecognition({ org, volunteers, sessionStaff, sessions, recognition, onDataChange }) {
   const primary = org?.primary_color || PURPLE
-  const [awarding, setAwarding] = useState(null)
   const [saving, setSaving] = useState(false)
 
   const withHours = volunteers.map(v => ({ ...v, hours: totalHours(v, sessionStaff, sessions) })).sort((a, b) => b.hours - a.hours)
@@ -29,7 +28,6 @@ export default function VolunteersRecognition({ org, volunteers, sessionStaff, s
     setSaving(true)
     await supabase.from('volunteer_recognition').insert({ org_id: org.id, volunteer_id: volunteerId, type, title })
     setSaving(false)
-    setAwarding(null)
     onDataChange?.()
   }
 
