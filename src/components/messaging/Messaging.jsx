@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format, formatDistanceToNow } from 'date-fns'
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const AUDIENCES = [
   { key: 'all_staff',   label: 'All Staff',   icon: '👥', color: '#3B82F6' },
@@ -120,6 +121,7 @@ function ThreadView({ thread, org, session: authSession, onBack }) {
 }
 
 export default function Messaging({ org, session: authSession }) {
+  const isMobile = useIsMobile()
   const [threads, setThreads] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeThread, setActiveThread] = useState(null)
@@ -170,7 +172,7 @@ export default function Messaging({ org, session: authSession }) {
             + New Thread
           </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
           {AUDIENCES.map(a => (
             <div key={a.key} style={{ background: '#fff', borderRadius: 12, padding: '10px 14px', border: '1px solid #e5e7eb' }}>
               <div style={{ fontSize: 20, fontWeight: 900, color: a.color }}>{threads.filter(t => t.audience === a.key).length}</div>
