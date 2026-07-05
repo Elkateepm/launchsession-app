@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
 
@@ -13,22 +14,45 @@ const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sun
 const TIMES = ['Morning','Afternoon','Evening']
 
 const s = {
-  wrap: { minHeight:'100vh', background:'linear-gradient(135deg,#0D1B2A 0%,#1B2A3B 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20, fontFamily:'Inter,sans-serif' },
-  card: { background:'#fff', borderRadius:24, width:'100%', maxWidth:480, overflow:'hidden', boxShadow:'0 32px 80px rgba(0,0,0,0.3)' },
-  head: (color) => ({ background:color||'#1B9AAA', padding:'28px 28px 20px', color:'#fff' }),
+  wrap: { minHeight:'100vh', background:'radial-gradient(circle at 15% 10%, #16283d 0%, #0A121D 45%, #060a11 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20, fontFamily:'Inter,sans-serif', position:'relative', overflow:'hidden' },
+  card: { background:'#fff', borderRadius:28, width:'100%', maxWidth:480, overflow:'hidden', boxShadow:'0 40px 100px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06)', position:'relative', zIndex:1 },
+  head: (color) => ({ background:`linear-gradient(135deg, ${color||'#1B9AAA'}, ${color||'#1B9AAA'}dd)`, padding:'28px 28px 20px', color:'#fff', position:'relative', overflow:'hidden' }),
   body: { padding:'28px 28px 24px' },
   label: { fontSize:12, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.6, display:'block', marginBottom:6 },
-  inp: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1.5px solid #E5E7EB', fontSize:15, outline:'none', boxSizing:'border-box', marginBottom:14, fontFamily:'Inter,sans-serif' },
-  btn: (color) => ({ width:'100%', padding:14, borderRadius:14, border:'none', background:color||'#1B9AAA', color:'#fff', fontSize:16, fontWeight:800, cursor:'pointer', marginTop:8 }),
+  inp: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1.5px solid #E5E7EB', fontSize:15, outline:'none', boxSizing:'border-box', marginBottom:14, fontFamily:'Inter,sans-serif', transition:'border-color 0.15s, box-shadow 0.15s' },
+  btn: (color) => ({ width:'100%', padding:14, borderRadius:14, border:'none', background:`linear-gradient(135deg, ${color||'#1B9AAA'}, ${color||'#1B9AAA'}cc)`, color:'#fff', fontSize:16, fontWeight:800, cursor:'pointer', marginTop:8, boxShadow:`0 8px 24px ${color||'#1B9AAA'}55` }),
   back: { background:'none', border:'none', color:'rgba(255,255,255,0.6)', fontSize:13, cursor:'pointer', padding:0, display:'flex', alignItems:'center', gap:4, marginBottom:12 },
   chip: (active,color) => ({ padding:'8px 14px', borderRadius:99, border:`1.5px solid ${active?(color||'#1B9AAA'):'#E5E7EB'}`, background:active?(color||'#1B9AAA')+'18':'#F9FAFB', color:active?(color||'#1B9AAA'):'#6B7280', fontSize:13, fontWeight:700, cursor:'pointer', transition:'all 0.15s' }),
   prog: (pct,color) => ({ height:3, background:'rgba(255,255,255,0.2)', borderRadius:2, marginTop:12, overflow:'hidden', children:null }),
 }
 
+// Ambient floating gradient orbs used behind auth/onboarding cards — purely decorative
+function AmbientOrbs({ color }) {
+  return (
+    <>
+      <motion.div
+        animate={{ y:[0,-18,0], x:[0,10,0] }}
+        transition={{ duration:9, repeat:Infinity, ease:'easeInOut' }}
+        style={{ position:'absolute', top:'8%', left:'8%', width:220, height:220, borderRadius:'50%', background:`${color||'#1B9AAA'}22`, filter:'blur(50px)', pointerEvents:'none' }}
+      />
+      <motion.div
+        animate={{ y:[0,16,0], x:[0,-12,0] }}
+        transition={{ duration:11, repeat:Infinity, ease:'easeInOut' }}
+        style={{ position:'absolute', bottom:'10%', right:'10%', width:260, height:260, borderRadius:'50%', background:'rgba(99,102,241,0.14)', filter:'blur(60px)', pointerEvents:'none' }}
+      />
+    </>
+  )
+}
+
 function ProgressBar({ step, total, color }) {
   return (
-    <div style={{ height:3, background:'rgba(255,255,255,0.2)', borderRadius:2, marginTop:12 }}>
-      <div style={{ height:'100%', width:`${(step/total)*100}%`, background:'rgba(255,255,255,0.8)', borderRadius:2, transition:'width 0.4s ease' }} />
+    <div style={{ height:4, background:'rgba(255,255,255,0.2)', borderRadius:2, marginTop:12, overflow:'hidden' }}>
+      <motion.div
+        initial={false}
+        animate={{ width:`${(step/total)*100}%` }}
+        transition={{ type:'spring', stiffness:120, damping:20 }}
+        style={{ height:'100%', background:'#fff', borderRadius:2 }}
+      />
     </div>
   )
 }
@@ -289,7 +313,13 @@ function OnboardingWizard({ user, org, onComplete }) {
 
   return (
     <div style={s.wrap}>
-      <div style={s.card}>
+      <AmbientOrbs color={primary} />
+      <motion.div
+        initial={{ opacity:0, y:16, scale:0.98 }}
+        animate={{ opacity:1, y:0, scale:1 }}
+        transition={{ duration:0.35, ease:'easeOut' }}
+        style={s.card}
+      >
         <div style={{ background:primary, padding:'22px 28px 18px', color:'#fff', position:'relative', overflow:'hidden' }}>
           <div style={{ position:'absolute', top:-30, right:-30, width:100, height:100, borderRadius:'50%', background:'rgba(255,255,255,0.08)', pointerEvents:'none' }} />
           {/* Logo row */}
@@ -301,14 +331,24 @@ function OnboardingWizard({ user, org, onComplete }) {
             )}
             <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.55)' }}>{step === 0 ? 'Volunteer Setup' : `Step ${step} of ${TOTAL - 1}`}</span>
           </div>
-          {step > 0 && <button onClick={()=>setStep(s=>s-1)} style={s.back}>← Back</button>}
+          {step > 0 && <motion.button whileTap={{ scale:0.95 }} onClick={()=>setStep(s=>s-1)} style={s.back}>← Back</motion.button>}
           <div style={{ fontSize:20, fontWeight:900, position:'relative', zIndex:1 }}>
             {['Welcome','About You','Emergency Contact','Your Address','Availability','Interests','Experience','Qualifications','Preferences','Health','Communication','Agreements'][step]}
           </div>
           {step > 0 && <ProgressBar step={step} total={TOTAL - 1} color={primary} />}
         </div>
-        {steps[step]}
-      </div>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={step}
+            initial={{ opacity:0, x:16 }}
+            animate={{ opacity:1, x:0 }}
+            exit={{ opacity:0, x:-16 }}
+            transition={{ duration:0.22, ease:'easeOut' }}
+          >
+            {steps[step]}
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
     </div>
   )
 }
@@ -359,9 +399,12 @@ export default function VolunteerPortal() {
   }
 
   if(view==='loading') return (
-    <div style={{ minHeight:'100vh', background:'#0D1B2A', display:'flex', alignItems:'center', justifyContent:'center' }}>
-      <div style={{ width:36, height:36, border:`3px solid ${primary}`, borderTop:'3px solid transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    <div style={{ minHeight:'100vh', background:'radial-gradient(circle at 15% 10%, #16283d 0%, #0A121D 45%, #060a11 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <motion.div
+        animate={{ rotate:360 }}
+        transition={{ duration:0.8, repeat:Infinity, ease:'linear' }}
+        style={{ width:36, height:36, border:`3px solid ${primary}`, borderTop:'3px solid transparent', borderRadius:'50%' }}
+      />
     </div>
   )
 
@@ -369,32 +412,35 @@ export default function VolunteerPortal() {
 
   if(view==='pending') return (
     <div style={s.wrap}>
-      <div style={{ ...s.card, textAlign:'center' }}>
+      <AmbientOrbs color={primary} />
+      <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35 }} style={{ ...s.card, textAlign:'center' }}>
         <div style={s.head(primary)}><div style={{ fontSize:32 }}>⏳</div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Pending Approval</div></div>
         <div style={s.body}>
           <p style={{ color:'#6B7280', lineHeight:1.6, marginBottom:20 }}>Your application has been received. A staff member will review and approve your account shortly.</p>
-          <button onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('#6B7280'), marginTop:0 }}>Sign out</button>
+          <motion.button whileTap={{ scale:0.97 }} onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('#6B7280'), marginTop:0 }}>Sign out</motion.button>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 
   if(view==='rejected') return (
     <div style={s.wrap}>
-      <div style={{ ...s.card, textAlign:'center' }}>
+      <AmbientOrbs color="#EF4444" />
+      <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35 }} style={{ ...s.card, textAlign:'center' }}>
         <div style={s.head('#EF4444')}><div style={{ fontSize:32 }}>❌</div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Application Unsuccessful</div></div>
         <div style={s.body}>
           <p style={{ color:'#6B7280', lineHeight:1.6, marginBottom:20 }}>Unfortunately your volunteer application was not approved. Please contact {org?.name} for more information.</p>
-          <button onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('#6B7280'), marginTop:0 }}>Sign out</button>
+          <motion.button whileTap={{ scale:0.97 }} onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('#6B7280'), marginTop:0 }}>Sign out</motion.button>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 
   if(view==='login') return (
     <div style={s.wrap}>
-      <div style={s.card}>
-        <div style={{ background: primary, padding:'28px 28px 22px', color:'#fff', position:'relative', overflow:'hidden' }}>
+      <AmbientOrbs color={primary} />
+      <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35, ease:'easeOut' }} style={s.card}>
+        <div style={{ background: `linear-gradient(135deg, ${primary}, ${primary}dd)`, padding:'28px 28px 22px', color:'#fff', position:'relative', overflow:'hidden' }}>
           {/* subtle background glow */}
           <div style={{ position:'absolute', top:-40, right:-40, width:140, height:140, borderRadius:'50%', background:'rgba(255,255,255,0.08)', pointerEvents:'none' }} />
           <div style={{ position:'absolute', bottom:-30, left:-20, width:100, height:100, borderRadius:'50%', background:'rgba(0,0,0,0.08)', pointerEvents:'none' }} />
@@ -423,13 +469,13 @@ export default function VolunteerPortal() {
             <input style={s.inp} type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" required autoFocus />
             <label style={s.label}>Password</label>
             <input style={s.inp} type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" required />
-            <button type="submit" disabled={authLoading} style={s.btn(primary)}>{authLoading?'Signing in...':'Sign in →'}</button>
+            <motion.button whileTap={{ scale:0.97 }} type="submit" disabled={authLoading} style={s.btn(primary)}>{authLoading?'Signing in...':'Sign in →'}</motion.button>
           </form>
           <div style={{ textAlign:'center', marginTop:16, fontSize:12, color:'#9CA3AF', lineHeight:1.5 }}>
             New volunteer? Ask {org?.name || 'your organisation'} to send you an invite.
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 
@@ -526,9 +572,17 @@ function VolunteerDashboard({ user, profile, org, onSignOut }) {
     <div style={{ minHeight:'100vh', background:'#F5F5F5', display:'flex', flexDirection:'column', fontFamily:'Inter,sans-serif', paddingTop:'env(safe-area-inset-top)' }}>
 
       {/* ── HEADER ── */}
-      <div style={{ background:'#0D1B2A', padding:'12px 18px 0', position:'relative', overflow:'hidden', flexShrink:0 }}>
-        <div style={{ position:'absolute', top:-40, right:-40, width:160, height:160, borderRadius:'50%', background:primary+'18' }} />
-        <div style={{ position:'absolute', bottom:20, left:-20, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.04)' }} />
+      <div style={{ background:'linear-gradient(160deg, #0D1B2A 0%, #14263a 100%)', padding:'12px 18px 0', position:'relative', overflow:'hidden', flexShrink:0 }}>
+        <motion.div
+          animate={{ y:[0,-14,0], x:[0,8,0] }}
+          transition={{ duration:8, repeat:Infinity, ease:'easeInOut' }}
+          style={{ position:'absolute', top:-40, right:-40, width:160, height:160, borderRadius:'50%', background:primary+'20', filter:'blur(2px)' }}
+        />
+        <motion.div
+          animate={{ y:[0,10,0], x:[0,-6,0] }}
+          transition={{ duration:10, repeat:Infinity, ease:'easeInOut' }}
+          style={{ position:'absolute', bottom:20, left:-20, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.05)' }}
+        />
         <div style={{ position:'relative', zIndex:1 }}>
           {/* Top bar */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
@@ -537,35 +591,43 @@ function VolunteerDashboard({ user, profile, org, onSignOut }) {
               : <span style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:1 }}>{org?.name}</span>
             }
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <div onClick={()=>setTab('profile')} style={{ width:36, height:36, borderRadius:'50%', background:profile?.photo_url?'transparent':primary, border:'2px solid rgba(255,255,255,0.2)', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0 }}>
+              <motion.div whileTap={{ scale:0.92 }} onClick={()=>setTab('profile')} style={{ width:36, height:36, borderRadius:'50%', background:profile?.photo_url?'transparent':primary, border:'2px solid rgba(255,255,255,0.2)', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0 }}>
                 {profile?.photo_url ? <img src={profile.photo_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:12, fontWeight:900, color:'#fff' }}>{initials}</span>}
-              </div>
-              <button onClick={onSignOut} style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.45)', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, padding:'5px 12px', cursor:'pointer' }}>Sign out</button>
+              </motion.div>
+              <motion.button whileTap={{ scale:0.95 }} onClick={onSignOut} style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.45)', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, padding:'5px 12px', cursor:'pointer' }}>Sign out</motion.button>
             </div>
           </div>
           {/* Greeting */}
-          <div style={{ marginBottom:6 }}>
+          <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.3 }} style={{ marginBottom:6 }}>
             <div style={{ fontSize:22, fontWeight:900, color:'#fff', lineHeight:1.1, marginBottom:6 }}>{greeting}, {firstName}! 👋</div>
             <div style={{ fontSize:12, color:primary, fontWeight:700, marginBottom:12 }}>Welcome to {org?.name}</div>
-          </div>
+          </motion.div>
           {/* Stats strip */}
           <div style={{ display:'flex', gap:0, margin:'0 -18px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
             {[
               { val: todaySessions.length, label:'Today', color:'#F5D000' },
               { val: upcomingRota.length, label:'Booked', color:'#fff' },
               { val: totalHours.toFixed(1), label:'Hours', color:primary },
-            ].map((s,i) => (
-              <div key={s.label} style={{ flex:1, padding:'12px 0', textAlign:'center', borderRight: i<2?'1px solid rgba(255,255,255,0.07)':'none' }}>
-                <div style={{ fontSize:18, fontWeight:900, color:s.color, lineHeight:1 }}>{s.val}</div>
-                <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:0.5, marginTop:4 }}>{s.label}</div>
-              </div>
+            ].map((stat,i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity:0, y:8 }}
+                animate={{ opacity:1, y:0 }}
+                transition={{ duration:0.3, delay:i*0.05 }}
+                style={{ flex:1, padding:'12px 0', textAlign:'center', borderRight: i<2?'1px solid rgba(255,255,255,0.07)':'none' }}
+              >
+                <div style={{ fontSize:18, fontWeight:900, color:stat.color, lineHeight:1 }}>{stat.val}</div>
+                <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:0.5, marginTop:4 }}>{stat.label}</div>
+              </motion.div>
             ))}
           </div>
         </div>
       </div>
 
       {/* ── CONTENT ── */}
-      <div style={{ flex:1, overflowY:'auto', padding:'16px 16px 90px' }}>
+      <div style={{ flex:1, overflowY:'auto', padding:'16px 16px 110px' }}>
+      <AnimatePresence mode="wait">
+      <motion.div key={tab} initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }} transition={{ duration:0.2, ease:'easeOut' }}>
 
         {/* TODAY TAB */}
         {tab === 'today' && (
@@ -577,7 +639,7 @@ function VolunteerDashboard({ user, profile, org, onSignOut }) {
                 <div style={{ fontSize:13, fontWeight:800, color:'#C00', marginBottom:1 }}>Safeguarding</div>
                 <div style={{ fontSize:11, color:'#C00', fontWeight:600, opacity:0.8 }}>Report any concerns to the DSL immediately.</div>
               </div>
-              <button onClick={()=>setShowCFC(true)} style={{ background:'#C00', color:'#fff', border:'none', borderRadius:9, padding:'7px 12px', fontSize:11, fontWeight:800, cursor:'pointer', whiteSpace:'nowrap' }}>Raise Concern</button>
+              <motion.button whileTap={{ scale:0.95 }} onClick={()=>setShowCFC(true)} style={{ background:'#C00', color:'#fff', border:'none', borderRadius:9, padding:'7px 12px', fontSize:11, fontWeight:800, cursor:'pointer', whiteSpace:'nowrap' }}>Raise Concern</motion.button>
             </div>
 
             {/* Upcoming from rota */}
@@ -626,7 +688,7 @@ function VolunteerDashboard({ user, profile, org, onSignOut }) {
                 <div style={{ fontSize:32, marginBottom:12 }}>⭐</div>
                 <div style={{ fontSize:16, fontWeight:900, color:'#fff', marginBottom:6 }}>Rest day!</div>
                 <div style={{ fontSize:12, color:'rgba(255,255,255,0.55)', fontWeight:600, marginBottom:16 }}>No sessions today — enjoy the break.</div>
-                <button onClick={()=>setTab('book')} style={{ padding:'10px 20px', borderRadius:10, border:'none', background:primary, color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>Browse upcoming sessions →</button>
+                <motion.button whileTap={{ scale:0.97 }} onClick={()=>setTab('book')} style={{ padding:'10px 20px', borderRadius:10, border:'none', background:primary, color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>Browse upcoming sessions →</motion.button>
               </div>
             ) : todaySessions.map(s => (
               <div key={s.id} style={{ background:'#fff', borderRadius:16, border:'1.5px solid #E5E7EB', padding:'14px', marginBottom:10, position:'relative', overflow:'hidden' }}>
@@ -715,9 +777,9 @@ function VolunteerDashboard({ user, profile, org, onSignOut }) {
                   <div style={{ display:'flex', gap:6, marginBottom:12, flexWrap:'wrap' }}>
                     <span style={{ fontSize:11, fontWeight:700, background: isFeatured?'rgba(255,255,255,0.1)':primary+'15', color: isFeatured?'rgba(255,255,255,0.7)':primary, borderRadius:99, padding:'4px 10px' }}>❤️ {count} volunteer{count!==1?'s':''}</span>
                   </div>
-                  <button onClick={()=>handleBook(s)} disabled={isSaving} style={{ width:'100%', padding:12, borderRadius:12, border:'none', background: isFeatured?primary:`linear-gradient(135deg,${primary},#6366F1)`, color: isFeatured&&primary==='#F5D000'?'#0D1B2A':'#fff', fontSize:14, fontWeight:900, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                  <motion.button whileTap={{ scale:0.96 }} onClick={()=>handleBook(s)} disabled={isSaving} style={{ width:'100%', padding:12, borderRadius:12, border:'none', background: isFeatured?primary:`linear-gradient(135deg,${primary},#6366F1)`, color: isFeatured&&primary==='#F5D000'?'#0D1B2A':'#fff', fontSize:14, fontWeight:900, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
                     {isSaving?'...':<>❤️ Join Session</>}
-                  </button>
+                  </motion.button>
                 </div>
               )
             })}
@@ -748,7 +810,7 @@ function VolunteerDashboard({ user, profile, org, onSignOut }) {
                 <div style={{ fontSize:40, marginBottom:12 }}>🗓️</div>
                 <div style={{ fontSize:16, fontWeight:900, color:'#fff', marginBottom:8 }}>No sessions yet</div>
                 <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginBottom:20 }}>Book a session to get started</div>
-                <button onClick={()=>setTab('book')} style={{ padding:'11px 22px', borderRadius:10, border:'none', background:primary, color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>Browse Sessions →</button>
+                <motion.button whileTap={{ scale:0.97 }} onClick={()=>setTab('book')} style={{ padding:'11px 22px', borderRadius:10, border:'none', background:primary, color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>Browse Sessions →</motion.button>
               </div>
             ) : (
               <>
@@ -925,35 +987,55 @@ function VolunteerDashboard({ user, profile, org, onSignOut }) {
               </div>
             )}
 
-            <button onClick={onSignOut} style={{ width:'100%', padding:14, borderRadius:14, border:'1.5px solid #E5E7EB', background:'#fff', fontSize:14, fontWeight:700, color:'#6B7280', cursor:'pointer', marginTop:8 }}>Sign Out</button>
+            <motion.button whileTap={{ scale:0.98 }} onClick={onSignOut} style={{ width:'100%', padding:14, borderRadius:14, border:'1.5px solid #E5E7EB', background:'#fff', fontSize:14, fontWeight:700, color:'#6B7280', cursor:'pointer', marginTop:8 }}>Sign Out</motion.button>
           </div>
         )}
+      </motion.div>
+      </AnimatePresence>
       </div>
 
-      {/* ── BOTTOM NAV ── */}
-      <div style={{ position:'fixed', bottom:0, left:0, right:0, background:'#fff', borderTop:'1px solid #E5E7EB', display:'flex', zIndex:100, paddingBottom:'env(safe-area-inset-bottom,0px)' }}>
-        {NAV.map(t => (
-          <button key={t.key} onClick={()=>setTab(t.key)} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'10px 4px', background:'none', border:'none', cursor:'pointer', borderTop:`2px solid ${tab===t.key?primary:'transparent'}` }}>
-            <span style={{ fontSize:20 }}>{t.icon}</span>
-            <span style={{ fontSize:9, fontWeight:800, color: tab===t.key?primary:'#9CA3AF', textTransform:'uppercase', letterSpacing:0.3 }}>{t.label}</span>
-          </button>
-        ))}
+      {/* ── BOTTOM NAV (floating glass pill) ── */}
+      <div style={{ position:'fixed', bottom:14, left:14, right:14, zIndex:100, display:'flex', justifyContent:'center', paddingBottom:'env(safe-area-inset-bottom,0px)' }}>
+        <div style={{ display:'flex', gap:2, background:'rgba(13,27,42,0.92)', backdropFilter:'blur(20px)', borderRadius:22, padding:5, boxShadow:'0 16px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.06)', maxWidth:440, width:'100%' }}>
+          {NAV.map(t => (
+            <button key={t.key} onClick={()=>setTab(t.key)} style={{ position:'relative', flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'9px 4px', background:'none', border:'none', cursor:'pointer' }}>
+              {tab === t.key && (
+                <motion.div
+                  layoutId="volunteerNavPill"
+                  transition={{ type:'spring', stiffness:420, damping:32 }}
+                  style={{ position:'absolute', inset:0, background:primary, borderRadius:16 }}
+                />
+              )}
+              <span style={{ position:'relative', zIndex:1, fontSize:18 }}>{t.icon}</span>
+              <span style={{ position:'relative', zIndex:1, fontSize:9, fontWeight:800, color: tab===t.key?'#fff':'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:0.3 }}>{t.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* CFC Modal */}
+      <AnimatePresence>
       {showCFC && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', alignItems:'flex-end' }}>
-          <div style={{ background:'#fff', borderRadius:'20px 20px 0 0', width:'100%', maxHeight:'90vh', overflowY:'auto', padding:'20px' }}>
+        <motion.div
+          initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', alignItems:'flex-end' }}
+        >
+          <motion.div
+            initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }}
+            transition={{ type:'spring', stiffness:300, damping:32 }}
+            style={{ background:'#fff', borderRadius:'20px 20px 0 0', width:'100%', maxHeight:'90vh', overflowY:'auto', padding:'20px' }}
+          >
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
               <div style={{ fontSize:16, fontWeight:900, color:'#111' }}>🛡️ Raise a Concern</div>
-              <button onClick={()=>setShowCFC(false)} style={{ background:'none', border:'none', fontSize:22, cursor:'pointer', color:'#6B7280' }}>✕</button>
+              <motion.button whileTap={{ scale:0.9 }} onClick={()=>setShowCFC(false)} style={{ background:'none', border:'none', fontSize:22, cursor:'pointer', color:'#6B7280' }}>✕</motion.button>
             </div>
             <p style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>Please complete this form and your DSL will be notified immediately.</p>
             <textarea rows={5} placeholder="Describe the concern in detail..." style={{ width:'100%', padding:'12px 14px', borderRadius:12, border:'1.5px solid #E5E7EB', fontSize:14, outline:'none', boxSizing:'border-box', resize:'none', marginBottom:12 }} />
-            <button style={{ width:'100%', padding:13, borderRadius:12, border:'none', background:'#C00', color:'#fff', fontSize:14, fontWeight:800, cursor:'pointer' }}>Submit Concern</button>
-          </div>
-        </div>
+            <motion.button whileTap={{ scale:0.98 }} style={{ width:'100%', padding:13, borderRadius:12, border:'none', background:'#C00', color:'#fff', fontSize:14, fontWeight:800, cursor:'pointer' }}>Submit Concern</motion.button>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   )
 }
