@@ -521,6 +521,8 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [hoverStar, setHoverStar] = useState(0)
+  const [focused, setFocused] = useState(null)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSave = async () => {
@@ -540,110 +542,165 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
     setSaving(false)
   }
 
-  const ta = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border, #E5E7EB)', fontSize: 13, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70 }
+  const ta = (key) => ({
+    width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 12,
+    border: `1.5px solid ${focused === key ? primary : 'var(--border, #E5E7EB)'}`,
+    boxShadow: focused === key ? `0 0 0 4px ${primary}1A` : 'none',
+    fontSize: 13, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70,
+    transition: 'border-color 0.15s, box-shadow 0.15s', background: 'var(--surface, #fff)', color: 'var(--text, #111)',
+  })
   const label = { fontSize: 12, fontWeight: 800, color: 'var(--text, #111)', display: 'block', marginBottom: 6 }
   const hint = { fontSize: 11, color: 'var(--text3, #9CA3AF)', marginBottom: 8, lineHeight: 1.4 }
 
+  const Field = ({ i, children }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: Math.min(i * 0.04, 0.3) }}
+      style={{ marginBottom: 18 }}
+    >
+      {children}
+    </motion.div>
+  )
+
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface, #fff)', borderRadius: 20, width: '100%', maxWidth: 560, maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
+    <motion.div
+      onClick={onClose}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+    >
+      <motion.div
+        onClick={e => e.stopPropagation()}
+        initial={{ opacity: 0, y: 20, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 14, scale: 0.97 }}
+        transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+        style={{ background: 'var(--surface, #fff)', borderRadius: 24, width: '100%', maxWidth: 560, maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.04)' }}
+      >
         {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border, #F3F4F6)', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text, #111)' }}>⭐ Session Reflection</div>
-              <div style={{ fontSize: 12, color: 'var(--text3, #9CA3AF)', marginTop: 2 }}>{session.title} · {format(parseISO(session.session_date), 'd MMM yyyy')}</div>
+        <div style={{ padding: '22px 24px', background: `linear-gradient(135deg, ${primary}12, transparent)`, borderBottom: '1px solid var(--border, #F3F4F6)', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+          <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, borderRadius: '50%', background: `${primary}14`, filter: 'blur(20px)', pointerEvents: 'none' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: `${primary}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}>⭐</div>
+              <div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text, #111)' }}>Session Reflection</div>
+                <div style={{ fontSize: 12, color: 'var(--text3, #9CA3AF)', marginTop: 2 }}>{session.title} · {format(parseISO(session.session_date), 'd MMM yyyy')}</div>
+              </div>
             </div>
-            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: 'var(--surface2, #F3F4F6)', cursor: 'pointer', fontSize: 16, color: 'var(--text3, #6B7280)' }}>×</button>
+            <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'var(--surface2, #F3F4F6)', cursor: 'pointer', fontSize: 16, color: 'var(--text3, #6B7280)', flexShrink: 0 }}>×</motion.button>
           </div>
         </div>
 
         {/* Scrollable form */}
-        <div style={{ overflowY: 'auto', flex: 1, padding: 24 }}>
+        <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, padding: 24, WebkitOverflowScrolling: 'touch' }}>
           {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 16, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>}
 
           {/* Overall rating */}
-          <div style={{ marginBottom: 20 }}>
+          <Field i={0}>
             <label style={label}>How did the session go overall?</label>
             <div style={{ display: 'flex', gap: 8 }}>
-              {[1,2,3,4,5].map(n => (
-                <button key={n} onClick={() => set('overall_rating', n)}
-                  style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1.5px solid ${form.overall_rating >= n ? '#F59E0B' : 'var(--border, #E5E7EB)'}`, background: form.overall_rating >= n ? '#FEF3C7' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 18 }}>
-                  ⭐
-                </button>
-              ))}
+              {[1,2,3,4,5].map(n => {
+                const lit = (hoverStar || form.overall_rating) >= n
+                return (
+                  <motion.button
+                    key={n}
+                    whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+                    onMouseEnter={() => setHoverStar(n)} onMouseLeave={() => setHoverStar(0)}
+                    onClick={() => set('overall_rating', n)}
+                    style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: `1.5px solid ${lit ? '#F59E0B' : 'var(--border, #E5E7EB)'}`, background: lit ? 'linear-gradient(135deg,#FEF3C7,#FDE68A)' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 19, boxShadow: lit ? '0 4px 12px rgba(245,158,11,0.25)' : 'none', transition: 'background 0.15s, box-shadow 0.15s' }}
+                  >
+                    ⭐
+                  </motion.button>
+                )
+              })}
             </div>
-          </div>
+          </Field>
 
           {/* What went well */}
-          <div style={{ marginBottom: 18 }}>
+          <Field i={1}>
             <label style={label}>What went well?</label>
             <div style={hint}>Activities, engagement, moments worth repeating.</div>
-            <textarea style={ta} value={form.what_went_well} onChange={e => set('what_went_well', e.target.value)} placeholder="e.g. The warm-up game got everyone involved straight away..." />
-          </div>
+            <textarea style={ta('www')} onFocus={() => setFocused('www')} onBlur={() => setFocused(null)} value={form.what_went_well} onChange={e => set('what_went_well', e.target.value)} placeholder="e.g. The warm-up game got everyone involved straight away..." />
+          </Field>
 
           {/* What could improve */}
-          <div style={{ marginBottom: 18 }}>
+          <Field i={2}>
             <label style={label}>What could be improved next time?</label>
             <div style={hint}>Timing, equipment, structure, anything that didn't quite land.</div>
-            <textarea style={ta} value={form.what_could_improve} onChange={e => set('what_could_improve', e.target.value)} placeholder="e.g. We ran short on footballs for the group size..." />
-          </div>
+            <textarea style={ta('imp')} onFocus={() => setFocused('imp')} onBlur={() => setFocused(null)} value={form.what_could_improve} onChange={e => set('what_could_improve', e.target.value)} placeholder="e.g. We ran short on footballs for the group size..." />
+          </Field>
 
           {/* Attendance notes */}
-          <div style={{ marginBottom: 18 }}>
+          <Field i={3}>
             <label style={label}>Attendance notes</label>
             <div style={hint}>Anything worth flagging about who came, who didn't, or patterns to watch.</div>
-            <textarea style={ta} value={form.attendance_notes} onChange={e => set('attendance_notes', e.target.value)} placeholder="e.g. Two regulars missing without notice — worth a follow-up call." />
-          </div>
+            <textarea style={ta('att')} onFocus={() => setFocused('att')} onBlur={() => setFocused(null)} value={form.attendance_notes} onChange={e => set('attendance_notes', e.target.value)} placeholder="e.g. Two regulars missing without notice — worth a follow-up call." />
+          </Field>
 
           {/* Behaviour notes */}
-          <div style={{ marginBottom: 18 }}>
+          <Field i={4}>
             <label style={label}>Behaviour & group dynamics</label>
             <div style={hint}>How the group got on together, any friction, standout moments.</div>
-            <textarea style={ta} value={form.behaviour_notes} onChange={e => set('behaviour_notes', e.target.value)} placeholder="e.g. A couple of the younger ones needed extra encouragement to join in." />
-          </div>
+            <textarea style={ta('beh')} onFocus={() => setFocused('beh')} onBlur={() => setFocused(null)} value={form.behaviour_notes} onChange={e => set('behaviour_notes', e.target.value)} placeholder="e.g. A couple of the younger ones needed extra encouragement to join in." />
+          </Field>
 
           {/* Staffing notes */}
-          <div style={{ marginBottom: 18 }}>
+          <Field i={5}>
             <label style={label}>Staffing & volunteer cover</label>
             <div style={hint}>Was there enough cover? Anyone who went above and beyond?</div>
-            <textarea style={ta} value={form.staffing_notes} onChange={e => set('staffing_notes', e.target.value)} placeholder="e.g. Could have used one more volunteer for the smaller groups." />
-          </div>
+            <textarea style={ta('staff')} onFocus={() => setFocused('staff')} onBlur={() => setFocused(null)} value={form.staffing_notes} onChange={e => set('staffing_notes', e.target.value)} placeholder="e.g. Could have used one more volunteer for the smaller groups." />
+          </Field>
 
           {/* Would repeat */}
-          <div style={{ marginBottom: 18 }}>
+          <Field i={6}>
             <label style={label}>Would you run this session again as-is?</label>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => set('would_repeat', true)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1.5px solid ${form.would_repeat === true ? '#16A34A' : 'var(--border, #E5E7EB)'}`, background: form.would_repeat === true ? '#F0FDF4' : 'var(--surface, #fff)', color: form.would_repeat === true ? '#16A34A' : 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>👍 Yes</button>
-              <button onClick={() => set('would_repeat', false)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1.5px solid ${form.would_repeat === false ? '#DC2626' : 'var(--border, #E5E7EB)'}`, background: form.would_repeat === false ? '#FEF2F2' : 'var(--surface, #fff)', color: form.would_repeat === false ? '#DC2626' : 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>👎 Needs changes</button>
+            <div style={{ display: 'flex', gap: 8, background: 'var(--surface2, #F3F4F6)', borderRadius: 12, padding: 4 }}>
+              {[
+                { key: true, label: '👍 Yes', color: '#16A34A', bg: '#F0FDF4' },
+                { key: false, label: '👎 Needs changes', color: '#DC2626', bg: '#FEF2F2' },
+              ].map(opt => {
+                const active = form.would_repeat === opt.key
+                return (
+                  <button key={String(opt.key)} onClick={() => set('would_repeat', opt.key)} style={{ position: 'relative', flex: 1, padding: '9px 0', borderRadius: 9, border: 'none', background: 'transparent', color: active ? opt.color : 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                    {active && (
+                      <motion.div layoutId="repeatPill" transition={{ type: 'spring', stiffness: 400, damping: 32 }} style={{ position: 'absolute', inset: 0, background: opt.bg, borderRadius: 9, border: `1.5px solid ${opt.color}` }} />
+                    )}
+                    <span style={{ position: 'relative', zIndex: 1 }}>{opt.label}</span>
+                  </button>
+                )
+              })}
             </div>
-          </div>
+          </Field>
 
           {/* Safeguarding flag */}
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, border: `1.5px solid ${form.safeguarding_flag ? '#DC2626' : 'var(--border, #E5E7EB)'}`, background: form.safeguarding_flag ? '#FEF2F2' : 'var(--surface2, #F9FAFB)', cursor: 'pointer', marginBottom: 18 }}>
-            <input type="checkbox" checked={form.safeguarding_flag} onChange={e => set('safeguarding_flag', e.target.checked)} style={{ width: 16, height: 16 }} />
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: form.safeguarding_flag ? '#DC2626' : 'var(--text, #111)' }}>🛡️ Flag for safeguarding follow-up</div>
-              <div style={{ fontSize: 11, color: 'var(--text3, #9CA3AF)' }}>Tick if anything here needs a safeguarding lead's attention — log the actual concern separately.</div>
-            </div>
-          </label>
+          <Field i={7}>
+            <motion.label
+              whileTap={{ scale: 0.99 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${form.safeguarding_flag ? '#DC2626' : 'var(--border, #E5E7EB)'}`, background: form.safeguarding_flag ? '#FEF2F2' : 'var(--surface2, #F9FAFB)', cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s' }}
+            >
+              <input type="checkbox" checked={form.safeguarding_flag} onChange={e => set('safeguarding_flag', e.target.checked)} style={{ width: 16, height: 16, accentColor: '#DC2626' }} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: form.safeguarding_flag ? '#DC2626' : 'var(--text, #111)' }}>🛡️ Flag for safeguarding follow-up</div>
+                <div style={{ fontSize: 11, color: 'var(--text3, #9CA3AF)' }}>Tick if anything here needs a safeguarding lead's attention — log the actual concern separately.</div>
+              </div>
+            </motion.label>
+          </Field>
 
           {/* Free-form summary (backwards-compatible with original 'reflection' field) */}
-          <div style={{ marginBottom: 4 }}>
+          <Field i={8}>
             <label style={label}>Anything else?</label>
-            <textarea style={ta} value={form.reflection} onChange={e => set('reflection', e.target.value)} placeholder="Any other thoughts for next time..." />
-          </div>
+            <textarea style={ta('free')} onFocus={() => setFocused('free')} onBlur={() => setFocused(null)} value={form.reflection} onChange={e => set('reflection', e.target.value)} placeholder="Any other thoughts for next time..." />
+          </Field>
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 10, flexShrink: 0 }}>
-          <button onClick={onClose} style={{ padding: '12px 18px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 10, flexShrink: 0, background: 'var(--surface, #fff)' }}>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={onClose} style={{ padding: '12px 18px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}>Cancel</motion.button>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : `linear-gradient(135deg, ${primary}, ${primary}cc)`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 20px ${primary}44` }}>
             {saving ? 'Saving...' : existing ? '💾 Update Reflection' : '✅ Complete Reflection'}
-          </button>
+          </motion.button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -1201,6 +1258,7 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
       )}
 
       {selectedSession && <VolunteerPanel session={selectedSession} org={org} onClose={() => { setSelectedSession(null); loadData() }} />}
+      <AnimatePresence>
       {reflectingSession && (
         <ReflectionModal
           session={reflectingSession}
@@ -1210,6 +1268,7 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
           onSaved={() => { setReflectingSession(null); loadData() }}
         />
       )}
+      </AnimatePresence>
       </div>
     </div>
   )
