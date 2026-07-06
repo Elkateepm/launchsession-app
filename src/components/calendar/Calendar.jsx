@@ -233,6 +233,8 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
   const [navDirection, setNavDirection] = useState('right')
   const [showConfettiFor, setShowConfettiFor] = useState(null)
   const [bankHolidays, setBankHolidays] = useState({})
+  const [monthYoungPeople, setMonthYoungPeople] = useState(0)
+  const [showNewMenu, setShowNewMenu] = useState(false)
   const primary = org?.primary_color || '#1B9AAA'
   const gridKey = useRef(0)
 
@@ -266,6 +268,16 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
 
   useEffect(() => { load(false) }, [load])
   useRealtimeTable('sessions', () => load(true), { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 5000 })
+
+  useEffect(() => {
+    if (!org?.id) return
+    const m = format(currentDate, 'yyyy-MM')
+    const monthSessionIds = sessions.filter(s => s.session_date?.startsWith(m)).map(s => s.id)
+    if (monthSessionIds.length === 0) { setMonthYoungPeople(0); return }
+    supabase.from('attendance').select('child_id').in('session_id', monthSessionIds).then(({ data }) => {
+      setMonthYoungPeople(new Set((data || []).map(a => a.child_id)).size)
+    })
+  }, [org?.id, sessions, currentDate])
 
   useEffect(() => {
     const handler = (e) => {
@@ -350,8 +362,47 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
     setPlanPickerDate(dateStr)
   }
 
+  const duplicateLastSession = async () => {
+    if (!org?.id) return
+    const mostRecent = [...sessions].sort((a, b) => new Date(b.session_date) - new Date(a.session_date))[0]
+    if (!mostRecent) { alert('No existing sessions to duplicate yet.'); return }
+    const { id, created_at, ...rest } = mostRecent
+    const nextDate = format(addDays(new Date(), 7), 'yyyy-MM-dd')
+    const { data } = await supabase.from('sessions').insert({ ...rest, title: `${rest.title} (Copy)`, session_date: nextDate }).select().single()
+    if (data) { setSessions(s => [...s, data]); setSelectedSession(data); if (onSessionChanged) onSessionChanged() }
+  }
+
+  const exportCalendarIcs = () => {
+    const pad = (n) => String(n).padStart(2, '0')
+    const toIcsDate = (dateStr, timeStr) => {
+      const [y, m, d] = dateStr.split('-')
+      const [h, min] = (timeStr || '00:00').split(':')
+      return `${y}${m}${d}T${pad(h)}${pad(min)}00`
+    }
+    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//LaunchSession//Calendar//EN']
+    filtered.forEach(s => {
+      if (!s.session_date) return
+      lines.push('BEGIN:VEVENT')
+      lines.push(`UID:${s.id}@launchsession.co.uk`)
+      lines.push(`SUMMARY:${(s.title || 'Session').replace(/\n/g, ' ')}`)
+      lines.push(`DTSTART:${toIcsDate(s.session_date, s.start_time)}`)
+      lines.push(`DTEND:${toIcsDate(s.end_date || s.session_date, s.end_time || s.start_time)}`)
+      if (s.location) lines.push(`LOCATION:${s.location.replace(/\n/g, ' ')}`)
+      if (s.description) lines.push(`DESCRIPTION:${s.description.replace(/\n/g, ' ')}`)
+      lines.push('END:VEVENT')
+    })
+    lines.push('END:VCALENDAR')
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `${org?.name || 'launchsession'}-calendar.ics`
+    document.body.appendChild(a); a.click(); document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 14 : 20, height: '100%', minHeight: 0, overflowY: isMobile ? 'auto' : 'visible' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 14 : 20, flex: 1, minHeight: 0, overflowY: 'auto' }}>
       <style>{KEYFRAMES}</style>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: isMobile ? 480 : 0 }}>
 
@@ -363,15 +414,31 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
-                {['month','week','day'].map(v => (
+                {['month','week','day','list'].map(v => (
                   <button key={v} onClick={() => { setNavDirection('right'); gridKey.current += 1; setViewMode(v) }} style={{ padding: '7px 12px', border: 'none', background: viewMode === v ? primary : 'transparent', color: viewMode === v ? '#fff' : '#6B7280', fontWeight: 700, fontSize: 12, cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
-                    {v === 'month' ? '📅 Month' : v === 'week' ? '📋 Week' : '☀️ Day'}
+                    {v === 'month' ? '📅 Month' : v === 'week' ? '📋 Week' : v === 'day' ? '☀️ Day' : '📃 List'}
                   </button>
                 ))}
               </div>
               <button onClick={jumpToday} style={{ padding: '7px 14px', borderRadius: 10, border: `1.5px solid ${primary}`, background: '#fff', color: primary, fontWeight: 800, fontSize: 12, cursor: 'pointer', transition: 'transform 0.1s' }}
                 onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
                 onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>Today</button>
+              <div style={{ position: 'relative', display: 'flex' }}>
+                <button onClick={() => handlePlanForDate(format(new Date(), 'yyyy-MM-dd'))} style={{ padding: '9px 16px', borderRadius: '10px 0 0 10px', border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px ${primary}40` }}>+ New Session</button>
+                <button onClick={() => setShowNewMenu(s => !s)} style={{ padding: '9px 10px', borderRadius: '0 10px 10px 0', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.3)', background: primary, color: '#fff', fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>▾</button>
+                {showNewMenu && (
+                  <div onMouseLeave={() => setShowNewMenu(false)} style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', borderRadius: 14, boxShadow: '0 20px 50px rgba(0,0,0,0.18)', border: '1px solid #F3F4F6', padding: 6, width: 200, zIndex: 60 }}>
+                    {[
+                      ['📄 Duplicate Last Session', duplicateLastSession],
+                      ['📆 Open Session Planner', () => onNavigate && onNavigate('planner')],
+                      ['⬇ Export Calendar (.ics)', exportCalendarIcs],
+                    ].map(([label, fn]) => (
+                      <button key={label} onClick={() => { fn(); setShowNewMenu(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: '#374151', cursor: 'pointer' }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>{label}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -389,9 +456,9 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
 
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', flex: 1, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F3F4F6' }}>
-            <button onClick={() => navigate(-1)}
-              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', transition: 'all 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = primary + '12'; e.currentTarget.style.borderColor = primary + '40' }}
+            <button onClick={() => navigate(-1)} disabled={viewMode === 'list'}
+              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: viewMode === 'list' ? 'default' : 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', transition: 'all 0.15s', opacity: viewMode === 'list' ? 0.35 : 1 }}
+              onMouseEnter={e => { if (viewMode !== 'list') { e.currentTarget.style.background = primary + '12'; e.currentTarget.style.borderColor = primary + '40' } }}
               onMouseLeave={e => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.borderColor = '#e5e7eb' }}>‹</button>
             <div key={gridKey.current + '-label'} style={{ textAlign: 'center', animation: `${slideAnim} 0.25s ease` }}>
               <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5 }}>
@@ -399,17 +466,19 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                   ? `${MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`
                   : viewMode === 'week'
                   ? `${format(weekDays[0], 'd MMM')} – ${format(weekDays[6], 'd MMM yyyy')}`
+                  : viewMode === 'list'
+                  ? 'Upcoming Sessions'
                   : format(currentDate, 'EEEE, d MMMM yyyy')
                 }
               </div>
             </div>
-            <button onClick={() => navigate(1)}
-              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', transition: 'all 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = primary + '12'; e.currentTarget.style.borderColor = primary + '40' }}
+            <button onClick={() => navigate(1)} disabled={viewMode === 'list'}
+              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: viewMode === 'list' ? 'default' : 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', transition: 'all 0.15s', opacity: viewMode === 'list' ? 0.35 : 1 }}
+              onMouseEnter={e => { if (viewMode !== 'list') { e.currentTarget.style.background = primary + '12'; e.currentTarget.style.borderColor = primary + '40' } }}
               onMouseLeave={e => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.borderColor = '#e5e7eb' }}>›</button>
           </div>
 
-          {viewMode !== 'day' && (
+          {viewMode !== 'day' && viewMode !== 'list' && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: '#F8FAFC', borderBottom: '1px solid #F3F4F6' }}>
               {DAYS.map(d => (
                 <div key={d} style={{ padding: '10px 0', textAlign: 'center', fontSize: 11, fontWeight: 800, color: '#9CA3AF', letterSpacing: 0.5, textTransform: 'uppercase' }}>{d}</div>
@@ -517,7 +586,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 )
               })}
             </div>
-          ) : (
+          ) : viewMode === 'day' ? (
             <div key={gridKey.current} style={{ padding: '24px 28px', flex: 1, animation: `${slideAnim} 0.28s ease`, position: 'relative' }}>
               {isToday(currentDate) && (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: primary, background: primary + '12', borderRadius: 99, padding: '4px 12px', marginBottom: 16 }}>
@@ -562,6 +631,58 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 </div>
               )}
             </div>
+          ) : (
+            <div key={gridKey.current} style={{ padding: '20px 24px', flex: 1, animation: `${slideAnim} 0.28s ease`, overflowY: 'auto' }}>
+              {(() => {
+                const today = format(new Date(), 'yyyy-MM-dd')
+                const agenda = filtered.filter(s => s.session_date >= today).sort((a, b) => (a.session_date + (a.start_time || '')).localeCompare(b.session_date + (b.start_time || '')))
+                if (agenda.length === 0) {
+                  return (
+                    <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+                      <div style={{ fontSize: 48, marginBottom: 12 }}>🚀</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: '#374151', marginBottom: 6 }}>No sessions planned yet</div>
+                      <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20 }}>Nothing coming up matching this filter.</div>
+                      <button onClick={() => handlePlanForDate(today)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px ${primary}40` }}>+ Create Session</button>
+                    </div>
+                  )
+                }
+                const grouped = []
+                let lastDate = null
+                agenda.forEach(s => {
+                  if (s.session_date !== lastDate) { grouped.push({ date: s.session_date, items: [] }); lastDate = s.session_date }
+                  grouped[grouped.length - 1].items.push(s)
+                })
+                return grouped.map((group, gi) => (
+                  <div key={group.date} style={{ marginBottom: 22, animation: `cal-pop-in 0.25s ease ${Math.min(gi * 0.04, 0.3)}s both` }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: group.date === today ? primary : '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {group.date === today && '🔴 '}{format(parseISO(group.date), 'EEEE, d MMMM')}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {group.items.map(s => {
+                        const cfg = getCfg(s.session_type)
+                        return (
+                          <button key={s.id} onClick={() => setSelectedSession(s)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 16px', borderRadius: 14, border: `1.5px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s' }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(3px)' }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}>
+                            <div style={{ width: 42, height: 42, borderRadius: 12, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}>{cfg.icon}</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{s.title}</div>
+                              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 3, fontSize: 11.5, color: cfg.color, fontWeight: 700 }}>
+                                {s.start_time && <span>⏰ {s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}</span>}
+                                {s.location && <span>📍 {s.location}</span>}
+                                {s.max_capacity && <span>👥 {s.max_capacity}</span>}
+                              </div>
+                            </div>
+                            <span style={{ background: cfg.color, color: '#fff', borderRadius: 99, padding: '4px 10px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{cfg.label}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))
+              })()}
+            </div>
           )}
         </div>
       </div>
@@ -569,21 +690,25 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
       <div style={{ width: isMobile ? '100%' : 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ background: '#fff', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 12 }}>This Month</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {[
               { label: 'Sessions', value: thisMonthCount, color: primary },
               { label: 'Types', value: [...new Set(sessions.filter(s => s.session_date?.startsWith(format(currentDate, 'yyyy-MM'))).map(s => s.session_type))].length, color: '#8B5CF6' },
+              { label: 'Young People', value: monthYoungPeople, color: '#16a34a' },
             ].map(s => (
-              <div key={s.label} style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 12px' }}>
-                <div style={{ fontSize: 22, fontWeight: 900, color: s.color }}>{s.value}</div>
-                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{s.label}</div>
+              <div key={s.label} style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 10px' }}>
+                <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.value}</div>
+                <div style={{ fontSize: 10.5, color: '#9CA3AF', marginTop: 2 }}>{s.label}</div>
               </div>
             ))}
           </div>
         </div>
 
         <div style={{ background: '#fff', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, flex: 1, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 12 }}>⏭ Upcoming</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#374151' }}>Upcoming Sessions</div>
+            <button onClick={() => { setNavDirection('right'); gridKey.current += 1; setViewMode('list') }} style={{ background: 'none', border: 'none', color: primary, fontSize: 11, fontWeight: 800, cursor: 'pointer', padding: 0 }}>View all →</button>
+          </div>
           {upcomingSessions.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '20px 0', color: '#9CA3AF', fontSize: 12 }}>
               <div style={{ fontSize: 28, marginBottom: 6 }}>📅</div>
@@ -645,14 +770,24 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
           </div>
         </div>
       </div>
+    </div>
 
-      {selectedSession && (
-        <SessionModal session={selectedSession} org={org} onClose={() => setSelectedSession(null)} onDelete={deleteSession} />
-      )}
+    <div style={{ position: 'sticky', bottom: 0, marginTop: 14, background: '#fff', border: '1px solid #EEF0F3', borderRadius: 16, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', boxShadow: '0 -12px 30px -18px rgba(15,23,42,0.25)', zIndex: 20 }}>
+      <div style={{ flex: 1, minWidth: 160 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}>💡 Planning something?</div>
+        <div style={{ fontSize: 11.5, color: '#9CA3AF', marginTop: 1 }}>Create a new session or duplicate an existing one to get started.</div>
+      </div>
+      <button onClick={() => onNavigate && onNavigate('planner')} style={{ padding: '9px 16px', borderRadius: 11, border: `1.5px solid ${primary}`, background: '#fff', color: primary, fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>📆 Session Planner</button>
+      <button onClick={() => handlePlanForDate(format(new Date(), 'yyyy-MM-dd'))} style={{ padding: '9px 18px', borderRadius: 11, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 8px 20px ${primary}40` }}>+ New Session</button>
+    </div>
 
-      {planPickerDate && (
-        <PlanPickerModal date={planPickerDate} org={org} onClose={() => setPlanPickerDate(null)} onNavigate={onNavigate} />
-      )}
+    {selectedSession && (
+      <SessionModal session={selectedSession} org={org} onClose={() => setSelectedSession(null)} onDelete={deleteSession} />
+    )}
+
+    {planPickerDate && (
+      <PlanPickerModal date={planPickerDate} org={org} onClose={() => setPlanPickerDate(null)} onNavigate={onNavigate} />
+    )}
     </div>
   )
 }
