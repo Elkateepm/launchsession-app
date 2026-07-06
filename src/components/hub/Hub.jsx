@@ -1130,7 +1130,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       {/* ── LIVE SESSION HERO ── */}
       <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
-        <div style={{ display: 'grid', gridTemplateColumns: todaySessions.length === 1 ? '1fr' : todaySessions.length === 2 ? '1fr 1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, padding: '0 0 8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : todaySessions.length === 1 ? '1fr' : todaySessions.length === 2 ? '1fr 1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, padding: '0 0 8px' }}>
           {todaySessions.slice(0, 20).map(s => (
             <LiveSessionPanel
               key={s.id}
