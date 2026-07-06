@@ -26,7 +26,9 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
     if (!childQuery.trim() || childQuery.length < 2) { setChildResults([]); return }
     const t = setTimeout(async () => {
       const { data } = await supabase.from('children').select('id, first_name, last_name, date_of_birth, photo_url, group_name')
-        .eq('org_id', org.id).or(`first_name.ilike.%${childQuery}%,last_name.ilike.%${childQuery}%`).limit(8)
+        .eq('org_id', org.id).eq('active', true)
+        .or(`first_name.ilike.%${childQuery}%,last_name.ilike.%${childQuery}%`)
+        .order('last_name').limit(8)
       setChildResults(data || [])
     }, 250)
     return () => clearTimeout(t)
@@ -127,7 +129,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                     </div>
                   )}
                   {form.child_id && <div style={{ marginTop: 8, fontSize: 12, color: '#15803D', fontWeight: 700 }}>✓ Linked to child record</div>}
-                  <div style={{ marginTop: 10, fontSize: 11.5, color: '#94A3B8' }}>Can't find them? Just type their name — you can link the record later.</div>
+                  <div style={{ marginTop: 10, fontSize: 11.5, color: '#94A3B8' }}>Searches your active Registers roster. Can't find them? Just type their name — you can link the record later.</div>
                 </div>
               )}
 
