@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from './lib/supabase'
 import { OrgProvider, useOrg } from './context/OrgContext'
 import Login from './components/auth/Login'
@@ -11,6 +11,50 @@ import VolunteerPortal from './components/volunteers/VolunteerPortal'
 import VolunteerAcceptInvite from './components/volunteers/VolunteerAcceptInvite'
 import PublicForm from './components/forms/PublicForm'
 import SplashScreen from './components/common/SplashScreen'
+
+const IDLE_TIMEOUT_MS = 60 * 60 * 1000 // 1 hour
+
+// Signs the user out and returns them to the marketing landing page after a
+// sustained period with no interaction. Only active while `enabled` (a live
+// session) is true. Any user activity resets the timer.
+function useIdleLogout(enabled) {
+  const timerRef = useRef(null)
+
+  useEffect(() => {
+    if (!enabled) return
+
+    const logout = async () => {
+      try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
+      window.location.replace('/landing.html')
+    }
+
+    const reset = () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(logout, IDLE_TIMEOUT_MS)
+    }
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click']
+    events.forEach(e => window.addEventListener(e, reset, { passive: true }))
+
+    // Re-check on tab focus: if the machine was asleep/backgrounded past the
+    // timeout, setTimeout may not have fired reliably, so verify elapsed time.
+    let lastActivity = Date.now()
+    const markActivity = () => { lastActivity = Date.now() }
+    events.forEach(e => window.addEventListener(e, markActivity, { passive: true }))
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && Date.now() - lastActivity >= IDLE_TIMEOUT_MS) logout()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    reset()
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      events.forEach(e => { window.removeEventListener(e, reset); window.removeEventListener(e, markActivity) })
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [enabled])
+}
 
 function AuthedApp({ session, org, onReady }) {
   const [onboardingDone, setOnboardingDone] = React.useState(null)
@@ -145,6 +189,9 @@ function AppContent() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  // Auto-logout to landing after 1 hour of inactivity while signed in.
+  useIdleLogout(!!session)
 
   // Redirect to landing immediately if this looks like a bare/fresh visit.
   if (shouldGoToLanding() && !checkedSession) {
