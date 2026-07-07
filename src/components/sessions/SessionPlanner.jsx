@@ -858,7 +858,143 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onVie
   )
 }
 
-// ─── SESSION DETAIL DRAWER ────────────────────────────────────
+// ─── PAST SESSIONS INSIGHTS ───────────────────────────────────
+function PastSessionsInsights({ pastSessions, org }) {
+  const primary = org?.primary_color || '#1B9AAA'
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState(null)
+
+  const sessionIds = React.useMemo(() => pastSessions.map(s => s.id), [pastSessions])
+  const sessionIdsKey = sessionIds.join(',')
+
+  useEffect(() => {
+    let cancelled = false
+    if (sessionIds.length === 0) { setStats(null); setLoading(false); return }
+    setLoading(true)
+    supabase.from('attendance').select('session_id, child_id, status, absence_reason, children(id, first_name, last_name, photo_url, group_name)').in('session_id', sessionIds)
+      .then(({ data }) => {
+        if (cancelled) return
+        const rows = data || []
+        let totalExpected = 0, totalAttended = 0, totalNoShow = 0
+        const absenceCounts = {} // child_id -> { count, child, reasons: {} }
+        const perSession = {} // session_id -> { total, attended }
+        rows.forEach(r => {
+          totalExpected++
+          if (!perSession[r.session_id]) perSession[r.session_id] = { total: 0, attended: 0 }
+          perSession[r.session_id].total++
+          if (r.status === 'signed_in' || r.status === 'signed_out') {
+            totalAttended++
+            perSession[r.session_id].attended++
+          } else {
+            totalNoShow++
+            if (r.child_id) {
+              if (!absenceCounts[r.child_id]) absenceCounts[r.child_id] = { count: 0, child: r.children, reasons: {} }
+              absenceCounts[r.child_id].count++
+              const reason = r.absence_reason?.trim()
+              if (reason) absenceCounts[r.child_id].reasons[reason] = (absenceCounts[r.child_id].reasons[reason] || 0) + 1
+            }
+          }
+        })
+        const topAbsentees = Object.values(absenceCounts).filter(a => a.child).sort((a, b) => b.count - a.count).slice(0, 6)
+        // Session with the lowest attendance rate (worth a look)
+        let lowestRateSession = null
+        Object.entries(perSession).forEach(([sid, v]) => {
+          if (v.total === 0) return
+          const rate = v.attended / v.total
+          if (!lowestRateSession || rate < lowestRateSession.rate) {
+            lowestRateSession = { sid, rate, ...v, session: pastSessions.find(s => s.id === sid) }
+          }
+        })
+        setStats({
+          totalSessions: pastSessions.length,
+          totalExpected, totalAttended, totalNoShow,
+          attendanceRate: totalExpected > 0 ? Math.round((totalAttended / totalExpected) * 100) : null,
+          topAbsentees,
+          lowestRateSession: lowestRateSession && lowestRateSession.total >= 3 ? lowestRateSession : null,
+        })
+        setLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [sessionIdsKey, pastSessions]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (pastSessions.length === 0) return null
+
+  const card = { background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(16px)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 8px 32px -12px rgba(30,41,59,0.1)', padding: 18 }
+
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+        📊 Session Insights
+      </div>
+
+      {loading ? (
+        <div style={{ ...card, textAlign: 'center', color: '#94A3B8', fontSize: 13, padding: 24 }}>Analysing past sessions…</div>
+      ) : (
+        <>
+          {/* KPI row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 12 }}>
+            {[
+              { label: 'Completed Sessions', value: stats.totalSessions, icon: '🗄️', color: '#64748B' },
+              { label: 'Attendance Rate', value: stats.attendanceRate != null ? `${stats.attendanceRate}%` : '—', icon: '✅', color: stats.attendanceRate == null ? '#94A3B8' : stats.attendanceRate >= 80 ? '#16A34A' : stats.attendanceRate >= 60 ? '#D97706' : '#DC2626' },
+              { label: 'Total No-Shows', value: stats.totalNoShow, icon: '⚠️', color: '#DC2626' },
+              { label: 'Young People Seen', value: stats.totalAttended, icon: '🙋', color: primary },
+            ].map(k => (
+              <div key={k.label} style={{ ...card, padding: '14px 16px' }}>
+                <div style={{ fontSize: 20, marginBottom: 6 }}>{k.icon}</div>
+                <div style={{ fontSize: 21, fontWeight: 900, color: k.color, lineHeight: 1 }}>{k.value}</div>
+                <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: stats.lowestRateSession ? '1.3fr 1fr' : '1fr', gap: 12 }}>
+            {/* Frequent absentees */}
+            <div style={card}>
+              <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Frequent Absentees</div>
+              {stats.topAbsentees.length === 0 ? (
+                <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No repeat no-shows — great attendance!</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {stats.topAbsentees.map(a => {
+                    const topReason = Object.entries(a.reasons).sort((x, y) => y[1] - x[1])[0]
+                    return (
+                      <div key={a.child.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#64748B', flexShrink: 0, overflow: 'hidden' }}>
+                          {a.child.photo_url ? <img src={a.child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${a.child.first_name?.[0] || ''}${a.child.last_name?.[0] || ''}`}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.child.first_name} {a.child.last_name}</div>
+                          <div style={{ fontSize: 10.5, color: '#94A3B8' }}>{a.child.group_name || 'No group'}{topReason ? ` · "${topReason[0]}"` : ''}</div>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: '#DC2626', background: '#FEF2F2', borderRadius: 99, padding: '3px 9px', flexShrink: 0 }}>{a.count} missed</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Lowest-attendance session flag */}
+            {stats.lowestRateSession && (
+              <div style={card}>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Worth a Look</div>
+                <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 6 }}>Lowest attendance of recent sessions</div>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{stats.lowestRateSession.session?.title || 'Untitled'}</div>
+                <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>{stats.lowestRateSession.session?.session_date ? format(parseISO(stats.lowestRateSession.session.session_date), 'd MMM yyyy') : ''}</div>
+                <div style={{ marginTop: 10, fontSize: 20, fontWeight: 900, color: stats.lowestRateSession.rate < 0.5 ? '#DC2626' : '#D97706' }}>
+                  {Math.round(stats.lowestRateSession.rate * 100)}%
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', marginLeft: 6 }}>{stats.lowestRateSession.attended}/{stats.lowestRateSession.total} attended</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+
 function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount, attendanceCounts, hasReflection }) {
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
   const isMultiDay = session.end_date && session.end_date !== session.session_date
@@ -867,6 +1003,15 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
   const needed = session.volunteer_limit || 0
   const covered = needed === 0 || volCount >= needed
   const ac = attendanceCounts?.[session.id] || { total: 0, signedIn: 0 }
+  const [absentees, setAbsentees] = useState(null)
+
+  useEffect(() => {
+    if (!isPast) { setAbsentees(null); return }
+    let cancelled = false
+    supabase.from('attendance').select('status, absence_reason, children(id, first_name, last_name, photo_url)').eq('session_id', session.id).eq('status', 'expected')
+      .then(({ data }) => { if (!cancelled) setAbsentees(data || []) })
+    return () => { cancelled = true }
+  }, [session.id, isPast])
 
   const dateLabel = isMultiDay
     ? `${format(parseISO(session.session_date), 'EEE d MMM')} – ${format(parseISO(session.end_date), 'EEE d MMM')}`
@@ -915,6 +1060,23 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
           {ac.total > 0 && row('📋', 'Attendance', `${ac.signedIn} / ${ac.total} signed in`)}
           {row('📝', 'Description', session.description)}
           {isPast && row('⭐', 'Reflection', hasReflection ? 'Completed' : 'Due')}
+
+          {isPast && absentees && absentees.length > 0 && (
+            <div style={{ padding: '14px 0 4px' }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: '#DC2626', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 8 }}>⚠️ Didn't Attend ({absentees.length})</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {absentees.map((a, i) => a.children && (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FEF2F2', borderRadius: 10, padding: '7px 10px' }}>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#DC2626', flexShrink: 0, overflow: 'hidden' }}>
+                      {a.children.photo_url ? <img src={a.children.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${a.children.first_name?.[0] || ''}${a.children.last_name?.[0] || ''}`}
+                    </div>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: '#7F1D1D', flex: 1 }}>{a.children.first_name} {a.children.last_name}</span>
+                    {a.absence_reason && <span style={{ fontSize: 10.5, color: '#B91C1C', fontStyle: 'italic' }}>{a.absence_reason}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -1003,6 +1165,8 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
     const endDateTime = new Date(`${endDateStr}T${endTimeStr}`)
     return endDateTime < new Date()
   }
+
+  const pastSessionsAll = React.useMemo(() => sessions.filter(isSessionPast), [sessions]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const displayed = sessions.filter(s => {
     if (filter === 'reflections') return false // handled separately below
@@ -1229,6 +1393,8 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
             ))}
           </div>
         </div>
+
+      {!loading && filter === 'past' && <PastSessionsInsights pastSessions={pastSessionsAll} org={org} />}
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 60, color: 'var(--text3, #94a3b8)', fontWeight: 700 }}>Loading sessions...</div>
