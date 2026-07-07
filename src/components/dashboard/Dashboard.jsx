@@ -19,13 +19,14 @@ import Gallery from '../gallery/Gallery'
 import Messaging from '../messaging/Messaging'
 import Forms from '../forms/Forms'
 import CaseManagement from '../casemgmt/CaseManagement'
+import RiskAssessments from '../riskassessments/RiskAssessments'
 import ImpactOutcomes from '../impact/ImpactOutcomes'
 import Fundraising from '../fundraising/Fundraising'
 import HR from '../hr/HR'
 import ResourceBooking from '../resources/ResourceBooking'
 
 // Base modules always free — regardless of pack
-const BASE_MODULE_KEYS = ['home', 'calendar', 'planner', 'events_trips', 'team', 'settings', 'templates']
+const BASE_MODULE_KEYS = ['home', 'calendar', 'planner', 'events_trips', 'team', 'settings', 'templates', 'risk_assessments']
 
 const ALL_MODULES = [
   { key: 'calendar',        label: 'Calendar',         icon: '📅', group: 'delivery' },
@@ -37,6 +38,7 @@ const ALL_MODULES = [
   { key: 'safeguarding',    label: 'Safeguarding',     icon: '🛡️', group: 'safeguarding' },
   { key: 'forms',           label: 'Forms',            icon: '📝', group: 'safeguarding' },
   { key: 'case_management', label: 'Case Management',  icon: '📁', group: 'safeguarding' },
+  { key: 'risk_assessments', label: 'Risk Assessments', icon: '🛡️', group: 'safeguarding' },
   { key: 'reports',         label: 'Reports',          icon: '📊', group: 'growth' },
   { key: 'impact_outcomes', label: 'Impact & Outcomes',icon: '🌱', group: 'growth' },
   { key: 'fundraising',     label: 'Fundraising',      icon: '💷', group: 'growth' },
@@ -50,7 +52,7 @@ const ALL_MODULES = [
 
 const MODULE_TO_PACK = {
   registers: 'Delivery', volunteers: 'Delivery', messaging: 'Delivery', gallery: 'Delivery',
-  safeguarding: 'Safeguarding', forms: 'Safeguarding', case_management: 'Safeguarding',
+  safeguarding: 'Safeguarding', forms: 'Safeguarding', case_management: 'Safeguarding', risk_assessments: 'Safeguarding',
   reports: 'Growth', impact_outcomes: 'Growth', fundraising: 'Growth',
   hr: 'Operations', resource_booking: 'Operations',
 }
@@ -513,6 +515,7 @@ export default function Dashboard({ session, org }) {
               { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
               { key: 'forms', label: 'Forms', icon: '📝' },
               { key: 'case_management', label: 'Case Management', icon: '📁' },
+              { key: 'risk_assessments', label: 'Risk Assessments', icon: '🛡️' },
             ].map(m => (
               <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
                 onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
@@ -653,6 +656,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'safeguarding'    && (hasModule('safeguarding')    ? <Safeguarding org={org} session={session} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} />)}
           {tab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} />)}
           {tab === 'case_management' && (hasModule('case_management') ? <CaseManagement org={org} session={session} />                        : <LockedModule moduleKey="case_management" label="Case Management" icon="📁" onNavigate={handleSetTab} />)}
+          {tab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} />)}
 
           {/* ── GROWTH PACK ── */}
           {tab === 'reports'         && (hasModule('reports')         ? <Reports org={org} session={session} />                                : <LockedModule moduleKey="reports"         label="Reports"           icon="📊" onNavigate={handleSetTab} />)}
