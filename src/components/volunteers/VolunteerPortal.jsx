@@ -64,8 +64,7 @@ function OnboardingWizard({ user, org, onComplete }) {
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoUrl, setPhotoUrl] = useState(null)
   const photoRef = useRef(null)
-  const primary = org?.primary_color || '#1B9AAA'
-  const TOTAL = 12
+  const primary = (org?.logo_url || (org?.primary_color && org.primary_color !== '#1B9AAA')) ? (org?.primary_color || '#1B9AAA') : '#7C5CFC'
 
   const [f, setF] = useState({
     first_name:'', last_name:'', preferred_name:'', phone:'', date_of_birth:'',
@@ -325,7 +324,10 @@ function OnboardingWizard({ user, org, onComplete }) {
           {/* Logo row */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, position:'relative', zIndex:1 }}>
             {org?.logo_url ? (
-              <img src={org.logo_url} alt={org.name} style={{ height:28, maxWidth:120, objectFit:'contain', filter:'brightness(0) invert(1)', opacity:0.9 }} />
+              <div style={{ display:'inline-flex', alignItems:'center', background:'#fff', borderRadius:9, padding:'4px 10px' }}>
+                <img src={org.logo_url} alt={org.name} style={{ height:20, maxWidth:110, objectFit:'contain', display:'block' }}
+                  onError={e => { e.target.parentNode.style.display='none' }} />
+              </div>
             ) : (
               <span style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.7)', textTransform:'uppercase', letterSpacing:0.8 }}>{org?.name}</span>
             )}
@@ -363,7 +365,8 @@ export default function VolunteerPortal() {
   const [error, setError] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const primary = org?.primary_color || '#1B9AAA'
+  const brandActivated = !!(org?.logo_url || (org?.primary_color && org.primary_color !== '#1B9AAA'))
+  const primary = brandActivated ? (org?.primary_color || '#1B9AAA') : '#7C5CFC'
 
   useEffect(() => {
     supabase.from('organisations').select('*').eq('slug', SLUG).single().then(({data}) => setOrg(data))
@@ -446,20 +449,34 @@ export default function VolunteerPortal() {
           <div style={{ position:'absolute', bottom:-30, left:-20, width:100, height:100, borderRadius:'50%', background:'rgba(0,0,0,0.08)', pointerEvents:'none' }} />
           {/* Org logo or name */}
           <div style={{ position:'relative', zIndex:1, marginBottom:16 }}>
-            {org?.logo_url ? (
-              <img src={org.logo_url} alt={org.name} style={{ height:40, maxWidth:160, objectFit:'contain', display:'block', filter:'brightness(0) invert(1)', opacity:0.92 }} />
-            ) : (
-              <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.15)', borderRadius:10, padding:'6px 12px' }}>
-                <div style={{ width:26, height:26, borderRadius:7, background:'rgba(255,255,255,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900 }}>
-                  {(org?.name||'L')[0].toUpperCase()}
+            {brandActivated ? (
+              org?.logo_url ? (
+                <div style={{ display:'inline-flex', alignItems:'center', background:'#fff', borderRadius:12, padding:'8px 14px', boxShadow:'0 4px 14px rgba(0,0,0,0.15)' }}>
+                  <img src={org.logo_url} alt={org.name} style={{ height:32, maxWidth:150, objectFit:'contain', display:'block' }}
+                    onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex' }} />
+                  <div style={{ display:'none', alignItems:'center', gap:8 }}>
+                    <div style={{ width:26, height:26, borderRadius:7, background:primary, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900, color:'#fff' }}>{(org?.name||'?')[0].toUpperCase()}</div>
+                    <span style={{ fontSize:13, fontWeight:800, color:'#111' }}>{org?.name}</span>
+                  </div>
                 </div>
-                <span style={{ fontSize:13, fontWeight:800, letterSpacing:0.5, textTransform:'uppercase' }}>{org?.name || 'LaunchSession'}</span>
+              ) : (
+                <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.15)', borderRadius:10, padding:'6px 12px' }}>
+                  <div style={{ width:26, height:26, borderRadius:7, background:'rgba(255,255,255,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900 }}>
+                    {(org?.name||'L')[0].toUpperCase()}
+                  </div>
+                  <span style={{ fontSize:13, fontWeight:800, letterSpacing:0.5, textTransform:'uppercase' }}>{org?.name}</span>
+                </div>
+              )
+            ) : (
+              <div style={{ display:'inline-flex', alignItems:'center', background:'#fff', borderRadius:12, padding:'7px 14px', boxShadow:'0 4px 14px rgba(0,0,0,0.15)' }}>
+                <img src="/logo.png" alt="LaunchSession" style={{ height:26, width:26, objectFit:'contain', marginRight:8 }} />
+                <span style={{ fontSize:14, fontWeight:900, color:'#111' }}>Launch<span style={{ color:primary }}>Session</span></span>
               </div>
             )}
           </div>
           <div style={{ position:'relative', zIndex:1 }}>
             <div style={{ fontSize:22, fontWeight:900, marginBottom:4 }}>Volunteer Sign In</div>
-            <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)', fontWeight:600 }}>Welcome back</div>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)', fontWeight:600 }}>{brandActivated ? 'Welcome back' : `Welcome back to ${org?.name || 'your organisation'}`}</div>
           </div>
         </div>
         <div style={s.body}>
@@ -484,7 +501,7 @@ export default function VolunteerPortal() {
 
 // ─── VOLUNTEER DASHBOARD ──────────────────────────────────────────────────────
 function VolunteerDashboard({ user, profile, org, onSignOut }) {
-  const primary = org?.primary_color || '#1B9AAA'
+  const primary = (org?.logo_url || (org?.primary_color && org.primary_color !== '#1B9AAA')) ? (org?.primary_color || '#1B9AAA') : '#7C5CFC'
   const [tab, setTab] = useState('today')
   const [sessions, setSessions] = useState([])
   const [myRota, setMyRota] = useState([])
@@ -587,7 +604,9 @@ function VolunteerDashboard({ user, profile, org, onSignOut }) {
           {/* Top bar */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
             {org?.logo_url && !imgFailed
-              ? <img src={org.logo_url} alt={org.name} style={{ height:24, objectFit:'contain', filter:'brightness(0) invert(1)', opacity:0.85 }} onError={()=>setImgFailed(true)} />
+              ? <div style={{ display:'inline-flex', alignItems:'center', background:'#fff', borderRadius:8, padding:'4px 9px' }}>
+                  <img src={org.logo_url} alt={org.name} style={{ height:18, maxWidth:100, objectFit:'contain', display:'block' }} onError={()=>setImgFailed(true)} />
+                </div>
               : <span style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:1 }}>{org?.name}</span>
             }
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
