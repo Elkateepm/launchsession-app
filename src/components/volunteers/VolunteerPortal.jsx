@@ -65,6 +65,7 @@ function OnboardingWizard({ user, org, onComplete }) {
   const [photoUrl, setPhotoUrl] = useState(null)
   const photoRef = useRef(null)
   const primary = (org?.logo_url || (org?.primary_color && org.primary_color !== '#1B9AAA')) ? (org?.primary_color || '#1B9AAA') : '#7C5CFC'
+  const TOTAL = 12
 
   const [f, setF] = useState({
     first_name:'', last_name:'', preferred_name:'', phone:'', date_of_birth:'',
