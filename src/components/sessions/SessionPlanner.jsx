@@ -4,6 +4,7 @@ import { format, addDays, parseISO, startOfWeek, isSameDay } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence } from 'framer-motion'
+import RASessionCard from '../riskassessments/RASessionCard'
 
 function CountUp({ value, duration = 0.6 }) {
   const [display, setDisplay] = React.useState(value)
@@ -112,9 +113,11 @@ function RotationPlanner({ slots, onChange, selectedBubbles, bubbleDefs }) {
 }
 
 // ─── SESSION FORM ─────────────────────────────────────────────
-function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs }) {
+function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNavigate }) {
   const [form, setForm] = useState(initial || EMPTY_FORM)
   const [step, setStep] = useState(0)
+  const [raLinked, setRaLinked] = useState(null) // null = unknown/loading, true/false once RASessionCard reports in
+  const [pendingRaId, setPendingRaId] = useState(null)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const toggleBubble = (label) => set('bubbles', form.bubbles.includes(label) ? form.bubbles.filter(x => x !== label) : [...form.bubbles, label])
   const type = SESSION_TYPES.find(t => t.key === form.session_type) || SESSION_TYPES[0]
@@ -319,6 +322,17 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs }) {
               </div>
             )}
 
+            {/* Risk Assessment */}
+            <RASessionCard
+              sessionId={initial?.id || null}
+              sessionTitle={form.title}
+              org={org}
+              onNavigate={onNavigate}
+              pendingAssessmentId={pendingRaId}
+              onPendingChange={setPendingRaId}
+              onLinkedChange={setRaLinked}
+            />
+
             {/* Summary card */}
             <div style={{ background: 'var(--surface2, #F9FAFB)', borderRadius: 14, border: '1.5px solid var(--border, #e5e7eb)', padding: '16px' }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>Summary</div>
@@ -362,7 +376,10 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs }) {
             Continue →
           </button>
         ) : (
-          <button onClick={() => onSave(form)} disabled={saving || !canSave}
+          <button onClick={() => {
+            if (raLinked === false && !window.confirm('This session has no risk assessment attached. Continue anyway?')) return
+            onSave({ ...form, _pendingRiskAssessmentId: pendingRaId })
+          }} disabled={saving || !canSave}
             style={{ flex: 1, padding: '13px', borderRadius: 12, border: 'none', background: saving || !canSave ? '#9ca3af' : type.color, color: '#fff', fontSize: 15, fontWeight: 900, cursor: saving || !canSave ? 'default' : 'pointer' }}>
             {saving ? 'Saving...' : isEditing ? '✓ Save Changes' : '🚀 Create Session'}
           </button>
@@ -841,7 +858,7 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, volCo
 }
 
 // ─── MAIN PLANNER ─────────────────────────────────────────────
-export default function SessionPlanner({ org, onSessionSaved, initialReflectSessionId }) {
+export default function SessionPlanner({ org, onSessionSaved, initialReflectSessionId, onNavigate }) {
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const { groups: orgGroups } = useOrgSettings(orgId)
@@ -962,6 +979,11 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
           await supabase.from('attendance').insert(bc.map(c => ({ session_id: newSession.id, child_id: c.id, org_id: orgId, status: 'expected' })))
         }
       }
+      // Link any risk assessment picked/created while the session was still unsaved
+      if (newSession && form._pendingRiskAssessmentId) {
+        await supabase.from('risk_assessment_sessions').insert({ assessment_id: form._pendingRiskAssessmentId, session_id: newSession.id, org_id: orgId })
+        await supabase.from('risk_assessment_audit').insert({ assessment_id: form._pendingRiskAssessmentId, org_id: orgId, action: 'attached', detail: `Attached to session "${form.title}"` })
+      }
     }
     setSaving(false)
     setEditing(null)
@@ -988,14 +1010,14 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
     // Mobile: centred modal. Desktop: full page inline
     if (!isMobile) return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--surface, #fff)' }}>
-        <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} />
+        <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} org={org} onNavigate={onNavigate} />
       </div>
     )
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div onClick={() => { setView('list'); setEditing(null) }} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)' }} />
         <div style={{ position: 'relative', width: '100%', maxWidth: 560, maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: 'var(--surface, #fff)', borderRadius: 24, boxShadow: '0 32px 80px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
-          <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} />
+          <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} org={org} onNavigate={onNavigate} />
         </div>
       </div>
     )
