@@ -723,7 +723,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   )
 }
 
-function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, volCounts, hasReflection, attendanceCounts, index = 0 }) {
+function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onView, volCounts, hasReflection, attendanceCounts, index = 0 }) {
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
   const isMultiDay = session.end_date && session.end_date !== session.session_date
   const volCount = volCounts?.[session.id] || 0
@@ -758,6 +758,7 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, volCo
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.35, delay: index * 0.02 }}
       whileHover={{ y: -4, scale: 1.005 }}
+      onClick={() => onView && onView(session)}
       style={{
         position: 'relative',
         background: 'rgba(255,255,255,0.7)',
@@ -768,7 +769,7 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, volCo
         boxShadow: '0 8px 32px -12px rgba(30,41,59,0.12), inset 0 1px 0 rgba(255,255,255,0.8)',
         marginBottom: 14,
         overflow: 'hidden',
-        cursor: 'default',
+        cursor: onView ? 'pointer' : 'default',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '18px 20px' }}>
@@ -841,7 +842,7 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, volCo
             {quickActions.map(a => (
               <motion.button
                 key={a.key}
-                onClick={a.onClick}
+                onClick={e => { e.stopPropagation(); a.onClick() }}
                 whileHover={{ y: -2, rotate: 6, background: a.color + '22' }}
                 whileTap={{ scale: 0.92 }}
                 style={{ width: 34, height: 34, borderRadius: 11, border: 'none', background: a.color + '12', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -857,7 +858,78 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, volCo
   )
 }
 
-// ─── MAIN PLANNER ─────────────────────────────────────────────
+// ─── SESSION DETAIL DRAWER ────────────────────────────────────
+function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount, attendanceCounts, hasReflection }) {
+  const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
+  const isMultiDay = session.end_date && session.end_date !== session.session_date
+  const isPast = session.session_date < format(new Date(), 'yyyy-MM-dd')
+  const isToday = session.session_date === format(new Date(), 'yyyy-MM-dd') && !isPast
+  const needed = session.volunteer_limit || 0
+  const covered = needed === 0 || volCount >= needed
+  const ac = attendanceCounts?.[session.id] || { total: 0, signedIn: 0 }
+
+  const dateLabel = isMultiDay
+    ? `${format(parseISO(session.session_date), 'EEE d MMM')} – ${format(parseISO(session.end_date), 'EEE d MMM')}`
+    : format(parseISO(session.session_date), 'EEEE d MMMM')
+
+  const statusChip = isPast
+    ? { label: 'Completed', bg: '#F1F5F9', color: '#64748B' }
+    : isToday
+      ? { label: 'Live', bg: '#DCFCE7', color: '#16A34A' }
+      : { label: 'Upcoming', bg: type.color + '15', color: type.color }
+
+  const row = (icon, label, value) => value ? (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 0', borderBottom: '1px solid rgba(15,23,42,0.05)' }}>
+      <span style={{ fontSize: 16, width: 22, flexShrink: 0 }}>{icon}</span>
+      <div>
+        <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A', marginTop: 2 }}>{value}</div>
+      </div>
+    </div>
+  ) : null
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.55)', backdropFilter: 'blur(4px)', zIndex: 400, display: 'flex', justifyContent: 'flex-end' }}>
+      <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', stiffness: 320, damping: 34 }}
+        onClick={e => e.stopPropagation()}
+        style={{ width: '100%', maxWidth: 420, height: '100%', background: 'var(--surface, #fff)', display: 'flex', flexDirection: 'column', boxShadow: '-24px 0 60px rgba(0,0,0,0.25)' }}>
+
+        {/* Colour banner header */}
+        <div style={{ background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, padding: '22px 22px 18px', flexShrink: 0, position: 'relative' }}>
+          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}>✕</button>
+          <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 12 }}>{type.icon}</div>
+          <div style={{ fontSize: 19, fontWeight: 900, color: '#fff', marginBottom: 6, paddingRight: 40, lineHeight: 1.2 }}>{session.title}</div>
+          <span style={{ fontSize: 11, fontWeight: 800, color: statusChip.color, background: statusChip.bg, borderRadius: 99, padding: '4px 12px' }}>{statusChip.label}</span>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '4px 22px' }}>
+          {row('📅', 'Date', dateLabel)}
+          {row('🕐', 'Time', session.start_time ? `${session.start_time}${session.end_time ? ` – ${session.end_time}` : ''}` : null)}
+          {row('📍', 'Location', session.location)}
+          {row('🎫', 'Session Type', type.label)}
+          {row('👥', 'Groups', session.bubbles?.length ? session.bubbles.join(', ') : null)}
+          {row('🔢', 'Capacity', session.max_capacity ? `${session.max_capacity} young people` : null)}
+          {needed > 0 && row(covered ? '✅' : '⚠️', 'Volunteers', `${volCount} / ${needed} ${covered ? '(covered)' : '(needs more)'}`)}
+          {ac.total > 0 && row('📋', 'Attendance', `${ac.signedIn} / ${ac.total} signed in`)}
+          {row('📝', 'Description', session.description)}
+          {isPast && row('⭐', 'Reflection', hasReflection ? 'Completed' : 'Due')}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '16px 22px', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 8, flexShrink: 0, background: 'var(--surface, #fff)' }}>
+          {onVolunteers && (
+            <button onClick={() => { onVolunteers(session); onClose() }} style={{ padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>❤️ Volunteers</button>
+          )}
+          <button onClick={() => { onEdit(session); onClose() }} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${type.color}, ${type.color}cc)`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: `0 8px 20px ${type.color}44` }}>✏️ Edit Session</button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+
 export default function SessionPlanner({ org, onSessionSaved, initialReflectSessionId, onNavigate }) {
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
@@ -877,6 +949,7 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
+  const [viewingSession, setViewingSession] = useState(null)
 
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
@@ -1231,7 +1304,7 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
         <div>
           <AnimatePresence>
             {displayed.map((s, i) => (
-              <SessionCard key={s.id} session={s} index={i} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} onReflect={setReflectingSession} volCounts={volCounts} hasReflection={!!reflections[s.id]} attendanceCounts={attendanceCounts} />
+              <SessionCard key={s.id} session={s} index={i} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} onReflect={setReflectingSession} onView={setViewingSession} volCounts={volCounts} hasReflection={!!reflections[s.id]} attendanceCounts={attendanceCounts} />
             ))}
           </AnimatePresence>
         </div>
@@ -1257,7 +1330,7 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
                     const needed = s.volunteer_limit || 0
                     const covered = needed === 0 || vc >= needed
                     return (
-                      <div key={s.id} style={{ background: type.color + '12', border: `1.5px solid ${type.color}30`, borderRadius: 12, padding: 10, marginBottom: 8 }}>
+                      <div key={s.id} onClick={() => setViewingSession(s)} style={{ background: type.color + '12', border: `1.5px solid ${type.color}30`, borderRadius: 12, padding: 10, marginBottom: 8, cursor: 'pointer' }}>
                         <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 4 }}>{s.icon}{s.title}</div>
                         <div style={{ fontSize: 11, color: 'var(--text3, #475569)', fontWeight: 600, lineHeight: 1.6 }}>
                           🕐 {s.start_time || '—'}{s.end_time ? `–${s.end_time}` : ''}<br />
@@ -1269,9 +1342,9 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
                           </div>
                         )}
                         <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
-                          <button onClick={() => setSelectedSession(s)} style={{ flex: 1, border: 'none', background: type.color + '20', borderRadius: 7, padding: '4px 0', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: type.color }}>❤️ Vols</button>
-                          <button onClick={() => { setEditing(s); setView('form') }} style={{ border: 'none', background: 'var(--surface2, #F9FAFB)', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>✏️</button>
-                          <button onClick={() => handleDelete(s.id)} style={{ border: 'none', background: '#FFF0F0', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>🗑</button>
+                          <button onClick={e => { e.stopPropagation(); setSelectedSession(s) }} style={{ flex: 1, border: 'none', background: type.color + '20', borderRadius: 7, padding: '4px 0', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: type.color }}>❤️ Vols</button>
+                          <button onClick={e => { e.stopPropagation(); setEditing(s); setView('form') }} style={{ border: 'none', background: 'var(--surface2, #F9FAFB)', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>✏️</button>
+                          <button onClick={e => { e.stopPropagation(); handleDelete(s.id) }} style={{ border: 'none', background: '#FFF0F0', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>🗑</button>
                         </div>
                       </div>
                     )
@@ -1284,6 +1357,19 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
       )}
 
       {selectedSession && <VolunteerPanel session={selectedSession} org={org} onClose={() => { setSelectedSession(null); loadData() }} />}
+      <AnimatePresence>
+        {viewingSession && (
+          <SessionDetailDrawer
+            session={viewingSession}
+            onClose={() => setViewingSession(null)}
+            onEdit={s => { setEditing(s); setView('form') }}
+            onVolunteers={setSelectedSession}
+            volCount={volCounts[viewingSession.id] || 0}
+            attendanceCounts={attendanceCounts}
+            hasReflection={!!reflections[viewingSession.id]}
+          />
+        )}
+      </AnimatePresence>
       <AnimatePresence>
       {reflectingSession && (
         <ReflectionModal
