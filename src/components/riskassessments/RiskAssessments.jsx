@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { Avatar, CountUp, glass, inputStyle, btnPrimary, btnGhost, PAGE_BG } from '../volunteers/vh_shared'
+import { CountUp, glass, inputStyle, btnPrimary, btnGhost, PAGE_BG } from '../volunteers/vh_shared'
 import {
   RA_STATUSES, RA_STATUS_LABELS, ACTIVITY_TYPES, ACTIVITY_ICON,
-  riskScore, riskRating, RatingBadge, RAStatusChip, RiskMatrix, RiskGauge, RATING_STYLE,
+  riskScore, riskRating, RatingBadge, RAStatusChip, RiskMatrix, RiskGauge,
   timeAgo, daysUntil,
 } from './ra_shared'
 import { RA_TEMPLATES } from './ra_templates'
