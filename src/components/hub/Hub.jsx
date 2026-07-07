@@ -831,7 +831,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
 
-  const today = new Date().toISOString().split("T")[0];
+  // Local calendar date (NOT toISOString, which converts to UTC and can roll
+  // the date back during the early hours of BST — e.g. 00:19 local on 8 Jul
+  // becomes 23:19 UTC on 7 Jul, silently hiding today's live sessions).
+  const toLocalDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const today = toLocalDateStr(new Date());
 
   function go(tab, payload) {
     if (typeof onNavigate === "function") onNavigate(tab, payload);
@@ -893,7 +897,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const now = new Date()
     const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000)
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-    const yesterdayStr = yesterday.toISOString().split('T')[0]
+    const yesterdayStr = toLocalDateStr(yesterday)
     return sessions.filter(s => {
       if (!s.session_date) return false
       // Today's sessions — stay visible all day, even after they've ended, until midnight
@@ -912,7 +916,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const now = new Date()
     const sevenDaysOut = new Date(now)
     sevenDaysOut.setDate(sevenDaysOut.getDate() + 7)
-    const sevenDaysStr = sevenDaysOut.toISOString().slice(0, 10)
+    const sevenDaysStr = toLocalDateStr(sevenDaysOut)
 
     return sessions
       .filter(s => {
