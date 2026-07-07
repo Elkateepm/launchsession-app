@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { btnPrimary, btnGhost } from '../volunteers/vh_shared'
 import { riskScore, riskRating, LIKELIHOOD_LABELS, SEVERITY_LABELS, RA_STATUS_LABELS } from './ra_shared'
