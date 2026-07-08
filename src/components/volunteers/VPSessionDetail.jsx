@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { activityTheme } from './vp_shared'
 
-export default function VPSessionDetail({ session, org, user, onClose, onNavigateTab, primary }) {
+export default function VPSessionDetail({ session, org, onClose, onNavigateTab, primary }) {
   const theme = activityTheme(session.session_type)
   const todayStr = new Date().toLocaleDateString('en-CA')
   const isToday = session.session_date === todayStr
