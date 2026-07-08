@@ -3,6 +3,12 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
+import VPToday from './VPToday'
+import VPSessions from './VPSessions'
+import VPSessionDetail from './VPSessionDetail'
+import VPMessages from './VPMessages'
+import VPProfile from './VPProfile'
+import VPQuickActionMenu from './VPQuickActionMenu'
 
 const SLUG = window.location.pathname.split('/volunteer/')[1]?.split('/')[0]
 
@@ -501,561 +507,138 @@ export default function VolunteerPortal() {
 }
 
 // ─── VOLUNTEER DASHBOARD ──────────────────────────────────────────────────────
-function VolunteerDashboard({ user, profile, org, onSignOut }) {
+
+function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
   const primary = (org?.logo_url || (org?.primary_color && org.primary_color !== '#1B9AAA')) ? (org?.primary_color || '#1B9AAA') : '#7C5CFC'
+  const [profile, setProfile] = useState(initialProfile)
+  useEffect(() => { setProfile(initialProfile) }, [initialProfile])
+
   const [tab, setTab] = useState('today')
+  const [profileSub, setProfileSub] = useState(null)
   const [sessions, setSessions] = useState([])
-  const [myRota, setMyRota] = useState([])
-  const [myBookings, setMyBookings] = useState({}) // session_id -> status
+  const [myBookings, setMyBookings] = useState({})
   const [attendance, setAttendance] = useState([])
   const [volunteerCounts, setVolunteerCounts] = useState({})
+  const [announcements, setAnnouncements] = useState([])
   const [saving, setSaving] = useState(null)
-  const [showCFC, setShowCFC] = useState(false)
-  const [imgFailed, setImgFailed] = useState(false)
-  const today = new Date().toISOString().split('T')[0]
+  const [viewingSession, setViewingSession] = useState(null)
+  const [quickMenuOpen, setQuickMenuOpen] = useState(false)
+  const [forceModal, setForceModal] = useState(null)
 
-  const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' }) : ''
+  // Local calendar date — NOT toISOString(), which converts to UTC and can roll
+  // the date back an hour or two early during BST.
+  const toLocalDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const today = toLocalDateStr(new Date())
 
   async function loadData() {
     if (!org?.id || !user?.id) return
-    const [{ data: sess }, { data: rota }, { data: att }] = await Promise.all([
+    const [{ data: sess }, { data: rota }, { data: att }, { data: myAtt }, { data: ann }] = await Promise.all([
       supabase.from('sessions').select('*').eq('org_id', org.id).gte('session_date', today).order('session_date').order('start_time').limit(30),
-      supabase.from('session_staff').select('*, session:sessions(*)').eq('org_id', org.id).eq('user_id', user.id).order('created_at'),
+      supabase.from('session_staff').select('*').eq('org_id', org.id).eq('user_id', user.id),
       supabase.from('session_staff').select('session_id').eq('org_id', org.id),
+      supabase.from('volunteer_attendance').select('*').eq('volunteer_id', user.id).eq('org_id', org.id).order('created_at', { ascending: false }),
+      supabase.from('announcements').select('*').eq('org_id', org.id).order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(10),
     ])
     setSessions(sess || [])
-    setMyRota((rota || []).sort((a,b) => (a.session?.session_date||'').localeCompare(b.session?.session_date||'')))
-    // Build my bookings map
     const bmap = {}
     ;(rota || []).forEach(r => { bmap[r.session_id] = r.status || 'pending' })
     setMyBookings(bmap)
-    // Volunteer counts per session
     const counts = {}
-    ;(att || []).forEach(r => { counts[r.session_id] = (counts[r.session_id]||0)+1 })
+    ;(att || []).forEach(r => { counts[r.session_id] = (counts[r.session_id] || 0) + 1 })
     setVolunteerCounts(counts)
-    // My attendance/hours
-    const { data: myAtt } = await supabase.from('volunteer_attendance').select('*').eq('volunteer_id', user.id).eq('org_id', org.id).order('created_at', { ascending:false })
     setAttendance(myAtt || [])
+    setAnnouncements(ann || [])
   }
 
-  useEffect(() => {
-    loadData()
-  }, [org?.id, user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadData() }, [org?.id, user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useRealtimeTable('sessions', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 6000 })
   useRealtimeTable('session_staff', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 6000 })
-  useRealtimeTable('volunteer_attendance', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 6000 })
+  useRealtimeTable('volunteer_attendance', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 8000 })
 
   async function handleBook(session) {
     setSaving(session.id)
     const booked = myBookings[session.id]
     if (booked) {
       await supabase.from('session_staff').delete().eq('session_id', session.id).eq('user_id', user.id).eq('org_id', org.id)
-      setMyBookings(p => { const n={...p}; delete n[session.id]; return n })
+      setMyBookings(p => { const n = { ...p }; delete n[session.id]; return n })
     } else {
-      await supabase.from('session_staff').insert({ session_id:session.id, user_id:user.id, org_id:org.id, role:'volunteer', status:'pending' })
-      setMyBookings(p => ({ ...p, [session.id]:'pending' }))
+      await supabase.from('session_staff').insert({ session_id: session.id, user_id: user.id, org_id: org.id, role: 'volunteer', status: 'pending' })
+      setMyBookings(p => ({ ...p, [session.id]: 'pending' }))
     }
     setSaving(null)
     loadData()
   }
 
-  const totalHours = attendance.reduce((s,a) => s+(a.hours_logged||0), 0)
-  const completedSessions = attendance.filter(a => a.signed_out_at).length
-  const upcomingRota = myRota.filter(r => (r.session?.session_date||'') >= today)
-  const pastRota = myRota.filter(r => (r.session?.session_date||'') < today)
   const todaySessions = sessions.filter(s => s.session_date === today)
   const futureSessions = sessions.filter(s => s.session_date > today)
 
-  const tier = totalHours >= 100 ? 'Champion' : totalHours >= 50 ? 'Gold' : totalHours >= 25 ? 'Silver' : 'Green'
-  const tierColor = totalHours >= 100 ? '#F5D000' : totalHours >= 50 ? '#F0A500' : totalHours >= 25 ? '#C0C0C0' : '#4ADE80'
-  const nextTier = totalHours >= 100 ? 100 : totalHours >= 50 ? 100 : totalHours >= 25 ? 50 : 25
-  const nextTierName = totalHours >= 50 ? 'Champion' : totalHours >= 25 ? 'Gold' : 'Silver'
-  const progress = Math.min((totalHours / nextTier) * 100, 100)
-
-  const firstName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'there'
-  const initials = (profile?.full_name || '?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)
-  const h = new Date().getHours()
-  const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
+  const goTab = (t, sub) => { setTab(t); if (sub) setProfileSub(sub); }
+  const openQuickModal = (key) => { setForceModal(key); setQuickMenuOpen(true) }
 
   const NAV = [
-    { key:'today',   icon:'🏠', label:'Today' },
-    { key:'book',    icon:'📅', label:'Book' },
-    { key:'rota',    icon:'📋', label:'My Rota' },
-    { key:'impact',  icon:'⭐', label:'Impact' },
-    { key:'profile', icon:'👤', label:'Profile' },
+    { key: 'today', icon: '🏠', label: 'Today' },
+    { key: 'sessions', icon: '📅', label: 'Sessions' },
+    { key: '__plus', icon: '➕', label: '' },
+    { key: 'messages', icon: '💬', label: 'Messages' },
+    { key: 'profile', icon: '👤', label: 'Profile' },
   ]
 
   return (
-    <div style={{ height:'100%', background:'#F5F5F5', display:'flex', flexDirection:'column', fontFamily:'Inter,sans-serif', paddingTop:'env(safe-area-inset-top)', overflow:'hidden' }}>
-
-      {/* ── HEADER ── */}
-      <div style={{ background:'linear-gradient(160deg, #0D1B2A 0%, #14263a 100%)', padding:'12px 18px 0', position:'relative', overflow:'hidden', flexShrink:0 }}>
-        <motion.div
-          animate={{ y:[0,-14,0], x:[0,8,0] }}
-          transition={{ duration:8, repeat:Infinity, ease:'easeInOut' }}
-          style={{ position:'absolute', top:-40, right:-40, width:160, height:160, borderRadius:'50%', background:primary+'20', filter:'blur(2px)' }}
-        />
-        <motion.div
-          animate={{ y:[0,10,0], x:[0,-6,0] }}
-          transition={{ duration:10, repeat:Infinity, ease:'easeInOut' }}
-          style={{ position:'absolute', bottom:20, left:-20, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.05)' }}
-        />
-        <div style={{ position:'relative', zIndex:1 }}>
-          {/* Top bar */}
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
-            {org?.logo_url && !imgFailed
-              ? <div style={{ display:'inline-flex', alignItems:'center', background:'#fff', borderRadius:8, padding:'4px 9px' }}>
-                  <img src={org.logo_url} alt={org.name} style={{ height:18, maxWidth:100, objectFit:'contain', display:'block' }} onError={()=>setImgFailed(true)} />
-                </div>
-              : <span style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:1 }}>{org?.name}</span>
-            }
-            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <motion.div whileTap={{ scale:0.92 }} onClick={()=>setTab('profile')} style={{ width:36, height:36, borderRadius:'50%', background:profile?.photo_url?'transparent':primary, border:'2px solid rgba(255,255,255,0.2)', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0 }}>
-                {profile?.photo_url ? <img src={profile.photo_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:12, fontWeight:900, color:'#fff' }}>{initials}</span>}
-              </motion.div>
-              <motion.button whileTap={{ scale:0.95 }} onClick={onSignOut} style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.45)', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, padding:'5px 12px', cursor:'pointer' }}>Sign out</motion.button>
-            </div>
-          </div>
-          {/* Greeting */}
-          <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.3 }} style={{ marginBottom:6 }}>
-            <div style={{ fontSize:22, fontWeight:900, color:'#fff', lineHeight:1.1, marginBottom:6 }}>{greeting}, {firstName}! 👋</div>
-            <div style={{ fontSize:12, color:primary, fontWeight:700, marginBottom:12 }}>Welcome to {org?.name}</div>
-          </motion.div>
-          {/* Stats strip */}
-          <div style={{ display:'flex', gap:0, margin:'0 -18px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
-            {[
-              { val: todaySessions.length, label:'Today', color:'#F5D000' },
-              { val: upcomingRota.length, label:'Booked', color:'#fff' },
-              { val: totalHours.toFixed(1), label:'Hours', color:primary },
-            ].map((stat,i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity:0, y:8 }}
-                animate={{ opacity:1, y:0 }}
-                transition={{ duration:0.3, delay:i*0.05 }}
-                style={{ flex:1, padding:'12px 0', textAlign:'center', borderRight: i<2?'1px solid rgba(255,255,255,0.07)':'none' }}
-              >
-                <div style={{ fontSize:18, fontWeight:900, color:stat.color, lineHeight:1 }}>{stat.val}</div>
-                <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:0.5, marginTop:4 }}>{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── CONTENT ── */}
-      <div style={{ flex:1, minHeight:0, overflowY:'auto', WebkitOverflowScrolling:'touch', padding:'16px 16px 110px' }}>
-      <AnimatePresence mode="wait">
-      <motion.div key={tab} initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }} transition={{ duration:0.2, ease:'easeOut' }}>
-
-        {/* TODAY TAB */}
+    <div style={{ height: '100%', background: '#F5F5F5', display: 'flex', flexDirection: 'column', fontFamily: 'Inter,sans-serif', paddingTop: 'env(safe-area-inset-top)', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {tab === 'today' && (
-          <div>
-            {/* Safeguarding */}
-            <div style={{ background:'#FFF5F5', borderRadius:14, border:'1.5px solid #FFB3B3', padding:'12px 14px', marginBottom:16, display:'flex', alignItems:'center', gap:12 }}>
-              <div style={{ width:38, height:38, borderRadius:10, background:'#FEE2E2', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:18 }}>🛡️</div>
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:13, fontWeight:800, color:'#C00', marginBottom:1 }}>Safeguarding</div>
-                <div style={{ fontSize:11, color:'#C00', fontWeight:600, opacity:0.8 }}>Report any concerns to the DSL immediately.</div>
-              </div>
-              <motion.button whileTap={{ scale:0.95 }} onClick={()=>setShowCFC(true)} style={{ background:'#C00', color:'#fff', border:'none', borderRadius:9, padding:'7px 12px', fontSize:11, fontWeight:800, cursor:'pointer', whiteSpace:'nowrap' }}>Raise Concern</motion.button>
-            </div>
-
-            {/* Upcoming from rota */}
-            {upcomingRota.slice(0,3).length > 0 && (
-              <div style={{ marginBottom:20 }}>
-                <div style={{ fontSize:12, fontWeight:800, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.8, marginBottom:10 }}>Coming Up</div>
-                {upcomingRota.slice(0,3).map(r => {
-                  const isToday = r.session?.session_date === today
-                  return (
-                    <div key={r.id} style={{ background: isToday?`linear-gradient(135deg,${primary},#0F6E56)`:'#fff', borderRadius:14, border: isToday?'none':'1.5px solid #E5E7EB', padding:'13px 14px', marginBottom:8, display:'flex', alignItems:'center', gap:12 }}>
-                      <div style={{ width:40, height:40, borderRadius:11, background: isToday?'rgba(255,255,255,0.2)':primary+'18', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:18 }}>📅</div>
-                      <div style={{ flex:1 }}>
-                        <div style={{ fontSize:14, fontWeight:800, color: isToday?'#fff':'#111', marginBottom:2 }}>{r.session?.title}</div>
-                        <div style={{ fontSize:11, fontWeight:600, color: isToday?'rgba(255,255,255,0.7)':'#6B7280' }}>
-                          {isToday?'Today':fmt(r.session?.session_date)}{r.session?.start_time?` · ${r.session.start_time}`:''}
-                        </div>
-                      </div>
-                      {isToday && <span style={{ background:'rgba(255,255,255,0.2)', color:'#fff', borderRadius:99, padding:'3px 10px', fontSize:11, fontWeight:800 }}>Today!</span>}
-                      {!isToday && <span style={{ background: r.status==='confirmed'?'#DCFCE7':'#FEF9C3', color: r.status==='confirmed'?'#16A34A':'#92400E', borderRadius:99, padding:'3px 10px', fontSize:10, fontWeight:800 }}>{r.status==='confirmed'?'Confirmed':'Pending'}</span>}
-                    </div>
-                  )
-                })}
-                {upcomingRota.length > 3 && <button onClick={()=>setTab('rota')} style={{ width:'100%', padding:8, borderRadius:10, border:`1.5px solid ${primary}40`, background:primary+'10', fontSize:12, fontWeight:700, color:primary, cursor:'pointer' }}>View all {upcomingRota.length} sessions →</button>}
-              </div>
-            )}
-
-            {/* Impact stats */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:16 }}>
-              {[
-                { val:totalHours.toFixed(1), label:'Hours given', color:'#F5D000', bg:'#0D1B2A' },
-                { val:completedSessions, label:'Sessions done', color:'#fff', bg:primary },
-                { val:Math.round(totalHours*2), label:'Young people', color:'#F5D000', bg:'#2D1B69' },
-                { val:tier, label:'My tier', color:tierColor, bg:'#1A3A1A' },
-              ].map(s => (
-                <div key={s.label} style={{ background:s.bg, borderRadius:14, padding:'12px 14px' }}>
-                  <div style={{ fontSize:22, fontWeight:900, color:s.color, lineHeight:1, marginBottom:3 }}>{s.val}</div>
-                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.55)', fontWeight:700, textTransform:'uppercase', letterSpacing:0.4 }}>{s.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Today's sessions */}
-            <div style={{ fontSize:12, fontWeight:800, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.8, marginBottom:10 }}>Today's Sessions</div>
-            {todaySessions.length === 0 ? (
-              <div style={{ background:'#0D1B2A', borderRadius:18, padding:'28px 20px', textAlign:'center' }}>
-                <div style={{ fontSize:32, marginBottom:12 }}>⭐</div>
-                <div style={{ fontSize:16, fontWeight:900, color:'#fff', marginBottom:6 }}>Rest day!</div>
-                <div style={{ fontSize:12, color:'rgba(255,255,255,0.55)', fontWeight:600, marginBottom:16 }}>No sessions today — enjoy the break.</div>
-                <motion.button whileTap={{ scale:0.97 }} onClick={()=>setTab('book')} style={{ padding:'10px 20px', borderRadius:10, border:'none', background:primary, color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>Browse upcoming sessions →</motion.button>
-              </div>
-            ) : todaySessions.map(s => (
-              <div key={s.id} style={{ background:'#fff', borderRadius:16, border:'1.5px solid #E5E7EB', padding:'14px', marginBottom:10, position:'relative', overflow:'hidden' }}>
-                <div style={{ position:'absolute', top:0, left:0, width:4, height:'100%', background:primary, borderRadius:'4px 0 0 4px' }} />
-                <div style={{ paddingLeft:8 }}>
-                  <div style={{ fontSize:15, fontWeight:900, color:'#111', marginBottom:4 }}>{s.title}</div>
-                  <div style={{ fontSize:12, color:'#6B7280', fontWeight:600 }}>{s.start_time}{s.end_time?` – ${s.end_time}`:''}{s.location?` · ${s.location.split(',')[0]}`:''}</div>
-                  <div style={{ marginTop:8, display:'flex', gap:6 }}>
-                    <span style={{ fontSize:11, fontWeight:700, background:primary+'18', color:primary, borderRadius:99, padding:'3px 10px' }}>❤️ {volunteerCounts[s.id]||0} volunteers</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <VPToday
+            org={org} user={user} profile={profile} sessions={sessions} todaySessions={todaySessions} futureSessions={futureSessions}
+            attendance={attendance} announcements={announcements} volunteerCounts={volunteerCounts} primary={primary}
+            onOpenSession={setViewingSession} onNavigate={goTab} onRaiseConcern={() => openQuickModal('concern')}
+            onOpenRegister={setViewingSession}
+          />
         )}
-
-        {/* BOOK TAB */}
-        {tab === 'book' && (
-          <div>
-            <div style={{ fontSize:20, fontWeight:900, color:'#111', marginBottom:4 }}>Find Your Next Session</div>
-            <div style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>Join a session and help make a difference</div>
-
-            {/* Confirmed bookings */}
-            {upcomingRota.filter(r=>r.status==='confirmed').length > 0 && (
-              <div style={{ marginBottom:20 }}>
-                <div style={{ fontSize:12, fontWeight:800, color:'#16A34A', textTransform:'uppercase', letterSpacing:0.8, marginBottom:10 }}>✅ My Confirmed Sessions</div>
-                {upcomingRota.filter(r=>r.status==='confirmed').map(r => (
-                  <div key={r.id} style={{ background:'linear-gradient(135deg,#DCFCE7,#D1FAE5)', borderRadius:14, border:'2px solid #16A34A', padding:'13px 14px', marginBottom:8, display:'flex', alignItems:'center', gap:12 }}>
-                    <div style={{ width:40, height:40, borderRadius:11, background:'#16A34A', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>✅</div>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:14, fontWeight:800, color:'#111', marginBottom:2 }}>{r.session?.title}</div>
-                      <div style={{ fontSize:11, color:'#6B7280', fontWeight:600 }}>{fmt(r.session?.session_date)}{r.session?.start_time?` · ${r.session.start_time}`:''}</div>
-                    </div>
-                    <span style={{ background:'#DCFCE7', color:'#16A34A', borderRadius:99, padding:'4px 10px', fontSize:11, fontWeight:800 }}>Confirmed</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Pending bookings */}
-            {upcomingRota.filter(r=>r.status==='pending').length > 0 && (
-              <div style={{ marginBottom:20 }}>
-                <div style={{ fontSize:12, fontWeight:800, color:'#92400E', textTransform:'uppercase', letterSpacing:0.8, marginBottom:10 }}>⏳ Awaiting Confirmation</div>
-                {upcomingRota.filter(r=>r.status==='pending').map(r => (
-                  <div key={r.id} style={{ background:'#FEF9C3', borderRadius:14, border:'1.5px solid #FDE68A', padding:'13px 14px', marginBottom:8, display:'flex', alignItems:'center', gap:12 }}>
-                    <div style={{ width:40, height:40, borderRadius:11, background:'#F59E0B', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>⏳</div>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:14, fontWeight:800, color:'#111', marginBottom:2 }}>{r.session?.title}</div>
-                      <div style={{ fontSize:11, color:'#6B7280', fontWeight:600 }}>{fmt(r.session?.session_date)}</div>
-                    </div>
-                    <span style={{ background:'#FEF9C3', color:'#92400E', borderRadius:99, padding:'4px 10px', fontSize:11, fontWeight:800, border:'1.5px solid #FDE68A' }}>Pending</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Available sessions */}
-            <div style={{ fontSize:12, fontWeight:800, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.8, marginBottom:12 }}>
-              Available Sessions ({[...todaySessions,...futureSessions].filter(s=>!myBookings[s.id]).length})
-            </div>
-            {[...todaySessions,...futureSessions].filter(s=>!myBookings[s.id]).length === 0 ? (
-              <div style={{ background:'#0D1B2A', borderRadius:18, padding:'28px 20px', textAlign:'center' }}>
-                <div style={{ fontSize:32, marginBottom:12 }}>🎉</div>
-                <div style={{ fontSize:15, fontWeight:900, color:'#fff', marginBottom:6 }}>You're booked in for everything!</div>
-                <div style={{ fontSize:12, color:'rgba(255,255,255,0.55)', fontWeight:600 }}>Check back soon for new sessions.</div>
-              </div>
-            ) : [...todaySessions,...futureSessions].filter(s=>!myBookings[s.id]).map((s, idx) => {
-              const isSaving = saving === s.id
-              const count = volunteerCounts[s.id]||0
-              const isFeatured = idx === 0
-              return (
-                <div key={s.id} style={{ background: isFeatured?'#0D1B2A':'#fff', borderRadius:18, border: isFeatured?'none':'1.5px solid #E5E7EB', padding:'16px', marginBottom:12, position:'relative', overflow:'hidden' }}>
-                  {isFeatured && <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,${primary},#6366F1)` }} />}
-                  <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:12 }}>
-                    <div style={{ width:48, height:48, borderRadius:14, background:primary+'22', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:22 }}>📅</div>
-                    <div style={{ flex:1 }}>
-                      {isFeatured && <div style={{ fontSize:10, fontWeight:800, color:'#F5D000', textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>Next Session</div>}
-                      <div style={{ fontSize:16, fontWeight:900, color: isFeatured?'#fff':'#111', marginBottom:5, lineHeight:1.2 }}>{s.title}</div>
-                      <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-                        <div style={{ fontSize:12, fontWeight:600, color: isFeatured?'rgba(255,255,255,0.65)':'#6B7280', display:'flex', alignItems:'center', gap:5 }}>📅 {fmt(s.session_date)}</div>
-                        {s.start_time && <div style={{ fontSize:12, fontWeight:600, color: isFeatured?'rgba(255,255,255,0.65)':'#6B7280', display:'flex', alignItems:'center', gap:5 }}>🕐 {s.start_time}{s.end_time?` – ${s.end_time}`:''}</div>}
-                        {s.location && <div style={{ fontSize:12, fontWeight:600, color: isFeatured?'rgba(255,255,255,0.65)':'#6B7280', display:'flex', alignItems:'center', gap:5 }}>📍 {s.location.split(',')[0]}</div>}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display:'flex', gap:6, marginBottom:12, flexWrap:'wrap' }}>
-                    <span style={{ fontSize:11, fontWeight:700, background: isFeatured?'rgba(255,255,255,0.1)':primary+'15', color: isFeatured?'rgba(255,255,255,0.7)':primary, borderRadius:99, padding:'4px 10px' }}>❤️ {count} volunteer{count!==1?'s':''}</span>
-                  </div>
-                  <motion.button whileTap={{ scale:0.96 }} onClick={()=>handleBook(s)} disabled={isSaving} style={{ width:'100%', padding:12, borderRadius:12, border:'none', background: isFeatured?primary:`linear-gradient(135deg,${primary},#6366F1)`, color: isFeatured&&primary==='#F5D000'?'#0D1B2A':'#fff', fontSize:14, fontWeight:900, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-                    {isSaving?'...':<>❤️ Join Session</>}
-                  </motion.button>
-                </div>
-              )
-            })}
-          </div>
+        {tab === 'sessions' && (
+          <VPSessions sessions={sessions} myBookings={myBookings} todayStr={today} onOpenSession={setViewingSession} onBook={handleBook} saving={saving} primary={primary} />
         )}
-
-        {/* ROTA TAB */}
-        {tab === 'rota' && (
-          <div>
-            <div style={{ fontSize:20, fontWeight:900, color:'#111', marginBottom:4 }}>My Sessions</div>
-            <div style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>Your upcoming and past volunteer sessions</div>
-
-            {/* Stats */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:20 }}>
-              {[
-                { val:upcomingRota.length, label:'Upcoming', bg:'#0D1B2A', color:'#F5D000' },
-                { val:pastRota.length, label:'Completed', bg:primary, color:'#fff' },
-              ].map(s => (
-                <div key={s.label} style={{ background:s.bg, borderRadius:14, padding:'14px' }}>
-                  <div style={{ fontSize:28, fontWeight:900, color:s.color, lineHeight:1, marginBottom:4 }}>{s.val}</div>
-                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.55)', fontWeight:700, textTransform:'uppercase', letterSpacing:0.5 }}>{s.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {upcomingRota.length === 0 && pastRota.length === 0 ? (
-              <div style={{ background:'#0D1B2A', borderRadius:18, padding:'36px 20px', textAlign:'center' }}>
-                <div style={{ fontSize:40, marginBottom:12 }}>🗓️</div>
-                <div style={{ fontSize:16, fontWeight:900, color:'#fff', marginBottom:8 }}>No sessions yet</div>
-                <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginBottom:20 }}>Book a session to get started</div>
-                <motion.button whileTap={{ scale:0.97 }} onClick={()=>setTab('book')} style={{ padding:'11px 22px', borderRadius:10, border:'none', background:primary, color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>Browse Sessions →</motion.button>
-              </div>
-            ) : (
-              <>
-                {upcomingRota.length > 0 && (
-                  <div style={{ marginBottom:24 }}>
-                    <div style={{ fontSize:12, fontWeight:800, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.8, marginBottom:12 }}>Upcoming</div>
-                    {upcomingRota.map(r => (
-                      <div key={r.id} style={{ background:'#fff', borderRadius:14, border:`1.5px solid ${r.status==='confirmed'?'#86EFAC':'#E5E7EB'}`, padding:'14px', marginBottom:10 }}>
-                        <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:8 }}>
-                          <div style={{ flex:1 }}>
-                            <div style={{ fontSize:15, fontWeight:800, color:'#111', marginBottom:3 }}>{r.session?.title}</div>
-                            <div style={{ fontSize:12, color:'#6B7280', fontWeight:600, display:'flex', gap:8, flexWrap:'wrap' }}>
-                              {r.session?.session_date && <span>📅 {fmt(r.session.session_date)}</span>}
-                              {r.session?.start_time && <span>🕐 {r.session.start_time}</span>}
-                              {r.session?.location && <span>📍 {r.session.location.split(',')[0]}</span>}
-                            </div>
-                          </div>
-                          <span style={{ background: r.status==='confirmed'?'#DCFCE7':'#FEF9C3', color: r.status==='confirmed'?'#16A34A':'#92400E', borderRadius:99, padding:'4px 10px', fontSize:11, fontWeight:800, flexShrink:0 }}>{r.status==='confirmed'?'Confirmed':'Pending'}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {pastRota.length > 0 && (
-                  <div>
-                    <div style={{ fontSize:12, fontWeight:800, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.8, marginBottom:12 }}>Past Sessions ({pastRota.length})</div>
-                    {pastRota.slice(0,5).map(r => (
-                      <div key={r.id} style={{ background:'#F9FAFB', borderRadius:12, padding:'12px 14px', marginBottom:8, display:'flex', alignItems:'center', gap:10, opacity:0.75 }}>
-                        <div style={{ width:36, height:36, borderRadius:10, background:'#E5E7EB', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>✅</div>
-                        <div style={{ flex:1 }}>
-                          <div style={{ fontSize:13, fontWeight:700, color:'#111' }}>{r.session?.title}</div>
-                          <div style={{ fontSize:11, color:'#6B7280' }}>{fmt(r.session?.session_date)}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-
-        {/* IMPACT TAB */}
-        {tab === 'impact' && (
-          <div>
-            <div style={{ fontSize:20, fontWeight:900, color:'#111', marginBottom:4 }}>My Impact</div>
-            <div style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>Thank you for making a difference</div>
-
-            {/* Hero impact card */}
-            <div style={{ background:'linear-gradient(135deg,#0D1B2A,#1B2A4A)', borderRadius:20, padding:'20px', marginBottom:16, position:'relative', overflow:'hidden' }}>
-              <div style={{ position:'absolute', top:-20, right:-20, width:100, height:100, borderRadius:'50%', background:primary+'18' }} />
-              <div style={{ fontSize:10, fontWeight:800, color:'#F5D000', textTransform:'uppercase', letterSpacing:1.5, marginBottom:12 }}>❤️ My Impact</div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                {[
-                  { val:Math.round(totalHours*2), label:'Young people helped', emoji:'👦', grad:`linear-gradient(135deg,${primary},#0F6E56)` },
-                  { val:completedSessions, label:'Sessions done', emoji:'🏕️', grad:'linear-gradient(135deg,#7C4DBA,#4A1B9A)' },
-                  { val:totalHours.toFixed(1)+'h', label:'Hours given', emoji:'⏱️', grad:'linear-gradient(135deg,#C9860F,#8B5E0A)' },
-                  { val:upcomingRota.length, label:'Upcoming', emoji:'📅', grad:'linear-gradient(135deg,#1B4FA8,#0D2D6E)' },
-                ].map(s => (
-                  <div key={s.label} style={{ borderRadius:14, overflow:'hidden', position:'relative', height:80, background:s.grad }}>
-                    <div style={{ position:'absolute', top:-10, right:-10, width:50, height:50, borderRadius:'50%', background:'rgba(255,255,255,0.07)' }} />
-                    <div style={{ padding:'12px 14px', height:'100%', boxSizing:'border-box', display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
-                      <div style={{ fontSize:10, fontWeight:800, color:'rgba(255,255,255,0.55)', textTransform:'uppercase', letterSpacing:0.5 }}>{s.emoji} {s.label}</div>
-                      <div style={{ fontSize:24, fontWeight:900, color:'#fff', lineHeight:1 }}>{s.val}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Volunteer journey */}
-            <div style={{ background:'#fff', borderRadius:18, border:'1.5px solid #E5E7EB', padding:'16px', marginBottom:14 }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-                <div style={{ fontSize:14, fontWeight:800, color:'#111' }}>🏆 Volunteer Journey</div>
-                <span style={{ fontSize:12, fontWeight:800, color:tierColor }}>{tier}</span>
-              </div>
-              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:10 }}>
-                {['Green','Silver','Gold','Champion'].map((t,i) => {
-                  const thresholds=[0,25,50,100], colors=['#4ADE80','#C0C0C0','#F0A500','#F5D000']
-                  const isPast = thresholds[i] <= totalHours, isActive = tier === t
-                  return (
-                    <React.Fragment key={t}>
-                      <div style={{ width:28, height:28, borderRadius:'50%', background:isPast?colors[i]:'#F3F4F6', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, border:isActive?`2.5px solid ${colors[i]}`:'none' }}>
-                        <span style={{ fontSize:12 }}>{isPast?'🏅':'○'}</span>
-                      </div>
-                      {i<3 && <div style={{ flex:1, height:3, borderRadius:99, background:totalHours>=thresholds[i+1]?colors[i+1]:'#F3F4F6' }} />}
-                    </React.Fragment>
-                  )
-                })}
-              </div>
-              <div style={{ background:'#F3F4F6', borderRadius:10, padding:'10px 12px' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:'#111' }}>{tier==='Champion'?'Maximum level!':`${(nextTier-totalHours).toFixed(1)}h to ${nextTierName}`}</div>
-                  <div style={{ fontSize:12, color:'#6B7280' }}>{totalHours.toFixed(1)}/{nextTier}h</div>
-                </div>
-                <div style={{ background:'#E5E7EB', borderRadius:99, height:8 }}>
-                  <div style={{ background:`linear-gradient(90deg,${primary},#6366F1)`, width:`${progress}%`, height:'100%', borderRadius:99, transition:'width 0.5s' }} />
-                </div>
-              </div>
-            </div>
-
-            {/* Achievements */}
-            <div style={{ background:'#fff', borderRadius:18, border:'1.5px solid #E5E7EB', padding:'16px' }}>
-              <div style={{ fontSize:14, fontWeight:800, color:'#111', marginBottom:14 }}>🎖️ Achievements</div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                {[
-                  { label:'First Session', icon:'⭐', desc:'Completed first session', unlocked:completedSessions>=1, color:'#F5D000' },
-                  { label:'5 Hours', icon:'⏱️', desc:'Volunteered 5+ hours', unlocked:totalHours>=5, color:primary },
-                  { label:'10 Hours', icon:'❤️', desc:'Volunteered 10+ hours', unlocked:totalHours>=10, color:'#9B59B6' },
-                  { label:'Silver Tier', icon:'🥈', desc:'Reached 25 hours', unlocked:totalHours>=25, color:'#C0C0C0' },
-                  { label:'5 Sessions', icon:'🏕️', desc:'5 sessions done', unlocked:completedSessions>=5, color:'#16A34A' },
-                  { label:'Gold Tier', icon:'🥇', desc:'Reached 50 hours', unlocked:totalHours>=50, color:'#F0A500' },
-                ].map(a => (
-                  <div key={a.label} style={{ background:a.unlocked?a.color+'15':'#F9FAFB', borderRadius:12, padding:'12px 10px', border:`1.5px solid ${a.unlocked?a.color+'40':'#E5E7EB'}`, opacity:a.unlocked?1:0.6 }}>
-                    <div style={{ fontSize:28, marginBottom:8 }}>{a.unlocked?a.icon:'🔒'}</div>
-                    <div style={{ fontSize:12, fontWeight:800, color:a.unlocked?'#111':'#6B7280', marginBottom:2 }}>{a.label}</div>
-                    <div style={{ fontSize:10, color:'#6B7280', fontWeight:600, lineHeight:1.3 }}>{a.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* PROFILE TAB */}
+        {tab === 'messages' && <VPMessages org={org} user={user} primary={primary} />}
         {tab === 'profile' && (
-          <div>
-            {/* Hero card */}
-            <div style={{ background:'linear-gradient(135deg,#0D1B2A,#1B2A4A)', borderRadius:20, padding:'20px', marginBottom:16, position:'relative', overflow:'hidden' }}>
-              <div style={{ position:'absolute', top:-30, right:-30, width:120, height:120, borderRadius:'50%', background:primary+'18' }} />
-              <div style={{ display:'flex', alignItems:'center', gap:14, position:'relative', zIndex:1 }}>
-                <div style={{ width:64, height:64, borderRadius:18, background:profile?.photo_url?'transparent':primary, border:'3px solid rgba(255,255,255,0.15)', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                  {profile?.photo_url ? <img src={profile.photo_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:22, fontWeight:900, color:'#fff' }}>{initials}</span>}
-                </div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:20, fontWeight:900, color:'#fff', lineHeight:1.1, marginBottom:4 }}>{profile?.full_name || 'Volunteer'}</div>
-                  <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)', marginBottom:8 }}>{profile?.email}</div>
-                  <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                    {profile?.availability?.days?.slice(0,3).map(d => (
-                      <span key={d} style={{ background:'rgba(255,255,255,0.1)', borderRadius:99, padding:'3px 10px', fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.7)' }}>{d.slice(0,3)}</span>
-                    ))}
-                    <span style={{ background:tierColor+'25', borderRadius:99, padding:'3px 10px', fontSize:10, fontWeight:800, color:tierColor }}>{tier}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Info cards */}
-            {[
-              { title:'Contact', items:[{ label:'Phone', val:profile?.phone }, { label:'Email', val:profile?.email }] },
-              { title:'Emergency Contact', items:[{ label:'Name', val:profile?.emergency_contact_name }, { label:'Phone', val:profile?.emergency_contact_phone }, { label:'Relationship', val:profile?.emergency_contact_relationship }] },
-              { title:'Availability', items:[{ label:'Days', val:profile?.availability?.days?.join(', ')||'Not set' }, { label:'Times', val:profile?.availability?.times?.join(', ')||'Not set' }] },
-            ].map(section => (
-              <div key={section.title} style={{ background:'#fff', borderRadius:16, border:'1.5px solid #E5E7EB', padding:'14px 16px', marginBottom:12 }}>
-                <div style={{ fontSize:13, fontWeight:800, color:'#111', marginBottom:10 }}>{section.title}</div>
-                {section.items.filter(i=>i.val).map(item => (
-                  <div key={item.label} style={{ display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:'1px solid #F3F4F6' }}>
-                    <span style={{ fontSize:12, color:'#6B7280', fontWeight:600 }}>{item.label}</span>
-                    <span style={{ fontSize:12, color:'#111', fontWeight:700 }}>{item.val}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-
-            {/* Interests */}
-            {profile?.interests?.length > 0 && (
-              <div style={{ background:'#fff', borderRadius:16, border:'1.5px solid #E5E7EB', padding:'14px 16px', marginBottom:12 }}>
-                <div style={{ fontSize:13, fontWeight:800, color:'#111', marginBottom:10 }}>Interests</div>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-                  {profile.interests.map(i => (
-                    <span key={i} style={{ background:primary+'15', color:primary, borderRadius:99, padding:'5px 12px', fontSize:12, fontWeight:700 }}>{i}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <motion.button whileTap={{ scale:0.98 }} onClick={onSignOut} style={{ width:'100%', padding:14, borderRadius:14, border:'1.5px solid #E5E7EB', background:'#fff', fontSize:14, fontWeight:700, color:'#6B7280', cursor:'pointer', marginTop:8 }}>Sign Out</motion.button>
-          </div>
+          <VPProfile org={org} user={user} profile={profile} attendance={attendance} primary={primary} initialSub={profileSub}
+            onSignOut={onSignOut} onProfileUpdated={setProfile} />
         )}
-      </motion.div>
-      </AnimatePresence>
       </div>
 
-      {/* ── BOTTOM NAV (floating glass pill) ── */}
-      <div style={{ position:'fixed', bottom:14, left:14, right:14, zIndex:100, display:'flex', justifyContent:'center', paddingBottom:'env(safe-area-inset-bottom,0px)' }}>
-        <div style={{ display:'flex', gap:2, background:'rgba(13,27,42,0.92)', backdropFilter:'blur(20px)', borderRadius:22, padding:5, boxShadow:'0 16px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.06)', maxWidth:440, width:'100%' }}>
-          {NAV.map(t => (
-            <button key={t.key} onClick={()=>setTab(t.key)} style={{ position:'relative', flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'9px 4px', background:'none', border:'none', cursor:'pointer' }}>
-              {tab === t.key && (
-                <motion.div
-                  layoutId="volunteerNavPill"
-                  transition={{ type:'spring', stiffness:420, damping:32 }}
-                  style={{ position:'absolute', inset:0, background:primary, borderRadius:16 }}
-                />
-              )}
-              <span style={{ position:'relative', zIndex:1, fontSize:18 }}>{t.icon}</span>
-              <span style={{ position:'relative', zIndex:1, fontSize:9, fontWeight:800, color: tab===t.key?'#fff':'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:0.3 }}>{t.label}</span>
-            </button>
-          ))}
+      {/* FLOATING BOTTOM NAV */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, display: 'flex', justifyContent: 'center', padding: '0 14px 14px', pointerEvents: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, background: 'rgba(20,26,38,0.94)', backdropFilter: 'blur(20px)', borderRadius: 26, padding: '8px 8px', boxShadow: '0 16px 40px rgba(0,0,0,0.3)', pointerEvents: 'auto', maxWidth: 420, width: '100%' }}>
+          {NAV.map(t => {
+            if (t.key === '__plus') {
+              return (
+                <button key="plus" onClick={() => { setForceModal(null); setQuickMenuOpen(true) }}
+                  style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontSize: 22, cursor: 'pointer', marginTop: -20, boxShadow: `0 8px 20px ${primary}66`, flexShrink: 0 }}>+</button>
+              )
+            }
+            const active = tab === t.key
+            return (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '9px 4px', border: 'none', background: 'none', cursor: 'pointer' }}>
+                {active && <motion.div layoutId="vpNavPill" style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.1)', borderRadius: 16 }} />}
+                <span style={{ position: 'relative', fontSize: 18 }}>{t.icon}</span>
+                <span style={{ position: 'relative', fontSize: 9, fontWeight: 800, color: active ? '#fff' : 'rgba(255,255,255,0.45)' }}>{t.label}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      {/* CFC Modal */}
       <AnimatePresence>
-      {showCFC && (
-        <motion.div
-          initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', alignItems:'flex-end' }}
-        >
-          <motion.div
-            initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }}
-            transition={{ type:'spring', stiffness:300, damping:32 }}
-            style={{ background:'#fff', borderRadius:'20px 20px 0 0', width:'100%', maxHeight:'90vh', overflowY:'auto', padding:'20px' }}
-          >
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
-              <div style={{ fontSize:16, fontWeight:900, color:'#111' }}>🛡️ Raise a Concern</div>
-              <motion.button whileTap={{ scale:0.9 }} onClick={()=>setShowCFC(false)} style={{ background:'none', border:'none', fontSize:22, cursor:'pointer', color:'#6B7280' }}>✕</motion.button>
-            </div>
-            <p style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>Please complete this form and your DSL will be notified immediately.</p>
-            <textarea rows={5} placeholder="Describe the concern in detail..." style={{ width:'100%', padding:'12px 14px', borderRadius:12, border:'1.5px solid #E5E7EB', fontSize:14, outline:'none', boxSizing:'border-box', resize:'none', marginBottom:12 }} />
-            <motion.button whileTap={{ scale:0.98 }} style={{ width:'100%', padding:13, borderRadius:12, border:'none', background:'#C00', color:'#fff', fontSize:14, fontWeight:800, cursor:'pointer' }}>Submit Concern</motion.button>
-          </motion.div>
-        </motion.div>
-      )}
+        {viewingSession && (
+          <VPSessionDetail session={viewingSession} org={org} user={user} primary={primary} onClose={() => setViewingSession(null)} onNavigateTab={goTab} />
+        )}
       </AnimatePresence>
+
+      <VPQuickActionMenu
+        open={quickMenuOpen} onClose={() => { setQuickMenuOpen(false); setForceModal(null) }} forceModal={forceModal}
+        org={org} user={user} todaySession={todaySessions[0]} onNavigate={goTab}
+        onGoRegister={() => setViewingSession(todaySessions[0])} onGoMessage={() => setTab('messages')}
+      />
     </div>
   )
 }
