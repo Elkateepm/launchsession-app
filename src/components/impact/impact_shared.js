@@ -213,6 +213,23 @@ export function DismissibleTip({ id, children }) {
 }
 
 // ---------------------------------------------------------------------------
+// ACHIEVEMENTS — rule-based badges evaluated from live data (no server calc)
+// ---------------------------------------------------------------------------
+export const ACHIEVEMENTS = [
+  { key: 'first_goal', icon: '⭐', label: 'First Goal Achieved', check: ({ goals }) => goals.some(g => g.status === 'completed') },
+  { key: 'confidence_champion', icon: '🏆', label: 'Confidence Champion', check: ({ scores }) => { const c = scores.filter(s => s.area === 'confidence'); return c.length >= 3 && c.slice(0, 3).every(s => s.score >= 8) } },
+  { key: 'wellbeing_improved', icon: '🌱', label: 'Wellbeing Improved', check: ({ scores }) => { const w = scores.filter(s => s.area === 'wellbeing').sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at)); return w.length >= 2 && w[w.length - 1].score - w[0].score >= 2 } },
+  { key: 'education_milestone', icon: '🎓', label: 'Education Milestone', check: ({ scores }) => scores.some(s => s.area === 'education' && s.score >= 9) },
+  { key: 'perfect_attendance', icon: '🔥', label: 'Perfect Attendance', check: ({ attendance }) => attendance.length >= 5 && attendance.slice(0, 5).every(a => a.status === 'present') },
+  { key: 'well_rounded', icon: '🌟', label: 'Well Rounded', check: ({ scores }) => new Set(scores.map(s => s.area)).size >= 6 },
+  { key: 'consistent_tracker', icon: '📈', label: 'Consistently Tracked', check: ({ scores }) => scores.length >= 10 },
+]
+
+export function evaluateAchievements({ scores = [], goals = [], attendance = [] }) {
+  return ACHIEVEMENTS.filter(a => { try { return a.check({ scores, goals, attendance }) } catch { return false } })
+}
+
+// ---------------------------------------------------------------------------
 // KpiCard — premium analytics card with sparkline + trend + quick action
 // ---------------------------------------------------------------------------
 export function KpiCard({ icon, label, value, decimals = 0, suffix = '', color = '#111827', spark, delta, onClick, index = 0 }) {
