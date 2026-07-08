@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '../../lib/supabase'
-import { activityTheme, tierFor, computeAchievements, glassCard, CountUp, timeAgo } from './vp_shared'
+import { motion } from 'framer-motion'
+import { activityTheme, tierFor, computeAchievements, glassCard, timeAgo } from './vp_shared'
 
 function useCountdown(target) {
   const [now, setNow] = useState(Date.now())
@@ -15,14 +14,13 @@ function useCountdown(target) {
   return { h, m, s, total: diff }
 }
 
-export default function VPToday({ org, user, profile, sessions, todaySessions, futureSessions, attendance, announcements, volunteerCounts, primary, onOpenSession, onNavigate, onRaiseConcern, onOpenRegister }) {
+export default function VPToday({ org, profile, todaySessions, futureSessions, attendance, announcements, primary, onOpenSession, onNavigate, onRaiseConcern, onOpenRegister }) {
   const firstName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'there'
   const h = new Date().getHours()
   const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
 
   const totalHours = attendance.reduce((s, a) => s + (a.hours_logged || 0), 0)
   const sessionsCompleted = attendance.filter(a => a.status === 'completed' || a.signed_out_at).length
-  const youngPeopleSupported = todaySessions.reduce((s, sess) => s + (volunteerCounts[sess.id] ? 0 : 0), 0) // placeholder; real per-child count not tracked per volunteer
   const tier = tierFor(totalHours)
 
   // Streak: count consecutive weeks (Mon-Sun) with at least one attendance record
