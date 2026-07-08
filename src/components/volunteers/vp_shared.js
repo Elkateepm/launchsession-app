@@ -1,6 +1,5 @@
 // Shared building blocks for the redesigned Volunteer Portal.
 import React from 'react'
-import { motion } from 'framer-motion'
 
 // Every activity type gets its own colour theme + icon so session cards feel unique at a glance.
 export const ACTIVITY_THEMES = {
