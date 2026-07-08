@@ -325,11 +325,12 @@ export default function ImpactOutcomes({ org }) {
           ) : (
             <>
               {/* KPI Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 12, marginBottom: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(5,1fr)', gap: 12, marginBottom: 20 }}>
                 <KpiCard index={0} icon="👥" label="Young People" value={children.length} color={primary} />
                 <KpiCard index={1} icon="📊" label="Being Tracked" value={trackedCount} color="#2563EB" spark={monthlySpark} />
-                <KpiCard index={2} icon="⭐" label="Average Score" value={avgOverall || 0} decimals={1} suffix="/10" color={avgOverall ? scoreColor(avgOverall) : '#9CA3AF'} delta={improvementDelta} spark={monthlySpark} />
-                <KpiCard index={3} icon="🧭" label="Needs Support" value={needingSupport} color={needingSupport > 0 ? '#DC2626' : '#16A34A'} onClick={() => setAreaFilter('needs_support')} />
+                <KpiCard index={2} icon="📝" label="Outcome Readings" value={totalReadings} color="#8B5CF6" />
+                <KpiCard index={3} icon="⭐" label="Average Score" value={avgOverall || 0} decimals={1} suffix="/10" color={avgOverall ? scoreColor(avgOverall) : '#9CA3AF'} delta={improvementDelta} spark={monthlySpark} />
+                <KpiCard index={4} icon="🧭" label="Needs Support" value={needingSupport} color={needingSupport > 0 ? '#DC2626' : '#16A34A'} onClick={() => setAreaFilter('needs_support')} />
               </div>
 
               {/* Org Health hero + timeline */}
