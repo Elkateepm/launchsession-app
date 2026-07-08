@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format, formatDistanceToNow } from 'date-fns'
 import { supabase } from '../../lib/supabase'
-import { OUTCOME_AREAS, areaByKey, scoreColor, scoreEmoji, scoreLabel, ProgressRing, ScoreBar, EmptyState } from './impact_shared'
+import { OUTCOME_AREAS, areaByKey, scoreColor, scoreEmoji, scoreLabel, ProgressRing, ScoreBar, EmptyState, evaluateAchievements, ACHIEVEMENTS } from './impact_shared'
 
 const TABS = [
   { key: 'overview', label: 'Overview', icon: '📊' },
@@ -245,7 +245,39 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
           )}
 
           {tab === 'achievements' && (
-            <EmptyState icon="🏆" title="Coming soon" subtitle="Automatic achievement badges (Confidence Champion, Perfect Attendance, and more) are landing in the next update." primary={primary} />
+            (() => {
+              const unlocked = evaluateAchievements({ scores: childScores, goals, attendance })
+              const locked = ACHIEVEMENTS.filter(a => !unlocked.some(u => u.key === a.key))
+              if (unlocked.length === 0) {
+                return <EmptyState icon="🏆" title="No badges unlocked yet" subtitle="Achievements unlock automatically as outcomes and goals are recorded." primary={primary} />
+              }
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 18 }}>
+                    {unlocked.map((a, i) => (
+                      <motion.div key={a.key} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06, type: 'spring', stiffness: 200 }}
+                        style={{ background: `linear-gradient(135deg, ${primary}18, #fff)`, border: `1.5px solid ${primary}40`, borderRadius: 14, padding: '14px 12px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 28 }}>{a.icon}</div>
+                        <div style={{ fontSize: 11.5, fontWeight: 800, marginTop: 6 }}>{a.label}</div>
+                      </motion.div>
+                    ))}
+                  </div>
+                  {locked.length > 0 && (
+                    <>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: '#9CA3AF', marginBottom: 10 }}>LOCKED</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                        {locked.map(a => (
+                          <div key={a.key} style={{ background: '#F9FAFB', border: '1.5px dashed #E5E7EB', borderRadius: 14, padding: '14px 12px', textAlign: 'center', opacity: 0.6 }}>
+                            <div style={{ fontSize: 28, filter: 'grayscale(1)' }}>{a.icon}</div>
+                            <div style={{ fontSize: 11.5, fontWeight: 800, marginTop: 6 }}>{a.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )
+            })()
           )}
         </div>
       </motion.div>
