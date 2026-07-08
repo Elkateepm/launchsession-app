@@ -585,7 +585,8 @@ function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
   ]
 
   return (
-    <div style={{ height: '100%', background: '#F5F5F5', display: 'flex', flexDirection: 'column', fontFamily: 'Inter,sans-serif', paddingTop: 'env(safe-area-inset-top)', overflow: 'hidden', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', background: '#E7E9EE', display: 'flex', justifyContent: 'center' }}>
+    <div style={{ width: '100%', maxWidth: 480, minHeight: '100vh', background: '#F5F5F5', display: 'flex', flexDirection: 'column', fontFamily: 'Inter,sans-serif', paddingTop: 'env(safe-area-inset-top)', overflow: 'hidden', position: 'relative', boxShadow: '0 0 70px rgba(15,23,42,0.10)' }}>
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {tab === 'today' && (
           <VPToday
@@ -639,6 +640,7 @@ function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
         org={org} user={user} todaySession={todaySessions[0]} onNavigate={goTab}
         onGoRegister={() => setViewingSession(todaySessions[0])} onGoMessage={() => setTab('messages')}
       />
+    </div>
     </div>
   )
 }
