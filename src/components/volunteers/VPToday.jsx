@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { activityTheme, tierFor, computeAchievements, glassCard, timeAgo } from './vp_shared'
 
 function useCountdown(target) {
@@ -58,6 +58,18 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
   }
   if (announcements.some(a => a.pinned)) checklist.push({ key: 'announce', label: 'Read the pinned announcement', done: false })
   const [checked, setChecked] = useState({})
+
+  // Today's overview — computed from real session data (capacity, scheduled duration)
+  const todayExpected = todaySessions.reduce((sum, s) => sum + (s.max_capacity || 0), 0)
+  const todayHours = todaySessions.reduce((sum, s) => {
+    if (!s.start_time || !s.end_time) return sum
+    const [sh, sm] = s.start_time.split(':').map(Number)
+    const [eh, em] = s.end_time.split(':').map(Number)
+    const mins = (eh * 60 + em) - (sh * 60 + sm)
+    return sum + (mins > 0 ? mins / 60 : 0)
+  }, 0)
+
+  const [viewingBadge, setViewingBadge] = useState(null)
 
   return (
     <div style={{ padding: '0 0 100px' }}>
@@ -155,6 +167,22 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
           <div style={{ background: '#DC2626', color: '#fff', borderRadius: 10, padding: '7px 12px', fontSize: 11.5, fontWeight: 800 }}>Raise</div>
         </motion.button>
 
+        {/* TODAY'S OVERVIEW */}
+        <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Today's Overview</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 14 }}>
+          {[
+            { icon: '📅', value: todaySessions.length, label: todaySessions.length === 1 ? 'Session today' : 'Sessions today', bg: '#EFF6FF' },
+            { icon: '🙋', value: todayExpected, label: 'Young people expected', bg: '#F5F3FF' },
+            { icon: '⏱️', value: todayHours.toFixed(1), label: 'Hours scheduled', bg: '#FFFBEB' },
+          ].map(k => (
+            <div key={k.label} style={{ ...glassCard({ padding: '13px 8px', background: k.bg }) }}>
+              <div style={{ fontSize: 18, marginBottom: 4 }}>{k.icon}</div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>{k.value}</div>
+              <div style={{ fontSize: 9.5, color: '#64748B', fontWeight: 700, lineHeight: 1.25, marginTop: 2 }}>{k.label}</div>
+            </div>
+          ))}
+        </div>
+
         {/* TODAY'S ACTIONS CHECKLIST */}
         {checklist.length > 0 && (
           <div style={{ ...glassCard({ padding: 16, marginBottom: 14 }) }}>
@@ -198,10 +226,10 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
         </div>
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, marginBottom: 18 }}>
           {achievements.map(a => (
-            <div key={a.key} style={{ ...glassCard({ padding: '14px 12px' }), flexShrink: 0, width: 84, textAlign: 'center', opacity: a.earned ? 1 : 0.35 }}>
+            <button key={a.key} onClick={() => setViewingBadge(a)} style={{ ...glassCard({ padding: '14px 12px' }), flexShrink: 0, width: 84, textAlign: 'center', opacity: a.earned ? 1 : 0.35, border: 'none', cursor: 'pointer' }}>
               <div style={{ fontSize: 26, marginBottom: 4, filter: a.earned ? 'none' : 'grayscale(1)' }}>{a.icon}</div>
               <div style={{ fontSize: 9.5, fontWeight: 700, color: '#334155', lineHeight: 1.2 }}>{a.label}</div>
-            </div>
+            </button>
           ))}
         </div>
 
@@ -222,6 +250,23 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
           </>
         )}
       </div>
+
+      <AnimatePresence>
+        {viewingBadge && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingBadge(null)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()} style={{ ...glassCard({ padding: 26, maxWidth: 280, width: '100%', textAlign: 'center', background: '#fff' }) }}>
+              <div style={{ fontSize: 52, marginBottom: 12, filter: viewingBadge.earned ? 'none' : 'grayscale(1)', opacity: viewingBadge.earned ? 1 : 0.5 }}>{viewingBadge.icon}</div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>{viewingBadge.label}</div>
+              <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5, marginBottom: 14 }}>{viewingBadge.desc}</div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: viewingBadge.earned ? '#F0FDF4' : '#F1F5F9', color: viewingBadge.earned ? '#16A34A' : '#94A3B8', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800 }}>
+                {viewingBadge.earned ? '✓ Earned' : '🔒 Not yet earned'}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
