@@ -10,6 +10,10 @@ import {
 } from './impact_shared'
 import OutcomeWizard from './OutcomeWizard'
 import PersonPanel from './PersonPanel'
+import ImpactWheel from './ImpactWheel'
+import ProgrammePerformance from './ProgrammePerformance'
+import Heatmap from './Heatmap'
+import DataToolsModal from './DataToolsModal'
 
 // ---------------------------------------------------------------------------
 // TimelineChart — inline SVG line chart, Week/Month/Quarter/Year toggle
@@ -187,6 +191,7 @@ export default function ImpactOutcomes({ org }) {
   const isMobile = useIsMobile()
   const [children, setChildren] = useState([])
   const [scores, setScores] = useState([])
+  const [goals, setGoals] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeChild, setActiveChild] = useState(null)
   const [search, setSearch] = useState('')
@@ -194,16 +199,19 @@ export default function ImpactOutcomes({ org }) {
   const [showWizard, setShowWizard] = useState(false)
   const [wizardPresetChild, setWizardPresetChild] = useState(null)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const [dataToolsMode, setDataToolsMode] = useState(null)
   const primary = org?.primary_color || '#1B9AAA'
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [{ data: kids }, { data: sc }] = await Promise.all([
+    const [{ data: kids }, { data: sc }, { data: gl }] = await Promise.all([
       supabase.from('children').select('id,first_name,last_name,school,group_name').eq('org_id', org.id).order('first_name'),
       supabase.from('outcome_scores').select('*').eq('org_id', org.id).order('recorded_at', { ascending: false }),
+      supabase.from('goals').select('*').eq('org_id', org.id),
     ])
     setChildren(kids || [])
     setScores(sc || [])
+    setGoals(gl || [])
     setLoading(false)
   }, [org.id])
 
@@ -293,7 +301,13 @@ export default function ImpactOutcomes({ org }) {
               <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 style={{ position: 'absolute', top: 46, right: 0, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14, boxShadow: '0 10px 30px rgba(0,0,0,0.1)', width: 200, zIndex: 20, overflow: 'hidden' }}>
                 {['Generate Report', 'Export Data', 'Import Assessments', 'Help Centre'].map(label => (
-                  <button key={label} onClick={() => { setShowMoreMenu(false); alert(`${label} is coming in the next update.`) }}
+                  <button key={label} onClick={() => {
+                    setShowMoreMenu(false)
+                    if (label === 'Generate Report') setDataToolsMode('report')
+                    else if (label === 'Export Data') setDataToolsMode('export')
+                    else if (label === 'Import Assessments') setDataToolsMode('import')
+                    else alert('Help Centre is coming in the next update.')
+                  }}
                     style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 16px', border: 'none', background: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
                     onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                     {label}
@@ -312,14 +326,14 @@ export default function ImpactOutcomes({ org }) {
       ) : (
         <>
           {/* AI Summary */}
-          <AISummaryCard children={children} scores={scores} primary={primary} onRecord={() => openWizard()} onReport={() => setShowMoreMenu(false)} />
+          <AISummaryCard children={children} scores={scores} primary={primary} onRecord={() => openWizard()} onReport={() => setDataToolsMode('report')} />
 
           {scores.length === 0 ? (
             <EmptyState
               icon="📊" title="No outcomes have been recorded yet"
               subtitle="Start tracking confidence, wellbeing, attendance and more to see the full impact of your work."
               primaryLabel="Record First Outcome" onPrimary={() => openWizard()}
-              secondaryLabel="Import Existing Data" onSecondary={() => alert('Import is coming in the next update.')}
+              secondaryLabel="Import Existing Data" onSecondary={() => setDataToolsMode('import')}
               primary={primary}
             />
           ) : (
@@ -333,8 +347,8 @@ export default function ImpactOutcomes({ org }) {
                 <KpiCard index={4} icon="🧭" label="Needs Support" value={needingSupport} color={needingSupport > 0 ? '#DC2626' : '#16A34A'} onClick={() => setAreaFilter('needs_support')} />
               </div>
 
-              {/* Org Health hero + timeline */}
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: 16, marginBottom: 20 }}>
+              {/* Org Health hero + Impact Wheel + timeline */}
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: 16, marginBottom: 16 }}>
                 <div style={{ background: '#fff', border: '1px solid #EEF0F2', borderRadius: 20, padding: '22px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <div style={{ fontSize: 13, fontWeight: 900, alignSelf: 'flex-start', marginBottom: 14 }}>🎯 Organisation Health</div>
                   <CircularGauge value={overallImpactScore} color={primary} label="Overall Impact" sublabel="out of 100" />
@@ -354,6 +368,15 @@ export default function ImpactOutcomes({ org }) {
                 </div>
                 <TimelineChart scores={scores} primary={primary} />
               </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 20 }}>
+                <ImpactWheel scores={scores} primary={primary} onSelectArea={(key) => setAreaFilter(key)} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <Heatmap scores={scores} />
+                </div>
+              </div>
+
+              <ProgrammePerformance children={children} scores={scores} org={org} primary={primary} />
 
               {/* Outcome category cards */}
               <div style={{ marginBottom: 20 }}>
@@ -427,6 +450,11 @@ export default function ImpactOutcomes({ org }) {
       {showWizard && (
         <OutcomeWizard org={org} children={children} presetChild={wizardPresetChild}
           onClose={() => setShowWizard(false)} onSaved={onScoreAdded} />
+      )}
+
+      {dataToolsMode && (
+        <DataToolsModal mode={dataToolsMode} org={org} children={children} scores={scores} goals={goals}
+          onClose={() => setDataToolsMode(null)} onImported={load} />
       )}
     </div>
   )
