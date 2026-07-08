@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
-import { activityTheme, tierFor, computeAchievements, glassCard, DAYS, SLOTS } from './vp_shared'
+import { tierFor, computeAchievements, glassCard, DAYS, SLOTS } from './vp_shared'
 
 const SEGMENTS = [
   { key: 'overview', label: 'Overview' },
