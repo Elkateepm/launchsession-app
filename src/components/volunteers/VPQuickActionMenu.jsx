@@ -12,8 +12,15 @@ const ACTIONS = [
   { key: 'document', icon: '📎', label: 'Upload Document', color: '#8B5CF6' },
 ]
 
-export default function VPQuickActionMenu({ open, onClose, org, user, todaySession, onNavigate, onGoRegister, onGoMessage }) {
+export default function VPQuickActionMenu({ open, onClose, org, user, todaySession, onNavigate, onGoRegister, onGoMessage, forceModal }) {
   const [modal, setModal] = useState(null)
+
+  React.useEffect(() => {
+    if (open && forceModal) setModal(forceModal)
+    if (!open) setModal(null)
+  }, [open, forceModal])
+
+  const showRadial = open && !forceModal
 
   const handlePick = (key) => {
     if (key === 'register') { onClose(); onGoRegister && onGoRegister(); return }
@@ -24,7 +31,7 @@ export default function VPQuickActionMenu({ open, onClose, org, user, todaySessi
   return (
     <>
       <AnimatePresence>
-        {open && (
+        {showRadial && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
             style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.55)', backdropFilter: 'blur(6px)', zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 110 }}>
             <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} transition={{ type: 'spring', stiffness: 340, damping: 28 }}
