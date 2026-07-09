@@ -9,12 +9,19 @@ export default function CampaignComparisonChart({ campaigns }) {
     pct: Math.min(((c.raised || 0) / c.target_amount) * 100, 100),
   })).sort((a, b) => b.pct - a.pct)
 
-  if (withTargets.length < 2) return null // not enough campaigns to make a comparison meaningful
+  if (withTargets.length === 0) {
+    return (
+      <div style={{ border: '1px dashed #E5E3DC', borderRadius: 16, padding: '18px 20px', marginBottom: 20, background: '#fff' }}>
+        <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9B9890', marginBottom: 2 }}>Campaign comparison</div>
+        <div style={{ fontSize: 12.5, color: '#9CA3AF', lineHeight: 1.5 }}>Set a target amount on a campaign to track progress here.</div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ border: '1px solid #E5E3DC', borderRadius: 16, padding: '18px 20px', marginBottom: 20, background: '#fff' }}>
-      <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9B9890', marginBottom: 2 }}>Campaign comparison</div>
-      <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 16 }}>Progress toward target, side by side</div>
+      <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9B9890', marginBottom: 2 }}>{withTargets.length === 1 ? 'Campaign progress' : 'Campaign comparison'}</div>
+      <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 16 }}>{withTargets.length === 1 ? 'Add a second campaign with a target to compare them side by side' : 'Progress toward target, side by side'}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {withTargets.map((c, i) => (
           <div key={c.id}>
