@@ -113,16 +113,48 @@ function TimelineChart({ scores, primary }) {
 // ---------------------------------------------------------------------------
 // AI Summary — heuristic-generated insight card
 // ---------------------------------------------------------------------------
-function buildInsights(children, scores) {
+// ---------------------------------------------------------------------------
+// Predictive insight helpers — pure heuristics, no external AI call.
+// A simple least-squares trend line per area/child is used to project
+// forward and flag risk before it shows up as a hard drop.
+// ---------------------------------------------------------------------------
+const DAY_MS = 1000 * 60 * 60 * 24
+const RISK_THRESHOLD = 4.5
+
+function trendLine(points) {
+  // points: [{x: days, y: score}], returns { slope, intercept } or null
+  const n = points.length
+  if (n < 3) return null
+  const sumX = points.reduce((s, p) => s + p.x, 0)
+  const sumY = points.reduce((s, p) => s + p.y, 0)
+  const sumXY = points.reduce((s, p) => s + p.x * p.y, 0)
+  const sumXX = points.reduce((s, p) => s + p.x * p.x, 0)
+  const denom = n * sumXX - sumX * sumX
+  if (denom === 0) return null
+  const slope = (n * sumXY - sumX * sumY) / denom
+  const intercept = (sumY - slope * sumX) / n
+  return { slope, intercept }
+}
+
+function toPoints(list) {
+  return list
+    .map(s => ({ x: new Date(s.recorded_at).getTime() / DAY_MS, y: s.score }))
+    .sort((a, b) => a.x - b.x)
+}
+
+function buildInsights(children, scores, goals = []) {
   if (scores.length === 0) return { headline: null, bullets: [] }
   const byChild = {}
   scores.forEach(s => { (byChild[s.child_id] = byChild[s.child_id] || []).push(s) })
+  const nameOf = id => { const c = children.find(c => c.id === id); return c ? c.first_name : 'Someone' }
 
   const bullets = []
   const now = new Date()
+  const nowDays = now.getTime() / DAY_MS
   const recentCutoff = subDays(now, 30)
   const priorCutoff = subDays(now, 60)
 
+  // 1. Area-level trend (actual, already happened)
   OUTCOME_AREAS.forEach(area => {
     const areaScores = scores.filter(s => s.area === area.key)
     const recent = areaScores.filter(s => isAfter(new Date(s.recorded_at), recentCutoff))
@@ -132,34 +164,82 @@ function buildInsights(children, scores) {
       const priorAvg = prior.reduce((s, x) => s + x.score, 0) / prior.length
       const deltaPct = ((recentAvg - priorAvg) / priorAvg) * 100
       if (Math.abs(deltaPct) >= 8) {
-        bullets.push({ icon: deltaPct > 0 ? '📈' : '⚠️', text: `${area.label} has ${deltaPct > 0 ? 'increased' : 'dropped'} by ${Math.abs(deltaPct).toFixed(0)}%.` })
+        bullets.push({ icon: deltaPct > 0 ? '📈' : '⚠️', priority: 3, text: `${area.label} has ${deltaPct > 0 ? 'increased' : 'dropped'} by ${Math.abs(deltaPct).toFixed(0)}%.` })
       }
     }
   })
 
-  let needSupport = 0
-  Object.entries(byChild).forEach(([, list]) => {
-    const recent = list.filter(s => isAfter(new Date(s.recorded_at), recentCutoff))
-    if (recent.length && recent.reduce((s, x) => s + x.score, 0) / recent.length < 4.5) needSupport++
+  // 2. Predictive: area-level forecast 30 days out, flagging areas trending toward risk
+  OUTCOME_AREAS.forEach(area => {
+    const pts = toPoints(scores.filter(s => s.area === area.key))
+    const trend = trendLine(pts)
+    if (!trend) return
+    const current = pts[pts.length - 1].y
+    const forecast = trend.intercept + trend.slope * (nowDays + 30)
+    if (trend.slope < -0.01 && current >= RISK_THRESHOLD && forecast < RISK_THRESHOLD) {
+      bullets.push({ icon: '🔮', priority: 1, text: `${area.label} is on track to drop below target within a month if the current trend continues.` })
+    }
   })
-  if (needSupport > 0) bullets.push({ icon: '💡', text: `${needSupport} young ${needSupport === 1 ? 'person may' : 'people may'} benefit from additional mentoring.` })
 
+  // 3. Predictive: named individuals with a declining trend, not just a snapshot average
+  const decliningNames = []
+  Object.entries(byChild).forEach(([childId, list]) => {
+    const pts = toPoints(list)
+    const trend = trendLine(pts)
+    const recentAvg = list.filter(s => isAfter(new Date(s.recorded_at), recentCutoff))
+    const avg = recentAvg.length ? recentAvg.reduce((s, x) => s + x.score, 0) / recentAvg.length : null
+    if (trend && trend.slope < -0.02 && avg !== null && avg < RISK_THRESHOLD + 1) {
+      decliningNames.push(nameOf(childId))
+    }
+  })
+  if (decliningNames.length) {
+    const shown = decliningNames.slice(0, 3).join(', ')
+    const extra = decliningNames.length > 3 ? ` +${decliningNames.length - 3} more` : ''
+    bullets.push({ icon: '💡', priority: 1, text: `${shown}${extra} ${decliningNames.length === 1 ? 'is' : 'are'} trending downward and may benefit from additional support soon.` })
+  }
+
+  // 4. Goal deadline risk — active goals due soon with low progress
+  const dueSoonRisk = (goals || []).filter(g => {
+    if (g.status !== 'active' || !g.target_date) return false
+    const daysLeft = (new Date(g.target_date).getTime() - now.getTime()) / DAY_MS
+    return daysLeft >= 0 && daysLeft <= 14 && (g.progress_pct || 0) < 50
+  })
+  if (dueSoonRisk.length) {
+    bullets.push({ icon: '⏳', priority: 2, text: `${dueSoonRisk.length} goal${dueSoonRisk.length === 1 ? ' is' : 's are'} due within 2 weeks and under 50% progress.` })
+  }
+
+  // 5. Momentum shoutout — named individuals on a genuine upward streak
+  const risingNames = []
+  Object.entries(byChild).forEach(([childId, list]) => {
+    const pts = toPoints(list)
+    const trend = trendLine(pts)
+    if (trend && trend.slope > 0.03 && pts.length >= 3) risingNames.push(nameOf(childId))
+  })
+  if (risingNames.length) {
+    const shown = risingNames.slice(0, 2).join(', ')
+    const extra = risingNames.length > 2 ? ` +${risingNames.length - 2} more` : ''
+    bullets.push({ icon: '🚀', priority: 4, text: `${shown}${extra} ${risingNames.length === 1 ? 'is' : 'are'} on a strong upward streak — worth celebrating.` })
+  }
+
+  // 6. Coverage — always useful context, lowest priority
   const trackedCount = Object.keys(byChild).length
-  if (trackedCount > 0) bullets.push({ icon: '🌱', text: `Wellbeing and outcome scores have been recorded for ${trackedCount} young ${trackedCount === 1 ? 'person' : 'people'} so far.` })
+  if (trackedCount > 0) bullets.push({ icon: '🌱', priority: 5, text: `Wellbeing and outcome scores have been recorded for ${trackedCount} young ${trackedCount === 1 ? 'person' : 'people'} so far.` })
 
-  const positive = bullets.filter(b => b.icon === '📈').length
-  const negative = bullets.filter(b => b.icon === '⚠️').length
-  const headline = positive > negative
-    ? 'Your organisation is showing strong positive progress.'
-    : negative > positive
-      ? 'A few areas need a closer look this month.'
+  bullets.sort((a, b) => a.priority - b.priority)
+
+  const riskCount = bullets.filter(b => b.icon === '🔮' || b.icon === '⚠️' || b.icon === '💡' || b.icon === '⏳').length
+  const positiveCount = bullets.filter(b => b.icon === '📈' || b.icon === '🚀').length
+  const headline = riskCount > positiveCount
+    ? 'A few areas need a closer look before they become a problem.'
+    : positiveCount > riskCount
+      ? 'Your organisation is showing strong positive progress.'
       : 'Outcomes are steady across your tracked areas.'
 
-  return { headline, bullets: bullets.slice(0, 5) }
+  return { headline, bullets: bullets.slice(0, 6) }
 }
 
-function AISummaryCard({ children, scores, primary, onRecord, onReport }) {
-  const { headline, bullets } = useMemo(() => buildInsights(children, scores), [children, scores])
+function AISummaryCard({ children, scores, goals, primary, onRecord, onReport }) {
+  const { headline, bullets } = useMemo(() => buildInsights(children, scores, goals), [children, scores, goals])
   if (!headline) return null
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -326,7 +406,7 @@ export default function ImpactOutcomes({ org }) {
       ) : (
         <>
           {/* AI Summary */}
-          <AISummaryCard children={children} scores={scores} primary={primary} onRecord={() => openWizard()} onReport={() => setDataToolsMode('report')} />
+          <AISummaryCard children={children} scores={scores} goals={goals} primary={primary} onRecord={() => openWizard()} onReport={() => setDataToolsMode('report')} />
 
           {scores.length === 0 ? (
             <EmptyState
