@@ -240,9 +240,21 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
   }, [grants, category, savedOnly, saves, search])
 
   const inp = { padding: '11px 14px 11px 38px', borderRadius: 12, border: '1.5px solid #E5E3DC', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
+  const blobColors = [primary, '#8C5A3C', '#4C4A8C', '#4E7A3A', '#92640C']
 
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
+      {/* Decorative blurred colour field behind the glass cards */}
+      <div style={{ position: 'absolute', inset: '-40px -20px', overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
+        {blobColors.map((c, i) => (
+          <div key={i} style={{
+            position: 'absolute', width: 340, height: 340, borderRadius: '50%', background: c,
+            opacity: 0.10, filter: 'blur(70px)',
+            left: `${(i * 23 + 5) % 90}%`, top: `${(i * 37 + 8) % 70}%`,
+          }} />
+        ))}
+      </div>
+      <div style={{ position: 'relative', zIndex: 1 }}>
       {/* Header strip */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap', marginBottom: 16 }}>
         <span style={{ fontSize: 13, color: '#6B7280' }}>
@@ -316,8 +328,22 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
               const meta = CATEGORY_META[g.category] || CATEGORY_META.general
               const bullets = eligibilityBullets(g.eligibility)
               return (
-                <motion.div key={g.id} layout variants={cardVariants} whileHover={{ y: -4, boxShadow: '0 14px 32px rgba(28,35,51,0.10)', borderColor: `${primary}55` }}
-                  style={{ border: '1px solid #E5E3DC', borderRadius: 18, padding: '20px 22px', background: '#fff', transition: 'box-shadow 0.2s, border-color 0.2s' }}>
+                <motion.div key={g.id} layout variants={cardVariants}
+                  onMouseMove={e => {
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    e.currentTarget.style.setProperty('--mx', `${((e.clientX - rect.left) / rect.width) * 100}%`)
+                    e.currentTarget.style.setProperty('--my', `${((e.clientY - rect.top) / rect.height) * 100}%`)
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.setProperty('--sO', '1')}
+                  onMouseLeave={e => e.currentTarget.style.setProperty('--sO', '0')}
+                  whileHover={{ y: -6, boxShadow: `0 18px 40px ${primary}20, 0 4px 14px rgba(28,35,51,0.08)` }}
+                  style={{
+                    position: 'relative', overflow: 'hidden',
+                    background: `linear-gradient(135deg, ${meta.color}1f, rgba(255,255,255,0.62))`,
+                    backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+                    border: `1px solid ${meta.color}33`, borderRadius: 18, padding: '20px 22px',
+                    transition: 'box-shadow 0.25s', '--sO': 0,
+                  }}>
                   <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
                     <FunderAvatar name={g.funder_name} />
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -378,12 +404,14 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                       {shareFeedback === g.id ? <CheckIcon color="#16A34A" /> : <ShareIcon color="#6B7280" />}
                     </button>
                   </div>
+                  <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at var(--mx, 50%) var(--my, 50%), ${primary}55, transparent 55%)`, opacity: 'var(--sO, 0)', transition: 'opacity 0.3s', mixBlendMode: 'overlay', pointerEvents: 'none' }} />
                 </motion.div>
               )
             })}
           </AnimatePresence>
         </motion.div>
       )}
+      </div>
     </div>
   )
 }
