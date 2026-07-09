@@ -3,6 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import FundingMarketplace from './FundingMarketplace'
+import FundraisingCalendar from './FundraisingCalendar'
+import DocumentVault from './DocumentVault'
+import ApplicationTracker from './ApplicationTracker'
 
 const CAMPAIGN_TYPES = [
   { key: 'general',    label: 'General fundraiser' },
@@ -16,14 +20,12 @@ const CAMPAIGN_TYPES = [
 const GOLD = '#BA7517'
 const DAY_MS = 1000 * 60 * 60 * 24
 
-// Curated, static — not a live database. Real UK grant-making bodies relevant
-// to youth and community sports organisations. No fabricated match scores.
-const FUNDING_RESOURCES = [
-  { name: 'Sport England', desc: 'National funding for community sport and physical activity projects.', url: 'https://www.sportengland.org' },
-  { name: 'The National Lottery Community Fund', desc: 'General grants for community-led projects across the UK.', url: 'https://www.tnlcommunityfund.org.uk' },
-  { name: 'Football Foundation', desc: 'Facilities, pitches and equipment funding for grassroots football clubs.', url: 'https://footballfoundation.org.uk' },
-  { name: 'BBC Children in Need', desc: 'Grants supporting disadvantaged children and young people.', url: 'https://www.bbcchildreninneed.co.uk' },
-  { name: 'Comic Relief', desc: 'Funding for organisations tackling poverty and injustice.', url: 'https://www.comicrelief.com' },
+const TABS = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'discover', label: 'Discover Funding' },
+  { key: 'calendar', label: 'Deadlines' },
+  { key: 'documents', label: 'Documents' },
+  { key: 'applications', label: 'Applications' },
 ]
 
 function statusOf(c) {
@@ -401,6 +403,8 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
 
 export default function Fundraising({ org }) {
   const isMobile = useIsMobile()
+  const [activeTab, setActiveTab] = useState('overview')
+  const [trackerRefresh, setTrackerRefresh] = useState(0)
   const [campaigns, setCampaigns] = useState([])
   const [latestDonationByCampaign, setLatestDonationByCampaign] = useState({})
   const [loading, setLoading] = useState(true)
@@ -455,17 +459,8 @@ export default function Fundraising({ org }) {
 
   if (selectedCampaign) return <CampaignDetail campaign={selectedCampaign} org={org} onBack={() => { setSelectedCampaign(null); load() }} onUpdate={updated => { setCampaigns(c => c.map(x => x.id === updated.id ? { ...x, ...updated } : x)); setSelectedCampaign(updated) }} />
 
-  return (
-    <div style={{ maxWidth: 760 }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 4 }}>Fundraising · {org?.name}</div>
-          <div style={{ fontSize: 15, color: '#6B7280' }}>{campaigns.filter(c => statusOf(c).key === 'active').length} active campaign{campaigns.filter(c => statusOf(c).key === 'active').length !== 1 ? 's' : ''}</div>
-        </div>
-        <button onClick={() => setShowCreate(true)} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ New campaign</button>
-      </div>
-
+  const overviewContent = (
+    <>
       {loading ? (
         <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>Loading...</div>
       ) : (
@@ -580,22 +575,46 @@ export default function Fundraising({ org }) {
           {/* Insights */}
           {insights.length > 0 && <InsightsPanel bullets={insights} org={org} primary={primary} />}
 
-          {/* Funding resources */}
-          <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Funding resources</div>
-          <div style={{ borderTop: '0.5px solid #e5e7eb' }}>
-            {FUNDING_RESOURCES.map((r, i) => (
-              <a key={r.name} href={r.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: '0.5px solid #e5e7eb', textDecoration: 'none', color: 'inherit' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, color: '#1C2333' }}>{r.name}</div>
-                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>{r.desc}</div>
-                </div>
-                <span style={{ fontSize: 12, color: primary, flexShrink: 0 }}>Visit →</span>
-              </a>
-            ))}
-          </div>
-          <div style={{ fontSize: 11, color: '#B0AFA8', marginTop: 8 }}>A curated list, not a live matching service — check each funder's own criteria before applying.</div>
+          {/* Discover Funding pointer */}
+          <button onClick={() => setActiveTab('discover')} style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', border: '1px solid #e5e7eb', borderRadius: 14, background: '#fff', cursor: 'pointer' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13.5, color: '#1C2333' }}>Discover funding for {org?.name}</div>
+              <div style={{ fontSize: 12, color: '#9CA3AF' }}>Real, researched UK funders — search, save and track applications</div>
+            </div>
+            <span style={{ fontSize: 12, color: primary, flexShrink: 0 }}>Open →</span>
+          </button>
         </>
       )}
+    </>
+  )
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 4 }}>Fundraising · {org?.name}</div>
+          <div style={{ fontSize: 15, color: '#6B7280' }}>{campaigns.filter(c => statusOf(c).key === 'active').length} active campaign{campaigns.filter(c => statusOf(c).key === 'active').length !== 1 ? 's' : ''}</div>
+        </div>
+        {activeTab === 'overview' && <button onClick={() => setShowCreate(true)} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ New campaign</button>}
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid #e5e7eb', overflowX: 'auto' }}>
+        {TABS.map(t => (
+          <button key={t.key} onClick={() => setActiveTab(t.key)}
+            style={{ padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: activeTab === t.key ? primary : '#9CA3AF', borderBottom: activeTab === t.key ? `2px solid ${primary}` : '2px solid transparent', whiteSpace: 'nowrap', marginBottom: -1 }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ maxWidth: activeTab === 'overview' ? 760 : 820 }}>
+        {activeTab === 'overview' && overviewContent}
+        {activeTab === 'discover' && <FundingMarketplace org={org} primary={primary} onTrack={() => setTrackerRefresh(k => k + 1)} />}
+        {activeTab === 'calendar' && <FundraisingCalendar org={org} />}
+        {activeTab === 'documents' && <DocumentVault org={org} />}
+        {activeTab === 'applications' && <ApplicationTracker org={org} refreshKey={trackerRefresh} />}
+      </div>
     </div>
   )
 }
