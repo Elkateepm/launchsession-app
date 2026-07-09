@@ -227,11 +227,10 @@ export default function VolunteersMain({ org }) {
             <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', background: `radial-gradient(circle, ${primary}30, transparent 70%)`, filter: 'blur(14px)', pointerEvents: 'none' }} />
             {/* real logo badge */}
             <div style={{
-              position: 'relative', width: 120, height: 120, borderRadius: '50%', overflow: 'hidden',
-              boxShadow: `0 20px 44px ${primary}28, inset 0 1px 0 rgba(255,255,255,0.7)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0B0F1A',
+              position: 'relative', width: 130, height: 130,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <img src={launchSessionBadge} alt="LaunchSession" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={launchSessionBadge} alt="LaunchSession" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: `drop-shadow(0 8px 20px ${primary}30)` }} />
             </div>
             {/* sparkle accents */}
             <motion.span animate={{ opacity: [0.25, 1, 0.25] }} transition={{ duration: 2, repeat: Infinity }} style={{ position: 'absolute', top: 4, right: 0, fontSize: 13, color: primary }}>✦</motion.span>
