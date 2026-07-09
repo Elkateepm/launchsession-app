@@ -307,7 +307,7 @@ function AISummaryCard({ children, scores, goals, org, primary, onRecord, onRepo
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <button onClick={() => setShowInfo(v => !v)} title="What data does this use?"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#9CA3AF', width: 16, height: 16, borderRadius: 999, border: '1px solid #D1D5DB', lineHeight: '14px', padding: 0 }}>
+            style={{ background: 'none', cursor: 'pointer', fontSize: 11, color: '#9CA3AF', width: 16, height: 16, borderRadius: 999, border: '1px solid #D1D5DB', lineHeight: '14px', padding: 0 }}>
             i
           </button>
           <motion.button onClick={() => fetchAI(true)} disabled={aiLoading} whileTap={{ scale: 0.9 }}
