@@ -279,6 +279,7 @@ function AISummaryCard({ children, scores, goals, org, primary, onRecord, onRepo
 
   useEffect(() => { if (org?.id) fetchAI(false) }, [org?.id, fetchAI]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [showInfo, setShowInfo] = useState(false)
   const showing = aiResult || heuristic
   const isAI = !!aiResult
   if (!heuristic.headline && !aiResult?.headline) return null
@@ -286,7 +287,7 @@ function AISummaryCard({ children, scores, goals, org, primary, onRecord, onRepo
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
       style={{ background: `linear-gradient(135deg, ${primary}18, #fff)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 22px', marginBottom: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 16 }}>✨</span>
           <span style={{ fontSize: 13, fontWeight: 900, color: primary }}>Launch AI Summary</span>
@@ -304,12 +305,31 @@ function AISummaryCard({ children, scores, goals, org, primary, onRecord, onRepo
             ) : null}
           </AnimatePresence>
         </div>
-        <motion.button onClick={() => fetchAI(true)} disabled={aiLoading} whileTap={{ scale: 0.9 }}
-          animate={aiLoading ? { rotate: 360 } : { rotate: 0 }} transition={aiLoading ? { duration: 1, repeat: Infinity, ease: 'linear' } : { duration: 0.2 }}
-          title="Refresh AI summary" style={{ background: 'none', border: 'none', cursor: aiLoading ? 'default' : 'pointer', fontSize: 14, color: '#9CA3AF', padding: 4, lineHeight: 1 }}>
-          ↻
-        </motion.button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button onClick={() => setShowInfo(v => !v)} title="What data does this use?"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#9CA3AF', width: 16, height: 16, borderRadius: 999, border: '1px solid #D1D5DB', lineHeight: '14px', padding: 0 }}>
+            i
+          </button>
+          <motion.button onClick={() => fetchAI(true)} disabled={aiLoading} whileTap={{ scale: 0.9 }}
+            animate={aiLoading ? { rotate: 360 } : { rotate: 0 }} transition={aiLoading ? { duration: 1, repeat: Infinity, ease: 'linear' } : { duration: 0.2 }}
+            title="Refresh AI summary" style={{ background: 'none', border: 'none', cursor: aiLoading ? 'default' : 'pointer', fontSize: 14, color: '#9CA3AF', padding: 4, lineHeight: 1 }}>
+            ↻
+          </motion.button>
+        </div>
       </div>
+
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }}
+            style={{ overflow: 'hidden' }}>
+            <div style={{ fontSize: 11.5, color: '#6B7280', lineHeight: 1.5, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, padding: '8px 10px', marginBottom: 10, marginTop: 4 }}>
+              This summary is generated from aggregate outcome scores and goal progress only — first names, trend directions and dates. It never sees safeguarding records, medical information, case notes, addresses or any other personal or sensitive data. Those stay out of any AI request entirely.
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div style={{ marginBottom: 6 }} />
 
       <AnimatePresence mode="wait">
         <motion.div key={isAI ? 'ai' : 'heuristic'} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35 }}>
