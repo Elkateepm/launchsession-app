@@ -169,7 +169,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
         <div style={{ textAlign: 'center', padding: 40, border: '1.5px dashed #E5E3DC', borderRadius: 14, color: '#9CA3AF' }}>No funders match your filters.</div>
       ) : (
         <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14 }}>
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: 14 }}>
           <AnimatePresence>
             {filtered.map(g => {
               const meta = CATEGORY_META[g.category] || CATEGORY_META.general
@@ -183,7 +183,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                       <div style={{ fontSize: 12.5, color: '#6B7280', marginTop: 2 }}>{g.funder_name}</div>
                     </div>
                     <button onClick={() => toggleSave(g.id)} disabled={busyId === g.id} title={saves[g.id] ? 'Unsave' : 'Save'}
-                      style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: saves[g.id] ? '#BA7517' : '#D1D5DB', flexShrink: 0, padding: 0, alignSelf: 'flex-start' }}>
+                      style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: saves[g.id] ? '#BA7517' : '#D1D5DB', flexShrink: 0, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: -6, marginRight: -8 }}>
                       {saves[g.id] ? '★' : '☆'}
                     </button>
                   </div>
@@ -196,7 +196,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
 
                   <div style={{ fontSize: 13, color: '#4B5563', lineHeight: 1.55, marginBottom: 14, minHeight: 40 }}>{g.description}</div>
 
-                  <div style={{ display: 'flex', gap: 20, marginBottom: 14, paddingTop: 12, borderTop: '0.5px solid #ECEAE4' }}>
+                  <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 14, paddingTop: 12, borderTop: '0.5px solid #ECEAE4' }}>
                     <div>
                       <div style={{ fontSize: 10.5, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Amount</div>
                       <div style={{ fontSize: 13, color: '#92640C', fontWeight: 600, marginTop: 2 }}>{formatAmount(g.amount_min, g.amount_max)}</div>
