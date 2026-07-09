@@ -185,15 +185,15 @@ function InsightsPanel({ bullets: heuristicBullets, org, primary }) {
             ) : null}
           </AnimatePresence>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <button onClick={() => setShowInfo(v => !v)} title="What data does this use?"
-            style={{ background: 'none', cursor: 'pointer', fontSize: 11, color: '#B08B3F', width: 16, height: 16, borderRadius: 999, border: '1px solid #E2C77E', lineHeight: '14px', padding: 0 }}>
-            i
+            style={{ background: 'none', cursor: 'pointer', border: 'none', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ width: 16, height: 16, fontSize: 11, color: '#B08B3F', borderRadius: 999, border: '1px solid #E2C77E', lineHeight: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>i</span>
           </button>
           <motion.button onClick={() => fetchAI(true)} disabled={aiLoading} whileTap={{ scale: 0.85, rotate: 20 }}
-            animate={aiLoading ? { rotate: 360 } : { rotate: 0 }} transition={aiLoading ? { duration: 1, repeat: Infinity, ease: 'linear' } : { duration: 0.2 }}
-            title="Refresh insights" style={{ background: 'none', border: 'none', cursor: aiLoading ? 'default' : 'pointer', fontSize: 14, color: '#B08B3F', padding: 4, lineHeight: 1 }}>
-            ↻
+            title="Refresh insights" style={{ background: 'none', border: 'none', cursor: aiLoading ? 'default' : 'pointer', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <motion.span animate={aiLoading ? { rotate: 360 } : { rotate: 0 }} transition={aiLoading ? { duration: 1, repeat: Infinity, ease: 'linear' } : { duration: 0.2 }}
+              style={{ fontSize: 14, color: '#B08B3F', display: 'inline-block' }}>↻</motion.span>
           </motion.button>
         </div>
       </div>
@@ -777,7 +777,7 @@ export default function Fundraising({ org }) {
         {activeTab === 'overview' && <button onClick={() => setShowCreate(true)} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ New campaign</button>}
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid #e5e7eb', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid #e5e7eb', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
             style={{ position: 'relative', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: activeTab === t.key ? primary : '#9CA3AF', whiteSpace: 'nowrap', marginBottom: -1 }}>
