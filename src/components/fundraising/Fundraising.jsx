@@ -20,6 +20,25 @@ const CAMPAIGN_TYPES = [
 const GOLD = '#BA7517'
 const DAY_MS = 1000 * 60 * 60 * 24
 
+function AnimatedNumber({ value, prefix = '', decimals = 0 }) {
+  const [display, setDisplay] = useState(0)
+  useEffect(() => {
+    let frame
+    const start = performance.now()
+    const duration = 700
+    const to = Number(value) || 0
+    const tick = (now) => {
+      const t = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setDisplay(to * eased)
+      if (t < 1) frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [value])
+  return <>{prefix}{display.toLocaleString(undefined, { maximumFractionDigits: decimals, minimumFractionDigits: decimals })}</>
+}
+
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'discover', label: 'Discover Funding' },
@@ -466,39 +485,41 @@ export default function Fundraising({ org }) {
       ) : (
         <>
           {/* Hero ledger */}
-          <div style={{ padding: '20px 0 16px', borderTop: '0.5px solid #e5e7eb', borderBottom: '0.5px solid #e5e7eb', marginBottom: 20 }}>
-            <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 6 }}>Total raised</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 48, lineHeight: 1, color: '#1C2333', marginBottom: 14 }}>£{totalRaised.toLocaleString()}</div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+            style={{ padding: '22px 24px', borderRadius: 20, marginBottom: 20, background: `linear-gradient(135deg, ${primary}14, #fff)`, border: `1px solid ${primary}25` }}>
+            <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 6 }}>Total raised</div>
+            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 48, lineHeight: 1, color: '#1C2333', marginBottom: 14 }}>£<AnimatedNumber value={totalRaised} /></div>
             {totalTarget > 0 ? (
               <>
                 <Thermometer raised={totalRaised} target={totalTarget} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                  <span style={{ fontSize: 12, color: '#9CA3AF' }}>{Math.min(Math.round((totalRaised / totalTarget) * 100), 100)}% of £{totalTarget.toLocaleString()} across all campaigns</span>
-                  <span style={{ fontSize: 12, color: '#9CA3AF' }}>{Math.max(totalTarget - totalRaised, 0).toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })} remaining</span>
+                  <span style={{ fontSize: 12, color: '#6B7280' }}>{Math.min(Math.round((totalRaised / totalTarget) * 100), 100)}% of £{totalTarget.toLocaleString()} across all campaigns</span>
+                  <span style={{ fontSize: 12, color: '#6B7280' }}>{Math.max(totalTarget - totalRaised, 0).toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })} remaining</span>
                 </div>
               </>
             ) : (
               <div style={{ fontSize: 12, color: '#9CA3AF' }}>No campaign targets set yet</div>
             )}
-          </div>
+          </motion.div>
 
-          {/* Ledger line items */}
-          <div style={{ display: 'flex', marginBottom: 28 }}>
+          {/* KPI tiles */}
+          <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07 } } }}
+            style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 10, marginBottom: 28 }}>
             {[
-              { label: 'Campaigns', value: campaigns.length },
-              { label: 'Donations', value: totalDonations },
-              { label: 'Avg. donation', value: avgDonation !== null ? `£${avgDonation.toFixed(0)}` : '—' },
-              { label: 'Success rate', value: successRate !== null ? `${successRate}%` : '—' },
-            ].map((s, i) => (
-              <React.Fragment key={s.label}>
-                {i > 0 && <div style={{ width: '0.5px', background: '#e5e7eb' }} />}
-                <div style={{ flex: 1, paddingLeft: i > 0 ? 16 : 0, paddingRight: 16 }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
-                  <div style={{ fontSize: 12, color: '#6B7280' }}>{s.label}</div>
+              { label: 'Campaigns', value: campaigns.length, prefix: '', color: primary, bg: `${primary}14` },
+              { label: 'Donations', value: totalDonations, prefix: '', color: '#4F46E5', bg: '#EEF2FF' },
+              { label: 'Avg. donation', value: avgDonation !== null ? Math.round(avgDonation) : null, prefix: '£', color: '#92640C', bg: '#FDF6E8' },
+              { label: 'Success rate', value: successRate, prefix: '', suffix: '%', color: '#16803C', bg: '#E7F6EC' },
+            ].map(s => (
+              <motion.div key={s.label} variants={{ hidden: { opacity: 0, y: 10, scale: 0.96 }, show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 340, damping: 22 } } }}
+                whileHover={{ y: -2 }} style={{ background: s.bg, borderRadius: 14, padding: '14px 16px' }}>
+                <div style={{ fontSize: 22, fontWeight: 700, color: s.color, fontVariantNumeric: 'tabular-nums' }}>
+                  {s.value === null ? '—' : <>{s.prefix}<AnimatedNumber value={s.value} />{s.suffix || ''}</>}
                 </div>
-              </React.Fragment>
+                <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{s.label}</div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Create campaign */}
           {showCreate && (
@@ -542,16 +563,19 @@ export default function Fundraising({ org }) {
           ) : (
             <>
               <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Campaigns</div>
-              <div style={{ borderTop: '0.5px solid #e5e7eb', marginBottom: 28 }}>
-                {campaigns.map((c, i) => {
+              <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }} style={{ marginBottom: 28 }}>
+                {campaigns.map((c) => {
                   const status = statusOf(c)
                   const raised = c.raised || 0
                   const target = c.target_amount || 0
                   const pct = target > 0 ? Math.min((raised / target) * 100, 100) : 0
                   const statusBg = { active: '#E7F6EC', planning: '#F3F2EE', completed: '#F3F2EE' }[status.key]
                   const statusColor = { active: '#16803C', planning: '#6B7280', completed: '#6B7280' }[status.key]
+                  const accent = { active: '#16A34A', planning: '#D1D5DB', completed: '#D1D5DB' }[status.key]
                   return (
-                    <div key={c.id} onClick={() => setSelectedCampaign(c)} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 0', borderBottom: '0.5px solid #e5e7eb', cursor: 'pointer' }}>
+                    <motion.div key={c.id} variants={{ hidden: { opacity: 0, x: -8 }, show: { opacity: 1, x: 0 } }}
+                      onClick={() => setSelectedCampaign(c)} whileHover={{ x: 2, backgroundColor: 'rgba(0,0,0,0.015)' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0 14px 12px', borderLeft: `3px solid ${accent}`, borderBottom: '0.5px solid #e5e7eb', cursor: 'pointer' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                           <span style={{ fontSize: 14, color: '#1C2333', fontWeight: 500 }}>{c.name}</span>
@@ -565,10 +589,10 @@ export default function Fundraising({ org }) {
                         <div style={{ width: 120, flexShrink: 0 }}><Thermometer raised={raised} target={target} thin /></div>
                       )}
                       <div style={{ fontSize: 13, color: '#6B7280', width: 36, textAlign: 'right', flexShrink: 0 }}>{target > 0 ? `${pct.toFixed(0)}%` : '—'}</div>
-                    </div>
+                    </motion.div>
                   )
                 })}
-              </div>
+              </motion.div>
             </>
           )}
 
@@ -602,19 +626,25 @@ export default function Fundraising({ org }) {
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid #e5e7eb', overflowX: 'auto' }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
-            style={{ padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: activeTab === t.key ? primary : '#9CA3AF', borderBottom: activeTab === t.key ? `2px solid ${primary}` : '2px solid transparent', whiteSpace: 'nowrap', marginBottom: -1 }}>
+            style={{ position: 'relative', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: activeTab === t.key ? primary : '#9CA3AF', whiteSpace: 'nowrap', marginBottom: -1 }}>
             {t.label}
+            {activeTab === t.key && (
+              <motion.div layoutId="fundraising-tab-indicator" transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                style={{ position: 'absolute', left: 0, right: 0, bottom: -1, height: 2, background: primary, borderRadius: 2 }} />
+            )}
           </button>
         ))}
       </div>
 
-      <div style={{ maxWidth: activeTab === 'overview' ? 760 : 820 }}>
+      <AnimatePresence mode="wait">
+        <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} style={{ maxWidth: activeTab === 'overview' ? 760 : 820 }}>
         {activeTab === 'overview' && overviewContent}
         {activeTab === 'discover' && <FundingMarketplace org={org} primary={primary} onTrack={() => setTrackerRefresh(k => k + 1)} />}
         {activeTab === 'calendar' && <FundraisingCalendar org={org} />}
         {activeTab === 'documents' && <DocumentVault org={org} />}
         {activeTab === 'applications' && <ApplicationTracker org={org} refreshKey={trackerRefresh} />}
-      </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   )
 }
