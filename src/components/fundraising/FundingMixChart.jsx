@@ -6,7 +6,17 @@ const PALETTE = ['#BA7517', '#375A82', '#4E7A3A', '#7A4066', '#2F6F63', '#8C5A3C
 export default function FundingMixChart({ campaigns }) {
   const withRaised = campaigns.filter(c => (c.raised || 0) > 0).sort((a, b) => (b.raised || 0) - (a.raised || 0))
   const total = withRaised.reduce((s, c) => s + (c.raised || 0), 0)
-  if (withRaised.length < 2 || total === 0) return null // not enough spread to make a mix chart meaningful
+
+  if (withRaised.length < 2 || total === 0) {
+    return (
+      <div style={{ border: '1px dashed #E5E3DC', borderRadius: 16, padding: '18px 20px', marginBottom: 20, background: '#fff' }}>
+        <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9B9890', marginBottom: 2 }}>Funding mix</div>
+        <div style={{ fontSize: 12.5, color: '#9CA3AF', lineHeight: 1.5 }}>
+          {total === 0 ? 'Record a donation on a couple of campaigns to see where your funding is coming from.' : 'Add a second campaign with donations to see the mix between them.'}
+        </div>
+      </div>
+    )
+  }
 
   const size = 140, stroke = 20, radius = (size - stroke) / 2, circumference = 2 * Math.PI * radius
   let cumulative = 0
