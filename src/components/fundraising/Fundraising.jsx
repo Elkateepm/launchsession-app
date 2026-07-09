@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -90,24 +91,111 @@ function buildFundraisingInsights(campaigns, latestDonationByCampaign) {
 }
 
 const TONE_COLOR = { success: '#16A34A', warning: '#B45309' }
+const TONE_BG = { success: '#DCFCE7', warning: '#FEF3C7', accent: '#F3EFFF' }
 
-function InsightsPanel({ bullets, primary }) {
-  if (bullets.length === 0) return null
+const bulletListVariants = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } }
+const bulletItemVariants = {
+  hidden: { opacity: 0, scale: 0.85, y: 6 },
+  show: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 400, damping: 22 } },
+}
+
+function InsightsPanel({ bullets: heuristicBullets, org, primary }) {
+  const [aiResult, setAiResult] = useState(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState(null)
+  const [fetchedOnce, setFetchedOnce] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
+
+  const fetchAI = useCallback(async (force = false) => {
+    setAiLoading(true)
+    setAiError(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/fundraising-insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ force }),
+      })
+      const body = await res.json()
+      if (!res.ok) { setAiError(body.error || 'AI insights unavailable'); return }
+      if (body.headline) setAiResult(body)
+    } catch (err) {
+      setAiError(err?.message || 'AI insights unavailable')
+    } finally {
+      setAiLoading(false)
+      setFetchedOnce(true)
+    }
+  }, [])
+
+  useEffect(() => { if (org?.id) fetchAI(false) }, [org?.id, fetchAI]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isAI = !!aiResult
+  const showingBullets = isAI ? aiResult.bullets : heuristicBullets
+  if (heuristicBullets.length === 0 && !aiResult) return null
+
   return (
-    <div style={{ border: '0.5px solid #e5e7eb', borderRadius: 12, padding: '14px 16px', marginBottom: 28 }}>
-      {bullets.map((b, i) => (
-        <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 0', borderBottom: i < bullets.length - 1 ? '0.5px solid #f0f0ef' : 'none' }}>
-          <IconGlyph name={b.icon} color={TONE_COLOR[b.tone] || primary} />
-          <span style={{ fontSize: 13, color: '#4B5563', lineHeight: 1.5 }}>{b.text}</span>
+    <div style={{ background: 'linear-gradient(135deg, #FDF6E8, #ffffff)', border: '1px solid #F3E3BC', borderRadius: 20, padding: '16px 18px', marginBottom: 28 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <motion.span animate={{ rotate: [0, -12, 12, -8, 0] }} transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 3 }} style={{ fontSize: 15, display: 'inline-block' }}>✨</motion.span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#92640C' }}>Fundraising Insights</span>
+          <AnimatePresence mode="wait">
+            {aiLoading ? (
+              <motion.span key="thinking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ fontSize: 11, color: '#B08B3F', fontWeight: 600 }}>
+                <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.4, repeat: Infinity }}>Cooking up insights…</motion.span>
+              </motion.span>
+            ) : isAI ? (
+              <motion.span key="refined" initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                style={{ fontSize: 10, fontWeight: 700, color: '#92640C', background: '#F3E3BC', borderRadius: 20, padding: '2px 8px' }}>
+                AI-refined
+              </motion.span>
+            ) : null}
+          </AnimatePresence>
         </div>
-      ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button onClick={() => setShowInfo(v => !v)} title="What data does this use?"
+            style={{ background: 'none', cursor: 'pointer', fontSize: 11, color: '#B08B3F', width: 16, height: 16, borderRadius: 999, border: '1px solid #E2C77E', lineHeight: '14px', padding: 0 }}>
+            i
+          </button>
+          <motion.button onClick={() => fetchAI(true)} disabled={aiLoading} whileTap={{ scale: 0.85, rotate: 20 }}
+            animate={aiLoading ? { rotate: 360 } : { rotate: 0 }} transition={aiLoading ? { duration: 1, repeat: Infinity, ease: 'linear' } : { duration: 0.2 }}
+            title="Refresh insights" style={{ background: 'none', border: 'none', cursor: aiLoading ? 'default' : 'pointer', fontSize: 14, color: '#B08B3F', padding: 4, lineHeight: 1 }}>
+            ↻
+          </motion.button>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }} style={{ overflow: 'hidden' }}>
+            <div style={{ fontSize: 11.5, color: '#8A6A2E', lineHeight: 1.5, background: '#fff', border: '1px solid #F3E3BC', borderRadius: 10, padding: '8px 10px', marginBottom: 8, marginTop: 4 }}>
+              Generated from campaign pace, donation activity and targets only — campaign names and numbers you've already entered. It never sees donor personal details, safeguarding records or anything from other modules.
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div key={isAI ? 'ai' : 'heuristic'} variants={bulletListVariants} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+        {showingBullets.map((b, i) => (
+          <motion.div key={i} variants={bulletItemVariants} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 26, height: 26, borderRadius: 999, background: TONE_BG[b.tone] || TONE_BG.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <IconGlyph name={b.icon} color={TONE_COLOR[b.tone] || primary} />
+            </span>
+            <span style={{ fontSize: 13, color: '#4B5563', lineHeight: 1.5 }}>{b.text}</span>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {aiError && fetchedOnce && (
+        <div style={{ fontSize: 11, color: '#B08B3F', marginTop: 10 }}>AI insights unavailable right now — showing the quick summary instead.</div>
+      )}
     </div>
   )
 }
 
 // Minimal inline icon set (no external icon font dependency in the app bundle)
 function IconGlyph({ name, color }) {
-  const common = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flexShrink: 0, marginTop: 2 } }
+  const common = { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 2.4, strokeLinecap: 'round', strokeLinejoin: 'round' }
   if (name === 'trending-up') return <svg {...common}><polyline points="3 17 9 11 13 15 21 7" /><polyline points="14 7 21 7 21 14" /></svg>
   if (name === 'alert-triangle') return <svg {...common}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
   if (name === 'clock-pause') return <svg {...common}><circle cx="12" cy="12" r="9" /><line x1="10" y1="9" x2="10" y2="15" /><line x1="14" y1="9" x2="14" y2="15" /></svg>
@@ -490,12 +578,7 @@ export default function Fundraising({ org }) {
           )}
 
           {/* Insights */}
-          {insights.length > 0 && (
-            <>
-              <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Insights</div>
-              <InsightsPanel bullets={insights} primary={primary} />
-            </>
-          )}
+          {insights.length > 0 && <InsightsPanel bullets={insights} org={org} primary={primary} />}
 
           {/* Funding resources */}
           <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Funding resources</div>
