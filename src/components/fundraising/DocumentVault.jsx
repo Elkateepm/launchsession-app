@@ -90,7 +90,7 @@ export default function DocumentVault({ org }) {
                 <option value="have">Have it</option>
                 <option value="expiring_soon">Expiring soon</option>
               </select>
-              <button onClick={() => removeDoc(d.id)} title="Remove" style={{ background: 'none', border: 'none', color: '#D1D5DB', cursor: 'pointer', fontSize: 14, padding: 0 }}>✕</button>
+              <button onClick={() => removeDoc(d.id)} title="Remove" style={{ background: 'none', border: 'none', color: '#D1D5DB', cursor: 'pointer', fontSize: 14, width: 32, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -6 }}>✕</button>
             </div>
           )
         })}
