@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { Card, SectionTitle, Badge, Avatar, CountUp, sessionHours, daysUntil, inputStyle, btnPrimary, btnGhost, glass, PURPLE, PAGE_BG } from './vh_shared'
+import launchSessionBadge from '../../assets/images/launchsession-badge.png'
 import VolunteerDirectory from './VolunteerDirectory'
 import VolunteersApplications from './VolunteersApplications'
 import VolunteersCoverage from './VolunteersCoverage'
@@ -224,27 +225,13 @@ export default function VolunteersMain({ org }) {
           >
             {/* ambient glow */}
             <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', background: `radial-gradient(circle, ${primary}30, transparent 70%)`, filter: 'blur(14px)', pointerEvents: 'none' }} />
-            {/* glass badge */}
+            {/* real logo badge */}
             <div style={{
-              position: 'relative', width: 120, height: 120, borderRadius: '50%',
-              background: `linear-gradient(135deg, ${primary}20, rgba(255,255,255,0.75))`,
-              backdropFilter: 'blur(10px)', border: `1.5px solid ${primary}35`,
+              position: 'relative', width: 120, height: 120, borderRadius: '50%', overflow: 'hidden',
               boxShadow: `0 20px 44px ${primary}28, inset 0 1px 0 rgba(255,255,255,0.7)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0B0F1A',
             }}>
-              <svg width="54" height="54" viewBox="0 0 24 24" fill="none">
-                <defs>
-                  <linearGradient id="vhRocketGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                    <stop offset="0" stopColor={primary} />
-                    <stop offset="1" stopColor="#6366F1" />
-                  </linearGradient>
-                </defs>
-                <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" fill="url(#vhRocketGrad)" />
-                <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" fill="url(#vhRocketGrad)" opacity="0.9" />
-                <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" stroke="url(#vhRocketGrad)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" stroke="url(#vhRocketGrad)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="15" cy="9" r="1.6" fill="#fff" opacity="0.9" />
-              </svg>
+              <img src={launchSessionBadge} alt="LaunchSession" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             {/* sparkle accents */}
             <motion.span animate={{ opacity: [0.25, 1, 0.25] }} transition={{ duration: 2, repeat: Infinity }} style={{ position: 'absolute', top: 4, right: 0, fontSize: 13, color: primary }}>✦</motion.span>
