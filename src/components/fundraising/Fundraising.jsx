@@ -17,6 +17,15 @@ const CAMPAIGN_TYPES = [
   { key: 'annual',     label: 'Annual appeal' },
 ]
 
+const CAMPAIGN_TEMPLATES = [
+  { label: 'Sponsored walk', name: 'Sponsored Walk', type: 'general', description: 'Supporters get sponsored to complete a walk, with all proceeds going toward the cause.' },
+  { label: 'Fun run', name: 'Fun Run', type: 'general', description: 'A community fun run with entry fees and sponsorship going toward the cause.' },
+  { label: 'Quiz night', name: 'Quiz Night', type: 'general', description: 'A ticketed quiz night — entry fees and a raffle raise funds for the cause.' },
+  { label: 'Bake sale', name: 'Bake Sale', type: 'general', description: 'A community bake sale raising funds through cake and treat sales.' },
+  { label: 'Equipment appeal', name: 'Equipment Appeal', type: 'equipment', description: 'Raising funds for new equipment to support our sessions and activities.' },
+  { label: 'Trip fund', name: 'Trip Fund', type: 'trips', description: 'Helping cover the cost of an upcoming trip or outing for our young people.' },
+]
+
 const GOLD = '#BA7517'
 const DAY_MS = 1000 * 60 * 60 * 24
 
@@ -248,6 +257,28 @@ function Sparkline({ values, color, width = 140, height = 36 }) {
   )
 }
 
+const CONFETTI_COLORS = ['#BA7517', '#16A34A', '#4F46E5', '#DB2777', '#0EA5E9']
+
+function ConfettiBurst() {
+  const pieces = useMemo(() => Array.from({ length: 16 }, (_, i) => ({
+    id: i, angle: (i / 16) * 360 + (Math.random() * 20 - 10), distance: 40 + Math.random() * 40,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length], delay: Math.random() * 0.1,
+  })), [])
+  return (
+    <div style={{ position: 'relative', width: 0, height: 0, display: 'inline-block' }}>
+      {pieces.map(p => {
+        const rad = (p.angle * Math.PI) / 180
+        return (
+          <motion.span key={p.id} initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+            animate={{ opacity: 0, x: Math.cos(rad) * p.distance, y: Math.sin(rad) * p.distance - 20, scale: 0.4 }}
+            transition={{ duration: 0.9, delay: p.delay, ease: 'easeOut' }}
+            style={{ position: 'absolute', width: 6, height: 6, borderRadius: 2, background: p.color, top: 0, left: 0 }} />
+        )
+      })}
+    </div>
+  )
+}
+
 function CampaignDetail({ campaign, org, onBack, onUpdate }) {
   const isMobile = useIsMobile()
   const [donations, setDonations] = useState([])
@@ -338,7 +369,11 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
             </div>
           </>
         )}
-        {pct >= 100 && <div style={{ marginTop: 10, fontSize: 14, fontWeight: 600, color: '#16A34A' }}>Target reached.</div>}
+        {pct >= 100 && (
+          <div style={{ marginTop: 10, fontSize: 14, fontWeight: 600, color: '#16A34A', display: 'flex', alignItems: 'center', gap: 4 }}>
+            Target reached. <ConfettiBurst />
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: 0, marginTop: 20 }}>
           {[
@@ -456,7 +491,7 @@ export default function Fundraising({ org }) {
     setLoading(true)
     const [{ data: camps }, { data: dons }, { data: grantPreview }] = await Promise.all([
       supabase.from('fundraising_campaigns').select('*, fundraising_donations(count)').eq('org_id', org.id).order('created_at', { ascending: false }),
-      supabase.from('fundraising_donations').select('campaign_id, amount, created_at').eq('org_id', org.id).order('created_at', { ascending: false }),
+      supabase.from('fundraising_donations').select('campaign_id, donor_name, amount, gift_aid, created_at').eq('org_id', org.id).order('created_at', { ascending: false }),
       supabase.from('grants').select('id, name, funder_name, amount_min, amount_max, category').eq('active', true).order('funder_name').limit(2),
     ])
     setCampaigns(camps || [])
@@ -520,6 +555,18 @@ export default function Fundraising({ org }) {
     if (recent > 0) return 'new'
     return null
   }, [donationHistory])
+
+  const recentActivity = useMemo(() => {
+    const campaignName = id => campaigns.find(c => c.id === id)?.name || 'a campaign'
+    const donationEvents = donationHistory.slice(0, 6).map(d => ({
+      type: 'donation', date: d.created_at,
+      text: `${d.donor_name || 'Anonymous'} donated £${Number(d.amount).toLocaleString()} to ${campaignName(d.campaign_id)}${d.gift_aid ? ' (Gift Aid)' : ''}`,
+    }))
+    const milestoneEvents = campaigns.filter(c => c.target_amount > 0 && (c.raised || 0) >= c.target_amount).map(c => ({
+      type: 'milestone', date: c.created_at, text: `🎉 ${c.name} reached its £${Number(c.target_amount).toLocaleString()} target!`,
+    }))
+    return [...donationEvents, ...milestoneEvents].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6)
+  }, [donationHistory, campaigns])
   const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
 
   if (selectedCampaign) return <CampaignDetail campaign={selectedCampaign} org={org} onBack={() => { setSelectedCampaign(null); load() }} onUpdate={updated => { setCampaigns(c => c.map(x => x.id === updated.id ? { ...x, ...updated } : x)); setSelectedCampaign(updated) }} />
@@ -585,7 +632,16 @@ export default function Fundraising({ org }) {
           {/* Create campaign */}
           {showCreate && (
             <div style={{ background: '#FAFAF8', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 20, marginBottom: 24 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14 }}>New fundraising campaign</div>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>New fundraising campaign</div>
+              <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 6 }}>Quick start</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+                {CAMPAIGN_TEMPLATES.map(t => (
+                  <button key={t.label} type="button" onClick={() => setNewCampaign(n => ({ ...n, name: n.name || t.name, description: n.description || t.description, campaign_type: t.type }))}
+                    style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid #e5e7eb', background: '#fff', color: '#6B7280', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
                 <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Campaign name</label><input value={newCampaign.name} onChange={e => setNewCampaign(n => ({ ...n, name: e.target.value }))} placeholder="e.g. New minibus fund" style={inp} /></div>
                 <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Type</label>
@@ -653,6 +709,22 @@ export default function Fundraising({ org }) {
                     </motion.div>
                   )
                 })}
+              </motion.div>
+            </>
+          )}
+
+          {/* Recent activity */}
+          {recentActivity.length > 0 && (
+            <>
+              <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Recent activity</div>
+              <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }} style={{ borderTop: '0.5px solid #e5e7eb', marginBottom: 28 }}>
+                {recentActivity.map((e, i) => (
+                  <motion.div key={i} variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '0.5px solid #e5e7eb' }}>
+                    <span style={{ fontSize: 13, color: '#4B5563', flex: 1 }}>{e.text}</span>
+                    <span style={{ fontSize: 11, color: '#9CA3AF', flexShrink: 0 }}>{format(new Date(e.date), 'd MMM')}</span>
+                  </motion.div>
+                ))}
               </motion.div>
             </>
           )}
