@@ -4,6 +4,9 @@ import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import FundingMarketplace from './FundingMarketplace'
+import FundingMixChart from './FundingMixChart'
+import CampaignComparisonChart from './CampaignComparisonChart'
+import GivingHeatmap from './GivingHeatmap'
 import FundraisingCalendar from './FundraisingCalendar'
 import DocumentVault from './DocumentVault'
 import ApplicationTracker from './ApplicationTracker'
@@ -661,6 +664,13 @@ export default function Fundraising({ org }) {
               {createError && <div style={{ marginTop: 10, fontSize: 12, color: '#B91C1C' }}>Couldn't create the campaign: {createError}</div>}
             </div>
           )}
+
+          {/* Visual analysis */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+            <FundingMixChart campaigns={campaigns} />
+            <CampaignComparisonChart campaigns={campaigns} />
+          </div>
+          <GivingHeatmap donations={donationHistory} />
 
           {/* Campaigns */}
           {campaigns.length === 0 ? (
