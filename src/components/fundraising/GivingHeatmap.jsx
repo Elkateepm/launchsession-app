@@ -6,8 +6,6 @@ const DAY_MS = 1000 * 60 * 60 * 24
 const GOLD = '#BA7517'
 
 export default function GivingHeatmap({ donations }) {
-  if (donations.length < 5) return null // not enough spread to be meaningful yet
-
   const now = new Date()
   const weeks = 10
   // Build a Monday-first grid for the last `weeks` weeks
@@ -29,13 +27,14 @@ export default function GivingHeatmap({ donations }) {
   })
 
   const maxAmount = Math.max(...Object.values(cellTotals).map(c => c.amount), 1)
-  const hasAnyData = Object.keys(cellTotals).length > 0
-  if (!hasAnyData) return null
+  const hasEnoughData = donations.length >= 5
 
   return (
     <div style={{ border: '1px solid #E5E3DC', borderRadius: 16, padding: '18px 20px', marginBottom: 20, background: '#fff' }}>
       <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9B9890', marginBottom: 2 }}>Giving activity</div>
-      <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>Which days tend to bring in donations, last {weeks} weeks</div>
+      <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>
+        {hasEnoughData ? `Which days tend to bring in donations, last ${weeks} weeks` : `Record a few more donations to see which days tend to bring them in`}
+      </div>
       <div style={{ overflowX: 'auto' }}>
         <div style={{ display: 'inline-flex', gap: 4 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginRight: 4 }}>
