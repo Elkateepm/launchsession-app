@@ -130,8 +130,10 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
   const [showAdd, setShowAdd] = useState(false)
   const [newDonation, setNewDonation] = useState({ donor_name: '', amount: '', message: '', gift_aid: false })
   const [saving, setSaving] = useState(false)
+  const [donationError, setDonationError] = useState(null)
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ ...campaign })
+  const [editError, setEditError] = useState(null)
   const primary = org?.primary_color || '#1B9AAA'
   const status = statusOf(campaign)
 
@@ -146,8 +148,10 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
   const addDonation = async () => {
     if (!newDonation.amount) return
     setSaving(true)
+    setDonationError(null)
     const amount = parseFloat(newDonation.amount)
-    const { data } = await supabase.from('fundraising_donations').insert({ campaign_id: campaign.id, org_id: org.id, donor_name: newDonation.donor_name || 'Anonymous', amount, message: newDonation.message, gift_aid: newDonation.gift_aid }).select().single()
+    const { data, error } = await supabase.from('fundraising_donations').insert({ campaign_id: campaign.id, org_id: org.id, donor_name: newDonation.donor_name || 'Anonymous', amount, message: newDonation.message || null, gift_aid: newDonation.gift_aid }).select().single()
+    if (error) { setDonationError(error.message); setSaving(false); return }
     if (data) {
       setDonations(d => [data, ...d])
       const newRaised = (campaign.raised || 0) + amount
@@ -160,7 +164,14 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
   }
 
   const saveEdit = async () => {
-    const { data } = await supabase.from('fundraising_campaigns').update({ name: editForm.name, description: editForm.description, target_amount: editForm.target_amount, end_date: editForm.end_date }).eq('id', campaign.id).select().single()
+    setEditError(null)
+    const { data, error } = await supabase.from('fundraising_campaigns').update({
+      name: editForm.name,
+      description: editForm.description || null,
+      target_amount: editForm.target_amount ? parseFloat(editForm.target_amount) : 0,
+      end_date: editForm.end_date || null,
+    }).eq('id', campaign.id).select().single()
+    if (error) { setEditError(error.message); return }
     if (data) { onUpdate(data); setEditing(false) }
   }
 
@@ -234,6 +245,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
             <button onClick={saveEdit} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Save changes</button>
             <button onClick={() => setEditing(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
+          {editError && <div style={{ marginTop: 10, fontSize: 12, color: '#B91C1C' }}>Couldn't save: {editError}</div>}
         </div>
       )}
 
@@ -263,6 +275,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
             <button onClick={addDonation} disabled={saving || !newDonation.amount} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: saving || !newDonation.amount ? '#9CA3AF' : primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving...' : 'Record donation'}</button>
             <button onClick={() => setShowAdd(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
+          {donationError && <div style={{ marginTop: 10, fontSize: 12, color: '#B91C1C' }}>Couldn't record donation: {donationError}</div>}
         </div>
       )}
 
@@ -306,6 +319,7 @@ export default function Fundraising({ org }) {
   const [selectedCampaign, setSelectedCampaign] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState(null)
   const [newCampaign, setNewCampaign] = useState({ name: '', description: '', campaign_type: 'general', target_amount: '', start_date: new Date().toISOString().slice(0, 10), end_date: '' })
   const primary = org?.primary_color || '#1B9AAA'
 
@@ -327,8 +341,18 @@ export default function Fundraising({ org }) {
   const createCampaign = async () => {
     if (!newCampaign.name) return
     setCreating(true)
-    const { data } = await supabase.from('fundraising_campaigns').insert({ ...newCampaign, org_id: org.id, raised: 0, target_amount: newCampaign.target_amount || 0 }).select().single()
+    setCreateError(null)
+    const payload = {
+      ...newCampaign,
+      org_id: org.id,
+      raised: 0,
+      target_amount: newCampaign.target_amount ? parseFloat(newCampaign.target_amount) : 0,
+      start_date: newCampaign.start_date || null,
+      end_date: newCampaign.end_date || null,
+    }
+    const { data, error } = await supabase.from('fundraising_campaigns').insert(payload).select().single()
     setCreating(false)
+    if (error) { setCreateError(error.message); return }
     if (data) { setCampaigns(c => [{ ...data, fundraising_donations: [{ count: 0 }] }, ...c]); setShowCreate(false); setNewCampaign({ name: '', description: '', campaign_type: 'general', target_amount: '', start_date: new Date().toISOString().slice(0, 10), end_date: '' }) }
   }
 
@@ -409,10 +433,11 @@ export default function Fundraising({ org }) {
                 <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>End date</label><input type="date" value={newCampaign.end_date} onChange={e => setNewCampaign(n => ({ ...n, end_date: e.target.value }))} style={inp} /></div>
                 <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Description</label><textarea value={newCampaign.description} onChange={e => setNewCampaign(n => ({ ...n, description: e.target.value }))} rows={2} placeholder="What are you raising money for?" style={{ ...inp, resize: 'none' }} /></div>
               </div>
-              <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <button onClick={createCampaign} disabled={creating || !newCampaign.name} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: creating || !newCampaign.name ? '#9CA3AF' : primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{creating ? 'Creating...' : 'Launch campaign'}</button>
                 <button onClick={() => setShowCreate(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               </div>
+              {createError && <div style={{ marginTop: 10, fontSize: 12, color: '#B91C1C' }}>Couldn't create the campaign: {createError}</div>}
             </div>
           )}
 
