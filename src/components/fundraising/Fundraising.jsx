@@ -1,28 +1,124 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
 const CAMPAIGN_TYPES = [
-  { key: 'general',    label: 'General Fundraiser', icon: '💛' },
-  { key: 'equipment',  label: 'Equipment Fund',     icon: '⚽' },
-  { key: 'trips',      label: 'Trips & Events',     icon: '🚌' },
-  { key: 'bursary',    label: 'Bursary Fund',       icon: '🎓' },
-  { key: 'emergency',  label: 'Emergency Appeal',   icon: '🚨' },
-  { key: 'annual',     label: 'Annual Appeal',      icon: '📅' },
+  { key: 'general',    label: 'General fundraiser' },
+  { key: 'equipment',  label: 'Equipment fund' },
+  { key: 'trips',      label: 'Trips and events' },
+  { key: 'bursary',    label: 'Bursary fund' },
+  { key: 'emergency',  label: 'Emergency appeal' },
+  { key: 'annual',     label: 'Annual appeal' },
 ]
 
-function ProgressBar({ raised, target, color }) {
+const GOLD = '#BA7517'
+const DAY_MS = 1000 * 60 * 60 * 24
+
+// Curated, static — not a live database. Real UK grant-making bodies relevant
+// to youth and community sports organisations. No fabricated match scores.
+const FUNDING_RESOURCES = [
+  { name: 'Sport England', desc: 'National funding for community sport and physical activity projects.', url: 'https://www.sportengland.org' },
+  { name: 'The National Lottery Community Fund', desc: 'General grants for community-led projects across the UK.', url: 'https://www.tnlcommunityfund.org.uk' },
+  { name: 'Football Foundation', desc: 'Facilities, pitches and equipment funding for grassroots football clubs.', url: 'https://footballfoundation.org.uk' },
+  { name: 'BBC Children in Need', desc: 'Grants supporting disadvantaged children and young people.', url: 'https://www.bbcchildreninneed.co.uk' },
+  { name: 'Comic Relief', desc: 'Funding for organisations tackling poverty and injustice.', url: 'https://www.comicrelief.com' },
+]
+
+function statusOf(c) {
+  const today = new Date().toISOString().slice(0, 10)
+  if (c.start_date && c.start_date > today) return { key: 'planning', label: 'Planning' }
+  if (c.end_date && c.end_date < today) return { key: 'completed', label: 'Completed' }
+  return { key: 'active', label: 'Active' }
+}
+
+function daysLeftLabel(c, status) {
+  if (status.key === 'planning') return `Starts ${format(new Date(c.start_date), 'd MMM')}`
+  if (status.key === 'completed') return `Ended ${format(new Date(c.end_date), 'd MMM yyyy')}`
+  if (c.end_date) {
+    const days = Math.ceil((new Date(c.end_date) - new Date()) / DAY_MS)
+    return days >= 0 ? `${days} day${days === 1 ? '' : 's'} left` : 'Ended'
+  }
+  return 'Ongoing'
+}
+
+// ---------------------------------------------------------------------------
+// Heuristic insights — pace-to-target, stalled campaigns, missing story.
+// No external AI call.
+// ---------------------------------------------------------------------------
+function buildFundraisingInsights(campaigns, latestDonationByCampaign) {
+  const bullets = []
+  const now = new Date()
+
+  campaigns.forEach(c => {
+    const status = statusOf(c)
+    if (status.key !== 'active' || !c.target_amount || !c.start_date || !c.end_date) return
+    const start = new Date(c.start_date), end = new Date(c.end_date)
+    const totalDays = (end - start) / DAY_MS
+    const elapsedDays = (now - start) / DAY_MS
+    if (totalDays <= 0 || elapsedDays <= 0) return
+    const expectedPct = Math.min(elapsedDays / totalDays, 1)
+    const actualPct = (c.raised || 0) / c.target_amount
+    const diff = actualPct - expectedPct
+    if (diff > 0.1) {
+      const daysEarly = Math.round((diff) * totalDays)
+      bullets.push({ icon: 'trending-up', tone: 'success', priority: 2, text: `${c.name} is on pace to hit its target${daysEarly > 0 ? ` around ${daysEarly} days early` : ''}.` })
+    } else if (diff < -0.15) {
+      bullets.push({ icon: 'alert-triangle', tone: 'warning', priority: 1, text: `${c.name} is behind pace — ${Math.round(actualPct * 100)}% raised with ${Math.round((1 - expectedPct) * 100)}% of the time remaining.` })
+    }
+  })
+
+  campaigns.forEach(c => {
+    const status = statusOf(c)
+    if (status.key !== 'active') return
+    const latest = latestDonationByCampaign[c.id]
+    const daysSince = latest ? (now - new Date(latest)) / DAY_MS : (now - new Date(c.start_date || c.created_at)) / DAY_MS
+    if (daysSince >= 14) {
+      bullets.push({ icon: 'clock-pause', tone: 'warning', priority: 1, text: `${c.name} has had no donations in ${Math.floor(daysSince)} days. An update to supporters often restarts momentum.` })
+    }
+  })
+
+  const missingStory = campaigns.filter(c => statusOf(c).key !== 'completed' && !c.description)
+  if (missingStory.length) {
+    const shown = missingStory.slice(0, 2).map(c => c.name).join(', ')
+    const extra = missingStory.length > 2 ? ` and ${missingStory.length - 2} more` : ''
+    bullets.push({ icon: 'bulb', tone: 'accent', priority: 3, text: `${shown}${extra} ${missingStory.length === 1 ? "doesn't" : "don't"} have a story yet. Campaigns with a description tend to raise more.` })
+  }
+
+  bullets.sort((a, b) => a.priority - b.priority)
+  return bullets.slice(0, 6)
+}
+
+const TONE_COLOR = { success: '#16A34A', warning: '#B45309' }
+
+function InsightsPanel({ bullets, primary }) {
+  if (bullets.length === 0) return null
+  return (
+    <div style={{ border: '0.5px solid #e5e7eb', borderRadius: 12, padding: '14px 16px', marginBottom: 28 }}>
+      {bullets.map((b, i) => (
+        <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 0', borderBottom: i < bullets.length - 1 ? '0.5px solid #f0f0ef' : 'none' }}>
+          <IconGlyph name={b.icon} color={TONE_COLOR[b.tone] || primary} />
+          <span style={{ fontSize: 13, color: '#4B5563', lineHeight: 1.5 }}>{b.text}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Minimal inline icon set (no external icon font dependency in the app bundle)
+function IconGlyph({ name, color }) {
+  const common = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flexShrink: 0, marginTop: 2 } }
+  if (name === 'trending-up') return <svg {...common}><polyline points="3 17 9 11 13 15 21 7" /><polyline points="14 7 21 7 21 14" /></svg>
+  if (name === 'alert-triangle') return <svg {...common}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+  if (name === 'clock-pause') return <svg {...common}><circle cx="12" cy="12" r="9" /><line x1="10" y1="9" x2="10" y2="15" /><line x1="14" y1="9" x2="14" y2="15" /></svg>
+  return <svg {...common}><path d="M9 18h6" /><path d="M10 22h4" /><path d="M12 2a6 6 0 0 0-4 10.5c.5.5.9 1.2 1 2.5h6c.1-1.3.5-2 1-2.5A6 6 0 0 0 12 2Z" /></svg>
+}
+
+function Thermometer({ raised, target, thin }) {
   const pct = target > 0 ? Math.min((raised / target) * 100, 100) : 0
   return (
-    <div>
-      <div style={{ height: 10, background: '#F3F4F6', borderRadius: 99, overflow: 'hidden', marginBottom: 5 }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: pct >= 100 ? '#16A34A' : color, borderRadius: 99, transition: 'width 0.6s ease' }} />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#6B7280' }}>
-        <span style={{ fontWeight: 700, color: pct >= 100 ? '#16A34A' : color }}>£{raised.toLocaleString()} raised</span>
-        <span>{pct.toFixed(0)}% of £{target.toLocaleString()}</span>
-      </div>
+    <div style={{ height: thin ? 3 : 4, background: '#eceae4', borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: pct >= 100 ? '#16A34A' : GOLD, borderRadius: 2, transition: 'width 0.6s ease' }} />
     </div>
   )
 }
@@ -37,7 +133,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ ...campaign })
   const primary = org?.primary_color || '#1B9AAA'
-  const typeCfg = CAMPAIGN_TYPES.find(t => t.key === campaign.campaign_type) || CAMPAIGN_TYPES[0]
+  const status = statusOf(campaign)
 
   const load = useCallback(async () => {
     const { data } = await supabase.from('fundraising_donations').select('*').eq('campaign_id', campaign.id).order('created_at', { ascending: false })
@@ -70,56 +166,72 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
 
   const raised = campaign.raised || 0
   const target = campaign.target_amount || 0
-  const pct = target > 0 ? Math.min((raised / target) * 100, 100).toFixed(0) : null
+  const pct = target > 0 ? Math.min((raised / target) * 100, 100) : null
   const giftAidTotal = donations.filter(d => d.gift_aid).reduce((s, d) => s + d.amount * 0.25, 0)
   const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
+  const statusBg = { active: '#E7F6EC', planning: '#F3F2EE', completed: '#F3F2EE' }[status.key]
+  const statusColor = { active: '#16803C', planning: '#6B7280', completed: '#6B7280' }[status.key]
 
   return (
     <div>
-      <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 20, padding: 0 }}>← Back to Campaigns</button>
+      <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 24, padding: 0 }}>← Back to fundraising</button>
 
       {/* Header */}
-      <div style={{ background: `linear-gradient(135deg, #16A34A18, #16A34A05)`, border: '1.5px solid #16A34A30', borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+      <div style={{ paddingBottom: 20, borderBottom: '0.5px solid #e5e7eb', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <span style={{ fontSize: 28 }}>{typeCfg.icon}</span>
-              <div style={{ fontSize: 22, fontWeight: 900 }}>{campaign.name}</div>
+              <div style={{ fontSize: 20, fontWeight: 600 }}>{campaign.name}</div>
+              <span style={{ fontSize: 11, padding: '2px 9px', borderRadius: 20, background: statusBg, color: statusColor, fontWeight: 600 }}>{status.label}</span>
             </div>
-            <div style={{ fontSize: 13, color: '#6B7280' }}>{campaign.description || typeCfg.label}</div>
+            <div style={{ fontSize: 13, color: '#6B7280' }}>{campaign.description || CAMPAIGN_TYPES.find(t => t.key === campaign.campaign_type)?.label}</div>
           </div>
           <button onClick={() => setEditing(!editing)} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
-            {editing ? '✕ Cancel' : '✏️ Edit'}
+            {editing ? 'Cancel' : 'Edit'}
           </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10, marginBottom: 16 }}>
-          {[
-            { label: 'Total Raised', value: `£${raised.toLocaleString()}`, color: '#16A34A' },
-            { label: 'Target', value: target ? `£${target.toLocaleString()}` : 'No target', color: '#6B7280' },
-            { label: 'Donations', value: donations.length, color: primary },
-            { label: 'Gift Aid Value', value: giftAidTotal > 0 ? `£${giftAidTotal.toFixed(2)}` : '—', color: '#8B5CF6' },
-          ].map(s => (
-            <div key={s.label} style={{ background: '#fff', borderRadius: 12, padding: '10px 14px', border: '1px solid #e5e7eb' }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{s.label}</div>
+
+        <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 6 }}>Total raised</div>
+        <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 40, lineHeight: 1, color: '#1C2333', marginBottom: 14 }}>£{raised.toLocaleString()}</div>
+        {target > 0 && (
+          <>
+            <Thermometer raised={raised} target={target} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, color: '#9CA3AF' }}>
+              <span>{pct.toFixed(0)}% of £{target.toLocaleString()} goal</span>
+              <span>{Math.max(target - raised, 0).toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })} remaining</span>
             </div>
+          </>
+        )}
+        {pct >= 100 && <div style={{ marginTop: 10, fontSize: 14, fontWeight: 600, color: '#16A34A' }}>Target reached.</div>}
+
+        <div style={{ display: 'flex', gap: 0, marginTop: 20 }}>
+          {[
+            { label: 'Donations', value: donations.length },
+            { label: 'Gift Aid value', value: giftAidTotal > 0 ? `£${giftAidTotal.toFixed(2)}` : '—' },
+            { label: 'Days left', value: daysLeftLabel(campaign, status) },
+          ].map((s, i) => (
+            <React.Fragment key={s.label}>
+              {i > 0 && <div style={{ width: '0.5px', background: '#e5e7eb' }} />}
+              <div style={{ flex: 1, paddingLeft: i > 0 ? 16 : 0, paddingRight: 16 }}>
+                <div style={{ fontSize: 18, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+                <div style={{ fontSize: 12, color: '#9CA3AF' }}>{s.label}</div>
+              </div>
+            </React.Fragment>
           ))}
         </div>
-        {target > 0 && <ProgressBar raised={raised} target={target} color={primary} />}
-        {pct >= 100 && <div style={{ textAlign: 'center', marginTop: 10, fontSize: 16, fontWeight: 900, color: '#16A34A' }}>🎉 Target reached! Amazing work!</div>}
       </div>
 
       {/* Edit form */}
       {editing && (
         <div style={{ background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 18, marginBottom: 20 }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
-            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Campaign Name</label><input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} style={inp} /></div>
+            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Campaign name</label><input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} style={inp} /></div>
             <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Description</label><textarea value={editForm.description || ''} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={2} style={{ ...inp, resize: 'none' }} /></div>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Target Amount (£)</label><input type="number" value={editForm.target_amount || ''} onChange={e => setEditForm(f => ({ ...f, target_amount: e.target.value }))} style={inp} /></div>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>End Date</label><input type="date" value={editForm.end_date || ''} onChange={e => setEditForm(f => ({ ...f, end_date: e.target.value }))} style={inp} /></div>
+            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Target amount (£)</label><input type="number" value={editForm.target_amount || ''} onChange={e => setEditForm(f => ({ ...f, target_amount: e.target.value }))} style={inp} /></div>
+            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>End date</label><input type="date" value={editForm.end_date || ''} onChange={e => setEditForm(f => ({ ...f, end_date: e.target.value }))} style={inp} /></div>
           </div>
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-            <button onClick={saveEdit} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Save</button>
+            <button onClick={saveEdit} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Save changes</button>
             <button onClick={() => setEditing(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
@@ -127,28 +239,28 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
 
       {/* Add donation */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <div style={{ fontSize: 14, fontWeight: 800 }}>💰 Donations ({donations.length})</div>
-        <button onClick={() => setShowAdd(!showAdd)} style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>+ Record Donation</button>
+        <div style={{ fontSize: 13, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#9CA3AF' }}>Donations ({donations.length})</div>
+        <button onClick={() => setShowAdd(!showAdd)} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Record donation</button>
       </div>
 
       {showAdd && (
-        <div style={{ background: '#F0FDF4', border: '1.5px solid #BBF7D0', borderRadius: 14, padding: 18, marginBottom: 16 }}>
+        <div style={{ background: '#FAFAF8', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 18, marginBottom: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>DONOR NAME</label><input value={newDonation.donor_name} onChange={e => setNewDonation(n => ({ ...n, donor_name: e.target.value }))} placeholder="Anonymous" style={inp} /></div>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>AMOUNT (£) *</label><input type="number" step="0.01" value={newDonation.amount} onChange={e => setNewDonation(n => ({ ...n, amount: e.target.value }))} placeholder="0.00" style={inp} /></div>
-            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>MESSAGE</label><input value={newDonation.message} onChange={e => setNewDonation(n => ({ ...n, message: e.target.value }))} placeholder="Donation message or reference..." style={inp} /></div>
+            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Donor name</label><input value={newDonation.donor_name} onChange={e => setNewDonation(n => ({ ...n, donor_name: e.target.value }))} placeholder="Anonymous" style={inp} /></div>
+            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Amount (£)</label><input type="number" step="0.01" value={newDonation.amount} onChange={e => setNewDonation(n => ({ ...n, amount: e.target.value }))} placeholder="0.00" style={inp} /></div>
+            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Message</label><input value={newDonation.message} onChange={e => setNewDonation(n => ({ ...n, message: e.target.value }))} placeholder="Donation message or reference" style={inp} /></div>
           </div>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer', marginBottom: 14, fontWeight: 600 }}>
             <input type="checkbox" checked={newDonation.gift_aid} onChange={e => setNewDonation(n => ({ ...n, gift_aid: e.target.checked }))} />
             Gift Aid eligible (+25% from HMRC)
           </label>
           {newDonation.gift_aid && newDonation.amount && (
-            <div style={{ background: '#fff', border: '1px solid #BBF7D0', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#16A34A', fontWeight: 700, marginBottom: 12 }}>
-              🎉 Gift Aid adds £{(parseFloat(newDonation.amount) * 0.25).toFixed(2)} — total value £{(parseFloat(newDonation.amount) * 1.25).toFixed(2)}
+            <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#16A34A', fontWeight: 600, marginBottom: 12 }}>
+              Gift Aid adds £{(parseFloat(newDonation.amount) * 0.25).toFixed(2)} — total value £{(parseFloat(newDonation.amount) * 1.25).toFixed(2)}
             </div>
           )}
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={addDonation} disabled={saving || !newDonation.amount} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: saving || !newDonation.amount ? '#9CA3AF' : '#16A34A', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{saving ? 'Saving...' : '💰 Record Donation'}</button>
+            <button onClick={addDonation} disabled={saving || !newDonation.amount} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: saving || !newDonation.amount ? '#9CA3AF' : primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving...' : 'Record donation'}</button>
             <button onClick={() => setShowAdd(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
@@ -158,27 +270,25 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
       {loading ? (
         <div style={{ textAlign: 'center', padding: 30, color: '#9CA3AF' }}>Loading donations...</div>
       ) : donations.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 40, background: '#F9FAFB', borderRadius: 14, color: '#9CA3AF', border: '1.5px dashed #e5e7eb' }}>
-          <div style={{ fontSize: 32, marginBottom: 8 }}>💰</div>
-          <div style={{ fontWeight: 700 }}>No donations recorded yet</div>
-          <div style={{ fontSize: 13, marginTop: 4 }}>Start recording donations as they come in</div>
+        <div style={{ textAlign: 'center', padding: 40, borderRadius: 14, color: '#9CA3AF', border: '1.5px dashed #e5e7eb' }}>
+          <div style={{ fontWeight: 600, color: '#374151' }}>No donations recorded yet</div>
+          <div style={{ fontSize: 13, marginTop: 4 }}>Start recording donations as they come in.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div>
           {donations.map((d, i) => (
-            <div key={d.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>💰</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                  <span style={{ fontWeight: 800, fontSize: 14 }}>{d.donor_name || 'Anonymous'}</span>
-                  {d.gift_aid && <span style={{ background: '#F0FDF4', color: '#16A34A', borderRadius: 6, padding: '2px 7px', fontSize: 10, fontWeight: 700 }}>Gift Aid</span>}
+            <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < donations.length - 1 ? '0.5px solid #ECEAE4' : 'none' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>{d.donor_name || 'Anonymous'}</span>
+                  {d.gift_aid && <span style={{ background: '#E7F6EC', color: '#16803C', borderRadius: 6, padding: '2px 7px', fontSize: 10, fontWeight: 600 }}>Gift Aid</span>}
                 </div>
                 {d.message && <div style={{ fontSize: 12, color: '#6B7280' }}>{d.message}</div>}
                 <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{format(new Date(d.created_at), 'd MMM yyyy')}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontSize: 16, fontWeight: 900, color: '#16A34A' }}>£{d.amount.toFixed(2)}</div>
-                {d.gift_aid && <div style={{ fontSize: 10, color: '#16A34A', opacity: 0.7 }}>+£{(d.amount * 0.25).toFixed(2)} GA</div>}
+                <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 16, color: '#1C2333' }}>£{d.amount.toFixed(2)}</div>
+                {d.gift_aid && <div style={{ fontSize: 10, color: '#16803C' }}>+£{(d.amount * 0.25).toFixed(2)} GA</div>}
               </div>
             </div>
           ))}
@@ -191,6 +301,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
 export default function Fundraising({ org }) {
   const isMobile = useIsMobile()
   const [campaigns, setCampaigns] = useState([])
+  const [latestDonationByCampaign, setLatestDonationByCampaign] = useState({})
   const [loading, setLoading] = useState(true)
   const [selectedCampaign, setSelectedCampaign] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
@@ -200,8 +311,14 @@ export default function Fundraising({ org }) {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase.from('fundraising_campaigns').select('*, fundraising_donations(count)').eq('org_id', org.id).order('created_at', { ascending: false })
-    setCampaigns(data || [])
+    const [{ data: camps }, { data: dons }] = await Promise.all([
+      supabase.from('fundraising_campaigns').select('*, fundraising_donations(count)').eq('org_id', org.id).order('created_at', { ascending: false }),
+      supabase.from('fundraising_donations').select('campaign_id, created_at').eq('org_id', org.id).order('created_at', { ascending: false }),
+    ])
+    setCampaigns(camps || [])
+    const latest = {}
+    ;(dons || []).forEach(d => { if (!latest[d.campaign_id]) latest[d.campaign_id] = d.created_at })
+    setLatestDonationByCampaign(latest)
     setLoading(false)
   }, [org.id])
 
@@ -216,104 +333,160 @@ export default function Fundraising({ org }) {
   }
 
   const totalRaised = campaigns.reduce((s, c) => s + (c.raised || 0), 0)
+  const totalTarget = campaigns.reduce((s, c) => s + (c.target_amount || 0), 0)
   const totalDonations = campaigns.reduce((s, c) => s + (c.fundraising_donations?.[0]?.count || 0), 0)
+  const avgDonation = totalDonations > 0 ? totalRaised / totalDonations : null
+  const completedCount = campaigns.filter(c => statusOf(c).key === 'completed').length
+  const successRate = completedCount > 0 ? Math.round((campaigns.filter(c => statusOf(c).key === 'completed' && (c.raised || 0) >= (c.target_amount || Infinity)).length / completedCount) * 100) : null
+  const insights = useMemo(() => buildFundraisingInsights(campaigns, latestDonationByCampaign), [campaigns, latestDonationByCampaign])
   const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
 
   if (selectedCampaign) return <CampaignDetail campaign={selectedCampaign} org={org} onBack={() => { setSelectedCampaign(null); load() }} onUpdate={updated => { setCampaigns(c => c.map(x => x.id === updated.id ? { ...x, ...updated } : x)); setSelectedCampaign(updated) }} />
 
   return (
-    <div>
+    <div style={{ maxWidth: 760 }}>
       {/* Header */}
-      <div style={{ background: `linear-gradient(135deg, #16A34A18, #16A34A05)`, border: '1.5px solid #16A34A30', borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 900 }}>💷 Fundraising</div>
-            <div style={{ fontSize: 13, color: '#6B7280', marginTop: 3 }}>{campaigns.length} campaign{campaigns.length !== 1 ? 's' : ''} · £{totalRaised.toLocaleString()} raised in total</div>
-          </div>
-          <button onClick={() => setShowCreate(true)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: '#16A34A', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ New Campaign</button>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 4 }}>Fundraising · {org?.name}</div>
+          <div style={{ fontSize: 15, color: '#6B7280' }}>{campaigns.filter(c => statusOf(c).key === 'active').length} active campaign{campaigns.filter(c => statusOf(c).key === 'active').length !== 1 ? 's' : ''}</div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(3,1fr)', gap: 10 }}>
-          {[
-            { label: 'Total Raised', value: `£${totalRaised.toLocaleString()}`, color: '#16A34A' },
-            { label: 'Campaigns', value: campaigns.length, color: primary },
-            { label: 'Total Donations', value: totalDonations, color: '#8B5CF6' },
-          ].map(s => (
-            <div key={s.label} style={{ background: '#fff', borderRadius: 12, padding: '10px 14px', border: '1px solid #e5e7eb' }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
+        <button onClick={() => setShowCreate(true)} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ New campaign</button>
       </div>
 
-      {/* Create campaign */}
-      {showCreate && (
-        <div style={{ background: '#F0FDF4', border: '1.5px solid #BBF7D0', borderRadius: 16, padding: 20, marginBottom: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>💷 New Fundraising Campaign</div>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
-            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>CAMPAIGN NAME *</label><input value={newCampaign.name} onChange={e => setNewCampaign(n => ({ ...n, name: e.target.value }))} placeholder="e.g. New Minibus Fund 🚌" style={inp} /></div>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>TYPE</label>
-              <select value={newCampaign.campaign_type} onChange={e => setNewCampaign(n => ({ ...n, campaign_type: e.target.value }))} style={inp}>
-                {CAMPAIGN_TYPES.map(t => <option key={t.key} value={t.key}>{t.icon} {t.label}</option>)}
-              </select>
-            </div>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>TARGET (£)</label><input type="number" value={newCampaign.target_amount} onChange={e => setNewCampaign(n => ({ ...n, target_amount: e.target.value }))} placeholder="0 = no target" style={inp} /></div>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>START DATE</label><input type="date" value={newCampaign.start_date} onChange={e => setNewCampaign(n => ({ ...n, start_date: e.target.value }))} style={inp} /></div>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>END DATE</label><input type="date" value={newCampaign.end_date} onChange={e => setNewCampaign(n => ({ ...n, end_date: e.target.value }))} style={inp} /></div>
-            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>DESCRIPTION</label><textarea value={newCampaign.description} onChange={e => setNewCampaign(n => ({ ...n, description: e.target.value }))} rows={2} placeholder="What are you raising money for?" style={{ ...inp, resize: 'none' }} /></div>
-          </div>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={createCampaign} disabled={creating || !newCampaign.name} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: creating || !newCampaign.name ? '#9CA3AF' : '#16A34A', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{creating ? 'Creating...' : '💷 Launch Campaign'}</button>
-            <button onClick={() => setShowCreate(false)} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {/* Campaign cards */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>Loading campaigns...</div>
-      ) : campaigns.length === 0 ? (
-        <div style={{ padding: 60, textAlign: 'center', background: '#F9FAFB', borderRadius: 16, border: '1.5px dashed #e5e7eb' }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>💷</div>
-          <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>No campaigns yet</div>
-          <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 20 }}>Launch your first fundraising campaign and start tracking donations</div>
-          <button onClick={() => setShowCreate(true)} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: '#16A34A', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>+ Launch First Campaign</button>
-        </div>
+        <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>Loading...</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
-          {campaigns.map(campaign => {
-            const typeCfg = CAMPAIGN_TYPES.find(t => t.key === campaign.campaign_type) || CAMPAIGN_TYPES[0]
-            const raised = campaign.raised || 0
-            const target = campaign.target_amount || 0
-            const donCount = campaign.fundraising_donations?.[0]?.count || 0
-            return (
-              <div key={campaign.id} onClick={() => setSelectedCampaign(campaign)} style={{ background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 16, padding: '18px 20px', cursor: 'pointer', transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#16A34A'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(22,163,74,0.15)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = 'none' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 24 }}>{typeCfg.icon}</span>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.2 }}>{campaign.name}</div>
-                      <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{typeCfg.label}</div>
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: '#16A34A' }}>£{raised.toLocaleString()}</div>
+        <>
+          {/* Hero ledger */}
+          <div style={{ padding: '20px 0 16px', borderTop: '0.5px solid #e5e7eb', borderBottom: '0.5px solid #e5e7eb', marginBottom: 20 }}>
+            <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 6 }}>Total raised</div>
+            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 48, lineHeight: 1, color: '#1C2333', marginBottom: 14 }}>£{totalRaised.toLocaleString()}</div>
+            {totalTarget > 0 ? (
+              <>
+                <Thermometer raised={totalRaised} target={totalTarget} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                  <span style={{ fontSize: 12, color: '#9CA3AF' }}>{Math.min(Math.round((totalRaised / totalTarget) * 100), 100)}% of £{totalTarget.toLocaleString()} across all campaigns</span>
+                  <span style={{ fontSize: 12, color: '#9CA3AF' }}>{Math.max(totalTarget - totalRaised, 0).toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })} remaining</span>
                 </div>
-                {target > 0 && (
-                  <div style={{ marginBottom: 12 }}>
-                    <ProgressBar raised={raised} target={target} color='#16A34A' />
-                  </div>
-                )}
-                {campaign.description && <div style={{ fontSize: 12, color: '#6B7280', lineHeight: 1.5, marginBottom: 10 }}>{campaign.description}</div>}
-                <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#9CA3AF' }}>
-                  <span>💰 {donCount} donation{donCount !== 1 ? 's' : ''}</span>
-                  {campaign.end_date && <span>⏰ Ends {format(new Date(campaign.end_date), 'd MMM yyyy')}</span>}
+              </>
+            ) : (
+              <div style={{ fontSize: 12, color: '#9CA3AF' }}>No campaign targets set yet</div>
+            )}
+          </div>
+
+          {/* Ledger line items */}
+          <div style={{ display: 'flex', marginBottom: 28 }}>
+            {[
+              { label: 'Campaigns', value: campaigns.length },
+              { label: 'Donations', value: totalDonations },
+              { label: 'Avg. donation', value: avgDonation !== null ? `£${avgDonation.toFixed(0)}` : '—' },
+              { label: 'Success rate', value: successRate !== null ? `${successRate}%` : '—' },
+            ].map((s, i) => (
+              <React.Fragment key={s.label}>
+                {i > 0 && <div style={{ width: '0.5px', background: '#e5e7eb' }} />}
+                <div style={{ flex: 1, paddingLeft: i > 0 ? 16 : 0, paddingRight: 16 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+                  <div style={{ fontSize: 12, color: '#6B7280' }}>{s.label}</div>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+
+          {/* Create campaign */}
+          {showCreate && (
+            <div style={{ background: '#FAFAF8', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 20, marginBottom: 24 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14 }}>New fundraising campaign</div>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Campaign name</label><input value={newCampaign.name} onChange={e => setNewCampaign(n => ({ ...n, name: e.target.value }))} placeholder="e.g. New minibus fund" style={inp} /></div>
+                <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Type</label>
+                  <select value={newCampaign.campaign_type} onChange={e => setNewCampaign(n => ({ ...n, campaign_type: e.target.value }))} style={inp}>
+                    {CAMPAIGN_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Target (£)</label><input type="number" value={newCampaign.target_amount} onChange={e => setNewCampaign(n => ({ ...n, target_amount: e.target.value }))} placeholder="0 = no target" style={inp} /></div>
+                <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Start date</label><input type="date" value={newCampaign.start_date} onChange={e => setNewCampaign(n => ({ ...n, start_date: e.target.value }))} style={inp} /></div>
+                <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>End date</label><input type="date" value={newCampaign.end_date} onChange={e => setNewCampaign(n => ({ ...n, end_date: e.target.value }))} style={inp} /></div>
+                <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Description</label><textarea value={newCampaign.description} onChange={e => setNewCampaign(n => ({ ...n, description: e.target.value }))} rows={2} placeholder="What are you raising money for?" style={{ ...inp, resize: 'none' }} /></div>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={createCampaign} disabled={creating || !newCampaign.name} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: creating || !newCampaign.name ? '#9CA3AF' : primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{creating ? 'Creating...' : 'Launch campaign'}</button>
+                <button onClick={() => setShowCreate(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              </div>
+            </div>
+          )}
+
+          {/* Campaigns */}
+          {campaigns.length === 0 ? (
+            <>
+              <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Your first campaign will look like this</div>
+              <div style={{ border: '1px dashed #d1d0c8', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 16, opacity: 0.6, marginBottom: 24 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, color: '#6B7280' }}>Summer kit fund</div>
+                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>Target · 30 days left</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 16, color: '#6B7280' }}>£0</div>
+                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>raised</div>
                 </div>
               </div>
-            )
-          })}
-        </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Campaigns</div>
+              <div style={{ borderTop: '0.5px solid #e5e7eb', marginBottom: 28 }}>
+                {campaigns.map((c, i) => {
+                  const status = statusOf(c)
+                  const raised = c.raised || 0
+                  const target = c.target_amount || 0
+                  const pct = target > 0 ? Math.min((raised / target) * 100, 100) : 0
+                  const statusBg = { active: '#E7F6EC', planning: '#F3F2EE', completed: '#F3F2EE' }[status.key]
+                  const statusColor = { active: '#16803C', planning: '#6B7280', completed: '#6B7280' }[status.key]
+                  return (
+                    <div key={c.id} onClick={() => setSelectedCampaign(c)} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 0', borderBottom: '0.5px solid #e5e7eb', cursor: 'pointer' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                          <span style={{ fontSize: 14, color: '#1C2333', fontWeight: 500 }}>{c.name}</span>
+                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: statusBg, color: statusColor, fontWeight: 600 }}>{status.label}</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: '#9CA3AF' }}>
+                          {target > 0 ? `£${raised.toLocaleString()} of £${target.toLocaleString()}` : `£${raised.toLocaleString()} raised`} · {daysLeftLabel(c, status)}
+                        </div>
+                      </div>
+                      {target > 0 && !isMobile && (
+                        <div style={{ width: 120, flexShrink: 0 }}><Thermometer raised={raised} target={target} thin /></div>
+                      )}
+                      <div style={{ fontSize: 13, color: '#6B7280', width: 36, textAlign: 'right', flexShrink: 0 }}>{target > 0 ? `${pct.toFixed(0)}%` : '—'}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+
+          {/* Insights */}
+          {insights.length > 0 && (
+            <>
+              <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Insights</div>
+              <InsightsPanel bullets={insights} primary={primary} />
+            </>
+          )}
+
+          {/* Funding resources */}
+          <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Funding resources</div>
+          <div style={{ borderTop: '0.5px solid #e5e7eb' }}>
+            {FUNDING_RESOURCES.map((r, i) => (
+              <a key={r.name} href={r.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: '0.5px solid #e5e7eb', textDecoration: 'none', color: 'inherit' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, color: '#1C2333' }}>{r.name}</div>
+                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>{r.desc}</div>
+                </div>
+                <span style={{ fontSize: 12, color: primary, flexShrink: 0 }}>Visit →</span>
+              </a>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: '#B0AFA8', marginTop: 8 }}>A curated list, not a live matching service — check each funder's own criteria before applying.</div>
+        </>
       )}
     </div>
   )
