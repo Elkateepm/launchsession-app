@@ -532,14 +532,14 @@ export default function Fundraising({ org }) {
         <>
           {/* Hero ledger */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-            style={{ padding: '22px 24px', borderRadius: 20, marginBottom: 20, background: `linear-gradient(135deg, ${primary}14, #fff)`, border: `1px solid ${primary}25` }}>
+            style={{ padding: '24px 26px', borderRadius: 16, marginBottom: 20, background: '#fff', border: '1px solid #E5E3DC' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
               <div>
-                <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 6 }}>Total raised</div>
+                <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9B9890', marginBottom: 8 }}>Total raised</div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                  <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 48, lineHeight: 1, color: '#1C2333' }}>£<AnimatedNumber value={totalRaised} /></div>
+                  <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 46, lineHeight: 1, color: '#1C2333', letterSpacing: '-0.01em' }}>£<AnimatedNumber value={totalRaised} /></div>
                   {monthDelta !== null && (
-                    <span style={{ fontSize: 12, fontWeight: 700, color: monthDelta === 'new' || monthDelta >= 0 ? '#16803C' : '#B91C1C' }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: monthDelta === 'new' || monthDelta >= 0 ? '#16803C' : '#B91C1C' }}>
                       {monthDelta === 'new' ? 'New this month' : `${monthDelta >= 0 ? '▲' : '▼'} ${Math.abs(monthDelta)}% vs last month`}
                     </span>
                   )}
@@ -547,17 +547,17 @@ export default function Fundraising({ org }) {
               </div>
               {weeklyRaised.some(v => v > 0) && <Sparkline values={weeklyRaised} color={GOLD} />}
             </div>
-            <div style={{ marginTop: 14 }}>
+            <div style={{ marginTop: 18 }}>
               {totalTarget > 0 ? (
                 <>
                   <Thermometer raised={totalRaised} target={totalTarget} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                    <span style={{ fontSize: 12, color: '#6B7280' }}>{Math.min(Math.round((totalRaised / totalTarget) * 100), 100)}% of £{totalTarget.toLocaleString()} across all campaigns</span>
-                    <span style={{ fontSize: 12, color: '#6B7280' }}>{Math.max(totalTarget - totalRaised, 0).toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })} remaining</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                    <span style={{ fontSize: 12, color: '#9B9890' }}>{Math.min(Math.round((totalRaised / totalTarget) * 100), 100)}% of £{totalTarget.toLocaleString()} across all campaigns</span>
+                    <span style={{ fontSize: 12, color: '#9B9890' }}>{Math.max(totalTarget - totalRaised, 0).toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })} remaining</span>
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: 12, color: '#9CA3AF' }}>No campaign targets set yet</div>
+                <div style={{ fontSize: 12, color: '#9B9890' }}>No campaign targets set yet</div>
               )}
             </div>
           </motion.div>
@@ -566,17 +566,18 @@ export default function Fundraising({ org }) {
           <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07 } } }}
             style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 10, marginBottom: 28 }}>
             {[
-              { label: 'Campaigns', value: campaigns.length, prefix: '', color: primary, bg: `${primary}14` },
-              { label: 'Donations', value: totalDonations, prefix: '', color: '#4F46E5', bg: '#EEF2FF' },
-              { label: 'Avg. donation', value: avgDonation !== null ? Math.round(avgDonation) : null, prefix: '£', color: '#92640C', bg: '#FDF6E8' },
-              { label: 'Success rate', value: successRate, prefix: '', suffix: '%', color: '#16803C', bg: '#E7F6EC' },
+              { label: 'Campaigns', value: campaigns.length, prefix: '', color: '#1C2333' },
+              { label: 'Donations', value: totalDonations, prefix: '', color: '#1C2333' },
+              { label: 'Avg. donation', value: avgDonation !== null ? Math.round(avgDonation) : null, prefix: '£', color: '#92640C' },
+              { label: 'Success rate', value: successRate, prefix: '', suffix: '%', color: '#16803C' },
             ].map(s => (
-              <motion.div key={s.label} variants={{ hidden: { opacity: 0, y: 10, scale: 0.96 }, show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 340, damping: 22 } } }}
-                whileHover={{ y: -2 }} style={{ background: s.bg, borderRadius: 14, padding: '14px 16px' }}>
-                <div style={{ fontSize: 22, fontWeight: 700, color: s.color, fontVariantNumeric: 'tabular-nums' }}>
+              <motion.div key={s.label} variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } }}
+                whileHover={{ y: -2, boxShadow: '0 6px 16px rgba(28,35,51,0.06)' }}
+                style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 14, padding: '16px 18px', transition: 'box-shadow 0.2s' }}>
+                <div style={{ fontSize: 22, fontWeight: 600, color: s.color, fontVariantNumeric: 'tabular-nums', fontFamily: 'Georgia, "Times New Roman", serif' }}>
                   {s.value === null ? '—' : <>{s.prefix}<AnimatedNumber value={s.value} />{s.suffix || ''}</>}
                 </div>
-                <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{s.label}</div>
+                <div style={{ fontSize: 11.5, letterSpacing: '0.03em', color: '#9B9890', marginTop: 4 }}>{s.label}</div>
               </motion.div>
             ))}
           </motion.div>
