@@ -238,24 +238,96 @@ function buildInsights(children, scores, goals = []) {
   return { headline, bullets: bullets.slice(0, 6) }
 }
 
-function AISummaryCard({ children, scores, goals, primary, onRecord, onReport }) {
-  const { headline, bullets } = useMemo(() => buildInsights(children, scores, goals), [children, scores, goals])
-  if (!headline) return null
+const TONE_ICON = { success: '📈', warning: '⚠️', accent: '💡' }
+
+const bulletListVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } },
+}
+const bulletItemVariants = {
+  hidden: { opacity: 0, x: -8 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.3 } },
+}
+
+function AISummaryCard({ children, scores, goals, org, primary, onRecord, onReport }) {
+  const heuristic = useMemo(() => buildInsights(children, scores, goals), [children, scores, goals])
+  const [aiResult, setAiResult] = useState(null) // { headline, bullets, cached, generated_at }
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState(null)
+  const [fetchedOnce, setFetchedOnce] = useState(false)
+
+  const fetchAI = useCallback(async (force = false) => {
+    setAiLoading(true)
+    setAiError(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/impact-insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ force }),
+      })
+      const body = await res.json()
+      if (!res.ok) { setAiError(body.error || 'AI insights unavailable'); return }
+      if (body.headline) setAiResult(body)
+    } catch (err) {
+      setAiError(err?.message || 'AI insights unavailable')
+    } finally {
+      setAiLoading(false)
+      setFetchedOnce(true)
+    }
+  }, [])
+
+  useEffect(() => { if (org?.id) fetchAI(false) }, [org?.id, fetchAI]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const showing = aiResult || heuristic
+  const isAI = !!aiResult
+  if (!heuristic.headline && !aiResult?.headline) return null
+
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
       style={{ background: `linear-gradient(135deg, ${primary}18, #fff)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 22px', marginBottom: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: 16 }}>✨</span>
-        <span style={{ fontSize: 13, fontWeight: 900, color: primary }}>Launch AI Summary</span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16 }}>✨</span>
+          <span style={{ fontSize: 13, fontWeight: 900, color: primary }}>Launch AI Summary</span>
+          <AnimatePresence mode="wait">
+            {aiLoading ? (
+              <motion.span key="thinking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>
+                <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.4, repeat: Infinity }}>Thinking…</motion.span>
+              </motion.span>
+            ) : isAI ? (
+              <motion.span key="refined" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                style={{ fontSize: 10, fontWeight: 700, color: primary, background: `${primary}18`, borderRadius: 20, padding: '2px 8px' }}>
+                AI-refined
+              </motion.span>
+            ) : null}
+          </AnimatePresence>
+        </div>
+        <motion.button onClick={() => fetchAI(true)} disabled={aiLoading} whileTap={{ scale: 0.9 }}
+          animate={aiLoading ? { rotate: 360 } : { rotate: 0 }} transition={aiLoading ? { duration: 1, repeat: Infinity, ease: 'linear' } : { duration: 0.2 }}
+          title="Refresh AI summary" style={{ background: 'none', border: 'none', cursor: aiLoading ? 'default' : 'pointer', fontSize: 14, color: '#9CA3AF', padding: 4, lineHeight: 1 }}>
+          ↻
+        </motion.button>
       </div>
-      <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>{headline}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {bullets.map((b, i) => (
-          <div key={i} style={{ fontSize: 13, color: '#4B5563', display: 'flex', gap: 8 }}>
-            <span>{b.icon}</span><span>{b.text}</span>
-          </div>
-        ))}
-      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div key={isAI ? 'ai' : 'heuristic'} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>{showing.headline}</div>
+          <motion.div variants={bulletListVariants} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {showing.bullets.map((b, i) => (
+              <motion.div key={i} variants={bulletItemVariants} style={{ fontSize: 13, color: '#4B5563', display: 'flex', gap: 8 }}>
+                <span>{b.icon || TONE_ICON[b.tone] || '🌱'}</span><span>{b.text}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+
+      {aiError && fetchedOnce && (
+        <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 10 }}>AI summary unavailable right now — showing the quick summary instead.</div>
+      )}
+
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
         <button onClick={onRecord} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 12.5 }}>+ Record Outcome</button>
         <button onClick={onReport} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer', fontSize: 12.5 }}>Generate Report</button>
@@ -406,7 +478,7 @@ export default function ImpactOutcomes({ org }) {
       ) : (
         <>
           {/* AI Summary */}
-          <AISummaryCard children={children} scores={scores} goals={goals} primary={primary} onRecord={() => openWizard()} onReport={() => setDataToolsMode('report')} />
+          <AISummaryCard children={children} scores={scores} goals={goals} org={org} primary={primary} onRecord={() => openWizard()} onReport={() => setDataToolsMode('report')} />
 
           {scores.length === 0 ? (
             <EmptyState
