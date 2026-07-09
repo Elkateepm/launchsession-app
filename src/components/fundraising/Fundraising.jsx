@@ -232,6 +232,22 @@ function Thermometer({ raised, target, thin }) {
   )
 }
 
+function Sparkline({ values, color, width = 140, height = 36 }) {
+  const max = Math.max(...values, 1)
+  const min = Math.min(...values, 0)
+  const range = max - min || 1
+  const step = width / Math.max(values.length - 1, 1)
+  const points = values.map((v, i) => `${i * step},${height - ((v - min) / range) * height}`).join(' ')
+  const areaPoints = `0,${height} ${points} ${width},${height}`
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+      <polygon points={areaPoints} fill={color} opacity={0.12} />
+      <motion.polyline points={points} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, ease: 'easeOut' }} />
+    </svg>
+  )
+}
+
 function CampaignDetail({ campaign, org, onBack, onUpdate }) {
   const isMobile = useIsMobile()
   const [donations, setDonations] = useState([])
@@ -426,6 +442,8 @@ export default function Fundraising({ org }) {
   const [trackerRefresh, setTrackerRefresh] = useState(0)
   const [campaigns, setCampaigns] = useState([])
   const [latestDonationByCampaign, setLatestDonationByCampaign] = useState({})
+  const [donationHistory, setDonationHistory] = useState([])
+  const [previewGrants, setPreviewGrants] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedCampaign, setSelectedCampaign] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
@@ -436,14 +454,17 @@ export default function Fundraising({ org }) {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [{ data: camps }, { data: dons }] = await Promise.all([
+    const [{ data: camps }, { data: dons }, { data: grantPreview }] = await Promise.all([
       supabase.from('fundraising_campaigns').select('*, fundraising_donations(count)').eq('org_id', org.id).order('created_at', { ascending: false }),
-      supabase.from('fundraising_donations').select('campaign_id, created_at').eq('org_id', org.id).order('created_at', { ascending: false }),
+      supabase.from('fundraising_donations').select('campaign_id, amount, created_at').eq('org_id', org.id).order('created_at', { ascending: false }),
+      supabase.from('grants').select('id, name, funder_name, amount_min, amount_max, category').eq('active', true).order('funder_name').limit(2),
     ])
     setCampaigns(camps || [])
     const latest = {}
     ;(dons || []).forEach(d => { if (!latest[d.campaign_id]) latest[d.campaign_id] = d.created_at })
     setLatestDonationByCampaign(latest)
+    setDonationHistory(dons || [])
+    setPreviewGrants(grantPreview || [])
     setLoading(false)
   }, [org.id])
 
@@ -474,6 +495,31 @@ export default function Fundraising({ org }) {
   const completedCount = campaigns.filter(c => statusOf(c).key === 'completed').length
   const successRate = completedCount > 0 ? Math.round((campaigns.filter(c => statusOf(c).key === 'completed' && (c.raised || 0) >= (c.target_amount || Infinity)).length / completedCount) * 100) : null
   const insights = useMemo(() => buildFundraisingInsights(campaigns, latestDonationByCampaign), [campaigns, latestDonationByCampaign])
+
+  const weeklyRaised = useMemo(() => {
+    const now = new Date()
+    const buckets = Array(8).fill(0)
+    donationHistory.forEach(d => {
+      const weeksAgo = Math.floor((now - new Date(d.created_at)) / (7 * DAY_MS))
+      if (weeksAgo >= 0 && weeksAgo < 8) buckets[7 - weeksAgo] += Number(d.amount) || 0
+    })
+    return buckets
+  }, [donationHistory])
+
+  const monthDelta = useMemo(() => {
+    const now = new Date()
+    const cutoff30 = new Date(now - 30 * DAY_MS)
+    const cutoff60 = new Date(now - 60 * DAY_MS)
+    let recent = 0, prior = 0
+    donationHistory.forEach(d => {
+      const dt = new Date(d.created_at)
+      if (dt >= cutoff30) recent += Number(d.amount) || 0
+      else if (dt >= cutoff60) prior += Number(d.amount) || 0
+    })
+    if (prior > 0) return Math.round(((recent - prior) / prior) * 100)
+    if (recent > 0) return 'new'
+    return null
+  }, [donationHistory])
   const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
 
   if (selectedCampaign) return <CampaignDetail campaign={selectedCampaign} org={org} onBack={() => { setSelectedCampaign(null); load() }} onUpdate={updated => { setCampaigns(c => c.map(x => x.id === updated.id ? { ...x, ...updated } : x)); setSelectedCampaign(updated) }} />
@@ -487,19 +533,33 @@ export default function Fundraising({ org }) {
           {/* Hero ledger */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
             style={{ padding: '22px 24px', borderRadius: 20, marginBottom: 20, background: `linear-gradient(135deg, ${primary}14, #fff)`, border: `1px solid ${primary}25` }}>
-            <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 6 }}>Total raised</div>
-            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 48, lineHeight: 1, color: '#1C2333', marginBottom: 14 }}>£<AnimatedNumber value={totalRaised} /></div>
-            {totalTarget > 0 ? (
-              <>
-                <Thermometer raised={totalRaised} target={totalTarget} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                  <span style={{ fontSize: 12, color: '#6B7280' }}>{Math.min(Math.round((totalRaised / totalTarget) * 100), 100)}% of £{totalTarget.toLocaleString()} across all campaigns</span>
-                  <span style={{ fontSize: 12, color: '#6B7280' }}>{Math.max(totalTarget - totalRaised, 0).toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })} remaining</span>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 6 }}>Total raised</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                  <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 48, lineHeight: 1, color: '#1C2333' }}>£<AnimatedNumber value={totalRaised} /></div>
+                  {monthDelta !== null && (
+                    <span style={{ fontSize: 12, fontWeight: 700, color: monthDelta === 'new' || monthDelta >= 0 ? '#16803C' : '#B91C1C' }}>
+                      {monthDelta === 'new' ? 'New this month' : `${monthDelta >= 0 ? '▲' : '▼'} ${Math.abs(monthDelta)}% vs last month`}
+                    </span>
+                  )}
                 </div>
-              </>
-            ) : (
-              <div style={{ fontSize: 12, color: '#9CA3AF' }}>No campaign targets set yet</div>
-            )}
+              </div>
+              {weeklyRaised.some(v => v > 0) && <Sparkline values={weeklyRaised} color={GOLD} />}
+            </div>
+            <div style={{ marginTop: 14 }}>
+              {totalTarget > 0 ? (
+                <>
+                  <Thermometer raised={totalRaised} target={totalTarget} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                    <span style={{ fontSize: 12, color: '#6B7280' }}>{Math.min(Math.round((totalRaised / totalTarget) * 100), 100)}% of £{totalTarget.toLocaleString()} across all campaigns</span>
+                    <span style={{ fontSize: 12, color: '#6B7280' }}>{Math.max(totalTarget - totalRaised, 0).toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })} remaining</span>
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: 12, color: '#9CA3AF' }}>No campaign targets set yet</div>
+              )}
+            </div>
           </motion.div>
 
           {/* KPI tiles */}
@@ -599,13 +659,24 @@ export default function Fundraising({ org }) {
           {/* Insights */}
           {insights.length > 0 && <InsightsPanel bullets={insights} org={org} primary={primary} />}
 
-          {/* Discover Funding pointer */}
-          <button onClick={() => setActiveTab('discover')} style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', border: '1px solid #e5e7eb', borderRadius: 14, background: '#fff', cursor: 'pointer' }}>
+          {/* Discover Funding preview */}
+          <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Discover funding</div>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
+            {previewGrants.map(g => (
+              <div key={g.id} onClick={() => setActiveTab('discover')} style={{ border: '1px solid #e5e7eb', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', background: '#fff' }}>
+                <div style={{ fontSize: 13.5, color: '#1C2333', fontWeight: 500, marginBottom: 2 }}>{g.name}</div>
+                <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 8 }}>{g.funder_name}</div>
+                <div style={{ fontSize: 12.5, color: GOLD, fontWeight: 600 }}>
+                  {g.amount_min && g.amount_max ? `£${Number(g.amount_min).toLocaleString()} – £${Number(g.amount_max).toLocaleString()}` : g.amount_max ? `Up to £${Number(g.amount_max).toLocaleString()}` : 'Amount varies'}
+                </div>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => setActiveTab('discover')} style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', border: '1px solid #e5e7eb', borderRadius: 14, background: '#FAFAF8', cursor: 'pointer' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13.5, color: '#1C2333' }}>Discover funding for {org?.name}</div>
-              <div style={{ fontSize: 12, color: '#9CA3AF' }}>Real, researched UK funders — search, save and track applications</div>
+              <div style={{ fontSize: 12.5, color: '#6B7280' }}>Real, researched UK funders for {org?.name} — search, save and track applications</div>
             </div>
-            <span style={{ fontSize: 12, color: primary, flexShrink: 0 }}>Open →</span>
+            <span style={{ fontSize: 12, color: primary, flexShrink: 0, fontWeight: 600 }}>View all →</span>
           </button>
         </>
       )}
