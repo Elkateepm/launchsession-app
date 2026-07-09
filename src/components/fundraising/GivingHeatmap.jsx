@@ -35,7 +35,7 @@ export default function GivingHeatmap({ donations }) {
       <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>
         {hasEnoughData ? `Which days tend to bring in donations, last ${weeks} weeks` : `Record a few more donations to see which days tend to bring them in`}
       </div>
-      <div style={{ overflowX: 'auto' }}>
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ display: 'inline-flex', gap: 4 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginRight: 4 }}>
             {DAYS.map(d => <div key={d} style={{ height: 16, fontSize: 10, color: '#9CA3AF', display: 'flex', alignItems: 'center' }}>{d}</div>)}
