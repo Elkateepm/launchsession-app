@@ -791,7 +791,7 @@ export default function Fundraising({ org }) {
       </div>
 
       <AnimatePresence mode="wait">
-        <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} style={{ maxWidth: activeTab === 'overview' ? 760 : 820 }}>
+        <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
         {activeTab === 'overview' && overviewContent}
         {activeTab === 'discover' && <FundingMarketplace org={org} primary={primary} onTrack={() => setTrackerRefresh(k => k + 1)} />}
         {activeTab === 'calendar' && <FundraisingCalendar org={org} />}
