@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Lottie from 'lottie-react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -10,6 +11,7 @@ import GivingHeatmap from './GivingHeatmap'
 import FundraisingCalendar from './FundraisingCalendar'
 import DocumentVault from './DocumentVault'
 import ApplicationTracker from './ApplicationTracker'
+import successCheckAnimation from '../../assets/lottie/success-check.json'
 
 const CAMPAIGN_TYPES = [
   { key: 'general',    label: 'General fundraiser' },
@@ -260,28 +262,6 @@ function Sparkline({ values, color, width = 140, height = 36 }) {
   )
 }
 
-const CONFETTI_COLORS = ['#BA7517', '#16A34A', '#4F46E5', '#DB2777', '#0EA5E9']
-
-function ConfettiBurst() {
-  const pieces = useMemo(() => Array.from({ length: 16 }, (_, i) => ({
-    id: i, angle: (i / 16) * 360 + (Math.random() * 20 - 10), distance: 40 + Math.random() * 40,
-    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length], delay: Math.random() * 0.1,
-  })), [])
-  return (
-    <div style={{ position: 'relative', width: 0, height: 0, display: 'inline-block' }}>
-      {pieces.map(p => {
-        const rad = (p.angle * Math.PI) / 180
-        return (
-          <motion.span key={p.id} initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-            animate={{ opacity: 0, x: Math.cos(rad) * p.distance, y: Math.sin(rad) * p.distance - 20, scale: 0.4 }}
-            transition={{ duration: 0.9, delay: p.delay, ease: 'easeOut' }}
-            style={{ position: 'absolute', width: 6, height: 6, borderRadius: 2, background: p.color, top: 0, left: 0 }} />
-        )
-      })}
-    </div>
-  )
-}
-
 function CampaignDetail({ campaign, org, onBack, onUpdate }) {
   const isMobile = useIsMobile()
   const [donations, setDonations] = useState([])
@@ -373,8 +353,11 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
           </>
         )}
         {pct >= 100 && (
-          <div style={{ marginTop: 10, fontSize: 14, fontWeight: 600, color: '#16A34A', display: 'flex', alignItems: 'center', gap: 4 }}>
-            Target reached. <ConfettiBurst />
+          <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 34, height: 34, flexShrink: 0 }}>
+              <Lottie animationData={successCheckAnimation} loop={false} autoplay />
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#16A34A' }}>Target reached.</span>
           </div>
         )}
 
