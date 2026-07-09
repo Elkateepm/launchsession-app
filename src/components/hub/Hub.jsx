@@ -410,6 +410,12 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     return endDateTime < nowTick
   }, [activeSession, nowTick])
 
+  const hasNotStarted = React.useMemo(() => {
+    if (!activeSession?.session_date || !activeSession?.start_time) return false
+    const startDateTime = new Date(`${activeSession.session_date}T${activeSession.start_time}`)
+    return startDateTime > nowTick
+  }, [activeSession, nowTick])
+
   const hasReflection = (reflections || []).some(r => r.session_id === activeSession?.id)
 
   return (
@@ -444,6 +450,11 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#CBD5E1', letterSpacing: 0.8 }}>
                 <span style={{ width: 5, height: 5, background: '#94A3B8', borderRadius: '50%' }}></span>
                 SESSION ENDED
+              </span>
+            ) : hasNotStarted ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(251,191,36,0.14)', border: '1px solid rgba(251,191,36,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#FBBF24', letterSpacing: 0.8 }}>
+                <span style={{ width: 5, height: 5, background: '#FBBF24', borderRadius: '50%' }}></span>
+                NOT STARTED
               </span>
             ) : (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8, boxShadow: '0 2px 10px rgba(34,197,94,0.15)' }}>
