@@ -922,11 +922,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       .filter(s => {
         if (!s.session_date) return false
         if (s.session_date === today) {
-          const startDateTime = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
-          const endDateStr = s.end_date || s.session_date
-          const endDateTime = new Date(`${endDateStr}T${s.end_time || '23:59'}`)
-          const hasStarted = !startDateTime || startDateTime <= now
-          return hasStarted && endDateTime >= now
+          // Keep today's sessions visible all day, even after they've ended —
+          // the hero badge below distinguishes Live Now / Not Started / Ended.
+          return true
         }
         return s.session_date > today && s.session_date <= sevenDaysStr
       })
@@ -1237,7 +1235,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   const isToday = s.session_date === today
                   const now = new Date()
                   const startDateTime = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
-                  const isLiveNow = isToday && (!startDateTime || startDateTime <= now)
+                  const endDateTime = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
+                  const hasEnded = isToday && !!endDateTime && endDateTime < now
+                  const notStartedYet = isToday && !!startDateTime && startDateTime > now
+                  const isLiveNow = isToday && (!startDateTime || startDateTime <= now) && !hasEnded
                   const typeColors = {
                     activity:  { bg: '#EFF6FF', accent: '#3B82F6', icon: '🏃' },
                     workshop:  { bg: '#F0FDF4', accent: '#16A34A', icon: '🛠️' },
@@ -1273,7 +1274,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                             <div style={{ fontSize: 15, fontWeight: 900, color: isToday ? '#fff' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                             {isLiveNow && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', animation: 'pulse-live 1.5s infinite' }} />LIVE NOW</span>}
-                            {isToday && !isLiveNow && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>TODAY</span>}
+                            {isToday && hasEnded && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>ENDED</span>}
+                            {isToday && notStartedYet && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>NOT STARTED</span>}
+                            {isToday && !isLiveNow && !hasEnded && !notStartedYet && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>TODAY</span>}
                             {idx === 0 && !isToday && <span style={{ background: primary + '15', color: primary, borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>NEXT</span>}
                           </div>
 
