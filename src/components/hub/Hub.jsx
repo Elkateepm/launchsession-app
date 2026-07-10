@@ -448,14 +448,8 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
         {!isMobile && (
           <>
-            <button onClick={() => onOpenRegister(activeSession?.id)}
-              style={{ position: 'absolute', top: 20, right: 22, padding: '11px 18px', borderRadius: 13, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 22px -6px ${primary}70`, transition: 'transform 0.12s', zIndex: 1 }}
-              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-              onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
-              Full Register →
-            </button>
             <button onClick={() => { setPopupMode('walkin'); setPopupSearch('') }}
-              style={{ position: 'absolute', top: 20, right: 152, padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s', zIndex: 1 }}
+              style={{ position: 'absolute', top: 20, right: 22, padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s', zIndex: 1 }}
               onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
               onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
               + Walk-in
@@ -512,10 +506,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             <button onClick={() => { setPopupMode('walkin'); setPopupSearch('') }}
               style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
               + Walk-in
-            </button>
-            <button onClick={() => onOpenRegister(activeSession?.id)}
-              style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 22px -6px ${primary}70` }}>
-              Full Register →
             </button>
           </div>
         )}
