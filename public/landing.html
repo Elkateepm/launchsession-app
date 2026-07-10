@@ -79,7 +79,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
 .trust-dot{width:5px;height:5px;border-radius:50%;background:#22C55E}
 /* Hero visual */
 .hero-visual{position:relative}
-.hero-card{background:rgba(11,15,39,0.9);border:1px solid var(--border2);border-radius:18px;padding:24px;box-shadow:0 32px 80px rgba(0,0,0,0.5);animation:float 6s ease-in-out infinite}
+.hero-card{background:rgba(11,15,39,0.9);border:1px solid var(--border2);border-radius:18px;padding:24px;box-shadow:0 32px 80px rgba(0,0,0,0.5);animation:float 6s ease-in-out infinite;position:relative;z-index:1}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 .hc-header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
 .hc-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1B9AAA,#3B82F6);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff}
@@ -95,7 +95,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
 .hc-name{font-size:12px;font-weight:600;color:#fff;flex:1}
 .hc-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px}
 /* floating badge */
-.hero-badge{position:absolute;background:rgba(11,15,39,0.95);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);display:flex;align-items:center;gap:8px}
+.hero-badge{position:absolute;background:rgba(11,15,39,0.95);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);display:flex;align-items:center;gap:8px;z-index:2}
 .hero-badge-1{bottom:-16px;left:-20px;animation:float 5s 1s ease-in-out infinite}
 .hero-badge-2{top:20px;right:-24px;animation:float 5s 2s ease-in-out infinite}
 .hb-icon{font-size:18px}
