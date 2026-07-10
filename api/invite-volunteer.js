@@ -27,51 +27,56 @@ export default async function handler(req, res) {
     const { email, name, org_id, org_slug, redirect_to, role } = req.body || {}
     if (!email || !org_id) return res.status(400).json({ error: 'Missing email or org_id' })
     const inviteRole = ['admin', 'staff', 'volunteer'].includes(role) ? role : 'volunteer'
+    const cleanEmail = email.trim().toLowerCase()
+    const fullName = name || email.split('@')[0]
 
-    // Use service role to invite
+    // Use service role for all admin operations
     const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
 
-    const redirectUrl = redirect_to || (inviteRole === 'volunteer'
-      ? `https://app.launchsession.co.uk/volunteer/accept-invite`
-      : `https://app.launchsession.co.uk/create-password`)
+    // ── Check for an existing account up front. This applies the same way ──
+    // regardless of which invite path (volunteer vs staff/admin) we take below.
+    let existingUserId = null
+    try {
+      // Supabase Admin API has no direct "get user by email" — page through listUsers.
+      // For larger user bases this should be replaced with a dedicated lookup (e.g. an
+      // RPC or a users-by-email index), but this covers current scale.
+      let page = 1
+      const perPage = 200
+      while (!existingUserId) {
+        const { data: pageData, error: listErr } = await adminClient.auth.admin.listUsers({ page, perPage })
+        if (listErr) throw listErr
+        const match = pageData.users.find(u => u.email?.toLowerCase() === cleanEmail)
+        if (match) { existingUserId = match.id; break }
+        if (pageData.users.length < perPage) break // last page reached, no match
+        page += 1
+      }
+    } catch (lookupErr) {
+      console.error('invite-volunteer: existing-user lookup failed', lookupErr)
+      return res.status(500).json({ error: 'Failed to look up existing user: ' + lookupErr.message })
+    }
 
-    const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
-      redirectTo: redirectUrl,
-      data: { org_id, role: inviteRole, full_name: name || email.split('@')[0] }
-    })
-
-    // If the user already has an account, update their existing profile to this org/role
-    // instead of failing outright (single-org-per-user model).
-    if (error && error.code === 'email_exists') {
-      let existingUserId = null
+    // Get org details for the email (non-fatal if this fails)
+    async function fetchOrgData() {
       try {
-        // Supabase Admin API has no direct "get user by email" — page through listUsers.
-        // For larger user bases this should be replaced with a dedicated lookup (e.g. an
-        // RPC or a users-by-email index), but this covers current scale.
-        let page = 1
-        const perPage = 200
-        while (!existingUserId) {
-          const { data: pageData, error: listErr } = await adminClient.auth.admin.listUsers({ page, perPage })
-          if (listErr) throw listErr
-          const match = pageData.users.find(u => u.email?.toLowerCase() === email.trim().toLowerCase())
-          if (match) { existingUserId = match.id; break }
-          if (pageData.users.length < perPage) break // last page reached, no match
-          page += 1
-        }
-      } catch (lookupErr) {
-        console.error('invite-volunteer: existing-user lookup failed', lookupErr)
-        return res.status(500).json({ error: 'Failed to look up existing user: ' + lookupErr.message })
+        const { data: org, error: orgErr } = await adminClient
+          .from('organisations')
+          .select('name, slug, primary_color, logo_url')
+          .eq('id', org_id)
+          .single()
+        if (orgErr) throw orgErr
+        return org
+      } catch (orgFetchErr) {
+        console.error('invite-volunteer: org lookup failed (non-fatal)', orgFetchErr)
+        return null
       }
+    }
 
-      if (!existingUserId) {
-        // Shouldn't happen (Supabase just told us the email exists) but guard anyway
-        return res.status(400).json({ error: 'User already registered but could not be located' })
-      }
-
+    // ── Existing user: reassign to this org/role and notify, regardless of role ──
+    if (existingUserId) {
       const { error: reassignErr } = await adminClient.from('user_profiles').upsert({
         id: existingUserId,
-        email: email.trim().toLowerCase(),
-        full_name: name || email.split('@')[0],
+        email: cleanEmail,
+        full_name: fullName,
         org_id,
         role: inviteRole,
         status: 'active',
@@ -82,33 +87,19 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Failed to update existing user profile: ' + reassignErr.message })
       }
 
-      // Get org details for the notification email (non-fatal if this fails)
-      let orgDataForExisting = null
-      try {
-        const { data: org, error: orgErr } = await adminClient
-          .from('organisations')
-          .select('name, slug, primary_color, logo_url')
-          .eq('id', org_id)
-          .single()
-        if (orgErr) throw orgErr
-        orgDataForExisting = org
-      } catch (orgFetchErr) {
-        console.error('invite-volunteer: org lookup failed for existing user (non-fatal)', orgFetchErr)
-      }
+      const orgDataForExisting = await fetchOrgData()
 
-      // Notify the existing user via the same branded email function, added_to_org variant
       let existingUserEmailSent = true
       try {
         const { error: fnError } = await adminClient.functions.invoke('send-invite-email', {
           body: {
-            email: email.trim().toLowerCase(),
-            full_name: name || email.split('@')[0],
+            email: cleanEmail,
+            full_name: fullName,
             org_name: orgDataForExisting?.name || 'your organisation',
             org_slug: orgDataForExisting?.slug || org_slug,
             org_color: orgDataForExisting?.primary_color || '#3B82F6',
             org_logo: orgDataForExisting?.logo_url || null,
             role: inviteRole,
-            redirect_to: redirectUrl,
             existing_user: true, // lets the Edge Function pick an "added to org" template instead of "welcome, set your password"
           }
         })
@@ -126,67 +117,110 @@ export default async function handler(req, res) {
       })
     }
 
-    if (error) {
-      console.error('invite-volunteer: inviteUserByEmail failed', error)
-      return res.status(400).json({ error: error.message })
-    }
+    // ── New volunteer: use Supabase's native invite flow (unchanged) ──
+    // This redirects to /volunteer/accept-invite, which is built to handle
+    // Supabase Auth's own invite link format.
+    if (inviteRole === 'volunteer') {
+      const redirectUrl = redirect_to || `https://app.launchsession.co.uk/volunteer/accept-invite`
 
-    // Create or update user profile
-    const { error: profileErr } = await adminClient.from('user_profiles').upsert({
-      id: data.user.id,
-      email: email.trim().toLowerCase(),
-      full_name: name || email.split('@')[0],
-      org_id,
-      role: inviteRole,
-      status: 'pending_invite',
-    }, { onConflict: 'id' })
-
-    if (profileErr) {
-      console.error('invite-volunteer: user_profiles upsert failed', profileErr)
-      // Invite was already created in auth — don't fail the whole request, but surface it
-      return res.status(207).json({
-        success: true,
-        user_id: data.user.id,
-        warning: 'Invite sent but profile record failed to save: ' + profileErr.message,
+      const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
+        redirectTo: redirectUrl,
+        data: { org_id, role: inviteRole, full_name: fullName }
       })
+
+      if (error) {
+        console.error('invite-volunteer: inviteUserByEmail failed', error)
+        return res.status(400).json({ error: error.message })
+      }
+
+      const { error: profileErr } = await adminClient.from('user_profiles').upsert({
+        id: data.user.id,
+        email: cleanEmail,
+        full_name: fullName,
+        org_id,
+        role: inviteRole,
+        status: 'pending_invite',
+      }, { onConflict: 'id' })
+
+      if (profileErr) {
+        console.error('invite-volunteer: user_profiles upsert failed', profileErr)
+        return res.status(207).json({
+          success: true,
+          user_id: data.user.id,
+          warning: 'Invite sent but profile record failed to save: ' + profileErr.message,
+        })
+      }
+
+      const orgData = await fetchOrgData()
+
+      let emailSent = true
+      try {
+        const { error: fnError } = await adminClient.functions.invoke('send-invite-email', {
+          body: {
+            email: cleanEmail,
+            full_name: fullName,
+            org_name: orgData?.name || 'your organisation',
+            org_slug: orgData?.slug || org_slug,
+            org_color: orgData?.primary_color || '#3B82F6',
+            org_logo: orgData?.logo_url || null,
+            role: inviteRole,
+            redirect_to: redirectUrl,
+          }
+        })
+        if (fnError) throw fnError
+      } catch (emailErr) {
+        emailSent = false
+        console.error('invite-volunteer: send-invite-email failed (non-fatal)', emailErr)
+      }
+
+      return res.status(200).json({ success: true, user_id: data.user.id, email_sent: emailSent })
     }
 
-    // Get org details for the email (non-fatal if this fails)
-    let orgData = null
-    try {
-      const { data: org, error: orgErr } = await adminClient
-        .from('organisations')
-        .select('name, slug, primary_color, logo_url')
-        .eq('id', org_id)
-        .single()
-      if (orgErr) throw orgErr
-      orgData = org
-    } catch (orgFetchErr) {
-      console.error('invite-volunteer: org lookup failed (non-fatal)', orgFetchErr)
+    // ── New staff/admin: create an admin_invites row and send its real token ──
+    // CreatePassword.jsx reads ?token= from the URL and looks it up directly in
+    // admin_invites — it does NOT use Supabase's built-in invite flow at all, and
+    // it creates the auth user itself (via signUp) once the person sets a password.
+    // Calling inviteUserByEmail here would pre-create a passwordless auth user and
+    // break that signUp step, so we deliberately skip it for this path.
+    const { data: adminInvite, error: inviteErr } = await adminClient
+      .from('admin_invites')
+      .insert({
+        org_id,
+        email: cleanEmail,
+        full_name: fullName,
+        role: inviteRole,
+      })
+      .select()
+      .single()
+
+    if (inviteErr) {
+      console.error('invite-volunteer: admin_invites insert failed', inviteErr)
+      return res.status(500).json({ error: 'Failed to create invite: ' + inviteErr.message })
     }
 
-    // Send branded invite email via the send-invite-email Edge Function (non-fatal)
+    const orgData = await fetchOrgData()
+
     let emailSent = true
     try {
       const { error: fnError } = await adminClient.functions.invoke('send-invite-email', {
         body: {
-          email: email.trim().toLowerCase(),
-          full_name: name || email.split('@')[0],
+          email: cleanEmail,
+          full_name: fullName,
           org_name: orgData?.name || 'your organisation',
           org_slug: orgData?.slug || org_slug,
           org_color: orgData?.primary_color || '#3B82F6',
           org_logo: orgData?.logo_url || null,
           role: inviteRole,
-          redirect_to: redirectUrl,
+          token: adminInvite.token, // the real, DB-generated token CreatePassword.jsx will look up
         }
       })
       if (fnError) throw fnError
     } catch (emailErr) {
       emailSent = false
-      console.error('invite-volunteer: send-invite-email failed (non-fatal)', emailErr)
+      console.error('invite-volunteer: send-invite-email failed for admin/staff invite (non-fatal)', emailErr)
     }
 
-    return res.status(200).json({ success: true, user_id: data.user.id, email_sent: emailSent })
+    return res.status(200).json({ success: true, invite_id: adminInvite.id, email_sent: emailSent })
   } catch (err) {
     // Catch-all: guarantees we ALWAYS return valid JSON, never Vercel's HTML error page
     console.error('invite-volunteer: unhandled exception', err)
