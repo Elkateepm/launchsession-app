@@ -16,7 +16,7 @@ import RALinkedSessions, { printRiskAssessment } from './RALinkedSessions'
 
 const RATING_ORDER = { low: 1, medium: 2, high: 3, critical: 4 }
 
-export default function RiskAssessments({ org, session: authSession }) {
+export default function RiskAssessments({ org, session: authSession, initialOpenAssessmentId }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#7C5CFC'
 
@@ -46,6 +46,13 @@ export default function RiskAssessments({ org, session: authSession }) {
   }, [org.id])
 
   useEffect(() => { loadAll() }, [loadAll])
+
+  // Deep-link: auto-open a specific assessment when navigated here with one (e.g. from the Home hero card)
+  useEffect(() => {
+    if (!initialOpenAssessmentId || assessments.length === 0) return
+    const match = assessments.find(a => a.id === initialOpenAssessmentId)
+    if (match) { setSelected(match); setTab('overview') }
+  }, [initialOpenAssessmentId, assessments])
 
   // Load hazards when an assessment is opened
   useEffect(() => {
