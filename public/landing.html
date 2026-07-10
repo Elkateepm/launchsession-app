@@ -322,6 +322,7 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
     <div class="nav-links">
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
+      <a href="#community">Community</a>
       <a href="#pricing">Pricing</a>
       <a href="#modules">Modules</a>
     </div>
@@ -337,6 +338,7 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
 <div class="mobile-nav" id="mobileNav">
   <a href="#how" onclick="toggleMenu()">How it works</a>
   <a href="#features" onclick="toggleMenu()">Features</a>
+  <a href="#community" onclick="toggleMenu()">Community</a>
   <a href="#pricing" onclick="toggleMenu()">Pricing</a>
   <a href="#modules" onclick="toggleMenu()">Modules</a>
   <div class="mobile-nav-cta">
@@ -483,9 +485,21 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
       </div>
       <div class="feature-card" style="--feat-color:#1B9AAA;--feat-bg:rgba(27,154,170,0.1)">
         <div class="feat-icon-wrap">📊</div>
-        <div class="feat-title">Impact Reports</div>
-        <div class="feat-desc">Generate funder-ready reports showing attendance trends, demographic breakdowns and session outcomes.</div>
+        <div class="feat-title">Impact & Outcomes</div>
+        <div class="feat-desc">AI-refined insights, outcome tracking and visual reporting — generate funder-ready evidence of your programme's impact in one click.</div>
         <div class="feat-tag">All plans</div>
+      </div>
+      <div class="feature-card" style="--feat-color:#DC2626;--feat-bg:rgba(220,38,38,0.1)">
+        <div class="feat-icon-wrap">📐</div>
+        <div class="feat-title">Risk Assessments</div>
+        <div class="feat-desc">HSE-standard 5×5 risk matrix, hazard tracking, session linking and one-click PDF export. Keep every activity properly assessed.</div>
+        <div class="feat-tag">Pro+</div>
+      </div>
+      <div class="feature-card" style="--feat-color:#BA7517;--feat-bg:rgba(186,117,23,0.1)">
+        <div class="feat-icon-wrap">💷</div>
+        <div class="feat-title">Fundraising Hub</div>
+        <div class="feat-desc">Track campaigns and donations, discover real UK grants matched to your work, and get AI-refined fundraising insights — all in one place.</div>
+        <div class="feat-tag">Pro+</div>
       </div>
       <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)">
         <div class="feat-icon-wrap">🤝</div>
@@ -918,6 +932,70 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
     </div>
   </div>
 </section>
+
+<!-- COMMUNITY & GIVING -->
+<section id="community" style="padding:100px 0;background:linear-gradient(180deg,#0B1023 0%,#131B33 100%)">
+  <div class="container">
+    <div style="text-align:center;max-width:640px;margin:0 auto 56px">
+      <div class="section-tag" style="color:#F59E0B">Coming soon</div>
+      <h2 class="section-heading" style="color:#fff">A community for charities<br>doing the work</h2>
+      <p class="section-sub" style="color:rgba(255,255,255,0.55)">A public spotlight for charities on LaunchSession — and a way for supporters to give directly to the campaigns that move them. Both are opt-in and both are in active development.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;margin:0 auto 40px" class="community-grid">
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px">🏅</div>
+        <div style="font-size:19px;font-weight:800;color:#fff;margin-bottom:8px">Charity Spotlight</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:16px">Charities will be able to opt in from their Settings to appear in a public directory — showing their story and active campaigns. Nothing from registers, safeguarding or case management is ever eligible to be shown publicly. Nobody has opted in yet, because the feature isn't live — you'd be one of the first.</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(186,117,23,0.18);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px">💛</div>
+        <div style="font-size:19px;font-weight:800;color:#fff;margin-bottom:8px">Give Directly</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:16px">Visitors will be able to donate straight to a spotlighted charity's campaign from this page. We're building this properly — real payment processing with each charity verified — rather than rushing it out, so it isn't live yet.</div>
+      </div>
+    </div>
+    <div style="max-width:480px;margin:0 auto;text-align:center">
+      <div style="font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:14px">Want to know when either launches?</div>
+      <form id="waitlistForm" style="display:flex;gap:10px" onsubmit="return submitWaitlist(event)">
+        <input id="waitlistEmail" type="email" required placeholder="you@yourcharity.org" style="flex:1;padding:13px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;outline:none;font-family:var(--font)" />
+        <button type="submit" style="padding:13px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;font-family:var(--font)">Notify me</button>
+      </form>
+      <div id="waitlistMsg" style="margin-top:12px;font-size:13px;color:#4ADE80;display:none">✓ You're on the list — we'll email you when it's live.</div>
+      <div id="waitlistErr" style="margin-top:12px;font-size:13px;color:#F87171;display:none">Something went wrong — mind trying again?</div>
+    </div>
+  </div>
+</section>
+<script>
+async function submitWaitlist(e) {
+  e.preventDefault();
+  const email = document.getElementById('waitlistEmail').value.trim();
+  const msg = document.getElementById('waitlistMsg');
+  const err = document.getElementById('waitlistErr');
+  msg.style.display = 'none'; err.style.display = 'none';
+  try {
+    const res = await fetch('https://ssahcqeqrxawmwtjpwvh.supabase.co/rest/v1/waitlist_signups', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzYWhjcWVxcnhhd213dGpwd3ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNDYyNTEsImV4cCI6MjA5MzcyMjI1MX0.HYCzuHe5C1cWoxh7yYUZuLWG0bxvy_9xTE1bmlwJweQ',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ email: email, interest: 'community_and_giving' })
+    });
+    if (!res.ok) throw new Error('failed');
+    msg.style.display = 'block';
+    document.getElementById('waitlistForm').reset();
+  } catch (e2) {
+    err.style.display = 'block';
+  }
+  return false;
+}
+</script>
+<style>
+@media (max-width: 720px) {
+  .community-grid { grid-template-columns: 1fr !important; }
+  #waitlistForm { flex-direction: column; }
+}
+</style>
 
 <!-- CTA -->
 <section id="cta">
