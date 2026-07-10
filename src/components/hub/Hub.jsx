@@ -310,11 +310,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     return LEGACY_BUBBLE_COLORS[name] || '#9CA3AF'
   }
 
-  // Live group breakdown — derived from children actually in this session
-  const sessionChildIds = new Set(sessionAttendance.map(a => a.child_id))
-  const sessionChildren = childList.filter(ch => sessionChildIds.has(ch.id))
-  const bubbleGroups = [...new Set(sessionChildren.map(ch => (ch.group_name || '').trim()).filter(Boolean))]
-
   const getChildStatus = (childId) => {
     const rec = sessionAttendance.find(a => a.child_id === childId)
     return rec?.status || 'expected'
@@ -328,6 +323,15 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       ? childList.filter(c => targetGroups.includes((c.group_name || '').toLowerCase()))
       : childList
   }, [activeSession, childList])
+
+  // Live group breakdown — union of children targeted by this session's bubbles AND any
+  // walk-ins who have an attendance record but weren't in a targeted group. Using attendance
+  // alone meant a group selected for the session wouldn't show its pill until someone in that
+  // group was actually signed in/expected, even though the session was already configured for it.
+  const sessionChildIds = new Set(sessionAttendance.map(a => a.child_id))
+  const targetedChildIds = new Set(targetedChildren.map(c => c.id))
+  const sessionChildren = childList.filter(ch => sessionChildIds.has(ch.id) || targetedChildIds.has(ch.id))
+  const bubbleGroups = [...new Set(sessionChildren.map(ch => (ch.group_name || '').trim()).filter(Boolean))]
 
   const popupChildren = useMemo(() => {
     let base = popupMode === 'walkin'
