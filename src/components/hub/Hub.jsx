@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { useRealtimeTable } from "../../lib/useRealtimeTable";
+import { useOrgSettings } from "../../hooks/useOrgSettings";
 
 const ANNOUNCEMENT_EMOJIS = ['📣', '🎉', '⭐', '🔥', '💡', '📌', '🚨', '🙌', '❤️', '🏆']
 const RA_RATING_COLORS = {
@@ -297,8 +298,14 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     return { signedIn: si, absent, signedOut: so, expected, percent: total > 0 ? Math.round((si / total) * 100) : 0 }
   }, [activeSession, sessionAttendance, childList])
 
-  const BUBBLE_COLORS = { red: '#D0021B', orange: '#F97316', yellow: '#F97316', blue: '#1B4FA8', purple: '#7B2D8B', teens: '#1A1A1A' }
-  const getBubbleColor = (groupName) => BUBBLE_COLORS[(groupName || '').toLowerCase()] || '#9CA3AF'
+  const { groups: orgGroups } = useOrgSettings(orgId)
+  const LEGACY_BUBBLE_COLORS = { red: '#D0021B', orange: '#F97316', yellow: '#F97316', blue: '#1B4FA8', purple: '#7B2D8B', teens: '#1A1A1A' }
+  const getBubbleColor = (groupName) => {
+    const name = (groupName || '').toLowerCase()
+    const match = (orgGroups || []).find(g => (g.label || '').toLowerCase() === name)
+    if (match?.color) return match.color
+    return LEGACY_BUBBLE_COLORS[name] || '#9CA3AF'
+  }
 
   // Live group breakdown — derived from children actually in this session
   const sessionChildIds = new Set(sessionAttendance.map(a => a.child_id))
