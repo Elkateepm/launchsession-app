@@ -27,9 +27,9 @@ function normaliseBubbles(groups) {
 const GROUP_PRESETS = ['Under 7s','Under 10s','Under 12s','Under 14s','Under 16s','Beginners','Intermediate','Advanced','Team A','Team B']
 const GROUP_COLOR_SWATCHES = ['#4F6EF7','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4','#F97316','#EC4899']
 
-function GroupsQuickSetupModal({ org, onClose, onSaved }) {
+function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) {
   const primary = org?.primary_color || '#1B9AAA'
-  const [groups, setGroups] = useState(org?.custom_groups || [])
+  const [groups, setGroups] = useState(initialGroups || org?.custom_groups || [])
   const [newLabel, setNewLabel] = useState('')
   const [newColor, setNewColor] = useState(GROUP_COLOR_SWATCHES[0])
   const [saving, setSaving] = useState(false)
@@ -1272,7 +1272,7 @@ export default function Registers({ org, onNavigate }) {
 
       {/* GROUPS QUICK SETUP MODAL */}
       {showGroupsSetup && (
-        <GroupsQuickSetupModal org={org} onClose={() => setShowGroupsSetup(false)}
+        <GroupsQuickSetupModal org={org} initialGroups={orgGroups} onClose={() => setShowGroupsSetup(false)}
           onSaved={(savedGroups) => {
             setShowGroupsSetup(false)
             refetchOrgSettings()
