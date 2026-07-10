@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
     // Verify the calling user is authenticated
     const anonClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_ANON_KEY)
-    const token = authHeader.replace('Bearer ', '')
+    const token = authHeader.replace(/^Bearer\s+/, '').trim()
     const { data: { user }, error: userErr } = await anonClient.auth.getUser(token)
     if (userErr || !user) return res.status(401).json({ error: 'Invalid session' })
 
