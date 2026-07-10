@@ -55,9 +55,20 @@ function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) {
     setSaving(true)
     setError('')
     try {
+      // Any group present before this edit but not in the final list was removed —
+      // clear group_name for children still assigned to it so no one is left pointing
+      // at a group that no longer exists.
+      const before = initialGroups || org?.custom_groups || []
+      const removedLabels = before.filter(og => !groups.some(g => g.id === og.id)).map(g => g.label).filter(Boolean)
+
       const { error: err } = await supabase.from('organisations').update({ custom_groups: groups }).eq('id', org.id)
       if (err) throw err
-      onSaved(groups)
+
+      if (removedLabels.length > 0) {
+        await supabase.from('children').update({ group_name: null }).eq('org_id', org.id).in('group_name', removedLabels)
+      }
+
+      onSaved(groups, removedLabels)
     } catch (e) {
       setError(e.message || 'Could not save groups')
     }
@@ -351,7 +362,7 @@ function InlineChildImport({ org, template, onImported }) {
         {rows.slice(0,8).map((r,i) => (
           <div key={i} style={{ display: 'flex', gap: 8, padding: '5px 10px', borderBottom: '1px solid #F3F4F6', fontSize: 11 }}>
             <span style={{ fontWeight: 700, color: r.first_name ? '#111' : '#C00', minWidth: 80 }}>{r.first_name || '⚠'} {r.last_name}</span>
-            <span style={{ color: '#9CA3AF' }}>{r.group_name || '—'}</span>
+            <span style={{ color: '#9CA3AF' }}>{r.group_name || 'Ungrouped'}</span>
           </div>
         ))}
         {rows.length > 8 && <div style={{ padding: '5px 10px', fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>+{rows.length - 8} more</div>}
@@ -841,7 +852,7 @@ export default function Registers({ org, onNavigate }) {
       const alerts = [c.allergies && '⚠ Allergy', c.medical_notes && '✚ Medical', c.has_epipen && '💉 EpiPen'].filter(Boolean).join('  ')
       return `<tr>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:700">${c.first_name} ${c.last_name}</td>
-        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:${bubble?.color || '#64748b'};font-weight:700">${bubble?.label || c.group_name || '—'}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:${bubble?.color || '#64748b'};font-weight:700">${bubble?.label || c.group_name || 'Ungrouped'}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#dc2626">${alerts}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:800;color:${status === 'signed_in' ? '#16a34a' : status === 'absent' ? '#dc2626' : '#64748b'}">${statusLabel}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:#94a3b8;font-size:12px">_______________</td>
@@ -1273,10 +1284,17 @@ export default function Registers({ org, onNavigate }) {
       {/* GROUPS QUICK SETUP MODAL */}
       {showGroupsSetup && (
         <GroupsQuickSetupModal org={org} initialGroups={orgGroups} onClose={() => setShowGroupsSetup(false)}
-          onSaved={(savedGroups) => {
+          onSaved={(savedGroups, removedLabels) => {
             setShowGroupsSetup(false)
             refetchOrgSettings()
-            showToast(`✅ Saved ${savedGroups.length} group${savedGroups.length !== 1 ? 's' : ''}`)
+            if (removedLabels && removedLabels.length > 0) {
+              const removedLower = removedLabels.map(l => l.toLowerCase())
+              setChildren(prev => prev.map(c => removedLower.includes((c.group_name || '').toLowerCase()) ? { ...c, group_name: null } : c))
+              const affected = children.filter(c => removedLower.includes((c.group_name || '').toLowerCase())).length
+              showToast(`✅ Saved ${savedGroups.length} group${savedGroups.length !== 1 ? 's' : ''} — ${affected} child${affected !== 1 ? 'ren' : ''} moved to ungrouped`)
+            } else {
+              showToast(`✅ Saved ${savedGroups.length} group${savedGroups.length !== 1 ? 's' : ''}`)
+            }
           }} />
       )}
     </div>
