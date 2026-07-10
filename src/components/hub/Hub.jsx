@@ -431,7 +431,8 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     return startDateTime > nowTick
   }, [activeSession, nowTick])
 
-  const hasReflection = (reflections || []).some(r => r.session_id === activeSession?.id)
+  const activeReflection = (reflections || []).find(r => r.session_id === activeSession?.id) || null
+  const hasReflection = !!activeReflection
 
   return (
     <div style={{ background: `linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
@@ -604,6 +605,40 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             </div>
             <span style={{ color: '#FCD34D', fontSize: 16 }}>→</span>
           </button>
+        )}
+
+        {isSessionEnded && activeReflection && (
+          <div style={{ marginTop: 14, padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 15 }}>📝</span>
+                <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>Session Reflection</span>
+                {activeReflection.overall_rating ? (
+                  <span style={{ fontSize: 11, color: '#FCD34D', letterSpacing: 1 }}>{'★'.repeat(activeReflection.overall_rating)}{'☆'.repeat(Math.max(0, 5 - activeReflection.overall_rating))}</span>
+                ) : null}
+              </div>
+              <button onClick={() => onNavigate('planner', { reflectSessionId: activeSession?.id })}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                Edit →
+              </button>
+            </div>
+            {activeReflection.what_went_well && (
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, marginBottom: activeReflection.what_could_improve ? 6 : 0 }}>
+                <span style={{ color: '#4ADE80', fontWeight: 700 }}>Went well: </span>{activeReflection.what_went_well}
+              </div>
+            )}
+            {activeReflection.what_could_improve && (
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
+                <span style={{ color: '#FB923C', fontWeight: 700 }}>Could improve: </span>{activeReflection.what_could_improve}
+              </div>
+            )}
+            {!activeReflection.what_went_well && !activeReflection.what_could_improve && activeReflection.reflection && (
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>{activeReflection.reflection}</div>
+            )}
+            {activeReflection.safeguarding_flag && (
+              <div style={{ marginTop: 8, fontSize: 11, color: '#FCA5A5', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>🛡️ Safeguarding note flagged</div>
+            )}
+          </div>
         )}
       </div>
       <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
