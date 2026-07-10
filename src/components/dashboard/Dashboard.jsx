@@ -377,12 +377,14 @@ export default function Dashboard({ session, org }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [registersKey, setRegistersKey] = useState(0)
   const [reflectSessionId, setReflectSessionId] = useState(null)
+  const [openAssessmentId, setOpenAssessmentId] = useState(null)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
 
   const handleSetTab = (t, payload) => {
     if (t === 'registers') setRegistersKey(k => k + 1)
     setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
+    setOpenAssessmentId(t === 'risk_assessments' && payload?.openAssessmentId ? payload.openAssessmentId : null)
     setTab(t)
   }
 
@@ -656,7 +658,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'safeguarding'    && (hasModule('safeguarding')    ? <Safeguarding org={org} session={session} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} />)}
           {tab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} />)}
           {tab === 'case_management' && (hasModule('case_management') ? <CaseManagement org={org} session={session} />                        : <LockedModule moduleKey="case_management" label="Case Management" icon="📁" onNavigate={handleSetTab} />)}
-          {tab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} />)}
+          {tab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} />)}
 
           {/* ── GROWTH PACK ── */}
           {tab === 'reports'         && (hasModule('reports')         ? <Reports org={org} session={session} />                                : <LockedModule moduleKey="reports"         label="Reports"           icon="📊" onNavigate={handleSetTab} />)}
