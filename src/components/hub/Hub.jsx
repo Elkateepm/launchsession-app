@@ -271,13 +271,16 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
   React.useEffect(() => { if (sessions.length) setActiveSession(sessions[0]) }, [sessions])
 
-  React.useEffect(() => {
+  const loadLinkedRA = React.useCallback(() => {
     if (!activeSession?.id) { setLinkedRA(null); return }
-    setLinkedRA(undefined)
     supabase.from('risk_assessment_sessions').select('risk_assessments(id, title, risk_rating, status)').eq('session_id', activeSession.id).limit(1)
       .then(({ data }) => setLinkedRA(data && data.length > 0 ? data[0].risk_assessments : null))
       .catch(() => setLinkedRA(null))
   }, [activeSession?.id])
+
+  React.useEffect(() => { setLinkedRA(undefined); loadLinkedRA() }, [loadLinkedRA])
+  useRealtimeTable('risk_assessment_sessions', loadLinkedRA, { filter: activeSession?.id ? `session_id=eq.${activeSession.id}` : undefined, enabled: !!activeSession?.id, pollInterval: 5000 })
+  useRealtimeTable('risk_assessments', loadLinkedRA, { filter: linkedRA?.id ? `id=eq.${linkedRA.id}` : undefined, enabled: !!linkedRA?.id, pollInterval: 5000 })
 
   const sessionAttendance = localAttendance.filter(a => a.session_id === activeSession?.id)
 
@@ -951,6 +954,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   useRealtimeTable("attendance", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
   useRealtimeTable("sessions", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
   useRealtimeTable("safeguarding_concerns", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
+  useRealtimeTable("children", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
+  useRealtimeTable("organisations", loadHub, { filter: orgId ? `id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 5000 });
+  useRealtimeTable("session_reflections", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 5000 });
 
   // ── SEARCH ──────────────────────────────────────────────────
   React.useEffect(() => {
