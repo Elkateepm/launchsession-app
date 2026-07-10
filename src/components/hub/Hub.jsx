@@ -4,6 +4,12 @@ import { useIsMobile } from "../../hooks/useIsMobile";
 import { useRealtimeTable } from "../../lib/useRealtimeTable";
 
 const ANNOUNCEMENT_EMOJIS = ['📣', '🎉', '⭐', '🔥', '💡', '📌', '🚨', '🙌', '❤️', '🏆']
+const RA_RATING_COLORS = {
+  low: { bg: 'rgba(34,197,94,0.18)', color: '#86EFAC' },
+  medium: { bg: 'rgba(245,158,11,0.18)', color: '#FDE047' },
+  high: { bg: 'rgba(239,68,68,0.18)', color: '#FCA5A5' },
+  critical: { bg: 'rgba(124,58,237,0.2)', color: '#C4B5FD' },
+}
 
 // ── ANNOUNCEMENTS PANEL ─────────────────────────────────────────
 // Staff/admin only — visibility is enforced both here (UI) and via RLS
@@ -258,10 +264,19 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const [popupMode, setPopupMode] = useState(null) // 'expected' | 'signed_in' | 'signed_out' | null
   const [busyChildId, setBusyChildId] = useState(null)
   const [popupSearch, setPopupSearch] = useState('')
+  const [linkedRA, setLinkedRA] = useState(undefined) // undefined = loading, null = none, object = found
 
   // Keep local attendance in sync
   React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
   React.useEffect(() => { if (sessions.length) setActiveSession(sessions[0]) }, [sessions])
+
+  React.useEffect(() => {
+    if (!activeSession?.id) { setLinkedRA(null); return }
+    setLinkedRA(undefined)
+    supabase.from('risk_assessment_sessions').select('risk_assessments(id, title, risk_rating, status)').eq('session_id', activeSession.id).limit(1)
+      .then(({ data }) => setLinkedRA(data && data.length > 0 ? data[0].risk_assessments : null))
+      .catch(() => setLinkedRA(null))
+  }, [activeSession?.id])
 
   const sessionAttendance = localAttendance.filter(a => a.session_id === activeSession?.id)
 
@@ -468,6 +483,24 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             {activeSession?.start_time || ''}{activeSession?.end_time ? ` – ${activeSession.end_time}` : ''}
             {activeSession?.location ? ` · ${activeSession.location}` : ''}
           </p>
+          {linkedRA === undefined ? null : linkedRA ? (
+            <button onClick={() => onNavigate && onNavigate('risk_assessments', { openAssessmentId: linkedRA.id })}
+              style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 99, padding: '5px 12px 5px 10px', cursor: 'pointer' }}>
+              <span style={{ fontSize: 12 }}>🛡️</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{linkedRA.title}</span>
+              <span style={{
+                fontSize: 9.5, fontWeight: 900, letterSpacing: 0.4, textTransform: 'uppercase', borderRadius: 99, padding: '2px 8px',
+                background: RA_RATING_COLORS[linkedRA.risk_rating]?.bg || 'rgba(148,163,184,0.16)',
+                color: RA_RATING_COLORS[linkedRA.risk_rating]?.color || '#CBD5E1',
+              }}>{linkedRA.risk_rating || '—'}</span>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>View →</span>
+            </button>
+          ) : (
+            <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.18)', borderRadius: 99, padding: '5px 12px' }}>
+              <span style={{ fontSize: 12 }}>🛡️</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>No risk assessment attached</span>
+            </div>
+          )}
         </div>
 
         {isMobile && (
