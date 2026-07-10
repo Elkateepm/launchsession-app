@@ -420,7 +420,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   const isSessionEnded = React.useMemo(() => {
     if (!activeSession?.session_date) return false
-    const endDateStr = activeSession.end_date || activeSession.session_date
+    // Only use end_date when the session genuinely crosses midnight (end_time earlier than start_time).
+    // Some sessions carry a stray/incorrect end_date even when they're same-day — don't blindly trust it.
+    const crossesMidnight = !!(activeSession.start_time && activeSession.end_time && activeSession.end_time < activeSession.start_time)
+    const endDateStr = (crossesMidnight && activeSession.end_date) || activeSession.session_date
     const endDateTime = new Date(`${endDateStr}T${activeSession.end_time || '23:59'}`)
     return endDateTime < nowTick
   }, [activeSession, nowTick])
