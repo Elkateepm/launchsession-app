@@ -321,7 +321,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   const popupChildren = useMemo(() => {
     let base = popupMode === 'walkin'
-      ? childList  // walk-ins can be any child in the org
+      ? childList.filter(c => !sessionAttendance.some(a => a.child_id === c.id)) // only children not already on this session's register
       : targetedChildren
     if (popupMode === 'signed_in') base = base.filter(c => getChildStatus(c.id) === 'signed_in')
     else if (popupMode === 'signed_out') base = base.filter(c => getChildStatus(c.id) === 'signed_out')
@@ -684,14 +684,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                       {child.group_name && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{child.group_name}</div>}
                     </div>
                     {popupMode === 'walkin' ? (
-                      isIn ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#16A34A', background: '#DCFCE7', borderRadius: 99, padding: '5px 12px' }}>✓ In</span>
-                      ) : (
-                        <button onClick={() => handleWalkIn(child)} disabled={isBusy}
-                          style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: isBusy ? '#9CA3AF' : primary, border: 'none', borderRadius: 99, padding: '7px 14px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
-                          {isBusy ? '···' : '+ Walk-in'}
-                        </button>
-                      )
+                      <button onClick={() => handleWalkIn(child)} disabled={isBusy}
+                        style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: isBusy ? '#9CA3AF' : primary, border: 'none', borderRadius: 99, padding: '7px 14px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
+                        {isBusy ? '···' : '+ Walk-in'}
+                      </button>
                     ) : popupMode === 'expected' ? (
                       isIn ? (
                         <span style={{ fontSize: 11, fontWeight: 700, color: '#16A34A', background: '#DCFCE7', borderRadius: 99, padding: '5px 12px' }}>✓ In</span>
