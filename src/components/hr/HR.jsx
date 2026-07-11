@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format, differenceInDays, isWithinInterval, parseISO } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -101,7 +101,7 @@ function KpiCard({ icon, label: lbl, value, color, sub, onClick, active }) {
 // ─────────────────────────────────────────────────────────────────────────
 // Staff profile slide-over
 // ─────────────────────────────────────────────────────────────────────────
-function StaffPanel({ staff, org, session, accountStatus, onClose, onUpdate, onInviteSent, showToast }) {
+function StaffPanel({ staff, org, accountStatus, onClose, onUpdate, onInviteSent, showToast }) {
   const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState('profile')
   const [leaveLog, setLeaveLog] = useState([])
@@ -456,12 +456,13 @@ export default function HR({ org, session }) {
   const [filter, setFilter] = useState('active')
   const [search, setSearch] = useState('')
   const [toast, setToast] = useState(null)
+  const toastTimer = useRef(null)
   const primary = org?.primary_color || '#1B9AAA'
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type })
-    clearTimeout(showToast._t)
-    showToast._t = setTimeout(() => setToast(null), 4500)
+    clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 4500)
   }, [])
 
   const load = useCallback(async () => {
@@ -717,6 +718,7 @@ export default function HR({ org, session }) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800 }}>{member.full_name}</div>
                   <div style={{ fontSize: 11, color: '#6B7280' }}>{member.role}</div>
+                  <span style={{ background: dbs.bg, color: dbs.color, borderRadius: 7, padding: '2px 7px', fontSize: 10, fontWeight: 800, display: 'inline-block', marginTop: 4 }}>🔍 {dbs.label}</span>
                 </div>
                 <AccountBadge status={getAccountStatus(member)} />
               </div>
