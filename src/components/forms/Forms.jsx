@@ -667,7 +667,7 @@ function EmailFormModal({ form, primary, onClose }) {
   )
 }
 
-export default function Forms({ org }) {
+export default function Forms({ org, isAdmin }) {
   const isMobile = useIsMobile()
   const [forms, setForms] = useState([])
   const [loading, setLoading] = useState(true)
@@ -771,20 +771,22 @@ export default function Forms({ org }) {
           </div>
           <div style={{ fontSize: 14, color: '#475569' }}>Build digital forms, applications and consent packs.</div>
         </div>
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 10 }}>
-          <motion.button
-            onClick={() => setShowTemplates(v => !v)}
-            whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
-            style={{ padding: '13px 22px', borderRadius: 14, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            📋 Browse Templates
-          </motion.button>
-          <motion.button
-            onClick={() => { setSelectedForm(null); setView('builder') }}
-            whileHover={{ y: -3, boxShadow: '0 16px 40px -10px rgba(109,93,246,0.5)' }} whileTap={{ scale: 0.97 }}
-            style={{ padding: '13px 22px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 10px 30px -8px rgba(109,93,246,0.4)', whiteSpace: 'nowrap' }}>
-            + Create Form
-          </motion.button>
-        </div>
+        {isAdmin && (
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 10 }}>
+            <motion.button
+              onClick={() => setShowTemplates(v => !v)}
+              whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+              style={{ padding: '13px 22px', borderRadius: 14, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              📋 Browse Templates
+            </motion.button>
+            <motion.button
+              onClick={() => { setSelectedForm(null); setView('builder') }}
+              whileHover={{ y: -3, boxShadow: '0 16px 40px -10px rgba(109,93,246,0.5)' }} whileTap={{ scale: 0.97 }}
+              style={{ padding: '13px 22px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 10px 30px -8px rgba(109,93,246,0.4)', whiteSpace: 'nowrap' }}>
+              + Create Form
+            </motion.button>
+          </div>
+        )}
       </motion.div>
 
       {/* STATS */}
@@ -874,18 +876,27 @@ export default function Forms({ org }) {
       ) : forms.length === 0 ? (
         <div style={{ position: 'relative', padding: '56px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(14px)', borderRadius: 24, border: '1px solid rgba(255,255,255,0.7)' }}>
           <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} style={{ fontSize: 44, marginBottom: 14 }}>📝</motion.div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Ready to build something amazing?</div>
-          <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 22 }}>Choose one of our professionally designed templates or create your own.</div>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <motion.button onClick={() => setShowTemplates(true)} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
-              style={{ padding: '12px 24px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
-              📋 Browse Templates
-            </motion.button>
-            <motion.button onClick={() => { setSelectedForm(null); setView('builder') }} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
-              style={{ padding: '12px 24px', borderRadius: 14, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
-              Create From Scratch
-            </motion.button>
-          </div>
+          {isAdmin ? (
+            <>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Ready to build something amazing?</div>
+              <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 22 }}>Choose one of our professionally designed templates or create your own.</div>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <motion.button onClick={() => setShowTemplates(true)} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
+                  style={{ padding: '12px 24px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+                  📋 Browse Templates
+                </motion.button>
+                <motion.button onClick={() => { setSelectedForm(null); setView('builder') }} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
+                  style={{ padding: '12px 24px', borderRadius: 14, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+                  Create From Scratch
+                </motion.button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>No forms yet</div>
+              <div style={{ fontSize: 13.5, color: '#64748B' }}>An admin hasn't built any forms yet — check back soon.</div>
+            </>
+          )}
         </div>
       ) : (
         <div>
@@ -902,7 +913,10 @@ export default function Forms({ org }) {
                 <motion.div key={form.id}
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.3) }}
                   whileHover={{ y: -4, boxShadow: `0 20px 40px -18px ${accent}55` }}
-                  onClick={() => { setSelectedForm({ ...form, fields: form.fields || [] }); setView('builder') }}
+                  onClick={() => {
+                    if (isAdmin) { setSelectedForm({ ...form, fields: form.fields || [] }); setView('builder') }
+                    else { setSelectedForm(form); setView('submissions') }
+                  }}
                   style={{ position: 'relative', cursor: 'pointer', overflow: 'hidden', background: `linear-gradient(150deg, ${accent}0E, rgba(255,255,255,0.85) 60%)`, backdropFilter: 'blur(14px)', border: `1px solid ${accent}25`, borderRadius: 20, padding: 18, boxShadow: '0 6px 20px -14px rgba(30,41,59,0.18)', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
                   <div style={{ position: 'absolute', top: -30, right: -30, width: 110, height: 110, borderRadius: '50%', background: `radial-gradient(circle, ${accent}22, transparent 70%)`, pointerEvents: 'none' }} />
@@ -910,10 +924,16 @@ export default function Forms({ org }) {
                   {/* Top row: icon + status */}
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                     <div style={{ width: 42, height: 42, borderRadius: 13, background: `linear-gradient(135deg, ${accent}, ${accent}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, boxShadow: `0 8px 18px -8px ${accent}70` }}>📝</div>
-                    <button onClick={e => { e.stopPropagation(); toggleActive(form) }}
-                      style={{ padding: '4px 10px', borderRadius: 99, border: `1px solid ${form.is_active ? '#16A34A40' : '#e5e7eb'}`, background: form.is_active ? '#F0FDF4' : '#F9FAFB', color: form.is_active ? '#16A34A' : '#9CA3AF', fontSize: 10.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                      {form.is_active ? '● Active' : '⏸ Inactive'}
-                    </button>
+                    {isAdmin ? (
+                      <button onClick={e => { e.stopPropagation(); toggleActive(form) }}
+                        style={{ padding: '4px 10px', borderRadius: 99, border: `1px solid ${form.is_active ? '#16A34A40' : '#e5e7eb'}`, background: form.is_active ? '#F0FDF4' : '#F9FAFB', color: form.is_active ? '#16A34A' : '#9CA3AF', fontSize: 10.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        {form.is_active ? '● Active' : '⏸ Inactive'}
+                      </button>
+                    ) : (
+                      <span style={{ padding: '4px 10px', borderRadius: 99, border: `1px solid ${form.is_active ? '#16A34A40' : '#e5e7eb'}`, background: form.is_active ? '#F0FDF4' : '#F9FAFB', color: form.is_active ? '#16A34A' : '#9CA3AF', fontSize: 10.5, fontWeight: 800, whiteSpace: 'nowrap' }}>
+                        {form.is_active ? '● Active' : '⏸ Inactive'}
+                      </span>
+                    )}
                   </div>
 
                   {/* Name + description */}
@@ -934,14 +954,23 @@ export default function Forms({ org }) {
 
                   {/* Actions */}
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <button onClick={e => { e.stopPropagation(); setSelectedForm({ ...form, fields: form.fields || [] }); setView('builder') }}
-                      style={{ flex: 1, padding: '8px 12px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
-                      ✏️ Edit
-                    </button>
-                    <button onClick={e => { e.stopPropagation(); setSelectedForm(form); setView('submissions') }} title="View submissions"
-                      style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', color: '#374151', fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
-                      📬
-                    </button>
+                    {isAdmin ? (
+                      <button onClick={e => { e.stopPropagation(); setSelectedForm({ ...form, fields: form.fields || [] }); setView('builder') }}
+                        style={{ flex: 1, padding: '8px 12px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                        ✏️ Edit
+                      </button>
+                    ) : (
+                      <button onClick={e => { e.stopPropagation(); setSelectedForm(form); setView('submissions') }}
+                        style={{ flex: 1, padding: '8px 12px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                        📬 View submissions
+                      </button>
+                    )}
+                    {isAdmin && (
+                      <button onClick={e => { e.stopPropagation(); setSelectedForm(form); setView('submissions') }} title="View submissions"
+                        style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', color: '#374151', fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
+                        📬
+                      </button>
+                    )}
                     <button onClick={e => { e.stopPropagation(); copyFormLink(form) }} disabled={!form.is_active} title={form.is_active ? 'Copy public link' : 'Activate to get a link'}
                       style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${copiedId === form.id ? '#16A34A40' : 'rgba(0,0,0,0.08)'}`, background: copiedId === form.id ? '#F0FDF4' : '#fff', color: !form.is_active ? '#D1D5DB' : copiedId === form.id ? '#16A34A' : '#374151', fontSize: 13, cursor: form.is_active ? 'pointer' : 'default', flexShrink: 0 }}>
                       {copiedId === form.id ? '✅' : '🔗'}
@@ -950,10 +979,12 @@ export default function Forms({ org }) {
                       style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', color: !form.is_active ? '#D1D5DB' : '#374151', fontSize: 13, cursor: form.is_active ? 'pointer' : 'default', flexShrink: 0 }}>
                       ✉️
                     </button>
-                    <button onClick={e => { e.stopPropagation(); deleteForm(form) }} title="Delete form"
-                      style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid rgba(220,38,38,0.2)', background: 'rgba(220,38,38,0.05)', color: '#DC2626', fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
-                      🗑️
-                    </button>
+                    {isAdmin && (
+                      <button onClick={e => { e.stopPropagation(); deleteForm(form) }} title="Delete form"
+                        style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid rgba(220,38,38,0.2)', background: 'rgba(220,38,38,0.05)', color: '#DC2626', fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
+                        🗑️
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               )
