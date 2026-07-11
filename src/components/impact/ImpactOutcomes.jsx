@@ -349,7 +349,7 @@ function AISummaryCard({ children, scores, goals, org, primary, onRecord, onRepo
       )}
 
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-        <button onClick={onRecord} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 12.5 }}>+ Record Outcome</button>
+        {onRecord && <button onClick={onRecord} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 12.5 }}>+ Record Outcome</button>}
         <button onClick={onReport} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer', fontSize: 12.5 }}>Generate Report</button>
       </div>
     </motion.div>
@@ -359,7 +359,7 @@ function AISummaryCard({ children, scores, goals, org, primary, onRecord, onRepo
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
-export default function ImpactOutcomes({ org }) {
+export default function ImpactOutcomes({ org, isAdmin }) {
   const isMobile = useIsMobile()
   const [children, setChildren] = useState([])
   const [scores, setScores] = useState([])
@@ -444,12 +444,12 @@ export default function ImpactOutcomes({ org }) {
     return (
       <>
         <PersonPanel
-          child={activeChild} org={org} scores={scores}
+          child={activeChild} org={org} scores={scores} isAdmin={isAdmin}
           onClose={() => setActiveChild(null)}
           onRecordOutcome={(c) => openWizard(c)}
           onScoreAdded={onScoreAdded}
         />
-        {showWizard && (
+        {showWizard && isAdmin && (
           <OutcomeWizard org={org} children={children} presetChild={wizardPresetChild}
             onClose={() => setShowWizard(false)} onSaved={onScoreAdded} />
         )}
@@ -466,13 +466,13 @@ export default function ImpactOutcomes({ org }) {
           <div style={{ fontSize: 13, color: '#6B7280', marginTop: 4 }}>Measure confidence, wellbeing and personal development across every young person</div>
         </div>
         <div style={{ display: 'flex', gap: 8, position: 'relative' }}>
-          <button onClick={() => openWizard()} style={{ padding: '11px 20px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>+ Record Outcome</button>
+          {isAdmin && <button onClick={() => openWizard()} style={{ padding: '11px 20px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>+ Record Outcome</button>}
           <button onClick={() => setShowMoreMenu(m => !m)} style={{ padding: '11px 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>⋯</button>
           <AnimatePresence>
             {showMoreMenu && (
               <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 style={{ position: 'absolute', top: 46, right: 0, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14, boxShadow: '0 10px 30px rgba(0,0,0,0.1)', width: 200, zIndex: 20, overflow: 'hidden' }}>
-                {['Generate Report', 'Export Data', 'Import Assessments', 'Help Centre'].map(label => (
+                {['Generate Report', ...(isAdmin ? ['Export Data', 'Import Assessments'] : []), 'Help Centre'].map(label => (
                   <button key={label} onClick={() => {
                     setShowMoreMenu(false)
                     if (label === 'Generate Report') setDataToolsMode('report')
@@ -498,14 +498,13 @@ export default function ImpactOutcomes({ org }) {
       ) : (
         <>
           {/* AI Summary */}
-          <AISummaryCard children={children} scores={scores} goals={goals} org={org} primary={primary} onRecord={() => openWizard()} onReport={() => setDataToolsMode('report')} />
+          <AISummaryCard children={children} scores={scores} goals={goals} org={org} primary={primary} isAdmin={isAdmin} onRecord={isAdmin ? () => openWizard() : undefined} onReport={() => setDataToolsMode('report')} />
 
           {scores.length === 0 ? (
             <EmptyState
               icon="📊" title="No outcomes have been recorded yet"
               subtitle="Start tracking confidence, wellbeing, attendance and more to see the full impact of your work."
-              primaryLabel="Record First Outcome" onPrimary={() => openWizard()}
-              secondaryLabel="Import Existing Data" onSecondary={() => setDataToolsMode('import')}
+              {...(isAdmin ? { primaryLabel: "Record First Outcome", onPrimary: () => openWizard(), secondaryLabel: "Import Existing Data", onSecondary: () => setDataToolsMode('import') } : {})}
               primary={primary}
             />
           ) : (
@@ -619,7 +618,7 @@ export default function ImpactOutcomes({ org }) {
         </>
       )}
 
-      {showWizard && (
+      {showWizard && isAdmin && (
         <OutcomeWizard org={org} children={children} presetChild={wizardPresetChild}
           onClose={() => setShowWizard(false)} onSaved={onScoreAdded} />
       )}
