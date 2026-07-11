@@ -13,7 +13,7 @@ const TABS = [
   { key: 'achievements', label: 'Achievements', icon: '🏆' },
 ]
 
-export default function PersonPanel({ child, org, scores, onClose, onRecordOutcome }) {
+export default function PersonPanel({ child, org, scores, onClose, onRecordOutcome, isAdmin }) {
   const primary = org?.primary_color || '#1B9AAA'
   const [tab, setTab] = useState('overview')
   const [goals, setGoals] = useState([])
@@ -99,7 +99,7 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
                 {avgScore ? `${scoreEmoji(Number(avgScore))} ${scoreLabel(Number(avgScore))}` : 'No scores yet'}
               </div>
             </div>
-            <button onClick={() => onRecordOutcome(child)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 12.5 }}>+ Record</button>
+            {isAdmin && <button onClick={() => onRecordOutcome(child)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 12.5 }}>+ Record</button>}
           </div>
 
           {/* Tabs */}
@@ -161,17 +161,19 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
 
           {tab === 'goals' && (
             <div>
-              <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 14, marginBottom: 16, border: '1px solid #F3F4F6' }}>
-                <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 8 }}>+ New Goal</div>
-                <input value={newGoal.title} onChange={e => setNewGoal(g => ({ ...g, title: e.target.value }))} placeholder="e.g. Attend 4 sessions in a row" style={{ ...inp, marginBottom: 8 }} />
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <select value={newGoal.area} onChange={e => setNewGoal(g => ({ ...g, area: e.target.value }))} style={{ ...inp, flex: 1 }}>
-                    {OUTCOME_AREAS.map(a => <option key={a.key} value={a.key}>{a.icon} {a.label}</option>)}
-                  </select>
-                  <input type="date" value={newGoal.target_date} onChange={e => setNewGoal(g => ({ ...g, target_date: e.target.value }))} style={{ ...inp, flex: 1 }} />
+              {isAdmin && (
+                <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 14, marginBottom: 16, border: '1px solid #F3F4F6' }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 8 }}>+ New Goal</div>
+                  <input value={newGoal.title} onChange={e => setNewGoal(g => ({ ...g, title: e.target.value }))} placeholder="e.g. Attend 4 sessions in a row" style={{ ...inp, marginBottom: 8 }} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <select value={newGoal.area} onChange={e => setNewGoal(g => ({ ...g, area: e.target.value }))} style={{ ...inp, flex: 1 }}>
+                      {OUTCOME_AREAS.map(a => <option key={a.key} value={a.key}>{a.icon} {a.label}</option>)}
+                    </select>
+                    <input type="date" value={newGoal.target_date} onChange={e => setNewGoal(g => ({ ...g, target_date: e.target.value }))} style={{ ...inp, flex: 1 }} />
+                  </div>
+                  <button disabled={addingGoal || !newGoal.title.trim()} onClick={addGoal} style={{ marginTop: 8, padding: '8px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 12 }}>{addingGoal ? 'Adding...' : 'Add Goal'}</button>
                 </div>
-                <button disabled={addingGoal || !newGoal.title.trim()} onClick={addGoal} style={{ marginTop: 8, padding: '8px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 12 }}>{addingGoal ? 'Adding...' : 'Add Goal'}</button>
-              </div>
+              )}
 
               {goalsLoading ? (
                 <div style={{ textAlign: 'center', padding: 20, color: '#9CA3AF', fontSize: 13 }}>Loading...</div>
@@ -193,7 +195,7 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
                         <div style={{ marginTop: 10 }}>
                           <ScoreBar value={g.progress_pct} max={100} color={g.status === 'completed' ? '#16A34A' : primary} />
                         </div>
-                        {g.status !== 'completed' && (
+                        {g.status !== 'completed' && isAdmin && (
                           <input type="range" min={0} max={100} step={10} value={g.progress_pct} onChange={e => updateGoalProgress(g, Number(e.target.value))} style={{ width: '100%', marginTop: 8 }} />
                         )}
                       </div>
