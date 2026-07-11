@@ -101,7 +101,7 @@ function KpiCard({ icon, label: lbl, value, color, sub, onClick, active }) {
 // ─────────────────────────────────────────────────────────────────────────
 // Staff profile slide-over
 // ─────────────────────────────────────────────────────────────────────────
-function StaffPanel({ staff, org, accountStatus, onClose, onUpdate, onInviteSent, showToast }) {
+function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpdate, onInviteSent, showToast }) {
   const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState('profile')
   const [leaveLog, setLeaveLog] = useState([])
@@ -159,6 +159,17 @@ function StaffPanel({ staff, org, accountStatus, onClose, onUpdate, onInviteSent
       showToast(err.message || 'Failed to send invite', 'error')
     }
     setInviting(false)
+  }
+
+  const [changingRole, setChangingRole] = useState(false)
+  const changeAccountRole = async (newRole) => {
+    if (!accountProfile?.id || newRole === accountProfile.role) return
+    setChangingRole(true)
+    const { error } = await supabase.from('user_profiles').update({ role: newRole }).eq('id', accountProfile.id)
+    setChangingRole(false)
+    if (error) { showToast(`Couldn't update role: ${error.message}`, 'error'); return }
+    showToast(`${staff.full_name} is now ${newRole === 'admin' ? 'an admin' : 'a staff member'}.`, 'success')
+    onInviteSent()
   }
 
   const dbs = DBS_STATUS[staff.dbs_status || 'none']
@@ -328,6 +339,20 @@ function StaffPanel({ staff, org, accountStatus, onClose, onUpdate, onInviteSent
                 {accountStatus === 'pending' && 'An invite has been sent — they haven\'t set their password yet.'}
                 {accountStatus === 'none' && 'This person has no LaunchSession login yet. Send them an invite so they can sign in, view their sessions and record their own DBS/training documents.'}
               </div>
+              {accountStatus === 'active' && accountProfile && (
+                <div style={{ marginTop: 4 }}>
+                  <label style={label}>ACCOUNT ROLE</label>
+                  <select value={accountProfile.role} disabled={changingRole} onChange={e => changeAccountRole(e.target.value)} style={inp}>
+                    <option value="staff">Staff</option>
+                    <option value="admin">Admin (full access)</option>
+                  </select>
+                  <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 8 }}>
+                    {accountProfile.role === 'admin'
+                      ? 'This person has full admin access — Team & Staff, Settings, Branding, HR and Templates.'
+                      : 'Staff can use the day-to-day tools but not manage the team, settings or HR records.'}
+                  </div>
+                </div>
+              )}
               {accountStatus !== 'active' && (
                 <>
                   <div style={{ marginBottom: 10 }}>
@@ -490,7 +515,14 @@ export default function HR({ org, session }) {
     return map
   }, [profiles, pendingInvites])
 
+  const profileByEmail = useMemo(() => {
+    const map = {}
+    profiles.forEach(p => { if (p.email) map[p.email.toLowerCase()] = p })
+    return map
+  }, [profiles])
+
   const getAccountStatus = (member) => member.email ? (accountStatusByEmail[member.email.toLowerCase()] || 'none') : 'none'
+  const getAccountProfile = (member) => member.email ? profileByEmail[member.email.toLowerCase()] : null
 
   const onLeaveTodayIds = useMemo(() => {
     const set = new Set()
@@ -772,6 +804,7 @@ export default function HR({ org, session }) {
             org={org}
             session={session}
             accountStatus={getAccountStatus(selected)}
+            accountProfile={getAccountProfile(selected)}
             onClose={() => setSelected(null)}
             onUpdate={u => { setStaff(s => s.map(x => x.id === u.id ? { ...x, ...u } : x)); setSelected(u) }}
             onInviteSent={load}
