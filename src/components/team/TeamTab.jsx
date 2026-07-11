@@ -5,6 +5,33 @@ import { supabase } from '../../lib/supabase'
 
 const ROLES = ['admin', 'staff', 'volunteer']
 
+function RoleToggle({ member, roleColors, primary, onChange, disabled, updating }) {
+  const color = roleColors[member.role] || primary
+  // Only staff/admin are toggleable here — volunteers keep a plain badge.
+  if (!['staff', 'admin'].includes(member.role) || disabled) {
+    return (
+      <span style={{ padding: '3px 10px', borderRadius: 99, background: color + '18', color, fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        {member.role || 'staff'}
+      </span>
+    )
+  }
+  return (
+    <select
+      value={member.role}
+      disabled={updating}
+      onChange={e => onChange(member, e.target.value)}
+      title="Change role"
+      style={{
+        padding: '3px 8px 3px 10px', borderRadius: 99, background: color + '18', color, fontSize: 11, fontWeight: 900,
+        textTransform: 'uppercase', letterSpacing: 0.5, border: `1.5px solid ${color}40`, cursor: updating ? 'default' : 'pointer',
+        outline: 'none', opacity: updating ? 0.6 : 1, appearance: 'none', WebkitAppearance: 'none',
+      }}>
+      <option value="staff">Staff</option>
+      <option value="admin">Admin</option>
+    </select>
+  )
+}
+
 export default function TeamTab({ org, session }) {
   const isMobile = useIsMobile()
   const [members, setMembers] = useState([])
@@ -121,6 +148,23 @@ export default function TeamTab({ org, session }) {
     }
   }
 
+  const [updatingRoleId, setUpdatingRoleId] = useState(null)
+  const updateMemberRole = async (member, newRole) => {
+    if (newRole === member.role) return
+    setUpdatingRoleId(member.id)
+    setError('')
+    setInviteSuccess('')
+    const table = member.status === 'pending_invite' ? 'admin_invites' : 'user_profiles'
+    const { error: updateError } = await supabase.from(table).update({ role: newRole }).eq('id', member.id)
+    setUpdatingRoleId(null)
+    if (updateError) {
+      setError(`Couldn't update role for ${member.email}: ${updateError.message}`)
+      return
+    }
+    setMembers(prev => prev.map(m => m.id === member.id ? { ...m, role: newRole } : m))
+    setInviteSuccess(`${member.full_name || member.email} is now ${newRole === 'admin' ? 'an admin' : 'a staff member'}.`)
+  }
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <PageHeader
@@ -211,9 +255,7 @@ export default function TeamTab({ org, session }) {
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{member.full_name || member.email}</div>
                 <div style={{ fontSize: 12, color: 'var(--text3)' }}>{member.email}</div>
               </div>
-              <span style={{ padding: '3px 10px', borderRadius: 99, background: (roleColors[member.role] || primary) + '18', color: roleColors[member.role] || primary, fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
-                {member.role || 'staff'}
-              </span>
+              <RoleToggle member={member} roleColors={roleColors} primary={primary} onChange={updateMemberRole} updating={updatingRoleId === member.id} />
               <span style={{ padding: '3px 10px', borderRadius: 99, background: '#FEF3C7', color: '#B45309', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
                 pending
               </span>
@@ -254,9 +296,8 @@ export default function TeamTab({ org, session }) {
                 <div style={{ fontSize: 12, color: 'var(--text3)' }}>{m.email}</div>
               </div>
               <div style={{ flexShrink: 0 }}>
-                <span style={{ padding: '3px 10px', borderRadius: 99, background: roleColors[m.role] + '18' || '#f3f4f6', color: roleColors[m.role] || '#6b7280', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  {m.role || 'staff'}
-                </span>
+                <RoleToggle member={m} roleColors={roleColors} primary={primary} onChange={updateMemberRole}
+                  disabled={m.email === session?.user?.email} updating={updatingRoleId === m.id} />
               </div>
               <div style={{ flexShrink: 0, textAlign: 'right' }}>
                 <div style={{ fontSize: 11, color: 'var(--text3)' }}>Joined {m.created_at ? new Date(m.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '—'}</div>
