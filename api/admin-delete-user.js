@@ -3,27 +3,33 @@ import { createClient } from '@supabase/supabase-js'
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  // Verify the request comes from an authenticated admin
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' })
+  const token = authHeader.replace(/^Bearer\s+/, '').trim()
 
-  const token = authHeader.replace('Bearer ', '')
+  // Fail fast and clearly if required env vars are missing (this endpoint was
+  // previously reading the wrong env var name — SUPABASE_SERVICE_KEY instead
+  // of REACT_APP_SUPABASE_SERVICE_KEY — which silently produced an empty-key
+  // client, made every RLS-protected read fail, and surfaced as a confusing
+  // "Forbidden: admin role required" error for every admin, every time.)
+  const { REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_ANON_KEY, REACT_APP_SUPABASE_SERVICE_KEY } = process.env
+  if (!REACT_APP_SUPABASE_URL || !REACT_APP_SUPABASE_ANON_KEY || !REACT_APP_SUPABASE_SERVICE_KEY) {
+    console.error('admin-delete-user: missing required env vars', {
+      hasUrl: !!REACT_APP_SUPABASE_URL,
+      hasAnonKey: !!REACT_APP_SUPABASE_ANON_KEY,
+      hasServiceKey: !!REACT_APP_SUPABASE_SERVICE_KEY,
+    })
+    return res.status(500).json({ error: 'Server misconfiguration: missing Supabase credentials' })
+  }
 
   // Verify caller's session using anon client (stateless JWT check, no DB read needed here)
-  const anonClient = createClient(
-    process.env.REACT_APP_SUPABASE_URL || 'https://ssahcqeqrxawmwtjpwvh.supabase.co',
-    process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || ''
-  )
+  const anonClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_ANON_KEY)
   const { data: { user }, error: authError } = await anonClient.auth.getUser(token)
   if (authError || !user) return res.status(401).json({ error: 'Invalid session' })
 
   // All subsequent reads use the service-role client, since RLS would block
-  // an unauthenticated client from reading user_profiles at all (this was the
-  // bug that made every deletion attempt fail with a false "different org" error).
-  const adminClient = createClient(
-    process.env.REACT_APP_SUPABASE_URL || 'https://ssahcqeqrxawmwtjpwvh.supabase.co',
-    process.env.SUPABASE_SERVICE_KEY || ''
-  )
+  // an unauthenticated client from reading user_profiles at all.
+  const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
 
   // Verify caller is admin/owner in their org
   const { data: profile } = await adminClient
