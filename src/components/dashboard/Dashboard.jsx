@@ -28,6 +28,10 @@ import ResourceBooking from '../resources/ResourceBooking'
 // Base modules always free — regardless of pack
 const BASE_MODULE_KEYS = ['home', 'calendar', 'planner', 'events_trips', 'team', 'settings', 'templates', 'risk_assessments']
 
+// Tabs that require an admin/owner role — hidden from nav and blocked at the tab-switch level for staff.
+// This is UX polish only; the real enforcement is server-side RLS (is_org_admin()).
+const ADMIN_ONLY_TABS = ['team', 'branding', 'settings', 'hr', 'templates']
+
 const ALL_MODULES = [
   { key: 'calendar',        label: 'Calendar',         icon: '📅', group: 'delivery' },
   { key: 'registers',       label: 'Registers',        icon: '📋', group: 'delivery' },
@@ -80,6 +84,25 @@ function LockedModule({ moduleKey, label, icon, onNavigate }) {
             ← Back to Home
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+function RestrictedModule({ label, icon, onNavigate }) {
+  return (
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+      <div style={{ textAlign: 'center', padding: 40, maxWidth: 420 }}>
+        <div style={{ width: 80, height: 80, borderRadius: 24, background: '#94A3B815', border: '2px solid #94A3B830', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 20px' }}>{icon}</div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>{label}</div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#94A3B815', border: '1px solid #94A3B840', borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 16 }}>
+          🔒 Admin access only
+        </div>
+        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 24 }}>
+          This area is restricted to organisation admins. Speak to your admin if you need something here.
+        </div>
+        <button onClick={() => onNavigate && onNavigate('home')} style={{ padding: '11px 22px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+          ← Back to Home
+        </button>
       </div>
     </div>
   )
@@ -382,6 +405,7 @@ export default function Dashboard({ session, org }) {
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
 
   const handleSetTab = (t, payload) => {
+    if (ADMIN_ONLY_TABS.includes(t) && !isAdmin) { setTab('home'); return }
     if (t === 'registers') setRegistersKey(k => k + 1)
     setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
     setOpenAssessmentId(t === 'risk_assessments' && payload?.openAssessmentId ? payload.openAssessmentId : null)
@@ -425,6 +449,7 @@ export default function Dashboard({ session, org }) {
   }
 
   const userName = userProfile?.full_name || userEmail.split('@')[0]
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'owner'
 
   const [unreadSubs, setUnreadSubs] = useState([])
   useEffect(() => {
@@ -543,20 +568,24 @@ export default function Dashboard({ session, org }) {
               { key: 'hr', label: 'HR', icon: '🧑‍💼' },
               { key: 'resource_booking', label: 'Resource Booking', icon: '🗓️' },
               { key: 'events_trips', label: 'Events & Trips', icon: '✈️' },
-            ].map(m => (
+            ].filter(m => m.key !== 'hr' || isAdmin).map(m => (
               <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
                 onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
                 locked={!hasModule(m.key)} />
             ))}
-            <NavItem icon="🗂" label="Templates" active={tab === 'templates'}
-              onClick={() => handleSetTab('templates')} primary={primary} collapsed={sidebarCollapsed} />
+            {isAdmin && (
+              <NavItem icon="🗂" label="Templates" active={tab === 'templates'}
+                onClick={() => handleSetTab('templates')} primary={primary} collapsed={sidebarCollapsed} />
+            )}
           </NavSection>
 
-          <NavSection collapsed={sidebarCollapsed} title="Organisation" packColor="rgba(255,255,255,0.2)">
-            <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => { handleSetTab('team') }} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="🎨" label="Branding" active={tab === 'branding'} onClick={() => { handleSetTab('branding') }} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => { handleSetTab('settings') }} primary={primary} collapsed={sidebarCollapsed} />
-          </NavSection>
+          {isAdmin && (
+            <NavSection collapsed={sidebarCollapsed} title="Organisation" packColor="rgba(255,255,255,0.2)">
+              <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => { handleSetTab('team') }} primary={primary} collapsed={sidebarCollapsed} />
+              <NavItem icon="🎨" label="Branding" active={tab === 'branding'} onClick={() => { handleSetTab('branding') }} primary={primary} collapsed={sidebarCollapsed} />
+              <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => { handleSetTab('settings') }} primary={primary} collapsed={sidebarCollapsed} />
+            </NavSection>
+          )}
         </div>
 
         {/* USER PROFILE */}
@@ -643,10 +672,10 @@ export default function Dashboard({ session, org }) {
           {tab === 'planner'    && <SessionPlanner org={org} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} onNavigate={handleSetTab} />}
           {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
           {tab === 'events_trips' && <EventsTrips org={org} />}
-          {tab === 'team'       && <TeamTab org={org} session={session} />}
-          {tab === 'templates'  && <Templates org={org} session={session} onNavigate={handleSetTab} />}
-          {tab === 'settings'   && <Settings org={org} session={session} />}
-          {tab === 'branding'   && <Settings org={org} session={session} initialSection="branding" />}
+          {tab === 'team'       && (isAdmin ? <TeamTab org={org} session={session} /> : <RestrictedModule label="Team & Staff" icon="👥" onNavigate={handleSetTab} />)}
+          {tab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} />)}
+          {tab === 'settings'   && (isAdmin ? <Settings org={org} session={session} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} />)}
+          {tab === 'branding'   && (isAdmin ? <Settings org={org} session={session} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} />)}
 
           {/* ── DELIVERY PACK ── */}
           {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
@@ -666,7 +695,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'fundraising'     && (hasModule('fundraising')     ? <Fundraising org={org} session={session} />                           : <LockedModule moduleKey="fundraising"     label="Fundraising"       icon="💷" onNavigate={handleSetTab} />)}
 
           {/* ── OPERATIONS PACK ── */}
-          {tab === 'hr'               && (hasModule('hr')               ? <HR org={org} session={session} />                                  : <LockedModule moduleKey="hr"               label="HR"               icon="🧑‍💼" onNavigate={handleSetTab} />)}
+          {tab === 'hr'               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : hasModule('hr')               ? <HR org={org} session={session} />                                  : <LockedModule moduleKey="hr"               label="HR"               icon="🧑‍💼" onNavigate={handleSetTab} />)}
           {tab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceBooking org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} />)}
 
           {/* ── LEGACY / COMING SOON ── */}
@@ -715,7 +744,7 @@ export default function Dashboard({ session, org }) {
                   { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
                   { key: 'reports', label: 'Reports', icon: '📊' },
                   { key: 'settings', label: 'Settings', icon: '⚙️' }
-                ].map(item => (
+                ].filter(item => !ADMIN_ONLY_TABS.includes(item.key) || isAdmin).map(item => (
                   <button
                     key={item.key}
                     onClick={() => {
