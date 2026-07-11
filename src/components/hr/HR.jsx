@@ -172,6 +172,29 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
     onInviteSent()
   }
 
+  const [deleting, setDeleting] = useState(false)
+  const deleteAccount = async () => {
+    if (!accountProfile?.id) return
+    if (!window.confirm(`Permanently delete ${staff.full_name}'s LaunchSession login? This completely removes their account row from the database and cannot be undone. Their HR record (DBS, leave history, notes) is kept.`)) return
+    setDeleting(true)
+    try {
+      const { data: { session: liveSession } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin-delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${liveSession?.access_token}` },
+        body: JSON.stringify({ user_id: accountProfile.id, org_id: org.id }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      showToast(`${staff.full_name}'s account has been deleted.`, 'success')
+      onInviteSent()
+      onClose()
+    } catch (err) {
+      showToast(err.message || 'Failed to delete account', 'error')
+    }
+    setDeleting(false)
+  }
+
   const dbs = DBS_STATUS[staff.dbs_status || 'none']
   const annualLeave = leaveLog.filter(l => l.type === 'annual').reduce((s, l) => s + (l.days || 0), 0)
 
@@ -368,6 +391,18 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
                 </>
               )}
             </div>
+
+            {accountStatus === 'active' && accountProfile && (
+              <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 14, padding: 18 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#991B1B', marginBottom: 6 }}>⚠️ Danger Zone</div>
+                <div style={{ fontSize: 12, color: '#B91C1C', lineHeight: 1.6, marginBottom: 14 }}>
+                  Permanently deletes {staff.full_name}'s LaunchSession login — completely removing their account row from the database. This cannot be undone. Their HR record (DBS, leave history, notes) is kept.
+                </div>
+                <button onClick={deleteAccount} disabled={deleting} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: '#DC2626', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: deleting ? 'default' : 'pointer', opacity: deleting ? 0.6 : 1 }}>
+                  {deleting ? 'Deleting…' : '🗑️ Delete Account'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </motion.div>
