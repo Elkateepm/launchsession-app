@@ -262,7 +262,7 @@ function Sparkline({ values, color, width = 140, height = 36 }) {
   )
 }
 
-function CampaignDetail({ campaign, org, onBack, onUpdate }) {
+function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
   const isMobile = useIsMobile()
   const [donations, setDonations] = useState([])
   const [loading, setLoading] = useState(true)
@@ -336,9 +336,11 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
             </div>
             <div style={{ fontSize: 13, color: '#6B7280' }}>{campaign.description || CAMPAIGN_TYPES.find(t => t.key === campaign.campaign_type)?.label}</div>
           </div>
-          <button onClick={() => setEditing(!editing)} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
-            {editing ? 'Cancel' : 'Edit'}
-          </button>
+          {isAdmin && (
+            <button onClick={() => setEditing(!editing)} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+              {editing ? 'Cancel' : 'Edit'}
+            </button>
+          )}
         </div>
 
         <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 6 }}>Total raised</div>
@@ -398,10 +400,10 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
       {/* Add donation */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ fontSize: 13, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#9CA3AF' }}>Donations ({donations.length})</div>
-        <button onClick={() => setShowAdd(!showAdd)} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Record donation</button>
+        {isAdmin && <button onClick={() => setShowAdd(!showAdd)} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Record donation</button>}
       </div>
 
-      {showAdd && (
+      {isAdmin && showAdd && (
         <div style={{ background: '#FAFAF8', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 18, marginBottom: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Donor name</label><input value={newDonation.donor_name} onChange={e => setNewDonation(n => ({ ...n, donor_name: e.target.value }))} placeholder="Anonymous" style={inp} /></div>
@@ -457,7 +459,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate }) {
   )
 }
 
-export default function Fundraising({ org }) {
+export default function Fundraising({ org, isAdmin }) {
   const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState('overview')
   const [trackerRefresh, setTrackerRefresh] = useState(0)
@@ -555,7 +557,7 @@ export default function Fundraising({ org }) {
   }, [donationHistory, campaigns])
   const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
 
-  if (selectedCampaign) return <CampaignDetail campaign={selectedCampaign} org={org} onBack={() => { setSelectedCampaign(null); load() }} onUpdate={updated => { setCampaigns(c => c.map(x => x.id === updated.id ? { ...x, ...updated } : x)); setSelectedCampaign(updated) }} />
+  if (selectedCampaign) return <CampaignDetail campaign={selectedCampaign} org={org} isAdmin={isAdmin} onBack={() => { setSelectedCampaign(null); load() }} onUpdate={updated => { setCampaigns(c => c.map(x => x.id === updated.id ? { ...x, ...updated } : x)); setSelectedCampaign(updated) }} />
 
   const overviewContent = (
     <>
@@ -616,7 +618,7 @@ export default function Fundraising({ org }) {
           </motion.div>
 
           {/* Create campaign */}
-          {showCreate && (
+          {isAdmin && showCreate && (
             <div style={{ background: '#FAFAF8', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 20, marginBottom: 24 }}>
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>New fundraising campaign</div>
               <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 6 }}>Quick start</div>
@@ -757,7 +759,7 @@ export default function Fundraising({ org }) {
           <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 4 }}>Fundraising · {org?.name}</div>
           <div style={{ fontSize: 15, color: '#6B7280' }}>{campaigns.filter(c => statusOf(c).key === 'active').length} active campaign{campaigns.filter(c => statusOf(c).key === 'active').length !== 1 ? 's' : ''}</div>
         </div>
-        {activeTab === 'overview' && <button onClick={() => setShowCreate(true)} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ New campaign</button>}
+        {activeTab === 'overview' && isAdmin && <button onClick={() => setShowCreate(true)} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ New campaign</button>}
       </div>
 
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid #e5e7eb', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -778,7 +780,7 @@ export default function Fundraising({ org }) {
         {activeTab === 'overview' && overviewContent}
         {activeTab === 'discover' && <FundingMarketplace org={org} primary={primary} onTrack={() => setTrackerRefresh(k => k + 1)} />}
         {activeTab === 'calendar' && <FundraisingCalendar org={org} />}
-        {activeTab === 'documents' && <DocumentVault org={org} />}
+        {activeTab === 'documents' && <DocumentVault org={org} isAdmin={isAdmin} />}
         {activeTab === 'applications' && <ApplicationTracker org={org} refreshKey={trackerRefresh} />}
         </motion.div>
       </AnimatePresence>
