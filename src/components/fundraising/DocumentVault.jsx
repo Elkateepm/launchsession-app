@@ -18,7 +18,7 @@ const STATUS_META = {
   missing: { label: 'Missing', color: '#6B7280', bg: '#F3F2EE' },
 }
 
-export default function DocumentVault({ org }) {
+export default function DocumentVault({ org, isAdmin }) {
   const [docs, setDocs] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
@@ -27,14 +27,14 @@ export default function DocumentVault({ org }) {
   const load = useCallback(async () => {
     setLoading(true)
     const { data } = await supabase.from('fundraising_documents').select('*').eq('org_id', org.id).order('created_at')
-    if ((data || []).length === 0) {
+    if ((data || []).length === 0 && isAdmin) {
       const { data: seeded } = await supabase.from('fundraising_documents').insert(DEFAULT_DOCS.map(d => ({ ...d, org_id: org.id, status: 'missing' }))).select()
       setDocs(seeded || [])
     } else {
-      setDocs(data)
+      setDocs(data || [])
     }
     setLoading(false)
-  }, [org.id])
+  }, [org.id, isAdmin])
 
   useEffect(() => { load() }, [load])
 
@@ -84,19 +84,23 @@ export default function DocumentVault({ org }) {
                 <div style={{ fontSize: 13.5, color: '#1C2333' }}>{d.name}</div>
                 <div style={{ fontSize: 11, color: '#9CA3AF' }}>Updated {format(new Date(d.updated_at), 'd MMM yyyy')}</div>
               </div>
-              <select value={d.status} onChange={e => updateStatus(d.id, e.target.value)}
-                style={{ fontSize: 11.5, fontWeight: 600, color: meta.color, background: meta.bg, border: 'none', borderRadius: 20, padding: '4px 10px', cursor: 'pointer' }}>
-                <option value="missing">Missing</option>
-                <option value="have">Have it</option>
-                <option value="expiring_soon">Expiring soon</option>
-              </select>
-              <button onClick={() => removeDoc(d.id)} title="Remove" style={{ background: 'none', border: 'none', color: '#D1D5DB', cursor: 'pointer', fontSize: 14, width: 32, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -6 }}>✕</button>
+              {isAdmin ? (
+                <select value={d.status} onChange={e => updateStatus(d.id, e.target.value)}
+                  style={{ fontSize: 11.5, fontWeight: 600, color: meta.color, background: meta.bg, border: 'none', borderRadius: 20, padding: '4px 10px', cursor: 'pointer' }}>
+                  <option value="missing">Missing</option>
+                  <option value="have">Have it</option>
+                  <option value="expiring_soon">Expiring soon</option>
+                </select>
+              ) : (
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: meta.color, background: meta.bg, borderRadius: 20, padding: '4px 10px' }}>{meta.label}</span>
+              )}
+              {isAdmin && <button onClick={() => removeDoc(d.id)} title="Remove" style={{ background: 'none', border: 'none', color: '#D1D5DB', cursor: 'pointer', fontSize: 14, width: 32, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -6 }}>✕</button>}
             </div>
           )
         })}
       </div>
 
-      {showAdd ? (
+      {isAdmin && (showAdd ? (
         <div style={{ display: 'flex', gap: 8 }}>
           <input value={newDoc.name} onChange={e => setNewDoc(n => ({ ...n, name: e.target.value }))} placeholder="Document name" style={{ ...inp, flex: 1 }} />
           <button onClick={addDoc} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#fff', fontWeight: 600, fontSize: 12.5, cursor: 'pointer' }}>Add</button>
@@ -104,7 +108,7 @@ export default function DocumentVault({ org }) {
         </div>
       ) : (
         <button onClick={() => setShowAdd(true)} style={{ padding: '8px 16px', borderRadius: 8, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 12.5, cursor: 'pointer' }}>+ Add document</button>
-      )}
+      ))}
     </div>
   )
 }
