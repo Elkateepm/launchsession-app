@@ -47,13 +47,11 @@ function RocketScene() {
         background: 'radial-gradient(ellipse at 30% center, rgba(168,85,247,0.45), rgba(139,92,246,0.15) 55%, transparent 75%)',
         filter: 'blur(6px)',
       }} />
-      <motion.img
+      <img
         src="https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/hero-illustration.png"
         alt=""
-        animate={{ y: [0, -14, 0] }}
-        transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
         style={{
-          position: 'absolute', bottom: 20, left: 0,
+          position: 'absolute', bottom: 20, left: -180,
           width: 880, maxWidth: '210%', height: 'auto', filter: 'drop-shadow(0 0 30px rgba(168,85,247,0.55))',
         }} />
     </div>
