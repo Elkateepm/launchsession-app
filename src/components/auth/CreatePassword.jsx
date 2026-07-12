@@ -42,25 +42,20 @@ function RocketScene() {
             top: `${(i * 37) % 90}%`, left: `${(i * 53) % 100}%`,
           }} />
       ))}
-      <motion.div
-        animate={{ y: [0, -14, 0] }}
-        transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ position: 'absolute', bottom: 70, left: '50%', transform: 'translateX(-50%)', fontSize: 96, filter: 'drop-shadow(0 0 30px rgba(168,85,247,0.55))' }}>
-        🚀
-      </motion.div>
-      <motion.div
-        animate={{ scaleY: [1, 1.25, 1], opacity: [0.7, 1, 0.7] }}
-        transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
-        style={{
-          position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)', width: 20, height: 46, borderRadius: '0 0 50% 50%',
-          background: 'linear-gradient(180deg, #FDE68A, #F59E0B 40%, #EA580C 75%, transparent)',
-          filter: 'blur(2px)',
-        }} />
       <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, height: 90,
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: 110,
         background: 'radial-gradient(ellipse at center, rgba(168,85,247,0.45), rgba(139,92,246,0.15) 55%, transparent 75%)',
         filter: 'blur(6px)',
       }} />
+      <motion.img
+        src="https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/hero-illustration.png"
+        alt=""
+        animate={{ y: [0, -14, 0] }}
+        transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+          width: 220, height: 'auto', filter: 'drop-shadow(0 0 30px rgba(168,85,247,0.55))',
+        }} />
     </div>
   )
 }
