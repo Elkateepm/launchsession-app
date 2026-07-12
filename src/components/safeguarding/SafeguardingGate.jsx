@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
-export default function SafeguardingGate({ org, children }) {
+export default function SafeguardingGate({ org, isAdmin, children }) {
   const [status, setStatus] = useState('checking') // checking | locked | open
   const [pw, setPw] = useState('')
   const [error, setError] = useState('')
@@ -12,6 +12,12 @@ export default function SafeguardingGate({ org, children }) {
   useEffect(() => {
     let cancelled = false
     const check = async () => {
+      // Staff only ever see the "raise a concern" screen (no case data), so the
+      // access password only needs to gate the full admin dashboard.
+      if (!isAdmin) {
+        if (!cancelled) setStatus('open')
+        return
+      }
       if (sessionStorage.getItem(sessionKey) === '1') {
         if (!cancelled) setStatus('open')
         return
@@ -28,7 +34,7 @@ export default function SafeguardingGate({ org, children }) {
     check()
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [org?.id])
+  }, [org?.id, isAdmin])
 
   const handleUnlock = async (e) => {
     e.preventDefault()
