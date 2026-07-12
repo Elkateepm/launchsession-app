@@ -91,7 +91,7 @@ export function OrgProvider({ children }) {
         if (data.logo_url) {
           const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
           favicon.rel = 'icon'
-          favicon.href = data.logo_url + '?t=' + Date.now()
+          favicon.href = data.logo_url + (data.logo_url.includes('?') ? '&' : '?') + 't=' + Date.now()
           document.head.appendChild(favicon)
         }
         document.title = data.name || 'LaunchSession'
@@ -113,6 +113,12 @@ export function OrgProvider({ children }) {
       setOrg(data)
       document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
       document.title = data.name || 'LaunchSession'
+      if (data.logo_url) {
+        const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
+        favicon.rel = 'icon'
+        favicon.href = data.logo_url + (data.logo_url.includes('?') ? '&' : '?') + 't=' + Date.now()
+        document.head.appendChild(favicon)
+      }
     }
   }
 
