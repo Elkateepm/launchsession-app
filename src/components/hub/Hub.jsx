@@ -989,10 +989,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       if (!s.session_date) return false
       // Today's sessions — stay visible all day, even after they've ended, until midnight
       if (s.session_date === today) return true
-      // Include yesterday's sessions that haven't ended yet (within 24h window)
+      // Include yesterday's sessions only if genuinely still ongoing right now
+      // (e.g. an overnight residential that hasn't reached its end time yet) —
+      // NOT just "ended less than 24h ago", which would keep any finished
+      // session pinned as the hero card for most of the next day.
       if (s.session_date === yesterdayStr && s.end_time) {
         const endDateTime = new Date(`${s.session_date}T${s.end_time}`)
-        return endDateTime > yesterday && endDateTime > new Date(now.getTime() - 24 * 60 * 60 * 1000)
+        return endDateTime > now
       }
       // Include tomorrow's sessions starting within next 24h
       const startDateTime = new Date(`${s.session_date}T${s.start_time || '00:00'}`)
