@@ -4,6 +4,9 @@ import { supabase } from '../../lib/supabase'
 import { useOrg } from '../../context/OrgContext'
 import OrgSettingsPanel from './OrgSettingsPanel'
 
+// Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
+const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
+
 const NAV = [
   { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform', requiresAdmin: true },
   { key: 'users',        icon: '👥', label: 'Admin', group: 'Platform' },
@@ -82,8 +85,8 @@ function OrgSection({ org }) {
   return (
     <div>
       <div style={{ background: 'linear-gradient(135deg, #0A0F1E, #1a2744)', borderRadius: 12, padding: '20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
-        <div style={{ width: 56, height: 56, borderRadius: 14, background: org?.primary_color || '#1B9AAA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
-          {org?.logo_url ? <img src={org.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 14 }} /> : (org?.name || 'O')[0]}
+        <div style={{ width: 56, height: 56, borderRadius: 14, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 14 }} />
         </div>
         <div>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{org?.name || 'Your Organisation'}</div>
@@ -278,6 +281,7 @@ function BrandingSection({ org, refreshOrg }) {
   const [slogan, setSlogan] = useState(org?.slogan || '')
   const [logoPreview, setLogoPreview] = useState(org?.logo_url || '')
   const [logoFile, setLogoFile] = useState(null)
+  const [logoRemoved, setLogoRemoved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [previewTab, setPreviewTab] = useState('workspace') // workspace | login
@@ -296,6 +300,7 @@ function BrandingSection({ org, refreshOrg }) {
     if (!file) return
     setLogoFile(file)
     setLogoPreview(URL.createObjectURL(file))
+    setLogoRemoved(false)
   }
 
   const handleSave = async () => {
@@ -317,6 +322,8 @@ function BrandingSection({ org, refreshOrg }) {
         // picks up the new image instead of a browser-cached copy of the old one.
         logoUrl = `${data.publicUrl}?v=${Date.now()}`
       }
+    } else if (logoRemoved) {
+      logoUrl = null
     }
 
     await supabase.from('organisations').update({
@@ -327,10 +334,11 @@ function BrandingSection({ org, refreshOrg }) {
     }).eq('id', org?.id)
 
     document.documentElement.style.setProperty('--org-primary', color)
-    if (logoUrl) {
+    {
+      const faviconTarget = logoUrl || FALLBACK_LOGO_URL
       const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
       favicon.rel = 'icon'
-      favicon.href = logoUrl + (logoUrl.includes('?') ? '&' : '?') + 't=' + Date.now()
+      favicon.href = faviconTarget + (faviconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
       document.head.appendChild(favicon)
     }
     if (refreshOrg) await refreshOrg()
@@ -348,7 +356,6 @@ function BrandingSection({ org, refreshOrg }) {
     setLogoFile(null)
   }
 
-  const initials = (org?.name || 'LS').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   const orgName = org?.name || 'Your Organisation'
 
   return (
@@ -373,8 +380,8 @@ function BrandingSection({ org, refreshOrg }) {
         <div>
           <SettingCard title="Logo" description="This logo will appear in the sidebar, login screen and workspace header.">
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--surface2)', border: '1.5px dashed var(--border2)', borderRadius: 14, padding: 16, marginBottom: 4 }}>
-              <div style={{ width: 72, height: 72, borderRadius: 16, background: logoPreview ? '#fff' : color, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 22, color: '#fff', flexShrink: 0, boxShadow: `0 8px 24px ${color}40` }}>
-                {logoPreview ? <img src={logoPreview} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : initials}
+              <div style={{ width: 72, height: 72, borderRadius: 16, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 22, color: '#fff', flexShrink: 0, boxShadow: `0 8px 24px ${color}40` }}>
+                <img src={logoPreview || FALLBACK_LOGO_URL} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Upload your logo</div>
@@ -385,7 +392,7 @@ function BrandingSection({ org, refreshOrg }) {
                     <input type="file" accept="image/*" onChange={handleLogoChange} style={{ display: 'none' }} />
                   </label>
                   {logoPreview && (
-                    <button onClick={() => { setLogoPreview(''); setLogoFile(null) }} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🗑</button>
+                    <button onClick={() => { setLogoPreview(''); setLogoFile(null); setLogoRemoved(true) }} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🗑</button>
                   )}
                 </div>
               </div>
@@ -449,8 +456,8 @@ function BrandingSection({ org, refreshOrg }) {
                 <div style={{ background: `linear-gradient(135deg, ${color}, #0F172A)`, padding: 16, color: '#fff' }}>
                   <div style={{ fontSize: 10, opacity: 0.7, letterSpacing: 2, fontWeight: 800, marginBottom: 10 }}>WORKSPACE</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 14 }}>
-                      {logoPreview ? <img src={logoPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : initials}
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 14 }}>
+                      <img src={logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </div>
                     <div>
                       <div style={{ fontSize: 15, fontWeight: 900 }}>{orgName}</div>
@@ -475,8 +482,8 @@ function BrandingSection({ org, refreshOrg }) {
 
             {previewTab === 'login' && (
               <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB', background: '#060B18', padding: '32px 20px', textAlign: 'center' }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, margin: '0 auto 14px', background: logoPreview ? '#fff' : `linear-gradient(135deg, ${color}, ${secondaryColor})`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 18, color: '#fff', boxShadow: `0 8px 24px ${color}40` }}>
-                  {logoPreview ? <img src={logoPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : initials}
+                <div style={{ width: 56, height: 56, borderRadius: 14, margin: '0 auto 14px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 18, color: '#fff', boxShadow: `0 8px 24px ${color}40` }}>
+                  <img src={logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>{orgName}</div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>{slogan || 'Your tagline here'}</div>
