@@ -8,6 +8,9 @@ import Mentoring from '../mentoring/Mentoring'
 import SessionPlanner from '../sessions/SessionPlanner'
 import Hub from '../hub/Hub'
 import React, { useState, useEffect } from 'react'
+
+// Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
+const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
 import { supabase } from '../../lib/supabase'
 import Registers from '../registers/Registers'
 import EventsTrips from '../events/EventsTrips'
@@ -259,13 +262,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
       {/* LEFT — org card */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flexShrink: 0 }}>
         <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }} style={{ flexShrink: 0 }}>
-          {org?.logo_url ? (
-            <img src={org.logo_url} alt={orgName} style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 3, border: `1.5px solid ${primary}30` }} />
-          ) : (
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 900, color: '#fff', boxShadow: `0 6px 16px -4px ${primary}60` }}>
-              {orgName[0]}
-            </div>
-          )}
+          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 3, border: `1.5px solid ${primary}30` }} />
         </motion.div>
         <div style={{ minWidth: 0, display: 'none' }} className="ls-header-org-text">
           <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{orgName}</div>
@@ -494,13 +491,7 @@ export default function Dashboard({ session, org }) {
         <div style={{ padding: '16px 12px 14px', borderBottom: `1px solid ${primary}22`, background: `linear-gradient(180deg, ${primary}14, transparent)`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}, ${primary}44)` }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {org?.logo_url ? (
-              <img src={org.logo_url} alt={orgName} style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain', flexShrink: 0, background: 'rgba(255,255,255,0.95)', padding: 3, border: `1.5px solid ${primary}40` }} />
-            ) : (
-              <div style={{ width: 38, height: 38, borderRadius: 10, background: `linear-gradient(135deg, ${primary}, ${primary}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 900, color: '#fff', flexShrink: 0, boxShadow: `0 4px 12px ${primary}40` }}>
-                {orgName[0]}
-              </div>
-            )}
+            <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain', flexShrink: 0, background: 'rgba(255,255,255,0.95)', padding: 3, border: `1.5px solid ${primary}40` }} />
             {!sidebarCollapsed && <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-display, sans-serif)' }}>{orgName}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
