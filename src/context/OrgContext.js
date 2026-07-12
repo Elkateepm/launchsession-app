@@ -2,6 +2,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
+// Shown as the tab favicon whenever the org hasn't set its own logo (or has removed one)
+const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
+
 const OrgContext = createContext(null)
 
 export function OrgProvider({ children }) {
@@ -88,10 +91,11 @@ export function OrgProvider({ children }) {
         setOrg(data)
         setNoOrg(false)
         document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
-        if (data.logo_url) {
+        {
+          const faviconTarget = data.logo_url || FALLBACK_LOGO_URL
           const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
           favicon.rel = 'icon'
-          favicon.href = data.logo_url + (data.logo_url.includes('?') ? '&' : '?') + 't=' + Date.now()
+          favicon.href = faviconTarget + (faviconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
           document.head.appendChild(favicon)
         }
         document.title = data.name || 'LaunchSession'
@@ -113,10 +117,11 @@ export function OrgProvider({ children }) {
       setOrg(data)
       document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
       document.title = data.name || 'LaunchSession'
-      if (data.logo_url) {
+      {
+        const faviconTarget = data.logo_url || FALLBACK_LOGO_URL
         const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
         favicon.rel = 'icon'
-        favicon.href = data.logo_url + (data.logo_url.includes('?') ? '&' : '?') + 't=' + Date.now()
+        favicon.href = faviconTarget + (faviconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
         document.head.appendChild(favicon)
       }
     }
