@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { useRealtimeTable } from "../../lib/useRealtimeTable";
 import { useOrgSettings } from "../../hooks/useOrgSettings";
+import CauseForConcernForm from "../safeguarding/CauseForConcernForm";
 
 const ANNOUNCEMENT_EMOJIS = ['📣', '🎉', '⭐', '🔥', '💡', '📌', '🚨', '🙌', '❤️', '🏆']
 const RA_RATING_COLORS = {
@@ -852,6 +853,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
   const [search, setSearch] = React.useState('')
   const [searchResults, setSearchResults] = React.useState(null)
+  const [showConcernForm, setShowConcernForm] = React.useState(false)
 
   const getGreeting = () => {
     const h = new Date().getHours()
@@ -1454,6 +1456,35 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           </Panel>
         </div>
       </section>
+
+      {/* Floating Report a Cause for Concern button — always accessible from Home, no password needed */}
+      <button
+        onClick={() => setShowConcernForm(true)}
+        title="Report a Cause for Concern"
+        style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 60,
+          display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '14px' : '12px 20px',
+          borderRadius: 99, border: 'none', background: 'linear-gradient(90deg,#DC2626,#B91C1C)',
+          color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer',
+          boxShadow: '0 10px 28px rgba(220,38,38,0.4)',
+        }}
+      >
+        🚨{!isMobile && ' Report a Cause for Concern'}
+      </button>
+
+      {showConcernForm && (
+        <>
+          <div onClick={() => setShowConcernForm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99, backdropFilter: 'blur(4px)' }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(620px,96vw)', maxHeight: '92dvh', overflowY: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 24, zIndex: 100, boxShadow: '0 32px 80px rgba(0,0,0,0.4)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <CauseForConcernForm
+              org={org}
+              session={session}
+              onClose={() => setShowConcernForm(false)}
+              onSubmitted={() => {}}
+            />
+          </div>
+        </>
+      )}
       </div>
     </div>
   );
