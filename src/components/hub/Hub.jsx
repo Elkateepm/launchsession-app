@@ -1030,7 +1030,28 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const signedOut = attendance.filter(a => a.status === "signed_out").length;
   const medicalAlerts = children.filter(c => c.allergies || c.medical_notes).length;
   const attendanceRate = children.length > 0 ? Math.round((signedIn / children.length) * 100) : 0;
+  const todayHasLiveSession = useMemo(() => {
+    const now = new Date()
+    return todaySessions.some(s => {
+      const startDateTime = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
+      const endDateTime = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
+      const hasEnded = !!endDateTime && endDateTime < now
+      return (!startDateTime || startDateTime <= now) && !hasEnded
+    })
+  }, [todaySessions]);
   const nextSession = upcomingSessions[0];
+  const nextSessionStatus = useMemo(() => {
+    if (!nextSession) return null
+    const isToday = nextSession.session_date === today
+    const now = new Date()
+    const startDateTime = nextSession.start_time ? new Date(`${nextSession.session_date}T${nextSession.start_time}`) : null
+    const endDateTime = nextSession.end_time ? new Date(`${nextSession.session_date}T${nextSession.end_time}`) : null
+    const hasEnded = isToday && !!endDateTime && endDateTime < now
+    const isLiveNow = isToday && (!startDateTime || startDateTime <= now) && !hasEnded
+    if (isLiveNow) return 'live'
+    if (hasEnded) return 'ended'
+    return 'upcoming'
+  }, [nextSession, today]);
   const liveHeroSession = todaySessions[0];
   const trialDaysLeft = (org?.status === 'trial' && org?.created_at)
     ? Math.max(0, 7 - Math.floor((Date.now() - new Date(org.created_at).getTime()) / 86400000))
@@ -1284,8 +1305,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 )}
               </div>
 
-              <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? "Ready for delivery" : "Plan something amazing"} button="Open Planner" onClick={() => go("planner")} colour={primary} />
-              <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? "Upcoming" : "Plan now"} onClick={() => go("planner")} colour="#7C3AED" />
+              <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} />
+              <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} />
               {hasModule('registers') ? (
                 <StatCard icon="✅" title={signedIn > 0 ? `${signedIn} signed in` : "Registers"} text={signedOut > 0 ? `${signedOut} signed out` : "Take today's register"} button="Take Register" onClick={() => go("registers")} colour="#16A34A" />
               ) : (
