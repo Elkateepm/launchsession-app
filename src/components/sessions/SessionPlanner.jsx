@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence } from 'framer-motion'
 import RASessionCard from '../riskassessments/RASessionCard'
+import SessionWizard from './SessionWizard'
 
 function CountUp({ value, duration = 0.6 }) {
   const [display, setDisplay] = React.useState(value)
@@ -1092,7 +1093,7 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
 }
 
 
-export default function SessionPlanner({ org, onSessionSaved, initialReflectSessionId, onNavigate }) {
+export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, onNavigate }) {
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const { groups: orgGroups } = useOrgSettings(orgId)
@@ -1247,7 +1248,24 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
 
   const openNew = (date) => {
     setEditing({ ...EMPTY_FORM, session_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), end_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), session_type: filter === 'trips' ? 'trip' : 'activity' })
-    setView('form')
+    setView('wizard')
+  }
+
+  // ── WIZARD VIEW (new session creation) ──
+  if (view === 'wizard') {
+    return (
+      <SessionWizard
+        org={org}
+        session={session}
+        bubbleDefs={bubbleDefs}
+        onCancel={() => setView('list')}
+        onNavigate={onNavigate}
+        onPublished={async () => {
+          await loadData()
+          if (onSessionSaved) onSessionSaved()
+        }}
+      />
+    )
   }
 
   // ── FORM VIEW ──
