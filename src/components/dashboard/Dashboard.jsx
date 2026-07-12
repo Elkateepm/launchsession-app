@@ -14,6 +14,7 @@ import EventsTrips from '../events/EventsTrips'
 import Calendar from '../calendar/Calendar';
 import Templates from '../templates/Templates'
 import Safeguarding from '../safeguarding/Safeguarding'
+import SafeguardingGate from '../safeguarding/SafeguardingGate'
 import Reports from '../reports/Reports'
 import Gallery from '../gallery/Gallery'
 import Messaging from '../messaging/Messaging'
@@ -684,7 +685,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} />)}
 
           {/* ── SAFEGUARDING PACK ── */}
-          {tab === 'safeguarding'    && (hasModule('safeguarding')    ? <Safeguarding org={org} session={session} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} />)}
+          {tab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingGate org={org}><Safeguarding org={org} session={session} /></SafeguardingGate>                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} />)}
           {tab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} />)}
           {tab === 'case_management' && (hasModule('case_management') ? <CaseManagement org={org} session={session} />                        : <LockedModule moduleKey="case_management" label="Case Management" icon="📁" onNavigate={handleSetTab} />)}
           {tab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} />)}
