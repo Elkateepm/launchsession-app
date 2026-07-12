@@ -1208,7 +1208,7 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
       const { error } = await supabase.from('sessions').update(data).eq('id', editing.id)
       if (error) { console.error('Update error:', error); alert('Failed to update session: ' + error.message); setSaving(false); return }
     } else {
-      const { data: result, error } = await supabase.rpc('create_session_with_dependencies', {
+      const { error } = await supabase.rpc('create_session_with_dependencies', {
         p_title: data.title,
         p_session_date: data.session_date,
         p_end_date: data.end_date,
@@ -1227,8 +1227,8 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
         p_pending_risk_assessment_id: form._pendingRiskAssessmentId || null,
       })
       if (error) { console.error('Insert error:', error); alert('Failed to create session: ' + error.message); setSaving(false); return }
-      // result.session mirrors the row previously returned by .select().single(); result.children_added
-      // is available if we ever want to surface how many expected attendees were auto-populated.
+      // The RPC returns { session, children_added } if we ever want to surface how many
+      // expected attendees were auto-populated; not currently used here.
     }
     setSaving(false)
     setEditing(null)
