@@ -1208,19 +1208,27 @@ export default function SessionPlanner({ org, onSessionSaved, initialReflectSess
       const { error } = await supabase.from('sessions').update(data).eq('id', editing.id)
       if (error) { console.error('Update error:', error); alert('Failed to update session: ' + error.message); setSaving(false); return }
     } else {
-      const { data: newSession, error } = await supabase.from('sessions').insert([data]).select().single()
+      const { data: result, error } = await supabase.rpc('create_session_with_dependencies', {
+        p_title: data.title,
+        p_session_date: data.session_date,
+        p_end_date: data.end_date,
+        p_start_time: data.start_time,
+        p_end_time: data.end_time,
+        p_location: data.location,
+        p_session_type: data.session_type,
+        p_description: data.description,
+        p_max_capacity: data.max_capacity,
+        p_volunteer_limit: data.volunteer_limit,
+        p_bubbles: data.bubbles,
+        p_packed_lunch: data.packed_lunch,
+        p_meeting_point: data.meeting_point,
+        p_consent_required: data.consent_required,
+        p_rotation_slots: data.rotation_slots,
+        p_pending_risk_assessment_id: form._pendingRiskAssessmentId || null,
+      })
       if (error) { console.error('Insert error:', error); alert('Failed to create session: ' + error.message); setSaving(false); return }
-      if (newSession && form.bubbles?.length > 0) {
-        const { data: bc } = await supabase.from('children').select('id').eq('org_id', orgId).eq('active', true).in('group_name', form.bubbles)
-        if (bc?.length > 0) {
-          await supabase.from('attendance').insert(bc.map(c => ({ session_id: newSession.id, child_id: c.id, org_id: orgId, status: 'expected' })))
-        }
-      }
-      // Link any risk assessment picked/created while the session was still unsaved
-      if (newSession && form._pendingRiskAssessmentId) {
-        await supabase.from('risk_assessment_sessions').insert({ assessment_id: form._pendingRiskAssessmentId, session_id: newSession.id, org_id: orgId })
-        await supabase.from('risk_assessment_audit').insert({ assessment_id: form._pendingRiskAssessmentId, org_id: orgId, action: 'attached', detail: `Attached to session "${form.title}"` })
-      }
+      // result.session mirrors the row previously returned by .select().single(); result.children_added
+      // is available if we ever want to surface how many expected attendees were auto-populated.
     }
     setSaving(false)
     setEditing(null)
