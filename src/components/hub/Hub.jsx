@@ -5,6 +5,9 @@ import { useRealtimeTable } from "../../lib/useRealtimeTable";
 import { useOrgSettings } from "../../hooks/useOrgSettings";
 import CauseForConcernForm from "../safeguarding/CauseForConcernForm";
 
+// Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
+const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
+
 const ANNOUNCEMENT_EMOJIS = ['📣', '🎉', '⭐', '🔥', '💡', '📌', '🚨', '🙌', '❤️', '🏆']
 const RA_RATING_COLORS = {
   low: { bg: 'rgba(34,197,94,0.18)', color: '#86EFAC' },
@@ -1101,13 +1104,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {/* Org identity */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, padding: '4px 0' }}>
             <div style={{ position: 'relative' }}>
-              {org?.logo_url ? (
-                <img src={org.logo_url} alt={orgName} style={{ width: 48, height: 48, borderRadius: 13, objectFit: 'contain', border: `1.5px solid ${primary}30`, background: '#fff', padding: 3, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -6px ${primary}45` }} />
-              ) : (
-                <div style={{ width: 48, height: 48, borderRadius: 13, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, fontWeight: 900, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 8px 20px -6px ${primary}55` }}>
-                  {orgName[0]}
-                </div>
-              )}
+              <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 48, height: 48, borderRadius: 13, objectFit: 'contain', border: `1.5px solid ${primary}30`, background: '#fff', padding: 3, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -6px ${primary}45` }} />
               <div style={{ position: 'absolute', bottom: -2, right: -2, width: 12, height: 12, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />
             </div>
             {!isMobile && (
