@@ -31,7 +31,7 @@ const ROLE_CONTENT = {
 
 function RocketScene() {
   return (
-    <div style={{ position: 'relative', width: '100%', maxWidth: 420, height: 260, margin: '0 auto' }}>
+    <div style={{ position: 'relative', width: '100%', maxWidth: 420, height: 260, margin: '0 auto', overflow: 'visible' }}>
       {[...Array(18)].map((_, i) => (
         <motion.div key={i}
           initial={{ opacity: 0.15 }}
@@ -54,7 +54,7 @@ function RocketScene() {
         transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
         style={{
           position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
-          width: 220, height: 'auto', filter: 'drop-shadow(0 0 30px rgba(168,85,247,0.55))',
+          width: 880, maxWidth: '210%', height: 'auto', filter: 'drop-shadow(0 0 30px rgba(168,85,247,0.55))',
         }} />
     </div>
   )
