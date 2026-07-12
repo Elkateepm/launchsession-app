@@ -42,17 +42,12 @@ function RocketScene() {
             top: `${(i * 37) % 90}%`, left: `${(i * 53) % 100}%`,
           }} />
       ))}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, width: '60%', height: 110,
-        background: 'radial-gradient(ellipse at 30% center, rgba(168,85,247,0.45), rgba(139,92,246,0.15) 55%, transparent 75%)',
-        filter: 'blur(6px)',
-      }} />
       <img
         src="https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/hero-illustration.png"
         alt=""
         style={{
           position: 'absolute', bottom: 20, left: -180,
-          width: 880, maxWidth: '210%', height: 'auto', filter: 'drop-shadow(0 0 30px rgba(168,85,247,0.55))',
+          width: 880, maxWidth: '210%', height: 'auto',
         }} />
     </div>
   )
