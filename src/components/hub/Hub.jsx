@@ -1026,8 +1026,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     }).slice(0, 3);
   }, [sessions, reflections]);
 
-  const signedIn = attendance.filter(a => a.status === "signed_in").length;
-  const signedOut = attendance.filter(a => a.status === "signed_out").length;
+  const todaySessionIds = useMemo(() => new Set(todaySessions.map(s => s.id)), [todaySessions]);
+  const todayAttendance = useMemo(() => attendance.filter(a => todaySessionIds.has(a.session_id)), [attendance, todaySessionIds]);
+  const signedIn = todayAttendance.filter(a => a.status === "signed_in").length;
+  const signedOut = todayAttendance.filter(a => a.status === "signed_out").length;
   const medicalAlerts = children.filter(c => c.allergies || c.medical_notes).length;
   const attendanceRate = children.length > 0 ? Math.round((signedIn / children.length) * 100) : 0;
   const todayHasLiveSession = useMemo(() => {
