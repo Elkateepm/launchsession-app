@@ -933,7 +933,7 @@ export default function Registers({ org, onNavigate }) {
     total:      children.length,
     signed_in:  children.filter(c => getStatus(c.id) === 'signed_in').length,
     absent:     children.filter(c => getStatus(c.id) === 'absent').length,
-    expected:   children.filter(c => ['expected','unmarked'].includes(getStatus(c.id))).length,
+    expected:   children.filter(c => getStatus(c.id) === 'expected').length,
     signed_out: children.filter(c => getStatus(c.id) === 'signed_out').length,
   }
 
