@@ -8,9 +8,6 @@ import Mentoring from '../mentoring/Mentoring'
 import SessionPlanner from '../sessions/SessionPlanner'
 import Hub from '../hub/Hub'
 import React, { useState, useEffect } from 'react'
-
-// Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
-const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
 import { supabase } from '../../lib/supabase'
 import Registers from '../registers/Registers'
 import EventsTrips from '../events/EventsTrips'
@@ -28,6 +25,9 @@ import ImpactOutcomes from '../impact/ImpactOutcomes'
 import Fundraising from '../fundraising/Fundraising'
 import HR from '../hr/HR'
 import ResourceBooking from '../resources/ResourceBooking'
+
+// Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
+const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
 
 // Base modules always free — regardless of pack
 const BASE_MODULE_KEYS = ['home', 'calendar', 'planner', 'events_trips', 'team', 'settings', 'templates', 'risk_assessments']
