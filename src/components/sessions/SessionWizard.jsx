@@ -552,6 +552,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     if (err) { setError(err.message); return }
     clearDraft()
     setDone({ session: data.session, publishedAs: status })
+    if (onPublished) onPublished(data.session)
   }
 
   // ─── Confirmation screen ───
@@ -565,7 +566,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
           <strong>{done.session.title}</strong> has been {label} successfully.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
-          <button onClick={() => onNavigate && onNavigate('planner')} style={{ padding: 12, borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>View Session</button>
+          <button onClick={onCancel} style={{ padding: 12, borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>View Session</button>
           <button onClick={() => onNavigate && onNavigate('registers')} style={{ padding: 12, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>Open Register</button>
           {form.risk_assessment_required && (
             <button onClick={() => onNavigate && onNavigate('risk_assessments')} style={{ padding: 12, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>Complete Risk Assessment</button>
