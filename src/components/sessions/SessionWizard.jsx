@@ -11,12 +11,20 @@ const WIZARD_TYPES = [
   { key: 'trip',        label: 'Trip',              icon: '🚌' },
   { key: 'workshop',     label: 'Workshop',          icon: '🛠️' },
   { key: 'mentoring',    label: 'Mentoring',         icon: '🤝' },
-  { key: 'sports',       label: 'Sports Activity',   icon: '⚽' },
+  { key: 'sports',       label: 'Sports Event',      icon: '⚽' },
   { key: 'residential',  label: 'Residential',       icon: '🏕️' },
+  { key: 'theatre',      label: 'Theatre Visit',     icon: '🎭' },
+  { key: 'competition',  label: 'Competition',       icon: '🏆' },
   { key: 'community',    label: 'Community Event',   icon: '🎉' },
+  { key: 'celebration',  label: 'Celebration',       icon: '🎊' },
   { key: 'training',     label: 'Training',          icon: '📚' },
   { key: 'custom',       label: 'Custom Session',    icon: '✨' },
 ]
+
+// Session types that show up in the Events & Trips centre rather than the plain Session Planner list.
+// (Same underlying `sessions` row either way — this is purely a UI grouping, not a separate table.)
+export const EVENT_TYPE_KEYS = ['trip', 'sports', 'residential', 'theatre', 'competition', 'community', 'celebration', 'workshop', 'training', 'custom']
+export const EVENT_TYPE_META = Object.fromEntries(WIZARD_TYPES.map(t => [t.key, t]))
 
 // Fields/requirements a type turns on by default when first selected
 const TYPE_PRESETS = {
@@ -30,6 +38,9 @@ const TYPE_PRESETS = {
     emergency_contact_sheet_required: true, risk_assessment_required: true,
     collection_permissions_required: true, safeguarding_lead_required: true,
   },
+  theatre: { consent_required: true, venue_confirmation_required: true, transport_required: true },
+  competition: { risk_assessment_required: true, consent_required: true, transport_required: true },
+  celebration: { venue_confirmation_required: true },
   training: { reflection_required: false },
   community: { risk_assessment_required: true, venue_confirmation_required: true },
 }
@@ -434,7 +445,7 @@ function StepReview({ form, staff, expectedCount, primary }) {
 
 // ─── MAIN WIZARD ────────────────────────────────────────────────
 
-export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPublished, onNavigate }) {
+export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPublished, onNavigate, initialType }) {
   const isMobile = useIsMobile()
   const draftKey = `ls_session_draft_${org?.id}`
   const [step, setStep] = useState(1)
@@ -443,7 +454,9 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       const saved = localStorage.getItem(draftKey)
       if (saved) return { ...emptyForm(), ...JSON.parse(saved) }
     } catch (e) {}
-    return emptyForm()
+    const base = emptyForm()
+    if (initialType) return { ...base, session_type: initialType, ...(TYPE_PRESETS[initialType] || {}) }
+    return base
   })
   const [staff, setStaff] = useState([])
   const [children, setChildren] = useState([])
