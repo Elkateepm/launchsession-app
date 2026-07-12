@@ -782,6 +782,46 @@ function SafeguardingSection({ org }) {
   const [reviewFreq, setReviewFreq] = useState(org?.safeguarding_review_freq || 'annually')
   const [alerts, setAlerts] = useState({ new_concern: true, dsl_only: false, ...(org?.safeguarding_alert_prefs || {}) })
 
+  const [pwStatus, setPwStatus] = useState('loading') // loading | set | unset
+  const [newPw, setNewPw] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [pwSaving, setPwSaving] = useState(false)
+  const [pwSaved, setPwSaved] = useState(false)
+  const [pwError, setPwError] = useState('')
+  const [removing, setRemoving] = useState(false)
+
+  React.useEffect(() => {
+    let cancelled = false
+    supabase.rpc('safeguarding_password_status').then(({ data, error }) => {
+      if (cancelled) return
+      if (error) { setPwStatus('unset'); return }
+      setPwStatus(data ? 'set' : 'unset')
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  const handleSetPassword = async () => {
+    setPwError('')
+    if (newPw.length < 4) { setPwError('Password must be at least 4 characters.'); return }
+    if (newPw !== confirmPw) { setPwError('Passwords do not match.'); return }
+    setPwSaving(true)
+    const { error } = await supabase.rpc('set_safeguarding_password', { new_password: newPw })
+    setPwSaving(false)
+    if (error) { setPwError(error.message || 'Could not save password.'); return }
+    setPwStatus('set')
+    setNewPw(''); setConfirmPw('')
+    setPwSaved(true); setTimeout(() => setPwSaved(false), 2500)
+  }
+
+  const handleRemovePassword = async () => {
+    if (!window.confirm('Remove the safeguarding access password? Anyone in your organisation will be able to open the Safeguarding tab without a password.')) return
+    setRemoving(true)
+    const { error } = await supabase.rpc('clear_safeguarding_password')
+    setRemoving(false)
+    if (error) { setPwError(error.message || 'Could not remove password.'); return }
+    setPwStatus('unset')
+  }
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSave = async () => {
@@ -816,6 +856,41 @@ function SafeguardingSection({ org }) {
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Configure your DSL contact, policy documents and alert preferences.</div>
         </div>
       </div>
+
+      {/* Access Password */}
+      <SettingCard title="Safeguarding Access Password" description="Require a password before anyone — including staff — can open the Safeguarding tab. Only admins can set or change it.">
+        {pwStatus === 'loading' ? (
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Loading...</div>
+        ) : (
+          <>
+            {pwStatus === 'set' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, padding: '10px 14px', marginBottom: 16 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22C55E', flexShrink: 0 }} />
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Password protection is currently ON</div>
+              </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
+              <Field label={pwStatus === 'set' ? 'New Password' : 'Password'}>
+                <input type="password" style={inp} value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Min. 4 characters" />
+              </Field>
+              <Field label="Confirm Password">
+                <input type="password" style={inp} value={confirmPw} onChange={e => setConfirmPw(e.target.value)} placeholder="Repeat password" />
+              </Field>
+            </div>
+            {pwError && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginBottom: 12 }}>{pwError}</div>}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button onClick={handleSetPassword} disabled={pwSaving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: pwSaving ? '#9ca3af' : '#DC2626', color: '#fff', fontSize: 14, fontWeight: 700, cursor: pwSaving ? 'default' : 'pointer' }}>
+                {pwSaving ? 'Saving...' : pwSaved ? '✓ Saved!' : pwStatus === 'set' ? 'Update Password' : 'Set Password'}
+              </button>
+              {pwStatus === 'set' && (
+                <button onClick={handleRemovePassword} disabled={removing} style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700, cursor: removing ? 'default' : 'pointer' }}>
+                  {removing ? 'Removing...' : 'Remove Password'}
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </SettingCard>
 
       {/* DSL Contact */}
       <SettingCard title="Designated Safeguarding Lead (DSL)" description="This contact is shown to staff in the Safeguarding dashboard sidebar and on emergency guidance screens.">
