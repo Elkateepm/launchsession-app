@@ -43,8 +43,8 @@ function RocketScene() {
           }} />
       ))}
       <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, height: 110,
-        background: 'radial-gradient(ellipse at center, rgba(168,85,247,0.45), rgba(139,92,246,0.15) 55%, transparent 75%)',
+        position: 'absolute', bottom: 0, left: 0, width: '60%', height: 110,
+        background: 'radial-gradient(ellipse at 30% center, rgba(168,85,247,0.45), rgba(139,92,246,0.15) 55%, transparent 75%)',
         filter: 'blur(6px)',
       }} />
       <motion.img
@@ -53,7 +53,7 @@ function RocketScene() {
         animate={{ y: [0, -14, 0] }}
         transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
         style={{
-          position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+          position: 'absolute', bottom: 20, left: 0,
           width: 880, maxWidth: '210%', height: 'auto', filter: 'drop-shadow(0 0 30px rgba(168,85,247,0.55))',
         }} />
     </div>
