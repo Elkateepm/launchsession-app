@@ -311,7 +311,11 @@ function BrandingSection({ org, refreshOrg }) {
 
       if (!uploadError) {
         const { data } = supabase.storage.from('org-logos').getPublicUrl(filePath)
-        logoUrl = data.publicUrl
+        // The upload always overwrites the same storage path, so the public URL string
+        // never changes on its own — append a cache-busting version so every place that
+        // renders org.logo_url (sidebar, header, favicon, invite emails, etc.) actually
+        // picks up the new image instead of a browser-cached copy of the old one.
+        logoUrl = `${data.publicUrl}?v=${Date.now()}`
       }
     }
 
@@ -326,7 +330,7 @@ function BrandingSection({ org, refreshOrg }) {
     if (logoUrl) {
       const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
       favicon.rel = 'icon'
-      favicon.href = logoUrl + '?t=' + Date.now()
+      favicon.href = logoUrl + (logoUrl.includes('?') ? '&' : '?') + 't=' + Date.now()
       document.head.appendChild(favicon)
     }
     if (refreshOrg) await refreshOrg()
