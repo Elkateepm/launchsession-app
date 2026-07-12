@@ -46,6 +46,13 @@ export default function SafeguardingGate({ org, session, children }) {
     setStatus('open')
   }
 
+  const handleLock = () => {
+    sessionStorage.removeItem(sessionKey)
+    setStatus('locked')
+    setPw('')
+    setError('')
+  }
+
   if (status === 'checking') {
     return (
       <div style={{ padding: 60, textAlign: 'center', color: 'var(--text3)', fontSize: 14 }}>
@@ -54,7 +61,26 @@ export default function SafeguardingGate({ org, session, children }) {
     )
   }
 
-  if (status === 'open') return children
+  if (status === 'open') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+        <button
+          onClick={handleLock}
+          title="Lock Safeguarding"
+          style={{
+            position: 'fixed', bottom: 24, right: 24, zIndex: 50,
+            display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
+            borderRadius: 99, border: 'none', background: 'linear-gradient(90deg,#DC2626,#B91C1C)',
+            color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+            boxShadow: '0 8px 24px rgba(220,38,38,0.35)',
+          }}
+        >
+          🔒 Lock Safeguarding
+        </button>
+        {children}
+      </div>
+    )
+  }
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
