@@ -9,7 +9,7 @@ export default function SafeguardingGate({ org, session, children }) {
   const [verifying, setVerifying] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
-  const sessionKey = `sg_unlocked_${org?.id || 'none'}`
+  const sessionKey = `sg_unlocked_${org?.id || 'none'}_${session?.user?.id || 'anon'}`
 
   useEffect(() => {
     let cancelled = false
@@ -30,7 +30,7 @@ export default function SafeguardingGate({ org, session, children }) {
     check()
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [org?.id])
+  }, [org?.id, session?.user?.id])
 
   const handleUnlock = async (e) => {
     e.preventDefault()
