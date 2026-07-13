@@ -401,6 +401,9 @@ export default function Dashboard({ session, org }) {
   const [openAssessmentId, setOpenAssessmentId] = useState(null)
   const [initialThreadId, setInitialThreadId] = useState(null)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
+  const [showLaunchMenu, setShowLaunchMenu] = React.useState(false);
+  const [navContext, setNavContext] = React.useState({ mode: 'rocket', liveCount: 0 })
+  const [navBadges, setNavBadges] = React.useState({ registers: 0, mentoring: 0 })
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
 
   const handleSetTab = (t, payload) => {
@@ -417,6 +420,59 @@ export default function Dashboard({ session, org }) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Drives the Launch button's context-aware state: rocket (nothing today) / calendar
+  // (sessions coming up) / live (something running right now). Alert and celebration states
+  // from the original spec aren't wired in yet — flagged as a follow-up, not silently faked.
+  React.useEffect(() => {
+    if (!org?.id) return
+    const load = async () => {
+      const today = new Date()
+      const todayStr = today.toISOString().slice(0, 10)
+      const { data: sessions } = await supabase
+        .from('sessions').select('id, session_date, end_date, start_time, end_time, status')
+        .eq('org_id', org.id)
+        .lte('session_date', todayStr)
+        .gte('end_date', todayStr)
+        .neq('status', 'cancelled')
+      const list = sessions || []
+      const now = new Date()
+      const live = list.filter(s => {
+        if (s.session_date !== todayStr && s.end_date !== todayStr) return false
+        const startDT = s.start_time ? new Date(`${todayStr}T${s.start_time}`) : null
+        const endDT = s.end_time ? new Date(`${todayStr}T${s.end_time}`) : null
+        return (!startDT || startDT <= now) && (!endDT || endDT > now)
+      })
+      if (live.length > 0) setNavContext({ mode: 'live', liveCount: live.length })
+      else if (list.length > 0) setNavContext({ mode: 'calendar', liveCount: 0 })
+      else setNavContext({ mode: 'rocket', liveCount: 0 })
+    }
+    load()
+    const interval = setInterval(load, 20000)
+    return () => clearInterval(interval)
+  }, [org?.id])
+
+  React.useEffect(() => {
+    if (!org?.id) return
+    const load = async () => {
+      const todayStr = new Date().toISOString().slice(0, 10)
+      const [{ data: sess }, { count: mentoringCount }] = await Promise.all([
+        supabase.from('sessions').select('id').eq('org_id', org.id).eq('session_date', todayStr),
+        supabase.from('mentoring_referrals').select('id', { count: 'exact', head: true }).eq('org_id', org.id).eq('status', 'awaiting_match'),
+      ])
+      let registerCount = 0
+      if (sess && sess.length > 0) {
+        const { count } = await supabase.from('attendance').select('id', { count: 'exact', head: true })
+          .in('session_id', sess.map(s => s.id)).eq('status', 'expected')
+        registerCount = count || 0
+      }
+      setNavBadges({ registers: registerCount, mentoring: mentoringCount || 0 })
+    }
+    load()
+    const interval = setInterval(load, 30000)
+    return () => clearInterval(interval)
+  }, [org?.id])
+
   const plan    = org?.plan || 'starter'
   // org.modules stores the paid module keys. Base modules are always accessible.
   const paidModules = org?.modules || []
@@ -630,7 +686,7 @@ export default function Dashboard({ session, org }) {
       )}
 
       {/* MAIN CONTENT */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobileBottomNav ? 'calc(78px + env(safe-area-inset-bottom, 0px))' : 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobileBottomNav ? 'calc(110px + env(safe-area-inset-bottom, 0px))' : 0 }}>
         {tab !== 'registers' && tab !== 'home' && (
           <FloatingHeader
             org={org} orgName={orgName} primary={primary} tab={tab} ALL_MODULES={ALL_MODULES}
@@ -764,48 +820,139 @@ export default function Dashboard({ session, org }) {
         )}
 
         {isMobileBottomNav && (
-          <div style={{
-            position: 'fixed',
-            left: 12,
-            right: 12,
-            bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
-            height: 68,
-            background: 'rgba(10,15,30,0.96)',
-            borderRadius: 20,
-            display: 'grid',
-            gridTemplateColumns: 'repeat(5,1fr)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
-            zIndex: 9999,
-            padding: 4
-          }}>
-            {[
-              { key: 'home', label: 'Home', icon: '🏠' },
-              { key: 'planner', label: 'Planner', icon: '📅' },
-              { key: 'registers', label: 'Register', icon: '📋' },
-              { key: 'mentoring', label: 'Mentoring', icon: '🤝' },
-              { key: 'more', label: 'More', icon: '⚙️' }
-            ].map(item => (
-              <button key={item.key} onClick={() => item.key === 'more' ? setShowMobileMore(true) : handleSetTab(item.key)} style={{
-                border: 'none',
-                borderRadius: 16,
-                background: tab === item.key ? `linear-gradient(135deg, ${primary}, #6366F1)` : 'transparent',
-                color: tab === item.key ? '#fff' : 'rgba(255,255,255,0.55)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 4,
-                fontSize: 11,
-                fontWeight: 800,
-                cursor: 'pointer'
-              }}>
-                <span style={{ fontSize: 20 }}>{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </div>
+          <>
+            {/* Floating pill nav */}
+            <div style={{
+              position: 'fixed',
+              left: 12,
+              right: 12,
+              bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+              height: 74,
+              background: 'rgba(10,15,30,0.82)',
+              backdropFilter: 'blur(18px)',
+              WebkitBackdropFilter: 'blur(18px)',
+              borderRadius: 32,
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) 74px minmax(0,1fr) minmax(0,1fr)',
+              alignItems: 'center',
+              border: '1px solid rgba(255,255,255,0.08)',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
+              zIndex: 9999,
+              padding: '0 6px',
+            }}>
+              {[
+                { key: 'home', label: 'Home', icon: '🏠', badge: 0 },
+                { key: 'registers', label: 'Register', icon: '📋', badge: navBadges.registers },
+              ].map(item => (
+                <button key={item.key} onClick={() => handleSetTab(item.key)} style={{ position: 'relative', border: 'none', background: 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 2px', cursor: 'pointer' }}>
+                  {tab === item.key && (
+                    <motion.div layoutId="navCapsule" transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+                      style={{ position: 'absolute', inset: '2px 6px', borderRadius: 18, background: `linear-gradient(135deg, ${primary}33, #6366F133)` }} />
+                  )}
+                  <span style={{ fontSize: 19, position: 'relative', zIndex: 1 }}>{item.icon}</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: tab === item.key ? '#fff' : 'rgba(255,255,255,0.5)', position: 'relative', zIndex: 1 }}>{item.label}</span>
+                  {item.badge > 0 && (
+                    <span style={{ position: 'absolute', top: 4, right: '28%', background: '#EF4444', color: '#fff', fontSize: 9, fontWeight: 900, borderRadius: 99, minWidth: 15, height: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', zIndex: 2 }}>
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+
+              {/* Spacer for the floating FAB */}
+              <div />
+
+              {[
+                { key: 'mentoring', label: 'Mentoring', icon: '🤝', badge: navBadges.mentoring },
+                { key: 'more', label: 'More', icon: '☰', badge: 0 },
+              ].map(item => (
+                <button key={item.key} onClick={() => item.key === 'more' ? setShowMobileMore(true) : handleSetTab(item.key)} style={{ position: 'relative', border: 'none', background: 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 2px', cursor: 'pointer' }}>
+                  {tab === item.key && (
+                    <motion.div layoutId="navCapsule" transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+                      style={{ position: 'absolute', inset: '2px 6px', borderRadius: 18, background: `linear-gradient(135deg, ${primary}33, #6366F133)` }} />
+                  )}
+                  <span style={{ fontSize: 19, position: 'relative', zIndex: 1 }}>{item.icon}</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: tab === item.key ? '#fff' : 'rgba(255,255,255,0.5)', position: 'relative', zIndex: 1 }}>{item.label}</span>
+                  {item.badge > 0 && (
+                    <span style={{ position: 'absolute', top: 4, right: '28%', background: '#EF4444', color: '#fff', fontSize: 9, fontWeight: 900, borderRadius: 99, minWidth: 15, height: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', zIndex: 2 }}>
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Floating Launch button — context-aware: rocket / calendar / live */}
+            <motion.button
+              onClick={() => { if (navigator.vibrate) navigator.vibrate(8); setShowLaunchMenu(true) }}
+              whileTap={{ scale: 0.92 }}
+              animate={navContext.mode === 'live' ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+              transition={navContext.mode === 'live' ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : {}}
+              style={{
+                position: 'fixed',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                bottom: 'calc(40px + env(safe-area-inset-bottom, 0px))',
+                width: 66, height: 66, borderRadius: '50%',
+                border: '4px solid rgba(10,15,30,0.9)',
+                background: navContext.mode === 'live'
+                  ? 'linear-gradient(135deg, #22C55E, #16A34A)'
+                  : navContext.mode === 'calendar'
+                    ? 'linear-gradient(135deg, #7C3AED, #6366F1)'
+                    : 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                boxShadow: navContext.mode === 'live' ? '0 8px 28px -6px rgba(34,197,94,0.7)' : '0 8px 28px -6px rgba(124,58,237,0.6)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 10000, cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: 26 }}>
+                {navContext.mode === 'live' ? '🟢' : navContext.mode === 'calendar' ? '📆' : '🚀'}
+              </span>
+            </motion.button>
+          </>
         )}
+
+        {/* Launch menu — quick actions from anywhere in the app */}
+        <AnimatePresence>
+          {isMobileBottomNav && showLaunchMenu && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowLaunchMenu(false)}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 10001, display: 'flex', alignItems: 'flex-end' }}
+            >
+              <motion.div
+                onClick={e => e.stopPropagation()}
+                initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 340, damping: 32 }}
+                style={{ width: '100%', background: '#fff', borderRadius: '24px 24px 0 0', padding: '18px 16px calc(96px + env(safe-area-inset-bottom, 0px))', boxShadow: '0 -20px 60px rgba(15,23,42,0.25)' }}
+              >
+                <div style={{ width: 42, height: 5, borderRadius: 99, background: 'var(--border)', margin: '0 auto 16px' }} />
+                <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>🚀 Launch</div>
+                <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>
+                  {navContext.mode === 'live' ? `${navContext.liveCount} session${navContext.liveCount === 1 ? '' : 's'} live right now` : 'Jump straight to what you need'}
+                </div>
+                {[
+                  { key: 'planner', label: 'New Session', desc: 'Plan a new activity', icon: '📅', color: '#7C3AED' },
+                  { key: 'calendar', label: 'Calendar', desc: 'See what\'s scheduled', icon: '📆', color: '#2563EB' },
+                  { key: 'home', label: 'Live Sessions', desc: 'View what\'s running now', icon: '🟢', color: '#16A34A' },
+                  { key: 'events_trips', label: 'Events & Trips', desc: 'Manage trips and events', icon: '🚌', color: '#EA580C' },
+                  { key: 'volunteers', label: 'Volunteers Needed', desc: 'Fill unstaffed roles', icon: '❤️', color: '#DB2777' },
+                  { key: 'registers', label: 'Open Today\'s Register', desc: 'Sign children in and out', icon: '📋', color: '#0891B2' },
+                ].map(item => (
+                  <button key={item.key} onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key) }} style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 8px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid #F8FAFC',
+                  }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 14, background: `${item.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{item.icon}</div>
+                    <div>
+                      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>{item.label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text3)' }}>{item.desc}</div>
+                    </div>
+                  </button>
+                ))}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
       {showProfile && (
         <ProfilePage
