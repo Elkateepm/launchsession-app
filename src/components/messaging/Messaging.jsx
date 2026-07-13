@@ -9,7 +9,13 @@ const AUDIENCES = [
   { key: 'volunteers',  label: 'Volunteers',  icon: '❤️', color: '#EC4899' },
   { key: 'team',        label: 'Team Leads',  icon: '⭐', color: '#F59E0B' },
   { key: 'general',     label: 'General',     icon: '💬', color: '#6B7280' },
+  { key: 'event_staff',      label: 'Event Staff',      icon: '🎟️', color: '#7C3AED' },
+  { key: 'event_volunteers', label: 'Event Volunteers',  icon: '🙋', color: '#0EA5E9' },
 ]
+// Event-scoped threads (event_staff/event_volunteers) are auto-created against a specific
+// session, not manually started — so they're excluded from the "new thread" picker and the
+// top stats grid, but still recognised everywhere threads are looked up/filtered/displayed.
+const MANUAL_AUDIENCES = AUDIENCES.filter(a => !a.key.startsWith('event_'))
 
 const QUICK_MESSAGES = [
   '🚨 Urgent: Please read before today\'s session',
@@ -120,7 +126,7 @@ function ThreadView({ thread, org, session: authSession, onBack }) {
   )
 }
 
-export default function Messaging({ org, session: authSession }) {
+export default function Messaging({ org, session: authSession, initialThreadId }) {
   const isMobile = useIsMobile()
   const [threads, setThreads] = useState([])
   const [loading, setLoading] = useState(true)
@@ -129,16 +135,27 @@ export default function Messaging({ org, session: authSession }) {
   const [newThread, setNewThread] = useState({ subject: '', audience: 'all_staff' })
   const [creating, setCreating] = useState(false)
   const [filterAudience, setFilterAudience] = useState('all')
+  const [eventTitles, setEventTitles] = useState({})
   const primary = org?.primary_color || '#1B9AAA'
 
   const load = useCallback(async (isBackground) => {
     if (!isBackground) setLoading(true)
     const { data } = await supabase.from('message_threads').select('*, message_thread_messages(count)').eq('org_id', org.id).order('updated_at', { ascending: false })
     setThreads(data || [])
+    const sessionIds = [...new Set((data || []).map(t => t.session_id).filter(Boolean))]
+    if (sessionIds.length) {
+      const { data: sess } = await supabase.from('sessions').select('id, title').in('id', sessionIds)
+      setEventTitles(Object.fromEntries((sess || []).map(s => [s.id, s.title])))
+    }
     setLoading(false)
   }, [org.id])
 
   useEffect(() => { load(false) }, [load])
+  useEffect(() => {
+    if (!initialThreadId || !threads.length) return
+    const t = threads.find(t => t.id === initialThreadId)
+    if (t) setActiveThread(t)
+  }, [initialThreadId, threads])
   useRealtimeTable('message_threads', () => load(true), { filter: `org_id=eq.${org.id}`, pollInterval: 4000 })
   useRealtimeTable('message_thread_messages', () => load(true), { pollInterval: 4000 })
 
@@ -173,7 +190,7 @@ export default function Messaging({ org, session: authSession }) {
           </button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
-          {AUDIENCES.map(a => (
+          {MANUAL_AUDIENCES.map(a => (
             <div key={a.key} style={{ background: '#fff', borderRadius: 12, padding: '10px 14px', border: '1px solid #e5e7eb' }}>
               <div style={{ fontSize: 20, fontWeight: 900, color: a.color }}>{threads.filter(t => t.audience === a.key).length}</div>
               <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{a.icon} {a.label}</div>
@@ -189,7 +206,7 @@ export default function Messaging({ org, session: authSession }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, marginBottom: 12 }}>
             <input value={newThread.subject} onChange={e => setNewThread(n => ({ ...n, subject: e.target.value }))} placeholder="Thread subject e.g. 'Schedule change for Tuesday'" style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }} onKeyDown={e => e.key === 'Enter' && createThread()} />
             <select value={newThread.audience} onChange={e => setNewThread(n => ({ ...n, audience: e.target.value }))} style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit' }}>
-              {AUDIENCES.map(a => <option key={a.key} value={a.key}>{a.icon} {a.label}</option>)}
+              {MANUAL_AUDIENCES.map(a => <option key={a.key} value={a.key}>{a.icon} {a.label}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -232,6 +249,11 @@ export default function Messaging({ org, session: authSession }) {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>{thread.subject}</div>
+                  {thread.session_id && eventTitles[thread.session_id] && (
+                    <div style={{ display: 'inline-block', fontSize: 10.5, fontWeight: 700, color: '#7C3AED', background: '#F5F3FF', borderRadius: 99, padding: '2px 8px', marginBottom: 4 }}>
+                      🎟️ {eventTitles[thread.session_id]}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: 10, fontSize: 12, color: '#9CA3AF' }}>
                     <span style={{ color: aud.color, fontWeight: 700 }}>{aud.label}</span>
                     <span>{msgCount} message{msgCount !== 1 ? 's' : ''}</span>
