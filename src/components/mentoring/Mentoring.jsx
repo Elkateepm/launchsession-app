@@ -147,10 +147,6 @@ export default function Mentoring({ org, session }) {
           { label: 'Reviews Due', value: reviewsDue.length, icon: '⭐', color: '#E91E63' },
           { label: 'New This Month', value: thisMonth.length, icon: '✨', color: '#7C3AED' },
         ]}
-        actions={[
-          { label: '🌱 New Referral', onClick: () => setView('referral') },
-          { label: '💞 New Match', onClick: () => { setSelectedReferral(null); setView('match') }, variant: 'ghost' },
-        ]}
       />
       <div style={{ flex: 1, overflowY: 'auto' }}>
 
