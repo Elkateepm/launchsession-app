@@ -124,7 +124,7 @@ function HeroIllustration() {
 }
 
 // ─── DETAIL DRAWER ──────────────────────────────────────────────
-function EventDrawer({ event, org, onClose, onNavigate, onChanged }) {
+function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
   const [tab, setTab] = useState('overview')
   const [form, setForm] = useState(event)
   const [saving, setSaving] = useState(false)
@@ -165,7 +165,17 @@ function EventDrawer({ event, org, onClose, onNavigate, onChanged }) {
     if (!error) { onClose(); onChanged(null, true) }
   }
 
-  const TABS = [
+  const messageTeam = async () => {
+    let { data: thread } = await supabase.from('message_threads').select('id').eq('session_id', event.id).eq('audience', 'event_staff').maybeSingle()
+    if (!thread) {
+      const { data: created } = await supabase.from('message_threads').insert({
+        org_id: org.id, subject: `${event.title} — Staff`, audience: 'event_staff',
+        created_by: session?.user?.id || null, session_id: event.id,
+      }).select('id').single()
+      thread = created
+    }
+    onNavigate && onNavigate('messaging', { initialThreadId: thread?.id })
+  }
     { key: 'overview', label: 'Overview', icon: '📋' },
     { key: 'people', label: 'People', icon: '👥' },
     { key: 'safety', label: 'Safety', icon: '🛡️' },
@@ -192,7 +202,7 @@ function EventDrawer({ event, org, onClose, onNavigate, onChanged }) {
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button onClick={() => onNavigate && onNavigate('registers')} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Open Register</button>
-            <button onClick={() => onNavigate && onNavigate('messaging')} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Message Team</button>
+            <button onClick={messageTeam} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Message Team</button>
             {event.risk_assessment_required && (
               <button onClick={() => onNavigate && onNavigate('risk_assessments')} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Risk Assessment</button>
             )}
@@ -566,7 +576,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
       <AnimatePresence>
         {drawerEvent && (
           <EventDrawer
-            event={drawerEvent} org={org} onNavigate={onNavigate}
+            event={drawerEvent} org={org} session={session} onNavigate={onNavigate}
             onClose={() => setDrawerEvent(null)}
             onChanged={(updated, shouldReload) => {
               if (shouldReload) { load(); return }
