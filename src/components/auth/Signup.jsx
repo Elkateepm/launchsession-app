@@ -16,6 +16,7 @@ export default function Signup() {
   const [loading, setLoading]                   = useState(false)
   const [step, setStep]                         = useState(null) // current step label
   const [done, setDone]                         = useState(false)
+  const [emailFailed, setEmailFailed]            = useState(false)
   const [error, setError]                       = useState('')
 
   const handleSignup = async e => {
@@ -48,7 +49,12 @@ export default function Signup() {
     const { error: approveError } = await supabase.rpc('approve_trial_request', { trial_id: trial.id })
 
     if (approveError) {
-      setError('Workspace setup failed: ' + approveError.message)
+      const raw = approveError.message || ''
+      if (raw.includes('ORG_NAME_TAKEN')) {
+        setError(`An organisation called "${organisationName.trim()}" is already active on LaunchSession. If this is you, check your email for the original login link, or use a different name.`)
+      } else {
+        setError('Workspace setup failed: ' + raw)
+      }
       setLoading(false)
       setStep(null)
       return
@@ -68,6 +74,7 @@ export default function Signup() {
 
     // ── Step 4: send invite email ──
     setStep(STEPS[2].label)
+    let sendFailed = false
     if (approved?.admin_invite_token) {
       const { error: emailError } = await supabase.functions.invoke('send-invite-email', {
         body: {
@@ -82,13 +89,18 @@ export default function Signup() {
         }
       })
       if (emailError) {
-        // Workspace is ready, email failed — not fatal, show success anyway
+        // Workspace is genuinely ready — the org and invite both exist — but the email
+        // itself didn't go out, so we shouldn't tell the person to go check their inbox.
         console.warn('Email send failed:', emailError.message)
+        sendFailed = true
       }
+    } else {
+      sendFailed = true
     }
 
     setLoading(false)
     setStep(null)
+    setEmailFailed(sendFailed)
     setDone(true)
   }
 
@@ -100,17 +112,27 @@ export default function Signup() {
         <Logo />
         <div style={card}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 72, marginBottom: 16, lineHeight: 1 }}>🎉</div>
-            <h2 style={{ ...cardTitle, marginBottom: 12 }}>You're all set!</h2>
-            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>
-              We've sent a login link to
-            </p>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#60A5FA', marginBottom: 20, wordBreak: 'break-all' }}>
-              {email}
-            </div>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
-              Click the link to set your password and access your <strong style={{ color: 'rgba(255,255,255,0.75)' }}>{organisationName}</strong> workspace. Check your spam folder if it doesn't arrive within a couple of minutes.
-            </p>
+            <div style={{ fontSize: 72, marginBottom: 16, lineHeight: 1 }}>{emailFailed ? '⚠️' : '🎉'}</div>
+            <h2 style={{ ...cardTitle, marginBottom: 12 }}>{emailFailed ? 'Workspace created — one thing to check' : "You're all set!"}</h2>
+            {emailFailed ? (
+              <>
+                <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 20 }}>
+                  Your <strong style={{ color: 'rgba(255,255,255,0.85)' }}>{organisationName}</strong> workspace is ready, but we couldn't confirm the login link email actually sent to <strong style={{ color: '#60A5FA' }}>{email}</strong>. If it doesn't arrive shortly, contact <a href="mailto:support@launchsession.co.uk" style={{ color: '#60A5FA' }}>support@launchsession.co.uk</a> and we'll get you a fresh link right away.
+                </p>
+              </>
+            ) : (
+              <>
+                <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>
+                  We've sent a login link to
+                </p>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#60A5FA', marginBottom: 20, wordBreak: 'break-all' }}>
+                  {email}
+                </div>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
+                  Click the link to set your password and access your <strong style={{ color: 'rgba(255,255,255,0.75)' }}>{organisationName}</strong> workspace. Check your spam folder if it doesn't arrive within a couple of minutes.
+                </p>
+              </>
+            )}
             <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '14px 18px', fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
               💡 Once you've set your password, you can sign in anytime at{' '}
               <a href="https://app.launchsession.co.uk" target="_blank" rel="noreferrer" style={{ color: '#60A5FA', fontWeight: 700 }}>
