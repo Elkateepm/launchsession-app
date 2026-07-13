@@ -177,7 +177,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
             {/* Type picker */}
             <div style={{ marginBottom: 20 }}>
               <label style={lb}>What type of session?</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
                 {SESSION_TYPES.map(t => {
                   const active = form.session_type === t.key
                   return (
@@ -202,7 +202,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
             {/* Date */}
             <div style={{ marginBottom: 16 }}>
               <label style={lb}>{isTrip ? 'Trip dates' : 'Date'}</label>
-              <div style={{ display: 'grid', gridTemplateColumns: isTrip ? '1fr 1fr' : '1fr', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isTrip ? 'minmax(0,1fr) minmax(0,1fr)' : '1fr', gap: 8 }}>
                 <div>
                   {isTrip && <div style={{ fontSize: 11, color: 'var(--text3, #6B7280)', marginBottom: 4 }}>From</div>}
                   <input type="date" value={form.session_date} onChange={e => set('session_date', e.target.value)} style={fi} />
@@ -219,7 +219,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
             {/* Time */}
             <div style={{ marginBottom: 16 }}>
               <label style={lb}>Time</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
                 <div>
                   <div style={{ fontSize: 11, color: 'var(--text3, #6B7280)', marginBottom: 4 }}>Start</div>
                   <input type="time" value={form.start_time} onChange={e => set('start_time', e.target.value)} style={fi} />
@@ -272,7 +272,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
             </div>
 
             {/* Capacity */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 20 }}>
               <div>
                 <label style={lb}>Max young people</label>
                 <input type="number" min="0" value={form.max_capacity} onChange={e => set('max_capacity', e.target.value)}
@@ -308,7 +308,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
             {isTrip && (
               <div style={{ marginBottom: 16 }}>
                 <label style={lb}>Trip requirements</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
                   {[
                     { key: 'packed_lunch', icon: '🥪', label: 'Packed Lunch' },
                     { key: 'consent_required', icon: '📋', label: 'Consent Form' },
