@@ -724,6 +724,26 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   )
 }
 
+const SESSION_STATUS_META = {
+  planning:  { label: 'Planning',  bg: '#FEF3C7', color: '#B45309' },
+  confirmed: { label: 'Confirmed', bg: '#EDE9FE', color: '#6D28D9' },
+  live:      { label: 'Live',      bg: '#DCFCE7', color: '#16A34A', pulse: true },
+  completed: { label: 'Completed', bg: '#E0E7FF', color: '#3730A3' },
+  cancelled: { label: 'Cancelled', bg: '#FEE2E2', color: '#B91C1C' },
+}
+
+function deriveSessionStatus(s, isPast, isToday) {
+  if (s.status === 'cancelled' || s.cancelled_at) return 'cancelled'
+  if (isPast) return 'completed'
+  if (isToday) {
+    const now = new Date()
+    const startDT = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
+    const endDT = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
+    if ((!startDT || startDT <= now) && (!endDT || endDT > now)) return 'live'
+  }
+  return s.status === 'ready' ? 'confirmed' : 'planning'
+}
+
 function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onView, volCounts, hasReflection, attendanceCounts, index = 0 }) {
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
   const isMultiDay = session.end_date && session.end_date !== session.session_date
@@ -738,17 +758,13 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onVie
     ? `${format(parseISO(session.session_date), 'd MMM')} – ${format(parseISO(session.end_date), 'd MMM')}`
     : format(parseISO(session.session_date), 'EEE d MMM')
 
-  const statusChip = isPast
-    ? { label: 'Completed', bg: '#F1F5F9', color: '#64748B' }
-    : isToday
-      ? { label: 'Live', bg: '#DCFCE7', color: '#16A34A', pulse: true }
-      : { label: 'Upcoming', bg: type.color + '15', color: type.color }
+  const statusChip = SESSION_STATUS_META[deriveSessionStatus(session, isPast, isToday)]
 
   const quickActions = [
-    { key: 'edit', icon: '✏️', onClick: () => onEdit(session), color: '#6D5DF6' },
-    { key: 'vol', icon: '❤️', onClick: () => onVolunteers(session), color: '#F16063' },
-    ...(isPast ? [{ key: 'reflect', icon: '⭐', onClick: () => onReflect(session), color: '#FFB648' }] : []),
-    { key: 'delete', icon: '🗑', onClick: () => onDelete(session.id), color: '#F16063' },
+    { key: 'edit', icon: '✏️', onClick: () => onEdit(session), color: '#6D5DF6', enabled: true },
+    { key: 'vol', icon: '❤️', onClick: () => onVolunteers(session), color: '#F16063', enabled: true },
+    { key: 'reflect', icon: '⭐', onClick: () => onReflect(session), color: '#FFB648', enabled: isPast },
+    { key: 'delete', icon: '🗑', onClick: () => onDelete(session.id), color: '#F16063', enabled: true },
   ]
 
   return (
@@ -803,18 +819,22 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onVie
             )}
           </div>
 
-          {/* Progress bar — signed in / expected */}
+          {/* Attendance: live progress while running, retrospective summary once completed */}
           {ac.total > 0 && (
             <div style={{ marginTop: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700, color: '#94A3B8', marginBottom: 4 }}>
-                <span>{ac.signedIn} / {ac.total} children signed in</span>
+                <span>
+                  {isPast
+                    ? `${ac.signedIn} attended · ${ac.total - ac.signedIn} absent or unmarked`
+                    : `${ac.signedIn} / ${ac.total} children signed in`}
+                </span>
               </div>
               <div style={{ height: 6, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${ac.total > 0 ? (ac.signedIn / ac.total) * 100 : 0}%` }}
                   transition={{ duration: 0.8, ease: 'easeOut' }}
-                  style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${type.color}, #30C48D)` }}
+                  style={{ height: '100%', borderRadius: 99, background: isPast ? '#94A3B8' : `linear-gradient(90deg, ${type.color}, #30C48D)` }}
                 />
               </div>
             </div>
@@ -843,11 +863,12 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onVie
             {quickActions.map(a => (
               <motion.button
                 key={a.key}
-                onClick={e => { e.stopPropagation(); a.onClick() }}
-                whileHover={{ y: -2, rotate: 6, background: a.color + '22' }}
-                whileTap={{ scale: 0.92 }}
-                style={{ width: 34, height: 34, borderRadius: 11, border: 'none', background: a.color + '12', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                title={a.key}
+                onClick={e => { e.stopPropagation(); if (a.enabled) a.onClick() }}
+                whileHover={a.enabled ? { y: -2, rotate: 6, background: a.color + '22' } : {}}
+                whileTap={a.enabled ? { scale: 0.92 } : {}}
+                disabled={!a.enabled}
+                style={{ width: 34, height: 34, borderRadius: 11, border: 'none', background: a.enabled ? a.color + '12' : '#F1F5F9', cursor: a.enabled ? 'pointer' : 'not-allowed', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: a.enabled ? 1 : 0.35 }}
+                title={a.key === 'reflect' && !a.enabled ? 'Available once the session has ended' : a.key}
               >
                 {a.icon}
               </motion.button>
@@ -1172,9 +1193,11 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const displayed = sessions.filter(s => {
     if (filter === 'reflections') return false // handled separately below
     if (filter === 'past') { if (!isSessionPast(s)) return false }
+    else if (filter === 'reflections_due') { if (!isSessionPast(s) || reflections[s.id]) return false }
     else { if (isSessionPast(s)) return false } // hide ended sessions from all other views
     if (filter === 'trips' && s.session_type !== 'trip') return false
     if (filter === 'sessions' && s.session_type === 'trip') return false
+    if (filter === 'needs_volunteers' && !(s.volunteer_limit && (volCounts[s.id] || 0) < s.volunteer_limit)) return false
     if (search.trim() && !(`${s.title} ${s.location || ''}`.toLowerCase().includes(search.trim().toLowerCase()))) return false
     return true
   })
@@ -1289,10 +1312,10 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const needVolunteers = sessions.filter(s => s.volunteer_limit && (volCounts[s.id] || 0) < s.volunteer_limit).length
 
   const statCards = [
-    { key: 'upcoming', label: 'Upcoming Sessions', value: upcomingSessions.length, icon: '📅', color: '#5B8DEF' },
-    { key: 'volunteers', label: 'Need Volunteers', value: needVolunteers, icon: '❤️', color: '#F16063', pulse: needVolunteers > 0 },
+    { key: 'upcoming', label: 'Upcoming Sessions', value: upcomingSessions.length, icon: '📅', color: '#5B8DEF', onClick: () => setFilter('all'), active: filter === 'all' },
+    { key: 'volunteers', label: 'Need Volunteers', value: needVolunteers, icon: '❤️', color: '#F16063', pulse: needVolunteers > 0, onClick: () => setFilter('needs_volunteers'), active: filter === 'needs_volunteers' },
     { key: 'expected', label: 'Children Expected', value: childrenExpectedCount, icon: '👥', color: '#30C48D' },
-    { key: 'reflections', label: 'Reflections Due', value: reflectionsDueCount, icon: '⭐', color: '#FFB648', glow: reflectionsDueCount > 0 },
+    { key: 'reflections', label: 'Reflections Due', value: reflectionsDueCount, icon: '⭐', color: '#FFB648', glow: reflectionsDueCount > 0, onClick: () => setFilter('reflections_due'), active: filter === 'reflections_due' },
   ]
 
   const filterTabs = [
@@ -1346,14 +1369,16 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
           {statCards.map((s, i) => (
             <motion.div
               key={s.key}
+              onClick={s.onClick}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: i * 0.06 }}
-              whileHover={{ scale: 1.03, y: -3 }}
+              whileHover={s.onClick ? { scale: 1.03, y: -3 } : {}}
+              whileTap={s.onClick ? { scale: 0.98 } : {}}
               style={{
                 background: `linear-gradient(150deg, ${s.color}14, rgba(255,255,255,0.65) 55%)`, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-                borderRadius: 20, border: `1px solid ${s.color}30`, boxShadow: `0 8px 28px -14px ${s.color}50, inset 0 1px 0 rgba(255,255,255,0.85)`,
-                padding: '18px 18px',
+                borderRadius: 20, border: s.active ? `2px solid ${s.color}` : `1px solid ${s.color}30`, boxShadow: `0 8px 28px -14px ${s.color}50, inset 0 1px 0 rgba(255,255,255,0.85)`,
+                padding: '18px 18px', cursor: s.onClick ? 'pointer' : 'default',
               }}
             >
               <motion.div
