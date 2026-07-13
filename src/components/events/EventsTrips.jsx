@@ -227,11 +227,11 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
           {tab === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Field label="Title"><input style={inpStyle} value={form.title || ''} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></Field>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12 }}>
                 <Field label="Date"><input type="date" style={inpStyle} value={form.session_date || ''} onChange={e => setForm(f => ({ ...f, session_date: e.target.value }))} /></Field>
                 <Field label="Location"><input style={inpStyle} value={form.location || ''} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} /></Field>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12 }}>
                 <Field label="Start"><input type="time" style={inpStyle} value={form.start_time || ''} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} /></Field>
                 <Field label="End"><input type="time" style={inpStyle} value={form.end_time || ''} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} /></Field>
               </div>
