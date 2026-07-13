@@ -399,6 +399,7 @@ export default function Dashboard({ session, org }) {
   const [registersKey, setRegistersKey] = useState(0)
   const [reflectSessionId, setReflectSessionId] = useState(null)
   const [openAssessmentId, setOpenAssessmentId] = useState(null)
+  const [initialThreadId, setInitialThreadId] = useState(null)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
 
@@ -407,6 +408,7 @@ export default function Dashboard({ session, org }) {
     if (t === 'registers') setRegistersKey(k => k + 1)
     setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
     setOpenAssessmentId(t === 'risk_assessments' && payload?.openAssessmentId ? payload.openAssessmentId : null)
+    setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setTab(t)
   }
 
@@ -672,7 +674,7 @@ export default function Dashboard({ session, org }) {
           {/* ── DELIVERY PACK ── */}
           {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
           {tab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} />)}
-          {tab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} />)}
+          {tab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} />)}
           {tab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} />)}
 
           {/* ── SAFEGUARDING PACK ── */}
