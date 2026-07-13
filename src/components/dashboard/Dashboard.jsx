@@ -730,7 +730,7 @@ export default function Dashboard({ session, org }) {
               <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>More</div>
               <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Open another LaunchSession area</div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
                 {[
                   { key: 'calendar', label: 'Calendar', icon: '📅' },
                   { key: 'team', label: 'Team & Staff', icon: '👥' },
