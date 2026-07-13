@@ -887,32 +887,36 @@ export default function Dashboard({ session, org }) {
             </div>
 
             {/* Floating Launch button — context-aware: rocket / calendar / live */}
-            <motion.button
-              onClick={() => { if (navigator.vibrate) navigator.vibrate(8); setShowLaunchMenu(true) }}
-              whileTap={{ scale: 0.92 }}
-              animate={navContext.mode === 'live' ? { scale: [1, 1.06, 1] } : { scale: 1 }}
-              transition={navContext.mode === 'live' ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : {}}
-              style={{
-                position: 'fixed',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                bottom: 'calc(40px + env(safe-area-inset-bottom, 0px))',
-                width: 66, height: 66, borderRadius: '50%',
-                border: '4px solid rgba(10,15,30,0.9)',
-                background: navContext.mode === 'live'
-                  ? 'linear-gradient(135deg, #22C55E, #16A34A)'
-                  : navContext.mode === 'calendar'
-                    ? 'linear-gradient(135deg, #7C3AED, #6366F1)'
-                    : 'linear-gradient(135deg, #7C3AED, #A855F7)',
-                boxShadow: navContext.mode === 'live' ? '0 8px 28px -6px rgba(34,197,94,0.7)' : '0 8px 28px -6px rgba(124,58,237,0.6)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                zIndex: 10000, cursor: 'pointer',
-              }}
-            >
-              <span style={{ fontSize: 26 }}>
-                {navContext.mode === 'live' ? '🟢' : navContext.mode === 'calendar' ? '📆' : '🚀'}
-              </span>
-            </motion.button>
+            <div style={{
+              position: 'fixed',
+              left: 'calc(50% - 33px)', // half of the button's own 66px width — avoids transform, which framer-motion's animate would otherwise override
+              bottom: 'calc(40px + env(safe-area-inset-bottom, 0px))',
+              width: 66, height: 66,
+              zIndex: 10000,
+            }}>
+              <motion.button
+                onClick={() => { if (navigator.vibrate) navigator.vibrate(8); setShowLaunchMenu(true) }}
+                whileTap={{ scale: 0.92 }}
+                animate={navContext.mode === 'live' ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+                transition={navContext.mode === 'live' ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : {}}
+                style={{
+                  width: '100%', height: '100%', borderRadius: '50%',
+                  border: '4px solid rgba(10,15,30,0.9)',
+                  background: navContext.mode === 'live'
+                    ? 'linear-gradient(135deg, #22C55E, #16A34A)'
+                    : navContext.mode === 'calendar'
+                      ? 'linear-gradient(135deg, #7C3AED, #6366F1)'
+                      : 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                  boxShadow: navContext.mode === 'live' ? '0 8px 28px -6px rgba(34,197,94,0.7)' : '0 8px 28px -6px rgba(124,58,237,0.6)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{ fontSize: 26 }}>
+                  {navContext.mode === 'live' ? '🟢' : navContext.mode === 'calendar' ? '📆' : '🚀'}
+                </span>
+              </motion.button>
+            </div>
           </>
         )}
 
