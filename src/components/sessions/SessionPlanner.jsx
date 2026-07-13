@@ -1114,7 +1114,7 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
 }
 
 
-export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, onNavigate }) {
+export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, autoOpenWizard, onNavigate }) {
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const { groups: orgGroups } = useOrgSettings(orgId)
@@ -1273,6 +1273,13 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     setEditing({ ...EMPTY_FORM, session_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), end_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), session_type: filter === 'trips' ? 'trip' : 'activity' })
     setView('wizard')
   }
+
+  // Jump straight into the creation wizard when arriving here via the "New Session" nav
+  // button or Launch menu, instead of landing on the plain list first.
+  useEffect(() => {
+    if (autoOpenWizard) openNew()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenWizard])
 
   // ── WIZARD VIEW (new session creation) ──
   if (view === 'wizard') {
