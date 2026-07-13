@@ -176,6 +176,8 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
     }
     onNavigate && onNavigate('messaging', { initialThreadId: thread?.id })
   }
+
+  const TABS = [
     { key: 'overview', label: 'Overview', icon: '📋' },
     { key: 'people', label: 'People', icon: '👥' },
     { key: 'safety', label: 'Safety', icon: '🛡️' },
