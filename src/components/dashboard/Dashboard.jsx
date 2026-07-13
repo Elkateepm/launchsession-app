@@ -400,6 +400,7 @@ export default function Dashboard({ session, org }) {
   const [reflectSessionId, setReflectSessionId] = useState(null)
   const [openAssessmentId, setOpenAssessmentId] = useState(null)
   const [initialThreadId, setInitialThreadId] = useState(null)
+  const [autoOpenWizard, setAutoOpenWizard] = useState(false)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
   const [showLaunchMenu, setShowLaunchMenu] = React.useState(false);
   const [navContext, setNavContext] = React.useState({ mode: 'rocket', liveCount: 0 })
@@ -412,6 +413,7 @@ export default function Dashboard({ session, org }) {
     setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
     setOpenAssessmentId(t === 'risk_assessments' && payload?.openAssessmentId ? payload.openAssessmentId : null)
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
+    setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
     setTab(t)
   }
 
@@ -719,7 +721,7 @@ export default function Dashboard({ session, org }) {
           })()}
           {/* ── BASE MODULES — always free ── */}
           {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
-          {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} onNavigate={handleSetTab} />}
+          {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} onNavigate={handleSetTab} />}
           {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
           {tab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'team'       && (isAdmin ? <TeamTab org={org} session={session} /> : <RestrictedModule label="Team & Staff" icon="👥" onNavigate={handleSetTab} />)}
@@ -788,6 +790,7 @@ export default function Dashboard({ session, org }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
                 {[
+                  { key: 'mentoring', label: 'Mentoring', icon: '🤝', badge: navBadges.mentoring },
                   { key: 'calendar', label: 'Calendar', icon: '📅' },
                   { key: 'team', label: 'Team & Staff', icon: '👥' },
                   { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
@@ -802,6 +805,7 @@ export default function Dashboard({ session, org }) {
                       setShowMobileMore(false);
                     }}
                     style={{
+                      position: 'relative',
                       border: '1px solid #e5e7eb',
                       background: 'var(--surface2)',
                       borderRadius: 18,
@@ -812,6 +816,11 @@ export default function Dashboard({ session, org }) {
                   >
                     <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
                     <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)' }}>{item.label}</div>
+                    {item.badge > 0 && (
+                      <span style={{ position: 'absolute', top: 10, right: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, borderRadius: 99, minWidth: 17, height: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                        {item.badge > 9 ? '9+' : item.badge}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -863,21 +872,16 @@ export default function Dashboard({ session, org }) {
               <div />
 
               {[
-                { key: 'mentoring', label: 'Mentoring', icon: '🤝', badge: navBadges.mentoring },
+                { key: 'newsession', label: 'New Session', icon: '➕', badge: 0 },
                 { key: 'more', label: 'More', icon: '☰', badge: 0 },
               ].map(item => (
-                <button key={item.key} onClick={() => item.key === 'more' ? setShowMobileMore(true) : handleSetTab(item.key)} style={{ position: 'relative', border: 'none', background: 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 2px', cursor: 'pointer' }}>
-                  {tab === item.key && (
+                <button key={item.key} onClick={() => item.key === 'more' ? setShowMobileMore(true) : handleSetTab('planner', { autoOpenWizard: true })} style={{ position: 'relative', border: 'none', background: 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 2px', cursor: 'pointer' }}>
+                  {tab === 'planner' && item.key === 'newsession' && (
                     <motion.div layoutId="navCapsule" transition={{ type: 'spring', stiffness: 380, damping: 28 }}
                       style={{ position: 'absolute', inset: '2px 6px', borderRadius: 18, background: `linear-gradient(135deg, ${primary}33, #6366F133)` }} />
                   )}
                   <span style={{ fontSize: 19, position: 'relative', zIndex: 1 }}>{item.icon}</span>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: tab === item.key ? '#fff' : 'rgba(255,255,255,0.5)', position: 'relative', zIndex: 1 }}>{item.label}</span>
-                  {item.badge > 0 && (
-                    <span style={{ position: 'absolute', top: 4, right: '28%', background: '#EF4444', color: '#fff', fontSize: 9, fontWeight: 900, borderRadius: 99, minWidth: 15, height: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', zIndex: 2 }}>
-                      {item.badge > 9 ? '9+' : item.badge}
-                    </span>
-                  )}
+                  <span style={{ fontSize: 10, fontWeight: 800, color: tab === 'planner' && item.key === 'newsession' ? '#fff' : 'rgba(255,255,255,0.5)', position: 'relative', zIndex: 1 }}>{item.label}</span>
                 </button>
               ))}
             </div>
@@ -932,14 +936,15 @@ export default function Dashboard({ session, org }) {
                   {navContext.mode === 'live' ? `${navContext.liveCount} session${navContext.liveCount === 1 ? '' : 's'} live right now` : 'Jump straight to what you need'}
                 </div>
                 {[
-                  { key: 'planner', label: 'New Session', desc: 'Plan a new activity', icon: '📅', color: '#7C3AED' },
+                  { key: 'planner', label: 'New Session', desc: 'Plan a new activity', icon: '📅', color: '#7C3AED', payload: { autoOpenWizard: true } },
                   { key: 'calendar', label: 'Calendar', desc: 'See what\'s scheduled', icon: '📆', color: '#2563EB' },
                   { key: 'home', label: 'Live Sessions', desc: 'View what\'s running now', icon: '🟢', color: '#16A34A' },
                   { key: 'events_trips', label: 'Events & Trips', desc: 'Manage trips and events', icon: '🚌', color: '#EA580C' },
+                  { key: 'mentoring', label: 'Mentoring', desc: 'Referrals and matches', icon: '🤝', color: '#7C3AED' },
                   { key: 'volunteers', label: 'Volunteers Needed', desc: 'Fill unstaffed roles', icon: '❤️', color: '#DB2777' },
                   { key: 'registers', label: 'Open Today\'s Register', desc: 'Sign children in and out', icon: '📋', color: '#0891B2' },
                 ].map(item => (
-                  <button key={item.key} onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key) }} style={{
+                  <button key={item.key} onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key, item.payload) }} style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 8px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid #F8FAFC',
                   }}>
                     <div style={{ width: 44, height: 44, borderRadius: 14, background: `${item.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{item.icon}</div>
