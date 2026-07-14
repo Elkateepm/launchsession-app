@@ -434,6 +434,124 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   </div>
 </div>
 
+<!-- FOUNDING MEMBER OFFER -->
+<section id="founding-offer">
+  <div class="container">
+    <div class="fo-box">
+      <div class="fo-badge">⚡ Limited to the first 50 organisations</div>
+      <h2 class="fo-heading">Become a Founding Member</h2>
+      <p class="fo-sub">The first 50 organisations to sign up get lifetime access for a one-off <strong>£49.99</strong> — no monthly fees, ever. After that, it's gone for good.</p>
+      <div class="fo-progress-wrap" id="foProgressWrap">
+        <div class="fo-progress-label"><span id="foSpotsText">Loading availability…</span></div>
+        <div class="fo-progress-bar"><div class="fo-progress-fill" id="foProgressFill" style="width:0%"></div></div>
+      </div>
+
+      <form id="foForm" class="fo-form" onsubmit="return submitFoundingOffer(event)">
+        <input id="foName" type="text" required placeholder="Your name" class="fo-input" />
+        <input id="foOrg" type="text" required placeholder="Organisation name" class="fo-input" />
+        <input id="foEmail" type="email" required placeholder="you@yourorganisation.org" class="fo-input" />
+        <button type="submit" class="fo-submit" id="foSubmitBtn">Register interest →</button>
+      </form>
+      <div id="foMsg" class="fo-msg fo-msg-success" style="display:none">✓ You're on the list — we'll be in touch to confirm your founding member spot.</div>
+      <div id="foErr" class="fo-msg fo-msg-error" style="display:none">Something went wrong — mind trying again, or email <a href="mailto:info@launchnexus.co.uk" style="color:#F87171">info@launchnexus.co.uk</a> directly?</div>
+      <div class="fo-fine">No credit card needed to register interest. One founding-member offer per organisation.</div>
+    </div>
+  </div>
+</section>
+<style>
+#founding-offer{padding:70px 0}
+.fo-box{max-width:640px;margin:0 auto;text-align:center;background:linear-gradient(160deg,rgba(139,92,246,0.14),rgba(59,130,246,0.08));border:1.5px solid rgba(139,92,246,0.35);border-radius:28px;padding:52px 40px;position:relative;overflow:hidden}
+.fo-badge{display:inline-block;padding:7px 16px;border-radius:99px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.35);color:#FBBF24;font-size:12px;font-weight:800;letter-spacing:0.3px;margin-bottom:18px}
+.fo-heading{font-size:clamp(26px,4vw,36px);font-weight:900;color:#fff;margin-bottom:14px;letter-spacing:-0.5px}
+.fo-sub{font-size:15px;color:var(--text2);line-height:1.7;max-width:480px;margin:0 auto 28px}
+.fo-sub strong{color:#fff;font-size:17px}
+.fo-progress-wrap{max-width:380px;margin:0 auto 32px}
+.fo-progress-label{font-size:12.5px;font-weight:700;color:var(--text2);margin-bottom:8px}
+.fo-progress-bar{height:8px;border-radius:99px;background:rgba(255,255,255,0.08);overflow:hidden}
+.fo-progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#8B5CF6,#3B82F6);transition:width 0.6s ease}
+.fo-form{display:flex;flex-direction:column;gap:10px;max-width:380px;margin:0 auto}
+.fo-input{width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;outline:none;font-family:var(--font);box-sizing:border-box}
+.fo-input::placeholder{color:var(--text3)}
+.fo-submit{padding:13px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,#8B5CF6,#3B82F6);color:#fff;font-weight:800;font-size:14px;cursor:pointer;font-family:var(--font);margin-top:4px;transition:all 0.2s}
+.fo-submit:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(139,92,246,0.4)}
+.fo-submit:disabled{opacity:0.6;cursor:default;transform:none}
+.fo-msg{margin-top:16px;font-size:13.5px;font-weight:600}
+.fo-msg-success{color:#4ADE80}
+.fo-msg-error{color:#F87171}
+.fo-fine{margin-top:18px;font-size:12px;color:var(--text3)}
+@media (max-width:600px){.fo-box{padding:36px 22px;border-radius:22px}}
+</style>
+<script>
+const FO_SUPABASE_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co';
+const FO_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzYWhjcWVxcnhhd213dGpwd3ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNDYyNTEsImV4cCI6MjA5MzcyMjI1MX0.HYCzuHe5C1cWoxh7yYUZuLWG0bxvy_9xTE1bmlwJweQ';
+const FO_TOTAL_SPOTS = 50;
+
+async function loadFoundingSpots() {
+  try {
+    const res = await fetch(`${FO_SUPABASE_URL}/rest/v1/waitlist_signups?interest=eq.lifetime_deal_50&select=id`, {
+      headers: { 'apikey': FO_ANON_KEY, 'Authorization': `Bearer ${FO_ANON_KEY}`, 'Prefer': 'count=exact' }
+    });
+    const rows = await res.json();
+    const taken = Array.isArray(rows) ? rows.length : 0;
+    const remaining = Math.max(0, FO_TOTAL_SPOTS - taken);
+    const pct = Math.min(100, (taken / FO_TOTAL_SPOTS) * 100);
+    document.getElementById('foProgressFill').style.width = pct + '%';
+    if (remaining > 0) {
+      document.getElementById('foSpotsText').textContent = `${remaining} of ${FO_TOTAL_SPOTS} founding spots remaining`;
+    } else {
+      document.getElementById('foSpotsText').textContent = 'All founding member spots have been claimed';
+      document.getElementById('foSubmitBtn').disabled = true;
+      document.getElementById('foSubmitBtn').textContent = 'Fully claimed';
+    }
+  } catch (e) {
+    document.getElementById('foSpotsText').textContent = `${FO_TOTAL_SPOTS} founding spots available`;
+  }
+}
+loadFoundingSpots();
+
+async function submitFoundingOffer(e) {
+  e.preventDefault();
+  const btn = document.getElementById('foSubmitBtn');
+  const msg = document.getElementById('foMsg');
+  const err = document.getElementById('foErr');
+  msg.style.display = 'none'; err.style.display = 'none';
+  const name = document.getElementById('foName').value.trim();
+  const organisation_name = document.getElementById('foOrg').value.trim();
+  const email = document.getElementById('foEmail').value.trim();
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+  try {
+    const res = await fetch(`${FO_SUPABASE_URL}/rest/v1/waitlist_signups`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': FO_ANON_KEY,
+        'Authorization': `Bearer ${FO_ANON_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ email, name, organisation_name, interest: 'lifetime_deal_50' })
+    });
+    if (!res.ok) throw new Error('failed');
+
+    // Notify the team — non-blocking; the signup itself already succeeded above
+    fetch(`${FO_SUPABASE_URL}/functions/v1/notify-lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': FO_ANON_KEY, 'Authorization': `Bearer ${FO_ANON_KEY}` },
+      body: JSON.stringify({ name, email, organisation_name, interest: 'lifetime_deal_50', source: 'landing_page_founding_offer' })
+    }).catch(() => {});
+
+    msg.style.display = 'block';
+    document.getElementById('foForm').style.display = 'none';
+    loadFoundingSpots();
+  } catch (e2) {
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Register interest →';
+  }
+  return false;
+}
+</script>
+
 <!-- HOW IT WORKS -->
 <section id="how">
   <div class="container">
