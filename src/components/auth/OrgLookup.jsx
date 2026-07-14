@@ -2,6 +2,9 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
+// Shown wherever an org logo would go, whenever the org hasn't set one yet
+const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
+
 export default function OrgLookup() {
   localStorage.removeItem('launchsession_org_slug')
   const [orgName, setOrgName] = useState('')
@@ -91,8 +94,8 @@ export default function OrgLookup() {
           {/* STEP: FOUND */}
           {step === 'found' && org && !Array.isArray(org) && (
             <div style={{ textAlign: 'center' }}>
-              <div style={{ width: 64, height: 64, borderRadius: 18, background: org.primary_color || '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, color: '#fff', margin: '0 auto 16px', overflow: 'hidden' }}>
-                {org.logo_url ? <img src={org.logo_url} alt={org.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : org.name[0]}
+              <div style={{ width: 64, height: 64, borderRadius: 18, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', overflow: 'hidden', border: `2px solid ${org.primary_color || '#3B82F6'}30` }}>
+                <img src={org.logo_url || FALLBACK_LOGO_URL} alt={org.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </div>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Workspace found</div>
               <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 4 }}>{org.name}</div>
@@ -112,8 +115,8 @@ export default function OrgLookup() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {org.map(o => (
                   <button key={o.id} onClick={() => handleContinue(o)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s' }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: o.primary_color || '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
-                      {o.name[0]}
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', border: `1.5px solid ${o.primary_color || '#3B82F6'}30` }}>
+                      <img src={o.logo_url || FALLBACK_LOGO_URL} alt={o.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{o.name}</div>
