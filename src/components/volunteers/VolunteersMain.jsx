@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
-import { Card, SectionTitle, Badge, Avatar, CountUp, sessionHours, daysUntil, inputStyle, btnPrimary, btnGhost, glass, PURPLE, PAGE_BG } from './vh_shared'
-import launchSessionBadge from '../../assets/images/launchsession-badge-hq.png'
+import { Card, SectionTitle, Badge, Avatar, CountUp, sessionHours, daysUntil, statusStyle, inputStyle, btnPrimary, btnGhost, glass, PURPLE, PAGE_BG } from './vh_shared'
+// Shown wherever the org logo would go, whenever the org hasn't set one yet
+const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
 import VolunteerDirectory from './VolunteerDirectory'
 import VolunteersApplications from './VolunteersApplications'
 import VolunteersCoverage from './VolunteersCoverage'
@@ -11,10 +12,9 @@ import VolunteersRecognition from './VolunteersRecognition'
 import VolunteersReports from './VolunteersReports'
 
 const TABS = [
-  { key: 'dashboard', label: 'Dashboard', icon: '❤️' },
-  { key: 'directory', label: 'Directory', icon: '📇' },
-  { key: 'applications', label: 'Applications', icon: '📮' },
-  { key: 'coverage', label: 'Coverage', icon: '🗓️' },
+  { key: 'dashboard', label: 'Overview', icon: '❤️' },
+  { key: 'directory', label: 'Directory', icon: '👥' },
+  { key: 'coverage', label: 'Coverage', icon: '📅' },
   { key: 'training', label: 'Training', icon: '🎓' },
   { key: 'recognition', label: 'Recognition', icon: '🏆' },
   { key: 'reports', label: 'Reports', icon: '📊' },
@@ -48,6 +48,7 @@ export default function VolunteersMain({ org }) {
   const [tab, setTab] = useState('dashboard')
 
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false)
   const [showQR, setShowQR] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
@@ -98,26 +99,52 @@ export default function VolunteersMain({ org }) {
   const today = new Date().toISOString().slice(0, 10)
   const sessionsById = Object.fromEntries(sessions.map(s => [s.id, s]))
   const completedStaff = sessionStaff.filter(ss => sessionsById[ss.session_id]?.session_date <= today)
-  const upcomingShifts = sessionStaff.filter(ss => sessionsById[ss.session_id]?.session_date >= today).length
   const thisMonth = today.slice(0, 7)
   const hoursThisMonth = Math.round(completedStaff
     .filter(ss => sessionsById[ss.session_id]?.session_date?.slice(0, 7) === thisMonth)
     .reduce((sum, ss) => sum + sessionHours(sessionsById[ss.session_id]), 0))
-  const avgAttendance = completedStaff.length ? Math.round((completedStaff.filter(ss => ss.attended !== false).length / completedStaff.length) * 100) : 0
-  const availableThisWeek = volunteers.filter(v => v.availability && Object.values(v.availability).some(Boolean)).length
-  const dbsExpiringSoon = volunteers.filter(v => { const d = daysUntil(v.dbs_expiry); return d !== null && d <= 30 }).length
   const upcomingSessionsList = sessions.filter(s => s.session_date >= today).sort((a, b) => a.session_date.localeCompare(b.session_date)).slice(0, 4)
 
+  const todaySessions = sessions.filter(s => s.session_date === today)
+  const todaySessionsWithCoverage = todaySessions.map(s => {
+    const assigned = sessionStaff.filter(ss => ss.session_id === s.id).length
+    const required = s.volunteer_limit || 2
+    return { ...s, assigned, required, covered: assigned >= required }
+  })
+  const needCoverToday = todaySessionsWithCoverage.filter(s => !s.covered).length
+  const trainingDueSoon = training
+    .map(t => ({ ...t, daysLeft: daysUntil(t.expiry_date) }))
+    .filter(t => t.daysLeft !== null && t.daysLeft >= 0 && t.daysLeft <= 30)
+    .sort((a, b) => a.daysLeft - b.daysLeft)
+
   const kpis = [
-    { label: 'Total Volunteers', value: volunteers.length + applicants.length, icon: '👥' },
-    { label: 'Active', value: volunteers.length, icon: '✅' },
-    { label: 'Pending Approval', value: applicants.filter(a => (a.application_status || 'new') !== 'rejected' && (a.application_status || 'new') !== 'withdrawn').length, icon: '⏳' },
-    { label: 'Available This Week', value: availableThisWeek, icon: '📆' },
-    { label: 'Upcoming Shifts', value: upcomingShifts, icon: '🕐' },
-    { label: 'Hours This Month', value: hoursThisMonth, icon: '⏱️' },
-    { label: 'Average Attendance', value: `${avgAttendance}%`, icon: '📈' },
-    { label: 'DBS Expiring Soon', value: dbsExpiringSoon, icon: '🛡️' },
+    { label: 'Total Volunteers', value: volunteers.length + applicants.length, icon: '👥', color: '#16A34A', bg: 'rgba(34,197,94,0.12)' },
+    { label: 'Active Volunteers', value: volunteers.length, icon: '🟢', color: '#0891B2', bg: 'rgba(8,145,178,0.12)' },
+    { label: 'Sessions Today', value: todaySessions.length, icon: '📅', color: '#B45309', bg: 'rgba(245,158,11,0.14)' },
+    { label: 'Need Cover', value: needCoverToday, icon: '⚠️', color: '#DC2626', bg: 'rgba(220,38,38,0.12)' },
+    { label: 'Training Due', value: trainingDueSoon.length, icon: '🎓', color: '#7C3AED', bg: 'rgba(124,58,237,0.12)' },
+    { label: 'Volunteer Hours', value: hoursThisMonth, icon: '⭐', color: '#4F46E5', bg: 'rgba(79,70,229,0.12)' },
   ]
+
+  // Activity feed — merged from real signals, not fake data
+  const activityFeed = [
+    ...volunteers.slice(0, 5).map(v => ({
+      id: `join-${v.id}`, ts: v.created_at, icon: '👤', color: '#16A34A',
+      title: `${v.full_name} joined your team`, sub: v.role_title || 'Volunteer',
+    })),
+    ...broadcasts.slice(0, 5).map(b => ({
+      id: `bc-${b.id}`, ts: b.created_at, icon: '💬', color: '#0891B2',
+      title: `Broadcast sent to ${b.recipient_count} volunteer${b.recipient_count === 1 ? '' : 's'}`, sub: b.subject || b.body?.slice(0, 50) || 'Update',
+    })),
+    ...recognition.slice(0, 5).map(r => ({
+      id: `rec-${r.id}`, ts: r.awarded_at || r.created_at, icon: '🏆', color: '#B45309',
+      title: `${volunteers.find(v => v.id === r.volunteer_id)?.full_name || 'A volunteer'} — ${r.title}`, sub: r.note || 'Recognition',
+    })),
+    ...todaySessionsWithCoverage.filter(s => s.covered).map(s => ({
+      id: `cov-${s.id}`, ts: s.updated_at || s.created_at || s.session_date, icon: '✅', color: '#16A34A',
+      title: `${s.title} is fully covered`, sub: 'Today',
+    })),
+  ].filter(a => a.ts).sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 6)
 
   // ── Invite / portal ──────────────────────────────────
   async function handleInvite(e) {
@@ -161,13 +188,13 @@ export default function VolunteersMain({ org }) {
     setAudienceMode('custom')
     setCustomIds([volunteer.id])
     setBody(`Hi {{FirstName}}, `)
-    setTab('dashboard')
+    setShowBroadcastModal(true)
   }
   function openComposerForSession(s) {
     setAudienceMode('all')
     setSubject(`Cover needed: ${s.title}`)
     setBody(`Hi {{FirstName}}, we're looking for extra cover for ${s.title} on ${new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}. Let us know if you're able to help!`)
-    setTab('dashboard')
+    setShowBroadcastModal(true)
   }
 
   const audienceLabel = audienceMode === 'all' ? 'All Volunteers' : audienceMode === 'active' ? 'Only Active' : audienceMode === 'pending' ? 'Only Pending' : `${customIds.length} selected`
@@ -213,8 +240,10 @@ export default function VolunteersMain({ org }) {
             <div style={{ fontSize: 12.5, color: '#94A3B8', marginTop: 2 }}>Keep every volunteer informed, engaged and ready for every session.</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
               <button onClick={() => setShowInviteModal(true)} style={btnPrimary(primary)}>+ Invite Volunteer</button>
+              <button onClick={() => setShowBroadcastModal(true)} style={btnGhost}>📢 Send Broadcast</button>
+              <button onClick={() => setTab('coverage')} style={btnGhost}>📅 View Coverage</button>
+              <button onClick={() => setShowQR(true)} style={btnGhost}>📲 QR Portal</button>
               <button onClick={copyLink} style={btnGhost}>{copied ? '✓ Copied' : '🔗 Copy Portal Link'}</button>
-              <button onClick={() => setShowQR(true)} style={btnGhost}>📲 QR Code</button>
               <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...btnGhost, textDecoration: 'none', display: 'inline-block' }}>Open Portal ↗</a>
             </div>
           </div>
@@ -223,14 +252,15 @@ export default function VolunteersMain({ org }) {
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             style={{ position: 'relative', width: 120, height: 120, flexShrink: 0 }}
           >
-            {/* ambient glow */}
+            {/* ambient glow, tinted with the org's own brand colour */}
             <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', background: `radial-gradient(circle, ${primary}30, transparent 70%)`, filter: 'blur(14px)', pointerEvents: 'none' }} />
-            {/* real logo badge */}
+            {/* the org's own logo — falls back to the LaunchSession badge only if they haven't set one */}
             <div style={{
-              position: 'relative', width: 130, height: 130,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              position: 'relative', width: 130, height: 130, borderRadius: '50%', background: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+              border: `2px solid ${primary}30`, boxShadow: `0 8px 20px ${primary}30`,
             }}>
-              <img src={launchSessionBadge} alt="LaunchSession" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: `drop-shadow(0 8px 20px ${primary}30)` }} />
+              <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={org?.name || 'Organisation'} style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
             </div>
             {/* sparkle accents */}
             <motion.span animate={{ opacity: [0.25, 1, 0.25] }} transition={{ duration: 2, repeat: Infinity }} style={{ position: 'absolute', top: 4, right: 0, fontSize: 13, color: primary }}>✦</motion.span>
@@ -244,8 +274,8 @@ export default function VolunteersMain({ org }) {
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             flex: '1 0 auto', padding: '9px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
-            background: tab === t.key ? '#fff' : 'transparent', color: tab === t.key ? '#0F172A' : '#64748B',
-            boxShadow: tab === t.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none', whiteSpace: 'nowrap',
+            background: tab === t.key ? primary : 'transparent', color: tab === t.key ? '#fff' : '#64748B',
+            boxShadow: tab === t.key ? `0 4px 14px -4px ${primary}80` : 'none', whiteSpace: 'nowrap',
           }}>{t.icon} {t.label}</button>
         ))}
       </div>
@@ -254,159 +284,182 @@ export default function VolunteersMain({ org }) {
         <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
           {tab === 'dashboard' && (
             <>
-              {/* KPI CARDS */}
+              {/* KPI CARDS — colour-coded, each answers a different question at a glance */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
                 {kpis.map((k, i) => (
                   <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                    whileHover={{ y: -3 }} style={{ ...cardStyle, padding: 16 }}>
-                    <div style={{ fontSize: 18, marginBottom: 6 }}>{k.icon}</div>
-                    <div style={{ fontSize: 22, fontWeight: 900, color: '#0F172A' }}>
+                    whileHover={{ y: -3 }} style={{ ...cardStyle, padding: 16, background: `linear-gradient(160deg, ${k.bg}, rgba(255,255,255,0.7))` }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 10, background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 8 }}>{k.icon}</div>
+                    <div style={{ fontSize: 24, fontWeight: 900, color: k.color }}>
                       {typeof k.value === 'number' ? <CountUp value={k.value} /> : k.value}
                     </div>
-                    <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700 }}>{k.label}</div>
+                    <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700 }}>{k.label}</div>
                   </motion.div>
                 ))}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
+                {/* LEFT: Activity Feed + Upcoming Sessions */}
                 <div>
-                  {/* COMMUNICATIONS CENTRE */}
                   <Card style={{ marginBottom: 20 }}>
-                    <SectionTitle icon="💬" title="Volunteer Communications Centre" subtitle="Keep your team informed and engaged" />
-                    <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
-                      {CHANNELS.map(c => (
-                        <button key={c.key} onClick={() => c.wired && setChannel(c.key)} disabled={!c.wired}
-                          title={!c.wired ? 'Coming soon' : ''}
-                          style={{
-                            padding: '7px 12px', borderRadius: 10, border: 'none', cursor: c.wired ? 'pointer' : 'not-allowed', fontSize: 12, fontWeight: 700,
-                            background: channel === c.key ? primary : '#F1F5F9', color: channel === c.key ? '#fff' : c.wired ? '#475569' : '#CBD5E1',
-                          }}>{c.icon} {c.label}</button>
-                      ))}
-                    </div>
-
-                    {subject !== undefined && channel === 'email' && (
-                      <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Subject..." style={{ ...inputStyle, marginBottom: 8 }} />
-                    )}
-                    <textarea value={body} onChange={e => setBody(e.target.value)} rows={4} placeholder="Share an update, reminder or important information... Use {{FirstName}} to personalise."
-                      style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', marginBottom: 10 }} />
-
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-                      {QUICK_INSERTS.map(q => (
-                        <button key={q.label} onClick={() => setBody(q.text)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: '#fff', color: '#475569', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{q.label}</button>
-                      ))}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B' }}>Audience:</span>
-                      {['all', 'active', 'pending', 'custom'].map(m => (
-                        <button key={m} onClick={() => setAudienceMode(m)} style={{
-                          padding: '5px 12px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
-                          background: audienceMode === m ? primary : '#F1F5F9', color: audienceMode === m ? '#fff' : '#475569',
-                        }}>{m === 'all' ? 'All Volunteers' : m === 'active' ? 'Only Active' : m === 'pending' ? 'Only Pending' : 'Custom Selection'}</button>
-                      ))}
-                    </div>
-
-                    {audienceMode === 'custom' && (
-                      <div style={{ maxHeight: 120, overflowY: 'auto', border: '1px solid #F1F5F9', borderRadius: 10, padding: 8, marginBottom: 12 }}>
-                        {volunteers.map(v => (
-                          <label key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, padding: '4px 2px', cursor: 'pointer' }}>
-                            <input type="checkbox" checked={customIds.includes(v.id)}
-                              onChange={e => setCustomIds(prev => e.target.checked ? [...prev, v.id] : prev.filter(id => id !== v.id))} />
-                            {v.full_name}
-                          </label>
-                        ))}
-                      </div>
-                    )}
-
-                    {sendResult && <div style={{ fontSize: 12.5, fontWeight: 700, color: sendResult.startsWith('Error') ? '#DC2626' : '#15803D', marginBottom: 10 }}>{sendResult}</div>}
-
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <button onClick={sendBroadcast} disabled={sendingMsg || !body.trim()} style={{ ...btnPrimary(primary), opacity: sendingMsg || !body.trim() ? 0.6 : 1 }}>
-                        {sendingMsg ? 'Sending...' : `+ Send ${channel === 'email' ? 'Broadcast' : channel === 'portal' ? 'Notification' : 'Note'}`}
-                      </button>
-                    </div>
-                  </Card>
-
-                  {/* RECENT COMMUNICATIONS */}
-                  <Card>
-                    <SectionTitle icon="🕐" title="Recent Communications" />
-                    {broadcasts.length === 0 ? (
-                      <div style={{ fontSize: 13, color: '#94A3B8', textAlign: 'center', padding: '16px 0' }}>No messages sent yet.</div>
+                    <SectionTitle icon="💬" title="Volunteer Feed" />
+                    {activityFeed.length === 0 ? (
+                      <div style={{ fontSize: 12.5, color: '#94A3B8', textAlign: 'center', padding: '16px 0' }}>Activity will show up here as your team gets going.</div>
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {broadcasts.map(b => (
-                          <div key={b.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0', borderBottom: '1px solid #F1F5F9' }}>
-                            <div style={{ fontSize: 18 }}>{b.channel === 'email' ? '📧' : b.channel === 'portal' ? '🔔' : '📝'}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {activityFeed.map(a => (
+                          <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 4px', borderRadius: 10, transition: 'background 0.15s' }}>
+                            <div style={{ width: 30, height: 30, borderRadius: 9, background: `${a.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>{a.icon}</div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{b.subject || b.body.slice(0, 60)}</div>
-                              <div style={{ fontSize: 11.5, color: '#94A3B8' }}>{b.audience_label} · {new Date(b.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{a.title}</div>
+                              <div style={{ fontSize: 11.5, color: '#94A3B8' }}>{a.sub}</div>
                             </div>
-                            <Badge bg="rgba(34,197,94,0.12)" color="#15803D">{b.sent_count}/{b.recipient_count}</Badge>
+                            <div style={{ fontSize: 10.5, color: '#94A3B8', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                              {new Date(a.ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            </div>
                           </div>
                         ))}
                       </div>
                     )}
                   </Card>
-                </div>
 
-                <div>
-                  {/* UPCOMING SESSIONS */}
-                  <Card style={{ marginBottom: 20 }}>
-                    <SectionTitle icon="📅" title="Upcoming Sessions" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all →</button>} />
+                  <Card>
+                    <SectionTitle icon="📅" title="Upcoming Sessions" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View calendar →</button>} />
                     {upcomingSessionsList.length === 0 ? (
                       <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No upcoming sessions scheduled.</div>
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         {upcomingSessionsList.map(s => {
                           const assigned = sessionStaff.filter(ss => ss.session_id === s.id).length
                           const required = s.volunteer_limit || 2
+                          const pct = Math.min(100, (assigned / Math.max(1, required)) * 100)
+                          const covered = assigned >= required
+                          const barColor = covered ? '#16A34A' : assigned === 0 ? '#DC2626' : '#D97706'
                           return (
-                            <div key={s.id} style={{ padding: '10px 0', borderBottom: '1px solid #F1F5F9' }}>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{s.title}</div>
-                              <div style={{ fontSize: 11.5, color: '#94A3B8', marginBottom: 4 }}>{new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {s.start_time}–{s.end_time}</div>
-                              <div style={{ fontSize: 11.5, fontWeight: 700, color: assigned >= required ? '#15803D' : '#B45309' }}>{assigned} / {required} volunteers</div>
+                            <div key={s.id} style={{ padding: '12px 14px', borderRadius: 14, background: '#F8FAFC', border: '1px solid #F1F5F9' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                                <div>
+                                  <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{s.title}</div>
+                                  <div style={{ fontSize: 11.5, color: '#94A3B8' }}>{new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {s.start_time}–{s.end_time}{s.location ? ` · ${s.location}` : ''}</div>
+                                </div>
+                                <Badge bg={`${barColor}18`} color={barColor}>{assigned}/{required}</Badge>
+                              </div>
+                              <div style={{ height: 5, borderRadius: 99, background: '#E2E8F0', overflow: 'hidden', marginBottom: 8 }}>
+                                <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} style={{ height: '100%', background: barColor, borderRadius: 99 }} />
+                              </div>
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                <button onClick={() => setTab('coverage')} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', fontSize: 11, fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Open Register</button>
+                                <button onClick={() => openComposerForSession(s)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', fontSize: 11, fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Message Volunteers</button>
+                                {!covered && <button onClick={() => openComposerForSession(s)} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: barColor, fontSize: 11, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Find Cover</button>}
+                              </div>
                             </div>
                           )
                         })}
                       </div>
                     )}
                   </Card>
+                </div>
 
-                  {/* SPOTLIGHT */}
-                  {volunteers.length > 0 && (
-                    <Card style={{ marginBottom: 20, background: `linear-gradient(135deg, ${primary}12, ${PURPLE}0c)` }}>
-                      <SectionTitle icon="✨" title="Volunteer Spotlight" />
-                      {(() => {
-                        const spotlight = recognition.filter(r => r.type === 'spotlight').sort((a, b) => new Date(b.awarded_at) - new Date(a.awarded_at))[0]
-                        const v = spotlight ? volunteers.find(x => x.id === spotlight.volunteer_id) : volunteers[0]
-                        if (!v) return null
-                        const mine = completedStaff.filter(ss => ss.volunteer_id === v.id || ss.user_id === v.id)
-                        const hrs = Math.round(mine.reduce((sum, ss) => sum + sessionHours(sessionsById[ss.session_id]), 0))
-                        return (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <Avatar name={v.full_name} photoUrl={v.photo_url} size={48} color={primary} />
-                            <div>
-                              <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{v.full_name}</div>
-                              <div style={{ fontSize: 12, color: '#64748B' }}>{mine.length} sessions · {hrs} hours</div>
+                {/* RIGHT: Today's Coverage + Training Due + New Applications */}
+                <div>
+                  <Card style={{ marginBottom: 20 }}>
+                    <SectionTitle icon="📍" title="Today's Coverage" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all →</button>} />
+                    {todaySessionsWithCoverage.length === 0 ? (
+                      <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No sessions running today.</div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: needCoverToday > 0 ? 14 : 0 }}>
+                        {todaySessionsWithCoverage.map(s => {
+                          const pct = Math.min(100, (s.assigned / Math.max(1, s.required)) * 100)
+                          const barColor = s.covered ? '#16A34A' : '#D97706'
+                          return (
+                            <div key={s.id} style={{ padding: 12, borderRadius: 14, background: `${barColor}0c`, border: `1px solid ${barColor}30` }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{s.title}</div>
+                                <span style={{ fontSize: 11, fontWeight: 800, color: barColor }}>{s.covered ? '🟢 Ready' : `🟡 Need ${s.required - s.assigned}`}</span>
+                              </div>
+                              <div style={{ fontSize: 11, color: '#94A3B8', marginBottom: 6 }}>{s.required} needed · {s.assigned} confirmed</div>
+                              <div style={{ height: 5, borderRadius: 99, background: '#E2E8F0', overflow: 'hidden' }}>
+                                <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} style={{ height: '100%', background: barColor, borderRadius: 99 }} />
+                              </div>
                             </div>
-                          </div>
-                        )
-                      })()}
+                          )
+                        })}
+                      </div>
+                    )}
+                    {needCoverToday > 0 && (
+                      <button onClick={() => setTab('coverage')} style={{ ...btnPrimary(primary), width: '100%' }}>Find volunteers for gaps</button>
+                    )}
+                  </Card>
+
+                  {trainingDueSoon.length > 0 && (
+                    <Card style={{ marginBottom: 20 }}>
+                      <SectionTitle icon="🎓" title="Training Due Soon" right={<button onClick={() => setTab('training')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all →</button>} />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {trainingDueSoon.slice(0, 4).map(t => {
+                          const v = volunteers.find(vv => vv.id === t.volunteer_id)
+                          const urgent = t.daysLeft <= 14
+                          return (
+                            <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{t.training_type}</div>
+                                <div style={{ fontSize: 11, color: '#94A3B8' }}>{v?.full_name || 'Volunteer'}</div>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                                <span style={{ fontSize: 11, fontWeight: 800, color: urgent ? '#DC2626' : '#D97706' }}>{t.daysLeft}d left</span>
+                                <button onClick={() => setTab('training')} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: primary, fontSize: 10.5, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Renew</button>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </Card>
                   )}
 
-                  {/* QUICK ACTIONS */}
                   <Card>
-                    <SectionTitle icon="⚡" title="Quick Actions" />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <button onClick={() => setShowInviteModal(true)} style={{ ...btnGhost, textAlign: 'left' }}>👤 Invite Volunteer</button>
-                      <button onClick={() => setTab('coverage')} style={{ ...btnGhost, textAlign: 'left' }}>📅 View Coverage</button>
-                      <button onClick={() => setTab('training')} style={{ ...btnGhost, textAlign: 'left' }}>🎓 Training Centre</button>
-                      <button onClick={() => setShowQR(true)} style={{ ...btnGhost, textAlign: 'left' }}>📲 Generate QR Code</button>
-                    </div>
+                    <SectionTitle icon="📮" title="New Applications" right={applicants.length > 0 && <Badge bg="rgba(220,38,38,0.1)" color="#DC2626">New</Badge>} />
+                    {applicants.length === 0 ? (
+                      <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No pending applications.</div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {applicants.slice(0, 3).map(a => (
+                          <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <Avatar name={a.full_name} photoUrl={a.photo_url} size={32} color={primary} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{a.full_name}</div>
+                              <div style={{ fontSize: 10.5, color: '#94A3B8' }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                            </div>
+                            <button onClick={() => setTab('applications')} style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: '#fff', fontSize: 11, fontWeight: 700, color: primary, cursor: 'pointer', whiteSpace: 'nowrap' }}>Review →</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </Card>
                 </div>
               </div>
+
+              {/* RECENT VOLUNTEERS */}
+              {volunteers.length > 0 && (
+                <Card style={{ marginTop: 20 }}>
+                  <SectionTitle icon="👥" title="Recent Volunteers" right={<button onClick={() => setTab('directory')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all →</button>} />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+                    {volunteers.slice(0, 5).map(v => (
+                      <div key={v.id} style={{ padding: 14, borderRadius: 16, background: '#F8FAFC', border: '1px solid #F1F5F9', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+                          <Avatar name={v.full_name} photoUrl={v.photo_url} size={52} color={primary} />
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{v.full_name}</div>
+                        <div style={{ fontSize: 11, color: '#94A3B8', marginBottom: 6 }}>{v.role_title || 'Volunteer'}</div>
+                        <Badge bg={statusStyle(v.status || 'active').bg} color={statusStyle(v.status || 'active').color}>{statusStyle(v.status || 'active').label}</Badge>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginTop: 10 }}>
+                          <button onClick={() => openComposerFor(v)} title="Message" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}>💬</button>
+                          <button onClick={() => setTab('directory')} title="Availability" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}>📅</button>
+                          <button onClick={() => setTab('directory')} title="Edit" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}>✏️</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
             </>
           )}
 
@@ -478,6 +531,93 @@ export default function VolunteersMain({ org }) {
               <div ref={qrRef} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }} />
               <div style={{ fontSize: 11, color: '#94A3B8', wordBreak: 'break-all', marginBottom: 16 }}>{portalUrl}</div>
               <button onClick={copyLink} style={{ ...btnGhost, width: '100%' }}>{copied ? '✓ Copied!' : 'Copy portal link'}</button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showBroadcastModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowBroadcastModal(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <motion.div initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} onClick={e => e.stopPropagation()}
+              style={{ background: '#fff', borderRadius: 22, padding: 26, width: '100%', maxWidth: 520, maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>💬 Volunteer Communications</div>
+                  <div style={{ fontSize: 12, color: '#94A3B8' }}>Keep your team informed and engaged</div>
+                </div>
+                <button onClick={() => setShowBroadcastModal(false)} style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: 30, height: 30, fontSize: 18, cursor: 'pointer', color: '#64748B' }}>×</button>
+              </div>
+
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+                {CHANNELS.map(c => (
+                  <button key={c.key} onClick={() => c.wired && setChannel(c.key)} disabled={!c.wired}
+                    title={!c.wired ? 'Coming soon' : ''}
+                    style={{
+                      padding: '7px 12px', borderRadius: 10, border: 'none', cursor: c.wired ? 'pointer' : 'not-allowed', fontSize: 12, fontWeight: 700,
+                      background: channel === c.key ? primary : '#F1F5F9', color: channel === c.key ? '#fff' : c.wired ? '#475569' : '#CBD5E1',
+                    }}>{c.icon} {c.label}</button>
+                ))}
+              </div>
+
+              {channel === 'email' && (
+                <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Subject..." style={{ ...inputStyle, marginBottom: 8 }} />
+              )}
+              <textarea value={body} onChange={e => setBody(e.target.value)} rows={4} placeholder="Share an update, reminder or important information... Use {{FirstName}} to personalise."
+                style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', marginBottom: 10 }} />
+
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                {QUICK_INSERTS.map(q => (
+                  <button key={q.label} onClick={() => setBody(q.text)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: '#fff', color: '#475569', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{q.label}</button>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B' }}>Audience:</span>
+                {['all', 'active', 'pending', 'custom'].map(m => (
+                  <button key={m} onClick={() => setAudienceMode(m)} style={{
+                    padding: '5px 12px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
+                    background: audienceMode === m ? primary : '#F1F5F9', color: audienceMode === m ? '#fff' : '#475569',
+                  }}>{m === 'all' ? 'All Volunteers' : m === 'active' ? 'Only Active' : m === 'pending' ? 'Only Pending' : 'Custom Selection'}</button>
+                ))}
+              </div>
+
+              {audienceMode === 'custom' && (
+                <div style={{ maxHeight: 120, overflowY: 'auto', border: '1px solid #F1F5F9', borderRadius: 10, padding: 8, marginBottom: 12 }}>
+                  {volunteers.map(v => (
+                    <label key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, padding: '4px 2px', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={customIds.includes(v.id)}
+                        onChange={e => setCustomIds(prev => e.target.checked ? [...prev, v.id] : prev.filter(id => id !== v.id))} />
+                      {v.full_name}
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {sendResult && <div style={{ fontSize: 12.5, fontWeight: 700, color: sendResult.startsWith('Error') ? '#DC2626' : '#15803D', marginBottom: 10 }}>{sendResult}</div>}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: broadcasts.length > 0 ? 20 : 0 }}>
+                <button onClick={sendBroadcast} disabled={sendingMsg || !body.trim()} style={{ ...btnPrimary(primary), opacity: sendingMsg || !body.trim() ? 0.6 : 1 }}>
+                  {sendingMsg ? 'Sending...' : `+ Send ${channel === 'email' ? 'Broadcast' : channel === 'portal' ? 'Notification' : 'Note'}`}
+                </button>
+              </div>
+
+              {broadcasts.length > 0 && (
+                <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 14 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: '#64748B', marginBottom: 10 }}>RECENT BROADCASTS</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {broadcasts.slice(0, 4).map(b => (
+                      <div key={b.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', borderBottom: '1px solid #F8FAFC' }}>
+                        <div style={{ fontSize: 16 }}>{b.channel === 'email' ? '📧' : b.channel === 'portal' ? '🔔' : '📝'}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{b.subject || b.body?.slice(0, 60)}</div>
+                          <div style={{ fontSize: 11, color: '#94A3B8' }}>{b.audience_label} · {new Date(b.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                        <Badge bg="rgba(34,197,94,0.12)" color="#15803D">{b.sent_count}/{b.recipient_count}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}
