@@ -892,7 +892,7 @@ export default function Dashboard({ session, org }) {
               left: 'calc(50% - 33px)', // half of the button's own 66px width — avoids transform, which framer-motion's animate would otherwise override
               bottom: 'calc(40px + env(safe-area-inset-bottom, 0px))',
               width: 66, height: 66,
-              zIndex: 9990,
+              zIndex: 10000,
             }}>
               <motion.button
                 onClick={() => { if (navigator.vibrate) navigator.vibrate(8); setShowLaunchMenu(true) }}
