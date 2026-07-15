@@ -936,28 +936,53 @@ export default function Dashboard({ session, org }) {
               >
                 <div style={{ width: 42, height: 5, borderRadius: 99, background: 'var(--border)', margin: '0 auto 16px' }} />
                 <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>🚀 Launch</div>
-                <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>
+                <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 18 }}>
                   {navContext.mode === 'live' ? `${navContext.liveCount} session${navContext.liveCount === 1 ? '' : 's'} live right now` : 'Jump straight to what you need'}
                 </div>
-                {[
-                  { key: 'planner', label: 'New Session', desc: 'Plan a new activity', icon: '📅', color: '#7C3AED', payload: { autoOpenWizard: true } },
-                  { key: 'calendar', label: 'Calendar', desc: 'See what\'s scheduled', icon: '📆', color: '#2563EB' },
-                  { key: 'home', label: 'Live Sessions', desc: 'View what\'s running now', icon: '🟢', color: '#16A34A' },
-                  { key: 'events_trips', label: 'Events & Trips', desc: 'Manage trips and events', icon: '🚌', color: '#EA580C' },
-                  { key: 'mentoring', label: 'Mentoring', desc: 'Referrals and matches', icon: '🤝', color: '#7C3AED' },
-                  { key: 'volunteers', label: 'Volunteers Needed', desc: 'Fill unstaffed roles', icon: '❤️', color: '#DB2777' },
-                  { key: 'registers', label: 'Open Today\'s Register', desc: 'Sign children in and out', icon: '📋', color: '#0891B2' },
-                ].map(item => (
-                  <button key={item.key} onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key, item.payload) }} style={{
-                    width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 8px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid #F8FAFC',
-                  }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 14, background: `${item.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{item.icon}</div>
-                    <div>
-                      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>{item.label}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text3)' }}>{item.desc}</div>
-                    </div>
-                  </button>
-                ))}
+
+                {/* Primary action — the thing people tap most, given its own prominent row */}
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setShowLaunchMenu(false); handleSetTab('planner', { autoOpenWizard: true }) }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '16px',
+                    borderRadius: 16, border: 'none', cursor: 'pointer', textAlign: 'left', marginBottom: 14,
+                    background: 'linear-gradient(135deg, #7C3AED, #A855F7)', boxShadow: '0 8px 24px rgba(124,58,237,0.35)',
+                  }}
+                >
+                  <div style={{ width: 46, height: 46, borderRadius: 13, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>📅</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>New Session</div>
+                    <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.85)' }}>Plan a new activity</div>
+                  </div>
+                  <div style={{ fontSize: 20, color: '#fff', opacity: 0.85 }}>→</div>
+                </motion.button>
+
+                {/* Everything else — a scannable grid instead of a long list you have to scroll through */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {[
+                    { key: 'calendar', label: 'Calendar', desc: 'What\'s scheduled', icon: '📆', color: '#2563EB' },
+                    { key: 'home', label: 'Live Sessions', desc: 'Running now', icon: '🟢', color: '#16A34A' },
+                    { key: 'events_trips', label: 'Events & Trips', desc: 'Trips & events', icon: '🚌', color: '#EA580C' },
+                    { key: 'mentoring', label: 'Mentoring', desc: 'Referrals & matches', icon: '🤝', color: '#7C3AED' },
+                    { key: 'volunteers', label: 'Volunteers', desc: 'Fill unstaffed roles', icon: '❤️', color: '#DB2777' },
+                    { key: 'registers', label: 'Today\'s Register', desc: 'Sign children in/out', icon: '📋', color: '#0891B2' },
+                  ].map(item => (
+                    <motion.button
+                      key={item.key}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key, item.payload) }}
+                      style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, padding: '14px 12px',
+                        borderRadius: 14, border: '1px solid #F1F5F9', background: '#FAFAFB', cursor: 'pointer', textAlign: 'left',
+                      }}
+                    >
+                      <div style={{ width: 38, height: 38, borderRadius: 11, background: `${item.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{item.icon}</div>
+                      <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', lineHeight: 1.25 }}>{item.label}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.3 }}>{item.desc}</div>
+                    </motion.button>
+                  ))}
+                </div>
               </motion.div>
             </motion.div>
           )}
