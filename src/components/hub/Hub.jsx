@@ -1271,8 +1271,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       )}
       </div>
 
-      <section style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) 320px', gap: 18, padding: pad }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <section style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) 320px', gap: 18, padding: pad }}>
+        <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
           <Panel title="🧭 Today at a glance">
             <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
@@ -1333,10 +1333,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               </div>
             </div>
             {upcomingSessions.length === 0 ? (
-              <div style={{ background: `linear-gradient(135deg, ${primary}10, ${primary}05)`, border: `1.5px dashed ${primary}30`, borderRadius: 20, padding: '36px 24px', textAlign: 'center' }}>
+              <div style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', background: `linear-gradient(135deg, ${primary}10, ${primary}05)`, border: `1.5px dashed ${primary}30`, borderRadius: 20, padding: '36px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 6 }}>Nothing running or planned in the next 7 days</div>
-                <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20 }}>Create a session and it'll appear here instantly</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 6, maxWidth: 320 }}>Nothing running or planned in the next 7 days</div>
+                <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20, maxWidth: 320 }}>Create a session and it'll appear here instantly</div>
                 <button onClick={() => go('planner')} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 16px ${primary}40` }}>Plan a Session →</button>
               </div>
             ) : (
