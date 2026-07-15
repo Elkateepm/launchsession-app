@@ -140,7 +140,6 @@ section{padding:96px 5%}
 .steps-grid::before{content:'';position:absolute;top:72px;left:calc(16.66% + 8px);right:calc(16.66% + 8px);height:2px;background:linear-gradient(90deg,rgba(59,130,246,0.4),rgba(139,92,246,0.4),rgba(27,154,170,0.4));z-index:0}
 .step-card{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:30px 26px 28px;position:relative;overflow:hidden;transition:transform 0.3s,border-color 0.3s,box-shadow 0.3s;z-index:1}
 .step-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent1),var(--accent2))}
-.step-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 16px 40px rgba(0,0,0,0.35)}
 .step-card:nth-child(1){--accent1:#3B82F6;--accent2:#6366F1;--accent-shadow:rgba(59,130,246,0.4)}
 .step-card:nth-child(2){--accent1:#6366F1;--accent2:#8B5CF6;--accent-shadow:rgba(99,102,241,0.4)}
 .step-card:nth-child(3){--accent1:#8B5CF6;--accent2:#1B9AAA;--accent-shadow:rgba(139,92,246,0.4)}
@@ -158,9 +157,7 @@ section{padding:96px 5%}
 .features-intro{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;margin-bottom:56px;flex-wrap:wrap}
 .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .feature-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:22px;transition:all 0.25s;position:relative;overflow:hidden}
-.feature-card:hover{border-color:rgba(59,130,246,0.3);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.3)}
 .feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--feat-color,#3B82F6);opacity:0;transition:opacity 0.3s}
-.feature-card:hover::before{opacity:1}
 .feat-icon-wrap{width:52px;height:52px;border-radius:13px;overflow:hidden;margin-bottom:14px;background:var(--feat-bg,rgba(59,130,246,0.12))}
 .feat-icon-wrap img{width:100%;height:100%;object-fit:cover;display:block}
 .feat-title{font-size:15px;font-weight:800;color:#fff;margin-bottom:6px}
@@ -181,8 +178,6 @@ section{padding:96px 5%}
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1060px;margin:0 auto}
 .pricing-card{background:var(--glass);border:1px solid var(--border);border-radius:22px;padding:32px;position:relative;transition:all 0.3s}
 .pricing-card.popular{border-color:rgba(59,130,246,0.45);background:rgba(59,130,246,0.05);box-shadow:0 0 0 1px rgba(59,130,246,0.15) inset}
-.pricing-card.popular:hover{box-shadow:0 24px 60px rgba(59,130,246,0.2),0 0 0 1px rgba(59,130,246,0.2) inset}
-.pricing-card:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(0,0,0,0.3)}
 .popular-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);padding:4px 16px;border-radius:99px;background:linear-gradient(135deg,#3B82F6,#6366F1);font-size:10px;font-weight:800;color:#fff;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap}
 .plan-name{font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
 .plan-price{font-size:42px;font-weight:900;letter-spacing:-1.5px;color:#fff;line-height:1;margin-bottom:4px}
@@ -195,9 +190,7 @@ section{padding:96px 5%}
 .plan-btn-fill{background:linear-gradient(135deg,#3B82F6,#6366F1);border:none;color:#fff;box-shadow:0 4px 14px rgba(59,130,246,0.3)}
 .plan-btn-fill:hover{box-shadow:0 8px 28px rgba(59,130,246,0.5)}
 .module-addon-card{display:flex;align-items:flex-start;gap:12px;background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:16px;transition:all 0.2s}
-.module-addon-card:hover{border-color:rgba(255,255,255,0.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2)}
 .pack-card{transition:all 0.2s}
-.pack-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.2)}
 .module-addon-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .module-addon-name{font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px}
 .module-addon-desc{font-size:12px;color:var(--text3);line-height:1.5}
@@ -316,7 +309,7 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   .hero-ctas{flex-direction:column;align-items:center}
   .btn-hero-cta,.btn-hero-ghost{width:100%;justify-content:center;text-align:center}
   .cta-btns{flex-direction:column;align-items:center}
-  .pricing-card:hover,.feature-card:hover,.module-addon-card:hover{transform:none}
+  /* card hover effects now scoped to hover-capable pointers only, see end of stylesheet */
   .section-heading{font-size:26px}
   .section-sub{font-size:15px}
   .section-tag{font-size:11px}
@@ -338,6 +331,20 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   /* Trust bar */
   .trust-bar{flex-direction:column;gap:12px;align-items:flex-start;padding:0 5%}
   .trust-item{font-size:13px}
+}
+
+/* ── HOVER-CAPABLE POINTERS ONLY ─────────────────────────────
+   Card hover effects (border/shadow/lift) live here instead of
+   plain :hover so tapping a card on touch devices can't leave it
+   looking permanently "selected" — a mobile Safari :hover quirk. */
+@media (hover: hover) and (pointer: fine) {
+  .step-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 16px 40px rgba(0,0,0,0.35)}
+  .feature-card:hover{border-color:rgba(59,130,246,0.3);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.3)}
+  .feature-card:hover::before{opacity:1}
+  .pricing-card:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(0,0,0,0.3)}
+  .pricing-card.popular:hover{box-shadow:0 24px 60px rgba(59,130,246,0.2),0 0 0 1px rgba(59,130,246,0.2) inset}
+  .module-addon-card:hover{border-color:rgba(255,255,255,0.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2)}
+  .pack-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.2)}
 }
 </style>
 </head>
@@ -715,12 +722,14 @@ async function submitFoundingOffer(e) {
 <section id="pricing">
 <style>
 .ls-pack{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:32px;position:relative;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;text-align:left}
-.ls-pack:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(0,0,0,0.4)}
 .ls-pack::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;opacity:0.1;pointer-events:none;transition:opacity 0.3s}
-.ls-pack:hover::before{opacity:0.18}
 .ls-pack.lsp-d::before{background:#4F8EF7}.ls-pack.lsp-s::before{background:#22C997}.ls-pack.lsp-g::before{background:#F59E0B}.ls-pack.lsp-o::before{background:#A78BFA}
 .ls-pack::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:20px 20px 0 0}
 .ls-pack.lsp-d::after{background:linear-gradient(90deg,#4F8EF7,#93C5FD)}.ls-pack.lsp-s::after{background:linear-gradient(90deg,#22C997,#6EE7B7)}.ls-pack.lsp-g::after{background:linear-gradient(90deg,#F59E0B,#FCD34D)}.ls-pack.lsp-o::after{background:linear-gradient(90deg,#A78BFA,#DDD6FE)}
+@media (hover: hover) and (pointer: fine) {
+  .ls-pack:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(0,0,0,0.4)}
+  .ls-pack:hover::before{opacity:0.18}
+}
 .ls-mod-row{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;transition:background 0.15s}
 .ls-mod-row:hover{background:rgba(255,255,255,0.055)}
 .ls-pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;border:1px solid}
