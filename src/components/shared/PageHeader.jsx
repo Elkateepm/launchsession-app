@@ -1,4 +1,5 @@
 import React from 'react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 /**
  * PageHeader — premium animated header for every module page
@@ -15,6 +16,7 @@ import React from 'react'
  *   gradient   — override gradient string
  */
 export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA', orgName, stats = [], actions = [], badge, gradient }) {
+  const isMobile = useIsMobile()
   const grad = gradient || `linear-gradient(135deg, ${primary}18 0%, ${primary}08 60%, transparent 100%)`
 
   return (
@@ -30,7 +32,7 @@ export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA',
 
       <div style={{ position: 'relative', zIndex: 1, padding: '20px 24px 0' }}>
         {/* Top row */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: stats.length ? 16 : 20 }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-start', justifyContent: 'space-between', gap: isMobile ? 12 : 16, marginBottom: stats.length ? 16 : 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
             {/* Icon */}
             <div className="ls-page-header-icon" style={{ width: 48, height: 48, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, ${primary}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 10px 22px -8px ${primary}55` }}>
@@ -57,12 +59,13 @@ export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA',
 
           {/* Action buttons */}
           {actions.length > 0 && (
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', justifyContent: isMobile ? 'stretch' : 'flex-end', width: isMobile ? '100%' : 'auto' }}>
               {actions.map((a, i) => (
                 <button key={i} onClick={a.onClick} style={{
                   padding: '9px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, whiteSpace: 'nowrap',
                   fontFamily: 'var(--font-display, sans-serif)',
+                  ...(isMobile ? { flex: '1 1 0', minWidth: 0 } : {}),
                   ...(a.variant === 'ghost'
                     ? { border: `1.5px solid var(--border, #e5e7eb)`, background: 'var(--surface, #fff)', color: 'var(--text, #111)', boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -2px rgba(15,23,42,0.08)' }
                     : { border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -1px 0 rgba(0,0,0,0.12) inset, 0 8px 20px -8px ${primary}55` }
