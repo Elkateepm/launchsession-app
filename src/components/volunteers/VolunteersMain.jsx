@@ -2,14 +2,15 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { Card, SectionTitle, Badge, Avatar, CountUp, sessionHours, daysUntil, statusStyle, inputStyle, btnPrimary, btnGhost, glass, PURPLE, PAGE_BG } from './vh_shared'
-// Shown wherever the org logo would go, whenever the org hasn't set one yet
-const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
 import VolunteerDirectory from './VolunteerDirectory'
 import VolunteersApplications from './VolunteersApplications'
 import VolunteersCoverage from './VolunteersCoverage'
 import VolunteersTraining from './VolunteersTraining'
 import VolunteersRecognition from './VolunteersRecognition'
 import VolunteersReports from './VolunteersReports'
+
+// Shown wherever the org logo would go, whenever the org hasn't set one yet
+const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
 
 const TABS = [
   { key: 'dashboard', label: 'Overview', icon: '❤️' },
