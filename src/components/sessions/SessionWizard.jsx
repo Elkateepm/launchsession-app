@@ -206,8 +206,11 @@ function StepDetails({ form, setForm, bubbleDefs, staff }) {
         <label style={label}>Session title *</label>
         <input style={inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Football Skills Session" />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
-        <div><label style={label}>Date *</label><input type="date" style={inp} value={form.session_date} onChange={e => set('session_date', e.target.value)} /></div>
+      <div style={{ marginBottom: 14 }}>
+        <label style={label}>Date *</label>
+        <input type="date" style={inp} value={form.session_date} onChange={e => set('session_date', e.target.value)} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
         <div><label style={label}>Start time *</label><input type="time" style={inp} value={form.start_time} onChange={e => onStartTimeChange(e.target.value)} /></div>
         <div><label style={label}>End time *</label><input type="time" style={inp} value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value, _endTouched: true }))} /></div>
       </div>
@@ -215,7 +218,7 @@ function StepDetails({ form, setForm, bubbleDefs, staff }) {
         <label style={label}>Location *</label>
         <input style={inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Cassiobury Park" />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1.3fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
         <div>
           <label style={label}>Session lead *</label>
           <select style={inp} value={form.lead_staff_id} onChange={e => set('lead_staff_id', e.target.value)}>
@@ -239,7 +242,7 @@ function StepDetails({ form, setForm, bubbleDefs, staff }) {
           })}
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
         <div><label style={label}>Age range</label><input style={inp} value={form.age_range} onChange={e => set('age_range', e.target.value)} placeholder="e.g. 8-12" /></div>
         <div><label style={label}>Meeting point</label><input style={inp} value={form.meeting_point} onChange={e => set('meeting_point', e.target.value)} placeholder="e.g. Main entrance" /></div>
       </div>
