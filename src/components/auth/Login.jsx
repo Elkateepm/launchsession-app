@@ -20,6 +20,7 @@ export default function Login({ org }) {
   const [magicSent, setMagicSent] = useState(false)
   const [forgotSent, setForgotSent] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
 
   const primary = org?.primary_color || '#3B82F6'
   const orgName = org?.name || 'LaunchSession'
@@ -35,6 +36,7 @@ export default function Login({ org }) {
     e.preventDefault()
     setLoading(true)
     setError('')
+    try { localStorage.setItem('ls_remember_me', rememberMe ? 'true' : 'false') } catch (e) {}
 
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -53,6 +55,7 @@ export default function Login({ org }) {
   const handleMagicLink = async () => {
     setLoading(true)
     setError('')
+    try { localStorage.setItem('ls_remember_me', rememberMe ? 'true' : 'false') } catch (e) {}
     const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } })
     if (error) { setError(error.message); setLoading(false); return }
     setMagicSent(true)
@@ -157,6 +160,12 @@ export default function Login({ org }) {
                   {loading ? 'Signing in...' : 'Sign In'}
                 </button>
               </form>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 16, cursor: 'pointer', userSelect: 'none' }}>
+                <span onClick={() => setRememberMe(r => !r)} style={{ width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${rememberMe ? primary : 'rgba(255,255,255,0.25)'}`, background: rememberMe ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                  {rememberMe && <span style={{ color: '#fff', fontSize: 12, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                </span>
+                <span onClick={() => setRememberMe(r => !r)} style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>Keep me logged in</span>
+              </label>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
                 <button onClick={() => { setStep(STEPS.FORGOT); setError('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', padding: 0 }}>Forgot password?</button>
                 <button onClick={handleMagicLink} style={{ background: 'none', border: 'none', color: primary, fontSize: 13, cursor: 'pointer', padding: 0, fontWeight: 600 }}>Email magic link</button>
