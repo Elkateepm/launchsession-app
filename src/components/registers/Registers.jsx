@@ -1101,12 +1101,11 @@ export default function Registers({ org, onNavigate }) {
         </div>
 
         {/* FOOTER */}
-        <div style={{ background: '#fff', borderTop: '1px solid #F3F4F6', padding: isMobile ? '10px 12px' : '12px 16px', display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'space-between', gap: isMobile ? 8 : 0, flexWrap: isMobile ? 'wrap' : 'nowrap', flexShrink: 0 }}>
-          {!isMobile && <div style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600 }}>{filtered.length} of {children.length} shown</div>}
-          <button style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: session ? `linear-gradient(135deg, ${primary}, #16A34A)` : '#F3F4F6', color: session ? '#fff' : '#9CA3AF', fontSize: 13, fontWeight: 800, cursor: session ? 'pointer' : 'default', width: isMobile ? '100%' : 'auto' }}>
-            {session ? `✓ Complete Register · ${counts.signed_in} in` : 'No Active Session'}
-          </button>
-        </div>
+        {!isMobile && (
+          <div style={{ background: '#fff', borderTop: '1px solid #F3F4F6', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexShrink: 0 }}>
+            <div style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600 }}>{filtered.length} of {children.length} shown</div>
+          </div>
+        )}
       </div>
 
       {/* SIDEBAR TOOLS — desktop only */}
