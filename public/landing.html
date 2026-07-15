@@ -161,7 +161,8 @@ section{padding:96px 5%}
 .feature-card:hover{border-color:rgba(59,130,246,0.3);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.3)}
 .feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--feat-color,#3B82F6);opacity:0;transition:opacity 0.3s}
 .feature-card:hover::before{opacity:1}
-.feat-icon-wrap{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:14px;background:var(--feat-bg,rgba(59,130,246,0.12))}
+.feat-icon-wrap{width:52px;height:52px;border-radius:13px;overflow:hidden;margin-bottom:14px;background:var(--feat-bg,rgba(59,130,246,0.12))}
+.feat-icon-wrap img{width:100%;height:100%;object-fit:cover;display:block}
 .feat-title{font-size:15px;font-weight:800;color:#fff;margin-bottom:6px}
 .feat-desc{font-size:12px;color:var(--text2);line-height:1.6}
 .feat-tag{display:inline-block;margin-top:10px;font-size:10px;font-weight:700;padding:2px 9px;border-radius:99px;background:rgba(59,130,246,0.1);color:#60A5FA;letter-spacing:0.5px}
@@ -617,70 +618,94 @@ async function submitFoundingOffer(e) {
     </div>
     <div class="features-grid">
       <div class="feature-card" style="--feat-color:#22C55E;--feat-bg:rgba(34,197,94,0.1)">
-        <div class="feat-icon-wrap">📋</div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-live_registers.png" alt="Live Registers" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Live Registers</div>
         <div class="feat-desc">Take attendance in real time. Sign young people in and out, track latecomers, and flag medical alerts automatically.</div>
         <div class="feat-tag">Core</div>
       </div>
       <div class="feature-card" style="--feat-color:#3B82F6;--feat-bg:rgba(59,130,246,0.1)">
-        <div class="feat-icon-wrap">📅</div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-session_planner.png" alt="Session Planner" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Session Planner</div>
         <div class="feat-desc">Plan activities, trips and workshops weeks ahead. Assign volunteers, set capacity limits and track outcomes.</div>
         <div class="feat-tag">Core</div>
       </div>
       <div class="feature-card" style="--feat-color:#8B5CF6;--feat-bg:rgba(139,92,246,0.1)">
-        <div class="feat-icon-wrap">🛡️</div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-safeguarding.png" alt="Safeguarding" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Safeguarding</div>
         <div class="feat-desc">Log causes for concern, track follow-ups and ensure no safeguarding alert falls through the cracks.</div>
         <div class="feat-tag">Core</div>
       </div>
       <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)">
-        <div class="feat-icon-wrap">❤️</div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-volunteer_mgmt.png" alt="Volunteer Management" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Volunteer Management</div>
         <div class="feat-desc">Manage your volunteer workforce with sign-up flows, DBS tracking, availability matching and QR check-in.</div>
         <div class="feat-tag">Pro+</div>
       </div>
       <div class="feature-card" style="--feat-color:#EC4899;--feat-bg:rgba(236,72,153,0.1)">
-        <div class="feat-icon-wrap">👨‍👧</div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-parent_portal.png" alt="Parent Portal" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Parent Portal</div>
         <div class="feat-desc">Give parents visibility into their child's attendance, upcoming sessions and key information — no app download needed.</div>
         <div class="feat-tag">Pro+</div>
       </div>
       <div class="feature-card" style="--feat-color:#1B9AAA;--feat-bg:rgba(27,154,170,0.1)">
-        <div class="feat-icon-wrap">📊</div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-impact_outcomes.png" alt="Impact & Outcomes" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Impact & Outcomes</div>
         <div class="feat-desc">AI-refined insights, outcome tracking and visual reporting — generate funder-ready evidence of your programme's impact in one click.</div>
         <div class="feat-tag">All plans</div>
       </div>
       <div class="feature-card" style="--feat-color:#DC2626;--feat-bg:rgba(220,38,38,0.1)">
-        <div class="feat-icon-wrap">📐</div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-risk_assessments.png" alt="Risk Assessments" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Risk Assessments</div>
         <div class="feat-desc">HSE-standard 5×5 risk matrix, hazard tracking, session linking and one-click PDF export. Keep every activity properly assessed.</div>
         <div class="feat-tag">Pro+</div>
       </div>
+      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)">
+        <div class="feat-icon-wrap"><img src="/icons/feat-bulk_import.png" alt="Bulk Import" loading="lazy" width="52" height="52" /></div>
+        <div class="feat-title">Bulk Import</div>
+        <div class="feat-desc">Already have a spreadsheet of young people? Import up to thousands of records in seconds with our CSV import tool.</div>
+        <div class="feat-tag">All plans</div>
+      </div>
       <div class="feature-card" style="--feat-color:#BA7517;--feat-bg:rgba(186,117,23,0.1)">
-        <div class="feat-icon-wrap">💷</div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-fundraising_hub.png" alt="Fundraising Hub" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Fundraising Hub</div>
         <div class="feat-desc">Track campaigns and donations, discover real UK grants matched to your work, and get AI-refined fundraising insights — all in one place.</div>
         <div class="feat-tag">Pro+</div>
       </div>
-      <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)">
-        <div class="feat-icon-wrap">🤝</div>
-        <div class="feat-title">Mentoring</div>
-        <div class="feat-desc">Match mentors and mentees, track session notes, log milestones and measure the impact of 1:1 relationships.</div>
-        <div class="feat-tag">Enterprise</div>
-      </div>
       <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)">
-        <div class="feat-icon-wrap">🎨</div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-branding_centre.png" alt="Branding Centre" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Branding Centre</div>
         <div class="feat-desc">Upload your logo, set brand colours and your volunteers and parents see a fully branded experience on every screen.</div>
         <div class="feat-tag">Pro+</div>
       </div>
+      <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)">
+        <div class="feat-icon-wrap"><img src="/icons/feat-mentoring.png" alt="Mentoring" loading="lazy" width="52" height="52" /></div>
+        <div class="feat-title">Mentoring</div>
+        <div class="feat-desc">Match mentors and mentees, track session notes, log milestones and measure the impact of 1:1 relationships.</div>
+        <div class="feat-tag">Enterprise</div>
+      </div>
+      <div class="feature-card" style="--feat-color:#E11D48;--feat-bg:rgba(225,29,72,0.1)">
+        <div class="feat-icon-wrap"><img src="/icons/feat-policies_docs.png" alt="Policies & Documents" loading="lazy" width="52" height="52" /></div>
+        <div class="feat-title">Policies & Documents</div>
+        <div class="feat-desc">Store, organise and share policies, consents and key documents with staff, volunteers and parents.</div>
+        <div class="feat-tag">Pro+</div>
+      </div>
+      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)">
+        <div class="feat-icon-wrap"><img src="/icons/feat-notifications_centre.png" alt="Notifications Centre" loading="lazy" width="52" height="52" /></div>
+        <div class="feat-title">Notifications Centre</div>
+        <div class="feat-desc">Send targeted emails, SMS and in-app notifications. Keep your team, volunteers and parents always in the loop.</div>
+        <div class="feat-tag">Core</div>
+      </div>
       <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)">
-        <div class="feat-icon-wrap">📥</div>
-        <div class="feat-title">Bulk Import</div>
-        <div class="feat-desc">Already have a spreadsheet of young people? Import up to thousands of records in seconds with our CSV import tool.</div>
-        <div class="feat-tag">All plans</div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-team_staff.png" alt="Team & Staff" loading="lazy" width="52" height="52" /></div>
+        <div class="feat-title">Team & Staff</div>
+        <div class="feat-desc">Manage staff roles, permissions and access. See who's available and what everyone is responsible for.</div>
+        <div class="feat-tag">Core</div>
+      </div>
+      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)">
+        <div class="feat-icon-wrap"><img src="/icons/feat-settings_integrations.png" alt="Settings & Integrations" loading="lazy" width="52" height="52" /></div>
+        <div class="feat-title">Settings & Integrations</div>
+        <div class="feat-desc">Configure your organisation settings and connect with tools you already use.</div>
+        <div class="feat-tag">Core</div>
       </div>
     </div>
   </div>
