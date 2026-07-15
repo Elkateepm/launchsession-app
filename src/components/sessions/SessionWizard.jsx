@@ -152,6 +152,7 @@ function LiveSummary({ form, leadName, expectedCount }) {
 // ─── STEP 1: TYPE ───────────────────────────────────────────────
 
 function StepType({ form, setForm }) {
+  const isMobile = useIsMobile()
   const choose = (key) => {
     const preset = TYPE_PRESETS[key] || {}
     setForm(f => ({ ...f, session_type: key, ...preset }))
@@ -159,17 +160,17 @@ function StepType({ form, setForm }) {
   return (
     <div style={card}>
       <div style={sectionTitle}>What kind of session is this?</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 12 }}>
         {WIZARD_TYPES.map(t => {
           const active = form.session_type === t.key
           return (
             <button key={t.key} onClick={() => choose(t.key)} style={{
-              padding: '20px 12px', borderRadius: 14, cursor: 'pointer', textAlign: 'center',
+              padding: isMobile ? '14px 6px' : '20px 12px', borderRadius: isMobile ? 12 : 14, cursor: 'pointer', textAlign: 'center',
               border: active ? '2px solid #1B9AAA' : '1.5px solid var(--border)',
               background: active ? 'rgba(27,154,170,0.08)' : 'var(--surface)',
             }}>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>{t.icon}</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.label}</div>
+              <div style={{ fontSize: isMobile ? 22 : 28, marginBottom: isMobile ? 6 : 8 }}>{t.icon}</div>
+              <div style={{ fontSize: isMobile ? 11.5 : 13, fontWeight: 700, color: 'var(--text)', lineHeight: 1.25 }}>{t.label}</div>
             </button>
           )
         })}
