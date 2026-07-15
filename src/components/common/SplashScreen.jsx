@@ -157,7 +157,7 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9999,
+        zIndex: 999999,
         background: 'linear-gradient(160deg, #050816 0%, #0B1023 100%)',
         display: 'flex',
         alignItems: 'center',
