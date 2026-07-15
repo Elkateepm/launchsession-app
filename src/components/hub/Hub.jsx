@@ -1113,7 +1113,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <div style={{ position: 'absolute', top: -40, right: '15%', width: 260, height: 140, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}14, transparent 70%)`, pointerEvents: 'none' }} />
 
         {/* Top bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '18px 0 14px', borderBottom: `1px solid ${primary}18`, position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: isMobile ? '12px 0 10px' : '18px 0 14px', borderBottom: `1px solid ${primary}18`, position: 'relative' }}>
 
           {/* Org identity */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, padding: '4px 0' }}>
@@ -1121,7 +1121,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 48, height: 48, borderRadius: 13, objectFit: 'contain', border: `1.5px solid ${primary}30`, background: '#fff', padding: 3, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -6px ${primary}45` }} />
               <div style={{ position: 'absolute', bottom: -2, right: -2, width: 12, height: 12, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />
             </div>
-            {!isMobile && (
+            {!isMobile ? (
               <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text, #111)', lineHeight: 1.25, fontFamily: 'var(--font-display, sans-serif)', whiteSpace: 'nowrap' }}>{orgName}</div>
                 {org?.slogan && (
@@ -1136,6 +1136,16 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       ⭐ {trialDaysLeft}d left
                     </span>
                   )}
+                </div>
+              </div>
+            ) : (
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text, #111)', lineHeight: 1.25, fontFamily: 'var(--font-display, sans-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{orgName}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, fontSize: 10.5, fontWeight: 700, color: todayHasLiveSession ? '#DC2626' : '#16A34A' }}>
+                  <span style={{ fontSize: 7 }}>●</span>
+                  {org?.status === 'trial' && trialDaysLeft !== null
+                    ? <span style={{ color: trialDaysLeft <= 2 ? '#DC2626' : 'var(--text3, #6b7280)' }}>Trial · {trialDaysLeft}d left</span>
+                    : (todayHasLiveSession ? 'Live now' : 'Online')}
                 </div>
               </div>
             )}
@@ -1233,23 +1243,52 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         </div>
 
         {/* Greeting row */}
-        <div style={{ padding: '14px 0 12px' }}>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 20 : 24, fontWeight: 900, color: 'var(--text, #0f172a)', lineHeight: 1.15, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.3px' }}>
-            {getGreeting()}, {hubUserName.split(' ')[0]}! 👋
-          </h1>
-          <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text3, #64748b)', fontWeight: 600, background: todaySessions.length > 0 ? '#DCFCE7' : '#F3F4F6', borderRadius: 99, padding: '3px 10px' }}>
-              <span style={{ color: todaySessions.length > 0 ? '#16A34A' : '#9ca3af', fontSize: 7 }}>●</span>
-              {todaySessions.length} session{todaySessions.length !== 1 ? 's' : ''} today
-            </span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, background: concerns.length > 0 ? '#FEF9C3' : '#DCFCE7', color: concerns.length > 0 ? '#92400E' : '#16A34A', borderRadius: 99, padding: '3px 10px' }}>
-              {concerns.length > 0 ? `⚠ ${concerns.length} concern${concerns.length > 1 ? 's' : ''}` : '✓ All clear'}
-            </span>
-            {!isMobile && children.length > 0 && (
-              <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>{children.length} young people</span>
-            )}
+        {!isMobile ? (
+          <div style={{ padding: '14px 0 12px' }}>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--text, #0f172a)', lineHeight: 1.15, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.3px' }}>
+              {getGreeting()}, {hubUserName.split(' ')[0]}! 👋
+            </h1>
+            <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text3, #64748b)', fontWeight: 600, background: todaySessions.length > 0 ? '#DCFCE7' : '#F3F4F6', borderRadius: 99, padding: '3px 10px' }}>
+                <span style={{ color: todaySessions.length > 0 ? '#16A34A' : '#9ca3af', fontSize: 7 }}>●</span>
+                {todaySessions.length} session{todaySessions.length !== 1 ? 's' : ''} today
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, background: concerns.length > 0 ? '#FEF9C3' : '#DCFCE7', color: concerns.length > 0 ? '#92400E' : '#16A34A', borderRadius: 99, padding: '3px 10px' }}>
+                {concerns.length > 0 ? `⚠ ${concerns.length} concern${concerns.length > 1 ? 's' : ''}` : '✓ All clear'}
+              </span>
+              {children.length > 0 && (
+                <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>{children.length} young people</span>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={{ padding: '10px 0 12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 900, color: 'var(--text, #0f172a)', lineHeight: 1.2, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.3px' }}>
+                {getGreeting()}, {hubUserName.split(' ')[0]} 👋
+              </h1>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0, color: concerns.length > 0 ? '#92400E' : '#16A34A', background: concerns.length > 0 ? '#FEF9C3' : '#DCFCE7', borderRadius: 99, padding: '3px 9px' }}>
+                {concerns.length > 0 ? `⚠ ${concerns.length}` : '✓ Clear'}
+              </span>
+            </div>
+
+            {/* Live stats mini-row */}
+            <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+              <HeaderMiniStat icon="📅" value={strictlyTodaySessions.length} label="Sessions" onClick={() => go('planner')} primary={primary} />
+              <HeaderMiniStat icon="👥" value={children.length} label="Expected" onClick={() => go('registers')} primary={primary} />
+              <HeaderMiniStat icon="🙋" value={volunteersCount} label="Volunteers" onClick={() => go('volunteers')} primary={primary} />
+              <HeaderMiniStat icon="🛡️" value={concerns.length} label="Alerts" tone={concerns.length > 0 ? 'warn' : 'ok'} onClick={() => go('safeguarding')} primary={primary} />
+            </div>
+
+            {/* Quick actions row */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
+              <HeaderQuickAction icon="＋" label="Session" onClick={() => go('planner', { autoOpenWizard: true })} primary={primary} filled />
+              {hasModule('registers') && <HeaderQuickAction icon="📋" label="Register" onClick={() => go('registers')} primary={primary} />}
+              <HeaderQuickAction icon="💬" label="Messages" onClick={() => go('messaging')} primary={primary} />
+              {hasModule('volunteers') && <HeaderQuickAction icon="👥" label="Volunteers" onClick={() => go('volunteers')} primary={primary} />}
+            </div>
+          </div>
+        )}
       </header>
 
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
@@ -1616,6 +1655,33 @@ function QuickLinkTile({ icon, label, badge, onClick }) {
       )}
       <span style={{ fontSize: 18 }}>{icon}</span>
       <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text, #111)' }}>{label}</span>
+    </button>
+  );
+}
+
+function HeaderMiniStat({ icon, value, label, tone, onClick, primary }) {
+  const color = tone === 'warn' ? '#D97706' : tone === 'ok' ? '#16A34A' : primary
+  return (
+    <button onClick={onClick} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: '#fff', border: `1px solid ${primary}18`, borderRadius: 12, padding: '7px 4px', cursor: 'pointer' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+        <span style={{ fontSize: 11 }}>{icon}</span>
+        <span style={{ fontSize: 14, fontWeight: 900, color, fontFamily: 'var(--font-display, sans-serif)' }}>{value}</span>
+      </div>
+      <span style={{ fontSize: 8.5, fontWeight: 700, color: 'var(--text3, #9CA3AF)', textTransform: 'uppercase', letterSpacing: 0.3 }}>{label}</span>
+    </button>
+  );
+}
+
+function HeaderQuickAction({ icon, label, onClick, primary, filled }) {
+  return (
+    <button onClick={onClick} style={{
+      flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+      padding: '9px 14px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+      ...(filled
+        ? { border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', boxShadow: `0 4px 14px -6px ${primary}70` }
+        : { border: `1.5px solid ${primary}25`, background: '#fff', color: 'var(--text, #111)' })
+    }}>
+      <span>{icon}</span>{label}
     </button>
   );
 }
