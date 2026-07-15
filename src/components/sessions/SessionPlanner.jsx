@@ -537,8 +537,30 @@ function ReflectionField({ i, children }) {
   )
 }
 
+const REFLECT_STEPS = [
+  { key: 'rating',   title: 'Rate it',        emoji: '⭐' },
+  { key: 'wins',     title: 'The wins',       emoji: '🙌' },
+  { key: 'improve',  title: 'Room to grow',   emoji: '🌱' },
+  { key: 'people',   title: 'Who showed up',  emoji: '👥' },
+  { key: 'crew',     title: 'Behind the scenes', emoji: '🎽' },
+  { key: 'wrap',     title: 'Wrap it up',     emoji: '✨' },
+]
+
+const RATING_REACTIONS = {
+  0: { emoji: '🤔', text: 'Tap a star to rate the session' },
+  1: { emoji: '😬', text: "Tough one — let's capture what happened" },
+  2: { emoji: '😐', text: 'A mixed session — room to improve' },
+  3: { emoji: '🙂', text: 'Solid session overall!' },
+  4: { emoji: '😄', text: 'Great session — nice work!' },
+  5: { emoji: '🤩', text: 'Brilliant! Absolutely smashed it.' },
+}
+
 function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   const primary = org?.primary_color || '#1B9AAA'
+  const secondary = org?.secondary_color || '#7C3AED'
+  const isMobile = useIsMobile()
+  const [step, setStep] = useState(0)
+  const [direction, setDirection] = useState(1)
   const [form, setForm] = useState({
     overall_rating: existing?.overall_rating || 0,
     what_went_well: existing?.what_went_well || '',
@@ -552,9 +574,16 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
   const [hoverStar, setHoverStar] = useState(0)
   const [focused, setFocused] = useState(null)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const goTo = (n) => { setDirection(n > step ? 1 : -1); setStep(Math.max(0, Math.min(REFLECT_STEPS.length - 1, n))) }
+  const goNext = () => goTo(step + 1)
+  const goBack = () => goTo(step - 1)
+  const isLast = step === REFLECT_STEPS.length - 1
+  const canAdvance = step === 0 ? form.overall_rating > 0 : true
 
   const handleSave = async () => {
     setSaving(true)
@@ -566,26 +595,33 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
         ? await supabase.from('session_reflections').update(payload).eq('id', existing.id)
         : await supabase.from('session_reflections').insert(payload)
       if (err) throw err
-      onSaved()
+      setSaved(true)
+      setTimeout(onSaved, 1400)
     } catch (e) {
       setError(e.message || 'Failed to save reflection')
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   const ta = (key) => ({
-    width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 12,
+    width: '100%', boxSizing: 'border-box', padding: '13px 14px', borderRadius: 13,
     border: `1.5px solid ${focused === key ? primary : 'var(--border, #E5E7EB)'}`,
     boxShadow: focused === key ? `0 0 0 4px ${primary}1A` : 'none',
-    fontSize: 13, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70,
+    fontSize: 14, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 90,
     transition: 'border-color 0.15s, box-shadow 0.15s', background: 'var(--surface, #fff)', color: 'var(--text, #111)',
   })
-  const label = { fontSize: 12, fontWeight: 800, color: 'var(--text, #111)', display: 'block', marginBottom: 6 }
-  const hint = { fontSize: 11, color: 'var(--text3, #9CA3AF)', marginBottom: 8, lineHeight: 1.4 }
+  const label = { fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', display: 'block', marginBottom: 6 }
+  const hint = { fontSize: 11.5, color: 'var(--text3, #9CA3AF)', marginBottom: 10, lineHeight: 1.4 }
+
+  const slideVariants = {
+    enter: (dir) => ({ opacity: 0, x: dir > 0 ? 40 : -40 }),
+    center: { opacity: 1, x: 0 },
+    exit: (dir) => ({ opacity: 0, x: dir > 0 ? -40 : 40 }),
+  }
 
   return (
     <motion.div
-      onClick={onClose}
+      onClick={saved ? undefined : onClose}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
       style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
     >
@@ -593,132 +629,197 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
         onClick={e => e.stopPropagation()}
         initial={{ opacity: 0, y: 20, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 14, scale: 0.97 }}
         transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-        style={{ background: 'var(--surface, #fff)', borderRadius: 24, width: '100%', maxWidth: 560, maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.04)' }}
+        style={{ background: 'var(--surface, #fff)', borderRadius: 26, width: '100%', maxWidth: 520, maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.04)' }}
       >
-        {/* Header */}
-        <div style={{ padding: '22px 24px', background: `linear-gradient(135deg, ${primary}12, transparent)`, borderBottom: '1px solid var(--border, #F3F4F6)', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
-          <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, borderRadius: '50%', background: `${primary}14`, filter: 'blur(20px)', pointerEvents: 'none' }} />
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: `${primary}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}>⭐</div>
-              <div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text, #111)' }}>Session Reflection</div>
-                <div style={{ fontSize: 12, color: 'var(--text3, #9CA3AF)', marginTop: 2 }}>{session.title} · {format(parseISO(session.session_date), 'd MMM yyyy')}</div>
-              </div>
-            </div>
-            <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'var(--surface2, #F3F4F6)', cursor: 'pointer', fontSize: 16, color: 'var(--text3, #6B7280)', flexShrink: 0 }}>×</motion.button>
+        {saved ? (
+          /* ── CELEBRATION SCREEN ── */
+          <div style={{ padding: '56px 32px', textAlign: 'center', background: `linear-gradient(160deg, ${primary}10, ${secondary}08)` }}>
+            <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 14 }} style={{ fontSize: 56, marginBottom: 8 }}>
+              {RATING_REACTIONS[form.overall_rating]?.emoji || '🎉'}
+            </motion.div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text, #111)', fontFamily: 'var(--font-display, sans-serif)' }}>Reflection saved!</div>
+            <div style={{ fontSize: 13, color: 'var(--text3, #9CA3AF)', marginTop: 6 }}>Nice work capturing today's session.</div>
+            {org?.logo_url && <img src={org.logo_url} alt={org?.name || ''} style={{ height: 22, objectFit: 'contain', marginTop: 20, opacity: 0.7 }} />}
           </div>
-        </div>
-
-        {/* Scrollable form */}
-        <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, padding: 24, WebkitOverflowScrolling: 'touch' }}>
-          {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 16, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>}
-
-          {/* Overall rating */}
-          <ReflectionField i={0}>
-            <label style={label}>How did the session go overall?</label>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {[1,2,3,4,5].map(n => {
-                const lit = (hoverStar || form.overall_rating) >= n
-                return (
-                  <motion.button
-                    key={n}
-                    whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
-                    onMouseEnter={() => setHoverStar(n)} onMouseLeave={() => setHoverStar(0)}
-                    onClick={() => set('overall_rating', n)}
-                    style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: `1.5px solid ${lit ? '#F59E0B' : 'var(--border, #E5E7EB)'}`, background: lit ? 'linear-gradient(135deg,#FEF3C7,#FDE68A)' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 19, boxShadow: lit ? '0 4px 12px rgba(245,158,11,0.25)' : 'none', transition: 'background 0.15s, box-shadow 0.15s' }}
-                  >
-                    ⭐
-                  </motion.button>
-                )
-              })}
-            </div>
-          </ReflectionField>
-
-          {/* What went well */}
-          <ReflectionField i={1}>
-            <label style={label}>What went well?</label>
-            <div style={hint}>Activities, engagement, moments worth repeating.</div>
-            <textarea style={ta('www')} onFocus={() => setFocused('www')} onBlur={() => setFocused(null)} value={form.what_went_well} onChange={e => set('what_went_well', e.target.value)} placeholder="e.g. The warm-up game got everyone involved straight away..." />
-          </ReflectionField>
-
-          {/* What could improve */}
-          <ReflectionField i={2}>
-            <label style={label}>What could be improved next time?</label>
-            <div style={hint}>Timing, equipment, structure, anything that didn't quite land.</div>
-            <textarea style={ta('imp')} onFocus={() => setFocused('imp')} onBlur={() => setFocused(null)} value={form.what_could_improve} onChange={e => set('what_could_improve', e.target.value)} placeholder="e.g. We ran short on footballs for the group size..." />
-          </ReflectionField>
-
-          {/* Attendance notes */}
-          <ReflectionField i={3}>
-            <label style={label}>Attendance notes</label>
-            <div style={hint}>Anything worth flagging about who came, who didn't, or patterns to watch.</div>
-            <textarea style={ta('att')} onFocus={() => setFocused('att')} onBlur={() => setFocused(null)} value={form.attendance_notes} onChange={e => set('attendance_notes', e.target.value)} placeholder="e.g. Two regulars missing without notice — worth a follow-up call." />
-          </ReflectionField>
-
-          {/* Behaviour notes */}
-          <ReflectionField i={4}>
-            <label style={label}>Behaviour & group dynamics</label>
-            <div style={hint}>How the group got on together, any friction, standout moments.</div>
-            <textarea style={ta('beh')} onFocus={() => setFocused('beh')} onBlur={() => setFocused(null)} value={form.behaviour_notes} onChange={e => set('behaviour_notes', e.target.value)} placeholder="e.g. A couple of the younger ones needed extra encouragement to join in." />
-          </ReflectionField>
-
-          {/* Staffing notes */}
-          <ReflectionField i={5}>
-            <label style={label}>Staffing & volunteer cover</label>
-            <div style={hint}>Was there enough cover? Anyone who went above and beyond?</div>
-            <textarea style={ta('staff')} onFocus={() => setFocused('staff')} onBlur={() => setFocused(null)} value={form.staffing_notes} onChange={e => set('staffing_notes', e.target.value)} placeholder="e.g. Could have used one more volunteer for the smaller groups." />
-          </ReflectionField>
-
-          {/* Would repeat */}
-          <ReflectionField i={6}>
-            <label style={label}>Would you run this session again as-is?</label>
-            <div style={{ display: 'flex', gap: 8, background: 'var(--surface2, #F3F4F6)', borderRadius: 12, padding: 4 }}>
-              {[
-                { key: true, label: '👍 Yes', color: '#16A34A', bg: '#F0FDF4' },
-                { key: false, label: '👎 Needs changes', color: '#DC2626', bg: '#FEF2F2' },
-              ].map(opt => {
-                const active = form.would_repeat === opt.key
-                return (
-                  <button key={String(opt.key)} onClick={() => set('would_repeat', opt.key)} style={{ position: 'relative', flex: 1, padding: '9px 0', borderRadius: 9, border: 'none', background: 'transparent', color: active ? opt.color : 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-                    {active && (
-                      <motion.div layoutId="repeatPill" transition={{ type: 'spring', stiffness: 400, damping: 32 }} style={{ position: 'absolute', inset: 0, background: opt.bg, borderRadius: 9, border: `1.5px solid ${opt.color}` }} />
-                    )}
-                    <span style={{ position: 'relative', zIndex: 1 }}>{opt.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </ReflectionField>
-
-          {/* Safeguarding flag */}
-          <ReflectionField i={7}>
-            <motion.label
-              whileTap={{ scale: 0.99 }}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${form.safeguarding_flag ? '#DC2626' : 'var(--border, #E5E7EB)'}`, background: form.safeguarding_flag ? '#FEF2F2' : 'var(--surface2, #F9FAFB)', cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s' }}
-            >
-              <input type="checkbox" checked={form.safeguarding_flag} onChange={e => set('safeguarding_flag', e.target.checked)} style={{ width: 16, height: 16, accentColor: '#DC2626' }} />
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: form.safeguarding_flag ? '#DC2626' : 'var(--text, #111)' }}>🛡️ Flag for safeguarding follow-up</div>
-                <div style={{ fontSize: 11, color: 'var(--text3, #9CA3AF)' }}>Tick if anything here needs a safeguarding lead's attention — log the actual concern separately.</div>
+        ) : (
+          <>
+            {/* Header — branded */}
+            <div style={{ padding: '20px 22px 16px', background: `linear-gradient(135deg, ${primary}14, ${secondary}08)`, borderBottom: '1px solid var(--border, #F3F4F6)', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+              <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, borderRadius: '50%', background: `${secondary}18`, filter: 'blur(20px)', pointerEvents: 'none' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1, marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                  {org?.logo_url ? (
+                    <img src={org.logo_url} alt={org?.name || ''} style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'contain', background: '#fff', border: `1px solid ${primary}25`, padding: 3 }} />
+                  ) : (
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>⭐</div>
+                  )}
+                  <div>
+                    <div style={{ fontSize: 15.5, fontWeight: 900, color: 'var(--text, #111)', fontFamily: 'var(--font-display, sans-serif)' }}>Session Reflection</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--text3, #9CA3AF)', marginTop: 1 }}>{session.title} · {format(parseISO(session.session_date), 'd MMM yyyy')}</div>
+                  </div>
+                </div>
+                <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} onClick={onClose} style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: 'var(--surface2, #F3F4F6)', cursor: 'pointer', fontSize: 15, color: 'var(--text3, #6B7280)', flexShrink: 0 }}>×</motion.button>
               </div>
-            </motion.label>
-          </ReflectionField>
 
-          {/* Free-form summary (backwards-compatible with original 'reflection' field) */}
-          <ReflectionField i={8}>
-            <label style={label}>Anything else?</label>
-            <textarea style={ta('free')} onFocus={() => setFocused('free')} onBlur={() => setFocused(null)} value={form.reflection} onChange={e => set('reflection', e.target.value)} placeholder="Any other thoughts for next time..." />
-          </ReflectionField>
-        </div>
+              {/* Progress dots */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative', zIndex: 1 }}>
+                {REFLECT_STEPS.map((s, i) => (
+                  <div key={s.key} onClick={() => i < step && goTo(i)} style={{ flex: 1, height: 5, borderRadius: 99, background: i <= step ? `linear-gradient(90deg, ${primary}, ${secondary})` : 'var(--border, #E5E7EB)', cursor: i < step ? 'pointer' : 'default', transition: 'background 0.25s' }} />
+                ))}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, position: 'relative', zIndex: 1 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: primary, textTransform: 'uppercase', letterSpacing: 0.5 }}>{REFLECT_STEPS[step].emoji} {REFLECT_STEPS[step].title}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3, #9CA3AF)' }}>Step {step + 1} of {REFLECT_STEPS.length}</span>
+              </div>
+            </div>
 
-        {/* Footer */}
-        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 10, flexShrink: 0, background: 'var(--surface, #fff)' }}>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={onClose} style={{ padding: '12px 18px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}>Cancel</motion.button>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : `linear-gradient(135deg, ${primary}, ${primary}cc)`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 20px ${primary}44` }}>
-            {saving ? 'Saving...' : existing ? '💾 Update Reflection' : '✅ Complete Reflection'}
-          </motion.button>
-        </div>
+            {/* Scrollable step content */}
+            <div style={{ overflowY: 'auto', flex: 1, minHeight: isMobile ? 320 : 360, padding: 24, WebkitOverflowScrolling: 'touch', position: 'relative' }}>
+              {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 16, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>}
+
+              <AnimatePresence mode="wait" custom={direction}>
+                <motion.div key={step} custom={direction} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.22, ease: 'easeOut' }}>
+
+                  {/* STEP 0 — Rating */}
+                  {step === 0 && (
+                    <div style={{ textAlign: 'center', paddingTop: 8 }}>
+                      <motion.div key={form.overall_rating || hoverStar} initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 14 }} style={{ fontSize: 52, marginBottom: 6 }}>
+                        {RATING_REACTIONS[hoverStar || form.overall_rating]?.emoji}
+                      </motion.div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text, #111)', marginBottom: 22, minHeight: 20 }}>{RATING_REACTIONS[hoverStar || form.overall_rating]?.text}</div>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                        {[1,2,3,4,5].map(n => {
+                          const lit = (hoverStar || form.overall_rating) >= n
+                          return (
+                            <motion.button
+                              key={n}
+                              whileHover={{ scale: 1.12, y: -3 }} whileTap={{ scale: 0.9 }}
+                              onMouseEnter={() => setHoverStar(n)} onMouseLeave={() => setHoverStar(0)}
+                              onClick={() => { set('overall_rating', n); setTimeout(() => goTo(1), 550) }}
+                              style={{ width: 52, height: 52, borderRadius: 14, border: `1.5px solid ${lit ? '#F59E0B' : 'var(--border, #E5E7EB)'}`, background: lit ? 'linear-gradient(135deg,#FEF3C7,#FDE68A)' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 22, boxShadow: lit ? '0 6px 16px rgba(245,158,11,0.3)' : 'none', transition: 'background 0.15s, box-shadow 0.15s' }}
+                            >
+                              ⭐
+                            </motion.button>
+                          )
+                        })}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text3, #9CA3AF)', marginTop: 18 }}>Tap a star — we'll move on automatically ✨</div>
+                    </div>
+                  )}
+
+                  {/* STEP 1 — Wins */}
+                  {step === 1 && (
+                    <div>
+                      <label style={label}>What went well?</label>
+                      <div style={hint}>Activities, engagement, moments worth repeating.</div>
+                      <textarea autoFocus style={{ ...ta('www'), minHeight: 140 }} onFocus={() => setFocused('www')} onBlur={() => setFocused(null)} value={form.what_went_well} onChange={e => set('what_went_well', e.target.value)} placeholder="e.g. The warm-up game got everyone involved straight away..." />
+                    </div>
+                  )}
+
+                  {/* STEP 2 — Improve */}
+                  {step === 2 && (
+                    <div>
+                      <label style={label}>What could be improved next time?</label>
+                      <div style={hint}>Timing, equipment, structure, anything that didn't quite land.</div>
+                      <textarea autoFocus style={{ ...ta('imp'), minHeight: 140 }} onFocus={() => setFocused('imp')} onBlur={() => setFocused(null)} value={form.what_could_improve} onChange={e => set('what_could_improve', e.target.value)} placeholder="e.g. We ran short on footballs for the group size..." />
+                    </div>
+                  )}
+
+                  {/* STEP 3 — People (attendance + behaviour) */}
+                  {step === 3 && (
+                    <div>
+                      <ReflectionField i={0}>
+                        <label style={label}>Attendance notes</label>
+                        <div style={hint}>Anything worth flagging about who came, who didn't, or patterns to watch.</div>
+                        <textarea autoFocus style={ta('att')} onFocus={() => setFocused('att')} onBlur={() => setFocused(null)} value={form.attendance_notes} onChange={e => set('attendance_notes', e.target.value)} placeholder="e.g. Two regulars missing without notice — worth a follow-up call." />
+                      </ReflectionField>
+                      <ReflectionField i={1}>
+                        <label style={label}>Behaviour & group dynamics</label>
+                        <div style={hint}>How the group got on together, any friction, standout moments.</div>
+                        <textarea style={ta('beh')} onFocus={() => setFocused('beh')} onBlur={() => setFocused(null)} value={form.behaviour_notes} onChange={e => set('behaviour_notes', e.target.value)} placeholder="e.g. A couple of the younger ones needed extra encouragement to join in." />
+                      </ReflectionField>
+                    </div>
+                  )}
+
+                  {/* STEP 4 — Crew (staffing + would repeat) */}
+                  {step === 4 && (
+                    <div>
+                      <ReflectionField i={0}>
+                        <label style={label}>Staffing & volunteer cover</label>
+                        <div style={hint}>Was there enough cover? Anyone who went above and beyond?</div>
+                        <textarea autoFocus style={ta('staff')} onFocus={() => setFocused('staff')} onBlur={() => setFocused(null)} value={form.staffing_notes} onChange={e => set('staffing_notes', e.target.value)} placeholder="e.g. Could have used one more volunteer for the smaller groups." />
+                      </ReflectionField>
+                      <ReflectionField i={1}>
+                        <label style={label}>Would you run this session again as-is?</label>
+                        <div style={{ display: 'flex', gap: 8, background: 'var(--surface2, #F3F4F6)', borderRadius: 12, padding: 4 }}>
+                          {[
+                            { key: true, label: '👍 Yes', color: '#16A34A', bg: '#F0FDF4' },
+                            { key: false, label: '👎 Needs changes', color: '#DC2626', bg: '#FEF2F2' },
+                          ].map(opt => {
+                            const active = form.would_repeat === opt.key
+                            return (
+                              <button key={String(opt.key)} onClick={() => set('would_repeat', opt.key)} style={{ position: 'relative', flex: 1, padding: '9px 0', borderRadius: 9, border: 'none', background: 'transparent', color: active ? opt.color : 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                                {active && (
+                                  <motion.div layoutId="repeatPill" transition={{ type: 'spring', stiffness: 400, damping: 32 }} style={{ position: 'absolute', inset: 0, background: opt.bg, borderRadius: 9, border: `1.5px solid ${opt.color}` }} />
+                                )}
+                                <span style={{ position: 'relative', zIndex: 1 }}>{opt.label}</span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </ReflectionField>
+                    </div>
+                  )}
+
+                  {/* STEP 5 — Wrap up */}
+                  {step === 5 && (
+                    <div>
+                      <ReflectionField i={0}>
+                        <motion.label
+                          whileTap={{ scale: 0.99 }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${form.safeguarding_flag ? '#DC2626' : 'var(--border, #E5E7EB)'}`, background: form.safeguarding_flag ? '#FEF2F2' : 'var(--surface2, #F9FAFB)', cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s' }}
+                        >
+                          <input type="checkbox" checked={form.safeguarding_flag} onChange={e => set('safeguarding_flag', e.target.checked)} style={{ width: 16, height: 16, accentColor: '#DC2626' }} />
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: form.safeguarding_flag ? '#DC2626' : 'var(--text, #111)' }}>🛡️ Flag for safeguarding follow-up</div>
+                            <div style={{ fontSize: 11, color: 'var(--text3, #9CA3AF)' }}>Tick if anything here needs a safeguarding lead's attention — log the actual concern separately.</div>
+                          </div>
+                        </motion.label>
+                      </ReflectionField>
+                      <ReflectionField i={1}>
+                        <label style={label}>Anything else?</label>
+                        <textarea style={ta('free')} onFocus={() => setFocused('free')} onBlur={() => setFocused(null)} value={form.reflection} onChange={e => set('reflection', e.target.value)} placeholder="Any other thoughts for next time..." />
+                      </ReflectionField>
+                      <ReflectionField i={2}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, background: `linear-gradient(135deg, ${primary}0C, ${secondary}08)`, border: `1px dashed ${primary}30` }}>
+                          <span style={{ fontSize: 24 }}>{RATING_REACTIONS[form.overall_rating]?.emoji}</span>
+                          <div style={{ fontSize: 12, color: 'var(--text3, #6B7280)' }}>You rated this session <strong style={{ color: 'var(--text, #111)' }}>{form.overall_rating}/5</strong>. Ready to save?</div>
+                        </div>
+                      </ReflectionField>
+                    </div>
+                  )}
+
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '16px 22px', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 10, flexShrink: 0, background: 'var(--surface, #fff)' }}>
+              {step > 0 && (
+                <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}>← Back</motion.button>
+              )}
+              {!isLast ? (
+                <motion.button whileTap={{ scale: 0.97 }} disabled={!canAdvance} onClick={goNext} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: canAdvance ? `linear-gradient(135deg, ${primary}, ${secondary})` : '#D1D5DB', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canAdvance ? 'pointer' : 'default', boxShadow: canAdvance ? `0 8px 20px ${primary}44` : 'none' }}>
+                  Next →
+                </motion.button>
+              ) : (
+                <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 20px ${primary}44` }}>
+                  {saving ? 'Saving...' : existing ? '💾 Update Reflection' : '✅ Complete Reflection'}
+                </motion.button>
+              )}
+            </div>
+          </>
+        )}
       </motion.div>
     </motion.div>
   )
