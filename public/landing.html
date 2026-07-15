@@ -39,7 +39,9 @@
   --glass:rgba(255,255,255,0.04);
   --glass2:rgba(255,255,255,0.08);
   --font:'Plus Jakarta Sans',sans-serif;
+  --promo-h:44px;
 }
+@media(max-width:600px){:root{--promo-h:68px}}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -51,7 +53,7 @@ html,body{width:100%;min-height:100%;min-height:100dvh;margin:0;padding:0;oversc
 img{max-width:100%}
 
 /* ── NAV ──────────────────────────────────────────────────── */
-.nav-wrap{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:100;width:calc(100% - 40px);max-width:1160px}
+.nav-wrap{position:fixed;top:calc(var(--promo-h, 0px) + 16px);left:50%;transform:translateX(-50%);z-index:100;width:calc(100% - 40px);max-width:1160px;transition:top 0.2s}
 nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:64px;background:rgba(6,9,26,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border2);border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
 .logo{display:flex;align-items:center;gap:12px}
 .logo img{width:40px;height:40px;object-fit:contain}
@@ -67,15 +69,15 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
 .btn-start:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,0.45)}
 .hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;gap:5px}
 .hamburger span{display:block;width:20px;height:2px;background:#fff;border-radius:2px;transition:all 0.25s}
-.mobile-nav{display:none;position:fixed;top:88px;left:16px;right:16px;background:rgba(6,9,26,0.97);backdrop-filter:blur(20px);border:1px solid var(--border2);border-radius:16px;padding:12px;z-index:99;flex-direction:column;gap:4px}
+.mobile-nav{display:none;position:fixed;top:calc(var(--promo-h, 0px) + 88px);left:16px;right:16px;background:rgba(6,9,26,0.97);backdrop-filter:blur(20px);border:1px solid var(--border2);border-radius:16px;padding:12px;z-index:99;flex-direction:column;gap:4px}
 .mobile-nav.open{display:flex}
 .mobile-nav a{font-size:14px;font-weight:600;color:var(--text2);padding:10px 14px;border-radius:10px;display:block;transition:all 0.2s}
 .mobile-nav a:hover{color:#fff;background:var(--glass)}
 .mobile-nav-cta{display:flex;flex-direction:column;gap:8px;padding-top:12px;margin-top:4px;border-top:1px solid var(--border)}
 
 /* ── HERO ─────────────────────────────────────────────────── */
-#hero{padding:140px 5% 100px;position:relative;overflow:hidden;min-height:90vh;display:flex;align-items:center}
-@media(max-width:600px){#hero{padding:110px 5% 60px;min-height:auto}}
+#hero{padding:calc(140px + var(--promo-h, 0px)) 5% 100px;position:relative;overflow:hidden;min-height:90vh;display:flex;align-items:center;transition:padding-top 0.2s}
+@media(max-width:600px){#hero{padding:calc(110px + var(--promo-h, 0px)) 5% 60px;min-height:auto}}
 .hero-glow-1{position:absolute;top:-200px;left:20%;width:700px;height:700px;background:radial-gradient(ellipse,rgba(59,130,246,0.14),transparent 70%);pointer-events:none}
 .hero-glow-2{position:absolute;top:0;right:10%;width:500px;height:500px;background:radial-gradient(ellipse,rgba(99,102,241,0.1),transparent 70%);pointer-events:none}
 .hero-inner{max-width:1160px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;position:relative;z-index:1}
@@ -316,7 +318,7 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   .footer-col-links{display:none}
   .footer-bottom{flex-direction:column;text-align:center;gap:8px}
   /* Nav */
-  .nav-wrap{top:10px;width:calc(100% - 24px)}
+  .nav-wrap{top:calc(var(--promo-h, 0px) + 10px);width:calc(100% - 24px)}
   .logo-name{font-size:15px}
   /* Hero CTA buttons */
   .btn-hero-cta,.btn-hero-ghost{padding:14px 20px;font-size:15px}
@@ -328,9 +330,10 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
 </head>
 <body>
 
-<div style="background:linear-gradient(90deg,#6366F1,#8B5CF6);color:#fff;text-align:center;padding:9px 16px;font-size:13px;font-weight:700;position:relative;z-index:1001">
+<div id="promoBar" style="background:linear-gradient(90deg,#6366F1,#8B5CF6);color:#fff;text-align:center;padding:9px 40px;font-size:13px;font-weight:700;position:fixed;top:0;left:0;right:0;z-index:1002">
   🚀 Charity Spotlight &amp; Give Directly — Launching Summer 2026 &nbsp;·&nbsp;
   <a href="#community" style="color:#fff;text-decoration:underline">Register your interest →</a>
+  <button onclick="closePromoBar()" aria-label="Dismiss" style="position:absolute;top:50%;right:10px;transform:translateY(-50%);background:none;border:none;color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:6px;opacity:0.8">×</button>
 </div>
 
 <!-- NAV -->
@@ -1369,6 +1372,34 @@ function toggleFaq(btn) {
 </footer>
 
 <script>
+// ── PROMO BAR HEIGHT ────────────────────────────────────────────
+// The banner wraps to 2 lines on narrow screens, so its height varies.
+// Measure it and expose as --promo-h so the fixed nav + hero padding
+// always sit correctly below it instead of overlapping it.
+function syncPromoHeight() {
+  const bar = document.getElementById('promoBar')
+  const visible = bar && getComputedStyle(bar).display !== 'none'
+  const h = visible ? bar.offsetHeight : 0
+  document.documentElement.style.setProperty('--promo-h', h + 'px')
+}
+function closePromoBar() {
+  const bar = document.getElementById('promoBar')
+  if (bar) bar.style.display = 'none'
+  syncPromoHeight()
+  try { sessionStorage.setItem('promoBarClosed', '1') } catch (e) {}
+}
+window.addEventListener('load', syncPromoHeight)
+window.addEventListener('resize', syncPromoHeight)
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    if (sessionStorage.getItem('promoBarClosed') === '1') {
+      const bar = document.getElementById('promoBar')
+      if (bar) bar.style.display = 'none'
+    }
+  } catch (e) {}
+  syncPromoHeight()
+})
+
 // ── NAV SCROLL ─────────────────────────────────────────────────
 window.addEventListener('scroll', () => {
   document.getElementById('navWrap').classList.toggle('scrolled', window.scrollY > 20)
