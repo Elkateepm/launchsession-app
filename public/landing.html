@@ -137,15 +137,16 @@ section{padding:96px 5%}
 /* ── HOW IT WORKS ────────────────────────────────────────── */
 #how{background:var(--navy)}
 .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px;position:relative}
-.steps-grid::before{content:'';position:absolute;top:52px;left:calc(16.66% + 8px);right:calc(16.66% + 8px);height:2px;background:linear-gradient(90deg,rgba(59,130,246,0.4),rgba(139,92,246,0.4),rgba(27,154,170,0.4));z-index:0}
+.steps-grid::before{content:'';position:absolute;top:72px;left:calc(16.66% + 8px);right:calc(16.66% + 8px);height:2px;background:linear-gradient(90deg,rgba(59,130,246,0.4),rgba(139,92,246,0.4),rgba(27,154,170,0.4));z-index:0}
 .step-card{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:30px 26px 28px;position:relative;overflow:hidden;transition:transform 0.3s,border-color 0.3s,box-shadow 0.3s;z-index:1}
 .step-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent1),var(--accent2))}
 .step-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 16px 40px rgba(0,0,0,0.35)}
 .step-card:nth-child(1){--accent1:#3B82F6;--accent2:#6366F1;--accent-shadow:rgba(59,130,246,0.4)}
 .step-card:nth-child(2){--accent1:#6366F1;--accent2:#8B5CF6;--accent-shadow:rgba(99,102,241,0.4)}
 .step-card:nth-child(3){--accent1:#8B5CF6;--accent2:#1B9AAA;--accent-shadow:rgba(139,92,246,0.4)}
-.step-visual{position:relative;width:60px;height:60px;margin-bottom:20px}
-.step-badge{width:60px;height:60px;border-radius:17px;display:flex;align-items:center;justify-content:center;font-size:27px;background:linear-gradient(135deg,var(--accent1),var(--accent2));box-shadow:0 10px 26px var(--accent-shadow)}
+.step-visual{position:relative;width:84px;height:84px;margin-bottom:20px}
+.step-badge{width:84px;height:84px;border-radius:20px;overflow:hidden;box-shadow:0 10px 26px var(--accent-shadow)}
+.step-badge img{width:100%;height:100%;object-fit:cover;display:block}
 .step-badge-num{position:absolute;top:-7px;right:-7px;width:24px;height:24px;border-radius:50%;background:var(--navy);border:2px solid var(--navy);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.5)}
 .step-badge-num::before{content:'';position:absolute;inset:-2px;border-radius:50%;background:linear-gradient(135deg,var(--accent1),var(--accent2));z-index:-1}
 .step-tag{font-size:11px;font-weight:800;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
@@ -293,8 +294,8 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   .steps-grid{grid-template-columns:1fr}
   .steps-grid::before{display:none}
   .step-card{padding:24px 22px}
-  .step-badge{width:52px;height:52px;font-size:24px;border-radius:15px}
-  .step-visual{width:52px;height:52px;margin-bottom:16px}
+  .step-badge{width:68px;height:68px;border-radius:18px}
+  .step-visual{width:68px;height:68px;margin-bottom:16px}
   .features-grid{grid-template-columns:1fr 1fr}
   .pricing-grid{grid-template-columns:1fr;max-width:480px}
   .modules-layout{grid-template-columns:1fr}
@@ -575,7 +576,7 @@ async function submitFoundingOffer(e) {
     <div class="steps-grid">
       <div class="step-card">
         <div class="step-visual">
-          <div class="step-badge">🚀</div>
+          <div class="step-badge"><img src="/icons/step-1.png" alt="Rocket launching" loading="lazy" width="84" height="84" /></div>
           <div class="step-badge-num">1</div>
         </div>
         <div class="step-tag">Step 1</div>
@@ -584,7 +585,7 @@ async function submitFoundingOffer(e) {
       </div>
       <div class="step-card">
         <div class="step-visual">
-          <div class="step-badge">👥</div>
+          <div class="step-badge"><img src="/icons/step-2.png" alt="Team of people icon" loading="lazy" width="84" height="84" /></div>
           <div class="step-badge-num">2</div>
         </div>
         <div class="step-tag">Step 2</div>
@@ -593,7 +594,7 @@ async function submitFoundingOffer(e) {
       </div>
       <div class="step-card">
         <div class="step-visual">
-          <div class="step-badge">📋</div>
+          <div class="step-badge"><img src="/icons/step-3.png" alt="Calendar icon" loading="lazy" width="84" height="84" /></div>
           <div class="step-badge-num">3</div>
         </div>
         <div class="step-tag">Step 3</div>
