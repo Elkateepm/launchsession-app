@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../../lib/supabase";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { useRealtimeTable } from "../../lib/useRealtimeTable";
@@ -93,9 +94,9 @@ function PhotoCarousel({ orgId, primary, userId }) {
         </div>
       )}
 
-      {/* Lightbox */}
-      {lightbox && (
-        <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 900, backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      {/* Lightbox — portaled to <body> so it always sits above the bottom nav pill (z-index 9999) and Launch FAB (z-index 10000), and can't get trapped inside any ancestor's stacking context */}
+      {lightbox && createPortal(
+        <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 999999, backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <img src={lightbox.url} alt={lightbox.caption || ''} onClick={e => e.stopPropagation()}
             style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 14, boxShadow: '0 32px 80px rgba(0,0,0,0.6)' }} />
           {lightbox.caption && (
@@ -103,8 +104,9 @@ function PhotoCarousel({ orgId, primary, userId }) {
               {lightbox.caption}
             </div>
           )}
-          <button onClick={() => setLightbox(null)} style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer' }}>×</button>
-        </div>
+          <button onClick={() => setLightbox(null)} style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top, 16px))', right: 16, width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer', zIndex: 1 }}>×</button>
+        </div>,
+        document.body
       )}
     </div>
   )
