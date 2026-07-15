@@ -886,6 +886,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [attendance, setAttendance] = useState([]);
   const [concerns, setConcerns] = useState([]);
   const [children, setChildren] = useState([]);
+  const [volunteersCount, setVolunteersCount] = useState(0);
   const [weather, setWeather] = useState(null);
   const [weatherError, setWeatherError] = useState(false);
 
@@ -939,18 +940,21 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       { data: concernData },
       { data: childData },
       { data: reflectionData },
+      { data: volunteerData },
     ] = await Promise.all([
       supabase.from("sessions").select("*").eq("org_id", orgId).order("session_date", { ascending: true }).order("start_time", { ascending: true }),
       supabase.from("attendance").select("*").eq("org_id", orgId),
       supabase.from("safeguarding_concerns").select("*").eq("org_id", orgId).eq("status", "open"),
       supabase.from("children").select("*").eq("org_id", orgId).eq("active", true).order("first_name", { ascending: true }),
       supabase.from("session_reflections").select("*").eq("org_id", orgId),
+      supabase.from("volunteers").select("id").eq("org_id", orgId),
     ]);
     setSessions(sessionData || []);
     setAttendance(attendanceData || []);
     setConcerns(concernData || []);
     setChildren(childData || []);
     setReflections(reflectionData || []);
+    setVolunteersCount(volunteerData?.length || 0);
   }, [orgId]);
 
   useEffect(() => {
@@ -968,6 +972,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   useRealtimeTable("children", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
   useRealtimeTable("organisations", loadHub, { filter: orgId ? `id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 5000 });
   useRealtimeTable("session_reflections", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 5000 });
+  useRealtimeTable("volunteers", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 5000 });
 
   // ── SEARCH ──────────────────────────────────────────────────
   React.useEffect(() => {
@@ -1040,6 +1045,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const signedOut = todayAttendance.filter(a => a.status === "signed_out").length;
   const medicalAlerts = children.filter(c => c.allergies || c.medical_notes).length;
   const attendanceRate = children.length > 0 ? Math.round((signedIn / children.length) * 100) : 0;
+  const strictlyTodaySessions = useMemo(() => todaySessions.filter(s => s.session_date === today), [todaySessions, today]);
+  const sessionsEndedToday = useMemo(() => {
+    const now = new Date()
+    return strictlyTodaySessions.filter(s => {
+      const end = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
+      return !!end && end < now
+    }).length
+  }, [strictlyTodaySessions]);
   const todayHasLiveSession = useMemo(() => {
     const now = new Date()
     return todaySessions.some(s => {
@@ -1276,7 +1289,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       <section style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) 320px', gap: 18, padding: pad }}>
         <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
-          <Panel title="🧭 Today at a glance">
+          <Panel title="📍 Right now">
             <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
 
               {/* WEATHER CARD */}
@@ -1311,16 +1324,46 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
               <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} />
               <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} />
+            </div>
+          </Panel>
+
+          {/* TODAY AT A GLANCE — summary panel */}
+          <Panel title="🧭 Today at a glance" right={
+            <button onClick={() => go('reports')} style={{ background: `${primary}14`, color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>View summary →</button>
+          }>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
+              <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour="#16A34A" label="Young people" sub="Expected" onClick={() => go('registers')} />
+              <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="So far" onClick={() => go('registers')} />
+              <GlanceStat icon="🕐" iconBg="#FEF3C7" value={strictlyTodaySessions.length} valueColour="#D97706" label="Sessions" sub="Today" onClick={() => go('planner')} />
+              <GlanceStat icon="❤️" iconBg="#EDE9FE" value={volunteersCount} valueColour="#7C3AED" label="Volunteers" sub="Involved" onClick={() => go('volunteers')} />
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
               {hasModule('registers') ? (
-                <StatCard icon="✅" title={signedIn > 0 ? `${signedIn} signed in` : "Registers"} text={signedOut > 0 ? `${signedOut} signed out` : "Take today's register"} button="Take Register" onClick={() => go("registers")} colour="#16A34A" />
+                <GlanceCard icon="📋" tone="green" title="Registers" subtitle="Take today's register"
+                  fraction={`${sessionsEndedToday} / ${strictlyTodaySessions.length}`} fractionLabel="Sessions completed"
+                  onClick={() => go('registers')} />
               ) : (
-                <StatCard icon="👥" title="Young People" text={`${children?.length || 0} on roll`} button="View roster" onClick={() => go("planner")} colour="#16A34A" />
+                <GlanceCard icon="👥" tone="green" title="Young People" subtitle="View your roster"
+                  fraction={children.length} fractionLabel="On roll"
+                  onClick={() => go('planner')} />
               )}
               {hasModule('safeguarding') ? (
-                <StatCard icon="🛡️" title={concerns.length > 0 ? `${concerns.length} open concern${concerns.length > 1 ? 's' : ''}` : "Safeguarding"} text={concerns.length > 0 ? "Needs attention" : "All clear"} button="View concerns" onClick={() => go("safeguarding")} colour={concerns.length > 0 ? "#F59E0B" : "#2563EB"} />
+                <GlanceCard icon="🛡️" tone={concerns.length > 0 ? "amber" : "blue"} title="Safeguarding" subtitle={concerns.length > 0 ? "Needs attention" : "All clear"}
+                  fraction={concerns.length} fractionLabel={concerns.length > 0 ? `Open concern${concerns.length > 1 ? 's' : ''}` : "No open concerns"}
+                  onClick={() => go('safeguarding')} />
               ) : (
-                <StatCard icon="🚀" title="Grow your workspace" text="Unlock more modules" button="Explore plans" onClick={() => go("settings")} colour="#7C3AED" />
+                <GlanceCard icon="🚀" tone="blue" title="Grow your workspace" subtitle="Unlock more modules"
+                  fraction="→" fractionLabel="Explore plans"
+                  onClick={() => go('settings')} />
               )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: 10 }}>
+              <QuickLinkTile icon="💬" label="Messages" onClick={() => go('messaging')} />
+              <QuickLinkTile icon="📅" label="Calendar" onClick={() => go('calendar')} />
+              {hasModule('volunteers') && <QuickLinkTile icon="❤️" label="Volunteers" onClick={() => go('volunteers')} />}
+              {hasModule('reports') && <QuickLinkTile icon="📄" label="Reports" onClick={() => go('reports')} />}
             </div>
           </Panel>
 
@@ -1514,8 +1557,68 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     </div>
   );
 }
-function Panel({ title, children }) {
-  return <div style={styles.panel}><h3 style={styles.panelTitle}>{title}</h3>{children}</div>;
+function Panel({ title, right, children }) {
+  return (
+    <div style={styles.panel}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <h3 style={{ ...styles.panelTitle, margin: 0 }}>{title}</h3>
+        {right}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function GlanceStat({ icon, iconBg, value, valueColour, label, sub, onClick }) {
+  return (
+    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: onClick ? 'pointer' : 'default', padding: 0, flex: '1 1 130px', minWidth: 120, textAlign: 'left' }}>
+      <span style={{ width: 34, height: 34, borderRadius: '50%', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 19, fontWeight: 900, color: valueColour, lineHeight: 1.1 }}>{value}</div>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text, #111)', marginTop: 1 }}>{label}</div>
+        <div style={{ fontSize: 10.5, color: '#9CA3AF' }}>{sub}</div>
+      </div>
+    </button>
+  );
+}
+
+function GlanceCard({ icon, tone, title, subtitle, fraction, fractionLabel, onClick }) {
+  const tones = {
+    green: { bg: 'linear-gradient(135deg, #ECFDF5, #F0FDF4)', border: '#BBF7D0', iconBg: '#16A34A', pillBg: 'rgba(22,163,74,0.12)', pillColour: '#16A34A', arrowBg: '#16A34A' },
+    blue:  { bg: 'linear-gradient(135deg, #EFF6FF, #F5F8FF)', border: '#BFDBFE', iconBg: '#2563EB', pillBg: 'rgba(37,99,235,0.12)', pillColour: '#2563EB', arrowBg: '#2563EB' },
+    amber: { bg: 'linear-gradient(135deg, #FFFBEB, #FEF9F0)', border: '#FDE68A', iconBg: '#D97706', pillBg: 'rgba(217,119,6,0.12)', pillColour: '#D97706', arrowBg: '#D97706' },
+  }[tone] || { bg: '#F8FAFC', border: '#E5E7EB', iconBg: '#64748B', pillBg: 'rgba(100,116,139,0.12)', pillColour: '#64748B', arrowBg: '#64748B' };
+
+  return (
+    <button onClick={onClick} style={{ flex: '1 1 220px', minWidth: 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: 18, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <span style={{ width: 38, height: 38, borderRadius: 11, background: tones.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{icon}</span>
+      </div>
+      <div>
+        <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>{title}</div>
+        <div style={{ fontSize: 12, color: '#6B7280', marginTop: 1 }}>{subtitle}</div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ background: tones.pillBg, borderRadius: 10, padding: '8px 12px', flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: tones.pillColour, lineHeight: 1.1 }}>{fraction}</div>
+          <div style={{ fontSize: 10.5, color: tones.pillColour, opacity: 0.85, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fractionLabel}</div>
+        </div>
+        <span style={{ width: 34, height: 34, borderRadius: '50%', background: '#fff', color: tones.arrowBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, flexShrink: 0, boxShadow: '0 2px 8px rgba(15,23,42,0.1)' }}>→</span>
+      </div>
+    </button>
+  );
+}
+
+function QuickLinkTile({ icon, label, badge, onClick }) {
+  return (
+    <button onClick={onClick} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: '#F8FAFC', border: '1.5px solid #F1F5F9', borderRadius: 14, padding: '12px 8px', cursor: 'pointer' }}>
+      {badge > 0 && (
+        <span style={{ position: 'absolute', top: 6, right: 10, background: '#EF4444', color: '#fff', fontSize: 9.5, fontWeight: 900, borderRadius: 99, minWidth: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>{badge}</span>
+      )}
+      <span style={{ fontSize: 18 }}>{icon}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text, #111)' }}>{label}</span>
+    </button>
+  );
 }
 
 function StatCard({ icon, title, text, button, badge, onClick, colour }) {
