@@ -920,70 +920,65 @@ export default function Dashboard({ session, org }) {
           </>
         )}
 
-        {/* Launch menu — quick actions from anywhere in the app */}
+        {/* Launch menu — quick actions from anywhere in the app, fanned out from the FAB */}
         <AnimatePresence>
           {isMobileBottomNav && showLaunchMenu && (
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setShowLaunchMenu(false)}
-              style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 10001, display: 'flex', alignItems: 'flex-end' }}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,26,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 10001 }}
             >
-              <motion.div
+              {/* Anchor point — sits exactly at the FAB's center; every item/line below is positioned relative to this */}
+              <div
                 onClick={e => e.stopPropagation()}
-                initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
-                transition={{ type: 'spring', stiffness: 340, damping: 32 }}
-                style={{ width: '100%', background: '#fff', borderRadius: '24px 24px 0 0', padding: '18px 16px calc(96px + env(safe-area-inset-bottom, 0px))', boxShadow: '0 -20px 60px rgba(15,23,42,0.25)' }}
+                style={{ position: 'fixed', left: '50%', bottom: 'calc(73px + env(safe-area-inset-bottom, 0px))', width: 0, height: 0 }}
               >
-                <div style={{ width: 42, height: 5, borderRadius: 99, background: 'var(--border)', margin: '0 auto 16px' }} />
-                <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>🚀 Launch</div>
-                <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 18 }}>
-                  {navContext.mode === 'live' ? `${navContext.liveCount} session${navContext.liveCount === 1 ? '' : 's'} live right now` : 'Jump straight to what you need'}
-                </div>
-
-                {/* Primary action — the thing people tap most, given its own prominent row */}
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => { setShowLaunchMenu(false); handleSetTab('planner', { autoOpenWizard: true }) }}
-                  style={{
-                    width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '16px',
-                    borderRadius: 16, border: 'none', cursor: 'pointer', textAlign: 'left', marginBottom: 14,
-                    background: 'linear-gradient(135deg, #7C3AED, #A855F7)', boxShadow: '0 8px 24px rgba(124,58,237,0.35)',
-                  }}
-                >
-                  <div style={{ width: 46, height: 46, borderRadius: 13, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>📅</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>New Session</div>
-                    <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.85)' }}>Plan a new activity</div>
-                  </div>
-                  <div style={{ fontSize: 20, color: '#fff', opacity: 0.85 }}>→</div>
-                </motion.button>
-
-                {/* Everything else — a scannable grid instead of a long list you have to scroll through */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  {[
-                    { key: 'calendar', label: 'Calendar', desc: 'What\'s scheduled', icon: '📆', color: '#2563EB' },
-                    { key: 'home', label: 'Live Sessions', desc: 'Running now', icon: '🟢', color: '#16A34A' },
-                    { key: 'events_trips', label: 'Events & Trips', desc: 'Trips & events', icon: '🚌', color: '#EA580C' },
-                    { key: 'mentoring', label: 'Mentoring', desc: 'Referrals & matches', icon: '🤝', color: '#7C3AED' },
-                    { key: 'volunteers', label: 'Volunteers', desc: 'Fill unstaffed roles', icon: '❤️', color: '#DB2777' },
-                    { key: 'registers', label: 'Today\'s Register', desc: 'Sign children in/out', icon: '📋', color: '#0891B2' },
-                  ].map(item => (
-                    <motion.button
-                      key={item.key}
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key, item.payload) }}
-                      style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, padding: '14px 12px',
-                        borderRadius: 14, border: '1px solid #F1F5F9', background: '#FAFAFB', cursor: 'pointer', textAlign: 'left',
-                      }}
-                    >
-                      <div style={{ width: 38, height: 38, borderRadius: 11, background: `${item.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{item.icon}</div>
-                      <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', lineHeight: 1.25 }}>{item.label}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.3 }}>{item.desc}</div>
-                    </motion.button>
-                  ))}
-                </div>
-              </motion.div>
+                {[
+                  // Inner ring
+                  { key: 'home', label: 'Live Sessions', icon: '🟢', color: '#16A34A', dx: -85, dy: 67, gate: null },
+                  { key: 'planner', label: 'Session Planner', icon: '📅', color: '#7C3AED', dx: 0, dy: 108, gate: null },
+                  { key: 'risk_assessments', label: 'Risk Assessment', icon: '🛡️', color: '#DC2626', dx: 85, dy: 67, gate: 'risk_assessments' },
+                  // Outer ring
+                  { key: 'registers', label: 'Add Walk-in', icon: '🚶', color: '#0891B2', dx: -192, dy: 41, gate: 'registers' },
+                  { key: 'case_management', label: 'Case Management', icon: '📁', color: '#4F46E5', dx: -86, dy: 176, gate: 'case_management' },
+                  { key: 'registers', label: 'Quick Register', icon: '📋', color: '#0891B2', dx: 86, dy: 176, gate: 'registers' },
+                  { key: 'forms', label: 'Forms & Documents', icon: '📝', color: '#2563EB', dx: 192, dy: 41, gate: 'forms' },
+                ].filter(item => !item.gate || hasModule(item.gate)).map((item, i) => {
+                  const radius = Math.hypot(item.dx, item.dy)
+                  const angle = Math.atan2(item.dx, item.dy) * (180 / Math.PI)
+                  return (
+                    <React.Fragment key={item.label}>
+                      {/* Connecting line back to the FAB */}
+                      <motion.div
+                        initial={{ opacity: 0, scaleY: 0 }} animate={{ opacity: 1, scaleY: 1 }} exit={{ opacity: 0, scaleY: 0 }}
+                        transition={{ delay: i * 0.025, duration: 0.25 }}
+                        style={{
+                          position: 'absolute', left: '50%', bottom: 0, width: 1.5, height: radius,
+                          background: 'linear-gradient(to top, rgba(168,139,250,0.55), rgba(168,139,250,0))',
+                          transformOrigin: 'bottom center', transform: `translateX(-50%) rotate(${angle}deg)`,
+                        }}
+                      />
+                      {/* The action pill itself */}
+                      <motion.button
+                        initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.4 }}
+                        transition={{ delay: i * 0.03, type: 'spring', stiffness: 420, damping: 26 }}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key, item.key === 'planner' ? { autoOpenWizard: false } : undefined) }}
+                        style={{
+                          position: 'absolute', left: item.dx, bottom: item.dy, transform: 'translate(-50%, 50%)',
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                          width: 88, padding: '12px 8px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.12)',
+                          background: 'rgba(20,22,42,0.88)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+                          boxShadow: '0 8px 20px rgba(0,0,0,0.35)', cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: `${item.color}2A`, border: `1px solid ${item.color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{item.icon}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.25 }}>{item.label}</div>
+                      </motion.button>
+                    </React.Fragment>
+                  )
+                })}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
