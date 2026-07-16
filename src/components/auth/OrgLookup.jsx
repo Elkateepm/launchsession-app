@@ -3,7 +3,6 @@ import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import SpaceBackground from './SpaceBackground'
 import RocketIllustration from './RocketIllustration'
-import CloudLayer from './CloudLayer'
 
 // Shown wherever an org logo would go, whenever the org hasn't set one yet
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -77,28 +76,15 @@ export default function OrgLookup() {
         </div>
 
         {step === 'org' ? (
-          <>
-            {/* Headline (left) + ascending rocket (right) */}
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginTop: 8 }}>
-              <div style={{ flex: '1 1 auto', textAlign: 'left', minWidth: 0 }}>
-                <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: -0.9, lineHeight: 1.15, color: '#fff' }}>
-                  Let&apos;s get you to<br />
-                  <span style={{ background: 'linear-gradient(135deg,#60A5FA,#A78BFA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>your workspace</span>
-                </div>
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 10, fontWeight: 500 }}>
-                  Enter your organisation name to continue
-                </div>
-              </div>
-              <div style={{ flex: '0 0 auto', marginBottom: -6 }}>
-                <RocketIllustration width={128} />
-              </div>
+          <div style={{ marginTop: 8, marginBottom: 22 }}>
+            <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: -0.9, lineHeight: 1.15, color: '#fff', textAlign: 'left' }}>
+              Let&apos;s get you to<br />
+              <span style={{ background: 'linear-gradient(135deg,#60A5FA,#A78BFA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>your workspace</span>
             </div>
-
-            {/* Cloud horizon, spanning full width beneath the rocket */}
-            <div style={{ marginTop: -18, marginBottom: 22 }}>
-              <CloudLayer height={110} />
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 10, fontWeight: 500, textAlign: 'left' }}>
+              Enter your organisation name to continue
             </div>
-          </>
+          </div>
         ) : (
           <>
             {/* Rocket hero illustration */}
