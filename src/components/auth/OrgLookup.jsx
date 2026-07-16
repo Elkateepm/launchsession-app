@@ -64,18 +64,29 @@ export default function OrgLookup() {
 
       <div style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
 
-        {/* Logo + wordmark */}
-        <div style={{ textAlign: 'center', marginBottom: 6 }}>
-          <img src="/logo.png" alt="LaunchSession" style={{ width: 76, height: 76, objectFit: 'contain', display: 'block', margin: '0 auto 14px' }} />
-          <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: -0.5, color: '#fff' }}>
-            Launch<span style={{ background: 'linear-gradient(135deg,#93C5FD,#C4B5FD)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Session</span>
+        {step === 'found' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+            <img src="/logo.png" alt="LaunchSession" style={{ width: 44, height: 44, objectFit: 'contain', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, color: '#fff' }}>
+                Launch<span style={{ background: 'linear-gradient(135deg,#93C5FD,#C4B5FD)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Session</span>
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Built for youth &amp; community organisations</div>
+            </div>
           </div>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>
-            Built for youth &amp; community organisations
+        ) : (
+          <div style={{ textAlign: 'center', marginBottom: 6 }}>
+            <img src="/logo.png" alt="LaunchSession" style={{ width: 76, height: 76, objectFit: 'contain', display: 'block', margin: '0 auto 14px' }} />
+            <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: -0.5, color: '#fff' }}>
+              Launch<span style={{ background: 'linear-gradient(135deg,#93C5FD,#C4B5FD)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Session</span>
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>
+              Built for youth &amp; community organisations
+            </div>
           </div>
-        </div>
+        )}
 
-        {step === 'org' ? (
+        {step === 'org' && (
           <div style={{ marginTop: 8, marginBottom: 22, textAlign: 'center' }}>
             <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: -0.9, lineHeight: 1.15, color: '#fff' }}>
               Let&apos;s get you to<br />
@@ -85,7 +96,16 @@ export default function OrgLookup() {
               Enter your organisation name to continue
             </div>
           </div>
-        ) : (
+        )}
+
+        {step === 'found' && (
+          <div style={{ textAlign: 'center', marginBottom: 22 }}>
+            <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: -0.8, lineHeight: 1.18, color: '#fff' }}>Welcome back!</div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 8, fontWeight: 500 }}>Find your organisation to continue</div>
+          </div>
+        )}
+
+        {step === 'multiple' && (
           <>
             {/* Rocket hero illustration */}
             <div style={{ margin: '4px 0 8px', textAlign: 'center' }}>
@@ -94,19 +114,17 @@ export default function OrgLookup() {
 
             {/* Headline */}
             <div style={{ textAlign: 'center', marginBottom: 26 }}>
-              <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: -0.8, lineHeight: 1.18, color: '#fff' }}>
-                {step === 'found' && <>Almost there</>}
-                {step === 'multiple' && <>A few workspaces match</>}
-              </div>
-              <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 10, fontWeight: 500 }}>
-                {step === 'found' && 'Confirm your workspace to sign in'}
-                {step === 'multiple' && 'Select your organisation below'}
-              </div>
+              <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: -0.8, lineHeight: 1.18, color: '#fff' }}>A few workspaces match</div>
+              <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 10, fontWeight: 500 }}>Select your organisation below</div>
             </div>
           </>
         )}
 
-        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 28, backdropFilter: 'blur(20px)' }}>
+        <div style={{
+          background: 'rgba(255,255,255,0.04)', border: `1px solid ${step === 'found' ? 'rgba(139,92,246,0.35)' : 'rgba(255,255,255,0.1)'}`,
+          borderRadius: 24, padding: 28, backdropFilter: 'blur(20px)',
+          boxShadow: step === 'found' ? '0 0 60px 10px rgba(139,92,246,0.18)' : 'none',
+        }}>
 
           {/* STEP: ORG NAME */}
           {step === 'org' && (
@@ -161,16 +179,25 @@ export default function OrgLookup() {
           {/* STEP: FOUND */}
           {step === 'found' && org && !Array.isArray(org) && (
             <div style={{ textAlign: 'center' }}>
-              <div style={{ width: 64, height: 64, borderRadius: 18, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', overflow: 'hidden', border: `2px solid ${org.primary_color || '#3B82F6'}30` }}>
-                <img src={org.logo_url || FALLBACK_LOGO_URL} alt={org.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <div style={{
+                width: 88, height: 88, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 18px', border: `2px solid ${org.primary_color || '#8B5CF6'}`, boxShadow: `0 0 24px 2px ${org.primary_color || '#8B5CF6'}40`,
+                background: '#0B0F27', overflow: 'hidden',
+              }}>
+                <img src={org.logo_url || FALLBACK_LOGO_URL} alt={org.name} style={{ width: '78%', height: '78%', objectFit: 'contain' }} />
               </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Workspace found</div>
-              <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 4 }}>{org.name}</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginBottom: 28 }}>{org.slug}.launchsession.co.uk</div>
-              <button onClick={() => handleContinue(org)} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginBottom: 12, fontFamily: font, boxShadow: '0 8px 24px rgba(59,130,246,0.3)' }}>
-                Continue to {org.name} →
+              <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 10 }}>{org.name}</div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 99, padding: '5px 12px', fontSize: 12, fontWeight: 700, color: '#C4B5FD', marginBottom: 10 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2l7 4v6c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+                Verified Organisation
+              </div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 24 }}>{org.slug}.launchsession.co.uk</div>
+              <button onClick={() => handleContinue(org)} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: font, boxShadow: '0 8px 24px rgba(59,130,246,0.3)' }}>
+                Continue to Sign In →
               </button>
-              <button onClick={() => { setStep('org'); setError(''); setOrgName('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer', fontFamily: font }}>Not your workspace?</button>
             </div>
           )}
 
@@ -196,6 +223,35 @@ export default function OrgLookup() {
             </div>
           )}
         </div>
+
+        {step === 'found' && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '22px 0' }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', fontWeight: 700 }}>OR</div>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+            </div>
+
+            <button onClick={() => { setStep('org'); setError(''); setOrgName('') }} style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 16px', borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.7)',
+              fontSize: 14.5, fontWeight: 600, cursor: 'pointer', fontFamily: font,
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+              </svg>
+              <span style={{ flex: 1, textAlign: 'left' }}>Sign in to a different organisation</span>
+              <span style={{ color: 'rgba(255,255,255,0.3)' }}>→</span>
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 20, fontSize: 12.5, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+              </svg>
+              Your data is secure and your organisation is private.
+            </div>
+          </>
+        )}
 
         {step === 'org' && (
           <>
