@@ -1,8 +1,10 @@
 import React from 'react'
 
+// Rocket-only illustration (no clouds baked in — those live in CloudLayer so they
+// can span the full width of the hero independently of this graphic's size/position).
 export default function RocketIllustration({ width = 200 }) {
   return (
-    <svg width={width} viewBox="0 0 240 260" style={{ display: 'block', margin: '0 auto', overflow: 'visible' }}>
+    <svg width={width} viewBox="65 50 155 190" style={{ display: 'block', overflow: 'visible' }}>
       <defs>
         <linearGradient id="rocketBody" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#FFFFFF" />
@@ -17,24 +19,8 @@ export default function RocketIllustration({ width = 200 }) {
           <stop offset="45%" stopColor="#FB923C" />
           <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
         </radialGradient>
-        <radialGradient id="cloudGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#C4D3FF" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#6D7FE0" stopOpacity="0" />
-        </radialGradient>
-        <filter id="softBlur"><feGaussianBlur stdDeviation="6" /></filter>
         <filter id="flameBlur"><feGaussianBlur stdDeviation="3" /></filter>
       </defs>
-
-      {/* Cloud puffs */}
-      <g filter="url(#softBlur)">
-        <ellipse cx="70" cy="215" rx="60" ry="26" fill="url(#cloudGrad)" />
-        <ellipse cx="130" cy="228" rx="70" ry="28" fill="url(#cloudGrad)" />
-        <ellipse cx="185" cy="205" rx="45" ry="22" fill="url(#cloudGrad)" />
-      </g>
-
-      {/* Vapor trail */}
-      <path d="M 150 190 C 110 205, 90 218, 55 224" stroke="#93A9F0" strokeOpacity="0.35" strokeWidth="10"
-        strokeLinecap="round" fill="none" filter="url(#softBlur)" />
 
       {/* Rocket group, angled for an ascending look */}
       <g transform="translate(120 128) rotate(-28)">

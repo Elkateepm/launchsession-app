@@ -14,7 +14,7 @@ function mulberry32(seed) {
 export default function SpaceBackground({ height = 620 }) {
   const stars = useMemo(() => {
     const rand = mulberry32(42)
-    return Array.from({ length: 55 }).map((_, i) => ({
+    return Array.from({ length: 85 }).map((_, i) => ({
       id: i,
       top: rand() * 100,
       left: rand() * 100,
@@ -42,7 +42,16 @@ export default function SpaceBackground({ height = 620 }) {
         @keyframes ls-twinkle { 0%,100%{opacity:0.25} 50%{opacity:0.9} }
       `}</style>
 
-      {/* Planet, cropped in the top-left corner */}
+      {/* Soft ambient glow that carries the eye down toward the rocket illustration,
+          so that area reads as part of the same scene rather than a plain gap */}
+      <div style={{
+        position: 'absolute', top: '38%', left: '50%', transform: 'translateX(-50%)',
+        width: 420, height: 420, borderRadius: '50%',
+        background: 'radial-gradient(ellipse, rgba(99,102,241,0.16) 0%, rgba(59,130,246,0.06) 45%, transparent 72%)',
+      }} />
+
+      {/* Planet, cropped in the top-left corner, with a softened outer rim so the
+          edge blends into the navy rather than reading as a hard-cut circle */}
       <div style={{
         position: 'absolute', top: -170, left: -140, width: 380, height: 380, borderRadius: '50%',
         background: 'radial-gradient(circle at 62% 38%, #7C6BF5 0%, #4C3FA6 32%, #241E5C 60%, #0D0B2A 82%)',
@@ -58,18 +67,30 @@ export default function SpaceBackground({ height = 620 }) {
           transform: 'rotate(-8deg)', borderRadius: 3,
         }} />
       </div>
+      {/* Atmospheric rim glow, slightly larger than the planet and heavily blurred,
+          so the transition from planet to background has no visible seam */}
+      <div style={{
+        position: 'absolute', top: -190, left: -160, width: 420, height: 420, borderRadius: '50%',
+        background: 'radial-gradient(circle at 62% 38%, transparent 68%, rgba(124,107,245,0.22) 78%, transparent 92%)',
+        filter: 'blur(18px)',
+      }} />
 
-      {/* Comet arc, upper right */}
+      {/* Small secondary moon, upper right */}
+      <div style={{
+        position: 'absolute', top: 78, right: 42, width: 46, height: 46, borderRadius: '50%',
+        background: 'radial-gradient(circle at 38% 32%, #4C4A7A 0%, #2E2C54 45%, #171630 85%)',
+        boxShadow: '0 0 18px 2px rgba(76,74,122,0.25)',
+      }} />
+
+      {/* Comet arc, upper right, short and understated */}
       <svg viewBox="0 0 400 480" width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0 }}>
         <defs>
           <linearGradient id="cometFade" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#93C5FD" stopOpacity="0" />
-            <stop offset="55%" stopColor="#93C5FD" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#DBEAFE" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#DBEAFE" stopOpacity="0.85" />
           </linearGradient>
         </defs>
-        <path d="M 250 10 C 320 60, 355 120, 380 210" stroke="url(#cometFade)" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-        <circle cx="380" cy="210" r="2.6" fill="#EFF6FF" />
+        <path d="M 232 78 L 288 108" stroke="url(#cometFade)" strokeWidth="1.6" fill="none" strokeLinecap="round" />
       </svg>
 
       {/* Small sparkle accents */}
@@ -92,7 +113,7 @@ export default function SpaceBackground({ height = 620 }) {
 
       {/* Fade to solid navy at the bottom so content below sits on a clean background */}
       <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: 0, height: '45%',
+        position: 'absolute', left: 0, right: 0, bottom: 0, height: '38%',
         background: 'linear-gradient(180deg, transparent 0%, #060B18 100%)',
       }} />
     </div>

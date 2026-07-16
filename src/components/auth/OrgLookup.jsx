@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import SpaceBackground from './SpaceBackground'
 import RocketIllustration from './RocketIllustration'
+import CloudLayer from './CloudLayer'
 
 // Shown wherever an org logo would go, whenever the org hasn't set one yet
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -58,7 +59,7 @@ export default function OrgLookup() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#060B18', display: 'flex', justifyContent: 'center', padding: '56px 20px 32px', position: 'relative', overflow: 'hidden', fontFamily: font }}>
+    <div style={{ minHeight: '100vh', background: '#060B18', display: 'flex', justifyContent: 'center', padding: '48px 20px 32px', position: 'relative', overflow: 'hidden', fontFamily: font }}>
 
       <SpaceBackground height={620} />
 
@@ -68,31 +69,56 @@ export default function OrgLookup() {
         <div style={{ textAlign: 'center', marginBottom: 6 }}>
           <img src="/logo.png" alt="LaunchSession" style={{ width: 76, height: 76, objectFit: 'contain', display: 'block', margin: '0 auto 14px' }} />
           <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: -0.5, color: '#fff' }}>
-            Launch<span style={{ color: '#60A5FA' }}>Session</span>
+            Launch<span style={{ background: 'linear-gradient(135deg,#93C5FD,#C4B5FD)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Session</span>
           </div>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>
             Built for youth &amp; community organisations
           </div>
         </div>
 
-        {/* Rocket hero illustration */}
-        <div style={{ margin: '4px 0 8px' }}>
-          <RocketIllustration width={190} />
-        </div>
+        {step === 'org' ? (
+          <>
+            {/* Headline (left) + ascending rocket (right) */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginTop: 8 }}>
+              <div style={{ flex: '1 1 auto', textAlign: 'left', minWidth: 0 }}>
+                <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: -0.9, lineHeight: 1.15, color: '#fff' }}>
+                  Let&apos;s get you to<br />
+                  <span style={{ background: 'linear-gradient(135deg,#60A5FA,#A78BFA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>your workspace</span>
+                </div>
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 10, fontWeight: 500 }}>
+                  Enter your organisation name to continue
+                </div>
+              </div>
+              <div style={{ flex: '0 0 auto', marginBottom: -6 }}>
+                <RocketIllustration width={128} />
+              </div>
+            </div>
 
-        {/* Headline */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: -0.8, lineHeight: 1.18, color: '#fff' }}>
-            {step === 'org' && <>Let&apos;s get you to your <span style={{ background: 'linear-gradient(135deg,#60A5FA,#A78BFA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>workspace</span></>}
-            {step === 'found' && <>Almost there</>}
-            {step === 'multiple' && <>A few workspaces match</>}
-          </div>
-          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 10, fontWeight: 500 }}>
-            {step === 'org' && 'Enter your organisation name to continue'}
-            {step === 'found' && 'Confirm your workspace to sign in'}
-            {step === 'multiple' && 'Select your organisation below'}
-          </div>
-        </div>
+            {/* Cloud horizon, spanning full width beneath the rocket */}
+            <div style={{ marginTop: -18, marginBottom: 22 }}>
+              <CloudLayer height={110} />
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Rocket hero illustration */}
+            <div style={{ margin: '4px 0 8px', textAlign: 'center' }}>
+              <RocketIllustration width={205} />
+            </div>
+
+            {/* Headline */}
+            <div style={{ textAlign: 'center', marginBottom: 26 }}>
+              <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: -0.8, lineHeight: 1.18, color: '#fff' }}>
+                {step === 'found' && <>Almost there</>}
+                {step === 'multiple' && <>A few workspaces match</>}
+              </div>
+              <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 10, fontWeight: 500 }}>
+                {step === 'found' && 'Confirm your workspace to sign in'}
+                {step === 'multiple' && 'Select your organisation below'}
+              </div>
+            </div>
+          </>
+        )}
 
         <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 28, backdropFilter: 'blur(20px)' }}>
 
@@ -142,14 +168,6 @@ export default function OrgLookup() {
                 <button type="submit" disabled={loading || !orgName.trim()} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading || !orgName.trim() ? 'default' : 'pointer', opacity: loading || !orgName.trim() ? 0.6 : 1, fontFamily: font, boxShadow: '0 8px 24px rgba(59,130,246,0.3)' }}>
                   {loading ? 'Searching...' : 'Find my workspace →'}
                 </button>
-
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 18, fontSize: 12.5, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2l7 4v6c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z" />
-                    <path d="M9 12l2 2 4-4" />
-                  </svg>
-                  Secure &middot; Your data is protected
-                </div>
               </form>
             </div>
           )}
@@ -193,8 +211,53 @@ export default function OrgLookup() {
           )}
         </div>
 
+        {step === 'org' && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 22, fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l7 4v6c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
+              Secure. Private. Built for organisations like yours.
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 26 }}>
+              {[
+                { icon: 'lock', bg: 'linear-gradient(135deg,#8B5CF6,#6366F1)', title: 'Secure access', sub: 'Your data stays safe' },
+                { icon: 'people', bg: 'linear-gradient(135deg,#3B4276,#252B52)', title: 'Built for teams', sub: 'Collaborate with ease' },
+                { icon: 'rocket', bg: 'linear-gradient(135deg,#8B5CF6,#6366F1)', title: 'Save time', sub: 'Focus on what matters' },
+              ].map(f => (
+                <div key={f.title} style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, flexShrink: 0 }}>
+                    {f.icon === 'lock' && (
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                      </svg>
+                    )}
+                    {f.icon === 'people' && (
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="9" cy="8" r="3" /><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6" />
+                        <circle cx="17" cy="9" r="2.4" /><path d="M16 14.2c2.9.5 5 2.6 5 5.3" />
+                      </svg>
+                    )}
+                    {f.icon === 'rocket' && (
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2c3 2 5 6 5 10 0 2-1 4-1 4l-4 1-4-1s-1-2-1-4c0-4 2-8 5-10Z" />
+                        <circle cx="12" cy="10" r="1.6" fill="#fff" stroke="none" />
+                        <path d="M9 15l-3 3 1 3 3-3M15 15l3 3-1 3-3-3" />
+                      </svg>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 2 }}>{f.title}</div>
+                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.4)', lineHeight: 1.35 }}>{f.sub}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
         <button onClick={() => window.location.href = 'https://www.launchsession.co.uk/landing.html'} style={{
-          width: '100%', marginTop: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
+          width: '100%', marginTop: 28, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: 14, padding: '13px 16px', color: 'rgba(255,255,255,0.55)', fontSize: 13.5, fontWeight: 600,
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: font,
         }}>
