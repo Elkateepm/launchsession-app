@@ -76,12 +76,12 @@ export default function OrgLookup() {
         </div>
 
         {step === 'org' ? (
-          <div style={{ marginTop: 8, marginBottom: 22 }}>
-            <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: -0.9, lineHeight: 1.15, color: '#fff', textAlign: 'left' }}>
+          <div style={{ marginTop: 8, marginBottom: 22, textAlign: 'center' }}>
+            <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: -0.9, lineHeight: 1.15, color: '#fff' }}>
               Let&apos;s get you to<br />
               <span style={{ background: 'linear-gradient(135deg,#60A5FA,#A78BFA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>your workspace</span>
             </div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 10, fontWeight: 500, textAlign: 'left' }}>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 10, fontWeight: 500 }}>
               Enter your organisation name to continue
             </div>
           </div>
