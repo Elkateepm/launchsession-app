@@ -12,6 +12,17 @@ import FundraisingCalendar from './FundraisingCalendar'
 import DocumentVault from './DocumentVault'
 import ApplicationTracker from './ApplicationTracker'
 import successCheckAnimation from '../../assets/lottie/success-check.json'
+import { LS } from './fundraisingShared'
+import FundraisingHeader from './hub/FundraisingHeader'
+import FundraisingHero from './hub/FundraisingHero'
+import FundraisingQuickActions from './hub/FundraisingQuickActions'
+import FundraisingKpis from './hub/FundraisingKpis'
+import ActiveCampaignsPanel from './hub/ActiveCampaignsPanel'
+import FundingOpportunitiesPanel from './hub/FundingOpportunitiesPanel'
+import FundingPipelinePanel from './hub/FundingPipelinePanel'
+import UpcomingDeadlinesStrip from './hub/UpcomingDeadlinesStrip'
+import ImpactSnapshotPanel from './hub/ImpactSnapshotPanel'
+import FundraisingAssistantCard from './hub/FundraisingAssistantCard'
 
 const CAMPAIGN_TYPES = [
   { key: 'general',    label: 'General fundraiser' },
@@ -246,22 +257,6 @@ function Thermometer({ raised, target, thin }) {
   )
 }
 
-function Sparkline({ values, color, width = 140, height = 36 }) {
-  const max = Math.max(...values, 1)
-  const min = Math.min(...values, 0)
-  const range = max - min || 1
-  const step = width / Math.max(values.length - 1, 1)
-  const points = values.map((v, i) => `${i * step},${height - ((v - min) / range) * height}`).join(' ')
-  const areaPoints = `0,${height} ${points} ${width},${height}`
-  return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
-      <polygon points={areaPoints} fill={color} opacity={0.12} />
-      <motion.polyline points={points} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, ease: 'easeOut' }} />
-    </svg>
-  )
-}
-
 function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
   const isMobile = useIsMobile()
   const [donations, setDonations] = useState([])
@@ -467,6 +462,8 @@ export default function Fundraising({ org, isAdmin }) {
   const [latestDonationByCampaign, setLatestDonationByCampaign] = useState({})
   const [donationHistory, setDonationHistory] = useState([])
   const [previewGrants, setPreviewGrants] = useState([])
+  const [deadlineEvents, setDeadlineEvents] = useState([])
+  const [deadlinesLoading, setDeadlinesLoading] = useState(true)
   const [loading, setLoading] = useState(true)
   const [selectedCampaign, setSelectedCampaign] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
@@ -493,6 +490,33 @@ export default function Fundraising({ org, isAdmin }) {
 
   useEffect(() => { load() }, [load])
 
+  // Powers both the KPI/hero "next deadline" figures and the Upcoming Deadlines
+  // strip — fetched once here and passed down, rather than re-queried per card.
+  const loadDeadlines = useCallback(async () => {
+    setDeadlinesLoading(true)
+    const [{ data: savedGrants }, { data: campaignsWithEnd }, { data: applications }] = await Promise.all([
+      supabase.from('grant_saves').select('grant_id, grants(name, funder_name, deadline_type, deadline_date)').eq('org_id', org.id),
+      supabase.from('fundraising_campaigns').select('id, name, end_date').eq('org_id', org.id).not('end_date', 'is', null),
+      supabase.from('grant_applications').select('id, custom_name, target_date, stage, grants(name, funder_name)').eq('org_id', org.id).not('target_date', 'is', null),
+    ])
+    const evts = []
+    ;(savedGrants || []).forEach(row => {
+      const g = row.grants
+      if (g?.deadline_type === 'fixed' && g.deadline_date) evts.push({ type: 'grant', date: g.deadline_date, title: g.name, subtitle: g.funder_name })
+    })
+    ;(campaignsWithEnd || []).forEach(c => evts.push({ type: 'campaign', date: c.end_date, title: c.name, subtitle: 'Campaign ends' }))
+    ;(applications || []).forEach(a => {
+      if (a.stage === 'submitted' || a.stage === 'awarded' || a.stage === 'declined') return
+      evts.push({ type: 'application', date: a.target_date, title: a.grants?.name || a.custom_name || 'Application', subtitle: 'Your target date' })
+    })
+    const now = new Date()
+    const future = evts.filter(e => new Date(e.date) >= now).sort((a, b) => new Date(a.date) - new Date(b.date))
+    setDeadlineEvents(future)
+    setDeadlinesLoading(false)
+  }, [org.id])
+
+  useEffect(() => { loadDeadlines() }, [loadDeadlines])
+
   const createCampaign = async () => {
     if (!newCampaign.name) return
     setCreating(true)
@@ -511,38 +535,10 @@ export default function Fundraising({ org, isAdmin }) {
     if (data) { setCampaigns(c => [{ ...data, fundraising_donations: [{ count: 0 }] }, ...c]); setShowCreate(false); setNewCampaign({ name: '', description: '', campaign_type: 'general', target_amount: '', start_date: new Date().toISOString().slice(0, 10), end_date: '' }) }
   }
 
-  const totalRaised = campaigns.reduce((s, c) => s + (c.raised || 0), 0)
   const totalTarget = campaigns.reduce((s, c) => s + (c.target_amount || 0), 0)
-  const totalDonations = campaigns.reduce((s, c) => s + (c.fundraising_donations?.[0]?.count || 0), 0)
-  const avgDonation = totalDonations > 0 ? totalRaised / totalDonations : null
   const completedCount = campaigns.filter(c => statusOf(c).key === 'completed').length
   const successRate = completedCount > 0 ? Math.round((campaigns.filter(c => statusOf(c).key === 'completed' && (c.raised || 0) >= (c.target_amount || Infinity)).length / completedCount) * 100) : null
   const insights = useMemo(() => buildFundraisingInsights(campaigns, latestDonationByCampaign), [campaigns, latestDonationByCampaign])
-
-  const weeklyRaised = useMemo(() => {
-    const now = new Date()
-    const buckets = Array(8).fill(0)
-    donationHistory.forEach(d => {
-      const weeksAgo = Math.floor((now - new Date(d.created_at)) / (7 * DAY_MS))
-      if (weeksAgo >= 0 && weeksAgo < 8) buckets[7 - weeksAgo] += Number(d.amount) || 0
-    })
-    return buckets
-  }, [donationHistory])
-
-  const monthDelta = useMemo(() => {
-    const now = new Date()
-    const cutoff30 = new Date(now - 30 * DAY_MS)
-    const cutoff60 = new Date(now - 60 * DAY_MS)
-    let recent = 0, prior = 0
-    donationHistory.forEach(d => {
-      const dt = new Date(d.created_at)
-      if (dt >= cutoff30) recent += Number(d.amount) || 0
-      else if (dt >= cutoff60) prior += Number(d.amount) || 0
-    })
-    if (prior > 0) return Math.round(((recent - prior) / prior) * 100)
-    if (recent > 0) return 'new'
-    return null
-  }, [donationHistory])
 
   const recentActivity = useMemo(() => {
     const campaignName = id => campaigns.find(c => c.id === id)?.name || 'a campaign'
@@ -555,67 +551,116 @@ export default function Fundraising({ org, isAdmin }) {
     }))
     return [...donationEvents, ...milestoneEvents].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6)
   }, [donationHistory, campaigns])
+
+  // ── Fundraising Hub redesign: derived stats for the hero/KPI/focus cards ──
+  const raisedThisYear = useMemo(() => {
+    const y = new Date().getFullYear()
+    return donationHistory.filter(d => new Date(d.created_at).getFullYear() === y).reduce((s, d) => s + (Number(d.amount) || 0), 0)
+  }, [donationHistory])
+
+  const yearDelta = useMemo(() => {
+    const now = new Date()
+    const thisYear = now.getFullYear()
+    const dayOfYear = Math.floor((now - new Date(thisYear, 0, 1)) / DAY_MS)
+    let thisYearTotal = 0, lastYearToDateTotal = 0
+    donationHistory.forEach(d => {
+      const dt = new Date(d.created_at)
+      if (dt.getFullYear() === thisYear) thisYearTotal += Number(d.amount) || 0
+      else if (dt.getFullYear() === thisYear - 1) {
+        const doy = Math.floor((dt - new Date(thisYear - 1, 0, 1)) / DAY_MS)
+        if (doy <= dayOfYear) lastYearToDateTotal += Number(d.amount) || 0
+      }
+    })
+    if (lastYearToDateTotal > 0) return Math.round(((thisYearTotal - lastYearToDateTotal) / lastYearToDateTotal) * 100)
+    if (thisYearTotal > 0) return 'new'
+    return null
+  }, [donationHistory])
+
+  const endingSoonCount = useMemo(() => campaigns.filter(c => {
+    const status = statusOf(c)
+    if (status.key !== 'active' || !c.end_date) return false
+    const days = Math.ceil((new Date(c.end_date) - new Date()) / DAY_MS)
+    return days >= 0 && days <= 7
+  }).length, [campaigns])
+
+  const upcomingDeadlinesCount = deadlineEvents.length
+  const nextDeadlineDays = deadlineEvents.length > 0 ? Math.max(0, Math.ceil((new Date(deadlineEvents[0].date) - new Date()) / DAY_MS)) : null
+
+  const focusItems = useMemo(() => {
+    const items = []
+    if (deadlineEvents.length > 0) {
+      const first = deadlineEvents[0]
+      const days = Math.max(0, Math.ceil((new Date(first.date) - new Date()) / DAY_MS))
+      if (days <= 14) items.push({ icon: 'clock', text: `${first.title} closes in ${days} day${days === 1 ? '' : 's'}.` })
+    }
+    insights.filter(b => b.tone === 'warning').forEach(b => items.push({ icon: 'alert-triangle', text: b.text }))
+    return items.slice(0, 3)
+  }, [deadlineEvents, insights])
+
   const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
+  const reportsRef = React.useRef(null)
+  const scrollToReports = () => reportsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const [shareFeedback, setShareFeedback] = useState(false)
+
+  const shareCampaign = async () => {
+    const target = campaigns.find(c => statusOf(c).key === 'active') || campaigns[0]
+    if (!target) { setShowCreate(true); return }
+    const raised = target.raised || 0
+    const targetAmt = target.target_amount || 0
+    const text = `Help us reach our goal for "${target.name}"! We've raised £${raised.toLocaleString()}${targetAmt ? ` of £${targetAmt.toLocaleString()}` : ''} so far.`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: target.name, text })
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text)
+        setShareFeedback(true)
+        setTimeout(() => setShareFeedback(false), 2500)
+      }
+    } catch (err) { /* user cancelled the native share sheet */ }
+  }
 
   if (selectedCampaign) return <CampaignDetail campaign={selectedCampaign} org={org} isAdmin={isAdmin} onBack={() => { setSelectedCampaign(null); load() }} onUpdate={updated => { setCampaigns(c => c.map(x => x.id === updated.id ? { ...x, ...updated } : x)); setSelectedCampaign(updated) }} />
 
   const overviewContent = (
     <>
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>Loading...</div>
+        <div style={{ textAlign: 'center', padding: 40, color: LS.muted }}>Loading...</div>
       ) : (
         <>
-          {/* Hero ledger */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-            style={{ padding: '24px 26px', borderRadius: 16, marginBottom: 20, background: '#fff', border: '1px solid #E5E3DC' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-              <div>
-                <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9B9890', marginBottom: 8 }}>Total raised</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                  <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 46, lineHeight: 1, color: '#1C2333', letterSpacing: '-0.01em' }}>£<AnimatedNumber value={totalRaised} /></div>
-                  {monthDelta !== null && (
-                    <span style={{ fontSize: 12, fontWeight: 600, color: monthDelta === 'new' || monthDelta >= 0 ? '#16803C' : '#B91C1C' }}>
-                      {monthDelta === 'new' ? 'New this month' : `${monthDelta >= 0 ? '▲' : '▼'} ${Math.abs(monthDelta)}% vs last month`}
-                    </span>
-                  )}
-                </div>
-              </div>
-              {weeklyRaised.some(v => v > 0) && <Sparkline values={weeklyRaised} color={GOLD} />}
+          {shareFeedback && (
+            <div style={{ position: 'fixed', top: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 200, background: LS.text, color: '#fff', padding: '10px 18px', borderRadius: 12, fontSize: 12.5, fontWeight: 600, boxShadow: '0 10px 26px rgba(0,0,0,0.25)' }}>
+              Campaign summary copied — paste it anywhere to share
             </div>
-            <div style={{ marginTop: 18 }}>
-              {totalTarget > 0 ? (
-                <>
-                  <Thermometer raised={totalRaised} target={totalTarget} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                    <span style={{ fontSize: 12, color: '#9B9890' }}>{Math.min(Math.round((totalRaised / totalTarget) * 100), 100)}% of £{totalTarget.toLocaleString()} across all campaigns</span>
-                    <span style={{ fontSize: 12, color: '#9B9890' }}>{Math.max(totalTarget - totalRaised, 0).toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })} remaining</span>
-                  </div>
-                </>
-              ) : (
-                <div style={{ fontSize: 12, color: '#9B9890' }}>No campaign targets set yet</div>
-              )}
-            </div>
-          </motion.div>
+          )}
 
-          {/* KPI tiles */}
-          <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07 } } }}
-            style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 10, marginBottom: 28 }}>
-            {[
-              { label: 'Campaigns', value: campaigns.length, prefix: '', color: '#1C2333' },
-              { label: 'Donations', value: totalDonations, prefix: '', color: '#1C2333' },
-              { label: 'Avg. donation', value: avgDonation !== null ? Math.round(avgDonation) : null, prefix: '£', color: '#92640C' },
-              { label: 'Success rate', value: successRate, prefix: '', suffix: '%', color: '#16803C' },
-            ].map(s => (
-              <motion.div key={s.label} variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } }}
-                whileHover={{ y: -2, boxShadow: '0 6px 16px rgba(28,35,51,0.06)' }}
-                style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 14, padding: '16px 18px', transition: 'box-shadow 0.2s' }}>
-                <div style={{ fontSize: 22, fontWeight: 600, color: s.color, fontVariantNumeric: 'tabular-nums', fontFamily: 'Georgia, "Times New Roman", serif' }}>
-                  {s.value === null ? '—' : <>{s.prefix}<AnimatedNumber value={s.value} />{s.suffix || ''}</>}
-                </div>
-                <div style={{ fontSize: 11.5, letterSpacing: '0.03em', color: '#9B9890', marginTop: 4 }}>{s.label}</div>
-              </motion.div>
-            ))}
-          </motion.div>
+          <FundraisingHero
+            campaigns={campaigns}
+            donationHistory={donationHistory}
+            totalTarget={totalTarget}
+            focusItems={focusItems}
+            onReviewFocus={() => { deadlineEvents.length > 0 ? setActiveTab('calendar') : scrollToReports() }}
+          />
+
+          <FundraisingQuickActions
+            isAdmin={isAdmin}
+            onNewCampaign={() => setShowCreate(true)}
+            onFindFunding={() => setActiveTab('discover')}
+            onNewApplication={() => setActiveTab('applications')}
+            onDocuments={() => setActiveTab('documents')}
+            onShareCampaign={shareCampaign}
+            onReports={scrollToReports}
+          />
+
+          <FundraisingKpis
+            raisedThisYear={raisedThisYear}
+            monthDelta={yearDelta}
+            activeCount={campaigns.filter(c => statusOf(c).key === 'active').length}
+            endingSoonCount={endingSoonCount}
+            upcomingDeadlinesCount={upcomingDeadlinesCount}
+            nextDeadlineDays={nextDeadlineDays}
+            successRate={successRate}
+            successRateSampleSize={completedCount}
+          />
 
           {/* Create campaign */}
           {isAdmin && showCreate && (
@@ -643,70 +688,36 @@ export default function Fundraising({ org, isAdmin }) {
                 <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Description</label><textarea value={newCampaign.description} onChange={e => setNewCampaign(n => ({ ...n, description: e.target.value }))} rows={2} placeholder="What are you raising money for?" style={{ ...inp, resize: 'none' }} /></div>
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <button onClick={createCampaign} disabled={creating || !newCampaign.name} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: creating || !newCampaign.name ? '#9CA3AF' : primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{creating ? 'Creating...' : 'Launch campaign'}</button>
+                <button onClick={createCampaign} disabled={creating || !newCampaign.name} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: creating || !newCampaign.name ? '#9CA3AF' : LS.purple, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{creating ? 'Creating...' : 'Launch campaign'}</button>
                 <button onClick={() => setShowCreate(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               </div>
               {createError && <div style={{ marginTop: 10, fontSize: 12, color: '#B91C1C' }}>Couldn't create the campaign: {createError}</div>}
             </div>
           )}
 
-          {/* Visual analysis */}
+          {/* Main content grid: campaigns / opportunities / pipeline */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16, marginBottom: 16 }}>
+            <ActiveCampaignsPanel campaigns={campaigns} isMobile={isMobile} isAdmin={isAdmin}
+              onSelect={setSelectedCampaign} onNewCampaign={() => setShowCreate(true)} />
+            <FundingOpportunitiesPanel org={org} campaigns={campaigns}
+              onOpen={() => setActiveTab('discover')} onViewAll={() => setActiveTab('discover')} />
+            <FundingPipelinePanel org={org} onViewPipeline={() => setActiveTab('applications')} />
+          </div>
+
+          {/* Lower row: deadlines / impact / assistant */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+            <UpcomingDeadlinesStrip events={deadlineEvents} loading={deadlinesLoading} onViewCalendar={() => setActiveTab('calendar')} />
+            <ImpactSnapshotPanel org={org} />
+            <FundraisingAssistantCard bullets={insights} onViewAll={scrollToReports} />
+          </div>
+
+          {/* Reports & Insights — existing analytics, activity feed, full insights panel and a Discover Funding preview, preserved from the previous layout */}
+          <div ref={reportsRef} style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10, paddingTop: 4 }}>Reports &amp; Insights</div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
             <FundingMixChart campaigns={campaigns} />
             <CampaignComparisonChart campaigns={campaigns} />
           </div>
           <GivingHeatmap donations={donationHistory} />
-
-          {/* Campaigns */}
-          {campaigns.length === 0 ? (
-            <>
-              <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Your first campaign will look like this</div>
-              <div style={{ border: '1px dashed #d1d0c8', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 16, opacity: 0.6, marginBottom: 24 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, color: '#6B7280' }}>Summer kit fund</div>
-                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>Target · 30 days left</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 16, color: '#6B7280' }}>£0</div>
-                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>raised</div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Campaigns</div>
-              <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }} style={{ marginBottom: 28 }}>
-                {campaigns.map((c) => {
-                  const status = statusOf(c)
-                  const raised = c.raised || 0
-                  const target = c.target_amount || 0
-                  const pct = target > 0 ? Math.min((raised / target) * 100, 100) : 0
-                  const statusBg = { active: '#E7F6EC', planning: '#F3F2EE', completed: '#F3F2EE' }[status.key]
-                  const statusColor = { active: '#16803C', planning: '#6B7280', completed: '#6B7280' }[status.key]
-                  const accent = { active: '#16A34A', planning: '#D1D5DB', completed: '#D1D5DB' }[status.key]
-                  return (
-                    <motion.div key={c.id} variants={{ hidden: { opacity: 0, x: -8 }, show: { opacity: 1, x: 0 } }}
-                      onClick={() => setSelectedCampaign(c)} whileHover={{ x: 2, backgroundColor: 'rgba(0,0,0,0.015)' }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0 14px 12px', borderLeft: `3px solid ${accent}`, borderBottom: '0.5px solid #e5e7eb', cursor: 'pointer' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                          <span style={{ fontSize: 14, color: '#1C2333', fontWeight: 500 }}>{c.name}</span>
-                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: statusBg, color: statusColor, fontWeight: 600 }}>{status.label}</span>
-                        </div>
-                        <div style={{ fontSize: 12, color: '#9CA3AF' }}>
-                          {target > 0 ? `£${raised.toLocaleString()} of £${target.toLocaleString()}` : `£${raised.toLocaleString()} raised`} · {daysLeftLabel(c, status)}
-                        </div>
-                      </div>
-                      {target > 0 && !isMobile && (
-                        <div style={{ width: 120, flexShrink: 0 }}><Thermometer raised={raised} target={target} thin /></div>
-                      )}
-                      <div style={{ fontSize: 13, color: '#6B7280', width: 36, textAlign: 'right', flexShrink: 0 }}>{target > 0 ? `${pct.toFixed(0)}%` : '—'}</div>
-                    </motion.div>
-                  )
-                })}
-              </motion.div>
-            </>
-          )}
 
           {/* Recent activity */}
           {recentActivity.length > 0 && (
@@ -753,24 +764,17 @@ export default function Fundraising({ org, isAdmin }) {
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 4 }}>Fundraising · {org?.name}</div>
-          <div style={{ fontSize: 15, color: '#6B7280' }}>{campaigns.filter(c => statusOf(c).key === 'active').length} active campaign{campaigns.filter(c => statusOf(c).key === 'active').length !== 1 ? 's' : ''}</div>
-        </div>
-        {activeTab === 'overview' && isAdmin && <button onClick={() => setShowCreate(true)} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ New campaign</button>}
-      </div>
+      <FundraisingHeader isAdmin={isAdmin} onNewCampaign={() => setShowCreate(true)} onOpenAssistant={scrollToReports} />
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid #e5e7eb', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: LS.bg, border: `1px solid ${LS.border}`, borderRadius: 13, padding: 4, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
-            style={{ position: 'relative', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: activeTab === t.key ? primary : '#9CA3AF', whiteSpace: 'nowrap', marginBottom: -1 }}>
+            style={{
+              position: 'relative', padding: '9px 16px', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 12.5, fontWeight: 700,
+              color: activeTab === t.key ? '#fff' : LS.muted, background: activeTab === t.key ? LS.gradient : 'transparent',
+              whiteSpace: 'nowrap', transition: 'background 0.2s, color 0.2s', flexShrink: 0,
+            }}>
             {t.label}
-            {activeTab === t.key && (
-              <motion.div layoutId="fundraising-tab-indicator" transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                style={{ position: 'absolute', left: 0, right: 0, bottom: -1, height: 2, background: primary, borderRadius: 2 }} />
-            )}
           </button>
         ))}
       </div>
@@ -787,3 +791,4 @@ export default function Fundraising({ org, isAdmin }) {
     </div>
   )
 }
+
