@@ -1001,16 +1001,18 @@ export default function Dashboard({ session, org }) {
               onClick={() => setShowLaunchMenu(false)}
               style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,26,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 10001 }}
             >
-              {/* Anchor point — sits exactly at the FAB's center; every item/line below is positioned relative to this */}
+              {/* Anchor point — sits exactly at the FAB's measured centre (not CSS 50%, which can
+                  drift off the FAB if any ancestor has a transform that changes the containing
+                  block for position:fixed); every item/line below is positioned relative to this */}
               <div
                 onClick={e => e.stopPropagation()}
-                style={{ position: 'fixed', left: '50%', bottom: 'calc(73px + env(safe-area-inset-bottom, 0px))', width: 0, height: 0 }}
+                style={{ position: 'fixed', left: dialCenterRef.current.x, top: dialCenterRef.current.y, width: 0, height: 0 }}
               >
                 {(() => {
                   // Six evenly-spaced positions across a tight 150° arc above the FAB — a compact
                   // dial rather than the old wide two-tier fan. Angle 0 = straight up; positive
                   // rotates toward +dx (matches the atan2(dx,dy) convention used for the connector lines).
-                  const RADIUS = 150
+                  const RADIUS = 185
                   const ANGLES = [-75, -45, -15, 15, 45, 75]
                   const rawSlots = ANGLES.map(deg => {
                     const rad = deg * (Math.PI / 180)
