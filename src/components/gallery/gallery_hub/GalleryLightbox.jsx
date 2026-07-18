@@ -10,6 +10,7 @@ export default function GalleryLightbox({ items, index, onClose, onNavigate, onS
   const [consentStatus, setConsentStatus] = useState(item?.consent_status || 'pending_review')
   const [location, setLocation] = useState(item?.location || '')
   const [saving, setSaving] = useState(false)
+  const [zoom, setZoom] = useState(1)
 
   useEffect(() => {
     setCaption(item?.caption || '')
@@ -17,6 +18,7 @@ export default function GalleryLightbox({ items, index, onClose, onNavigate, onS
     setConsentStatus(item?.consent_status || 'pending_review')
     setLocation(item?.location || '')
     setEditing(false)
+    setZoom(1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item?.id])
 
@@ -41,27 +43,59 @@ export default function GalleryLightbox({ items, index, onClose, onNavigate, onS
     setEditing(false)
   }
 
+  const zoomIn = () => setZoom(z => Math.min(3, +(z + 0.5).toFixed(2)))
+  const zoomOut = () => setZoom(z => Math.max(1, +(z - 0.5).toFixed(2)))
+  const resetZoom = () => setZoom(1)
+
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,5,25,0.94)', zIndex: 900, display: 'flex' }} onClick={onClose}>
-      <button onClick={onClose} style={{ position: 'absolute', top: 18, right: 20, zIndex: 5, background: 'rgba(255,255,255,0.12)', border: 'none', color: '#fff', width: 40, height: 40, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <IconGlyph name="close" color="#fff" size={18} />
-      </button>
-
-      {index > 0 && (
-        <button onClick={e => { e.stopPropagation(); onNavigate(index - 1) }} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', zIndex: 5, background: 'rgba(255,255,255,0.12)', border: 'none', color: '#fff', width: 42, height: 42, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <IconGlyph name="chevron-left" color="#fff" size={20} />
+      {/* Photo-viewing area — close button, nav arrows and zoom controls are anchored to THIS
+          container (not the full screen), so they always sit over the dark backdrop and never
+          get lost behind the white info panel on the right. */}
+      <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 90px', minWidth: 0 }} onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} title="Close" style={{ position: 'absolute', top: 18, right: 20, zIndex: 5, background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 40, height: 40, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <IconGlyph name="close" color="#fff" size={18} />
         </button>
-      )}
-      {index < items.length - 1 && (
-        <button onClick={e => { e.stopPropagation(); onNavigate(index + 1) }} style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', zIndex: 5, background: 'rgba(255,255,255,0.12)', border: 'none', color: '#fff', width: 42, height: 42, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <IconGlyph name="chevron-right" color="#fff" size={20} />
-        </button>
-      )}
 
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 90px' }} onClick={e => e.stopPropagation()}>
-        {item.media_type === 'video'
-          ? <video src={item.url} controls style={{ maxWidth: '100%', maxHeight: '82vh', borderRadius: 12 }} />
-          : <img src={item.url} alt={item.caption || ''} style={{ maxWidth: '100%', maxHeight: '82vh', objectFit: 'contain', borderRadius: 12 }} />}
+        {index > 0 && (
+          <button onClick={e => { e.stopPropagation(); onNavigate(index - 1) }} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', zIndex: 5, background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 42, height: 42, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IconGlyph name="chevron-left" color="#fff" size={20} />
+          </button>
+        )}
+        {index < items.length - 1 && (
+          <button onClick={e => { e.stopPropagation(); onNavigate(index + 1) }} style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', zIndex: 5, background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 42, height: 42, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IconGlyph name="chevron-right" color="#fff" size={20} />
+          </button>
+        )}
+
+        <div style={{ width: '100%', height: '100%', overflow: zoom > 1 ? 'auto' : 'hidden', display: 'flex', alignItems: zoom > 1 ? 'flex-start' : 'center', justifyContent: zoom > 1 ? 'flex-start' : 'center' }}>
+          {item.media_type === 'video'
+            ? <video src={item.url} controls style={{ maxWidth: '100%', maxHeight: '82vh', borderRadius: 12, margin: 'auto' }} />
+            : (
+              <img
+                src={item.url} alt={item.caption || ''}
+                onDoubleClick={() => setZoom(z => (z > 1 ? 1 : 2))}
+                style={{
+                  maxWidth: zoom > 1 ? 'none' : '100%', maxHeight: zoom > 1 ? 'none' : '82vh',
+                  width: zoom > 1 ? `${zoom * 100}%` : 'auto',
+                  objectFit: 'contain', borderRadius: 12, margin: 'auto',
+                  cursor: zoom > 1 ? 'zoom-out' : 'zoom-in', transition: 'width 0.15s ease',
+                }}
+              />
+            )}
+        </div>
+
+        {item.media_type !== 'video' && (
+          <div onClick={e => e.stopPropagation()} style={{
+            position: 'absolute', bottom: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 5,
+            display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.14)',
+            border: '1px solid rgba(255,255,255,0.2)', borderRadius: 99, padding: 4,
+          }}>
+            <button onClick={zoomOut} disabled={zoom <= 1} title="Zoom out" style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'transparent', color: zoom <= 1 ? 'rgba(255,255,255,0.35)' : '#fff', cursor: zoom <= 1 ? 'default' : 'pointer', fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+            <button onClick={resetZoom} title="Reset zoom" style={{ minWidth: 46, padding: '0 8px', height: 32, borderRadius: 99, border: 'none', background: 'transparent', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>{Math.round(zoom * 100)}%</button>
+            <button onClick={zoomIn} disabled={zoom >= 3} title="Zoom in" style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'transparent', color: zoom >= 3 ? 'rgba(255,255,255,0.35)' : '#fff', cursor: zoom >= 3 ? 'default' : 'pointer', fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+          </div>
+        )}
       </div>
 
       <div onClick={e => e.stopPropagation()} style={{ width: 320, flexShrink: 0, background: '#fff', overflowY: 'auto', padding: '24px 22px' }}>
@@ -131,3 +165,4 @@ export default function GalleryLightbox({ items, index, onClose, onNavigate, onS
     </div>
   )
 }
+
