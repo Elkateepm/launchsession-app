@@ -17,6 +17,7 @@ export default function GalleryLightbox({ items, index, onClose, onNavigate, onS
     setConsentStatus(item?.consent_status || 'pending_review')
     setLocation(item?.location || '')
     setEditing(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item?.id])
 
   const handleKey = useCallback((e) => {
