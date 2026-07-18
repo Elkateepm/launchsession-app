@@ -272,6 +272,9 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const [busyChildId, setBusyChildId] = useState(null)
   const [popupSearch, setPopupSearch] = useState('')
   const [linkedRA, setLinkedRA] = useState(undefined) // undefined = loading, null = none, object = found
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const [photoToast, setPhotoToast] = useState('')
+  const photoInputRef = React.useRef(null)
 
   // Keep local attendance in sync
   React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
@@ -457,6 +460,31 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const activeReflection = (reflections || []).find(r => r.session_id === activeSession?.id) || null
   const hasReflection = !!activeReflection
 
+  const handleAddPhotoFiles = async (fileList) => {
+    const files = Array.from(fileList || [])
+    if (!files.length || !activeSession?.id) return
+    setPhotoUploading(true)
+    let succeeded = 0
+    for (const file of files) {
+      const ext = file.name.split('.').pop()
+      const path = `${orgId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
+      if (!upErr) {
+        const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(path)
+        const { error: insErr } = await supabase.from('gallery_photos').insert({
+          org_id: orgId, url: urlData.publicUrl, path,
+          category: 'Sessions', session_id: activeSession.id,
+          media_type: file.type.startsWith('video') ? 'video' : 'image',
+          consent_status: 'pending_review',
+        })
+        if (!insErr) succeeded++
+      }
+    }
+    setPhotoUploading(false)
+    setPhotoToast(succeeded > 0 ? `✓ ${succeeded} photo${succeeded === 1 ? '' : 's'} added to ${activeSession.title}` : 'Upload failed — please try again')
+    setTimeout(() => setPhotoToast(''), 3000)
+  }
+
   return (
     <div style={{ background: `linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
 
@@ -468,13 +496,27 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
         {!isMobile && (
           <>
-            <button onClick={() => { setPopupMode('walkin'); setPopupSearch('') }}
-              style={{ position: 'absolute', top: 20, right: 22, padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s', zIndex: 1 }}
-              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-              onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
-              + Walk-in
-            </button>
+            <div style={{ position: 'absolute', top: 20, right: 22, display: 'flex', gap: 8, zIndex: 1 }}>
+              <button onClick={() => photoInputRef.current?.click()} disabled={photoUploading}
+                style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: photoUploading ? 'default' : 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s' }}
+                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                {photoUploading ? 'Uploading…' : '📷 Add Photo'}
+              </button>
+              <button onClick={() => { setPopupMode('walkin'); setPopupSearch('') }}
+                style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s' }}
+                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                + Walk-in
+              </button>
+            </div>
           </>
+        )}
+        <input ref={photoInputRef} type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={e => { handleAddPhotoFiles(e.target.files); e.target.value = '' }} />
+        {photoToast && (
+          <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 2, background: 'rgba(15,23,42,0.92)', color: '#fff', padding: '7px 16px', borderRadius: 99, fontSize: 12, fontWeight: 700, border: '1px solid rgba(255,255,255,0.15)', whiteSpace: 'nowrap' }}>
+            {photoToast}
+          </div>
         )}
 
         <div style={{ textAlign: 'center', marginBottom: 14, padding: isMobile ? '0' : '0 130px' }}>
@@ -523,6 +565,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
         {isMobile && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+            <button onClick={() => photoInputRef.current?.click()} disabled={photoUploading}
+              style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: photoUploading ? 'default' : 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
+              {photoUploading ? 'Uploading…' : '📷 Add Photo'}
+            </button>
             <button onClick={() => { setPopupMode('walkin'); setPopupSearch('') }}
               style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
               + Walk-in
@@ -1821,3 +1867,4 @@ const styles = {
   snapshotGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 },
   impactGrid: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 },
 };
+
