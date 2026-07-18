@@ -23,6 +23,7 @@ import CaseManagement from '../casemgmt/CaseManagement'
 import RiskAssessments from '../riskassessments/RiskAssessments'
 import ImpactOutcomes from '../impact/ImpactOutcomes'
 import Fundraising from '../fundraising/Fundraising'
+import FundraisingGate from '../fundraising/FundraisingGate'
 import HR from '../hr/HR'
 import ResourceBooking from '../resources/ResourceBooking'
 
@@ -744,7 +745,7 @@ export default function Dashboard({ session, org }) {
           {/* ── GROWTH PACK ── */}
           {tab === 'reports'         && (hasModule('reports')         ? <Reports org={org} session={session} />                                : <LockedModule moduleKey="reports"         label="Reports"           icon="📊" onNavigate={handleSetTab} />)}
           {tab === 'impact_outcomes' && (hasModule('impact_outcomes') ? <ImpactOutcomes org={org} session={session} isAdmin={isAdmin} />                        : <LockedModule moduleKey="impact_outcomes" label="Impact & Outcomes" icon="🌱" onNavigate={handleSetTab} />)}
-          {tab === 'fundraising'     && (hasModule('fundraising')     ? <Fundraising org={org} session={session} isAdmin={isAdmin} />                           : <LockedModule moduleKey="fundraising"     label="Fundraising"       icon="💷" onNavigate={handleSetTab} />)}
+          {tab === 'fundraising'     && (hasModule('fundraising')     ? <FundraisingGate org={org} session={session}><Fundraising org={org} session={session} isAdmin={isAdmin} /></FundraisingGate>                           : <LockedModule moduleKey="fundraising"     label="Fundraising"       icon="💷" onNavigate={handleSetTab} />)}
 
           {/* ── OPERATIONS PACK ── */}
           {tab === 'hr'               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : hasModule('hr')               ? <HR org={org} session={session} />                                  : <LockedModule moduleKey="hr"               label="HR"               icon="🧑‍💼" onNavigate={handleSetTab} />)}
