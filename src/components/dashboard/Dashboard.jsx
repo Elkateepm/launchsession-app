@@ -404,6 +404,10 @@ export default function Dashboard({ session, org }) {
   const [autoOpenWizard, setAutoOpenWizard] = useState(false)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
   const [showLaunchMenu, setShowLaunchMenu] = React.useState(false);
+  const [dialDragging, setDialDragging] = React.useState(false);
+  const [dialHoveredKey, setDialHoveredKey] = React.useState(null);
+  const dialCenterRef = React.useRef({ x: 0, y: 0 });
+  const dialItemsRef = React.useRef([]); // current slot list, kept in sync so the pointermove handler always has fresh angles
   const [navContext, setNavContext] = React.useState({ mode: 'rocket', liveCount: 0 })
   const [navBadges, setNavBadges] = React.useState({ registers: 0, mentoring: 0 })
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
@@ -423,6 +427,54 @@ export default function Dashboard({ session, org }) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Mirrors dialHoveredKey into a ref so the pointerup handler below always reads the very
+  // latest hovered item without needing to re-subscribe listeners on every move.
+  const dialHoveredKeyLive = React.useRef(null)
+  React.useEffect(() => { dialHoveredKeyLive.current = dialHoveredKey }, [dialHoveredKey])
+
+  // Radial dial: press-and-slide-to-select gesture. Started from the FAB's onPointerDown;
+  // tracked here via window listeners so the finger can move anywhere on screen while held.
+  React.useEffect(() => {
+    if (!dialDragging) return
+    const DEADZONE = 34 // px from centre before an item counts as "hovered"
+
+    const handleMove = (e) => {
+      const dx = e.clientX - dialCenterRef.current.x
+      const dy = dialCenterRef.current.y - e.clientY // inverted: up = positive, matches slot convention
+      const dist = Math.hypot(dx, dy)
+      if (dist < DEADZONE) { setDialHoveredKey(null); return }
+      const angle = Math.atan2(dx, dy) * (180 / Math.PI)
+      let closest = null, closestDiff = Infinity
+      dialItemsRef.current.forEach(item => {
+        const itemAngle = Math.atan2(item.dx, item.dy) * (180 / Math.PI)
+        const diff = Math.abs(angle - itemAngle)
+        if (diff < closestDiff) { closestDiff = diff; closest = item }
+      })
+      setDialHoveredKey(closest ? closest.uid : null)
+    }
+
+    const handleUp = () => {
+      setDialDragging(false)
+      const chosen = dialItemsRef.current.find(i => i.uid === dialHoveredKeyLive.current)
+      setShowLaunchMenu(false)
+      setDialHoveredKey(null)
+      if (chosen) {
+        if (navigator.vibrate) navigator.vibrate(12)
+        handleSetTab(chosen.key, chosen.key === 'planner' ? { autoOpenWizard: false } : undefined)
+      }
+      // If nothing was hovered (a plain tap-and-release with no slide), leave the menu open
+      // so the person can pick an item with a normal tap instead.
+      if (!chosen) setShowLaunchMenu(true)
+    }
+
+    window.addEventListener('pointermove', handleMove)
+    window.addEventListener('pointerup', handleUp)
+    return () => {
+      window.removeEventListener('pointermove', handleMove)
+      window.removeEventListener('pointerup', handleUp)
+    }
+  }, [dialDragging])
 
   // Drives the Launch button's context-aware state: rocket (nothing today) / calendar
   // (sessions coming up later today) / live (something running right now) / ended (today's
@@ -892,7 +944,9 @@ export default function Dashboard({ session, org }) {
               ))}
             </div>
 
-            {/* Floating Launch button — context-aware: rocket / calendar / live */}
+            {/* Floating Launch button — context-aware: rocket / calendar / live / ended.
+                onPointerDown starts the press-slide-release gesture (see effects above); a
+                plain tap (press+release with no slide) leaves the dial open for normal taps. */}
             <div style={{
               position: 'fixed',
               left: 'calc(50% - 33px)', // half of the button's own 66px width — avoids transform, which framer-motion's animate would otherwise override
@@ -901,7 +955,13 @@ export default function Dashboard({ session, org }) {
               zIndex: 10000,
             }}>
               <motion.button
-                onClick={() => { if (navigator.vibrate) navigator.vibrate(8); setShowLaunchMenu(true) }}
+                onPointerDown={(e) => {
+                  if (navigator.vibrate) navigator.vibrate(8)
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  dialCenterRef.current = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+                  setShowLaunchMenu(true)
+                  setDialDragging(true)
+                }}
                 whileTap={{ scale: 0.92 }}
                 animate={navContext.mode === 'live' ? { scale: [1, 1.06, 1] } : { scale: 1 }}
                 transition={navContext.mode === 'live' ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : {}}
@@ -917,7 +977,7 @@ export default function Dashboard({ session, org }) {
                         : 'linear-gradient(135deg, #7C3AED, #A855F7)',
                   boxShadow: navContext.mode === 'live' ? '0 8px 28px -6px rgba(34,197,94,0.7)' : '0 8px 28px -6px rgba(124,58,237,0.6)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer',
+                  cursor: 'pointer', touchAction: 'none',
                 }}
               >
                 <span style={{ fontSize: 26 }}>
@@ -929,7 +989,10 @@ export default function Dashboard({ session, org }) {
         )}
 
 
-        {/* Launch menu — quick actions from anywhere in the app, fanned out from the FAB */}
+        {/* Radial Launch Dial — quick actions orbiting tightly around the FAB.
+            Fast, intuitive, one-handed: tap the FAB to expand the dial, then either slide your
+            thumb to an action and release (no need to lift between press and select), or lift
+            immediately to leave the dial open and tap an action normally. */}
         <AnimatePresence>
           {isMobileBottomNav && showLaunchMenu && (
             <motion.div
@@ -943,11 +1006,16 @@ export default function Dashboard({ session, org }) {
                 style={{ position: 'fixed', left: '50%', bottom: 'calc(73px + env(safe-area-inset-bottom, 0px))', width: 0, height: 0 }}
               >
                 {(() => {
-                  // Same 7 fan positions regardless of context — only which action fills each slot changes.
-                  const SLOTS = [
-                    { dx: -85, dy: 67 }, { dx: 0, dy: 108 }, { dx: 85, dy: 67 },
-                    { dx: -192, dy: 41 }, { dx: -86, dy: 176 }, { dx: 86, dy: 176 }, { dx: 192, dy: 41 },
-                  ]
+                  // Six evenly-spaced positions across a tight 150° arc above the FAB — a compact
+                  // dial rather than the old wide two-tier fan. Angle 0 = straight up; positive
+                  // rotates toward +dx (matches the atan2(dx,dy) convention used for the connector lines).
+                  const RADIUS = 108
+                  const ANGLES = [-75, -45, -15, 15, 45, 75]
+                  const SLOTS = ANGLES.map(deg => {
+                    const rad = deg * (Math.PI / 180)
+                    return { dx: RADIUS * Math.sin(rad), dy: RADIUS * Math.cos(rad) }
+                  })
+
                   // Three action sets tailored to what's actually useful at that point in the day —
                   // reusing only real, existing tabs (no invented routes).
                   const CONTEXT_SETS = {
@@ -959,7 +1027,6 @@ export default function Dashboard({ session, org }) {
                         { key: 'risk_assessments', label: 'Risk Assessment', icon: '🛡️', color: '#DC2626', gate: 'risk_assessments' },
                         { key: 'registers', label: 'Add Walk-in', icon: '🚶', color: '#0891B2', gate: 'registers' },
                         { key: 'case_management', label: 'Case Management', icon: '📁', color: '#4F46E5', gate: 'case_management' },
-                        { key: 'registers', label: 'Quick Register', icon: '📋', color: '#0891B2', gate: 'registers' },
                         { key: 'forms', label: 'Forms & Documents', icon: '📝', color: '#2563EB', gate: 'forms' },
                       ],
                     },
@@ -989,61 +1056,66 @@ export default function Dashboard({ session, org }) {
                   const contextKey = navContext.mode === 'live' ? 'live' : navContext.mode === 'ended' ? 'ended' : 'morning'
                   const set = CONTEXT_SETS[contextKey]
                   const ctaTarget = { live: 'registers', ended: 'planner', morning: 'registers' }[contextKey]
-                  const rawItems = set.items.map((item, i) => ({ ...item, ...SLOTS[i] }))
 
-                  // The widest offsets (±192px) assume a screen wide enough to fit them either
-                  // side of centre with room for the pill itself (88px wide). On genuinely narrow
-                  // phones that pushes the outer ring past the screen edge, producing a lopsided,
-                  // broken-looking fan. Scale every offset down uniformly so the whole arrangement
-                  // always fits, while keeping its fan shape intact.
-                  const maxAbsDx = Math.max(...SLOTS.map(s => Math.abs(s.dx)))
-                  const vw = typeof window !== 'undefined' ? window.innerWidth : 400
-                  const safeHalfWidth = vw / 2 - 54 // 54 ≈ half the pill's own width + a little breathing room
-                  const scale = Math.min(1, Math.max(0.55, safeHalfWidth / maxAbsDx))
-                  const scaledItems = rawItems.map(i => ({ ...i, dx: i.dx * scale, dy: i.dy * scale }))
+                  const items = set.items
+                    .map((item, i) => ({ ...item, ...SLOTS[i], uid: `${contextKey}-${item.key}-${i}` }))
+                    .filter(item => !item.gate || hasModule(item.gate))
+
+                  // Keep the drag-gesture effect's nearest-item lookup in sync with what's actually rendered.
+                  dialItemsRef.current = items
 
                   return (
                     <>
-                      {scaledItems.filter(item => !item.gate || hasModule(item.gate)).map((item, i) => {
+                      {items.map((item, i) => {
                         const radius = Math.hypot(item.dx, item.dy)
                         const angle = Math.atan2(item.dx, item.dy) * (180 / Math.PI)
+                        const hovered = dialHoveredKey === item.uid
                         return (
-                          <React.Fragment key={`${item.key}-${item.label}`}>
+                          <React.Fragment key={item.uid}>
                             {/* Connecting line back to the FAB */}
                             <motion.div
                               initial={{ opacity: 0, scaleY: 0 }} animate={{ opacity: 1, scaleY: 1 }} exit={{ opacity: 0, scaleY: 0 }}
-                              transition={{ delay: i * 0.025, duration: 0.25 }}
+                              transition={{ delay: i * 0.02, duration: 0.22 }}
                               style={{
                                 position: 'absolute', left: '50%', bottom: 0, width: 1.5, height: radius,
-                                background: 'linear-gradient(to top, rgba(168,139,250,0.55), rgba(168,139,250,0))',
+                                background: hovered ? 'linear-gradient(to top, rgba(255,255,255,0.7), rgba(255,255,255,0))' : 'linear-gradient(to top, rgba(168,139,250,0.5), rgba(168,139,250,0))',
                                 transformOrigin: 'bottom center', transform: `translateX(-50%) rotate(${angle}deg)`,
                               }}
                             />
-                            {/* The action pill itself */}
+                            {/* The action bubble itself */}
                             <motion.button
-                              initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.4 }}
-                              transition={{ delay: i * 0.03, type: 'spring', stiffness: 420, damping: 26 }}
-                              whileTap={{ scale: 0.94 }}
+                              initial={{ opacity: 0, scale: 0.3 }}
+                              animate={{ opacity: 1, scale: hovered ? 1.18 : 1 }}
+                              exit={{ opacity: 0, scale: 0.3 }}
+                              transition={{ delay: i * 0.025, type: 'spring', stiffness: 460, damping: 24 }}
                               onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key, item.key === 'planner' ? { autoOpenWizard: false } : undefined) }}
                               style={{
                                 position: 'absolute', left: item.dx, bottom: item.dy, transform: 'translate(-50%, 50%)',
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                                width: 88, padding: '12px 8px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.12)',
-                                background: 'rgba(20,22,42,0.88)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-                                boxShadow: '0 8px 20px rgba(0,0,0,0.35)', cursor: 'pointer',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                                width: 66, padding: '10px 4px', borderRadius: 18,
+                                border: hovered ? '2px solid rgba(255,255,255,0.9)' : '1px solid rgba(255,255,255,0.12)',
+                                background: hovered ? `${item.color}CC` : 'rgba(20,22,42,0.88)',
+                                backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+                                boxShadow: hovered ? `0 0 0 8px ${item.color}30, 0 10px 26px rgba(0,0,0,0.4)` : '0 8px 20px rgba(0,0,0,0.35)',
+                                cursor: 'pointer', transition: 'background 0.12s, box-shadow 0.12s',
                               }}
                             >
-                              <div style={{ width: 34, height: 34, borderRadius: '50%', background: `${item.color}2A`, border: `1px solid ${item.color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{item.icon}</div>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.25 }}>{item.label}</div>
+                              <div style={{
+                                width: 30, height: 30, borderRadius: '50%',
+                                background: hovered ? 'rgba(255,255,255,0.25)' : `${item.color}2A`,
+                                border: hovered ? '1px solid rgba(255,255,255,0.5)' : `1px solid ${item.color}55`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
+                              }}>{item.icon}</div>
+                              <div style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>{item.label}</div>
                             </motion.button>
                           </React.Fragment>
                         )
                       })}
 
-                      {/* Context-aware primary action, shown just below the fan */}
+                      {/* Context-aware primary action, shown just below the dial */}
                       <motion.button
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-                        transition={{ delay: 0.18, duration: 0.2 }}
+                        transition={{ delay: 0.16, duration: 0.2 }}
                         onClick={() => { setShowLaunchMenu(false); handleSetTab(ctaTarget) }}
                         style={{
                           position: 'absolute', left: '50%', bottom: -46, transform: 'translateX(-50%)',
