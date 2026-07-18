@@ -11,7 +11,7 @@ export default function GalleryEmptyState({ icon = 'camera', title, subtitle, ac
         <IconGlyph name={icon} color={LS.purpleDark} size={22} />
       </div>
       <div style={{ fontWeight: 800, color: LS.text, fontSize: 16, marginBottom: 6 }}>{title}</div>
-      {subtitle && <div style={{ fontSize: 13, color: LS.muted, marginBottom: actions ? 18 : 0, lineHeight: 1.5, maxWidth: 380, margin: '0 auto', marginBottom: actions ? 18 : 0 }}>{subtitle}</div>}
+      {subtitle && <div style={{ fontSize: 13, color: LS.muted, lineHeight: 1.5, maxWidth: 380, margin: '0 auto', marginBottom: actions ? 18 : 0 }}>{subtitle}</div>}
       {actions && <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', marginTop: 14 }}>{actions}</div>}
     </div>
   )
