@@ -30,6 +30,18 @@ export const CATEGORIES = [
   { key: 'Other', label: 'Other', icon: 'dots' },
 ]
 
+// Accent colour per category — drives the category badge, "View Album" button and
+// date-circle tinting on the redesigned Latest Memories timeline cards.
+export const CATEGORY_COLORS = {
+  Sessions:     { solid: '#7C5CFC', bg: '#F1EDFF', gradient: 'linear-gradient(135deg,#8B6CFF,#6647F0)' },
+  Trips:        { solid: '#2F6FE0', bg: '#E9F0FA', gradient: 'linear-gradient(135deg,#4E9EFF,#2F6FE0)' },
+  Milestones:   { solid: '#B45309', bg: '#FDF3E4', gradient: 'linear-gradient(135deg,#F2B84B,#D9860A)' },
+  Volunteers:   { solid: '#EA580C', bg: '#FDECE1', gradient: 'linear-gradient(135deg,#FF9E6C,#E0692F)' },
+  Celebrations: { solid: '#DB2777', bg: '#FCE7F0', gradient: 'linear-gradient(135deg,#F472B6,#DB2777)' },
+  Other:        { solid: '#6B7280', bg: '#F3F2F7', gradient: 'linear-gradient(135deg,#9CA3AF,#6B7280)' },
+}
+export function categoryColor(category) { return CATEGORY_COLORS[category] || CATEGORY_COLORS.Other }
+
 export const CONSENT_META = {
   approved: { label: 'Approved to publish', color: '#16803C', bg: '#E7F6EC', icon: 'check' },
   internal_only: { label: 'Internal only', color: '#375A82', bg: '#E9F0F7', icon: 'lock' },
@@ -102,3 +114,4 @@ export function ConsentBadge({ status, size = 'sm' }) {
     </span>
   )
 }
+
