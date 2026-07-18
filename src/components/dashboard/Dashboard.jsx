@@ -1010,12 +1010,19 @@ export default function Dashboard({ session, org }) {
                   // Six evenly-spaced positions across a tight 150° arc above the FAB — a compact
                   // dial rather than the old wide two-tier fan. Angle 0 = straight up; positive
                   // rotates toward +dx (matches the atan2(dx,dy) convention used for the connector lines).
-                  const RADIUS = 108
+                  const RADIUS = 150
                   const ANGLES = [-75, -45, -15, 15, 45, 75]
-                  const SLOTS = ANGLES.map(deg => {
+                  const rawSlots = ANGLES.map(deg => {
                     const rad = deg * (Math.PI / 180)
                     return { dx: RADIUS * Math.sin(rad), dy: RADIUS * Math.cos(rad) }
                   })
+                  // Guard against genuinely tiny screens where even this tighter dial's outer
+                  // items could reach past the edge — scales the whole dial down uniformly.
+                  const maxAbsDx = Math.max(...rawSlots.map(s => Math.abs(s.dx)))
+                  const vw = typeof window !== 'undefined' ? window.innerWidth : 400
+                  const safeHalfWidth = vw / 2 - 40 // 40 ≈ half the pill's own width + a little breathing room
+                  const dialScale = Math.min(1, Math.max(0.7, safeHalfWidth / maxAbsDx))
+                  const SLOTS = rawSlots.map(s => ({ dx: s.dx * dialScale, dy: s.dy * dialScale }))
 
                   // Three action sets tailored to what's actually useful at that point in the day —
                   // reusing only real, existing tabs (no invented routes).
