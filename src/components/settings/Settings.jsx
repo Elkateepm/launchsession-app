@@ -12,6 +12,7 @@ const NAV = [
   { key: 'users',        icon: '👥', label: 'Admin', group: 'Platform' },
   { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform', requiresBranding: true },
   { key: 'safeguarding', icon: '🛡', label: 'Safeguarding', group: 'Operations' },
+  { key: 'fundraising',  icon: '💷', label: 'Fundraising', group: 'Operations' },
   { key: 'registers',    icon: '📋', label: 'Registers', group: 'Operations' },
   { key: 'sessions',     icon: '📅', label: 'Sessions', group: 'Operations' },
   { key: 'notifications',icon: '🔔', label: 'Notifications', group: 'Communications' },
@@ -995,6 +996,97 @@ function SafeguardingSection({ org }) {
   )
 }
 
+function FundraisingSection({ org }) {
+  const isMobile = useIsMobile()
+  const purple = { grad: 'linear-gradient(135deg, #8B6CFF 0%, #6647F0 100%)', solid: '#6647F0' }
+
+  const [pwStatus, setPwStatus] = useState('loading') // loading | set | unset
+  const [newPw, setNewPw] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [pwSaving, setPwSaving] = useState(false)
+  const [pwSaved, setPwSaved] = useState(false)
+  const [pwError, setPwError] = useState('')
+  const [removing, setRemoving] = useState(false)
+
+  React.useEffect(() => {
+    let cancelled = false
+    supabase.rpc('fundraising_password_status').then(({ data, error }) => {
+      if (cancelled) return
+      if (error) { setPwStatus('unset'); return }
+      setPwStatus(data ? 'set' : 'unset')
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  const handleSetPassword = async () => {
+    setPwError('')
+    if (newPw.length < 4) { setPwError('Password must be at least 4 characters.'); return }
+    if (newPw !== confirmPw) { setPwError('Passwords do not match.'); return }
+    setPwSaving(true)
+    const { error } = await supabase.rpc('set_fundraising_password', { new_password: newPw })
+    setPwSaving(false)
+    if (error) { setPwError(error.message || 'Could not save password.'); return }
+    setPwStatus('set')
+    setNewPw(''); setConfirmPw('')
+    setPwSaved(true); setTimeout(() => setPwSaved(false), 2500)
+  }
+
+  const handleRemovePassword = async () => {
+    if (!window.confirm('Remove the fundraising access password? Anyone in your organisation will be able to open the Fundraising Hub without a password.')) return
+    setRemoving(true)
+    const { error } = await supabase.rpc('clear_fundraising_password')
+    setRemoving(false)
+    if (error) { setPwError(error.message || 'Could not remove password.'); return }
+    setPwStatus('unset')
+  }
+
+  return (
+    <div>
+      <div style={{ background: purple.grad, borderRadius: 12, padding: '20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>💷</div>
+        <div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#fff' }}>Fundraising Settings</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>Control who can open the Fundraising Hub.</div>
+        </div>
+      </div>
+
+      <SettingCard title="Fundraising Access Password" description="Require a password before anyone — including staff — can open the Fundraising Hub. Only admins can set or change it.">
+        {pwStatus === 'loading' ? (
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Loading...</div>
+        ) : (
+          <>
+            {pwStatus === 'set' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(102,71,240,0.08)', border: '1px solid rgba(102,71,240,0.25)', borderRadius: 10, padding: '10px 14px', marginBottom: 16 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: purple.solid, flexShrink: 0 }} />
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Password protection is currently ON</div>
+              </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
+              <Field label={pwStatus === 'set' ? 'New Password' : 'Password'}>
+                <input type="password" style={inp} value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Min. 4 characters" />
+              </Field>
+              <Field label="Confirm Password">
+                <input type="password" style={inp} value={confirmPw} onChange={e => setConfirmPw(e.target.value)} placeholder="Repeat password" />
+              </Field>
+            </div>
+            {pwError && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginBottom: 12 }}>{pwError}</div>}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button onClick={handleSetPassword} disabled={pwSaving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: pwSaving ? '#9ca3af' : purple.solid, color: '#fff', fontSize: 14, fontWeight: 700, cursor: pwSaving ? 'default' : 'pointer' }}>
+                {pwSaving ? 'Saving...' : pwSaved ? '✓ Saved!' : pwStatus === 'set' ? 'Update Password' : 'Set Password'}
+              </button>
+              {pwStatus === 'set' && (
+                <button onClick={handleRemovePassword} disabled={removing} style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700, cursor: removing ? 'default' : 'pointer' }}>
+                  {removing ? 'Removing...' : 'Remove Password'}
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </SettingCard>
+    </div>
+  )
+}
+
 function ComingSoon({ label }) {
   return (
     <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9ca3af' }}>
@@ -1264,6 +1356,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
       case 'billing':        return <BillingSection org={org} session={session} isAdmin={isAdmin} refreshOrg={refreshOrg} />
       case 'registers':      return <GroupsSection org={org} />
       case 'safeguarding':   return <SafeguardingSection org={org} />
+      case 'fundraising':    return <FundraisingSection org={org} />
       case 'help':           return <HelpSection />
       default:               return <ComingSoon label={NAV.find(n => n.key === active)?.label || active} />
     }
@@ -1325,3 +1418,4 @@ export default function Settings({ org, session, userProfile, initialSection }) 
     </div>
   )
 }
+
