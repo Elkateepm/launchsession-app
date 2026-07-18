@@ -425,8 +425,8 @@ export default function Dashboard({ session, org }) {
   }, []);
 
   // Drives the Launch button's context-aware state: rocket (nothing today) / calendar
-  // (sessions coming up) / live (something running right now). Alert and celebration states
-  // from the original spec aren't wired in yet — flagged as a follow-up, not silently faked.
+  // (sessions coming up later today) / live (something running right now) / ended (today's
+  // sessions have all finished). This also drives which action set the Launch dial shows.
   React.useEffect(() => {
     if (!org?.id) return
     const load = async () => {
@@ -446,7 +446,12 @@ export default function Dashboard({ session, org }) {
         const endDT = s.end_time ? new Date(`${todayStr}T${s.end_time}`) : null
         return (!startDT || startDT <= now) && (!endDT || endDT > now)
       })
+      const allEnded = list.length > 0 && list.every(s => {
+        const endDT = s.end_time ? new Date(`${todayStr}T${s.end_time}`) : null
+        return endDT ? endDT <= now : false
+      })
       if (live.length > 0) setNavContext({ mode: 'live', liveCount: live.length })
+      else if (allEnded) setNavContext({ mode: 'ended', liveCount: 0 })
       else if (list.length > 0) setNavContext({ mode: 'calendar', liveCount: 0 })
       else setNavContext({ mode: 'rocket', liveCount: 0 })
     }
@@ -905,21 +910,24 @@ export default function Dashboard({ session, org }) {
                   border: '4px solid rgba(10,15,30,0.9)',
                   background: navContext.mode === 'live'
                     ? 'linear-gradient(135deg, #22C55E, #16A34A)'
-                    : navContext.mode === 'calendar'
-                      ? 'linear-gradient(135deg, #7C3AED, #6366F1)'
-                      : 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                    : navContext.mode === 'ended'
+                      ? 'linear-gradient(135deg, #6366F1, #4F46E5)'
+                      : navContext.mode === 'calendar'
+                        ? 'linear-gradient(135deg, #7C3AED, #6366F1)'
+                        : 'linear-gradient(135deg, #7C3AED, #A855F7)',
                   boxShadow: navContext.mode === 'live' ? '0 8px 28px -6px rgba(34,197,94,0.7)' : '0 8px 28px -6px rgba(124,58,237,0.6)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer',
                 }}
               >
                 <span style={{ fontSize: 26 }}>
-                  {navContext.mode === 'live' ? '🟢' : navContext.mode === 'calendar' ? '📆' : '🚀'}
+                  {navContext.mode === 'live' ? '🟢' : navContext.mode === 'ended' ? '🌙' : navContext.mode === 'calendar' ? '📆' : '🚀'}
                 </span>
               </motion.button>
             </div>
           </>
         )}
+
 
         {/* Launch menu — quick actions from anywhere in the app, fanned out from the FAB */}
         <AnimatePresence>
@@ -935,62 +943,121 @@ export default function Dashboard({ session, org }) {
                 style={{ position: 'fixed', left: '50%', bottom: 'calc(73px + env(safe-area-inset-bottom, 0px))', width: 0, height: 0 }}
               >
                 {(() => {
-                  const RAW_ITEMS = [
-                    // Inner ring
-                    { key: 'home', label: 'Live Sessions', icon: '🟢', color: '#16A34A', dx: -85, dy: 67, gate: null },
-                    { key: 'planner', label: 'Session Planner', icon: '📅', color: '#7C3AED', dx: 0, dy: 108, gate: null },
-                    { key: 'risk_assessments', label: 'Risk Assessment', icon: '🛡️', color: '#DC2626', dx: 85, dy: 67, gate: 'risk_assessments' },
-                    // Outer ring
-                    { key: 'registers', label: 'Add Walk-in', icon: '🚶', color: '#0891B2', dx: -192, dy: 41, gate: 'registers' },
-                    { key: 'case_management', label: 'Case Management', icon: '📁', color: '#4F46E5', dx: -86, dy: 176, gate: 'case_management' },
-                    { key: 'registers', label: 'Quick Register', icon: '📋', color: '#0891B2', dx: 86, dy: 176, gate: 'registers' },
-                    { key: 'forms', label: 'Forms & Documents', icon: '📝', color: '#2563EB', dx: 192, dy: 41, gate: 'forms' },
+                  // Same 7 fan positions regardless of context — only which action fills each slot changes.
+                  const SLOTS = [
+                    { dx: -85, dy: 67 }, { dx: 0, dy: 108 }, { dx: 85, dy: 67 },
+                    { dx: -192, dy: 41 }, { dx: -86, dy: 176 }, { dx: 86, dy: 176 }, { dx: 192, dy: 41 },
                   ]
+                  // Three action sets tailored to what's actually useful at that point in the day —
+                  // reusing only real, existing tabs (no invented routes).
+                  const CONTEXT_SETS = {
+                    live: {
+                      ctaLabel: 'Sign Child In',
+                      items: [
+                        { key: 'home', label: 'Live Sessions', icon: '🟢', color: '#16A34A', gate: null },
+                        { key: 'planner', label: 'Session Planner', icon: '📅', color: '#7C3AED', gate: null },
+                        { key: 'risk_assessments', label: 'Risk Assessment', icon: '🛡️', color: '#DC2626', gate: 'risk_assessments' },
+                        { key: 'registers', label: 'Add Walk-in', icon: '🚶', color: '#0891B2', gate: 'registers' },
+                        { key: 'case_management', label: 'Case Management', icon: '📁', color: '#4F46E5', gate: 'case_management' },
+                        { key: 'registers', label: 'Quick Register', icon: '📋', color: '#0891B2', gate: 'registers' },
+                        { key: 'forms', label: 'Forms & Documents', icon: '📝', color: '#2563EB', gate: 'forms' },
+                      ],
+                    },
+                    ended: {
+                      ctaLabel: 'Complete Session',
+                      items: [
+                        { key: 'planner', label: 'Session Reflection', icon: '📅', color: '#7C3AED', gate: null },
+                        { key: 'home', label: 'Live Sessions', icon: '🟢', color: '#16A34A', gate: null },
+                        { key: 'volunteers', label: 'Volunteers', icon: '🤝', color: '#EA580C', gate: 'volunteers' },
+                        { key: 'case_management', label: 'Case Management', icon: '📁', color: '#4F46E5', gate: 'case_management' },
+                        { key: 'registers', label: "Today's Register", icon: '📋', color: '#0891B2', gate: 'registers' },
+                        { key: 'forms', label: 'Forms & Documents', icon: '📝', color: '#2563EB', gate: 'forms' },
+                      ],
+                    },
+                    morning: {
+                      ctaLabel: 'Open Register',
+                      items: [
+                        { key: 'registers', label: "Today's Register", icon: '📋', color: '#0891B2', gate: 'registers' },
+                        { key: 'planner', label: 'Session Planner', icon: '📅', color: '#7C3AED', gate: null },
+                        { key: 'volunteers', label: 'Volunteers', icon: '🤝', color: '#EA580C', gate: 'volunteers' },
+                        { key: 'registers', label: 'Add Walk-in', icon: '🚶', color: '#0891B2', gate: 'registers' },
+                        { key: 'home', label: 'Live Sessions', icon: '🟢', color: '#16A34A', gate: null },
+                        { key: 'forms', label: 'Forms & Documents', icon: '📝', color: '#2563EB', gate: 'forms' },
+                      ],
+                    },
+                  }
+                  const contextKey = navContext.mode === 'live' ? 'live' : navContext.mode === 'ended' ? 'ended' : 'morning'
+                  const set = CONTEXT_SETS[contextKey]
+                  const ctaTarget = { live: 'registers', ended: 'planner', morning: 'registers' }[contextKey]
+                  const rawItems = set.items.map((item, i) => ({ ...item, ...SLOTS[i] }))
+
                   // The widest offsets (±192px) assume a screen wide enough to fit them either
                   // side of centre with room for the pill itself (88px wide). On genuinely narrow
                   // phones that pushes the outer ring past the screen edge, producing a lopsided,
                   // broken-looking fan. Scale every offset down uniformly so the whole arrangement
                   // always fits, while keeping its fan shape intact.
-                  const maxAbsDx = Math.max(...RAW_ITEMS.map(i => Math.abs(i.dx)))
+                  const maxAbsDx = Math.max(...SLOTS.map(s => Math.abs(s.dx)))
                   const vw = typeof window !== 'undefined' ? window.innerWidth : 400
                   const safeHalfWidth = vw / 2 - 54 // 54 ≈ half the pill's own width + a little breathing room
                   const scale = Math.min(1, Math.max(0.55, safeHalfWidth / maxAbsDx))
-                  return RAW_ITEMS.map(i => ({ ...i, dx: i.dx * scale, dy: i.dy * scale }))
-                })().filter(item => !item.gate || hasModule(item.gate)).map((item, i) => {
-                  const radius = Math.hypot(item.dx, item.dy)
-                  const angle = Math.atan2(item.dx, item.dy) * (180 / Math.PI)
+                  const scaledItems = rawItems.map(i => ({ ...i, dx: i.dx * scale, dy: i.dy * scale }))
+
                   return (
-                    <React.Fragment key={item.label}>
-                      {/* Connecting line back to the FAB */}
-                      <motion.div
-                        initial={{ opacity: 0, scaleY: 0 }} animate={{ opacity: 1, scaleY: 1 }} exit={{ opacity: 0, scaleY: 0 }}
-                        transition={{ delay: i * 0.025, duration: 0.25 }}
-                        style={{
-                          position: 'absolute', left: '50%', bottom: 0, width: 1.5, height: radius,
-                          background: 'linear-gradient(to top, rgba(168,139,250,0.55), rgba(168,139,250,0))',
-                          transformOrigin: 'bottom center', transform: `translateX(-50%) rotate(${angle}deg)`,
-                        }}
-                      />
-                      {/* The action pill itself */}
+                    <>
+                      {scaledItems.filter(item => !item.gate || hasModule(item.gate)).map((item, i) => {
+                        const radius = Math.hypot(item.dx, item.dy)
+                        const angle = Math.atan2(item.dx, item.dy) * (180 / Math.PI)
+                        return (
+                          <React.Fragment key={`${item.key}-${item.label}`}>
+                            {/* Connecting line back to the FAB */}
+                            <motion.div
+                              initial={{ opacity: 0, scaleY: 0 }} animate={{ opacity: 1, scaleY: 1 }} exit={{ opacity: 0, scaleY: 0 }}
+                              transition={{ delay: i * 0.025, duration: 0.25 }}
+                              style={{
+                                position: 'absolute', left: '50%', bottom: 0, width: 1.5, height: radius,
+                                background: 'linear-gradient(to top, rgba(168,139,250,0.55), rgba(168,139,250,0))',
+                                transformOrigin: 'bottom center', transform: `translateX(-50%) rotate(${angle}deg)`,
+                              }}
+                            />
+                            {/* The action pill itself */}
+                            <motion.button
+                              initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.4 }}
+                              transition={{ delay: i * 0.03, type: 'spring', stiffness: 420, damping: 26 }}
+                              whileTap={{ scale: 0.94 }}
+                              onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key, item.key === 'planner' ? { autoOpenWizard: false } : undefined) }}
+                              style={{
+                                position: 'absolute', left: item.dx, bottom: item.dy, transform: 'translate(-50%, 50%)',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                                width: 88, padding: '12px 8px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.12)',
+                                background: 'rgba(20,22,42,0.88)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+                                boxShadow: '0 8px 20px rgba(0,0,0,0.35)', cursor: 'pointer',
+                              }}
+                            >
+                              <div style={{ width: 34, height: 34, borderRadius: '50%', background: `${item.color}2A`, border: `1px solid ${item.color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{item.icon}</div>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.25 }}>{item.label}</div>
+                            </motion.button>
+                          </React.Fragment>
+                        )
+                      })}
+
+                      {/* Context-aware primary action, shown just below the fan */}
                       <motion.button
-                        initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.4 }}
-                        transition={{ delay: i * 0.03, type: 'spring', stiffness: 420, damping: 26 }}
-                        whileTap={{ scale: 0.94 }}
-                        onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key, item.key === 'planner' ? { autoOpenWizard: false } : undefined) }}
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+                        transition={{ delay: 0.18, duration: 0.2 }}
+                        onClick={() => { setShowLaunchMenu(false); handleSetTab(ctaTarget) }}
                         style={{
-                          position: 'absolute', left: item.dx, bottom: item.dy, transform: 'translate(-50%, 50%)',
-                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                          width: 88, padding: '12px 8px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.12)',
-                          background: 'rgba(20,22,42,0.88)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-                          boxShadow: '0 8px 20px rgba(0,0,0,0.35)', cursor: 'pointer',
+                          position: 'absolute', left: '50%', bottom: -46, transform: 'translateX(-50%)',
+                          padding: '9px 20px', borderRadius: 99, border: 'none', whiteSpace: 'nowrap',
+                          background: navContext.mode === 'live' ? 'linear-gradient(135deg,#22C55E,#16A34A)' : navContext.mode === 'ended' ? 'linear-gradient(135deg,#6366F1,#4F46E5)' : 'linear-gradient(135deg,#7C3AED,#A855F7)',
+                          color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer',
+                          boxShadow: '0 8px 18px rgba(0,0,0,0.35)',
                         }}
                       >
-                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: `${item.color}2A`, border: `1px solid ${item.color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{item.icon}</div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.25 }}>{item.label}</div>
+                        {set.ctaLabel}
                       </motion.button>
-                    </React.Fragment>
+                    </>
                   )
-                })}
+                })()}
               </div>
             </motion.div>
           )}
