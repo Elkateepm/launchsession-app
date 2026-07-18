@@ -474,6 +474,7 @@ export default function Dashboard({ session, org }) {
       window.removeEventListener('pointermove', handleMove)
       window.removeEventListener('pointerup', handleUp)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dialDragging])
 
   // Drives the Launch button's context-aware state: rocket (nothing today) / calendar
