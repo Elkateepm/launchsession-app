@@ -1082,61 +1082,71 @@ export default function Dashboard({ session, org }) {
                         const hovered = dialHoveredKey === item.uid
                         return (
                           <React.Fragment key={item.uid}>
-                            {/* Connecting line back to the FAB */}
-                            <motion.div
-                              initial={{ opacity: 0, scaleY: 0 }} animate={{ opacity: 1, scaleY: 1 }} exit={{ opacity: 0, scaleY: 0 }}
-                              transition={{ delay: i * 0.02, duration: 0.22 }}
-                              style={{
-                                position: 'absolute', left: '50%', bottom: 0, width: 1.5, height: radius,
-                                background: hovered ? 'linear-gradient(to top, rgba(255,255,255,0.7), rgba(255,255,255,0))' : 'linear-gradient(to top, rgba(168,139,250,0.5), rgba(168,139,250,0))',
-                                transformOrigin: 'bottom center', transform: `translateX(-50%) rotate(${angle}deg)`,
-                              }}
-                            />
-                            {/* The action bubble itself */}
-                            <motion.button
-                              initial={{ opacity: 0, scale: 0.3 }}
-                              animate={{ opacity: 1, scale: hovered ? 1.18 : 1 }}
-                              exit={{ opacity: 0, scale: 0.3 }}
-                              transition={{ delay: i * 0.025, type: 'spring', stiffness: 460, damping: 24 }}
-                              onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key, item.key === 'planner' ? { autoOpenWizard: false } : undefined) }}
-                              style={{
-                                position: 'absolute', left: item.dx, bottom: item.dy, transform: 'translate(-50%, 50%)',
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                                width: 66, padding: '10px 4px', borderRadius: 18,
-                                border: hovered ? '2px solid rgba(255,255,255,0.9)' : '1px solid rgba(255,255,255,0.12)',
-                                background: hovered ? `${item.color}CC` : 'rgba(20,22,42,0.88)',
-                                backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-                                boxShadow: hovered ? `0 0 0 8px ${item.color}30, 0 10px 26px rgba(0,0,0,0.4)` : '0 8px 20px rgba(0,0,0,0.35)',
-                                cursor: 'pointer', transition: 'background 0.12s, box-shadow 0.12s',
-                              }}
-                            >
-                              <div style={{
-                                width: 30, height: 30, borderRadius: '50%',
-                                background: hovered ? 'rgba(255,255,255,0.25)' : `${item.color}2A`,
-                                border: hovered ? '1px solid rgba(255,255,255,0.5)' : `1px solid ${item.color}55`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
-                              }}>{item.icon}</div>
-                              <div style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>{item.label}</div>
-                            </motion.button>
+                            {/* Connecting line back to the FAB — static rotate/position lives on this
+                                plain wrapper; the motion.div inside only animates scaleY/opacity, so
+                                Framer Motion never has a reason to overwrite our rotate transform. */}
+                            <div style={{
+                              position: 'absolute', left: '50%', bottom: 0, width: 1.5, height: radius,
+                              transformOrigin: 'bottom center', transform: `translateX(-50%) rotate(${angle}deg)`,
+                            }}>
+                              <motion.div
+                                initial={{ opacity: 0, scaleY: 0 }} animate={{ opacity: 1, scaleY: 1 }} exit={{ opacity: 0, scaleY: 0 }}
+                                transition={{ delay: i * 0.02, duration: 0.22 }}
+                                style={{
+                                  width: '100%', height: '100%', transformOrigin: 'bottom center',
+                                  background: hovered ? 'linear-gradient(to top, rgba(255,255,255,0.7), rgba(255,255,255,0))' : 'linear-gradient(to top, rgba(168,139,250,0.5), rgba(168,139,250,0))',
+                                }}
+                              />
+                            </div>
+                            {/* The action bubble itself — same fix: static centering transform on the
+                                wrapper, motion.button only animates scale/opacity. */}
+                            <div style={{ position: 'absolute', left: item.dx, bottom: item.dy, transform: 'translate(-50%, 50%)' }}>
+                              <motion.button
+                                initial={{ opacity: 0, scale: 0.3 }}
+                                animate={{ opacity: 1, scale: hovered ? 1.18 : 1 }}
+                                exit={{ opacity: 0, scale: 0.3 }}
+                                transition={{ delay: i * 0.025, type: 'spring', stiffness: 460, damping: 24 }}
+                                onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key, item.key === 'planner' ? { autoOpenWizard: false } : undefined) }}
+                                style={{
+                                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                                  width: 66, padding: '10px 4px', borderRadius: 18,
+                                  border: hovered ? '2px solid rgba(255,255,255,0.9)' : '1px solid rgba(255,255,255,0.12)',
+                                  background: hovered ? `${item.color}CC` : 'rgba(20,22,42,0.88)',
+                                  backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+                                  boxShadow: hovered ? `0 0 0 8px ${item.color}30, 0 10px 26px rgba(0,0,0,0.4)` : '0 8px 20px rgba(0,0,0,0.35)',
+                                  cursor: 'pointer', transition: 'background 0.12s, box-shadow 0.12s',
+                                }}
+                              >
+                                <div style={{
+                                  width: 30, height: 30, borderRadius: '50%',
+                                  background: hovered ? 'rgba(255,255,255,0.25)' : `${item.color}2A`,
+                                  border: hovered ? '1px solid rgba(255,255,255,0.5)' : `1px solid ${item.color}55`,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
+                                }}>{item.icon}</div>
+                                <div style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>{item.label}</div>
+                              </motion.button>
+                            </div>
                           </React.Fragment>
                         )
                       })}
 
-                      {/* Context-aware primary action, shown just below the dial */}
-                      <motion.button
-                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-                        transition={{ delay: 0.16, duration: 0.2 }}
-                        onClick={() => { setShowLaunchMenu(false); handleSetTab(ctaTarget) }}
-                        style={{
-                          position: 'absolute', left: '50%', bottom: -46, transform: 'translateX(-50%)',
-                          padding: '9px 20px', borderRadius: 99, border: 'none', whiteSpace: 'nowrap',
-                          background: navContext.mode === 'live' ? 'linear-gradient(135deg,#22C55E,#16A34A)' : navContext.mode === 'ended' ? 'linear-gradient(135deg,#6366F1,#4F46E5)' : 'linear-gradient(135deg,#7C3AED,#A855F7)',
-                          color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer',
-                          boxShadow: '0 8px 18px rgba(0,0,0,0.35)',
-                        }}
-                      >
-                        {set.ctaLabel}
-                      </motion.button>
+                      {/* Context-aware primary action, shown just below the dial — same fix again:
+                          static horizontal centering on the wrapper, motion.button only animates y/opacity. */}
+                      <div style={{ position: 'absolute', left: '50%', bottom: -46, transform: 'translateX(-50%)' }}>
+                        <motion.button
+                          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+                          transition={{ delay: 0.16, duration: 0.2 }}
+                          onClick={() => { setShowLaunchMenu(false); handleSetTab(ctaTarget) }}
+                          style={{
+                            padding: '9px 20px', borderRadius: 99, border: 'none', whiteSpace: 'nowrap',
+                            background: navContext.mode === 'live' ? 'linear-gradient(135deg,#22C55E,#16A34A)' : navContext.mode === 'ended' ? 'linear-gradient(135deg,#6366F1,#4F46E5)' : 'linear-gradient(135deg,#7C3AED,#A855F7)',
+                            color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer',
+                            boxShadow: '0 8px 18px rgba(0,0,0,0.35)',
+                          }}
+                        >
+                          {set.ctaLabel}
+                        </motion.button>
+                      </div>
                     </>
                   )
                 })()}
