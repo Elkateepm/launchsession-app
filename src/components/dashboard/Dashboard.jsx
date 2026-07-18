@@ -934,17 +934,29 @@ export default function Dashboard({ session, org }) {
                 onClick={e => e.stopPropagation()}
                 style={{ position: 'fixed', left: '50%', bottom: 'calc(73px + env(safe-area-inset-bottom, 0px))', width: 0, height: 0 }}
               >
-                {[
-                  // Inner ring
-                  { key: 'home', label: 'Live Sessions', icon: '🟢', color: '#16A34A', dx: -85, dy: 67, gate: null },
-                  { key: 'planner', label: 'Session Planner', icon: '📅', color: '#7C3AED', dx: 0, dy: 108, gate: null },
-                  { key: 'risk_assessments', label: 'Risk Assessment', icon: '🛡️', color: '#DC2626', dx: 85, dy: 67, gate: 'risk_assessments' },
-                  // Outer ring
-                  { key: 'registers', label: 'Add Walk-in', icon: '🚶', color: '#0891B2', dx: -192, dy: 41, gate: 'registers' },
-                  { key: 'case_management', label: 'Case Management', icon: '📁', color: '#4F46E5', dx: -86, dy: 176, gate: 'case_management' },
-                  { key: 'registers', label: 'Quick Register', icon: '📋', color: '#0891B2', dx: 86, dy: 176, gate: 'registers' },
-                  { key: 'forms', label: 'Forms & Documents', icon: '📝', color: '#2563EB', dx: 192, dy: 41, gate: 'forms' },
-                ].filter(item => !item.gate || hasModule(item.gate)).map((item, i) => {
+                {(() => {
+                  const RAW_ITEMS = [
+                    // Inner ring
+                    { key: 'home', label: 'Live Sessions', icon: '🟢', color: '#16A34A', dx: -85, dy: 67, gate: null },
+                    { key: 'planner', label: 'Session Planner', icon: '📅', color: '#7C3AED', dx: 0, dy: 108, gate: null },
+                    { key: 'risk_assessments', label: 'Risk Assessment', icon: '🛡️', color: '#DC2626', dx: 85, dy: 67, gate: 'risk_assessments' },
+                    // Outer ring
+                    { key: 'registers', label: 'Add Walk-in', icon: '🚶', color: '#0891B2', dx: -192, dy: 41, gate: 'registers' },
+                    { key: 'case_management', label: 'Case Management', icon: '📁', color: '#4F46E5', dx: -86, dy: 176, gate: 'case_management' },
+                    { key: 'registers', label: 'Quick Register', icon: '📋', color: '#0891B2', dx: 86, dy: 176, gate: 'registers' },
+                    { key: 'forms', label: 'Forms & Documents', icon: '📝', color: '#2563EB', dx: 192, dy: 41, gate: 'forms' },
+                  ]
+                  // The widest offsets (±192px) assume a screen wide enough to fit them either
+                  // side of centre with room for the pill itself (88px wide). On genuinely narrow
+                  // phones that pushes the outer ring past the screen edge, producing a lopsided,
+                  // broken-looking fan. Scale every offset down uniformly so the whole arrangement
+                  // always fits, while keeping its fan shape intact.
+                  const maxAbsDx = Math.max(...RAW_ITEMS.map(i => Math.abs(i.dx)))
+                  const vw = typeof window !== 'undefined' ? window.innerWidth : 400
+                  const safeHalfWidth = vw / 2 - 54 // 54 ≈ half the pill's own width + a little breathing room
+                  const scale = Math.min(1, Math.max(0.55, safeHalfWidth / maxAbsDx))
+                  return RAW_ITEMS.map(i => ({ ...i, dx: i.dx * scale, dy: i.dy * scale }))
+                })().filter(item => !item.gate || hasModule(item.gate)).map((item, i) => {
                   const radius = Math.hypot(item.dx, item.dy)
                   const angle = Math.atan2(item.dx, item.dy) * (180 / Math.PI)
                   return (
