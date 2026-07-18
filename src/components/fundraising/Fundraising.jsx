@@ -45,25 +45,6 @@ const CAMPAIGN_TEMPLATES = [
 const GOLD = '#BA7517'
 const DAY_MS = 1000 * 60 * 60 * 24
 
-function AnimatedNumber({ value, prefix = '', decimals = 0 }) {
-  const [display, setDisplay] = useState(0)
-  useEffect(() => {
-    let frame
-    const start = performance.now()
-    const duration = 700
-    const to = Number(value) || 0
-    const tick = (now) => {
-      const t = Math.min((now - start) / duration, 1)
-      const eased = 1 - Math.pow(1 - t, 3)
-      setDisplay(to * eased)
-      if (t < 1) frame = requestAnimationFrame(tick)
-    }
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [value])
-  return <>{prefix}{display.toLocaleString(undefined, { maximumFractionDigits: decimals, minimumFractionDigits: decimals })}</>
-}
-
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'discover', label: 'Discover Funding' },
