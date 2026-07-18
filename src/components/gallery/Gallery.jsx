@@ -1,201 +1,413 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
-import { format } from 'date-fns'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { LS, IconGlyph, CATEGORIES, timelineGroupLabel } from './galleryShared'
+import MemoryHero from './gallery_hub/MemoryHero'
+import GalleryFilters from './gallery_hub/GalleryFilters'
+import MemoryTimeline from './gallery_hub/MemoryTimeline'
+import GalleryGrid from './gallery_hub/GalleryGrid'
+import HighlightsPanel from './gallery_hub/HighlightsPanel'
+import CollectionsPanel from './gallery_hub/CollectionsPanel'
+import HistoryMemoryCard from './gallery_hub/HistoryMemoryCard'
+import GalleryLightbox from './gallery_hub/GalleryLightbox'
+import GalleryUploadWizard from './gallery_hub/GalleryUploadWizard'
 
-const CATEGORIES = ['All', 'Sessions', 'Trips', 'Milestones', 'Volunteers', 'Celebrations', 'Other']
+const CONSENT_SEVERITY = ['do_not_publish', 'consent_required', 'pending_review', 'internal_only', 'approved']
+const PAGE_SIZE = 8
 
-export default function Gallery({ org }) {
+function pickCover(items) {
+  const withImage = items.find(i => i.media_type !== 'video') || items[0]
+  return { url: withImage?.url, isVideo: withImage?.media_type === 'video' }
+}
+
+function worstConsent(items) {
+  for (const s of CONSENT_SEVERITY) {
+    if (items.some(i => i.consent_status === s)) return s
+  }
+  return 'pending_review'
+}
+
+export default function Gallery({ org, session }) {
   const isMobile = useIsMobile()
-  const [photos, setPhotos] = useState([])
+  const [media, setMedia] = useState([])
+  const [sessionsById, setSessionsById] = useState({})
+  const [sessionCounts, setSessionCounts] = useState({})
+  const [collections, setCollections] = useState([])
   const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+
   const [activeCategory, setActiveCategory] = useState('All')
-  const [lightbox, setLightbox] = useState(null)
-  const [showUploadPanel, setShowUploadPanel] = useState(false)
-  const [uploadMeta, setUploadMeta] = useState({ caption: '', category: 'Sessions' })
-  const [pendingFiles, setPendingFiles] = useState([])
-  const [editingPhoto, setEditingPhoto] = useState(null)
-  const fileRef = useRef()
-  const primary = org?.primary_color || '#1B9AAA'
+  const [showFavouritesOnly, setShowFavouritesOnly] = useState(false)
+  const [advanced, setAdvanced] = useState({ mediaType: 'all', consentStatus: 'all', safeToShareOnly: false })
+  const [viewMode, setViewMode] = useState('timeline') // timeline | grid
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+
+  const [lightboxItems, setLightboxItems] = useState(null)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [showUpload, setShowUpload] = useState(false)
+  const [uploadDefaults, setUploadDefaults] = useState({})
+  const [movePickerGroup, setMovePickerGroup] = useState(null)
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [toast, setToast] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase.from('gallery_photos').select('*').eq('org_id', org.id).order('created_at', { ascending: false })
-    setPhotos(data || [])
+    setError('')
+    const [{ data: photos, error: mErr }, { data: sessions }, { data: cols }] = await Promise.all([
+      supabase.from('gallery_photos').select('*').eq('org_id', org.id).order('created_at', { ascending: false }),
+      supabase.from('sessions').select('id, title, session_date, location').eq('org_id', org.id),
+      supabase.from('gallery_collections').select('*').eq('org_id', org.id).order('created_at'),
+    ])
+    if (mErr) { setError('Could not load your gallery. Please try again.'); setLoading(false); return }
+    setMedia(photos || [])
+    const sMap = {}
+    ;(sessions || []).forEach(s => { sMap[s.id] = s })
+    setSessionsById(sMap)
+    setCollections(cols || [])
+
+    const sessionIds = [...new Set((photos || []).filter(p => p.session_id).map(p => p.session_id))]
+    if (sessionIds.length > 0) {
+      const [{ data: att }, { data: staff }] = await Promise.all([
+        supabase.from('attendance').select('session_id, child_id').eq('org_id', org.id).eq('status', 'signed_in').in('session_id', sessionIds),
+        supabase.from('session_staff').select('session_id, user_id, volunteer_id').eq('org_id', org.id).in('session_id', sessionIds),
+      ])
+      const counts = {}
+      sessionIds.forEach(id => { counts[id] = { young: new Set(), vol: new Set() } })
+      ;(att || []).forEach(a => counts[a.session_id]?.young.add(a.child_id))
+      ;(staff || []).forEach(s => counts[s.session_id]?.vol.add(s.volunteer_id || s.user_id))
+      const finalCounts = {}
+      Object.entries(counts).forEach(([id, v]) => { finalCounts[id] = { young: v.young.size, vol: v.vol.size } })
+      setSessionCounts(finalCounts)
+    } else {
+      setSessionCounts({})
+    }
     setLoading(false)
   }, [org.id])
 
   useEffect(() => { load() }, [load])
 
-  const handleFiles = (e) => {
-    const files = Array.from(e.target.files || [])
-    if (!files.length) return
-    const previews = files.map(f => ({ file: f, preview: URL.createObjectURL(f) }))
-    setPendingFiles(previews)
-    setShowUploadPanel(true)
-  }
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2500) }
 
-  const uploadPhotos = async () => {
-    if (!pendingFiles.length) return
-    setUploading(true)
-    for (const { file, preview } of pendingFiles) {
-      const ext = file.name.split('.').pop()
-      const path = `${org.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
-      if (!upErr) {
-        const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(path)
-        await supabase.from('gallery_photos').insert({ org_id: org.id, url: urlData.publicUrl, path, category: uploadMeta.category, caption: uploadMeta.caption })
+  // Filtering
+  const filteredMedia = useMemo(() => {
+    return media.filter(m => {
+      if (activeCategory !== 'All' && m.category !== activeCategory) return false
+      if (showFavouritesOnly && !m.is_favourite) return false
+      if (advanced.mediaType !== 'all' && m.media_type !== advanced.mediaType) return false
+      if (advanced.consentStatus !== 'all' && m.consent_status !== advanced.consentStatus) return false
+      if (advanced.safeToShareOnly && m.consent_status !== 'approved') return false
+      return true
+    })
+  }, [media, activeCategory, showFavouritesOnly, advanced])
+
+  const counts = useMemo(() => {
+    const c = {}
+    CATEGORIES.forEach(cat => { c[cat.key] = cat.key === 'All' ? media.length : media.filter(m => m.category === cat.key).length })
+    return c
+  }, [media])
+
+  // Group into albums (by session, or by category+day fallback)
+  const allGroups = useMemo(() => {
+    const bySession = {}
+    const byFallback = {}
+    filteredMedia.forEach(item => {
+      if (item.session_id) {
+        (bySession[item.session_id] = bySession[item.session_id] || []).push(item)
+      } else {
+        const dayKey = (item.created_at || '').slice(0, 10)
+        const key = `${item.category || 'Other'}__${dayKey}`
+        ;(byFallback[key] = byFallback[key] || []).push(item)
       }
-      URL.revokeObjectURL(preview)
+    })
+
+    const groups = []
+    Object.entries(bySession).forEach(([sid, items]) => {
+      const s = sessionsById[sid]
+      const cover = pickCover(items)
+      groups.push({
+        id: `session-${sid}`, sessionId: sid, items,
+        title: s?.title || 'Session',
+        date: s?.session_date || items[0].created_at,
+        location: s?.location || items[0].location || null,
+        categoryLabel: items[0].category,
+        coverUrl: cover.url, coverIsVideo: cover.isVideo,
+        photoCount: items.filter(i => i.media_type !== 'video').length,
+        videoCount: items.filter(i => i.media_type === 'video').length,
+        youngPeopleCount: sessionCounts[sid] ? sessionCounts[sid].young : null,
+        volunteerCount: sessionCounts[sid] ? sessionCounts[sid].vol : null,
+        isFavourite: items.some(i => i.is_favourite),
+        consentStatus: worstConsent(items),
+        caption: items.find(i => i.caption)?.caption || null,
+      })
+    })
+    Object.entries(byFallback).forEach(([key, items]) => {
+      const [cat, day] = key.split('__')
+      const cover = pickCover(items)
+      groups.push({
+        id: `day-${key}`, sessionId: null, items,
+        title: (!cat || cat === 'Other') ? 'Unsorted Memories' : cat,
+        date: day || items[0].created_at,
+        location: items[0].location || null,
+        categoryLabel: cat,
+        coverUrl: cover.url, coverIsVideo: cover.isVideo,
+        photoCount: items.filter(i => i.media_type !== 'video').length,
+        videoCount: items.filter(i => i.media_type === 'video').length,
+        youngPeopleCount: null, volunteerCount: null,
+        isFavourite: items.some(i => i.is_favourite),
+        consentStatus: worstConsent(items),
+        caption: items.find(i => i.caption)?.caption || null,
+      })
+    })
+    groups.sort((a, b) => new Date(b.date) - new Date(a.date))
+    return groups
+  }, [filteredMedia, sessionsById, sessionCounts])
+
+  const visibleGroups = allGroups.slice(0, visibleCount)
+  const hasMore = allGroups.length > visibleCount
+
+  const groupedByDay = useMemo(() => {
+    const out = {}
+    visibleGroups.forEach(g => {
+      const label = timelineGroupLabel(g.date)
+      out[label] = out[label] || []
+      const dateLabel = new Date(g.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+      out[label].push({ ...g, dateLabel })
+    })
+    return out
+  }, [visibleGroups])
+
+  // Collections with computed cover/count
+  const collectionsWithMeta = useMemo(() => {
+    return collections.map(c => {
+      const items = media.filter(m => m.collection_id === c.id)
+      const cover = items.length ? pickCover(items) : {}
+      return { ...c, mediaCount: items.length, coverUrl: cover.url }
+    })
+  }, [collections, media])
+
+  // This Week in History
+  const historyMemory = useMemo(() => {
+    const now = new Date()
+    let best = null, bestDiff = Infinity
+    allGroups.forEach(g => {
+      const d = new Date(g.date)
+      const yearsAgo = now.getFullYear() - d.getFullYear()
+      if (yearsAgo < 1) return
+      const thisYearEquivalent = new Date(d)
+      thisYearEquivalent.setFullYear(now.getFullYear() - (yearsAgo - 1))
+      const diff = Math.abs((thisYearEquivalent - now) / (1000 * 60 * 60 * 24))
+      if (diff <= 4 && diff < bestDiff) { best = { ...g, yearsAgo }; bestDiff = diff }
+    })
+    return best
+  }, [allGroups])
+
+  // Actions
+  const toggleFavouriteItem = async (item) => {
+    const next = !item.is_favourite
+    setMedia(m => m.map(x => x.id === item.id ? { ...x, is_favourite: next } : x))
+    await supabase.from('gallery_photos').update({ is_favourite: next }).eq('id', item.id)
+  }
+
+  const toggleFavouriteGroup = async (group) => {
+    const next = !group.isFavourite
+    const ids = group.items.map(i => i.id)
+    setMedia(m => m.map(x => ids.includes(x.id) ? { ...x, is_favourite: next } : x))
+    await supabase.from('gallery_photos').update({ is_favourite: next }).in('id', ids)
+  }
+
+  const saveMediaDetails = async (item, patch) => {
+    setMedia(m => m.map(x => x.id === item.id ? { ...x, ...patch } : x))
+    await supabase.from('gallery_photos').update(patch).eq('id', item.id)
+    showToast('Saved')
+  }
+
+  const deleteItems = async (items) => {
+    const paths = items.map(i => i.path).filter(Boolean)
+    if (paths.length) await supabase.storage.from('gallery').remove(paths)
+    await supabase.from('gallery_photos').delete().in('id', items.map(i => i.id))
+    setMedia(m => m.filter(x => !items.some(i => i.id === x.id)))
+  }
+
+  const handleDeleteMedia = async (item) => {
+    if (!window.confirm('Delete this item? This cannot be undone.')) return
+    await deleteItems([item])
+    setLightboxItems(null)
+    showToast('Deleted')
+  }
+
+  const downloadItem = (item) => {
+    const a = document.createElement('a')
+    a.href = item.url
+    a.download = item.caption || 'memory'
+    a.target = '_blank'
+    document.body.appendChild(a); a.click(); a.remove()
+  }
+
+  const shareItem = async (item) => {
+    const shareData = { title: item.caption || 'Memory', url: item.url }
+    try {
+      if (navigator.share) await navigator.share(shareData)
+      else { await navigator.clipboard.writeText(item.url); showToast('Link copied to clipboard') }
+    } catch (e) { /* user cancelled */ }
+  }
+
+  const createCollection = async (name) => {
+    const { data, error } = await supabase.from('gallery_collections').insert({ org_id: org.id, name }).select().single()
+    if (!error && data) setCollections(c => [...c, data])
+  }
+
+  const moveGroupToCollection = async (group, collectionId) => {
+    const ids = group.items.map(i => i.id)
+    setMedia(m => m.map(x => ids.includes(x.id) ? { ...x, collection_id: collectionId || null } : x))
+    await supabase.from('gallery_photos').update({ collection_id: collectionId || null }).in('id', ids)
+    setMovePickerGroup(null)
+    showToast('Moved')
+  }
+
+  const handleTimelineAction = async (action, group) => {
+    if (action === 'add') { setUploadDefaults({ defaultSessionId: group.sessionId, defaultCategory: group.categoryLabel }); setShowUpload(true) }
+    else if (action === 'share') shareItem(group.items[0])
+    else if (action === 'download') group.items.forEach(downloadItem)
+    else if (action === 'move') setMovePickerGroup(group)
+    else if (action === 'archive') {
+      let archived = collections.find(c => c.name === 'Archived')
+      if (!archived) {
+        const { data } = await supabase.from('gallery_collections').insert({ org_id: org.id, name: 'Archived' }).select().single()
+        archived = data
+        if (archived) setCollections(c => [...c, archived])
+      }
+      if (archived) await moveGroupToCollection(group, archived.id)
     }
-    setUploading(false)
-    setPendingFiles([])
-    setShowUploadPanel(false)
-    setUploadMeta({ caption: '', category: 'Sessions' })
-    load()
+    else if (action === 'delete') {
+      if (!window.confirm(`Delete all ${group.items.length} item(s) in "${group.title}"? This cannot be undone.`)) return
+      await deleteItems(group.items)
+      showToast('Album deleted')
+    }
   }
 
-  const deletePhoto = async (photo) => {
-    if (!window.confirm('Delete this photo?')) return
-    if (photo.path) await supabase.storage.from('gallery').remove([photo.path])
-    await supabase.from('gallery_photos').delete().eq('id', photo.id)
-    setPhotos(p => p.filter(x => x.id !== photo.id))
-    setLightbox(null)
+  const openLightboxForGroup = (group) => { setLightboxItems(group.items); setLightboxIndex(0) }
+  const openLightboxForItem = (item) => {
+    const idx = filteredMedia.findIndex(m => m.id === item.id)
+    setLightboxItems(filteredMedia)
+    setLightboxIndex(idx >= 0 ? idx : 0)
   }
 
-  const saveCaption = async (photo, caption) => {
-    await supabase.from('gallery_photos').update({ caption }).eq('id', photo.id)
-    setPhotos(p => p.map(x => x.id === photo.id ? { ...x, caption } : x))
-    if (lightbox?.id === photo.id) setLightbox(l => ({ ...l, caption }))
-    setEditingPhoto(null)
-  }
-
-  const filtered = activeCategory === 'All' ? photos : photos.filter(p => p.category === activeCategory)
-  const counts = CATEGORIES.reduce((acc, cat) => {
-    acc[cat] = cat === 'All' ? photos.length : photos.filter(p => p.category === cat).length
-    return acc
-  }, {})
+  const toggleSelect = (id) => setSelectedIds(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
 
   return (
-    <div>
-      {/* Header */}
-      <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 900 }}>🖼️ Photo Gallery</div>
-            <div style={{ fontSize: 13, color: '#6B7280', marginTop: 3 }}>{photos.length} memories captured · Keep the magic alive</div>
-          </div>
-          <button onClick={() => fileRef.current?.click()} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
-            📷 Upload Photos
-          </button>
-          <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleFiles} style={{ display: 'none' }} />
-        </div>
-        {/* Stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
-          {[
-            { label: 'Total Photos', value: photos.length, icon: '🖼️' },
-            { label: 'Categories', value: CATEGORIES.slice(1).filter(c => counts[c] > 0).length, icon: '🗂️' },
-            { label: 'This Month', value: photos.filter(p => new Date(p.created_at) > new Date(Date.now() - 30*24*60*60*1000)).length, icon: '📅' },
-            { label: 'Trip Photos', value: counts['Trips'] || 0, icon: '🚌' },
-          ].map(s => (
-            <div key={s.label} style={{ background: '#fff', borderRadius: 12, padding: '10px 14px', border: '1px solid #e5e7eb' }}>
-              <div style={{ fontSize: 20, fontWeight: 900 }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{s.icon} {s.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Category filter */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
-        {CATEGORIES.map(cat => (
-          <button key={cat} onClick={() => setActiveCategory(cat)} style={{ padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${activeCategory === cat ? primary : '#e5e7eb'}`, background: activeCategory === cat ? primary + '12' : '#fff', color: activeCategory === cat ? primary : '#6B7280', fontSize: 12, fontWeight: activeCategory === cat ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            {cat} {counts[cat] > 0 && <span style={{ opacity: 0.7 }}>({counts[cat]})</span>}
-          </button>
-        ))}
-      </div>
-
-      {/* Upload panel */}
-      {showUploadPanel && (
-        <div style={{ background: '#F0F9FF', border: '1.5px solid #BAE6FD', borderRadius: 16, padding: 20, marginBottom: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>📤 Upload {pendingFiles.length} photo{pendingFiles.length > 1 ? 's' : ''}</div>
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 14, paddingBottom: 4 }}>
-            {pendingFiles.map((pf, i) => (
-              <img key={i} src={pf.preview} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, flexShrink: 0, border: '2px solid #fff' }} />
-            ))}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>CATEGORY</label>
-              <select value={uploadMeta.category} onChange={e => setUploadMeta(m => ({ ...m, category: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit' }}>
-                {CATEGORIES.slice(1).map(c => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>CAPTION (optional)</label>
-              <input value={uploadMeta.caption} onChange={e => setUploadMeta(m => ({ ...m, caption: e.target.value }))} placeholder="e.g. Summer tournament finals 🏆" style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit' }} />
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={uploadPhotos} disabled={uploading} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
-              {uploading ? 'Uploading...' : `Upload ${pendingFiles.length} photo${pendingFiles.length > 1 ? 's' : ''}`}
-            </button>
-            <button onClick={() => { setShowUploadPanel(false); setPendingFiles([]) }} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          </div>
+    <div style={{ position: 'relative' }}>
+      {isMobile && (
+        <button onClick={() => { setUploadDefaults({}); setShowUpload(true) }} style={{
+          position: 'fixed', bottom: 20, right: 18, zIndex: 90, width: 56, height: 56, borderRadius: '50%',
+          border: 'none', background: LS.gradient, color: '#fff', cursor: 'pointer', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', boxShadow: `0 10px 24px ${LS.purple}55`,
+        }} title="Upload Photos">
+          <IconGlyph name="camera" color="#fff" size={22} />
+        </button>
+      )}
+      {toast && (
+        <div style={{ position: 'fixed', top: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 400, background: LS.text, color: '#fff', padding: '10px 18px', borderRadius: 12, fontSize: 12.5, fontWeight: 600, boxShadow: '0 10px 26px rgba(0,0,0,0.25)' }}>
+          {toast}
         </div>
       )}
 
-      {/* Grid */}
-      {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>Loading gallery...</div>
-      ) : filtered.length === 0 ? (
-        <div style={{ padding: 60, textAlign: 'center', background: '#F9FAFB', borderRadius: 16, border: '1.5px dashed #e5e7eb' }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>📷</div>
-          <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>No photos yet</div>
-          <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 20 }}>Every session is worth remembering — start capturing moments</div>
-          <button onClick={() => fileRef.current?.click()} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>📷 Upload First Photo</button>
+      {error && (
+        <div style={{ background: '#FCEAEA', border: '1px solid #F5B5B5', borderRadius: 14, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <span style={{ fontSize: 13, color: '#B91C1C', fontWeight: 600 }}>{error}</span>
+          <button onClick={load} style={{ padding: '7px 16px', borderRadius: 9, border: 'none', background: '#B91C1C', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Retry</button>
         </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 60, color: LS.muted }}>Loading your Memory Vault...</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
-          {filtered.map(photo => (
-            <div key={photo.id} onClick={() => setLightbox(photo)} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', aspectRatio: '1', cursor: 'pointer', background: '#F3F4F6' }}
-              onMouseEnter={e => e.currentTarget.querySelector('.overlay').style.opacity = '1'}
-              onMouseLeave={e => e.currentTarget.querySelector('.overlay').style.opacity = '0'}>
-              <img src={photo.url} alt={photo.caption || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              <div className="overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', opacity: 0, transition: 'opacity 0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 10 }}>
-                {photo.caption && <div style={{ fontSize: 11, color: '#fff', fontWeight: 600, lineHeight: 1.3 }}>{photo.caption}</div>}
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>{format(new Date(photo.created_at), 'd MMM yyyy')}</div>
-              </div>
-              {photo.category && (
-                <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', color: '#fff', borderRadius: 6, padding: '2px 7px', fontSize: 10, fontWeight: 700, backdropFilter: 'blur(4px)' }}>{photo.category}</div>
+        <>
+          <MemoryHero media={media} onUpload={() => { setUploadDefaults({}); setShowUpload(true) }} onCreateAlbum={() => document.getElementById('gallery-new-collection-anchor')?.scrollIntoView({ behavior: 'smooth' })} />
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+            <GalleryFilters
+              activeCategory={activeCategory} onCategoryChange={c => { setActiveCategory(c); setVisibleCount(PAGE_SIZE) }}
+              counts={counts} showFavouritesOnly={showFavouritesOnly} onToggleFavourites={() => setShowFavouritesOnly(v => !v)}
+              advanced={advanced} onAdvancedChange={setAdvanced}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+            <div style={{ display: 'flex', gap: 4, background: LS.bg, borderRadius: 10, padding: 3, marginBottom: 12 }}>
+              {[{ key: 'timeline', label: 'Timeline' }, { key: 'grid', label: 'Grid' }].map(v => (
+                <button key={v.key} onClick={() => setViewMode(v.key)} style={{
+                  padding: '6px 14px', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                  background: viewMode === v.key ? '#fff' : 'transparent', color: viewMode === v.key ? LS.purpleDark : LS.muted,
+                  boxShadow: viewMode === v.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                }}>{v.label}</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.7fr 1fr', gap: 16, alignItems: 'start' }}>
+            <div>
+              {viewMode === 'timeline' ? (
+                <MemoryTimeline
+                  groupedByDay={groupedByDay} onView={openLightboxForGroup} onToggleFavourite={toggleFavouriteGroup}
+                  onAction={handleTimelineAction} hasMore={hasMore} onLoadMore={() => setVisibleCount(v => v + PAGE_SIZE)}
+                  onUpload={() => { setUploadDefaults({}); setShowUpload(true) }} hasAnyMedia={media.length > 0}
+                />
+              ) : (
+                <GalleryGrid
+                  items={filteredMedia} onOpen={openLightboxForItem} onToggleFavourite={toggleFavouriteItem}
+                  selectedIds={selectedIds} onToggleSelect={toggleSelect} hasAnyMedia={media.length > 0}
+                  onUpload={() => { setUploadDefaults({}); setShowUpload(true) }}
+                />
               )}
             </div>
-          ))}
-        </div>
+
+            <div>
+              <HighlightsPanel media={media} onViewAll={() => setViewMode('grid')} onOpen={openLightboxForItem} />
+              <div id="gallery-new-collection-anchor">
+                <CollectionsPanel
+                  collections={collectionsWithMeta}
+                  onOpen={() => { setActiveCategory('All'); setShowFavouritesOnly(false); setAdvanced({ mediaType: 'all', consentStatus: 'all', safeToShareOnly: false }); setViewMode('grid') }}
+                  onCreate={createCollection}
+                  onViewAll={() => setViewMode('grid')}
+                />
+              </div>
+              {historyMemory && <HistoryMemoryCard memory={historyMemory} onRelive={(m) => openLightboxForGroup(m)} />}
+            </div>
+          </div>
+        </>
       )}
 
-      {/* Lightbox */}
-      {lightbox && (
-        <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 800, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <button onClick={() => setLightbox(null)} style={{ position: 'absolute', top: 20, right: 24, background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 40, height: 40, borderRadius: '50%', fontSize: 20, cursor: 'pointer' }}>×</button>
-          <img onClick={e => e.stopPropagation()} src={lightbox.url} alt={lightbox.caption || ''} style={{ maxWidth: '90vw', maxHeight: '70vh', objectFit: 'contain', borderRadius: 12 }} />
-          <div onClick={e => e.stopPropagation()} style={{ marginTop: 16, textAlign: 'center', maxWidth: 480 }}>
-            {editingPhoto === lightbox.id ? (
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
-                <input defaultValue={lightbox.caption || ''} id="lightbox-caption-input" style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, outline: 'none', width: '100%', maxWidth: 260, boxSizing: 'border-box' }} />
-                <button onClick={() => saveCaption(lightbox, document.getElementById('lightbox-caption-input').value)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}>Save</button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>{lightbox.caption || <span style={{ opacity: 0.4 }}>No caption</span>}</div>
-                <button onClick={() => setEditingPhoto(lightbox.id)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 12 }}>✏️</button>
-              </div>
-            )}
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>{lightbox.category} · {format(new Date(lightbox.created_at), 'd MMM yyyy')}</div>
-            <button onClick={() => deletePhoto(lightbox)} style={{ marginTop: 12, padding: '7px 16px', borderRadius: 8, border: '1px solid rgba(220,38,38,0.4)', background: 'rgba(220,38,38,0.15)', color: '#FCA5A5', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🗑️ Delete Photo</button>
+      {lightboxItems && (
+        <GalleryLightbox
+          items={lightboxItems} index={lightboxIndex} onClose={() => setLightboxItems(null)}
+          onNavigate={setLightboxIndex} onSave={saveMediaDetails} onDelete={handleDeleteMedia}
+          onDownload={downloadItem} onShare={shareItem}
+          sessionTitleFor={(sid) => sessionsById[sid]?.title}
+        />
+      )}
+
+      {showUpload && (
+        <GalleryUploadWizard
+          org={org} collections={collections} onClose={() => setShowUpload(false)}
+          onDone={() => { setShowUpload(false); load(); showToast('Upload complete') }}
+          defaultSessionId={uploadDefaults.defaultSessionId} defaultCategory={uploadDefaults.defaultCategory}
+        />
+      )}
+
+      {movePickerGroup && (
+        <>
+          <div onClick={() => setMovePickerGroup(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(20,10,50,0.45)', zIndex: 299 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 300, background: '#fff', borderRadius: 18, padding: 22, width: 'min(340px, 92vw)', boxShadow: '0 24px 60px rgba(0,0,0,0.25)' }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: LS.text, marginBottom: 14 }}>Move to collection</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 260, overflowY: 'auto' }}>
+              <button onClick={() => moveGroupToCollection(movePickerGroup, null)} style={{ textAlign: 'left', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${LS.border}`, background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: LS.text }}>No collection</button>
+              {collections.map(c => (
+                <button key={c.id} onClick={() => moveGroupToCollection(movePickerGroup, c.id)} style={{ textAlign: 'left', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${LS.border}`, background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: LS.text }}>{c.name}</button>
+              ))}
+            </div>
+            <button onClick={() => setMovePickerGroup(null)} style={{ marginTop: 14, width: '100%', padding: '10px', borderRadius: 10, border: `1.5px solid ${LS.border}`, background: '#fff', color: LS.muted, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
-        </div>
+        </>
       )}
     </div>
   )
