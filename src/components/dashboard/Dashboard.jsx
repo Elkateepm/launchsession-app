@@ -428,22 +428,20 @@ export default function Dashboard({ session, org }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Mirrors dialHoveredKey into a ref so the pointerup handler below always reads the very
-  // latest hovered item without needing to re-subscribe listeners on every move.
-  const dialHoveredKeyLive = React.useRef(null)
-  React.useEffect(() => { dialHoveredKeyLive.current = dialHoveredKey }, [dialHoveredKey])
-
   // Radial dial: press-and-slide-to-select gesture. Started from the FAB's onPointerDown;
   // tracked here via window listeners so the finger can move anywhere on screen while held.
   React.useEffect(() => {
     if (!dialDragging) return
     const DEADZONE = 34 // px from centre before an item counts as "hovered"
+    let hoveredNow = null // written synchronously in handleMove — no React render-cycle lag,
+                           // unlike a ref synced via useEffect, which can go stale on a fast
+                           // real-device slide-and-release (pointerup firing before the effect runs)
 
     const handleMove = (e) => {
       const dx = e.clientX - dialCenterRef.current.x
       const dy = dialCenterRef.current.y - e.clientY // inverted: up = positive, matches slot convention
       const dist = Math.hypot(dx, dy)
-      if (dist < DEADZONE) { setDialHoveredKey(null); return }
+      if (dist < DEADZONE) { hoveredNow = null; setDialHoveredKey(null); return }
       const angle = Math.atan2(dx, dy) * (180 / Math.PI)
       let closest = null, closestDiff = Infinity
       dialItemsRef.current.forEach(item => {
@@ -451,12 +449,13 @@ export default function Dashboard({ session, org }) {
         const diff = Math.abs(angle - itemAngle)
         if (diff < closestDiff) { closestDiff = diff; closest = item }
       })
-      setDialHoveredKey(closest ? closest.uid : null)
+      hoveredNow = closest ? closest.uid : null
+      setDialHoveredKey(hoveredNow)
     }
 
     const handleUp = () => {
       setDialDragging(false)
-      const chosen = dialItemsRef.current.find(i => i.uid === dialHoveredKeyLive.current)
+      const chosen = dialItemsRef.current.find(i => i.uid === hoveredNow)
       setShowLaunchMenu(false)
       setDialHoveredKey(null)
       if (chosen) {
@@ -1077,28 +1076,10 @@ export default function Dashboard({ session, org }) {
                   return (
                     <>
                       {items.map((item, i) => {
-                        const radius = Math.hypot(item.dx, item.dy)
-                        const angle = Math.atan2(item.dx, item.dy) * (180 / Math.PI)
                         const hovered = dialHoveredKey === item.uid
                         return (
                           <React.Fragment key={item.uid}>
-                            {/* Connecting line back to the FAB — static rotate/position lives on this
-                                plain wrapper; the motion.div inside only animates scaleY/opacity, so
-                                Framer Motion never has a reason to overwrite our rotate transform. */}
-                            <div style={{
-                              position: 'absolute', left: '50%', bottom: 0, width: 1.5, height: radius,
-                              transformOrigin: 'bottom center', transform: `translateX(-50%) rotate(${angle}deg)`,
-                            }}>
-                              <motion.div
-                                initial={{ opacity: 0, scaleY: 0 }} animate={{ opacity: 1, scaleY: 1 }} exit={{ opacity: 0, scaleY: 0 }}
-                                transition={{ delay: i * 0.02, duration: 0.22 }}
-                                style={{
-                                  width: '100%', height: '100%', transformOrigin: 'bottom center',
-                                  background: hovered ? 'linear-gradient(to top, rgba(255,255,255,0.7), rgba(255,255,255,0))' : 'linear-gradient(to top, rgba(168,139,250,0.5), rgba(168,139,250,0))',
-                                }}
-                              />
-                            </div>
-                            {/* The action bubble itself — same fix: static centering transform on the
+                            {/* The action bubble itself — static centering transform on the
                                 wrapper, motion.button only animates scale/opacity. */}
                             <div style={{ position: 'absolute', left: item.dx, bottom: item.dy, transform: 'translate(-50%, 50%)' }}>
                               <motion.button
@@ -1106,7 +1087,7 @@ export default function Dashboard({ session, org }) {
                                 animate={{ opacity: 1, scale: hovered ? 1.18 : 1 }}
                                 exit={{ opacity: 0, scale: 0.3 }}
                                 transition={{ delay: i * 0.025, type: 'spring', stiffness: 460, damping: 24 }}
-                                onClick={() => { setShowLaunchMenu(false); handleSetTab(item.key, item.key === 'planner' ? { autoOpenWizard: false } : undefined) }}
+                                onPointerDown={(e) => { e.stopPropagation(); setShowLaunchMenu(false); handleSetTab(item.key, item.key === 'planner' ? { autoOpenWizard: false } : undefined) }}
                                 style={{
                                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
                                   width: 66, padding: '10px 4px', borderRadius: 18,
@@ -1136,7 +1117,7 @@ export default function Dashboard({ session, org }) {
                         <motion.button
                           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
                           transition={{ delay: 0.16, duration: 0.2 }}
-                          onClick={() => { setShowLaunchMenu(false); handleSetTab(ctaTarget) }}
+                          onPointerDown={(e) => { e.stopPropagation(); setShowLaunchMenu(false); handleSetTab(ctaTarget) }}
                           style={{
                             padding: '9px 20px', borderRadius: 99, border: 'none', whiteSpace: 'nowrap',
                             background: navContext.mode === 'live' ? 'linear-gradient(135deg,#22C55E,#16A34A)' : navContext.mode === 'ended' ? 'linear-gradient(135deg,#6366F1,#4F46E5)' : 'linear-gradient(135deg,#7C3AED,#A855F7)',
