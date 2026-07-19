@@ -17,7 +17,6 @@ export default function Login({ org }) {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [magicSent, setMagicSent] = useState(false)
   const [forgotSent, setForgotSent] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
@@ -50,16 +49,6 @@ export default function Login({ org }) {
       return
     }
     // Auth state change is picked up by App.js — no redirect needed
-  }
-
-  const handleMagicLink = async () => {
-    setLoading(true)
-    setError('')
-    try { localStorage.setItem('ls_remember_me', rememberMe ? 'true' : 'false') } catch (e) {}
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } })
-    if (error) { setError(error.message); setLoading(false); return }
-    setMagicSent(true)
-    setLoading(false)
   }
 
   const handleForgot = async e => {
@@ -122,19 +111,9 @@ export default function Login({ org }) {
                 <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>or</span>
                 <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
               </div>
-              <button onClick={() => { if(email.trim()) handleMagicLink() }} style={{ marginTop: 16, width: '100%', padding: 13, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s' }}>
-                ✉️ Email me a magic link
+              <button onClick={() => { if (email.trim()) { setError(''); setStep(STEPS.FORGOT) } }} style={{ marginTop: 16, width: '100%', padding: 13, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s' }}>
+                Forgot password?
               </button>
-            </div>
-          )}
-
-          {/* STEP: MAGIC SENT */}
-          {step === STEPS.EMAIL && magicSent && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(6,11,24,0.97)', borderRadius: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>✉️</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Check your email</div>
-              <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>We sent a magic link to <strong style={{ color: '#fff' }}>{email}</strong>. Click it to sign in instantly.</div>
-              <button onClick={() => setMagicSent(false)} style={{ marginTop: 24, padding: '10px 24px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 13, cursor: 'pointer' }}>Back</button>
             </div>
           )}
 
@@ -173,9 +152,8 @@ export default function Login({ org }) {
                 </span>
                 <span onClick={() => setRememberMe(r => !r)} style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>Keep me logged in</span>
               </label>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
+              <div style={{ marginTop: 16 }}>
                 <button onClick={() => { setStep(STEPS.FORGOT); setError('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', padding: 0 }}>Forgot password?</button>
-                <button onClick={handleMagicLink} style={{ background: 'none', border: 'none', color: primary, fontSize: 13, cursor: 'pointer', padding: 0, fontWeight: 600 }}>Email magic link</button>
               </div>
             </div>
           )}
