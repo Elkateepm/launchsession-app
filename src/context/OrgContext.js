@@ -1,4 +1,7 @@
 // AUTH FLOW LOCK: /org-search must clear saved org and never default to a previous organisation.
+// EXCEPTION: an explicit "remember this organisation" opt-in (launchsession_remembered_org_slug,
+// set only via a checkbox on OrgLookup) is allowed to fall back on bare root / login, since that's
+// informed consent rather than a silent default. /org-search clears this key too.
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
@@ -38,6 +41,7 @@ export function OrgProvider({ children }) {
 
       if (pathname === '/org-search') {
         localStorage.removeItem('launchsession_org_slug')
+        localStorage.removeItem('launchsession_remembered_org_slug')
         setOrg(null)
         setNoOrg(true)
         setLoading(false)
@@ -54,6 +58,14 @@ export function OrgProvider({ children }) {
       const isBareRoot = pathname === '/'
       if (!slug && pathname !== '/login' && !isBareRoot) {
         slug = localStorage.getItem('launchsession_org_slug')
+      }
+
+      // A user who explicitly ticked "remember this organisation" on OrgLookup
+      // gets a persistent, opt-in fallback even on the bare root or /login —
+      // this is a deliberate exception to the auth flow lock above, since it's
+      // informed consent rather than a silent default.
+      if (!slug && (isBareRoot || pathname === '/login')) {
+        slug = localStorage.getItem('launchsession_remembered_org_slug')
       }
 
       if (!slug && hostname.includes('.launchsession.app')) {
