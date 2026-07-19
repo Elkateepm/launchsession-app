@@ -3,6 +3,7 @@ import { supabase } from './lib/supabase'
 import { OrgProvider, useOrg } from './context/OrgContext'
 import Login from './components/auth/Login'
 import CreatePassword from './components/auth/CreatePassword'
+import ResetPassword from './components/auth/ResetPassword'
 import Signup from './components/auth/Signup'
 import OrgLookup from './components/auth/OrgLookup'
 import Dashboard from './components/dashboard/Dashboard'
@@ -119,7 +120,7 @@ function shouldGoToLanding() {
   const hostname = window.location.hostname
   const hasOrg = new URLSearchParams(window.location.search).get('org')
   const isDashboard = pathname === '/dashboard'
-  const isSpecialRoute = ['/login', '/signup', '/create-password', '/org-search'].includes(pathname) || pathname.startsWith('/volunteer') || pathname.startsWith('/forms/')
+  const isSpecialRoute = ['/login', '/signup', '/create-password', '/org-search', '/reset-password'].includes(pathname) || pathname.startsWith('/volunteer') || pathname.startsWith('/forms/')
   // The app subdomain is the application itself — never redirect it to the
   // marketing landing page, regardless of path or org context.
   const isAppSubdomain = hostname.startsWith('app.')
@@ -201,6 +202,7 @@ function AppContent() {
 
   // Special routes that bypass the org/session splash entirely.
   if (pathname === '/create-password') return <CreatePassword />
+  if (pathname === '/reset-password') return <ResetPassword />
   if (window.location.pathname === '/signup') return <Signup />
 
   const baseLoading = orgLoading || loading
