@@ -12,7 +12,7 @@ import VolunteerAcceptInvite from './components/volunteers/VolunteerAcceptInvite
 import PublicForm from './components/forms/PublicForm'
 import SplashScreen from './components/common/SplashScreen'
 
-const IDLE_TIMEOUT_MS = 60 * 60 * 1000 // 1 hour
+const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000 // 2 hours
 
 // Signs the user out and returns them to the marketing landing page after a
 // sustained period with no interaction. Only active while `enabled` (a live
