@@ -60,6 +60,8 @@ export default function Login({ org }) {
         email,
         org_name: orgName,
         org_slug: org?.slug,
+        org_logo: org?.logo_url,
+        org_color: org?.primary_color,
         redirect_to: window.location.origin + '/reset-password' + (org?.slug ? '?org=' + org.slug : ''),
       },
     })
