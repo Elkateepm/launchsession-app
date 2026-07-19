@@ -954,36 +954,72 @@ export default function Dashboard({ session, org }) {
               width: 66, height: 66,
               zIndex: 10000,
             }}>
-              <motion.button
-                onPointerDown={(e) => {
-                  if (navigator.vibrate) navigator.vibrate(8)
-                  const rect = e.currentTarget.getBoundingClientRect()
-                  dialCenterRef.current = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
-                  setShowLaunchMenu(true)
-                  setDialDragging(true)
-                }}
-                whileTap={{ scale: 0.92 }}
-                animate={navContext.mode === 'live' ? { scale: [1, 1.06, 1] } : { scale: 1 }}
-                transition={navContext.mode === 'live' ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : {}}
-                style={{
-                  width: '100%', height: '100%', borderRadius: '50%',
-                  border: '4px solid rgba(10,15,30,0.9)',
-                  background: navContext.mode === 'live'
-                    ? 'linear-gradient(135deg, #22C55E, #16A34A)'
-                    : navContext.mode === 'ended'
-                      ? 'linear-gradient(135deg, #6366F1, #4F46E5)'
-                      : navContext.mode === 'calendar'
-                        ? 'linear-gradient(135deg, #7C3AED, #6366F1)'
-                        : 'linear-gradient(135deg, #7C3AED, #A855F7)',
-                  boxShadow: navContext.mode === 'live' ? '0 8px 28px -6px rgba(34,197,94,0.7)' : '0 8px 28px -6px rgba(124,58,237,0.6)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', touchAction: 'none',
-                }}
-              >
-                <span style={{ fontSize: 26 }}>
-                  {navContext.mode === 'live' ? '🟢' : navContext.mode === 'ended' ? '🌙' : navContext.mode === 'calendar' ? '📆' : '🚀'}
-                </span>
-              </motion.button>
+              {(() => {
+                const fabGlow = navContext.mode === 'live' ? 'rgba(34,197,94,0.55)' : 'rgba(124,58,237,0.55)'
+                const fabCore = navContext.mode === 'live'
+                  ? 'radial-gradient(circle at 34% 28%, #6EE7A0, #22C55E 55%, #16803B 100%)'
+                  : navContext.mode === 'ended'
+                    ? 'radial-gradient(circle at 34% 28%, #A5B4FC, #6366F1 55%, #3730A3 100%)'
+                    : navContext.mode === 'calendar'
+                      ? 'radial-gradient(circle at 34% 28%, #C4B5FD, #7C3AED 55%, #4C1D95 100%)'
+                      : 'radial-gradient(circle at 34% 28%, #C4B5FD, #8B5CF6 55%, #5B21B6 100%)'
+                return (
+                  <>
+                    {/* Soft outer glow halo, sitting behind the ring */}
+                    <div style={{
+                      position: 'absolute', inset: -14, borderRadius: '50%',
+                      background: `radial-gradient(circle, ${fabGlow} 0%, transparent 68%)`,
+                      filter: 'blur(2px)', pointerEvents: 'none',
+                    }} />
+                    {/* Thin outer ring, offset from the sphere — echoes the "Orbit" style */}
+                    <div style={{
+                      position: 'absolute', inset: -8, borderRadius: '50%',
+                      border: `1.5px solid ${navContext.mode === 'live' ? 'rgba(34,197,94,0.45)' : 'rgba(139,92,246,0.45)'}`,
+                      pointerEvents: 'none',
+                    }} />
+                    <motion.button
+                      onPointerDown={(e) => {
+                        if (navigator.vibrate) navigator.vibrate(8)
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        dialCenterRef.current = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+                        setShowLaunchMenu(true)
+                        setDialDragging(true)
+                      }}
+                      whileTap={{ scale: 0.92 }}
+                      animate={navContext.mode === 'live' ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+                      transition={navContext.mode === 'live' ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : {}}
+                      style={{
+                        position: 'relative',
+                        width: '100%', height: '100%', borderRadius: '50%',
+                        border: '3px solid rgba(10,15,30,0.9)',
+                        background: fabCore,
+                        boxShadow: `0 8px 28px -6px ${fabGlow}, inset 0 8px 14px rgba(255,255,255,0.25), inset 0 -10px 16px rgba(0,0,0,0.35)`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', touchAction: 'none', overflow: 'hidden',
+                      }}
+                    >
+                      {/* Glossy highlight, upper-left */}
+                      <div style={{
+                        position: 'absolute', top: '10%', left: '16%', width: '46%', height: '30%',
+                        borderRadius: '50%', background: 'rgba(255,255,255,0.35)', filter: 'blur(4px)',
+                        pointerEvents: 'none',
+                      }} />
+                      {navContext.mode === 'live' || navContext.mode === 'ended' || navContext.mode === 'calendar' ? (
+                        <span style={{ fontSize: 24, position: 'relative', zIndex: 1 }}>
+                          {navContext.mode === 'live' ? '🟢' : navContext.mode === 'ended' ? '🌙' : '📆'}
+                        </span>
+                      ) : (
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{ position: 'relative', zIndex: 1 }}>
+                          <path
+                            d="M12 2 C12.6 7.2 13.4 9.2 18 10.5 C13.4 11.8 12.6 13.8 12 19 C11.4 13.8 10.6 11.8 6 10.5 C10.6 9.2 11.4 7.2 12 2 Z"
+                            fill="#FFFFFF"
+                          />
+                        </svg>
+                      )}
+                    </motion.button>
+                  </>
+                )
+              })()}
             </div>
           </>
         )}
