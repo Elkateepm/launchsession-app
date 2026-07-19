@@ -17,6 +17,7 @@ export default function OrgLookup() {
   const [step, setStep] = useState('org')
   const [org, setOrg] = useState(null)
   const [inputFocused, setInputFocused] = useState(false)
+  const [rememberOrg, setRememberOrg] = useState(false)
 
   const handleOrgSearch = async e => {
     e.preventDefault()
@@ -54,6 +55,11 @@ export default function OrgLookup() {
 
   const handleContinue = (selectedOrg) => {
     localStorage.setItem('launchsession_org_slug', selectedOrg.slug)
+    if (rememberOrg) {
+      localStorage.setItem('launchsession_remembered_org_slug', selectedOrg.slug)
+    } else {
+      localStorage.removeItem('launchsession_remembered_org_slug')
+    }
     window.location.href = window.location.origin + '/login?org=' + selectedOrg.slug
   }
 
@@ -195,6 +201,19 @@ export default function OrgLookup() {
                 Verified Organisation
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 24 }}>{org.slug}.launchsession.co.uk</div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, cursor: 'pointer', userSelect: 'none' }}>
+                <input
+                  type="checkbox"
+                  checked={rememberOrg}
+                  onChange={e => setRememberOrg(e.target.checked)}
+                  style={{ width: 17, height: 17, accentColor: '#8B5CF6', cursor: 'pointer', flexShrink: 0 }}
+                />
+                <span style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.55)', fontWeight: 500, textAlign: 'left' }}>
+                  Remember this organisation for future sign-ins
+                </span>
+              </label>
+
               <button onClick={() => handleContinue(org)} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: font, boxShadow: '0 8px 24px rgba(59,130,246,0.3)' }}>
                 Continue to Sign In →
               </button>
@@ -232,7 +251,7 @@ export default function OrgLookup() {
               <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
             </div>
 
-            <button onClick={() => { setStep('org'); setError(''); setOrgName('') }} style={{
+            <button onClick={() => { localStorage.removeItem('launchsession_remembered_org_slug'); setStep('org'); setError(''); setOrgName(''); setRememberOrg(false) }} style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 16px', borderRadius: 12,
               border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.7)',
               fontSize: 14.5, fontWeight: 600, cursor: 'pointer', fontFamily: font,
