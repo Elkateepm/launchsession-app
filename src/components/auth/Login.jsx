@@ -66,8 +66,15 @@ export default function Login({ org }) {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.href })
-    if (error) { setError(error.message); setLoading(false); return }
+    const { error } = await supabase.functions.invoke('send-password-reset-email', {
+      body: {
+        email,
+        org_name: orgName,
+        org_slug: org?.slug,
+        redirect_to: window.location.origin + '/reset-password' + (org?.slug ? '?org=' + org.slug : ''),
+      },
+    })
+    if (error) { setError('Something went wrong sending the reset email. Please try again.'); setLoading(false); return }
     setForgotSent(true)
     setLoading(false)
   }
