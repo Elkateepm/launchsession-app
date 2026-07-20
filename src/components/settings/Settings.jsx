@@ -822,7 +822,7 @@ function BrandingSection({ org, refreshOrg }) {
           <div ref={identityRef} style={sectionWrapStyle('identity')}>
           <SettingCard title="Brand Identity" description="Your name, logo and tagline across LaunchSession.">
             <Field label="Organisation name"><input style={inp} value={name} onChange={e => setName(e.target.value)} /></Field>
-            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 14 }}>
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 10 }}>
               <LogoUploadBox label="Logo" hint="PNG or SVG, recommended 512×512px, transparent background works best."
                 previewSrc={logoPreview} fallback={FALLBACK_LOGO_URL} transform={logoTransform}
                 onFileChange={handleFileChange(setLogoPreview, setLogoFile, setLogoRemoved)} onTransformChange={setLogoTransform}
@@ -831,6 +831,12 @@ function BrandingSection({ org, refreshOrg }) {
                 previewSrc={iconPreview} fallback={logoPreview || FALLBACK_LOGO_URL} transform={iconTransform}
                 onFileChange={handleFileChange(setIconPreview, setIconFile, setIconRemoved)} onTransformChange={setIconTransform}
                 onRemove={() => { setIconPreview(''); setIconFile(null); setIconRemoved(true) }} boxSize={64} />
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', marginBottom: 16 }}>
+              <span style={{ fontSize: 13, flexShrink: 0 }}>ℹ️</span>
+              <div style={{ fontSize: 11.5, color: 'var(--text3)', lineHeight: 1.5 }}>
+                This icon updates the browser tab and the icon your staff get if they use <strong style={{ color: 'var(--text2)' }}>"Add to Home Screen"</strong> from their phone's browser (this is the recommended way to install LaunchSession). It won't apply if LaunchSession is ever downloaded from the App Store or Google Play in future — store apps ship with one fixed icon for everyone, set at submission time, not per organisation.
+              </div>
             </div>
             {logoSuggestions.length > 0 && (
               <div style={{ marginBottom: 16 }}>
