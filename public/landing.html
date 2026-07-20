@@ -194,38 +194,11 @@ section{padding:96px 5%}
 .plan-btn-outline:hover{background:var(--glass2)}
 .plan-btn-fill{background:linear-gradient(135deg,#3B82F6,#6366F1);border:none;color:#fff;box-shadow:0 4px 14px rgba(59,130,246,0.3)}
 .plan-btn-fill:hover{box-shadow:0 8px 28px rgba(59,130,246,0.5)}
-.module-addon-card{display:flex;align-items:flex-start;gap:12px;background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:16px;transition:all 0.2s}
-.pack-card{transition:all 0.2s}
-.module-addon-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.module-addon-name{font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px}
-.module-addon-desc{font-size:12px;color:var(--text3);line-height:1.5}
 .plan-divider{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
 .plan-features{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:24px}
 .plan-features li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text2);line-height:1.4}
 .plan-features li .chk{color:#22C55E;font-weight:800;flex-shrink:0;margin-top:1px}
 .plan-features li .x{color:var(--text3);font-weight:800;flex-shrink:0;margin-top:1px}
-
-/* ── MODULE EXPLORER ─────────────────────────────────────── */
-#modules{background:var(--navy2)}
-.modules-layout{display:grid;grid-template-columns:320px 1fr;gap:40px;align-items:start;margin-top:56px}
-.module-plan-tabs{display:flex;flex-direction:column;gap:6px}
-.mod-tab{padding:14px 18px;border-radius:14px;border:1px solid var(--border);background:var(--glass);cursor:pointer;transition:all 0.2s;text-align:left}
-.mod-tab.active{border-color:rgba(59,130,246,0.45);background:rgba(59,130,246,0.08)}
-.mod-tab:hover{border-color:var(--border2);background:var(--glass2)}
-.mod-tab-name{font-size:14px;font-weight:800;color:#fff;margin-bottom:2px}
-.mod-tab-desc{font-size:11px;color:var(--text3)}
-.mod-tab-price{font-size:13px;font-weight:700;color:#60A5FA;margin-top:4px}
-.modules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.module-chip{padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--glass);transition:all 0.2s;position:relative}
-.module-chip.included{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.06)}
-.module-chip.addon{border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.06);cursor:pointer}
-.module-chip.locked{opacity:0.4;cursor:not-allowed}
-.module-chip-icon{font-size:20px;margin-bottom:6px;display:block}
-.module-chip-name{font-size:12px;font-weight:800;color:#fff;margin-bottom:3px}
-.module-chip-status{font-size:10px;font-weight:700;letter-spacing:0.3px}
-.chip-incl{color:#4ADE80}
-.chip-addon{color:#60A5FA}
-.chip-lock{color:var(--text3)}
 
 /* ── WHY ─────────────────────────────────────────────────── */
 #why{background:var(--navy)}
@@ -300,7 +273,6 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   .step-visual{width:68px;height:68px;margin-bottom:16px}
   .features-grid{grid-template-columns:1fr 1fr}
   .pricing-grid{grid-template-columns:1fr;max-width:480px}
-  .modules-layout{grid-template-columns:1fr}
   .why-grid{grid-template-columns:1fr}
   .testi-grid{grid-template-columns:1fr}
   .footer-inner{flex-direction:column;gap:32px}
@@ -315,7 +287,6 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   .hero-title{font-size:36px !important;letter-spacing:-1.5px;line-height:1.15}
   .hero-sub{font-size:15px}
   .features-grid{grid-template-columns:1fr}
-  .modules-grid{grid-template-columns:repeat(2,1fr)}
   .cta-box{padding:32px 20px;border-radius:20px}
   .hero-ctas{flex-direction:column;align-items:center}
   .btn-hero-cta,.btn-hero-ghost{width:100%;justify-content:center;text-align:center}
@@ -328,8 +299,6 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   .pricing-base-card{padding:24px 20px !important}
   .pricing-base-card .pricing-free{font-size:28px !important}
   .pricing-base-pills{gap:8px !important}
-  /* Module add-on grid — 1 col on very small screens */
-  .module-addon-grid{grid-template-columns:1fr !important}
   /* Steps */
   /* Footer */
   .footer-col-links{display:none}
@@ -357,8 +326,6 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   .feature-card:hover::before{opacity:1}
   .pricing-card:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(0,0,0,0.3)}
   .pricing-card.popular:hover{box-shadow:0 24px 60px rgba(59,130,246,0.2),0 0 0 1px rgba(59,130,246,0.2) inset}
-  .module-addon-card:hover{border-color:rgba(255,255,255,0.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2)}
-  .pack-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.2)}
 }
 </style>
 </head>
@@ -382,7 +349,6 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
       <a href="#features">Features</a>
       <a href="#community">Community</a>
       <a href="#pricing">Pricing</a>
-      <a href="#modules">Modules</a>
     </div>
     <div class="nav-right">
       <button class="btn-signin" onclick="window.location.href='https://app.launchsession.co.uk'">Sign in</button>
@@ -398,7 +364,6 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   <a href="#features" onclick="toggleMenu()">Features</a>
   <a href="#community" onclick="toggleMenu()">Community</a>
   <a href="#pricing" onclick="toggleMenu()">Pricing</a>
-  <a href="#modules" onclick="toggleMenu()">Modules</a>
   <div class="mobile-nav-cta">
     <button class="btn-hero-ghost" style="width:100%;justify-content:center;font-family:var(--font)" onclick="window.location.href='https://app.launchsession.co.uk'">Sign in</button>
     <button class="btn-hero-cta" style="width:100%;justify-content:center;font-family:var(--font)" onclick="window.location.href='/signup'">Start free trial →</button>
@@ -416,7 +381,7 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
         Built for youth & community organisations
       </div>
       <h1 class="hero-title">Run your whole<br><span class="grad">organisation</span><br>from one place</h1>
-      <p class="hero-sub">Registers, sessions, volunteers, safeguarding and parent comms — all connected, all in real time. Pick the modules your team needs.</p>
+      <p class="hero-sub">Registers, sessions, volunteers, safeguarding and parent comms — all connected, all in real time. Choose the plan that fits your organisation.</p>
       <div class="hero-ctas">
         <button class="btn-hero-cta" onclick="window.location.href='/signup'">Start your free 14-day trial →</button>
         <button class="btn-hero-ghost" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">See packages</button>
@@ -603,7 +568,7 @@ async function submitFoundingOffer(e) {
         </div>
         <div class="step-tag">Step 1</div>
         <div class="step-title">Choose your plan</div>
-        <div class="step-desc">Pick Starter, Pro or Enterprise based on your organisation size. Every plan includes core modules — add extras as you grow.</div>
+        <div class="step-desc">Pick Starter, Advanced or Pro+ based on your organisation's size and needs. Upgrade any time as you grow.</div>
       </div>
       <div class="step-card">
         <div class="step-visual">
@@ -734,311 +699,86 @@ async function submitFoundingOffer(e) {
 
 <!-- PRICING -->
 <section id="pricing">
-<style>
-.ls-pack{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:32px;position:relative;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;text-align:left}
-.ls-pack::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;opacity:0.1;pointer-events:none;transition:opacity 0.3s}
-.ls-pack.lsp-d::before{background:#4F8EF7}.ls-pack.lsp-s::before{background:#22C997}.ls-pack.lsp-g::before{background:#F59E0B}.ls-pack.lsp-o::before{background:#A78BFA}
-.ls-pack::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:20px 20px 0 0}
-.ls-pack.lsp-d::after{background:linear-gradient(90deg,#4F8EF7,#93C5FD)}.ls-pack.lsp-s::after{background:linear-gradient(90deg,#22C997,#6EE7B7)}.ls-pack.lsp-g::after{background:linear-gradient(90deg,#F59E0B,#FCD34D)}.ls-pack.lsp-o::after{background:linear-gradient(90deg,#A78BFA,#DDD6FE)}
-@media (hover: hover) and (pointer: fine) {
-  .ls-pack:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(0,0,0,0.4)}
-  .ls-pack:hover::before{opacity:0.18}
-}
-.ls-mod-row{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;transition:background 0.15s}
-.ls-mod-row:hover{background:rgba(255,255,255,0.055)}
-.ls-pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;border:1px solid}
-.lsp-d .ls-pill{color:#60A5FA;border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.08)}
-.lsp-s .ls-pill{color:#34D399;border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.08)}
-.lsp-g .ls-pill{color:#FBBF24;border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.08)}
-.lsp-o .ls-pill{color:#C084FC;border-color:rgba(192,132,252,0.3);background:rgba(192,132,252,0.08)}
-.ls-stat{flex:1;min-width:70px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center}
-.lsp-d .ls-stat-val{color:#60A5FA}.lsp-s .ls-stat-val{color:#34D399}.lsp-g .ls-stat-val{color:#FBBF24}.lsp-o .ls-stat-val{color:#C084FC}
-.ls-cta-btn{flex:1;min-width:140px;padding:13px 18px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.2s,transform 0.1s}
-.ls-cta-btn:hover{opacity:0.9;transform:scale(1.01)}.ls-cta-btn:active{transform:scale(0.98)}
-.lsp-d .ls-cta-btn{background:#4F8EF7;color:#fff}.lsp-s .ls-cta-btn{background:#22C997;color:#000}.lsp-g .ls-cta-btn{background:#F59E0B;color:#000}.lsp-o .ls-cta-btn{background:#A78BFA;color:#fff}
-@media(max-width:700px){.ls-packs-grid{grid-template-columns:1fr !important}}
-</style>
-
   <div class="container" style="text-align:center">
     <div class="section-tag">Pricing</div>
-    <h2 class="section-heading">Start free. Add what you need.</h2>
-    <p class="section-sub" style="margin:0 auto 48px">Pick the packs that match where you are right now. Add more as you grow. No per-seat pricing, no surprises.</p>
+    <h2 class="section-heading">Simple plans. No per-module pricing.</h2>
+    <p class="section-sub" style="margin:0 auto 32px">Choose the plan that fits your organisation today. Upgrade any time as you grow — nothing to configure, nothing to piece together.</p>
 
-    <!-- Base plan -->
-    <div class="pricing-base-card" style="max-width:600px;margin:0 auto 52px;background:var(--glass);border:1px solid rgba(59,130,246,0.3);border-radius:20px;padding:28px 32px;text-align:left">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:16px">
-        <div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Base Platform</div>
-          <div style="font-size:34px;font-weight:900;letter-spacing:-1px">Free <span style="font-size:15px;font-weight:500;color:var(--text3)">forever</span></div>
-          <div style="font-size:13px;color:var(--text3);margin-top:6px">Everything you need to get started. No credit card required.</div>
-        </div>
-        <button class="plan-btn plan-btn-fill" style="width:auto;padding:12px 24px;white-space:nowrap" onclick="window.location.href='/signup'">Start Free Trial →</button>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:48px">
+      <span id="monthlyLabel" class="active" style="font-size:14px;font-weight:700;color:var(--text2)">Monthly</span>
+      <div class="toggle-pill" id="toggleInner" onclick="toggleBilling()" role="switch" aria-checked="false" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){toggleBilling()}">
+        <div class="toggle-pill-inner" id="toggleInner"></div>
       </div>
-      <div class="pricing-base-pills" style="display:flex;flex-wrap:wrap;gap:8px">
-        <div style="display:flex;align-items:center;gap:7px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:9px;padding:7px 13px;font-size:12px;font-weight:600">🏠 Hub Home</div>
-        <div style="display:flex;align-items:center;gap:7px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:9px;padding:7px 13px;font-size:12px;font-weight:600">📅 Session Planner</div>
-        <div style="display:flex;align-items:center;gap:7px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:9px;padding:7px 13px;font-size:12px;font-weight:600">🗓 Calendar</div>
-        <div style="display:flex;align-items:center;gap:7px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:9px;padding:7px 13px;font-size:12px;font-weight:600">✈️ Events &amp; Trips</div>
-      </div>
+      <span id="yearlyLabel" style="font-size:14px;font-weight:700;color:var(--text2)">Annual</span>
+      <span class="save-badge">Save ~20%</span>
     </div>
 
-    <!-- Pack grid label -->
-    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:24px">Solution Packs — £19.99 / month each</div>
+    <div class="pricing-grid">
 
-    <!-- 4 packs -->
-    <div class="ls-packs-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;max-width:1060px;margin:0 auto;text-align:left">
-
-      <!-- DELIVERY -->
-      <div class="ls-pack lsp-d">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:50px;height:50px;border-radius:14px;background:rgba(79,142,247,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">📋</div>
-            <div>
-              <div style="font-size:19px;font-weight:800;color:#60A5FA;letter-spacing:-0.01em">Delivery Pack</div>
-              <div style="font-size:12px;color:var(--text3);margin-top:2px">Run sessions. Connect people. Share moments.</div>
-            </div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:24px;font-weight:800;letter-spacing:-0.03em">£19.99</div>
-            <div style="font-size:11px;color:var(--text3)">/month</div>
-          </div>
-        </div>
-        <div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
-          The heartbeat of your day-to-day work. Take registers, coordinate volunteers, keep staff in the loop, and build a shared visual record of everything your organisation achieves.
-        </div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px">4 modules included</div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">✅</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Registers</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Bubble-card attendance for any session. Filter by group, view stats, import via CSV.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">Bubble cards</span><span class="ls-pill">Group filters</span><span class="ls-pill">CSV import</span><span class="ls-pill">Attendance stats</span></div>
-            </div>
-          </div>
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">🙋</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Volunteers</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Public portal with a 12-step onboarding journey. Manage roles and status in the admin dashboard.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">Public portal</span><span class="ls-pill">12-step onboarding</span><span class="ls-pill">Role management</span></div>
-            </div>
-          </div>
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">💬</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Messaging</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Thread-based comms with audience targeting — all staff, volunteers, team leads, or general.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">Threads</span><span class="ls-pill">Audience targeting</span><span class="ls-pill">Quick replies</span></div>
-            </div>
-          </div>
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">🖼️</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Gallery</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Private photo album. Upload, categorise, caption — sessions, trips, milestones, celebrations.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">6 categories</span><span class="ls-pill">Lightbox view</span><span class="ls-pill">Captions</span></div>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:18px">
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">4</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Modules</div></div>
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">12</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Volunteer steps</div></div>
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">6</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Photo categories</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <button class="ls-cta-btn" onclick="window.location.href='/signup'">Add Delivery Pack</button>
-          <span style="font-size:12px;color:var(--text3);white-space:nowrap">4 modules · £4.99 each</span>
-        </div>
+      <!-- STARTER -->
+      <div class="pricing-card">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">£<span id="p1">29</span><span>/mo</span></div>
+        <div class="plan-period" id="pp1">billed monthly</div>
+        <div class="plan-tagline">Everything you need to run sessions safely, from day one.</div>
+        <button class="plan-btn plan-btn-outline" onclick="window.location.href='/signup'">Start Free Trial</button>
+        <div class="plan-divider">What's included</div>
+        <ul class="plan-features">
+          <li><span class="chk">✓</span> Session Planner &amp; Calendar</li>
+          <li><span class="chk">✓</span> Registers &amp; attendance</li>
+          <li><span class="chk">✓</span> Events &amp; Trips</li>
+          <li><span class="chk">✓</span> Venues management</li>
+          <li><span class="chk">✓</span> Safeguarding — Cause for Concern &amp; DSL dashboard</li>
+          <li><span class="chk">✓</span> Basic Forms</li>
+          <li><span class="chk">✓</span> Up to 100 children</li>
+          <li><span class="x">✕</span> Volunteer &amp; Parent Portals</li>
+          <li><span class="x">✕</span> Reports &amp; Impact tracking</li>
+        </ul>
       </div>
 
-      <!-- SAFEGUARDING -->
-      <div class="ls-pack lsp-s">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:50px;height:50px;border-radius:14px;background:rgba(34,201,151,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🛡️</div>
-            <div>
-              <div style="font-size:19px;font-weight:800;color:#34D399;letter-spacing:-0.01em">Safeguarding Pack</div>
-              <div style="font-size:12px;color:var(--text3);margin-top:2px">Protect the people in your care. Properly.</div>
-            </div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:24px;font-weight:800;letter-spacing:-0.03em">£19.99</div>
-            <div style="font-size:11px;color:var(--text3)">/month</div>
-          </div>
-        </div>
-        <div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
-          Compliance shouldn't feel like a chore. Raise concerns quickly, manage cases confidentially, and collect the data you need — without losing a form down the back of a filing cabinet.
-        </div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px">3 modules included</div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">🚨</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Safeguarding</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Raise a Cause for Concern from any device. DSL dashboard shows all open concerns with full audit trail.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">Cause for Concern</span><span class="ls-pill">DSL dashboard</span><span class="ls-pill">Audit trail</span></div>
-            </div>
-          </div>
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">📝</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Forms</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Drag-and-drop form builder with 8 field types and 6 pre-built templates. Collect submissions instantly.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">Drag-drop builder</span><span class="ls-pill">8 field types</span><span class="ls-pill">6 templates</span></div>
-            </div>
-          </div>
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">📁</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Case Management</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Log and track cases across 7 types and 5 statuses. Add notes, assign priority, monitor to closure.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">7 case types</span><span class="ls-pill">5 statuses</span><span class="ls-pill">Case notes log</span></div>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:18px">
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">3</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Modules</div></div>
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">7</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Case types</div></div>
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">6</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Form templates</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <button class="ls-cta-btn" onclick="window.location.href='/signup'">Add Safeguarding Pack</button>
-          <span style="font-size:12px;color:var(--text3);white-space:nowrap">3 modules · £6.66 each</span>
-        </div>
+      <!-- ADVANCED -->
+      <div class="pricing-card popular">
+        <div class="popular-badge">Most Popular</div>
+        <div class="plan-name">Advanced</div>
+        <div class="plan-price">£<span id="p2">59</span><span>/mo</span></div>
+        <div class="plan-period" id="pp2">billed monthly</div>
+        <div class="plan-tagline">Bring your whole community in — volunteers, parents, and deeper safeguarding.</div>
+        <button class="plan-btn plan-btn-fill" onclick="window.location.href='/signup'">Start Free Trial</button>
+        <div class="plan-divider">Everything in Starter, plus</div>
+        <ul class="plan-features">
+          <li><span class="chk">✓</span> Volunteer Portal &amp; onboarding</li>
+          <li><span class="chk">✓</span> Parent Portal &amp; messaging</li>
+          <li><span class="chk">✓</span> Photo Gallery</li>
+          <li><span class="chk">✓</span> Case Management &amp; Risk Assessments</li>
+          <li><span class="chk">✓</span> Branding Centre — your logo, your colours</li>
+          <li><span class="chk">✓</span> Unlimited children</li>
+          <li><span class="x">✕</span> Reports, Fundraising &amp; HR tools</li>
+        </ul>
       </div>
 
-      <!-- GROWTH -->
-      <div class="ls-pack lsp-g">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:50px;height:50px;border-radius:14px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">📈</div>
-            <div>
-              <div style="font-size:19px;font-weight:800;color:#FBBF24;letter-spacing:-0.01em">Growth Pack</div>
-              <div style="font-size:12px;color:var(--text3);margin-top:2px">Prove your impact. Fund your future.</div>
-            </div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:24px;font-weight:800;letter-spacing:-0.03em">£19.99</div>
-            <div style="font-size:11px;color:var(--text3)">/month</div>
-          </div>
-        </div>
-        <div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
-          Funders want evidence. Trustees want numbers. Young people deserve to see how far they've come. Capture outcomes, communicate impact, and run campaigns that actually bring money in.
-        </div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px">3 modules included</div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">📊</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Reports</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Five-tab analytics covering attendance, volunteers, sessions and more — with AI-generated insights.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">5 report tabs</span><span class="ls-pill">AI insights</span><span class="ls-pill">Trends</span></div>
-            </div>
-          </div>
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">🌱</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Impact &amp; Outcomes</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Score young people across 8 outcome areas on a 1–10 slider. Track progress and generate funder reports.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">8 outcome areas</span><span class="ls-pill">1–10 scoring</span><span class="ls-pill">Progress tracking</span></div>
-            </div>
-          </div>
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">💰</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Fundraising</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Create campaigns, record donations, track Gift Aid (+25%). Progress bars fill as your community rallies.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">Campaign cards</span><span class="ls-pill">Gift Aid +25%</span><span class="ls-pill">6 campaign types</span></div>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:18px">
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">3</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Modules</div></div>
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">8</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Outcome areas</div></div>
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">+25%</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Gift Aid</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <button class="ls-cta-btn" onclick="window.location.href='/signup'">Add Growth Pack</button>
-          <span style="font-size:12px;color:var(--text3);white-space:nowrap">3 modules · £6.66 each</span>
-        </div>
-      </div>
-
-      <!-- OPERATIONS -->
-      <div class="ls-pack lsp-o">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:50px;height:50px;border-radius:14px;background:rgba(167,139,250,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">⚙️</div>
-            <div>
-              <div style="font-size:19px;font-weight:800;color:#C084FC;letter-spacing:-0.01em">Operations Pack</div>
-              <div style="font-size:12px;color:var(--text3);margin-top:2px">Run a tight ship. Without the spreadsheets.</div>
-            </div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:24px;font-weight:800;letter-spacing:-0.03em">£19.99</div>
-            <div style="font-size:11px;color:var(--text3)">/month</div>
-          </div>
-        </div>
-        <div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
-          The back-office toolkit that holds everything together. Manage your staff, track DBS, handle leave, and make sure the minibus isn't double-booked — all without leaving LaunchSession.
-        </div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px">3 modules included</div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">🧑‍💼</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">HR</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Staff profiles with DBS tracking and expiry alerts. Log leave across 5 types, track allowances.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">DBS expiry alerts</span><span class="ls-pill">Leave logging</span><span class="ls-pill">5 leave types</span></div>
-            </div>
-          </div>
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">🗝️</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Resource Booking</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Week-view grid (8am–9pm, Mon–Sun) for rooms, minibuses, equipment. Click a slot, book it.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">Week-view grid</span><span class="ls-pill">Click-to-book</span><span class="ls-pill">Colour-coded</span></div>
-            </div>
-          </div>
-          <div class="ls-mod-row">
-            <div style="font-size:20px;width:26px;text-align:center;flex-shrink:0;padding-top:1px">✈️</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">Events &amp; Trips</div>
-              <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:6px">Plan trips end-to-end — participants, consent, costs, day-of sign-in. All in one place.</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="ls-pill">Participant list</span><span class="ls-pill">Consent tracking</span><span class="ls-pill">Day-of sign-in</span></div>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:18px">
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">3</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Modules</div></div>
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">8am–9pm</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Booking hours</div></div>
-          <div class="ls-stat"><div class="ls-stat-val" style="font-size:20px;font-weight:800">5</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">Leave types</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <button class="ls-cta-btn" onclick="window.location.href='/signup'">Add Operations Pack</button>
-          <span style="font-size:12px;color:var(--text3);white-space:nowrap">3 modules · £6.66 each</span>
-        </div>
+      <!-- PRO+ -->
+      <div class="pricing-card">
+        <div class="plan-name">Pro+</div>
+        <div class="plan-price">£<span id="p3">99</span><span>/mo</span></div>
+        <div class="plan-period" id="pp3">billed monthly</div>
+        <div class="plan-tagline">Prove your impact and scale operations with full reporting and fundraising.</div>
+        <button class="plan-btn plan-btn-outline" onclick="window.location.href='/signup'">Start Free Trial</button>
+        <div class="plan-divider">Everything in Advanced, plus</div>
+        <ul class="plan-features">
+          <li><span class="chk">✓</span> Reports &amp; Impact &amp; Outcomes</li>
+          <li><span class="chk">✓</span> Fundraising tools</li>
+          <li><span class="chk">✓</span> Mentoring module</li>
+          <li><span class="chk">✓</span> HR &amp; Resource Booking</li>
+          <li><span class="chk">✓</span> Priority support</li>
+          <li><span class="chk">✓</span> Dedicated onboarding</li>
+        </ul>
       </div>
 
     </div>
 
-    <!-- Full platform callout -->
-    <div style="max-width:1060px;margin:28px auto 0;background:linear-gradient(135deg,rgba(79,142,247,0.08),rgba(167,139,250,0.08));border:1px solid rgba(79,142,247,0.2);border-radius:18px;padding:32px 36px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:24px;text-align:left">
-      <div>
-        <div style="font-size:20px;font-weight:800;margin-bottom:8px">🚀 Go all-in with the Full Platform</div>
-        <div style="font-size:13px;color:var(--text3);max-width:500px;line-height:1.6">All 4 solution packs. All 13 modules. One workspace that handles everything — from taking a register to filing a safeguarding report to running a fundraising campaign.</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:40px;font-weight:900;letter-spacing:-0.03em;background:linear-gradient(135deg,#60A5FA,#C084FC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">£79.96</div>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:14px">per month · all 4 packs · 13 modules</div>
-        <button class="plan-btn plan-btn-fill" style="width:auto;padding:12px 28px" onclick="window.location.href='/signup'">Get the Full Platform →</button>
-      </div>
-    </div>
-
-    <p style="margin-top:20px;font-size:13px;color:var(--text3)">All packs include a 14-day free trial. No contracts. Registered charity? <a href="mailto:hello@launchsession.co.uk" style="color:#60A5FA;font-weight:600">Ask about our discount →</a></p>
+    <p style="margin-top:32px;font-size:13px;color:var(--text3)">Every plan includes a 14-day free trial. No contracts. Registered charity? <a href="mailto:hello@launchsession.co.uk" style="color:#60A5FA;font-weight:600">Ask about our discount →</a></p>
   </div>
 </section>
-
 
 
 <!-- WHY -->
@@ -1311,11 +1051,11 @@ async function submitWaitlist(e) {
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false" aria-controls="faq-a-2" onclick="toggleFaq(this)">
-          <span>Can we choose which modules appear?</span>
+          <span>Can we upgrade or downgrade our plan?</span>
           <span class="faq-chevron">⌄</span>
         </button>
         <div class="faq-a" id="faq-a-2" role="region">
-          <p>Yes. LaunchSession is modular — enable the packs your organisation actually needs (Delivery, Safeguarding, Growth, Operations) and leave the rest switched off.</p>
+          <p>Yes, any time. Move between Starter, Advanced and Pro+ as your organisation's needs change — your data stays exactly where you left it.</p>
         </div>
       </div>
       <div class="faq-item">
@@ -1498,48 +1238,8 @@ function toggleBilling() {
   document.getElementById('pp2').textContent = period
   document.getElementById('pp3').textContent = period
 }
-
-// ── MODULE EXPLORER ─────────────────────────────────────────────
-const MODULES = [
-  { icon:'📋', name:'Registers',        starter:'included', pro:'included',  enterprise:'included' },
-  { icon:'📅', name:'Session Planner',  starter:'included', pro:'included',  enterprise:'included' },
-  { icon:'🛡️', name:'Safeguarding',     starter:'included', pro:'included',  enterprise:'included' },
-  { icon:'📊', name:'Reports',          starter:'included', pro:'included',  enterprise:'included' },
-  { icon:'📥', name:'Bulk Import',      starter:'included', pro:'included',  enterprise:'included' },
-  { icon:'❤️', name:'Volunteers',       starter:'addon',    pro:'included',  enterprise:'included' },
-  { icon:'👨‍👧', name:'Parent Portal',   starter:'addon',    pro:'included',  enterprise:'included' },
-  { icon:'💬', name:'Messaging',        starter:'locked',   pro:'included',  enterprise:'included' },
-  { icon:'🎨', name:'Branding Centre',  starter:'addon',    pro:'included',  enterprise:'included' },
-  { icon:'🤝', name:'Mentoring',        starter:'locked',   pro:'addon',     enterprise:'included' },
-  { icon:'🖼',  name:'Gallery',          starter:'locked',   pro:'addon',     enterprise:'included' },
-  { icon:'🔌', name:'API Access',       starter:'locked',   pro:'locked',    enterprise:'included' },
-]
-
-let currentPlan = 'starter'
-
-function selectPlan(plan, el) {
-  currentPlan = plan
-  document.querySelectorAll('.mod-tab').forEach(t => t.classList.remove('active'))
-  el.classList.add('active')
-  renderModules()
-}
-
-function renderModules() {
-  const grid = document.getElementById('modulesGrid')
-  grid.innerHTML = MODULES.map(m => {
-    const status = m[currentPlan]
-    const cls = status === 'included' ? 'module-chip included' : status === 'addon' ? 'module-chip addon' : 'module-chip locked'
-    const statusHtml = status === 'included'
-      ? '<div class="module-chip-status chip-incl">✓ Included</div>'
-      : status === 'addon'
-      ? '<div class="module-chip-status chip-addon">+ Add-on</div>'
-      : '<div class="module-chip-status chip-lock">— Upgrade</div>'
-    return `<div class="${cls}"><span class="module-chip-icon">${m.icon}</span><div class="module-chip-name">${m.name}</div>${statusHtml}</div>`
-  }).join('')
-}
-
-renderModules()
 </script>
+
 
 <script>
 // Sign in → go straight to the app, where org search + login takes over
