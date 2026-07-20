@@ -15,6 +15,35 @@
     <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
+    <script>
+      // Resolve the org the same way OrgContext.js does (query param, then
+      // subdomain, then a remembered slug), purely from the URL/localStorage
+      // — no network round-trip — so the manifest link points at this org's
+      // icon before the browser evaluates PWA installability.
+      (function () {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var slug = params.get('org');
+          var host = window.location.hostname;
+          if (!slug && host.indexOf('.launchsession.app') !== -1) {
+            slug = host.split('.')[0];
+          }
+          if (!slug && host.indexOf('.launchsession.co.uk') !== -1) {
+            var sub = host.split('.')[0];
+            if (['www', 'launchsession', 'app', 'admin'].indexOf(sub) === -1) slug = sub;
+          }
+          if (!slug) {
+            slug = localStorage.getItem('launchsession_org_slug') || localStorage.getItem('launchsession_remembered_org_slug');
+          }
+          if (slug) {
+            var link = document.querySelector("link[rel='manifest']");
+            if (link) link.setAttribute('href', '/api/manifest?org=' + encodeURIComponent(slug));
+          }
+        } catch (e) {
+          // If anything above fails, the static /manifest.json link stays in place.
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
