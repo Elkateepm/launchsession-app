@@ -5,6 +5,7 @@ import { useIsMobile } from "../../hooks/useIsMobile";
 import { useRealtimeTable } from "../../lib/useRealtimeTable";
 import { useOrgSettings } from "../../hooks/useOrgSettings";
 import CauseForConcernForm from "../safeguarding/CauseForConcernForm";
+import LiveRegister from "../registers/LiveRegister";
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -268,9 +269,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const [activeSession, setActiveSession] = useState(sessions[0])
   const [localAttendance, setLocalAttendance] = useState(attendance)
   const [bubbleFilter, setBubbleFilter] = useState('all')
-  const [popupMode, setPopupMode] = useState(null) // 'expected' | 'signed_in' | 'signed_out' | null
-  const [busyChildId, setBusyChildId] = useState(null)
-  const [popupSearch, setPopupSearch] = useState('')
   const [linkedRA, setLinkedRA] = useState(undefined) // undefined = loading, null = none, object = found
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoToast, setPhotoToast] = useState('')
@@ -319,12 +317,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     return LEGACY_BUBBLE_COLORS[name] || '#9CA3AF'
   }
 
-  const getChildStatus = (childId) => {
-    const rec = sessionAttendance.find(a => a.child_id === childId)
-    return rec?.status || 'expected'
-  }
-
-  // All children targeted by this session (respects group targeting), used as the base pool for every popup
+  // All children targeted by this session (respects group targeting)
   const targetedChildren = useMemo(() => {
     if (!activeSession) return []
     const targetGroups = Array.isArray(activeSession?.bubbles) ? activeSession.bubbles.map(g => (g || '').toLowerCase()) : []
@@ -341,80 +334,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const targetedChildIds = new Set(targetedChildren.map(c => c.id))
   const sessionChildren = childList.filter(ch => sessionChildIds.has(ch.id) || targetedChildIds.has(ch.id))
   const bubbleGroups = [...new Set(sessionChildren.map(ch => (ch.group_name || '').trim()).filter(Boolean))]
-
-  const popupChildren = useMemo(() => {
-    let base = popupMode === 'walkin'
-      ? childList.filter(c => !sessionAttendance.some(a => a.child_id === c.id)) // only children not already on this session's register
-      : targetedChildren
-    if (popupMode === 'signed_in') base = base.filter(c => getChildStatus(c.id) === 'signed_in')
-    else if (popupMode === 'signed_out') base = base.filter(c => getChildStatus(c.id) === 'signed_out')
-    return base.filter(c => !popupSearch || `${c.first_name} ${c.last_name}`.toLowerCase().includes(popupSearch.toLowerCase()))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetedChildren, childList, popupMode, popupSearch, sessionAttendance])
-
-  const handleAddToExpected = async (child) => {
-    if (!activeSession) return
-    setBusyChildId(child.id)
-    const existing = sessionAttendance.find(a => a.child_id === child.id)
-    if (!existing) {
-      const { data } = await supabase.from('attendance').insert({
-        session_id: activeSession.id, child_id: child.id, org_id: orgId, status: 'expected'
-      }).select().single()
-      if (data) setLocalAttendance(prev => [...prev, data])
-    }
-    setBusyChildId(null)
-  }
-
-  const handleWalkIn = async (child) => {
-    if (!activeSession) return
-    setBusyChildId(child.id)
-    const existing = sessionAttendance.find(a => a.child_id === child.id)
-    const now = new Date().toISOString()
-    if (existing) {
-      await supabase.from('attendance').update({ status: 'signed_in', signed_in_at: now }).eq('id', existing.id)
-      setLocalAttendance(prev => prev.map(a => a.id === existing.id ? { ...a, status: 'signed_in', signed_in_at: now } : a))
-    } else {
-      const { data } = await supabase.from('attendance').insert({
-        session_id: activeSession.id, child_id: child.id, org_id: orgId, status: 'signed_in', signed_in_at: now
-      }).select().single()
-      if (data) setLocalAttendance(prev => [...prev, data])
-    }
-    setBusyChildId(null)
-  }
-
-  const handleSignIn = async (child) => {
-    if (!activeSession) return
-    setBusyChildId(child.id)
-    const existing = sessionAttendance.find(a => a.child_id === child.id)
-    const now = new Date().toISOString()
-    if (existing) {
-      await supabase.from('attendance').update({ status: 'signed_in', signed_in_at: now, signed_out_at: null }).eq('id', existing.id)
-      setLocalAttendance(prev => prev.map(a => a.id === existing.id ? { ...a, status: 'signed_in', signed_in_at: now, signed_out_at: null } : a))
-    } else {
-      const { data } = await supabase.from('attendance').insert({
-        session_id: activeSession.id, child_id: child.id, org_id: orgId, status: 'signed_in', signed_in_at: now
-      }).select().single()
-      if (data) setLocalAttendance(prev => [...prev, data])
-    }
-    setBusyChildId(null)
-  }
-
-  const handleSignOut = async (child) => {
-    if (!activeSession) return
-    setBusyChildId(child.id)
-    const existing = sessionAttendance.find(a => a.child_id === child.id)
-    const now = new Date().toISOString()
-    if (existing) {
-      await supabase.from('attendance').update({ status: 'signed_out', signed_out_at: now }).eq('id', existing.id)
-      setLocalAttendance(prev => prev.map(a => a.id === existing.id ? { ...a, status: 'signed_out', signed_out_at: now } : a))
-    } else {
-      const { data } = await supabase.from('attendance').insert({
-        session_id: activeSession.id, child_id: child.id, org_id: orgId, status: 'signed_out', signed_out_at: now
-      }).select().single()
-      if (data) setLocalAttendance(prev => [...prev, data])
-    }
-    setBusyChildId(null)
-  }
 
   const pct = stats.percent || 0
 
@@ -503,7 +422,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                 onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
                 {photoUploading ? 'Uploading…' : '📷 Add Photo'}
               </button>
-              <button onClick={() => { setPopupMode('walkin'); setPopupSearch('') }}
+              <button onClick={() => onOpenRegister(activeSession.id)}
                 style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s' }}
                 onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
                 onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
@@ -569,7 +488,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
               style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: photoUploading ? 'default' : 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
               {photoUploading ? 'Uploading…' : '📷 Add Photo'}
             </button>
-            <button onClick={() => { setPopupMode('walkin'); setPopupSearch('') }}
+            <button onClick={() => onOpenRegister(activeSession.id)}
               style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
               + Walk-in
             </button>
@@ -603,7 +522,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#C084FC', icon: '↩' },
           { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#60A5FA', icon: '👥' },
         ].map((s, i) => (
-          <button key={s.key} onClick={() => setPopupMode(s.key)}
+          <button key={s.key} onClick={() => onOpenRegister(activeSession.id)}
             style={{ background: 'transparent', border: 'none', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.12)' : 'none', padding: isMobile ? '10px 4px' : '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 8 }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
@@ -702,110 +621,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       </div>
       <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
 
-      {popupMode && (
-        <div onClick={() => setPopupMode(null)} style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 700,
-          display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'center',
-          padding: isMobile ? 0 : 20,
-        }}>
-          <div onClick={e => e.stopPropagation()} style={{
-            background: '#fff',
-            borderRadius: isMobile ? 0 : 22,
-            width: '100%',
-            maxWidth: isMobile ? '100%' : 460,
-            height: isMobile ? '100dvh' : 'auto',
-            maxHeight: isMobile ? '100dvh' : '80vh',
-            display: 'flex', flexDirection: 'column', overflow: 'hidden',
-            boxShadow: isMobile ? 'none' : '0 32px 80px rgba(0,0,0,0.35)',
-          }}>
-            {/* Header */}
-            <div style={{ padding: isMobile ? '16px 16px 14px' : '18px 20px', borderBottom: '1px solid #F3F4F6', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <div>
-                  <div style={{ fontSize: 16, fontWeight: 900, color: '#111' }}>
-                    {popupMode === 'expected' ? '👥 Expected Children' : popupMode === 'signed_in' ? '↪ Signed In' : popupMode === 'signed_out' ? '↩ Signed Out' : '🚶 Walk-in'}
-                  </div>
-                  <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{activeSession?.title} · {popupChildren.length} {popupMode === 'expected' ? 'expected' : popupMode === 'signed_in' ? 'signed in' : popupMode === 'signed_out' ? 'signed out' : 'children'}</div>
-                </div>
-                <button onClick={() => setPopupMode(null)} aria-label="Close"
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, height: 34, borderRadius: 17, border: 'none', background: '#F3F4F6', cursor: 'pointer', fontSize: 13, fontWeight: 800, color: '#374151', padding: isMobile ? '0 14px' : 0, width: isMobile ? 'auto' : 30, justifyContent: 'center' }}>
-                  <span style={{ fontSize: 16, lineHeight: 1 }}>×</span>
-                  {isMobile && <span>Close</span>}
-                </button>
-              </div>
-              <input value={popupSearch} onChange={e => setPopupSearch(e.target.value)} placeholder="Search a child..."
-                style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
-            </div>
-            {/* Child rows */}
-            <div style={{ overflowY: 'auto', flex: 1 }}>
-              {popupChildren.length === 0 ? (
-                <div style={{ padding: 30, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>
-                  {popupMode === 'signed_in' ? 'No one signed in yet.' : popupMode === 'signed_out' ? 'No one signed out yet.' : popupMode === 'walkin' ? 'No children found.' : 'No children match.'}
-                </div>
-              ) : popupChildren.map(child => {
-                const status = getChildStatus(child.id)
-                const isIn = status === 'signed_in'
-                const isOut = status === 'signed_out'
-                const isExpected = sessionAttendance.some(a => a.child_id === child.id)
-                const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
-                const gColor = getBubbleColor(child.group_name)
-                const isBusy = busyChildId === child.id
-                return (
-                  <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid #F9FAFB', borderLeft: `3px solid ${gColor}` }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: gColor + '18', border: `1.5px solid ${gColor}35`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: gColor, flexShrink: 0, overflow: 'hidden' }}>
-                      {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{child.first_name} {child.last_name}</div>
-                      {child.group_name && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{child.group_name}</div>}
-                    </div>
-                    {popupMode === 'walkin' ? (
-                      <button onClick={() => handleWalkIn(child)} disabled={isBusy}
-                        style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: isBusy ? '#9CA3AF' : primary, border: 'none', borderRadius: 99, padding: '7px 14px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
-                        {isBusy ? '···' : '+ Walk-in'}
-                      </button>
-                    ) : popupMode === 'expected' ? (
-                      isIn ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#16A34A', background: '#DCFCE7', borderRadius: 99, padding: '5px 12px' }}>✓ In</span>
-                      ) : isOut ? (
-                        <button onClick={() => handleSignIn(child)} disabled={isBusy}
-                          style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: isBusy ? '#9CA3AF' : primary, border: 'none', borderRadius: 99, padding: '7px 14px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
-                          {isBusy ? '···' : 'Sign In'}
-                        </button>
-                      ) : isExpected ? (
-                        <button onClick={() => handleSignIn(child)} disabled={isBusy}
-                          style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: isBusy ? '#9CA3AF' : primary, border: 'none', borderRadius: 99, padding: '7px 14px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
-                          {isBusy ? '···' : 'Sign In'}
-                        </button>
-                      ) : (
-                        <button onClick={() => handleAddToExpected(child)} disabled={isBusy}
-                          style={{ fontSize: 11, fontWeight: 800, color: primary, background: 'transparent', border: `1.5px solid ${primary}`, borderRadius: 99, padding: '6px 12px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
-                          {isBusy ? '···' : '+ Add'}
-                        </button>
-                      )
-                    ) : isIn ? (
-                      <button onClick={() => handleSignOut(child)} disabled={isBusy}
-                        style={{ fontSize: 11, fontWeight: 800, color: '#2563EB', background: isBusy ? '#F3F4F6' : '#DBEAFE', border: 'none', borderRadius: 99, padding: '7px 14px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
-                        {isBusy ? '···' : 'Sign Out'}
-                      </button>
-                    ) : isOut ? (
-                      <button onClick={() => handleSignIn(child)} disabled={isBusy}
-                        style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: isBusy ? '#9CA3AF' : primary, border: 'none', borderRadius: 99, padding: '7px 14px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
-                        {isBusy ? '···' : 'Sign In'}
-                      </button>
-                    ) : (
-                      <button onClick={() => handleSignIn(child)} disabled={isBusy}
-                        style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: isBusy ? '#9CA3AF' : primary, border: 'none', borderRadius: 99, padding: '7px 14px', cursor: isBusy ? 'default' : 'pointer', flexShrink: 0 }}>
-                        {isBusy ? '···' : 'Sign In'}
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -1159,9 +974,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     return { signedIn: si, absent, signedOut: so, expected, percent: expected > 0 ? Math.round((si / expected) * 100) : 0 };
   };
 
+  const [liveRegisterSessionId, setLiveRegisterSessionId] = useState(null)
   const openRegisterForSession = (sessionId) => {
-    try { window.localStorage.setItem("launchsession_selected_session_id", sessionId); } catch (e) {}
-    go("registers");
+    setLiveRegisterSessionId(sessionId)
   };
 
   if (loading) return <div style={styles.page}><div style={styles.loading}>Loading...</div></div>;
@@ -1661,6 +1476,16 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             />
           </div>
         </>
+      )}
+
+      {liveRegisterSessionId && sessions.find(s => s.id === liveRegisterSessionId) && (
+        <LiveRegister
+          session={sessions.find(s => s.id === liveRegisterSessionId)}
+          org={org}
+          authUserId={session?.user?.id}
+          onNavigate={onNavigate}
+          onClose={() => setLiveRegisterSessionId(null)}
+        />
       )}
       </div>
     </div>
