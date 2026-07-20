@@ -10,6 +10,7 @@ import Hub from '../hub/Hub'
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import Registers from '../registers/Registers'
+import { useBreakpoint } from '../../hooks/useIsMobile'
 import EventsTrips from '../events/EventsTrips'
 import Calendar from '../calendar/Calendar';
 import Templates from '../templates/Templates'
@@ -124,10 +125,23 @@ function ComingSoonModule({ icon, label, desc }) {
   )
 }
 
+// Tablet burger-menu reveal: items cascade in one after another (~1s total
+// across the full nav) when the overlay opens. No-ops on desktop, since the
+// container there never sets initial/animate (see SIDEBAR render below).
+const navContainerVariants = {
+  hidden: { transition: { staggerChildren: 0.025, staggerDirection: -1 } },
+  visible: { transition: { staggerChildren: 0.045, delayChildren: 0.05 } },
+}
+const navItemVariants = {
+  hidden: { opacity: 0, x: -16 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] } },
+}
+
 function NavItem({ icon, label, active, onClick, badge, primary, collapsed, locked }) {
   const [hovered, setHovered] = useState(false)
   return (
-    <button
+    <motion.button
+      variants={navItemVariants}
       title={collapsed ? label : undefined}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
@@ -157,7 +171,7 @@ function NavItem({ icon, label, active, onClick, badge, primary, collapsed, lock
         </span>
       )}
       {active && !collapsed && !locked && <div style={{ width: 7, height: 7, borderRadius: '50%', background: primary, boxShadow: `0 0 8px ${primary}`, flexShrink: 0, animation: 'pulse-dot 2s infinite' }} />}
-    </button>
+    </motion.button>
   )
 }
 
@@ -411,6 +425,15 @@ export default function Dashboard({ session, org }) {
   const [navContext, setNavContext] = React.useState({ mode: 'rocket', liveCount: 0 })
   const [navBadges, setNavBadges] = React.useState({ registers: 0, mentoring: 0 })
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
+  const { isTablet } = useBreakpoint()
+  const [tabletNavOpen, setTabletNavOpen] = React.useState(false)
+
+  // Tablet gets an overlay burger menu instead of the persistent/collapsible
+  // desktop rail - keep sidebarCollapsed forced off so it never renders in
+  // icon-only mode while in overlay mode, and start closed on entry.
+  React.useEffect(() => {
+    if (isTablet) { setSidebarCollapsed(false); setTabletNavOpen(false) }
+  }, [isTablet])
 
   const handleSetTab = (t, payload) => {
     if (ADMIN_ONLY_TABS.includes(t) && !isAdmin) { setTab('home'); return }
@@ -420,6 +443,7 @@ export default function Dashboard({ session, org }) {
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
     setTab(t)
+    if (isTablet) setTabletNavOpen(false)
   }
 
   React.useEffect(() => {
@@ -589,12 +613,23 @@ export default function Dashboard({ session, org }) {
     <div style={{ display: 'flex', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
 
       {/* SIDEBAR */}
-      <div style={{ width: sidebarCollapsed ? 64 : 240, background: 'linear-gradient(175deg, #0D1117 0%, #0A0F1A 60%, #080C14 100%)', transition: 'width 0.28s cubic-bezier(0.4,0,0.2,1)', display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', position: 'relative', overflow: 'hidden' }}>
+      <div style={{
+        width: sidebarCollapsed ? 64 : 240,
+        background: 'linear-gradient(175deg, #0D1117 0%, #0A0F1A 60%, #080C14 100%)',
+        transition: isTablet ? 'transform 0.28s cubic-bezier(0.4,0,0.2,1)' : 'width 0.28s cubic-bezier(0.4,0,0.2,1)',
+        display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0,
+        borderRight: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden',
+        position: isTablet ? 'fixed' : 'relative', top: isTablet ? 0 : undefined, left: isTablet ? 0 : undefined, bottom: isTablet ? 0 : undefined,
+        zIndex: isTablet ? 960 : undefined,
+        transform: isTablet ? (tabletNavOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
+        boxShadow: isTablet && tabletNavOpen ? '0 0 60px rgba(0,0,0,0.45)' : 'none',
+      }}>
         <style>{`@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.4)}}.sb-nav::-webkit-scrollbar{width:3px}.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:99px}`}</style>
         <div style={{ position:'absolute',top:-60,left:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle, ${primary}20, transparent 70%)`,pointerEvents:'none',zIndex:0 }} />
         <div style={{ position:'absolute',bottom:80,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%)',pointerEvents:'none',zIndex:0 }} />
 
-        {/* COLLAPSE BUTTON */}
+        {/* COLLAPSE BUTTON — desktop only; tablet uses the burger to open/close instead */}
+        {!isTablet && (
         <button
           onClick={() => setSidebarCollapsed(c => !c)}
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -604,6 +639,7 @@ export default function Dashboard({ session, org }) {
         >
           {sidebarCollapsed ? '›' : '‹'}
         </button>
+        )}
 
         {/* ORG HEADER */}
         <div style={{ padding: '16px 12px 14px', borderBottom: `1px solid ${primary}22`, background: `linear-gradient(180deg, ${primary}14, transparent)`, position: 'relative', overflow: 'hidden' }}>
@@ -621,6 +657,12 @@ export default function Dashboard({ session, org }) {
         </div>
 
         {/* NAV */}
+        <motion.div
+          style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
+          variants={isTablet ? navContainerVariants : undefined}
+          initial={isTablet ? 'hidden' : false}
+          animate={isTablet ? (tabletNavOpen ? 'visible' : 'hidden') : false}
+        >
         {/* Home — sticky, always visible */}
         <div style={{ padding: '4px 8px 0', flexShrink: 0 }}>
           <NavSection collapsed={sidebarCollapsed} packColor={primary}>
@@ -697,6 +739,7 @@ export default function Dashboard({ session, org }) {
             </NavSection>
           )}
         </div>
+        </motion.div>
 
         {/* USER PROFILE */}
         <div style={{ padding: '10px 10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
@@ -733,16 +776,35 @@ export default function Dashboard({ session, org }) {
         </div>
       </div>
 
-      {false && (
-        <div
-          onClick={() => {}}
+      <AnimatePresence>
+        {isTablet && tabletNavOpen && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setTabletNavOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15,23,42,0.55)",
+              zIndex: 955,
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {isTablet && (
+        <button
+          onClick={() => setTabletNavOpen(v => !v)}
+          title={tabletNavOpen ? 'Close menu' : 'Open menu'}
           style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15,23,42,0.55)",
-            zIndex: 900,
+            position: 'fixed', left: tabletNavOpen ? 240 : 0, top: '50%', transform: 'translateY(-50%)', zIndex: 970,
+            width: 26, height: 64, borderRadius: '0 14px 14px 0', border: '1px solid rgba(255,255,255,0.12)', borderLeft: 'none',
+            background: '#0D1117', color: 'rgba(255,255,255,0.75)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+            boxShadow: '4px 0 20px -6px rgba(0,0,0,0.5)', transition: 'left 0.28s cubic-bezier(0.4,0,0.2,1)',
           }}
-        />
+        >
+          {tabletNavOpen ? '‹' : '☰'}
+        </button>
       )}
 
       {/* MAIN CONTENT */}
