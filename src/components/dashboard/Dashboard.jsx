@@ -127,22 +127,19 @@ function ComingSoonModule({ icon, label, desc }) {
 
 // Tablet burger-menu reveal: all items fade in together once the panel has
 // mostly finished its own 0.28s slide-in (rather than racing that motion).
-// No-ops on desktop, since animate there is always 'visible' with nothing
-// to transition from (see SIDEBAR render below).
-const navContainerVariants = {
-  hidden: { transition: { duration: 0.12 } },
-  visible: { transition: { delayChildren: 0.3, staggerChildren: 0 } },
-}
-const navItemVariants = {
-  hidden: { opacity: 0, transition: { duration: 0.12, ease: 'easeIn' } },
-  visible: { opacity: 1, transition: { duration: 0.4, ease: 'easeOut' } },
-}
+// Plain CSS transition via context, not framer-motion - NavItem's style prop
+// already computes its own opacity for the `locked` state, and having two
+// separate systems (framer-motion's animated opacity + our static style
+// opacity) both drive the same property was fighting each other, visible as
+// a flash right when the framer-motion tween finished and handed control
+// back. One value, one system removes the conflict outright.
+const NavVisibleContext = React.createContext(true)
 
 function NavItem({ icon, label, active, onClick, badge, primary, collapsed, locked }) {
   const [hovered, setHovered] = useState(false)
+  const navVisible = React.useContext(NavVisibleContext)
   return (
-    <motion.button
-      variants={navItemVariants}
+    <button
       title={collapsed ? label : undefined}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
@@ -159,9 +156,9 @@ function NavItem({ icon, label, active, onClick, badge, primary, collapsed, lock
         color: locked ? 'rgba(255,255,255,0.2)' : active ? '#fff' : hovered ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.45)',
         fontSize: 13, fontWeight: active ? 700 : 500,
         marginBottom: 1, cursor: locked ? 'default' : 'pointer', textAlign: 'left',
-        transition: 'all 0.15s ease', position: 'relative',
+        transition: 'background 0.15s ease, color 0.15s ease, opacity 0.4s ease-out', position: 'relative',
         borderLeft: active ? `3px solid ${primary}` : '3px solid transparent',
-        opacity: locked ? 0.5 : 1,
+        opacity: !navVisible ? 0 : locked ? 0.5 : 1,
       }}
     >
       <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0, transform: hovered && !active && !locked ? 'translateX(1px)' : 'none', transition: 'transform 0.15s' }}>{icon}</span>
@@ -173,7 +170,7 @@ function NavItem({ icon, label, active, onClick, badge, primary, collapsed, lock
         </span>
       )}
       {active && !collapsed && !locked && <div style={{ width: 7, height: 7, borderRadius: '50%', background: primary, boxShadow: `0 0 8px ${primary}`, flexShrink: 0, animation: 'pulse-dot 2s infinite' }} />}
-    </motion.button>
+    </button>
   )
 }
 
@@ -659,12 +656,8 @@ export default function Dashboard({ session, org }) {
         </div>
 
         {/* NAV */}
-        <motion.div
-          style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
-          variants={navContainerVariants}
-          initial={false}
-          animate={isTablet ? (tabletNavOpen ? 'visible' : 'hidden') : 'visible'}
-        >
+        <NavVisibleContext.Provider value={isTablet ? tabletNavOpen : true}>
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
         {/* Home — sticky, always visible */}
         <div style={{ padding: '4px 8px 0', flexShrink: 0 }}>
           <NavSection collapsed={sidebarCollapsed} packColor={primary}>
@@ -741,7 +734,8 @@ export default function Dashboard({ session, org }) {
             </NavSection>
           )}
         </div>
-        </motion.div>
+        </div>
+        </NavVisibleContext.Provider>
 
         {/* USER PROFILE */}
         <div style={{ padding: '10px 10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
