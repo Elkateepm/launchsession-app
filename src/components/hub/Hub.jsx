@@ -703,10 +703,23 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
 
       {popupMode && (
-        <div onClick={() => setPopupMode(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 460, maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.35)' }}>
+        <div onClick={() => setPopupMode(null)} style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 700,
+          display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'center',
+          padding: isMobile ? 0 : 20,
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: '#fff',
+            borderRadius: isMobile ? 0 : 22,
+            width: '100%',
+            maxWidth: isMobile ? '100%' : 460,
+            height: isMobile ? '100dvh' : 'auto',
+            maxHeight: isMobile ? '100dvh' : '80vh',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            boxShadow: isMobile ? 'none' : '0 32px 80px rgba(0,0,0,0.35)',
+          }}>
             {/* Header */}
-            <div style={{ padding: '18px 20px', borderBottom: '1px solid #F3F4F6', flexShrink: 0 }}>
+            <div style={{ padding: isMobile ? '16px 16px 14px' : '18px 20px', borderBottom: '1px solid #F3F4F6', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 900, color: '#111' }}>
@@ -714,7 +727,11 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                   </div>
                   <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{activeSession?.title} · {popupChildren.length} {popupMode === 'expected' ? 'expected' : popupMode === 'signed_in' ? 'signed in' : popupMode === 'signed_out' ? 'signed out' : 'children'}</div>
                 </div>
-                <button onClick={() => setPopupMode(null)} style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', fontSize: 16, color: '#6B7280' }}>×</button>
+                <button onClick={() => setPopupMode(null)} aria-label="Close"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, height: 34, borderRadius: 17, border: 'none', background: '#F3F4F6', cursor: 'pointer', fontSize: 13, fontWeight: 800, color: '#374151', padding: isMobile ? '0 14px' : 0, width: isMobile ? 'auto' : 30, justifyContent: 'center' }}>
+                  <span style={{ fontSize: 16, lineHeight: 1 }}>×</span>
+                  {isMobile && <span>Close</span>}
+                </button>
               </div>
               <input value={popupSearch} onChange={e => setPopupSearch(e.target.value)} placeholder="Search a child..."
                 style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
