@@ -323,10 +323,10 @@ function contrastRatio(hex1, hex2) {
   return (lighter + 0.05) / (darker + 0.05)
 }
 function contrastGrade(ratio) {
-  if (ratio >= 7) return { label: 'AAA', color: '#16A34A', good: true }
-  if (ratio >= 4.5) return { label: 'AA', color: '#16A34A', good: true }
-  if (ratio >= 3) return { label: 'AA (large text)', color: '#D97706', good: true }
-  return { label: 'Fail', color: '#DC2626', good: false }
+  if (ratio >= 7) return { label: 'AAA', color: '#16A34A', good: true, rank: 3 }
+  if (ratio >= 4.5) return { label: 'AA', color: '#16A34A', good: true, rank: 2 }
+  if (ratio >= 3) return { label: 'AA Large', color: '#D97706', good: true, rank: 1 }
+  return { label: 'Fail', color: '#DC2626', good: false, rank: 0 }
 }
 // Suggests a secondary/accent pair by rotating hue around the primary colour.
 function suggestPalette(hex) {
@@ -437,10 +437,39 @@ function ColorSpectrumPicker({ hex, onChange }) {
 
 // A labeled colour field: swatch + hex input + contrast rating, expanding
 // to a full spectrum picker with recently-used swatches on demand.
-function ColorField({ label, hint, value, onChange, contrastAgainst, contrastLabel, recentColors, onCommit }) {
+function ColorField({ label, hint, value, onChange, contrastAgainst, contrastLabel, recentColors, onCommit, compact }) {
   const [expanded, setExpanded] = useState(false)
   const ratio = contrastAgainst ? contrastRatio(value, contrastAgainst) : null
   const grade = ratio ? contrastGrade(ratio) : null
+
+  if (compact) {
+    return (
+      <div>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{label}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={() => setExpanded(x => !x)} style={{ width: 34, height: 34, borderRadius: 9, background: value, border: '1.5px solid rgba(0,0,0,0.08)', cursor: 'pointer', flexShrink: 0 }} />
+          <input style={{ ...inp, flex: 1, fontSize: 12.5, padding: '9px 10px' }} value={value} onChange={e => onChange(e.target.value)} onBlur={() => onCommit && onCommit(value)} placeholder="#000000" />
+        </div>
+        <div style={{ display: 'grid', gridTemplateRows: expanded ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
+          <div style={{ overflow: 'hidden', minHeight: 0 }}>
+            <div style={{ marginTop: 10, padding: 12, background: 'var(--surface2)', borderRadius: 12, border: '1px solid var(--border)' }}>
+              <ColorSpectrumPicker hex={value} onChange={onChange} />
+              {recentColors?.length > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Recently used</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {recentColors.map(c => (
+                      <button key={c} onClick={() => onChange(c)} style={{ width: 24, height: 24, borderRadius: 6, background: c, border: value === c ? '2px solid #111' : '1px solid rgba(0,0,0,0.1)', cursor: 'pointer' }} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ marginBottom: 18 }}>
@@ -564,6 +593,8 @@ function BrandingSection({ org, refreshOrg }) {
   const [previewDevice, setPreviewDevice] = useState('desktop')
   const [confirmingReset, setConfirmingReset] = useState(false)
   const [highlightSection, setHighlightSection] = useState(null)
+  const [showCompletionDropdown, setShowCompletionDropdown] = useState(false)
+  const [showContrastDetails, setShowContrastDetails] = useState(false)
   const previewRef = useRef(null)
   const identityRef = useRef(null)
   const coloursRef = useRef(null)
@@ -700,30 +731,68 @@ function BrandingSection({ org, refreshOrg }) {
   const orgName = name || 'Your Organisation'
   const sectionWrapStyle = (key) => ({ borderRadius: 16, transition: 'box-shadow 0.3s ease', boxShadow: highlightSection === key ? `0 0 0 3px ${color}66` : 'none' })
 
+  const contrastChecks = [
+    { label: 'Primary vs white text', ratio: contrastRatio(color, '#FFFFFF') },
+    { label: 'Secondary vs white text', ratio: contrastRatio(secondaryColor, '#FFFFFF') },
+    { label: 'Accent vs white text', ratio: contrastRatio(accentColor, '#FFFFFF') },
+  ].map(c => ({ ...c, grade: contrastGrade(c.ratio) }))
+  const worstContrast = contrastChecks.reduce((worst, c) => (c.grade.rank < worst.grade.rank ? c : worst))
+  const allContrastGood = contrastChecks.every(c => c.grade.good)
+
   return (
     <div>
-      <div style={{ position: 'sticky', top: 0, zIndex: 5, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 16, padding: '18px 22px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 5, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)' }}>Your brand. Powered by LaunchSession.</div>
-          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Customise how {orgName} appears across your workspace, login screen and emails.</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)' }}>Branding Centre</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Shape how {orgName} appears across LaunchSession.</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, position: 'relative' }}>
           {isDirty && !saving && (
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#D97706', background: '#D9770614', border: '1px solid #D9770630', borderRadius: 99, padding: '5px 12px', whiteSpace: 'nowrap' }}>● Unsaved changes</span>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#D97706', background: '#D9770614', border: '1px solid #D9770630', borderRadius: 99, padding: '5px 12px', whiteSpace: 'nowrap' }}>● Unsaved</span>
           )}
+
+          <button onClick={() => setShowCompletionDropdown(x => !x)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text)' }}>Brand profile <span style={{ color }}>{completion.pct}%</span> complete</div>
+              <div style={{ width: 120, height: 5, borderRadius: 99, background: 'var(--surface2)', overflow: 'hidden', marginTop: 4 }}>
+                <div style={{ width: `${completion.pct}%`, height: '100%', background: color, borderRadius: 99, transition: 'width 0.3s' }} />
+              </div>
+            </div>
+            <span style={{ fontSize: 10, color: 'var(--text3)', transform: showCompletionDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>⌄</span>
+          </button>
+
+          {showCompletionDropdown && (
+            <div style={{ position: 'absolute', top: '110%', right: 0, minWidth: 260, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 32px rgba(0,0,0,0.12)', padding: 12, zIndex: 10 }}>
+              {completion.missing.length === 0 ? (
+                <div style={{ fontSize: 12.5, color: 'var(--text2)', fontWeight: 600, padding: '4px 2px' }}>🎉 Your brand profile is fully set up!</div>
+              ) : (
+                <>
+                  <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Still to do</div>
+                  {completion.missing.map(m => (
+                    <button key={m.label} onClick={() => { jumpTo(m.section); setShowCompletionDropdown(false) }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 8px', borderRadius: 8, border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                      + {m.label}
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? '#9ca3af' : color, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 24px ${color}40`, whiteSpace: 'nowrap' }}>
+            {saving ? 'Saving...' : saved ? '✅ Saved!' : '💾 Save changes'}
+          </button>
+          <button onClick={() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>👁 Preview brand</button>
           {confirmingReset ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', border: '1.5px solid #FCA5A5', borderRadius: 10, padding: '6px 6px 6px 12px' }}>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text2)' }}>Clear this form back to defaults?</span>
-              <button onClick={handleReset} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#DC2626', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Yes, reset</button>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text2)', whiteSpace: 'nowrap' }}>Reset to defaults?</span>
+              <button onClick={handleReset} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#DC2626', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Yes, reset</button>
               <button onClick={() => setConfirmingReset(false)} style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
             </div>
           ) : (
-            <button onClick={() => setConfirmingReset(true)} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>↺ Reset to defaults</button>
+            <button onClick={() => setConfirmingReset(true)} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>↺ Reset to default</button>
           )}
-          <button onClick={() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>👁 Preview brand</button>
-          <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? '#9ca3af' : color, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 24px ${color}40` }}>
-            {saving ? 'Saving...' : saved ? '✅ Saved!' : '💾 Save changes'}
-          </button>
         </div>
       </div>
 
@@ -733,34 +802,6 @@ function BrandingSection({ org, refreshOrg }) {
           <button onClick={handleSave} style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(220,38,38,0.3)', background: '#fff', color: '#B91C1C', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Try again</button>
         </div>
       )}
-
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-        {[
-          { key: 'identity', label: '👤 Identity' }, { key: 'colours', label: '🎨 Colours' },
-          { key: 'appearance', label: '◐ Appearance' }, { key: 'login', label: '🔐 Login & Comms' },
-          { key: 'orgLevel', label: '🏢 Organisation' },
-        ].map(s => (
-          <button key={s.key} onClick={() => jumpTo(s.key)} style={{ padding: '7px 14px', borderRadius: 99, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
-            {s.label}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '14px 18px', marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>Brand profile {completion.pct}% complete</div>
-          <div style={{ width: 140, height: 6, borderRadius: 99, background: 'var(--surface2)', overflow: 'hidden' }}>
-            <div style={{ width: `${completion.pct}%`, height: '100%', background: color, borderRadius: 99, transition: 'width 0.3s' }} />
-          </div>
-        </div>
-        {completion.missing.length > 0 && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-            {completion.missing.map(m => (
-              <button key={m.label} onClick={() => jumpTo(m.section)} style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 99, padding: '5px 11px', cursor: 'pointer' }}>+ {m.label}</button>
-            ))}
-          </div>
-        )}
-      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: 16, alignItems: 'flex-start' }}>
         <div>
@@ -794,11 +835,12 @@ function BrandingSection({ org, refreshOrg }) {
           </div>
 
           <div ref={coloursRef} style={sectionWrapStyle('colours')}>
-          <SettingCard title="Brand Colours" description="Used across buttons, highlights, active states and accents.">
-            <ColorField label="Primary colour" hint="Buttons, highlights, active states." value={color} onChange={setColor} contrastAgainst="#FFFFFF" contrastLabel="white button text" recentColors={recentColors} onCommit={commitRecentColor} />
-            <ColorField label="Secondary colour" hint="Accents, links, secondary elements." value={secondaryColor} onChange={setSecondaryColor} contrastAgainst="#FFFFFF" contrastLabel="white button text" recentColors={recentColors} onCommit={commitRecentColor} />
-            <ColorField label="Accent colour" hint="Badges, highlights, small details." value={accentColor} onChange={setAccentColor} contrastAgainst="#FFFFFF" contrastLabel="white button text" recentColors={recentColors} onCommit={commitRecentColor} />
-            <ColorField label="Background colour" hint="Page background across the workspace." value={backgroundColor} onChange={setBackgroundColor} contrastAgainst={color} contrastLabel="your primary colour" recentColors={recentColors} onCommit={commitRecentColor} />
+          <SettingCard title="Brand Colours" description="Choose colours that reflect your brand.">
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 16, marginBottom: 18 }}>
+              <ColorField compact label="Primary colour" value={color} onChange={setColor} recentColors={recentColors} onCommit={commitRecentColor} />
+              <ColorField compact label="Secondary colour" value={secondaryColor} onChange={setSecondaryColor} recentColors={recentColors} onCommit={commitRecentColor} />
+              <ColorField compact label="Accent colour" value={accentColor} onChange={setAccentColor} recentColors={recentColors} onCommit={commitRecentColor} />
+            </div>
 
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Presets</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
@@ -808,6 +850,31 @@ function BrandingSection({ org, refreshOrg }) {
                 </button>
               ))}
             </div>
+
+            <div style={{ background: allContrastGood ? '#F0FDF4' : '#FFFBEB', border: `1px solid ${allContrastGood ? '#16A34A30' : '#D9770630'}`, borderRadius: 12, padding: '10px 14px', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: allContrastGood ? '#16A34A' : '#D97706', flexShrink: 0 }} />
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{allContrastGood ? 'Good contrast' : `Low contrast — ${worstContrast.label}`}</span>
+                <span style={{ fontSize: 11.5, color: 'var(--text3)' }}>{contrastChecks.map(c => c.grade.label).join(' · ')}</span>
+                <button onClick={() => setShowContrastDetails(x => !x)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: color, fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+                  {showContrastDetails ? 'Hide details' : 'View details'}
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateRows: showContrastDetails ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
+                <div style={{ overflow: 'hidden', minHeight: 0 }}>
+                  <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {contrastChecks.map(c => (
+                      <div key={c.label} style={{ fontSize: 11.5, color: 'var(--text2)', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{c.label}</span>
+                        <span style={{ fontWeight: 700, color: c.grade.color }}>{c.grade.label} · {c.ratio.toFixed(1)}:1</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <ColorField label="Background colour" hint="Page background across the workspace." value={backgroundColor} onChange={setBackgroundColor} contrastAgainst={color} contrastLabel="your primary colour" recentColors={recentColors} onCommit={commitRecentColor} />
 
             <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: 12 }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Suggested accessible combination</div>
@@ -825,58 +892,65 @@ function BrandingSection({ org, refreshOrg }) {
           </div>
 
           <div ref={appearanceRef} style={sectionWrapStyle('appearance')}>
-          <SettingCard title="Appearance" description="How the workspace looks and feels.">
+          <SettingCard title="Appearance" description="Choose how LaunchSession looks for your users.">
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Mode</div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-              {[{ k: 'light', l: '☀️ Light' }, { k: 'dark', l: '🌙 Dark' }, { k: 'auto', l: '🌗 Automatic' }].map(m => (
-                <button key={m.k} onClick={() => setAppearanceMode(m.k)} style={{ flex: 1, padding: 10, borderRadius: 10, border: appearanceMode === m.k ? `2px solid ${color}` : '1.5px solid var(--border)', background: appearanceMode === m.k ? `${color}10` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, color: appearanceMode === m.k ? color : 'var(--text2)', cursor: 'pointer' }}>{m.l}</button>
+              {[{ k: 'light', i: '☀️', l: 'Light' }, { k: 'dark', i: '🌙', l: 'Dark' }, { k: 'auto', i: '🖥', l: 'Auto' }].map(m => (
+                <button key={m.k} onClick={() => setAppearanceMode(m.k)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '14px 10px', borderRadius: 12, border: appearanceMode === m.k ? `2px solid ${color}` : '1.5px solid var(--border)', background: appearanceMode === m.k ? `${color}10` : 'var(--surface)', cursor: 'pointer' }}>
+                  <span style={{ fontSize: 18 }}>{m.i}</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: appearanceMode === m.k ? color : 'var(--text2)' }}>{m.l}</span>
+                </button>
               ))}
             </div>
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Interface style</div>
             <div style={{ display: 'flex', gap: 8 }}>
-              {[{ k: 'rounded', l: '◠ Rounded' }, { k: 'compact', l: '▭ Compact' }].map(m => (
-                <button key={m.k} onClick={() => setUiDensity(m.k)} style={{ flex: 1, padding: 10, borderRadius: 10, border: uiDensity === m.k ? `2px solid ${color}` : '1.5px solid var(--border)', background: uiDensity === m.k ? `${color}10` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, color: uiDensity === m.k ? color : 'var(--text2)', cursor: 'pointer' }}>{m.l}</button>
+              {[{ k: 'rounded', i: '◠', l: 'Rounded' }, { k: 'compact', i: '▭', l: 'Compact' }].map(m => (
+                <button key={m.k} onClick={() => setUiDensity(m.k)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '14px 10px', borderRadius: 12, border: uiDensity === m.k ? `2px solid ${color}` : '1.5px solid var(--border)', background: uiDensity === m.k ? `${color}10` : 'var(--surface)', cursor: 'pointer' }}>
+                  <span style={{ fontSize: 18 }}>{m.i}</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: uiDensity === m.k ? color : 'var(--text2)' }}>{m.l}</span>
+                </button>
               ))}
             </div>
           </SettingCard>
           </div>
 
           <div ref={loginRef} style={sectionWrapStyle('login')}>
-          <SettingCard title="Login & Communications" description="What people see before they're signed in, and in the emails you send.">
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Login screen background</div>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                <div style={{ width: 100, height: 60, borderRadius: 10, background: loginBgPreview ? `url(${loginBgPreview}) center/cover` : 'linear-gradient(135deg, #0F172A, #1e293b)', border: '1px solid var(--border)', flexShrink: 0 }} />
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <label style={{ padding: '7px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
-                    Upload image
-                    <input type="file" accept="image/*" onChange={handleFileChange(setLoginBgPreview, setLoginBgFile, setLoginBgRemoved)} style={{ display: 'none' }} />
-                  </label>
-                  {loginBgPreview && <button onClick={() => { setLoginBgPreview(''); setLoginBgFile(null); setLoginBgRemoved(true) }} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🗑</button>}
-                </div>
-              </div>
-            </div>
-            <Field label="Welcome message" hint="Shown above the sign-in form.">
-              <input style={inp} value={welcomeMessage} onChange={e => setWelcomeMessage(e.target.value)} placeholder="e.g. Welcome back — let's make today great." />
+          <SettingCard title="Login & Communications" description="Customise messages and visuals for key touchpoints.">
+            <Field label="Login welcome message" hint={`${welcomeMessage.length}/80`}>
+              <input style={inp} value={welcomeMessage} onChange={e => setWelcomeMessage(e.target.value.slice(0, 80))} placeholder="e.g. Welcome back! Sign in to continue making an impact." maxLength={80} />
             </Field>
-            <div style={{ marginTop: 4, marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Email header logo</div>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                <div style={{ width: 64, height: 64, borderRadius: 12, background: '#fff', border: '1.5px dashed var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                  <img src={emailLogoPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <label style={{ padding: '7px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
-                    Upload
-                    <input type="file" accept="image/*" onChange={handleFileChange(setEmailLogoPreview, setEmailLogoFile, setEmailLogoRemoved)} style={{ display: 'none' }} />
-                  </label>
-                  {emailLogoPreview && <button onClick={() => { setEmailLogoPreview(''); setEmailLogoFile(null); setEmailLogoRemoved(true) }} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🗑</button>}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Login background</div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <div style={{ width: 56, height: 42, borderRadius: 8, background: loginBgPreview ? `url(${loginBgPreview}) center/cover` : 'linear-gradient(135deg, #0F172A, #1e293b)', border: '1px solid var(--border)', flexShrink: 0 }} />
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <label style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
+                      Upload
+                      <input type="file" accept="image/*" onChange={handleFileChange(setLoginBgPreview, setLoginBgFile, setLoginBgRemoved)} style={{ display: 'none' }} />
+                    </label>
+                    {loginBgPreview && <button onClick={() => { setLoginBgPreview(''); setLoginBgFile(null); setLoginBgRemoved(true) }} style={{ padding: '6px 8px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>🗑</button>}
+                  </div>
                 </div>
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6 }}>Falls back to your main logo if left blank.</div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Email header logo</div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 8, background: '#fff', border: '1.5px dashed var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    <img src={emailLogoPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <label style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
+                      Upload
+                      <input type="file" accept="image/*" onChange={handleFileChange(setEmailLogoPreview, setEmailLogoFile, setEmailLogoRemoved)} style={{ display: 'none' }} />
+                    </label>
+                    {emailLogoPreview && <button onClick={() => { setEmailLogoPreview(''); setEmailLogoFile(null); setEmailLogoRemoved(true) }} style={{ padding: '6px 8px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>🗑</button>}
+                  </div>
+                </div>
+              </div>
             </div>
-            <Field label="Email footer text">
-              <textarea style={{ ...inp, minHeight: 60, resize: 'vertical' }} value={emailFooterText} onChange={e => setEmailFooterText(e.target.value)} placeholder="e.g. Solidarity Sports · Registered Charity No. 123456" />
+            <Field label="Email footer text" hint={`${emailFooterText.length}/80`}>
+              <textarea style={{ ...inp, minHeight: 60, resize: 'vertical' }} value={emailFooterText} onChange={e => setEmailFooterText(e.target.value.slice(0, 80))} placeholder="e.g. Solidarity Sports · Registered Charity No. 123456" maxLength={80} />
             </Field>
           </SettingCard>
           </div>
@@ -898,16 +972,18 @@ function BrandingSection({ org, refreshOrg }) {
         </div>
 
         <div ref={previewRef} style={{ position: isMobile ? 'static' : 'sticky', top: 16 }}>
-          <SettingCard title="Live Preview" description="This is how your brand will appear across LaunchSession.">
-            <div style={{ display: 'flex', gap: 6, marginBottom: 10, background: 'var(--surface2)', borderRadius: 10, padding: 4 }}>
-              {[{ key: 'workspace', label: '🖥 Workspace' }, { key: 'login', label: '🔐 Login' }, { key: 'email', label: '✉️ Email' }].map(t => (
-                <button key={t.key} onClick={() => setPreviewTab(t.key)} style={{ flex: 1, padding: '8px 6px', borderRadius: 7, border: 'none', background: previewTab === t.key ? 'var(--surface)' : 'transparent', color: previewTab === t.key ? color : 'var(--text3)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', boxShadow: previewTab === t.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>{t.label}</button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-              {['desktop', 'mobile'].map(d => (
-                <button key={d} onClick={() => setPreviewDevice(d)} style={{ padding: '4px 10px', borderRadius: 99, border: `1.5px solid ${previewDevice === d ? color : 'var(--border)'}`, background: previewDevice === d ? `${color}12` : 'var(--surface)', color: previewDevice === d ? color : 'var(--text3)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{d === 'desktop' ? '🖥 Desktop' : '📱 Mobile'}</button>
-              ))}
+          <SettingCard title="Live Preview" description="See how your brand appears across LaunchSession.">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 16 }}>
+                {[{ key: 'workspace', label: 'Workspace' }, { key: 'login', label: 'Login Screen' }, { key: 'email', label: 'Email' }].map(t => (
+                  <button key={t.key} onClick={() => setPreviewTab(t.key)} style={{ padding: '0 0 10px', border: 'none', borderBottom: previewTab === t.key ? `2px solid ${color}` : '2px solid transparent', background: 'none', color: previewTab === t.key ? color : 'var(--text3)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: -1 }}>{t.label}</button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                {['desktop', 'mobile'].map(d => (
+                  <button key={d} onClick={() => setPreviewDevice(d)} style={{ padding: '4px 10px', borderRadius: 99, border: `1.5px solid ${previewDevice === d ? color : 'var(--border)'}`, background: previewDevice === d ? `${color}12` : 'var(--surface)', color: previewDevice === d ? color : 'var(--text3)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{d === 'desktop' ? '🖥 Desktop' : '📱 Mobile'}</button>
+                ))}
+              </div>
             </div>
 
             <div style={{ maxWidth: previewDevice === 'mobile' ? 260 : '100%', margin: previewDevice === 'mobile' ? '0 auto' : 0, transition: 'max-width 0.2s' }}>
@@ -987,13 +1063,32 @@ function BrandingSection({ org, refreshOrg }) {
             </div>
           </SettingCard>
 
-          <div style={{ background: `linear-gradient(135deg, ${color}12, ${secondaryColor}12)`, border: `1px solid ${color}30`, borderRadius: 14, padding: 16, marginTop: 16, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-            <div style={{ fontSize: 22, flexShrink: 0 }}>🚀</div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color }}>Your brand, your impact</div>
-              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, lineHeight: 1.5 }}>A consistent brand builds confidence with parents, volunteers and partners.</div>
+          {completion.missing.length > 0 ? (
+            <div style={{ background: `linear-gradient(135deg, ${color}12, ${secondaryColor}12)`, border: `1px solid ${color}30`, borderRadius: 14, padding: 16, marginTop: 16, display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 22, flexShrink: 0 }}>📋</div>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color }}>Complete your brand profile</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, marginBottom: 8, lineHeight: 1.5 }}>A few items are missing before your brand is complete.</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {completion.missing.slice(0, 3).map(m => (
+                    <div key={m.label} style={{ fontSize: 11.5, color: 'var(--text2)', fontWeight: 600 }}>● {m.label}</div>
+                  ))}
+                  {completion.missing.length > 3 && (
+                    <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>and {completion.missing.length - 3} more...</div>
+                  )}
+                </div>
+              </div>
+              <button onClick={() => jumpTo(completion.missing[0].section)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: color, color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>Go to missing items</button>
             </div>
-          </div>
+          ) : (
+            <div style={{ background: `linear-gradient(135deg, ${color}12, ${secondaryColor}12)`, border: `1px solid ${color}30`, borderRadius: 14, padding: 16, marginTop: 16, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <div style={{ fontSize: 22, flexShrink: 0 }}>🎉</div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800, color }}>Your brand profile is complete</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, lineHeight: 1.5 }}>A consistent brand builds confidence with parents, volunteers and partners.</div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
