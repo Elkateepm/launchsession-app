@@ -414,7 +414,17 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
 }
 
 export default function Dashboard({ session, org }) {
-  const [tab, setTab] = useState('home')
+  const [tab, setTab] = useState(() => {
+    // A page reload fully remounts this component, wiping any in-memory
+    // state — restore whatever tab the person was actually on instead of
+    // always dropping back to Home. The URL param is the source of truth
+    // (works even after a hard refresh or a shared link); sessionStorage is
+    // just a fallback for the rare case the query string got stripped.
+    try {
+      const fromUrl = new URLSearchParams(window.location.search).get('tab')
+      return fromUrl || sessionStorage.getItem('ls_dashboard_tab') || 'home'
+    } catch (e) { return 'home' }
+  })
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [registersKey, setRegistersKey] = useState(0)
   const [reflectSessionId, setReflectSessionId] = useState(null)
@@ -440,14 +450,24 @@ export default function Dashboard({ session, org }) {
     if (isTablet) { setSidebarCollapsed(false); setTabletNavOpen(false) }
   }, [isTablet])
 
+  const persistTab = (t) => {
+    try {
+      sessionStorage.setItem('ls_dashboard_tab', t)
+      const params = new URLSearchParams(window.location.search)
+      params.set('tab', t)
+      window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`)
+    } catch (e) { /* best-effort only — never block navigation on this */ }
+  }
+
   const handleSetTab = (t, payload) => {
-    if (ADMIN_ONLY_TABS.includes(t) && !isAdmin) { setTab('home'); return }
+    if (ADMIN_ONLY_TABS.includes(t) && !isAdmin) { setTab('home'); persistTab('home'); return }
     if (t === 'registers') setRegistersKey(k => k + 1)
     setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
     setOpenAssessmentId(t === 'risk_assessments' && payload?.openAssessmentId ? payload.openAssessmentId : null)
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
     setTab(t)
+    persistTab(t)
     if (isTablet) setTabletNavOpen(false)
   }
 
