@@ -230,6 +230,8 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
   const [viewMode, setViewMode] = useState('month')
   const [selectedSession, setSelectedSession] = useState(null)
   const [filterType, setFilterType] = useState('all')
+  const [filterVenue, setFilterVenue] = useState('all')
+  const [venues, setVenues] = useState([])
   const [navDirection, setNavDirection] = useState('right')
   const [showConfettiFor, setShowConfettiFor] = useState(null)
   const [bankHolidays, setBankHolidays] = useState({})
@@ -271,6 +273,12 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
 
   useEffect(() => {
     if (!org?.id) return
+    supabase.from('venues').select('id, name').eq('org_id', org.id).eq('is_active', true).order('name')
+      .then(({ data }) => setVenues(data || []))
+  }, [org?.id])
+
+  useEffect(() => {
+    if (!org?.id) return
     const m = format(currentDate, 'yyyy-MM')
     const monthSessionIds = sessions.filter(s => s.session_date?.startsWith(m)).map(s => s.id)
     if (monthSessionIds.length === 0) { setMonthYoungPeople(0); return }
@@ -306,7 +314,9 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
     setCurrentDate(new Date())
   }
 
-  const filtered = filterType === 'all' ? sessions : sessions.filter(s => s.session_type === filterType)
+  const filtered = sessions
+    .filter(s => filterType === 'all' || s.session_type === filterType)
+    .filter(s => filterVenue === 'all' || s.venue_id === filterVenue)
 
   const sessionsByDate = useMemo(() => {
     const map = {}
@@ -451,6 +461,13 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 {cfg.icon} {cfg.label}
               </button>
             ))}
+            {venues.length > 0 && (
+              <select value={filterVenue} onChange={e => setFilterVenue(e.target.value)}
+                style={{ padding: '4px 10px', borderRadius: 99, border: `1.5px solid ${filterVenue !== 'all' ? primary : '#e5e7eb'}`, background: filterVenue !== 'all' ? primary + '15' : '#fff', color: filterVenue !== 'all' ? primary : '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                <option value="all">📍 All venues</option>
+                {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+              </select>
+            )}
           </div>
         </div>
 
