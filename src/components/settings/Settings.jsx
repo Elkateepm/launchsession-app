@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { useOrg } from '../../context/OrgContext'
@@ -274,232 +274,636 @@ function GroupCard({ group, count, onRename, onColorChange, onDelete }) {
   )
 }
 
+// ─── Colour math (hex <-> rgb <-> hsv, WCAG contrast) ───────────
+
+function hexToRgb(hex) {
+  const clean = (hex || '').replace('#', '')
+  const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean
+  const num = parseInt(full, 16)
+  if (isNaN(num) || full.length !== 6) return { r: 0, g: 0, b: 0 }
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 }
+}
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('')
+}
+function rgbToHsv(r, g, b) {
+  r /= 255; g /= 255; b /= 255
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min
+  let h = 0
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d) % 6
+    else if (max === g) h = (b - r) / d + 2
+    else h = (r - g) / d + 4
+    h *= 60
+    if (h < 0) h += 360
+  }
+  return { h, s: max === 0 ? 0 : d / max, v: max }
+}
+function hsvToRgb(h, s, v) {
+  const c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c
+  let r = 0, g = 0, b = 0
+  if (h < 60) { r = c; g = x; b = 0 }
+  else if (h < 120) { r = x; g = c; b = 0 }
+  else if (h < 180) { r = 0; g = c; b = x }
+  else if (h < 240) { r = 0; g = x; b = c }
+  else if (h < 300) { r = x; g = 0; b = c }
+  else { r = c; g = 0; b = x }
+  return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 }
+}
+function relativeLuminance({ r, g, b }) {
+  const [rs, gs, bs] = [r, g, b].map(v => {
+    const c = v / 255
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+  })
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
+}
+function contrastRatio(hex1, hex2) {
+  const l1 = relativeLuminance(hexToRgb(hex1)), l2 = relativeLuminance(hexToRgb(hex2))
+  const [lighter, darker] = l1 > l2 ? [l1, l2] : [l2, l1]
+  return (lighter + 0.05) / (darker + 0.05)
+}
+function contrastGrade(ratio) {
+  if (ratio >= 7) return { label: 'AAA', color: '#16A34A', good: true }
+  if (ratio >= 4.5) return { label: 'AA', color: '#16A34A', good: true }
+  if (ratio >= 3) return { label: 'AA (large text)', color: '#D97706', good: true }
+  return { label: 'Fail', color: '#DC2626', good: false }
+}
+// Suggests a secondary/accent pair by rotating hue around the primary colour.
+function suggestPalette(hex) {
+  const { r, g, b } = hexToRgb(hex)
+  const { h, s, v } = rgbToHsv(r, g, b)
+  const rot = (deg) => {
+    const nh = (h + deg + 360) % 360
+    const c = hsvToRgb(nh, Math.min(1, Math.max(s, 0.55)), Math.max(v, 0.7))
+    return rgbToHex(c.r, c.g, c.b)
+  }
+  return { secondary: rot(35), accent: rot(-35) }
+}
+// Best-effort dominant-colour extraction from an uploaded logo, skipping
+// near-white/near-black/low-saturation pixels so it surfaces real brand
+// colours rather than background/transparency artifacts.
+function extractDominantColors(imgUrl) {
+  return new Promise((resolve) => {
+    if (!imgUrl) { resolve([]); return }
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      try {
+        const size = 40
+        const canvas = document.createElement('canvas')
+        canvas.width = size; canvas.height = size
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, size, size)
+        const data = ctx.getImageData(0, 0, size, size).data
+        const counts = {}
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3]
+          if (a < 200) continue
+          const max = Math.max(r, g, b), min = Math.min(r, g, b)
+          if (max > 235 && min > 220) continue // near-white
+          if (max < 25) continue // near-black
+          if (max - min < 12) continue // low-saturation grey
+          const key = `${Math.round(r / 24) * 24},${Math.round(g / 24) * 24},${Math.round(b / 24) * 24}`
+          counts[key] = (counts[key] || 0) + 1
+        }
+        resolve(Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([key]) => {
+          const [r, g, b] = key.split(',').map(Number)
+          return rgbToHex(r, g, b)
+        }))
+      } catch (e) { resolve([]) }
+    }
+    img.onerror = () => resolve([])
+    img.src = imgUrl
+  })
+}
+
+// ─── Colour spectrum picker (SV square + hue slider) ───────────
+
+function ColorSpectrumPicker({ hex, onChange }) {
+  const { r, g, b } = hexToRgb(hex)
+  const { h, s, v } = rgbToHsv(r, g, b)
+  const squareRef = useRef(null)
+  const hueRef = useRef(null)
+  const draggingRef = useRef(null)
+
+  const updateFromSV = (clientX, clientY) => {
+    const el = squareRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    const y = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height))
+    const c = hsvToRgb(h, x, 1 - y)
+    onChange(rgbToHex(c.r, c.g, c.b))
+  }
+  const updateFromHue = (clientX) => {
+    const el = hueRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    const c = hsvToRgb(x * 360, s || 1, v || 1)
+    onChange(rgbToHex(c.r, c.g, c.b))
+  }
+
+  useEffect(() => {
+    const handleMove = (e) => {
+      if (draggingRef.current === 'sv') updateFromSV(e.clientX, e.clientY)
+      if (draggingRef.current === 'hue') updateFromHue(e.clientX)
+    }
+    const handleUp = () => { draggingRef.current = null }
+    window.addEventListener('pointermove', handleMove)
+    window.addEventListener('pointerup', handleUp)
+    return () => { window.removeEventListener('pointermove', handleMove); window.removeEventListener('pointerup', handleUp) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [h, s, v])
+
+  const pureHueC = hsvToRgb(h, 1, 1)
+  const pureHueHex = rgbToHex(pureHueC.r, pureHueC.g, pureHueC.b)
+
+  return (
+    <div>
+      <div ref={squareRef} onPointerDown={e => { draggingRef.current = 'sv'; updateFromSV(e.clientX, e.clientY) }}
+        style={{ position: 'relative', width: '100%', height: 140, borderRadius: 10, cursor: 'crosshair', touchAction: 'none', marginBottom: 10,
+          background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent), ${pureHueHex}` }}>
+        <div style={{ position: 'absolute', left: `calc(${s * 100}% - 6px)`, top: `calc(${(1 - v) * 100}% - 6px)`, width: 12, height: 12, borderRadius: '50%', border: '2px solid #fff', boxShadow: '0 0 0 1px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3)', pointerEvents: 'none' }} />
+      </div>
+      <div ref={hueRef} onPointerDown={e => { draggingRef.current = 'hue'; updateFromHue(e.clientX) }}
+        style={{ position: 'relative', width: '100%', height: 14, borderRadius: 99, cursor: 'pointer', touchAction: 'none',
+          background: 'linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red)' }}>
+        <div style={{ position: 'absolute', left: `calc(${(h / 360) * 100}% - 9px)`, top: -2, width: 18, height: 18, borderRadius: '50%', background: pureHueHex, border: '2px solid #fff', boxShadow: '0 0 0 1px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.3)', pointerEvents: 'none' }} />
+      </div>
+    </div>
+  )
+}
+
+// A labeled colour field: swatch + hex input + contrast rating, expanding
+// to a full spectrum picker with recently-used swatches on demand.
+function ColorField({ label, hint, value, onChange, contrastAgainst, recentColors, onCommit }) {
+  const [expanded, setExpanded] = useState(false)
+  const ratio = contrastAgainst ? contrastRatio(value, contrastAgainst) : null
+  const grade = ratio ? contrastGrade(ratio) : null
+
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{label}</div>
+      {hint && <div style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 8 }}>{hint}</div>}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button onClick={() => setExpanded(x => !x)} style={{ width: 40, height: 40, borderRadius: 10, background: value, border: '1.5px solid rgba(0,0,0,0.08)', cursor: 'pointer', flexShrink: 0 }} />
+        <input style={{ ...inp, flex: 1 }} value={value} onChange={e => onChange(e.target.value)} onBlur={() => onCommit && onCommit(value)} placeholder="#000000" />
+        {grade && (
+          <div style={{ fontSize: 11, fontWeight: 800, color: grade.color, background: grade.color + '14', border: `1px solid ${grade.color}30`, borderRadius: 8, padding: '6px 10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            {grade.label} · {ratio.toFixed(1)}:1
+          </div>
+        )}
+      </div>
+      {grade && !grade.good && (
+        <div style={{ fontSize: 11, color: '#DC2626', marginTop: 6, fontWeight: 600 }}>⚠ Low contrast — text may be hard to read here.</div>
+      )}
+      {expanded && (
+        <div style={{ marginTop: 10, padding: 12, background: 'var(--surface2)', borderRadius: 12, border: '1px solid var(--border)' }}>
+          <ColorSpectrumPicker hex={value} onChange={onChange} />
+          {recentColors?.length > 0 && (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Recently used</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {recentColors.map(c => (
+                  <button key={c} onClick={() => onChange(c)} style={{ width: 24, height: 24, borderRadius: 6, background: c, border: value === c ? '2px solid #111' : '1px solid rgba(0,0,0,0.1)', cursor: 'pointer' }} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// A logo/icon upload slot with zoom + reposition sliders once an image is set.
+function LogoUploadBox({ label, hint, previewSrc, fallback, transform, onFileChange, onTransformChange, onRemove, boxSize = 84 }) {
+  const t = transform || { zoom: 100, x: 0, y: 0 }
+  return (
+    <div style={{ flex: 1, minWidth: 220 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 10 }}>{hint}</div>
+      <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+        <div style={{ width: boxSize, height: boxSize, borderRadius: 16, background: '#fff', border: '1.5px dashed var(--border2)', overflow: 'hidden', flexShrink: 0 }}>
+          <img src={previewSrc || fallback} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: `scale(${t.zoom / 100}) translate(${t.x}%, ${t.y}%)` }} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <label style={{ padding: '7px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
+              Upload
+              <input type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
+            </label>
+            {previewSrc && <button onClick={onRemove} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🗑</button>}
+          </div>
+          {previewSrc && (
+            <div>
+              <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2 }}>Zoom</div>
+              <input type="range" min="100" max="200" value={t.zoom} onChange={e => onTransformChange({ ...t, zoom: Number(e.target.value) })} style={{ width: '100%', marginBottom: 6 }} />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2 }}>Horizontal</div>
+                  <input type="range" min="-50" max="50" value={t.x} onChange={e => onTransformChange({ ...t, x: Number(e.target.value) })} style={{ width: '100%' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2 }}>Vertical</div>
+                  <input type="range" min="-50" max="50" value={t.y} onChange={e => onTransformChange({ ...t, y: Number(e.target.value) })} style={{ width: '100%' }} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BrandingSection({ org, refreshOrg }) {
   const isMobile = useIsMobile()
+  const [name, setName] = useState(org?.name || '')
+  const [slogan, setSlogan] = useState(org?.slogan || '')
   const [color, setColor] = useState(org?.primary_color || '#1B9AAA')
   const [secondaryColor, setSecondaryColor] = useState(org?.secondary_color || '#0EA5E9')
-  const [slogan, setSlogan] = useState(org?.slogan || '')
+  const [accentColor, setAccentColor] = useState(org?.accent_color || '#F59E0B')
+  const [backgroundColor, setBackgroundColor] = useState(org?.background_color || '#FFFFFF')
+  const [appearanceMode, setAppearanceMode] = useState(org?.appearance_mode || 'light')
+  const [uiDensity, setUiDensity] = useState(org?.ui_density || 'rounded')
+  const [welcomeMessage, setWelcomeMessage] = useState(org?.welcome_message || '')
+  const [emailFooterText, setEmailFooterText] = useState(org?.email_footer_text || '')
+  const [emailSenderName, setEmailSenderName] = useState(org?.email_sender_name || '')
+  const [hidePoweredBy, setHidePoweredBy] = useState(org?.hide_powered_by || false)
+  const [customDomain, setCustomDomain] = useState(org?.custom_domain || '')
+  const [recentColors, setRecentColors] = useState(org?.recent_colors || [])
+
   const [logoPreview, setLogoPreview] = useState(org?.logo_url || '')
   const [logoFile, setLogoFile] = useState(null)
   const [logoRemoved, setLogoRemoved] = useState(false)
+  const [logoTransform, setLogoTransform] = useState(org?.logo_transform || { zoom: 100, x: 0, y: 0 })
+
+  const [iconPreview, setIconPreview] = useState(org?.icon_url || '')
+  const [iconFile, setIconFile] = useState(null)
+  const [iconRemoved, setIconRemoved] = useState(false)
+  const [iconTransform, setIconTransform] = useState(org?.icon_transform || { zoom: 100, x: 0, y: 0 })
+
+  const [loginBgPreview, setLoginBgPreview] = useState(org?.login_background_url || '')
+  const [loginBgFile, setLoginBgFile] = useState(null)
+  const [loginBgRemoved, setLoginBgRemoved] = useState(false)
+
+  const [emailLogoPreview, setEmailLogoPreview] = useState(org?.email_logo_url || '')
+  const [emailLogoFile, setEmailLogoFile] = useState(null)
+  const [emailLogoRemoved, setEmailLogoRemoved] = useState(false)
+
+  const [logoSuggestions, setLogoSuggestions] = useState([])
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [previewTab, setPreviewTab] = useState('workspace') // workspace | login
+  const [previewTab, setPreviewTab] = useState('workspace')
+  const [previewDevice, setPreviewDevice] = useState('desktop')
+  const previewRef = useRef(null)
+
+  useEffect(() => { if (logoPreview) extractDominantColors(logoPreview).then(setLogoSuggestions) }, [logoPreview])
+
+  const commitRecentColor = (hex) => {
+    if (!hex || !/^#[0-9A-Fa-f]{6}$/i.test(hex)) return
+    setRecentColors(prev => [hex, ...prev.filter(c => c.toLowerCase() !== hex.toLowerCase())].slice(0, 8))
+  }
 
   const palettes = [
-    { name: 'Ocean', color: '#1B9AAA' },
-    { name: 'Blaze', color: '#FF6B1A' },
-    { name: 'Forest', color: '#16A34A' },
-    { name: 'Violet', color: '#7C3AED' },
-    { name: 'Navy', color: '#0B2D5E' },
-    { name: 'Rose', color: '#E11D48' },
+    { name: 'Ocean', color: '#1B9AAA' }, { name: 'Blaze', color: '#FF6B1A' },
+    { name: 'Forest', color: '#16A34A' }, { name: 'Violet', color: '#7C3AED' },
+    { name: 'Navy', color: '#0B2D5E' }, { name: 'Rose', color: '#E11D48' },
   ]
+  const suggested = useMemo(() => suggestPalette(color), [color])
 
-  const handleLogoChange = (e) => {
+  const handleFileChange = (setPreview, setFile, setRemoved) => (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setLogoFile(file)
-    setLogoPreview(URL.createObjectURL(file))
-    setLogoRemoved(false)
+    setFile(file); setPreview(URL.createObjectURL(file)); setRemoved(false)
   }
+
+  async function uploadIfNeeded(file, existingUrl, removed, pathSuffix) {
+    if (file) {
+      const ext = file.name.split('.').pop()
+      const filePath = `${org.id}/${pathSuffix}.${ext}`
+      const { error } = await supabase.storage.from('org-logos').upload(filePath, file, { upsert: true })
+      if (!error) {
+        const { data } = supabase.storage.from('org-logos').getPublicUrl(filePath)
+        return `${data.publicUrl}?v=${Date.now()}`
+      }
+      return existingUrl
+    }
+    if (removed) return null
+    return existingUrl
+  }
+
+  const completion = useMemo(() => {
+    const checks = [
+      { done: !!logoPreview, label: 'Upload your logo' },
+      { done: secondaryColor.toUpperCase() !== '#0EA5E9', label: 'Set a secondary colour' },
+      { done: !!accentColor && accentColor.toUpperCase() !== '#F59E0B', label: 'Set an accent colour' },
+      { done: !!slogan, label: 'Add a strapline' },
+      { done: !!welcomeMessage, label: 'Customise your login welcome message' },
+      { done: !!emailLogoPreview, label: 'Upload an email logo' },
+    ]
+    const doneCount = checks.filter(c => c.done).length
+    return { pct: Math.round((doneCount / checks.length) * 100), missing: checks.filter(c => !c.done) }
+  }, [logoPreview, secondaryColor, accentColor, slogan, welcomeMessage, emailLogoPreview])
 
   const handleSave = async () => {
     setSaving(true)
-    let logoUrl = org?.logo_url || ''
-
-    if (logoFile) {
-      const ext = logoFile.name.split('.').pop()
-      const filePath = `${org.id}/logo.${ext}`
-      const { error: uploadError } = await supabase.storage
-        .from('org-logos')
-        .upload(filePath, logoFile, { upsert: true })
-
-      if (!uploadError) {
-        const { data } = supabase.storage.from('org-logos').getPublicUrl(filePath)
-        // The upload always overwrites the same storage path, so the public URL string
-        // never changes on its own — append a cache-busting version so every place that
-        // renders org.logo_url (sidebar, header, favicon, invite emails, etc.) actually
-        // picks up the new image instead of a browser-cached copy of the old one.
-        logoUrl = `${data.publicUrl}?v=${Date.now()}`
-      }
-    } else if (logoRemoved) {
-      logoUrl = null
-    }
+    const [logoUrl, iconUrl, loginBgUrl, emailLogoUrl] = await Promise.all([
+      uploadIfNeeded(logoFile, org?.logo_url, logoRemoved, 'logo'),
+      uploadIfNeeded(iconFile, org?.icon_url, iconRemoved, 'icon'),
+      uploadIfNeeded(loginBgFile, org?.login_background_url, loginBgRemoved, 'login-bg'),
+      uploadIfNeeded(emailLogoFile, org?.email_logo_url, emailLogoRemoved, 'email-logo'),
+    ])
 
     await supabase.from('organisations').update({
-      primary_color: color,
-      secondary_color: secondaryColor,
-      slogan,
-      logo_url: logoUrl,
+      name, primary_color: color, secondary_color: secondaryColor, accent_color: accentColor,
+      background_color: backgroundColor, appearance_mode: appearanceMode, ui_density: uiDensity,
+      slogan, logo_url: logoUrl, icon_url: iconUrl, logo_transform: logoTransform, icon_transform: iconTransform,
+      login_background_url: loginBgUrl, welcome_message: welcomeMessage,
+      email_logo_url: emailLogoUrl, email_footer_text: emailFooterText, email_sender_name: emailSenderName,
+      hide_powered_by: hidePoweredBy, custom_domain: customDomain || null, recent_colors: recentColors,
     }).eq('id', org?.id)
 
     document.documentElement.style.setProperty('--org-primary', color)
     {
-      const faviconTarget = logoUrl || FALLBACK_LOGO_URL
+      const faviconTarget = iconUrl || logoUrl || FALLBACK_LOGO_URL
       const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
       favicon.rel = 'icon'
       favicon.href = faviconTarget + (faviconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
       document.head.appendChild(favicon)
     }
     if (refreshOrg) await refreshOrg()
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2500)
   }
 
   const handleReset = () => {
-    if (!window.confirm('Reset branding to defaults? This clears your logo, colours and tagline in this form (not saved until you hit Save).')) return
-    setColor('#1B9AAA')
-    setSecondaryColor('#0EA5E9')
-    setSlogan('')
-    setLogoPreview('')
-    setLogoFile(null)
+    if (!window.confirm('Reset branding to defaults? This clears everything in this form (not saved until you hit Save).')) return
+    setName(org?.name || '')
+    setColor('#1B9AAA'); setSecondaryColor('#0EA5E9'); setAccentColor('#F59E0B'); setBackgroundColor('#FFFFFF')
+    setAppearanceMode('light'); setUiDensity('rounded')
+    setSlogan(''); setWelcomeMessage(''); setEmailFooterText(''); setEmailSenderName('')
+    setHidePoweredBy(false); setCustomDomain('')
+    setLogoPreview(''); setLogoFile(null); setLogoRemoved(true); setLogoTransform({ zoom: 100, x: 0, y: 0 })
+    setIconPreview(''); setIconFile(null); setIconRemoved(true); setIconTransform({ zoom: 100, x: 0, y: 0 })
+    setLoginBgPreview(''); setLoginBgFile(null); setLoginBgRemoved(true)
+    setEmailLogoPreview(''); setEmailLogoFile(null); setEmailLogoRemoved(true)
   }
 
-  const orgName = org?.name || 'Your Organisation'
+  const orgName = name || 'Your Organisation'
 
   return (
     <div>
-      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 5, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 16, padding: '18px 22px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 900, color: '#6366F1', letterSpacing: 2, textTransform: 'uppercase' }}>Branding Centre</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginTop: 4 }}>Make LaunchSession feel like {orgName} ✨</div>
-          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Customise your organisation's look and create a consistent, professional experience.</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)' }}>Your brand. Powered by LaunchSession.</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Customise how {orgName} appears across your workspace, login screen and emails.</div>
         </div>
         <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
-          <button onClick={handleReset} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-            ↺ Reset to defaults
-          </button>
-          <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? '#9ca3af' : color, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 24px ${color}40`, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={handleReset} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>↺ Reset to defaults</button>
+          <button onClick={() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>👁 Preview brand</button>
+          <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? '#9ca3af' : color, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 24px ${color}40` }}>
             {saving ? 'Saving...' : saved ? '✅ Saved!' : '💾 Save changes'}
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.1fr 0.9fr', gap: 16 }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '14px 18px', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>Brand profile {completion.pct}% complete</div>
+          <div style={{ width: 140, height: 6, borderRadius: 99, background: 'var(--surface2)', overflow: 'hidden' }}>
+            <div style={{ width: `${completion.pct}%`, height: '100%', background: color, borderRadius: 99, transition: 'width 0.3s' }} />
+          </div>
+        </div>
+        {completion.missing.length > 0 && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+            {completion.missing.map(m => (
+              <span key={m.label} style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', background: 'var(--surface2)', borderRadius: 99, padding: '4px 10px' }}>+ {m.label}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: 16, alignItems: 'flex-start' }}>
         <div>
-          <SettingCard title="Logo" description="This logo will appear in the sidebar, login screen and workspace header.">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--surface2)', border: '1.5px dashed var(--border2)', borderRadius: 14, padding: 16, marginBottom: 4 }}>
-              <div style={{ width: 72, height: 72, borderRadius: 16, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 22, color: '#fff', flexShrink: 0, boxShadow: `0 8px 24px ${color}40` }}>
-                <img src={logoPreview || FALLBACK_LOGO_URL} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Upload your logo</div>
-                <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>PNG or SVG, recommended 512×512px, transparent background works best.</div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <label style={{ padding: '7px 14px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
-                    Change logo
-                    <input type="file" accept="image/*" onChange={handleLogoChange} style={{ display: 'none' }} />
-                  </label>
-                  {logoPreview && (
-                    <button onClick={() => { setLogoPreview(''); setLogoFile(null); setLogoRemoved(true) }} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🗑</button>
-                  )}
+          <SettingCard title="Brand Identity" description="Your name, logo and tagline across LaunchSession.">
+            <Field label="Organisation name"><input style={inp} value={name} onChange={e => setName(e.target.value)} /></Field>
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 14 }}>
+              <LogoUploadBox label="Logo" hint="PNG or SVG, recommended 512×512px, transparent background works best."
+                previewSrc={logoPreview} fallback={FALLBACK_LOGO_URL} transform={logoTransform}
+                onFileChange={handleFileChange(setLogoPreview, setLogoFile, setLogoRemoved)} onTransformChange={setLogoTransform}
+                onRemove={() => { setLogoPreview(''); setLogoFile(null); setLogoRemoved(true) }} boxSize={84} />
+              <LogoUploadBox label="Compact icon" hint="Square icon for tight spaces — mobile nav, browser tab, notifications."
+                previewSrc={iconPreview} fallback={logoPreview || FALLBACK_LOGO_URL} transform={iconTransform}
+                onFileChange={handleFileChange(setIconPreview, setIconFile, setIconRemoved)} onTransformChange={setIconTransform}
+                onRemove={() => { setIconPreview(''); setIconFile(null); setIconRemoved(true) }} boxSize={64} />
+            </div>
+            {logoSuggestions.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Colours from your logo</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {logoSuggestions.map(c => (
+                    <button key={c} onClick={() => { setColor(c); commitRecentColor(c) }} title={c} style={{ width: 28, height: 28, borderRadius: 8, background: c, border: '1px solid rgba(0,0,0,0.1)', cursor: 'pointer' }} />
+                  ))}
                 </div>
               </div>
-            </div>
-          </SettingCard>
-
-          <SettingCard title="Primary Colour" description="Used for primary buttons, highlights and active states.">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ width: 52, height: 44, borderRadius: 10, border: '1.5px solid #e5e7eb', cursor: 'pointer', padding: 2 }} />
-              <input style={{ ...inp, flex: 1 }} value={color} onChange={e => setColor(e.target.value)} placeholder="#1B9AAA" />
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: color, flexShrink: 0, boxShadow: `0 8px 20px ${color}50` }} />
-            </div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Presets</div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {palettes.map(p => (
-                <button key={p.color} onClick={() => setColor(p.color)} style={{ border: color === p.color ? `2px solid ${p.color}` : '1px solid var(--border)', background: 'var(--surface)', borderRadius: 999, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--text2)' }}>
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: p.color, display: 'inline-block' }} />{p.name}
-                </button>
-              ))}
-            </div>
-          </SettingCard>
-
-          <SettingCard title="Secondary Colour" description="Used for accents, links and secondary elements.">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} style={{ width: 52, height: 44, borderRadius: 10, border: '1.5px solid #e5e7eb', cursor: 'pointer', padding: 2 }} />
-              <input style={{ ...inp, flex: 1 }} value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} placeholder="#0EA5E9" />
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: secondaryColor, flexShrink: 0, boxShadow: `0 8px 20px ${secondaryColor}50` }} />
-            </div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Presets</div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {palettes.map(p => (
-                <button key={p.color} onClick={() => setSecondaryColor(p.color)} style={{ border: secondaryColor === p.color ? `2px solid ${p.color}` : '1px solid var(--border)', background: 'var(--surface)', borderRadius: 999, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--text2)' }}>
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: p.color, display: 'inline-block' }} />{p.name}
-                </button>
-              ))}
-            </div>
-          </SettingCard>
-
-          <SettingCard title="Tagline" description="Shown on the login screen and workspace.">
-            <Field label="Tagline" hint={`${slogan.length}/80`}>
+            )}
+            <Field label="Strapline" hint={`${slogan.length}/80`}>
               <input style={inp} value={slogan} onChange={e => setSlogan(e.target.value.slice(0, 80))} placeholder="e.g. Sport for every child" maxLength={80} />
             </Field>
           </SettingCard>
-        </div>
 
-        <div>
-          <SettingCard title="Live Preview" description="This is how your brand will appear across LaunchSession.">
-            <div style={{ display: 'flex', gap: 6, marginBottom: 14, background: 'var(--surface2)', borderRadius: 10, padding: 4 }}>
-              {[
-                { key: 'workspace', label: '🖥 Workspace' },
-                { key: 'login', label: '🔐 Login Screen' },
-              ].map(t => (
-                <button key={t.key} onClick={() => setPreviewTab(t.key)} style={{ flex: 1, padding: '8px 10px', borderRadius: 7, border: 'none', background: previewTab === t.key ? 'var(--surface)' : 'transparent', color: previewTab === t.key ? color : 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: previewTab === t.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
-                  {t.label}
+          <SettingCard title="Brand Colours" description="Used across buttons, highlights, active states and accents.">
+            <ColorField label="Primary colour" hint="Buttons, highlights, active states." value={color} onChange={setColor} contrastAgainst="#FFFFFF" recentColors={recentColors} onCommit={commitRecentColor} />
+            <ColorField label="Secondary colour" hint="Accents, links, secondary elements." value={secondaryColor} onChange={setSecondaryColor} contrastAgainst="#FFFFFF" recentColors={recentColors} onCommit={commitRecentColor} />
+            <ColorField label="Accent colour" hint="Badges, highlights, small details." value={accentColor} onChange={setAccentColor} contrastAgainst="#FFFFFF" recentColors={recentColors} onCommit={commitRecentColor} />
+            <ColorField label="Background colour" hint="Page background across the workspace." value={backgroundColor} onChange={setBackgroundColor} contrastAgainst={color} recentColors={recentColors} onCommit={commitRecentColor} />
+
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Presets</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+              {palettes.map(p => (
+                <button key={p.color} onClick={() => { setColor(p.color); commitRecentColor(p.color) }} style={{ border: color === p.color ? `2px solid ${p.color}` : '1px solid var(--border)', background: 'var(--surface)', borderRadius: 999, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--text2)' }}>
+                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: p.color, display: 'inline-block' }} />{p.name}
                 </button>
               ))}
             </div>
 
-            {previewTab === 'workspace' && (
-              <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB' }}>
-                <div style={{ background: `linear-gradient(135deg, ${color}, #0F172A)`, padding: 16, color: '#fff' }}>
-                  <div style={{ fontSize: 10, opacity: 0.7, letterSpacing: 2, fontWeight: 800, marginBottom: 10 }}>WORKSPACE</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 14 }}>
-                      <img src={logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 900 }}>{orgName}</div>
-                      <div style={{ fontSize: 11, opacity: 0.7 }}>{slogan || 'Your tagline here'}</div>
-                    </div>
-                  </div>
-                </div>
-                <div style={{ padding: 14, background: 'var(--surface2)' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                    {['Sessions', 'Registers', 'Team', 'Reports'].map((item, i) => (
-                      <div key={item} style={{ borderRadius: 8, padding: 10, background: i === 0 ? `${color}14` : '#fff', border: `1px solid ${i === 0 ? color + '40' : '#E5E7EB'}` }}>
-                        <div style={{ width: 16, height: 3, borderRadius: 99, background: i === 0 ? color : secondaryColor, marginBottom: 6 }} />
-                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{item}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <button style={{ width: '100%', border: 'none', borderRadius: 8, padding: 10, background: `linear-gradient(135deg, ${color}, ${secondaryColor})`, color: '#fff', fontWeight: 700, fontSize: 12 }}>Primary Action</button>
-                  <div style={{ textAlign: 'center', fontSize: 10, color: 'var(--text3)', marginTop: 10 }}>Powered by LaunchSession</div>
-                </div>
+            <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Suggested accessible combination</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12, color: 'var(--text2)' }}>Based on your primary colour:</span>
+                <button onClick={() => { setSecondaryColor(suggested.secondary); setAccentColor(suggested.accent); commitRecentColor(suggested.secondary); commitRecentColor(suggested.accent) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--text2)' }}>
+                  <span style={{ width: 14, height: 14, borderRadius: '50%', background: suggested.secondary }} />
+                  <span style={{ width: 14, height: 14, borderRadius: '50%', background: suggested.accent }} />
+                  Use this pair
+                </button>
               </div>
-            )}
+            </div>
+          </SettingCard>
 
-            {previewTab === 'login' && (
-              <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB', background: '#060B18', padding: '32px 20px', textAlign: 'center' }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, margin: '0 auto 14px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: 900, fontSize: 18, color: '#fff', boxShadow: `0 8px 24px ${color}40` }}>
-                  <img src={logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>{orgName}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>{slogan || 'Your tagline here'}</div>
-                <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${color}30`, borderRadius: 14, padding: 18, textAlign: 'left' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 12 }}>Sign in to {orgName}</div>
-                  <div style={{ height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }} />
-                  <div style={{ height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${color}, ${secondaryColor})` }} />
+          <SettingCard title="Appearance" description="How the workspace looks and feels.">
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Mode</div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
+              {[{ k: 'light', l: '☀️ Light' }, { k: 'dark', l: '🌙 Dark' }, { k: 'auto', l: '🌗 Automatic' }].map(m => (
+                <button key={m.k} onClick={() => setAppearanceMode(m.k)} style={{ flex: 1, padding: 10, borderRadius: 10, border: appearanceMode === m.k ? `2px solid ${color}` : '1.5px solid var(--border)', background: appearanceMode === m.k ? `${color}10` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, color: appearanceMode === m.k ? color : 'var(--text2)', cursor: 'pointer' }}>{m.l}</button>
+              ))}
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Interface style</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[{ k: 'rounded', l: '◠ Rounded' }, { k: 'compact', l: '▭ Compact' }].map(m => (
+                <button key={m.k} onClick={() => setUiDensity(m.k)} style={{ flex: 1, padding: 10, borderRadius: 10, border: uiDensity === m.k ? `2px solid ${color}` : '1.5px solid var(--border)', background: uiDensity === m.k ? `${color}10` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, color: uiDensity === m.k ? color : 'var(--text2)', cursor: 'pointer' }}>{m.l}</button>
+              ))}
+            </div>
+          </SettingCard>
+
+          <SettingCard title="Login & Communications" description="What people see before they're signed in, and in the emails you send.">
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Login screen background</div>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                <div style={{ width: 100, height: 60, borderRadius: 10, background: loginBgPreview ? `url(${loginBgPreview}) center/cover` : 'linear-gradient(135deg, #0F172A, #1e293b)', border: '1px solid var(--border)', flexShrink: 0 }} />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <label style={{ padding: '7px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
+                    Upload image
+                    <input type="file" accept="image/*" onChange={handleFileChange(setLoginBgPreview, setLoginBgFile, setLoginBgRemoved)} style={{ display: 'none' }} />
+                  </label>
+                  {loginBgPreview && <button onClick={() => { setLoginBgPreview(''); setLoginBgFile(null); setLoginBgRemoved(true) }} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🗑</button>}
                 </div>
               </div>
-            )}
+            </div>
+            <Field label="Welcome message" hint="Shown above the sign-in form.">
+              <input style={inp} value={welcomeMessage} onChange={e => setWelcomeMessage(e.target.value)} placeholder="e.g. Welcome back — let's make today great." />
+            </Field>
+            <div style={{ marginTop: 4, marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Email header logo</div>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                <div style={{ width: 64, height: 64, borderRadius: 12, background: '#fff', border: '1.5px dashed var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  <img src={emailLogoPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <label style={{ padding: '7px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
+                    Upload
+                    <input type="file" accept="image/*" onChange={handleFileChange(setEmailLogoPreview, setEmailLogoFile, setEmailLogoRemoved)} style={{ display: 'none' }} />
+                  </label>
+                  {emailLogoPreview && <button onClick={() => { setEmailLogoPreview(''); setEmailLogoFile(null); setEmailLogoRemoved(true) }} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🗑</button>}
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6 }}>Falls back to your main logo if left blank.</div>
+            </div>
+            <Field label="Email footer text">
+              <textarea style={{ ...inp, minHeight: 60, resize: 'vertical' }} value={emailFooterText} onChange={e => setEmailFooterText(e.target.value)} placeholder="e.g. Solidarity Sports · Registered Charity No. 123456" />
+            </Field>
+          </SettingCard>
+
+          <SettingCard title="Organisation-level Branding" description="Deeper white-labelling for organisations on a paid plan.">
+            <Toggle value={hidePoweredBy} onChange={setHidePoweredBy} label='Remove "Powered by LaunchSession"' />
+            <Field label="Custom domain" hint="Point your own domain at your workspace (e.g. app.yourcharity.org).">
+              <input style={inp} value={customDomain} onChange={e => setCustomDomain(e.target.value)} placeholder="app.yourcharity.org" />
+            </Field>
+            <Field label="Email sender name" hint="Shown as the 'From' name on emails LaunchSession sends on your behalf.">
+              <input style={inp} value={emailSenderName} onChange={e => setEmailSenderName(e.target.value)} placeholder={orgName} />
+            </Field>
+            <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.6, marginTop: 4 }}>
+              Also available on request: branded PDF reports, and different branding per programme or venue. <a href="mailto:hello@launchsession.co.uk" style={{ color, fontWeight: 700 }}>Contact us</a> to enable these for your plan.
+            </div>
+          </SettingCard>
+        </div>
+
+        <div ref={previewRef} style={{ position: isMobile ? 'static' : 'sticky', top: 16 }}>
+          <SettingCard title="Live Preview" description="This is how your brand will appear across LaunchSession.">
+            <div style={{ display: 'flex', gap: 6, marginBottom: 10, background: 'var(--surface2)', borderRadius: 10, padding: 4 }}>
+              {[{ key: 'workspace', label: '🖥 Workspace' }, { key: 'login', label: '🔐 Login' }, { key: 'email', label: '✉️ Email' }].map(t => (
+                <button key={t.key} onClick={() => setPreviewTab(t.key)} style={{ flex: 1, padding: '8px 6px', borderRadius: 7, border: 'none', background: previewTab === t.key ? 'var(--surface)' : 'transparent', color: previewTab === t.key ? color : 'var(--text3)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', boxShadow: previewTab === t.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>{t.label}</button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+              {['desktop', 'mobile'].map(d => (
+                <button key={d} onClick={() => setPreviewDevice(d)} style={{ padding: '4px 10px', borderRadius: 99, border: `1.5px solid ${previewDevice === d ? color : 'var(--border)'}`, background: previewDevice === d ? `${color}12` : 'var(--surface)', color: previewDevice === d ? color : 'var(--text3)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{d === 'desktop' ? '🖥 Desktop' : '📱 Mobile'}</button>
+              ))}
+            </div>
+
+            <div style={{ maxWidth: previewDevice === 'mobile' ? 260 : '100%', margin: previewDevice === 'mobile' ? '0 auto' : 0, transition: 'max-width 0.2s' }}>
+              {previewTab === 'workspace' && (
+                <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB', display: 'flex', height: 320, background: backgroundColor || '#F8FAFC' }}>
+                  {previewDevice === 'desktop' && (
+                    <div style={{ width: 56, background: '#0F172A', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14, gap: 14, flexShrink: 0 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: '#fff', overflow: 'hidden' }}><img src={iconPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /></div>
+                      {['🏠', '📅', '📋', '👥', '📊'].map((ic, i) => (
+                        <div key={i} style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, background: i === 0 ? color : 'transparent', color: i === 0 ? '#fff' : 'rgba(255,255,255,0.4)' }}>{ic}</div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <div style={{ padding: '10px 14px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 22, height: 22, borderRadius: 6, overflow: 'hidden' }}><img src={logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /></div>
+                        <div style={{ fontSize: 11, fontWeight: 800, color: '#111827' }}>{orgName}</div>
+                      </div>
+                      <div style={{ position: 'relative' }}>
+                        <div style={{ fontSize: 13 }}>🔔</div>
+                        <div style={{ position: 'absolute', top: -3, right: -3, width: 7, height: 7, borderRadius: '50%', background: accentColor }} />
+                      </div>
+                    </div>
+                    <div style={{ padding: 12, flex: 1, overflow: 'hidden' }}>
+                      <div style={{ fontSize: 9, opacity: 0.5, marginBottom: 6, fontWeight: 700 }}>{slogan || 'Your tagline here'}</div>
+                      <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: uiDensity === 'compact' ? 4 : 12, padding: 10, marginBottom: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <div style={{ fontSize: 10, fontWeight: 800, color: '#111827' }}>Football Skills Session</div>
+                          <span style={{ fontSize: 8, fontWeight: 800, color: '#fff', background: color, borderRadius: 99, padding: '2px 6px' }}>LIVE</span>
+                        </div>
+                        <div style={{ fontSize: 9, color: '#6B7280' }}>12 signed in · Main Hall</div>
+                      </div>
+                      <button style={{ width: '100%', border: 'none', borderRadius: uiDensity === 'compact' ? 4 : 8, padding: 9, background: `linear-gradient(135deg, ${color}, ${secondaryColor})`, color: '#fff', fontWeight: 700, fontSize: 11 }}>Primary Action</button>
+                      {!hidePoweredBy && <div style={{ textAlign: 'center', fontSize: 9, color: '#9CA3AF', marginTop: 10 }}>Powered by LaunchSession</div>}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {previewTab === 'login' && (
+                <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB', background: loginBgPreview ? `url(${loginBgPreview}) center/cover` : '#060B18', padding: '32px 20px', textAlign: 'center', minHeight: 320 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: uiDensity === 'compact' ? 6 : 14, margin: '0 auto 14px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0 8px 24px ${color}40` }}>
+                    <img src={iconPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.85)', marginBottom: 4 }}>{orgName}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>{slogan || 'Your tagline here'}</div>
+                  {welcomeMessage && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 16, fontStyle: 'italic' }}>{welcomeMessage}</div>}
+                  <div style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${color}30`, borderRadius: uiDensity === 'compact' ? 6 : 14, padding: 18, textAlign: 'left' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 12 }}>Sign in to {orgName}</div>
+                    <div style={{ height: 30, borderRadius: uiDensity === 'compact' ? 4 : 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }} />
+                    <div style={{ height: 30, borderRadius: uiDensity === 'compact' ? 4 : 8, background: `linear-gradient(135deg, ${color}, ${secondaryColor})` }} />
+                  </div>
+                </div>
+              )}
+
+              {previewTab === 'email' && (
+                <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB', background: '#F1F5F9', padding: 16, minHeight: 320 }}>
+                  <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+                    <div style={{ background: `linear-gradient(135deg, ${color}, ${secondaryColor})`, padding: '20px 16px', textAlign: 'center' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, margin: '0 auto 8px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                        <img src={emailLogoPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{emailSenderName || orgName}</div>
+                    </div>
+                    <div style={{ padding: 16, textAlign: 'center' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 6 }}>Welcome to {orgName}!</div>
+                      <div style={{ fontSize: 10.5, color: '#6B7280', marginBottom: 14, lineHeight: 1.5 }}>You're all set to sign in and get started.</div>
+                      <div style={{ display: 'inline-block', padding: '8px 18px', borderRadius: uiDensity === 'compact' ? 4 : 8, background: color, color: '#fff', fontWeight: 700, fontSize: 11 }}>Get Started</div>
+                    </div>
+                    <div style={{ borderTop: '1px solid #F1F5F9', padding: '12px 16px', textAlign: 'center' }}>
+                      <div style={{ fontSize: 9, color: '#9CA3AF' }}>{emailFooterText || `${orgName} · Powered by LaunchSession`}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </SettingCard>
 
           <div style={{ background: `linear-gradient(135deg, ${color}12, ${secondaryColor}12)`, border: `1px solid ${color}30`, borderRadius: 14, padding: 16, marginTop: 16, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
             <div style={{ fontSize: 22, flexShrink: 0 }}>🚀</div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: color }}>Your brand, your impact</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color }}>Your brand, your impact</div>
               <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, lineHeight: 1.5 }}>A consistent brand builds confidence with parents, volunteers and partners.</div>
             </div>
           </div>
@@ -1414,7 +1818,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
       )}
 
       {/* SETTINGS SIDEBAR */}
-      <div style={{ width: isMobile ? '100%' : 220, background: '#fff', borderRight: isMobile ? 'none' : '1px solid #e5e7eb', borderBottom: isMobile ? '1px solid #e5e7eb' : 'none', display: isMobile ? (showSidebar ? 'flex' : 'none') : 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto', maxHeight: isMobile ? 320 : 'none' }}>
+      <div style={{ width: isMobile ? '100%' : 190, background: '#fff', borderRight: isMobile ? 'none' : '1px solid #e5e7eb', borderBottom: isMobile ? '1px solid #e5e7eb' : 'none', display: isMobile ? (showSidebar ? 'flex' : 'none') : 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto', maxHeight: isMobile ? 320 : 'none' }}>
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>⚙️ Settings</div>
           <div style={{ position: 'relative' }}>
@@ -1429,7 +1833,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
               <div style={{ fontSize: 10, fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, padding: '8px 10px 4px' }}>{group}</div>
               {items.map(n => (
                 <button key={n.key} onClick={() => { setActive(n.key); if (isMobile) setShowSidebar(false) }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? '#EFF6FF' : 'transparent', color: active === n.key ? '#1D4ED8' : '#374151', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? `${org?.primary_color || '#1B9AAA'}12` : 'transparent', color: active === n.key ? (org?.primary_color || '#1B9AAA') : '#374151', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}
                   onMouseEnter={e => { if (active !== n.key) e.currentTarget.style.background = '#F9FAFB' }}
                   onMouseLeave={e => { if (active !== n.key) e.currentTarget.style.background = 'transparent' }}>
                   <span style={{ fontSize: 15 }}>{n.icon}</span>
