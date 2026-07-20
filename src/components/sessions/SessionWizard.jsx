@@ -72,7 +72,7 @@ const emptyForm = () => ({
   title: '', session_date: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
   end_date: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
   start_time: '09:00', end_time: '11:00',
-  location: '', description: '', max_capacity: '', age_range: '',
+  location: '', venue_id: null, description: '', max_capacity: '', age_range: '',
   internal_notes: '', meeting_point: '', colour: '#1B9AAA',
   bubbles: [],
   participant_mode: 'group', child_ids: [], allow_walk_ins: false,
@@ -186,7 +186,25 @@ function StepType({ form, setForm }) {
 
 // ─── STEP 2: DETAILS ────────────────────────────────────────────
 
-function StepDetails({ form, setForm, bubbleDefs, staff }) {
+function StepDetails({ form, setForm, bubbleDefs, staff, org }) {
+  const [venues, setVenues] = useState([])
+  const [useCustomLocation, setUseCustomLocation] = useState(false)
+
+  useEffect(() => {
+    if (!org?.id) return
+    supabase.from('venues').select('*').eq('org_id', org.id).eq('is_active', true).order('name')
+      .then(({ data }) => setVenues(data || []))
+  }, [org?.id])
+
+  // If this session already has a saved location that doesn't match any
+  // venue (e.g. an old free-text entry, or a one-off spot), default to the
+  // custom text field so we don't silently blank out what was already there.
+  useEffect(() => {
+    if (venues.length && form.location && !form.venue_id) {
+      const matches = venues.some(v => v.name === form.location)
+      if (!matches) setUseCustomLocation(true)
+    }
+  }, [venues]) // eslint-disable-line react-hooks/exhaustive-deps
   const isMobile = useIsMobile()
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -216,7 +234,31 @@ function StepDetails({ form, setForm, bubbleDefs, staff }) {
       </div>
       <div style={{ marginBottom: 14 }}>
         <label style={label}>Location *</label>
-        <input style={inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Cassiobury Park" />
+        {venues.length > 0 && !useCustomLocation ? (
+          <>
+            <select style={inp} value={form.venue_id || ''} onChange={e => {
+              const v = venues.find(x => x.id === e.target.value)
+              setForm(f => ({ ...f, venue_id: e.target.value || null, location: v ? v.name : '', meeting_point: v?.default_meeting_point || f.meeting_point }))
+            }}>
+              <option value="">— Select a venue —</option>
+              {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+            </select>
+            <button type="button" onClick={() => { setUseCustomLocation(true); setForm(f => ({ ...f, venue_id: null })) }}
+              style={{ background: 'none', border: 'none', color: 'var(--accent, #1B9AAA)', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>
+              Use a one-off location instead
+            </button>
+          </>
+        ) : (
+          <>
+            <input style={inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Cassiobury Park" />
+            {venues.length > 0 && (
+              <button type="button" onClick={() => setUseCustomLocation(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--accent, #1B9AAA)', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>
+                Choose a saved venue instead
+              </button>
+            )}
+          </>
+        )}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1.3fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
         <div>
@@ -564,6 +606,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       p_form_ids: form.form_ids.length ? form.form_ids : null,
       p_outcome_areas: form.outcome_areas.length ? form.outcome_areas : null,
       p_pending_risk_assessment_id: null,
+      p_venue_id: form.venue_id || null,
     })
     setSaving(false)
     if (err) { setError(err.message); return }
@@ -616,7 +659,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.15 }}>
               {step === 1 && <StepType form={form} setForm={setForm} />}
-              {step === 2 && <StepDetails form={form} setForm={setForm} bubbleDefs={bubbleDefs} staff={staff} />}
+              {step === 2 && <StepDetails form={form} setForm={setForm} bubbleDefs={bubbleDefs} staff={staff} org={org} />}
               {step === 3 && <StepPeople form={form} setForm={setForm} staff={staff} children={children} expectedCount={expectedCount} />}
               {step === 4 && <StepRequirements form={form} setForm={setForm} orgForms={orgForms} />}
               {step === 5 && <StepReview form={form} staff={staff} expectedCount={expectedCount} primary={primary} />}
