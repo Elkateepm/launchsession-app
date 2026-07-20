@@ -1199,8 +1199,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
           {/* Search — centred in header */}
           {!isMobile && (
-            <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '100%', maxWidth: 440, display: 'flex', justifyContent: 'center' }}>
-              <div style={{ width: '100%', position: 'relative' }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '100%', maxWidth: 440, position: 'relative' }}>
                 <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}>🔍</span>
                 <input
                   value={search}
