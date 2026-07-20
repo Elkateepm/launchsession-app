@@ -12,17 +12,23 @@ import VolunteerPortal from './components/volunteers/VolunteerPortal'
 import VolunteerAcceptInvite from './components/volunteers/VolunteerAcceptInvite'
 import PublicForm from './components/forms/PublicForm'
 import SplashScreen from './components/common/SplashScreen'
+import { useBreakpoint } from './hooks/useIsMobile'
 
 const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000 // 2 hours
 
 // Signs the user out and returns them to the marketing landing page after a
 // sustained period with no interaction. Only active while `enabled` (a live
-// session) is true. Any user activity resets the timer.
+// session) is true AND on desktop widths - mobile/iPad users stay signed in
+// until they explicitly log out, since idle timeouts on personal devices
+// mostly just cause unwanted logouts (app backgrounded, phone locked, etc.)
+// rather than the shared-desktop security case this was built for.
 function useIdleLogout(enabled) {
   const timerRef = useRef(null)
+  const { isDesktop } = useBreakpoint()
+  const active = enabled && isDesktop
 
   useEffect(() => {
-    if (!enabled) return
+    if (!active) return
 
     const logout = async () => {
       try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
@@ -54,7 +60,7 @@ function useIdleLogout(enabled) {
       events.forEach(e => { window.removeEventListener(e, reset); window.removeEventListener(e, markActivity) })
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [enabled])
+  }, [active])
 }
 
 function AuthedApp({ session, org, onReady }) {
@@ -191,7 +197,7 @@ function AppContent() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Auto-logout to landing after 1 hour of inactivity while signed in.
+  // Auto-logout to landing after 2 hours of inactivity while signed in - desktop only.
   useIdleLogout(!!session)
 
   // Redirect to landing immediately if this looks like a bare/fresh visit.
