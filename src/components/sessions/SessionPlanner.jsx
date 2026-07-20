@@ -2,7 +2,7 @@ import { useOrgSettings } from '../../hooks/useOrgSettings'
 import React, { useState, useEffect } from 'react'
 import { format, addDays, parseISO, startOfWeek, isSameDay } from 'date-fns'
 import { supabase } from '../../lib/supabase'
-import { useIsMobile } from '../../hooks/useIsMobile'
+import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence } from 'framer-motion'
 import RASessionCard from '../riskassessments/RASessionCard'
 import SessionWizard from './SessionWizard'
@@ -1221,6 +1221,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const { groups: orgGroups } = useOrgSettings(orgId)
   const bubbleDefs = normaliseBubbleDefs(orgGroups)
   const isMobile = useIsMobile()
+  const { isTablet } = useBreakpoint()
 
   const [sessions, setSessions] = useState([])
   const [volCounts, setVolCounts] = useState({})
@@ -1636,7 +1637,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       ) : (
         /* WEEK VIEW */
         <div style={{ overflowX: 'auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(140px, 1fr))', gap: 10, minWidth: 980 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(7, minmax(${isTablet ? 100 : 140}px, 1fr))`, gap: isTablet ? 6 : 10, minWidth: isTablet ? 736 : 980 }}>
             {weekDays.map(day => {
               const dateStr = format(day, 'yyyy-MM-dd')
               const daySessions = displayed.filter(s => s.session_date === dateStr)
