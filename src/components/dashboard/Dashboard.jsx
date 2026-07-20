@@ -135,7 +135,7 @@ function ComingSoonModule({ icon, label, desc }) {
 // SIDEBAR render below).
 const navContainerVariants = {
   hidden: { transition: { staggerChildren: 0, duration: 0.12 } },
-  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.3 } },
+  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.3 } },
 }
 const navItemVariants = {
   hidden: { opacity: 0, x: -14, transition: { duration: 0.12, ease: 'easeIn' } },
