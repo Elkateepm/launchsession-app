@@ -36,6 +36,7 @@ export default async function handler(req, res) {
     // ── Check for an existing account up front. This applies the same way ──
     // regardless of which invite path (volunteer vs staff/admin) we take below.
     let existingUserId = null
+    let existingUserNeverSignedIn = false
     try {
       // Supabase Admin API has no direct "get user by email" — page through listUsers.
       // For larger user bases this should be replaced with a dedicated lookup (e.g. an
@@ -46,7 +47,16 @@ export default async function handler(req, res) {
         const { data: pageData, error: listErr } = await adminClient.auth.admin.listUsers({ page, perPage })
         if (listErr) throw listErr
         const match = pageData.users.find(u => u.email?.toLowerCase() === cleanEmail)
-        if (match) { existingUserId = match.id; break }
+        if (match) {
+          existingUserId = match.id
+          // A stray auth.users row can exist without the person ever having
+          // actually completed setup (e.g. a leftover from an earlier invite
+          // attempt) — if they've never signed in, there's no real password
+          // to "go to workspace" with. Treat this the same as a brand-new
+          // invite instead of silently sending them a dead-end sign-in link.
+          existingUserNeverSignedIn = !match.last_sign_in_at
+          break
+        }
         if (pageData.users.length < perPage) break // last page reached, no match
         page += 1
       }
@@ -72,7 +82,7 @@ export default async function handler(req, res) {
     }
 
     // ── Existing user: reassign to this org/role and notify, regardless of role ──
-    if (existingUserId) {
+    if (existingUserId && !existingUserNeverSignedIn) {
       const { error: reassignErr } = await adminClient.from('user_profiles').upsert({
         id: existingUserId,
         email: cleanEmail,
@@ -120,7 +130,7 @@ export default async function handler(req, res) {
     // ── New volunteer: use Supabase's native invite flow (unchanged) ──
     // This redirects to /volunteer/accept-invite, which is built to handle
     // Supabase Auth's own invite link format.
-    if (inviteRole === 'volunteer') {
+    if (inviteRole === 'volunteer' && !existingUserId) {
       const redirectUrl = redirect_to || `https://app.launchsession.co.uk/volunteer/accept-invite`
 
       const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
