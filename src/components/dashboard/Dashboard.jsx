@@ -664,9 +664,9 @@ export default function Dashboard({ session, org }) {
         {/* NAV */}
         <motion.div
           style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
-          variants={isTablet ? navContainerVariants : undefined}
-          initial={isTablet ? 'hidden' : false}
-          animate={isTablet ? (tabletNavOpen ? 'visible' : 'hidden') : false}
+          variants={navContainerVariants}
+          initial={false}
+          animate={isTablet ? (tabletNavOpen ? 'visible' : 'hidden') : 'visible'}
         >
         {/* Home — sticky, always visible */}
         <div style={{ padding: '4px 8px 0', flexShrink: 0 }}>
