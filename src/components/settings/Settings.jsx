@@ -574,7 +574,6 @@ function BrandingSection({ org, refreshOrg }) {
   const [color, setColor] = useState(org?.primary_color || '#1B9AAA')
   const [secondaryColor, setSecondaryColor] = useState(org?.secondary_color || '#0EA5E9')
   const [accentColor, setAccentColor] = useState(org?.accent_color || '#F59E0B')
-  const [backgroundColor, setBackgroundColor] = useState(org?.background_color || '#FFFFFF')
   const [uiDensity, setUiDensity] = useState(org?.ui_density || 'rounded')
   const [welcomeMessage, setWelcomeMessage] = useState(org?.welcome_message || '')
   const [emailFooterText, setEmailFooterText] = useState(org?.email_footer_text || '')
@@ -625,7 +624,7 @@ function BrandingSection({ org, refreshOrg }) {
   // so people don't lose work by navigating away without noticing.
   const savedSnapshot = useRef(null)
   const currentSnapshot = () => JSON.stringify({
-    name, slogan, color, secondaryColor, accentColor, backgroundColor, uiDensity,
+    name, slogan, color, secondaryColor, accentColor, uiDensity,
     welcomeMessage, emailFooterText,
     logoPreview, iconPreview, loginBgPreview, emailLogoPreview, logoTransform, iconTransform,
   })
@@ -701,7 +700,7 @@ function BrandingSection({ org, refreshOrg }) {
 
     const { error } = await supabase.from('organisations').update({
       name, primary_color: color, secondary_color: secondaryColor, accent_color: accentColor,
-      background_color: backgroundColor, ui_density: uiDensity,
+      ui_density: uiDensity,
       slogan, logo_url: logoUrl, icon_url: iconUrl, logo_transform: logoTransform, icon_transform: iconTransform,
       login_background_url: loginBgUrl, welcome_message: welcomeMessage,
       email_logo_url: emailLogoUrl, email_footer_text: emailFooterText, recent_colors: recentColors,
@@ -733,7 +732,7 @@ function BrandingSection({ org, refreshOrg }) {
   const handleReset = () => {
     setConfirmingReset(false)
     setName(org?.name || '')
-    setColor('#1B9AAA'); setSecondaryColor('#0EA5E9'); setAccentColor('#F59E0B'); setBackgroundColor('#FFFFFF')
+    setColor('#1B9AAA'); setSecondaryColor('#0EA5E9'); setAccentColor('#F59E0B')
     setUiDensity('rounded')
     setSlogan(''); setWelcomeMessage(''); setEmailFooterText('')
     setLogoPreview(''); setLogoFile(null); setLogoRemoved(true); setLogoTransform({ zoom: 100, x: 0, y: 0 })
@@ -822,7 +821,7 @@ function BrandingSection({ org, refreshOrg }) {
           <div ref={identityRef} style={sectionWrapStyle('identity')}>
           <SettingCard title="Brand Identity" description="Your name, logo and tagline across LaunchSession.">
             <Field label="Organisation name"><input style={inp} value={name} onChange={e => setName(e.target.value)} /></Field>
-            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 10 }}>
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 14 }}>
               <LogoUploadBox label="Logo" hint="PNG or SVG, recommended 512×512px, transparent background works best."
                 previewSrc={logoPreview} fallback={FALLBACK_LOGO_URL} transform={logoTransform}
                 onFileChange={handleFileChange(setLogoPreview, setLogoFile, setLogoRemoved)} onTransformChange={setLogoTransform}
@@ -831,12 +830,6 @@ function BrandingSection({ org, refreshOrg }) {
                 previewSrc={iconPreview} fallback={logoPreview || FALLBACK_LOGO_URL} transform={iconTransform}
                 onFileChange={handleFileChange(setIconPreview, setIconFile, setIconRemoved)} onTransformChange={setIconTransform}
                 onRemove={() => { setIconPreview(''); setIconFile(null); setIconRemoved(true) }} boxSize={64} />
-            </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', marginBottom: 16 }}>
-              <span style={{ fontSize: 13, flexShrink: 0 }}>ℹ️</span>
-              <div style={{ fontSize: 11.5, color: 'var(--text3)', lineHeight: 1.5 }}>
-                This icon updates the browser tab and the icon your staff get if they use <strong style={{ color: 'var(--text2)' }}>"Add to Home Screen"</strong> from their phone's browser (this is the recommended way to install LaunchSession). It won't apply if LaunchSession is ever downloaded from the App Store or Google Play in future — store apps ship with one fixed icon for everyone, set at submission time, not per organisation.
-              </div>
             </div>
             {logoSuggestions.length > 0 && (
               <div style={{ marginBottom: 16 }}>
@@ -893,8 +886,6 @@ function BrandingSection({ org, refreshOrg }) {
                 </div>
               </div>
             </div>
-
-            <ColorField label="Background colour" hint="Page background across the workspace." value={backgroundColor} onChange={setBackgroundColor} contrastAgainst={color} contrastLabel="your primary colour" recentColors={recentColors} onCommit={commitRecentColor} />
 
             <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: 12 }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Suggested accessible combination</div>
@@ -984,7 +975,7 @@ function BrandingSection({ org, refreshOrg }) {
 
             <div style={{ maxWidth: previewDevice === 'mobile' ? 260 : '100%', margin: previewDevice === 'mobile' ? '0 auto' : 0, transition: 'max-width 0.2s' }}>
               {previewTab === 'workspace' && (
-                <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB', display: 'flex', height: 320, background: backgroundColor || '#F8FAFC' }}>
+                <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB', display: 'flex', height: 320, background: '#F8FAFC' }}>
                   {previewDevice === 'desktop' && (
                     <div style={{ width: 56, background: '#0F172A', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14, gap: 14, flexShrink: 0 }}>
                       <div style={{ width: 28, height: 28, borderRadius: 8, background: '#fff', overflow: 'hidden' }}><img src={iconPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /></div>
