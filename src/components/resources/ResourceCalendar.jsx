@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { categoryMeta, statusMeta, fmtTime, BOOKING_STATUS_CONFIG, CATEGORIES } from '../../lib/resourceHelpers'
+import { categoryMeta, fmtTime, BOOKING_STATUS_CONFIG, CATEGORIES } from '../../lib/resourceHelpers'
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7) // 7am - 8pm
 
