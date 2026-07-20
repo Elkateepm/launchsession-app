@@ -125,21 +125,17 @@ function ComingSoonModule({ icon, label, desc }) {
   )
 }
 
-// Tablet burger-menu reveal: items cascade in one after another as the panel
-// opens. Deliberately not raced against the panel's own 0.28s slide-in -
-// delayChildren waits for that to mostly finish so the two motions don't
-// visually collide. Closing skips the stagger entirely (uniform quick fade)
-// since the panel is also sliding shut at the same time and a reverse
-// cascade on top of that read as messy rather than premium. No-ops on
-// desktop, since the container there never sets initial/animate (see
-// SIDEBAR render below).
+// Tablet burger-menu reveal: all items fade in together once the panel has
+// mostly finished its own 0.28s slide-in (rather than racing that motion).
+// No-ops on desktop, since animate there is always 'visible' with nothing
+// to transition from (see SIDEBAR render below).
 const navContainerVariants = {
-  hidden: { transition: { staggerChildren: 0, duration: 0.12 } },
-  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.3 } },
+  hidden: { transition: { duration: 0.12 } },
+  visible: { transition: { delayChildren: 0.3, staggerChildren: 0 } },
 }
 const navItemVariants = {
-  hidden: { opacity: 0, x: -14, transition: { duration: 0.12, ease: 'easeIn' } },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] } },
+  hidden: { opacity: 0, transition: { duration: 0.12, ease: 'easeIn' } },
+  visible: { opacity: 1, transition: { duration: 0.4, ease: 'easeOut' } },
 }
 
 function NavItem({ icon, label, active, onClick, badge, primary, collapsed, locked }) {
