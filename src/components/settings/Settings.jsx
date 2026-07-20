@@ -13,7 +13,7 @@ const NAV = [
   { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform', requiresBranding: true },
   { key: 'safeguarding', icon: '🛡', label: 'Safeguarding', group: 'Operations' },
   { key: 'registers',    icon: '📋', label: 'Registers', group: 'Operations' },
-  { key: 'sessions',     icon: '📅', label: 'Sessions', group: 'Operations' },
+  { key: 'sessions',     icon: '📍', label: 'Venues', group: 'Operations' },
   { key: 'notifications',icon: '🔔', label: 'Notifications', group: 'Communications' },
   { key: 'communications',icon: '📢', label: 'Communications', group: 'Communications' },
   { key: 'security',     icon: '🔒', label: 'Security', group: 'Account' },
@@ -1027,6 +1027,128 @@ function GroupsSection({ org }) {
   )
 }
 
+function VenuesSection({ org, isAdmin }) {
+  const [venues, setVenues] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const emptyForm = { name: '', address: '', capacity: '', default_meeting_point: '', notes: '' }
+  const [form, setForm] = useState(emptyForm)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { if (org?.id) loadVenues() }, [org?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function loadVenues() {
+    setLoading(true)
+    const { data, error } = await supabase.from('venues').select('*').eq('org_id', org.id).order('name')
+    if (!error) setVenues(data || [])
+    setLoading(false)
+  }
+
+  function startAdd() { setForm(emptyForm); setEditingId(null); setAdding(true) }
+  function startEdit(v) {
+    setForm({ name: v.name, address: v.address || '', capacity: v.capacity || '', default_meeting_point: v.default_meeting_point || '', notes: v.notes || '' })
+    setEditingId(v.id); setAdding(true)
+  }
+
+  async function handleSave() {
+    if (!form.name.trim()) { setError('Venue name is required.'); return }
+    setSaving(true); setError('')
+    const payload = {
+      org_id: org.id,
+      name: form.name.trim(),
+      address: form.address.trim() || null,
+      capacity: form.capacity ? parseInt(form.capacity, 10) : null,
+      default_meeting_point: form.default_meeting_point.trim() || null,
+      notes: form.notes.trim() || null,
+    }
+    const { error } = editingId
+      ? await supabase.from('venues').update(payload).eq('id', editingId)
+      : await supabase.from('venues').insert(payload)
+    setSaving(false)
+    if (error) { setError(error.message); return }
+    setAdding(false); setEditingId(null); setForm(emptyForm)
+    loadVenues()
+  }
+
+  async function toggleActive(v) {
+    await supabase.from('venues').update({ is_active: !v.is_active }).eq('id', v.id)
+    loadVenues()
+  }
+
+  async function handleDelete(v) {
+    if (!window.confirm(`Remove "${v.name}"? Past sessions keep their record of it, but it won't be selectable for new sessions.`)) return
+    const { error } = await supabase.from('venues').delete().eq('id', v.id)
+    if (error) { setError(error.message); return }
+    loadVenues()
+  }
+
+  return (
+    <div>
+      <div style={{ background: 'linear-gradient(135deg, #0A0F1E, #1a2744)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ fontSize: 32 }}>📍</div>
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Venues</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>The physical locations sessions run at — pick from these instead of retyping an address every time</div>
+        </div>
+      </div>
+
+      {error && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 14, fontWeight: 600 }}>{error}</div>}
+
+      <SettingCard title="Your venues" description="Add every regular site your sessions take place at">
+        {loading ? (
+          <div style={{ padding: 20, textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>Loading...</div>
+        ) : venues.length === 0 && !adding ? (
+          <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>No venues yet — add your first one below.</div>
+        ) : (
+          venues.map(v => (
+            <div key={v.id} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f3f4f6', opacity: v.is_active ? 1 : 0.5 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
+                  {v.name} {!v.is_active && <span style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', marginLeft: 6 }}>INACTIVE</span>}
+                </div>
+                {v.address && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{v.address}</div>}
+                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4, display: 'flex', gap: 12 }}>
+                  {v.capacity && <span>👥 Capacity {v.capacity}</span>}
+                  {v.default_meeting_point && <span>📍 Meet at {v.default_meeting_point}</span>}
+                </div>
+              </div>
+              {isAdmin && (
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <button onClick={() => startEdit(v)} style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                  <button onClick={() => toggleActive(v)} style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{v.is_active ? 'Deactivate' : 'Reactivate'}</button>
+                  <button onClick={() => handleDelete(v)} style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+
+        {isAdmin && !adding && (
+          <button onClick={startAdd} style={{ marginTop: 14, padding: '9px 16px', borderRadius: 8, border: 'none', background: '#1B9AAA', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Venue</button>
+        )}
+
+        {isAdmin && adding && (
+          <div style={{ marginTop: 16, padding: 16, background: '#F8FAFC', borderRadius: 10, border: '1px solid var(--border)' }}>
+            <Field label="Venue name *"><input style={inp} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Cassiobury Park Sports Hall" /></Field>
+            <Field label="Address"><input style={inp} value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Street, town, postcode" /></Field>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}><Field label="Capacity"><input style={inp} type="number" value={form.capacity} onChange={e => setForm({ ...form, capacity: e.target.value })} placeholder="e.g. 40" /></Field></div>
+              <div style={{ flex: 1 }}><Field label="Default meeting point"><input style={inp} value={form.default_meeting_point} onChange={e => setForm({ ...form, default_meeting_point: e.target.value })} placeholder="e.g. Main entrance" /></Field></div>
+            </div>
+            <Field label="Notes" hint="Access codes, parking, anything staff should know"><textarea style={{ ...inp, minHeight: 60, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></Field>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={handleSave} disabled={saving} style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: '#1B9AAA', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Add Venue')}</button>
+              <button onClick={() => { setAdding(false); setEditingId(null); setError('') }} style={{ padding: '9px 18px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+            </div>
+          </div>
+        )}
+      </SettingCard>
+    </div>
+  )
+}
+
 const ROLE_CONFIG = {
   admin:     { label: 'Admin',     color: '#7C3AED', bg: '#F3E8FF' },
   staff:     { label: 'Staff',     color: '#2563EB', bg: '#DBEAFE' },
@@ -1269,6 +1391,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
       case 'integrations':   return <IntegrationsSection />
       case 'billing':        return <BillingSection org={org} session={session} isAdmin={isAdmin} refreshOrg={refreshOrg} />
       case 'registers':      return <GroupsSection org={org} />
+      case 'sessions':       return <VenuesSection org={org} isAdmin={isAdmin} />
       case 'safeguarding':   return <SafeguardingSection org={org} />
       case 'help':           return <HelpSection />
       default:               return <ComingSoon label={NAV.find(n => n.key === active)?.label || active} />
