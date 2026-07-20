@@ -104,11 +104,15 @@ export function OrgProvider({ children }) {
         setNoOrg(false)
         document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
         {
-          const faviconTarget = data.logo_url || FALLBACK_LOGO_URL
+          const iconTarget = data.icon_url || data.logo_url || FALLBACK_LOGO_URL
+          const bustedIcon = iconTarget + (iconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
           const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
           favicon.rel = 'icon'
-          favicon.href = faviconTarget + (faviconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
+          favicon.href = bustedIcon
           document.head.appendChild(favicon)
+          // iOS reads apple-touch-icon (not the manifest) for the actual
+          // "Add to Home Screen" icon, so it needs the same swap.
+          document.querySelectorAll("link[rel='apple-touch-icon']").forEach(el => { el.href = bustedIcon })
         }
         document.title = data.name || 'LaunchSession'
         pollInterval = setInterval(() => verifyOrgStillActive(slug), 30000)
@@ -130,11 +134,13 @@ export function OrgProvider({ children }) {
       document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
       document.title = data.name || 'LaunchSession'
       {
-        const faviconTarget = data.logo_url || FALLBACK_LOGO_URL
+        const iconTarget = data.icon_url || data.logo_url || FALLBACK_LOGO_URL
+        const bustedIcon = iconTarget + (iconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
         const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
         favicon.rel = 'icon'
-        favicon.href = faviconTarget + (faviconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
+        favicon.href = bustedIcon
         document.head.appendChild(favicon)
+        document.querySelectorAll("link[rel='apple-touch-icon']").forEach(el => { el.href = bustedIcon })
       }
     }
   }
