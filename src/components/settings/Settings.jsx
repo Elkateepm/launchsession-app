@@ -716,10 +716,14 @@ function BrandingSection({ org, refreshOrg }) {
     document.documentElement.style.setProperty('--org-primary', color)
     {
       const faviconTarget = iconUrl || logoUrl || FALLBACK_LOGO_URL
+      const bustedIcon = faviconTarget + (faviconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
       const favicon = document.querySelector("link[rel='icon']") || document.createElement('link')
       favicon.rel = 'icon'
-      favicon.href = faviconTarget + (faviconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
+      favicon.href = bustedIcon
       document.head.appendChild(favicon)
+      // iOS reads apple-touch-icon (not the manifest) for the actual
+      // "Add to Home Screen" icon, so it needs the same swap.
+      document.querySelectorAll("link[rel='apple-touch-icon']").forEach(el => { el.href = bustedIcon })
     }
     if (refreshOrg) await refreshOrg()
     savedSnapshot.current = currentSnapshot()
