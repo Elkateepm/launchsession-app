@@ -512,13 +512,29 @@ function ColorField({ label, hint, value, onChange, contrastAgainst, contrastLab
 // A logo/icon upload slot with zoom + reposition sliders once an image is set.
 function LogoUploadBox({ label, hint, previewSrc, fallback, transform, onFileChange, onTransformChange, onRemove, boxSize = 84 }) {
   const t = transform || { zoom: 100, x: 0, y: 0 }
+  // Scaling around the centre reveals up to (zoom-100)/2 % of extra image on
+  // each side — panning further than that would just push the logo off the
+  // edge into empty space, so the sliders' range is capped to what zoom
+  // actually makes available.
+  const maxOffset = Math.max(0, (t.zoom - 100) / 2)
+  const clamp = (v) => Math.max(-maxOffset, Math.min(maxOffset, v))
+
+  const handleZoomChange = (zoom) => {
+    const newMaxOffset = Math.max(0, (zoom - 100) / 2)
+    onTransformChange({
+      zoom,
+      x: Math.max(-newMaxOffset, Math.min(newMaxOffset, t.x)),
+      y: Math.max(-newMaxOffset, Math.min(newMaxOffset, t.y)),
+    })
+  }
+
   return (
     <div style={{ flex: 1, minWidth: 220 }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 10 }}>{hint}</div>
       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
         <div style={{ width: boxSize, height: boxSize, borderRadius: 16, background: '#fff', border: '1.5px dashed var(--border2)', overflow: 'hidden', flexShrink: 0 }}>
-          <img src={previewSrc || fallback} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: `scale(${t.zoom / 100}) translate(${t.x}%, ${t.y}%)` }} />
+          <img src={previewSrc || fallback} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: `translate(${t.x}%, ${t.y}%) scale(${t.zoom / 100})` }} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
@@ -531,17 +547,18 @@ function LogoUploadBox({ label, hint, previewSrc, fallback, transform, onFileCha
           {previewSrc && (
             <div>
               <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2 }}>Zoom</div>
-              <input type="range" min="100" max="200" value={t.zoom} onChange={e => onTransformChange({ ...t, zoom: Number(e.target.value) })} style={{ width: '100%', marginBottom: 6 }} />
+              <input type="range" min="100" max="200" value={t.zoom} onChange={e => handleZoomChange(Number(e.target.value))} style={{ width: '100%', marginBottom: 6 }} />
               <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2 }}>Horizontal</div>
-                  <input type="range" min="-50" max="50" value={t.x} onChange={e => onTransformChange({ ...t, x: Number(e.target.value) })} style={{ width: '100%' }} />
+                  <input type="range" min={-maxOffset} max={maxOffset} disabled={maxOffset === 0} value={clamp(t.x)} onChange={e => onTransformChange({ ...t, x: clamp(Number(e.target.value)) })} style={{ width: '100%', opacity: maxOffset === 0 ? 0.4 : 1 }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2 }}>Vertical</div>
-                  <input type="range" min="-50" max="50" value={t.y} onChange={e => onTransformChange({ ...t, y: Number(e.target.value) })} style={{ width: '100%' }} />
+                  <input type="range" min={-maxOffset} max={maxOffset} disabled={maxOffset === 0} value={clamp(t.y)} onChange={e => onTransformChange({ ...t, y: clamp(Number(e.target.value)) })} style={{ width: '100%', opacity: maxOffset === 0 ? 0.4 : 1 }} />
                 </div>
               </div>
+              {maxOffset === 0 && <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 6 }}>Zoom in first to reposition.</div>}
             </div>
           )}
         </div>
@@ -806,7 +823,7 @@ function BrandingSection({ org, refreshOrg }) {
                 previewSrc={logoPreview} fallback={FALLBACK_LOGO_URL} transform={logoTransform}
                 onFileChange={handleFileChange(setLogoPreview, setLogoFile, setLogoRemoved)} onTransformChange={setLogoTransform}
                 onRemove={() => { setLogoPreview(''); setLogoFile(null); setLogoRemoved(true) }} boxSize={84} />
-              <LogoUploadBox label="Compact icon" hint="Square icon for tight spaces — mobile nav, browser tab, notifications."
+              <LogoUploadBox label="Compact icon" hint="Square, ideally 512×512px. It only ever displays at 36–56px in the app (sidebar, browser tab), so this just keeps it sharp on retina screens."
                 previewSrc={iconPreview} fallback={logoPreview || FALLBACK_LOGO_URL} transform={iconTransform}
                 onFileChange={handleFileChange(setIconPreview, setIconFile, setIconRemoved)} onTransformChange={setIconTransform}
                 onRemove={() => { setIconPreview(''); setIconFile(null); setIconRemoved(true) }} boxSize={64} />
@@ -1998,7 +2015,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
 
       {/* CONTENT */}
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '24px' }}>
-        <div style={{ maxWidth: 700 }}>
+        <div style={{ maxWidth: active === 'branding' ? 'none' : 700 }}>
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>{current?.icon} {current?.label}</div>
             <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Manage your {current?.label?.toLowerCase()} settings</div>
