@@ -558,13 +558,9 @@ function BrandingSection({ org, refreshOrg }) {
   const [secondaryColor, setSecondaryColor] = useState(org?.secondary_color || '#0EA5E9')
   const [accentColor, setAccentColor] = useState(org?.accent_color || '#F59E0B')
   const [backgroundColor, setBackgroundColor] = useState(org?.background_color || '#FFFFFF')
-  const [appearanceMode, setAppearanceMode] = useState(org?.appearance_mode || 'light')
   const [uiDensity, setUiDensity] = useState(org?.ui_density || 'rounded')
   const [welcomeMessage, setWelcomeMessage] = useState(org?.welcome_message || '')
   const [emailFooterText, setEmailFooterText] = useState(org?.email_footer_text || '')
-  const [emailSenderName, setEmailSenderName] = useState(org?.email_sender_name || '')
-  const [hidePoweredBy, setHidePoweredBy] = useState(org?.hide_powered_by || false)
-  const [customDomain, setCustomDomain] = useState(org?.custom_domain || '')
   const [recentColors, setRecentColors] = useState(org?.recent_colors || [])
 
   const [logoPreview, setLogoPreview] = useState(org?.logo_url || '')
@@ -600,8 +596,7 @@ function BrandingSection({ org, refreshOrg }) {
   const coloursRef = useRef(null)
   const appearanceRef = useRef(null)
   const loginRef = useRef(null)
-  const orgLevelRef = useRef(null)
-  const sectionRefs = { identity: identityRef, colours: coloursRef, appearance: appearanceRef, login: loginRef, orgLevel: orgLevelRef }
+  const sectionRefs = { identity: identityRef, colours: coloursRef, appearance: appearanceRef, login: loginRef }
 
   const jumpTo = (key) => {
     sectionRefs[key]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -613,8 +608,8 @@ function BrandingSection({ org, refreshOrg }) {
   // so people don't lose work by navigating away without noticing.
   const savedSnapshot = useRef(null)
   const currentSnapshot = () => JSON.stringify({
-    name, slogan, color, secondaryColor, accentColor, backgroundColor, appearanceMode, uiDensity,
-    welcomeMessage, emailFooterText, emailSenderName, hidePoweredBy, customDomain,
+    name, slogan, color, secondaryColor, accentColor, backgroundColor, uiDensity,
+    welcomeMessage, emailFooterText,
     logoPreview, iconPreview, loginBgPreview, emailLogoPreview, logoTransform, iconTransform,
   })
   useEffect(() => {
@@ -689,11 +684,10 @@ function BrandingSection({ org, refreshOrg }) {
 
     const { error } = await supabase.from('organisations').update({
       name, primary_color: color, secondary_color: secondaryColor, accent_color: accentColor,
-      background_color: backgroundColor, appearance_mode: appearanceMode, ui_density: uiDensity,
+      background_color: backgroundColor, ui_density: uiDensity,
       slogan, logo_url: logoUrl, icon_url: iconUrl, logo_transform: logoTransform, icon_transform: iconTransform,
       login_background_url: loginBgUrl, welcome_message: welcomeMessage,
-      email_logo_url: emailLogoUrl, email_footer_text: emailFooterText, email_sender_name: emailSenderName,
-      hide_powered_by: hidePoweredBy, custom_domain: customDomain || null, recent_colors: recentColors,
+      email_logo_url: emailLogoUrl, email_footer_text: emailFooterText, recent_colors: recentColors,
     }).eq('id', org?.id)
 
     if (error) {
@@ -719,9 +713,8 @@ function BrandingSection({ org, refreshOrg }) {
     setConfirmingReset(false)
     setName(org?.name || '')
     setColor('#1B9AAA'); setSecondaryColor('#0EA5E9'); setAccentColor('#F59E0B'); setBackgroundColor('#FFFFFF')
-    setAppearanceMode('light'); setUiDensity('rounded')
-    setSlogan(''); setWelcomeMessage(''); setEmailFooterText(''); setEmailSenderName('')
-    setHidePoweredBy(false); setCustomDomain('')
+    setUiDensity('rounded')
+    setSlogan(''); setWelcomeMessage(''); setEmailFooterText('')
     setLogoPreview(''); setLogoFile(null); setLogoRemoved(true); setLogoTransform({ zoom: 100, x: 0, y: 0 })
     setIconPreview(''); setIconFile(null); setIconRemoved(true); setIconTransform({ zoom: 100, x: 0, y: 0 })
     setLoginBgPreview(''); setLoginBgFile(null); setLoginBgRemoved(true)
@@ -893,15 +886,6 @@ function BrandingSection({ org, refreshOrg }) {
 
           <div ref={appearanceRef} style={sectionWrapStyle('appearance')}>
           <SettingCard title="Appearance" description="Choose how LaunchSession looks for your users.">
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Mode</div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-              {[{ k: 'light', i: '☀️', l: 'Light' }, { k: 'dark', i: '🌙', l: 'Dark' }, { k: 'auto', i: '🖥', l: 'Auto' }].map(m => (
-                <button key={m.k} onClick={() => setAppearanceMode(m.k)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '14px 10px', borderRadius: 12, border: appearanceMode === m.k ? `2px solid ${color}` : '1.5px solid var(--border)', background: appearanceMode === m.k ? `${color}10` : 'var(--surface)', cursor: 'pointer' }}>
-                  <span style={{ fontSize: 18 }}>{m.i}</span>
-                  <span style={{ fontSize: 12.5, fontWeight: 700, color: appearanceMode === m.k ? color : 'var(--text2)' }}>{m.l}</span>
-                </button>
-              ))}
-            </div>
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Interface style</div>
             <div style={{ display: 'flex', gap: 8 }}>
               {[{ k: 'rounded', i: '◠', l: 'Rounded' }, { k: 'compact', i: '▭', l: 'Compact' }].map(m => (
@@ -954,21 +938,6 @@ function BrandingSection({ org, refreshOrg }) {
             </Field>
           </SettingCard>
           </div>
-
-          <div ref={orgLevelRef} style={sectionWrapStyle('orgLevel')}>
-          <SettingCard title="Organisation-level Branding" description="Deeper white-labelling for organisations on a paid plan.">
-            <Toggle value={hidePoweredBy} onChange={setHidePoweredBy} label='Remove "Powered by LaunchSession"' />
-            <Field label="Custom domain" hint="Point your own domain at your workspace (e.g. app.yourcharity.org).">
-              <input style={inp} value={customDomain} onChange={e => setCustomDomain(e.target.value)} placeholder="app.yourcharity.org" />
-            </Field>
-            <Field label="Email sender name" hint="Shown as the 'From' name on emails LaunchSession sends on your behalf.">
-              <input style={inp} value={emailSenderName} onChange={e => setEmailSenderName(e.target.value)} placeholder={orgName} />
-            </Field>
-            <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.6, marginTop: 4 }}>
-              Also available on request: branded PDF reports, and different branding per programme or venue. <a href="mailto:hello@launchsession.co.uk" style={{ color, fontWeight: 700 }}>Contact us</a> to enable these for your plan.
-            </div>
-          </SettingCard>
-          </div>
         </div>
 
         <div ref={previewRef} style={{ position: isMobile ? 'static' : 'sticky', top: 16 }}>
@@ -1018,7 +987,7 @@ function BrandingSection({ org, refreshOrg }) {
                         <div style={{ fontSize: 9, color: '#6B7280' }}>12 signed in · Main Hall</div>
                       </div>
                       <button style={{ width: '100%', border: 'none', borderRadius: uiDensity === 'compact' ? 4 : 8, padding: 9, background: `linear-gradient(135deg, ${color}, ${secondaryColor})`, color: '#fff', fontWeight: 700, fontSize: 11 }}>Primary Action</button>
-                      {!hidePoweredBy && <div style={{ textAlign: 'center', fontSize: 9, color: '#9CA3AF', marginTop: 10 }}>Powered by LaunchSession</div>}
+                      <div style={{ textAlign: 'center', fontSize: 9, color: '#9CA3AF', marginTop: 10 }}>Powered by LaunchSession</div>
                     </div>
                   </div>
                 </div>
@@ -1047,7 +1016,7 @@ function BrandingSection({ org, refreshOrg }) {
                       <div style={{ width: 40, height: 40, borderRadius: 10, margin: '0 auto 8px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                         <img src={emailLogoPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                       </div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{emailSenderName || orgName}</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{orgName}</div>
                     </div>
                     <div style={{ padding: 16, textAlign: 'center' }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 6 }}>Welcome to {orgName}!</div>
