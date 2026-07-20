@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import ResourceInventory from './ResourceInventory'
-import ResourceCard from './ResourceCard'
 import ResourceDetailsDrawer from './ResourceDetailsDrawer'
 import AddResourceModal from './AddResourceModal'
 import QuickBookingPanel from './QuickBookingPanel'
