@@ -27,6 +27,12 @@ import Fundraising from '../fundraising/Fundraising'
 import FundraisingGate from '../fundraising/FundraisingGate'
 import HR from '../hr/HR'
 import ResourceBooking from '../resources/ResourceBooking'
+import iconLiveSessions from '../../assets/icons/fab/live-sessions.png'
+import iconVolunteers from '../../assets/icons/fab/volunteers.png'
+import iconCaseManagement from '../../assets/icons/fab/case-management.png'
+import iconTodaysRegister from '../../assets/icons/fab/todays-register.png'
+import iconFormsDocuments from '../../assets/icons/fab/forms-documents.png'
+import iconSessionReflection from '../../assets/icons/fab/session-reflection.png'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -1128,34 +1134,34 @@ export default function Dashboard({ session, org }) {
                     live: {
                       ctaLabel: 'Sign Child In',
                       items: [
-                        { key: 'home', label: 'Live Sessions', icon: '🟢', color: '#16A34A', gate: null },
-                        { key: 'planner', label: 'Session Planner', icon: '📅', color: '#7C3AED', gate: null },
+                        { key: 'home', label: 'Live Sessions', icon: '🟢', image: iconLiveSessions, color: '#16A34A', gate: null },
+                        { key: 'planner', label: 'Session Planner', icon: '📅', image: iconSessionReflection, color: '#7C3AED', gate: null },
                         { key: 'risk_assessments', label: 'Risk Assessment', icon: '🛡️', color: '#DC2626', gate: 'risk_assessments' },
                         { key: 'registers', label: 'Add Walk-in', icon: '🚶', color: '#0891B2', gate: 'registers' },
-                        { key: 'case_management', label: 'Case Management', icon: '📁', color: '#4F46E5', gate: 'case_management' },
-                        { key: 'forms', label: 'Forms & Documents', icon: '📝', color: '#2563EB', gate: 'forms' },
+                        { key: 'case_management', label: 'Case Management', icon: '📁', image: iconCaseManagement, color: '#4F46E5', gate: 'case_management' },
+                        { key: 'forms', label: 'Forms & Documents', icon: '📝', image: iconFormsDocuments, color: '#2563EB', gate: 'forms' },
                       ],
                     },
                     ended: {
                       ctaLabel: 'Complete Session',
                       items: [
-                        { key: 'planner', label: 'Session Reflection', icon: '📅', color: '#7C3AED', gate: null },
-                        { key: 'home', label: 'Live Sessions', icon: '🟢', color: '#16A34A', gate: null },
-                        { key: 'volunteers', label: 'Volunteers', icon: '🤝', color: '#EA580C', gate: 'volunteers' },
-                        { key: 'case_management', label: 'Case Management', icon: '📁', color: '#4F46E5', gate: 'case_management' },
-                        { key: 'registers', label: "Today's Register", icon: '📋', color: '#0891B2', gate: 'registers' },
-                        { key: 'forms', label: 'Forms & Documents', icon: '📝', color: '#2563EB', gate: 'forms' },
+                        { key: 'planner', label: 'Session Reflection', icon: '📅', image: iconSessionReflection, color: '#7C3AED', gate: null },
+                        { key: 'home', label: 'Live Sessions', icon: '🟢', image: iconLiveSessions, color: '#16A34A', gate: null },
+                        { key: 'volunteers', label: 'Volunteers', icon: '🤝', image: iconVolunteers, color: '#EA580C', gate: 'volunteers' },
+                        { key: 'case_management', label: 'Case Management', icon: '📁', image: iconCaseManagement, color: '#4F46E5', gate: 'case_management' },
+                        { key: 'registers', label: "Today's Register", icon: '📋', image: iconTodaysRegister, color: '#0891B2', gate: 'registers' },
+                        { key: 'forms', label: 'Forms & Documents', icon: '📝', image: iconFormsDocuments, color: '#2563EB', gate: 'forms' },
                       ],
                     },
                     morning: {
                       ctaLabel: 'Open Register',
                       items: [
-                        { key: 'registers', label: "Today's Register", icon: '📋', color: '#0891B2', gate: 'registers' },
-                        { key: 'planner', label: 'Session Planner', icon: '📅', color: '#7C3AED', gate: null },
-                        { key: 'volunteers', label: 'Volunteers', icon: '🤝', color: '#EA580C', gate: 'volunteers' },
+                        { key: 'registers', label: "Today's Register", icon: '📋', image: iconTodaysRegister, color: '#0891B2', gate: 'registers' },
+                        { key: 'planner', label: 'Session Planner', icon: '📅', image: iconSessionReflection, color: '#7C3AED', gate: null },
+                        { key: 'volunteers', label: 'Volunteers', icon: '🤝', image: iconVolunteers, color: '#EA580C', gate: 'volunteers' },
                         { key: 'registers', label: 'Add Walk-in', icon: '🚶', color: '#0891B2', gate: 'registers' },
-                        { key: 'home', label: 'Live Sessions', icon: '🟢', color: '#16A34A', gate: null },
-                        { key: 'forms', label: 'Forms & Documents', icon: '📝', color: '#2563EB', gate: 'forms' },
+                        { key: 'home', label: 'Live Sessions', icon: '🟢', image: iconLiveSessions, color: '#16A34A', gate: null },
+                        { key: 'forms', label: 'Forms & Documents', icon: '📝', image: iconFormsDocuments, color: '#2563EB', gate: 'forms' },
                       ],
                     },
                   }
@@ -1195,12 +1201,23 @@ export default function Dashboard({ session, org }) {
                                   cursor: 'pointer', transition: 'background 0.12s, box-shadow 0.12s',
                                 }}
                               >
-                                <div style={{
-                                  width: 30, height: 30, borderRadius: '50%',
-                                  background: hovered ? 'rgba(255,255,255,0.25)' : `${item.color}2A`,
-                                  border: hovered ? '1px solid rgba(255,255,255,0.5)' : `1px solid ${item.color}55`,
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
-                                }}>{item.icon}</div>
+                                {item.image ? (
+                                  <div style={{
+                                    width: 34, height: 34, borderRadius: 10, overflow: 'hidden',
+                                    border: hovered ? '1px solid rgba(255,255,255,0.6)' : '1px solid rgba(255,255,255,0.14)',
+                                    boxShadow: hovered ? `0 0 0 6px ${item.color}30` : 'none',
+                                    flexShrink: 0,
+                                  }}>
+                                    <img src={item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                  </div>
+                                ) : (
+                                  <div style={{
+                                    width: 30, height: 30, borderRadius: '50%',
+                                    background: hovered ? 'rgba(255,255,255,0.25)' : `${item.color}2A`,
+                                    border: hovered ? '1px solid rgba(255,255,255,0.5)' : `1px solid ${item.color}55`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
+                                  }}>{item.icon}</div>
+                                )}
                                 <div style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>{item.label}</div>
                               </motion.button>
                             </div>
