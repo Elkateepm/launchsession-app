@@ -981,6 +981,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     return () => { alive = false }
   }, [org?.city]);
   const [reflections, setReflections] = useState([]);
+  const [checkedOutCount, setCheckedOutCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
 
@@ -1004,6 +1005,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       { data: childData },
       { data: reflectionData },
       { data: volunteerData },
+      { data: checkoutData },
     ] = await Promise.all([
       supabase.from("sessions").select("*").eq("org_id", orgId).order("session_date", { ascending: true }).order("start_time", { ascending: true }),
       supabase.from("attendance").select("*").eq("org_id", orgId),
@@ -1011,6 +1013,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       supabase.from("children").select("*").eq("org_id", orgId).eq("active", true).order("first_name", { ascending: true }),
       supabase.from("session_reflections").select("*").eq("org_id", orgId),
       supabase.from("volunteers").select("id").eq("org_id", orgId),
+      supabase.from("resource_checkouts").select("id").eq("org_id", orgId).in("status", ["checked_out", "overdue"]),
     ]);
     setSessions(sessionData || []);
     setAttendance(attendanceData || []);
@@ -1018,6 +1021,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     setChildren(childData || []);
     setReflections(reflectionData || []);
     setVolunteersCount(volunteerData?.length || 0);
+    setCheckedOutCount(checkoutData?.length || 0);
   }, [orgId]);
 
   useEffect(() => {
@@ -1596,13 +1600,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* ATTENTION CENTRE */}
-          {(hasModule('registers') || hasModule('safeguarding') || hasModule('volunteers') || hasModule('mentoring') || hasModule('reports')) && (
+          {(hasModule('registers') || hasModule('safeguarding') || hasModule('volunteers') || hasModule('mentoring') || hasModule('reports') || (hasModule('resource_booking') && checkedOutCount > 0)) && (
             <Panel title="🔔 Attention Centre">
               {hasModule('registers') && <AttentionRow icon="📋" label="Registers" value={signedIn > 0 ? `${signedIn} signed in today` : "No activity yet"} tone={signedIn > 0 ? "green" : "blue"} onClick={() => go("registers")} />}
               {hasModule('safeguarding') && <AttentionRow icon="🛡️" label="Safeguarding" value={concerns.length > 0 ? `${concerns.length} open concern${concerns.length > 1 ? "s" : ""}` : "No open concerns"} tone={concerns.length > 0 ? "amber" : "green"} onClick={() => go("safeguarding")} />}
               {hasModule('volunteers') && <AttentionRow icon="❤️" label="Volunteers" value="Review session cover" tone="blue" onClick={() => go("volunteers")} />}
               {hasModule('mentoring') && <AttentionRow icon="🤝" label="Mentoring" value="View active matches" tone="blue" onClick={() => go("mentoring")} />}
               {hasModule('reports') && <AttentionRow icon="📊" label="Reports" value="View impact data" tone="blue" onClick={() => go("reports")} />}
+              {hasModule('resource_booking') && checkedOutCount > 0 && <AttentionRow icon="↗" label="Resources" value={`${checkedOutCount} item${checkedOutCount > 1 ? "s" : ""} checked out`} tone="amber" onClick={() => go("resource_booking")} />}
             </Panel>
           )}
 
