@@ -437,7 +437,7 @@ function ColorSpectrumPicker({ hex, onChange }) {
 
 // A labeled colour field: swatch + hex input + contrast rating, expanding
 // to a full spectrum picker with recently-used swatches on demand.
-function ColorField({ label, hint, value, onChange, contrastAgainst, recentColors, onCommit }) {
+function ColorField({ label, hint, value, onChange, contrastAgainst, contrastLabel, recentColors, onCommit }) {
   const [expanded, setExpanded] = useState(false)
   const ratio = contrastAgainst ? contrastRatio(value, contrastAgainst) : null
   const grade = ratio ? contrastGrade(ratio) : null
@@ -450,13 +450,14 @@ function ColorField({ label, hint, value, onChange, contrastAgainst, recentColor
         <button onClick={() => setExpanded(x => !x)} style={{ width: 40, height: 40, borderRadius: 10, background: value, border: '1.5px solid rgba(0,0,0,0.08)', cursor: 'pointer', flexShrink: 0 }} />
         <input style={{ ...inp, flex: 1 }} value={value} onChange={e => onChange(e.target.value)} onBlur={() => onCommit && onCommit(value)} placeholder="#000000" />
         {grade && (
-          <div style={{ fontSize: 11, fontWeight: 800, color: grade.color, background: grade.color + '14', border: `1px solid ${grade.color}30`, borderRadius: 8, padding: '6px 10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            {grade.label} · {ratio.toFixed(1)}:1
+          <div title={`Accessibility contrast rating against ${contrastLabel || 'the paired colour'} — this doesn't affect saving.`}
+            style={{ fontSize: 11, fontWeight: 800, color: grade.color, background: grade.color + '14', border: `1px solid ${grade.color}30`, borderRadius: 8, padding: '6px 10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            Contrast {grade.label} · {ratio.toFixed(1)}:1
           </div>
         )}
       </div>
       {grade && !grade.good && (
-        <div style={{ fontSize: 11, color: '#DC2626', marginTop: 6, fontWeight: 600 }}>⚠ Low contrast — text may be hard to read here.</div>
+        <div style={{ fontSize: 11, color: '#DC2626', marginTop: 6, fontWeight: 600 }}>⚠ Low contrast against {contrastLabel || 'the paired colour'} — just a readability tip, this still saves fine.</div>
       )}
       {expanded && (
         <div style={{ marginTop: 10, padding: 12, background: 'var(--surface2)', borderRadius: 12, border: '1px solid var(--border)' }}>
@@ -715,10 +716,10 @@ function BrandingSection({ org, refreshOrg }) {
           </SettingCard>
 
           <SettingCard title="Brand Colours" description="Used across buttons, highlights, active states and accents.">
-            <ColorField label="Primary colour" hint="Buttons, highlights, active states." value={color} onChange={setColor} contrastAgainst="#FFFFFF" recentColors={recentColors} onCommit={commitRecentColor} />
-            <ColorField label="Secondary colour" hint="Accents, links, secondary elements." value={secondaryColor} onChange={setSecondaryColor} contrastAgainst="#FFFFFF" recentColors={recentColors} onCommit={commitRecentColor} />
-            <ColorField label="Accent colour" hint="Badges, highlights, small details." value={accentColor} onChange={setAccentColor} contrastAgainst="#FFFFFF" recentColors={recentColors} onCommit={commitRecentColor} />
-            <ColorField label="Background colour" hint="Page background across the workspace." value={backgroundColor} onChange={setBackgroundColor} contrastAgainst={color} recentColors={recentColors} onCommit={commitRecentColor} />
+            <ColorField label="Primary colour" hint="Buttons, highlights, active states." value={color} onChange={setColor} contrastAgainst="#FFFFFF" contrastLabel="white button text" recentColors={recentColors} onCommit={commitRecentColor} />
+            <ColorField label="Secondary colour" hint="Accents, links, secondary elements." value={secondaryColor} onChange={setSecondaryColor} contrastAgainst="#FFFFFF" contrastLabel="white button text" recentColors={recentColors} onCommit={commitRecentColor} />
+            <ColorField label="Accent colour" hint="Badges, highlights, small details." value={accentColor} onChange={setAccentColor} contrastAgainst="#FFFFFF" contrastLabel="white button text" recentColors={recentColors} onCommit={commitRecentColor} />
+            <ColorField label="Background colour" hint="Page background across the workspace." value={backgroundColor} onChange={setBackgroundColor} contrastAgainst={color} contrastLabel="your primary colour" recentColors={recentColors} onCommit={commitRecentColor} />
 
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Presets</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
