@@ -1318,14 +1318,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               </span>
             </div>
 
-            {/* Live stats mini-row */}
-            <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-              <HeaderMiniStat icon="📅" value={strictlyTodaySessions.length} label="Sessions" onClick={() => go('planner')} primary={primary} />
-              <HeaderMiniStat icon="👥" value={children.length} label="Expected" onClick={() => go('registers')} primary={primary} />
-              <HeaderMiniStat icon="🙋" value={volunteersCount} label="Volunteers" onClick={() => go('volunteers')} primary={primary} />
-              <HeaderMiniStat icon="🛡️" value={concerns.length} label="Alerts" tone={concerns.length > 0 ? 'warn' : 'ok'} onClick={() => go('safeguarding')} primary={primary} />
-            </div>
-
             {/* Quick actions row */}
             <div style={{ display: 'flex', gap: 8, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
               <HeaderQuickAction icon="＋" label="Session" onClick={() => go('planner', { autoOpenWizard: true })} primary={primary} filled />
@@ -1369,6 +1361,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         </section>
       )}
       </div>
+
+      {isMobile && (
+        <div style={{ padding: `0 ${pad}px` }}>
+          <div className="ls-glass-stat-row">
+            <HeaderMiniStat icon="📅" value={strictlyTodaySessions.length} label="Sessions" onClick={() => go('planner')} primary={primary} tint="teal" />
+            <HeaderMiniStat icon="👥" value={children.length} label="Expected" onClick={() => go('registers')} primary={primary} tint="violet" />
+            <HeaderMiniStat icon="🙋" value={volunteersCount} label="Volunteers" onClick={() => go('volunteers')} primary={primary} tint="amber" />
+            <HeaderMiniStat icon="🛡️" value={concerns.length} label="Alerts" tone={concerns.length > 0 ? 'warn' : 'ok'} onClick={() => go('safeguarding')} primary={primary} tint="green" />
+          </div>
+        </div>
+      )}
 
       <section style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) 320px', gap: 18, padding: pad }}>
         <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -1705,15 +1708,20 @@ function QuickLinkTile({ icon, label, badge, onClick }) {
   );
 }
 
-function HeaderMiniStat({ icon, value, label, tone, onClick, primary }) {
+const MINI_STAT_TINTS = {
+  teal:   { glow: 'rgba(27,154,170,0.45)',  icon: '#1B9AAA' },
+  violet: { glow: 'rgba(124,58,237,0.45)',  icon: '#7C3AED' },
+  amber:  { glow: 'rgba(217,119,6,0.4)',    icon: '#D97706' },
+  green:  { glow: 'rgba(22,163,74,0.4)',    icon: '#16A34A' },
+}
+function HeaderMiniStat({ icon, value, label, tone, onClick, primary, tint }) {
   const color = tone === 'warn' ? '#D97706' : tone === 'ok' ? '#16A34A' : primary
+  const t = MINI_STAT_TINTS[tint] || { glow: `${primary}40`, icon: color }
   return (
-    <button onClick={onClick} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: '#fff', border: `1px solid ${primary}18`, borderRadius: 12, padding: '7px 4px', cursor: 'pointer' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-        <span style={{ fontSize: 11 }}>{icon}</span>
-        <span style={{ fontSize: 14, fontWeight: 900, color, fontFamily: 'var(--font-display, sans-serif)' }}>{value}</span>
-      </div>
-      <span style={{ fontSize: 8.5, fontWeight: 700, color: 'var(--text3, #9CA3AF)', textTransform: 'uppercase', letterSpacing: 0.3 }}>{label}</span>
+    <button onClick={onClick} className="ls-glass-stat" style={{ '--glass-glow': t.glow }}>
+      <span className="ls-glass-stat-icon" style={{ color: t.icon }}>{icon}</span>
+      <span className="ls-glass-stat-value" style={{ color: tone ? color : 'var(--text, #111)' }}>{value}</span>
+      <span className="ls-glass-stat-label">{label}</span>
     </button>
   );
 }
