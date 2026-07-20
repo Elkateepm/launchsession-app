@@ -213,6 +213,11 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
             ⚠ Staff-to-child ratio is currently 1:{currentRatio.toFixed(1)}. Required ratio: 1:{requiredRatio}.
           </div>
         )}
+        {totalExpected > 0 && (
+          <div style={{ marginTop: 10, fontSize: 11.5, color: '#6B7280', fontWeight: 600 }}>
+            Register progress: {processedCount} of {totalExpected} processed
+          </div>
+        )}
       </div>
 
       {/* TABS */}
@@ -423,7 +428,6 @@ function AbsentSheet({ child, onClose, onMark }) {
 }
 
 function WalkInModal({ org, session, allChildren, onClose, onDone, onSignIn }) {
-  const [step, setStep] = useState('search')
   const [search, setSearch] = useState('')
   const [form, setForm] = useState({ first_name: '', last_name: '', emergency_contact_name: '', emergency_contact_phone: '', consent: false })
   const [saving, setSaving] = useState(false)
