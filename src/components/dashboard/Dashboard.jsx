@@ -152,6 +152,7 @@ function NavItem({ icon, label, active, onClick, badge, primary, collapsed, lock
         padding: collapsed ? '10px 0' : '8px 12px',
         justifyContent: collapsed ? 'center' : 'flex-start',
         borderRadius: 10, border: 'none',
+        willChange: 'opacity',
         background: active
           ? `linear-gradient(90deg, ${primary}28, ${primary}10)`
           : hovered && !locked ? 'rgba(255,255,255,0.05)' : 'transparent',
