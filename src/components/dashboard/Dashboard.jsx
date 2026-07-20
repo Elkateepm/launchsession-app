@@ -26,7 +26,7 @@ import ImpactOutcomes from '../impact/ImpactOutcomes'
 import Fundraising from '../fundraising/Fundraising'
 import FundraisingGate from '../fundraising/FundraisingGate'
 import HR from '../hr/HR'
-import ResourceBooking from '../resources/ResourceBooking'
+import ResourceCentre from '../resources/ResourceCentre'
 import iconLiveSessions from '../../assets/icons/fab/live-sessions.png'
 import iconVolunteers from '../../assets/icons/fab/volunteers.png'
 import iconCaseManagement from '../../assets/icons/fab/case-management.png'
@@ -870,7 +870,7 @@ export default function Dashboard({ session, org }) {
 
           {/* ── OPERATIONS PACK ── */}
           {tab === 'hr'               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : hasModule('hr')               ? <HR org={org} session={session} />                                  : <LockedModule moduleKey="hr"               label="HR"               icon="🧑‍💼" onNavigate={handleSetTab} />)}
-          {tab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceBooking org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} />)}
+          {tab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} />)}
 
           {/* ── LEGACY / COMING SOON ── */}
           {tab === 'mentoring'    && (hasModule('mentoring') ? <Mentoring org={org} session={session} /> : <LockedModule moduleKey="mentoring" label="Mentoring" icon="🤝" onNavigate={handleSetTab} />)}
