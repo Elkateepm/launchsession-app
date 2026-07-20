@@ -459,21 +459,23 @@ function ColorField({ label, hint, value, onChange, contrastAgainst, contrastLab
       {grade && !grade.good && (
         <div style={{ fontSize: 11, color: '#DC2626', marginTop: 6, fontWeight: 600 }}>⚠ Low contrast against {contrastLabel || 'the paired colour'} — just a readability tip, this still saves fine.</div>
       )}
-      {expanded && (
-        <div style={{ marginTop: 10, padding: 12, background: 'var(--surface2)', borderRadius: 12, border: '1px solid var(--border)' }}>
-          <ColorSpectrumPicker hex={value} onChange={onChange} />
-          {recentColors?.length > 0 && (
-            <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Recently used</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {recentColors.map(c => (
-                  <button key={c} onClick={() => onChange(c)} style={{ width: 24, height: 24, borderRadius: 6, background: c, border: value === c ? '2px solid #111' : '1px solid rgba(0,0,0,0.1)', cursor: 'pointer' }} />
-                ))}
+      <div style={{ display: 'grid', gridTemplateRows: expanded ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
+        <div style={{ overflow: 'hidden', minHeight: 0 }}>
+          <div style={{ marginTop: 10, padding: 12, background: 'var(--surface2)', borderRadius: 12, border: '1px solid var(--border)' }}>
+            <ColorSpectrumPicker hex={value} onChange={onChange} />
+            {recentColors?.length > 0 && (
+              <div style={{ marginTop: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Recently used</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {recentColors.map(c => (
+                    <button key={c} onClick={() => onChange(c)} style={{ width: 24, height: 24, borderRadius: 6, background: c, border: value === c ? '2px solid #111' : '1px solid rgba(0,0,0,0.1)', cursor: 'pointer' }} />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -557,9 +559,45 @@ function BrandingSection({ org, refreshOrg }) {
   const [logoSuggestions, setLogoSuggestions] = useState([])
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [previewTab, setPreviewTab] = useState('workspace')
   const [previewDevice, setPreviewDevice] = useState('desktop')
+  const [confirmingReset, setConfirmingReset] = useState(false)
+  const [highlightSection, setHighlightSection] = useState(null)
   const previewRef = useRef(null)
+  const identityRef = useRef(null)
+  const coloursRef = useRef(null)
+  const appearanceRef = useRef(null)
+  const loginRef = useRef(null)
+  const orgLevelRef = useRef(null)
+  const sectionRefs = { identity: identityRef, colours: coloursRef, appearance: appearanceRef, login: loginRef, orgLevel: orgLevelRef }
+
+  const jumpTo = (key) => {
+    sectionRefs[key]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setHighlightSection(key)
+    setTimeout(() => setHighlightSection(h => (h === key ? null : h)), 1400)
+  }
+
+  // Snapshot of the last-saved state, used purely to detect unsaved changes —
+  // so people don't lose work by navigating away without noticing.
+  const savedSnapshot = useRef(null)
+  const currentSnapshot = () => JSON.stringify({
+    name, slogan, color, secondaryColor, accentColor, backgroundColor, appearanceMode, uiDensity,
+    welcomeMessage, emailFooterText, emailSenderName, hidePoweredBy, customDomain,
+    logoPreview, iconPreview, loginBgPreview, emailLogoPreview, logoTransform, iconTransform,
+  })
+  useEffect(() => {
+    if (savedSnapshot.current === null) savedSnapshot.current = currentSnapshot()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  const isDirty = savedSnapshot.current !== null && savedSnapshot.current !== currentSnapshot()
+
+  useEffect(() => {
+    if (!isDirty) return
+    const handler = (e) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isDirty])
 
   useEffect(() => { if (logoPreview) extractDominantColors(logoPreview).then(setLogoSuggestions) }, [logoPreview])
 
@@ -598,19 +636,19 @@ function BrandingSection({ org, refreshOrg }) {
 
   const completion = useMemo(() => {
     const checks = [
-      { done: !!logoPreview, label: 'Upload your logo' },
-      { done: secondaryColor.toUpperCase() !== '#0EA5E9', label: 'Set a secondary colour' },
-      { done: !!accentColor && accentColor.toUpperCase() !== '#F59E0B', label: 'Set an accent colour' },
-      { done: !!slogan, label: 'Add a strapline' },
-      { done: !!welcomeMessage, label: 'Customise your login welcome message' },
-      { done: !!emailLogoPreview, label: 'Upload an email logo' },
+      { done: !!logoPreview, label: 'Upload your logo', section: 'identity' },
+      { done: secondaryColor.toUpperCase() !== '#0EA5E9', label: 'Set a secondary colour', section: 'colours' },
+      { done: !!accentColor && accentColor.toUpperCase() !== '#F59E0B', label: 'Set an accent colour', section: 'colours' },
+      { done: !!slogan, label: 'Add a strapline', section: 'identity' },
+      { done: !!welcomeMessage, label: 'Customise your login welcome message', section: 'login' },
+      { done: !!emailLogoPreview, label: 'Upload an email logo', section: 'login' },
     ]
     const doneCount = checks.filter(c => c.done).length
     return { pct: Math.round((doneCount / checks.length) * 100), missing: checks.filter(c => !c.done) }
   }, [logoPreview, secondaryColor, accentColor, slogan, welcomeMessage, emailLogoPreview])
 
   const handleSave = async () => {
-    setSaving(true)
+    setSaving(true); setSaveError('')
     const [logoUrl, iconUrl, loginBgUrl, emailLogoUrl] = await Promise.all([
       uploadIfNeeded(logoFile, org?.logo_url, logoRemoved, 'logo'),
       uploadIfNeeded(iconFile, org?.icon_url, iconRemoved, 'icon'),
@@ -618,7 +656,7 @@ function BrandingSection({ org, refreshOrg }) {
       uploadIfNeeded(emailLogoFile, org?.email_logo_url, emailLogoRemoved, 'email-logo'),
     ])
 
-    await supabase.from('organisations').update({
+    const { error } = await supabase.from('organisations').update({
       name, primary_color: color, secondary_color: secondaryColor, accent_color: accentColor,
       background_color: backgroundColor, appearance_mode: appearanceMode, ui_density: uiDensity,
       slogan, logo_url: logoUrl, icon_url: iconUrl, logo_transform: logoTransform, icon_transform: iconTransform,
@@ -626,6 +664,12 @@ function BrandingSection({ org, refreshOrg }) {
       email_logo_url: emailLogoUrl, email_footer_text: emailFooterText, email_sender_name: emailSenderName,
       hide_powered_by: hidePoweredBy, custom_domain: customDomain || null, recent_colors: recentColors,
     }).eq('id', org?.id)
+
+    if (error) {
+      setSaving(false)
+      setSaveError(error.message || 'Something went wrong saving your branding. Please try again.')
+      return
+    }
 
     document.documentElement.style.setProperty('--org-primary', color)
     {
@@ -636,11 +680,12 @@ function BrandingSection({ org, refreshOrg }) {
       document.head.appendChild(favicon)
     }
     if (refreshOrg) await refreshOrg()
+    savedSnapshot.current = currentSnapshot()
     setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2500)
   }
 
   const handleReset = () => {
-    if (!window.confirm('Reset branding to defaults? This clears everything in this form (not saved until you hit Save).')) return
+    setConfirmingReset(false)
     setName(org?.name || '')
     setColor('#1B9AAA'); setSecondaryColor('#0EA5E9'); setAccentColor('#F59E0B'); setBackgroundColor('#FFFFFF')
     setAppearanceMode('light'); setUiDensity('rounded')
@@ -653,6 +698,7 @@ function BrandingSection({ org, refreshOrg }) {
   }
 
   const orgName = name || 'Your Organisation'
+  const sectionWrapStyle = (key) => ({ borderRadius: 16, transition: 'box-shadow 0.3s ease', boxShadow: highlightSection === key ? `0 0 0 3px ${color}66` : 'none' })
 
   return (
     <div>
@@ -661,13 +707,43 @@ function BrandingSection({ org, refreshOrg }) {
           <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)' }}>Your brand. Powered by LaunchSession.</div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Customise how {orgName} appears across your workspace, login screen and emails.</div>
         </div>
-        <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
-          <button onClick={handleReset} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>↺ Reset to defaults</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          {isDirty && !saving && (
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#D97706', background: '#D9770614', border: '1px solid #D9770630', borderRadius: 99, padding: '5px 12px', whiteSpace: 'nowrap' }}>● Unsaved changes</span>
+          )}
+          {confirmingReset ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', border: '1.5px solid #FCA5A5', borderRadius: 10, padding: '6px 6px 6px 12px' }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text2)' }}>Clear this form back to defaults?</span>
+              <button onClick={handleReset} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#DC2626', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Yes, reset</button>
+              <button onClick={() => setConfirmingReset(false)} style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+            </div>
+          ) : (
+            <button onClick={() => setConfirmingReset(true)} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>↺ Reset to defaults</button>
+          )}
           <button onClick={() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>👁 Preview brand</button>
           <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? '#9ca3af' : color, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 24px ${color}40` }}>
             {saving ? 'Saving...' : saved ? '✅ Saved!' : '💾 Save changes'}
           </button>
         </div>
+      </div>
+
+      {saveError && (
+        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', borderRadius: 12, padding: '12px 16px', marginBottom: 16, fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10 }}>
+          ⚠ Couldn't save your branding: {saveError}
+          <button onClick={handleSave} style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(220,38,38,0.3)', background: '#fff', color: '#B91C1C', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Try again</button>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        {[
+          { key: 'identity', label: '👤 Identity' }, { key: 'colours', label: '🎨 Colours' },
+          { key: 'appearance', label: '◐ Appearance' }, { key: 'login', label: '🔐 Login & Comms' },
+          { key: 'orgLevel', label: '🏢 Organisation' },
+        ].map(s => (
+          <button key={s.key} onClick={() => jumpTo(s.key)} style={{ padding: '7px 14px', borderRadius: 99, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+            {s.label}
+          </button>
+        ))}
       </div>
 
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '14px 18px', marginBottom: 16 }}>
@@ -680,7 +756,7 @@ function BrandingSection({ org, refreshOrg }) {
         {completion.missing.length > 0 && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
             {completion.missing.map(m => (
-              <span key={m.label} style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', background: 'var(--surface2)', borderRadius: 99, padding: '4px 10px' }}>+ {m.label}</span>
+              <button key={m.label} onClick={() => jumpTo(m.section)} style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 99, padding: '5px 11px', cursor: 'pointer' }}>+ {m.label}</button>
             ))}
           </div>
         )}
@@ -688,6 +764,7 @@ function BrandingSection({ org, refreshOrg }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: 16, alignItems: 'flex-start' }}>
         <div>
+          <div ref={identityRef} style={sectionWrapStyle('identity')}>
           <SettingCard title="Brand Identity" description="Your name, logo and tagline across LaunchSession.">
             <Field label="Organisation name"><input style={inp} value={name} onChange={e => setName(e.target.value)} /></Field>
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -714,7 +791,9 @@ function BrandingSection({ org, refreshOrg }) {
               <input style={inp} value={slogan} onChange={e => setSlogan(e.target.value.slice(0, 80))} placeholder="e.g. Sport for every child" maxLength={80} />
             </Field>
           </SettingCard>
+          </div>
 
+          <div ref={coloursRef} style={sectionWrapStyle('colours')}>
           <SettingCard title="Brand Colours" description="Used across buttons, highlights, active states and accents.">
             <ColorField label="Primary colour" hint="Buttons, highlights, active states." value={color} onChange={setColor} contrastAgainst="#FFFFFF" contrastLabel="white button text" recentColors={recentColors} onCommit={commitRecentColor} />
             <ColorField label="Secondary colour" hint="Accents, links, secondary elements." value={secondaryColor} onChange={setSecondaryColor} contrastAgainst="#FFFFFF" contrastLabel="white button text" recentColors={recentColors} onCommit={commitRecentColor} />
@@ -743,7 +822,9 @@ function BrandingSection({ org, refreshOrg }) {
               </div>
             </div>
           </SettingCard>
+          </div>
 
+          <div ref={appearanceRef} style={sectionWrapStyle('appearance')}>
           <SettingCard title="Appearance" description="How the workspace looks and feels.">
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Mode</div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
@@ -758,7 +839,9 @@ function BrandingSection({ org, refreshOrg }) {
               ))}
             </div>
           </SettingCard>
+          </div>
 
+          <div ref={loginRef} style={sectionWrapStyle('login')}>
           <SettingCard title="Login & Communications" description="What people see before they're signed in, and in the emails you send.">
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Login screen background</div>
@@ -796,7 +879,9 @@ function BrandingSection({ org, refreshOrg }) {
               <textarea style={{ ...inp, minHeight: 60, resize: 'vertical' }} value={emailFooterText} onChange={e => setEmailFooterText(e.target.value)} placeholder="e.g. Solidarity Sports · Registered Charity No. 123456" />
             </Field>
           </SettingCard>
+          </div>
 
+          <div ref={orgLevelRef} style={sectionWrapStyle('orgLevel')}>
           <SettingCard title="Organisation-level Branding" description="Deeper white-labelling for organisations on a paid plan.">
             <Toggle value={hidePoweredBy} onChange={setHidePoweredBy} label='Remove "Powered by LaunchSession"' />
             <Field label="Custom domain" hint="Point your own domain at your workspace (e.g. app.yourcharity.org).">
@@ -809,6 +894,7 @@ function BrandingSection({ org, refreshOrg }) {
               Also available on request: branded PDF reports, and different branding per programme or venue. <a href="mailto:hello@launchsession.co.uk" style={{ color, fontWeight: 700 }}>Contact us</a> to enable these for your plan.
             </div>
           </SettingCard>
+          </div>
         </div>
 
         <div ref={previewRef} style={{ position: isMobile ? 'static' : 'sticky', top: 16 }}>
