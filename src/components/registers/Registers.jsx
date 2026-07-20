@@ -5,6 +5,7 @@ import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { TemplatePicker } from './TemplateCreator'
+import LiveRegister from './LiveRegister'
 
 const DEFAULT_BUBBLES = [
   { key: 'red',    label: 'Red',    color: '#E53935', dark: '#B71C1C' },
@@ -812,7 +813,7 @@ function EncouragementPanel({ org, primary }) {
 }
 
 // ─── MAIN REGISTER ────────────────────────────────────────────
-export default function Registers({ org, onNavigate }) {
+export default function Registers({ org, onNavigate, session: authSession }) {
   const orgId  = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const isMobile = useIsMobile()
@@ -836,6 +837,7 @@ export default function Registers({ org, onNavigate }) {
   const [activeImportTemplate, setActiveImportTemplate] = useState(null)
   const [toast, setToast] = useState('')
   const [note, setNote] = useState('')
+  const [showLiveRegister, setShowLiveRegister] = useState(false)
 
   const getAttRec = (id) => attendance.find(a => a.child_id === id)
   const getStatus = (id) => getAttRec(id)?.status || 'unmarked'
@@ -989,6 +991,11 @@ export default function Registers({ org, onNavigate }) {
               )}
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              {session && (
+                <button onClick={() => setShowLiveRegister(true)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  🔴 Open Live Register
+                </button>
+              )}
               {session && (
                 <button onClick={() => setShowAdd(true)} style={{ padding: '8px 14px', borderRadius: 10, border: `1.5px solid ${primary}40`, background: primary + '10', color: primary, fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
                   + Walk-in
@@ -1278,6 +1285,11 @@ export default function Registers({ org, onNavigate }) {
       {showAdd && (
         <AddChildModal orgId={orgId} bubbles={bubbles} onClose={() => setShowAdd(false)}
           onAdded={child => { setChildren(prev => [...prev, child]); setShowAdd(false); showToast(`✓ ${child.first_name} added`) }} />
+      )}
+
+      {/* FULL LIVE REGISTER */}
+      {showLiveRegister && session && (
+        <LiveRegister session={session} org={org} authUserId={authSession?.user?.id} onNavigate={onNavigate} onClose={() => setShowLiveRegister(false)} />
       )}
 
       {/* GROUPS QUICK SETUP MODAL */}
