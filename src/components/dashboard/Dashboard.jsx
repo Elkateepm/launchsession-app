@@ -804,7 +804,7 @@ export default function Dashboard({ session, org }) {
       )}
 
       {/* MAIN CONTENT */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingBottom: isMobileBottomNav ? 'calc(110px + env(safe-area-inset-bottom, 0px))' : 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingTop: isMobileBottomNav ? 'env(safe-area-inset-top, 0px)' : 0, paddingBottom: isMobileBottomNav ? 'calc(84px + env(safe-area-inset-bottom, 0px))' : 0 }}>
         {tab !== 'registers' && tab !== 'home' && (
           <FloatingHeader
             org={org} orgName={orgName} primary={primary} tab={tab} ALL_MODULES={ALL_MODULES}
@@ -946,23 +946,25 @@ export default function Dashboard({ session, org }) {
 
         {isMobileBottomNav && (
           <>
-            {/* Floating pill nav */}
+            {/* Full-width nav bar, docked to the bottom edge */}
             <div style={{
               position: 'fixed',
-              left: 12,
-              right: 12,
-              bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
-              height: 74,
-              background: 'rgba(10,15,30,0.82)',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(10,15,30,0.92)',
               backdropFilter: 'blur(18px)',
               WebkitBackdropFilter: 'blur(18px)',
-              borderRadius: 32,
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              boxShadow: '0 -8px 24px rgba(0,0,0,0.25)',
+              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+              zIndex: 9999,
+            }}>
+            <div style={{
+              height: 64,
               display: 'grid',
               gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) 74px minmax(0,1fr) minmax(0,1fr)',
               alignItems: 'center',
-              border: '1px solid rgba(255,255,255,0.08)',
-              boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
-              zIndex: 9999,
               padding: '0 6px',
             }}>
               {[
@@ -1001,6 +1003,7 @@ export default function Dashboard({ session, org }) {
                 </button>
               ))}
             </div>
+            </div>
 
             {/* Floating Launch button — context-aware: rocket / calendar / live / ended.
                 onPointerDown starts the press-slide-release gesture (see effects above); a
@@ -1008,7 +1011,7 @@ export default function Dashboard({ session, org }) {
             <div style={{
               position: 'fixed',
               left: 'calc(50% - 33px)', // half of the button's own 66px width — avoids transform, which framer-motion's animate would otherwise override
-              bottom: 'calc(40px + env(safe-area-inset-bottom, 0px))',
+              bottom: 'calc(18px + env(safe-area-inset-bottom, 0px))', // pokes ~20px above the new 64px docked bar
               width: 66, height: 66,
               zIndex: 10000,
             }}>
