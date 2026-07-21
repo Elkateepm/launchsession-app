@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useBreakpoint } from '../../hooks/useIsMobile'
 
 const STEPS = { ROLE: 'role', EMAIL: 'email', PASSWORD: 'password', MAGIC: 'magic', FORGOT: 'forgot' }
 
@@ -20,6 +21,11 @@ export default function Login({ org }) {
   const [forgotSent, setForgotSent] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
+  const { isDesktop } = useBreakpoint()
+  // Mobile/tablet is a personal device — same reasoning as the idle-logout
+  // carve-out (App.js), so there's no shared-computer risk to opt out of.
+  // Desktop keeps the explicit choice since it's more likely to be shared.
+  const effectiveRememberMe = isDesktop ? rememberMe : true
 
   const primary = org?.primary_color || '#3B82F6'
   const orgName = org?.name || 'LaunchSession'
@@ -35,7 +41,7 @@ export default function Login({ org }) {
     e.preventDefault()
     setLoading(true)
     setError('')
-    try { localStorage.setItem('ls_remember_me', rememberMe ? 'true' : 'false') } catch (e) {}
+    try { localStorage.setItem('ls_remember_me', effectiveRememberMe ? 'true' : 'false') } catch (e) {}
 
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -148,12 +154,19 @@ export default function Login({ org }) {
                   {loading ? 'Signing in...' : 'Sign In'}
                 </button>
               </form>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 16, cursor: 'pointer', userSelect: 'none' }}>
-                <span onClick={() => setRememberMe(r => !r)} style={{ width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${rememberMe ? primary : 'rgba(255,255,255,0.25)'}`, background: rememberMe ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
-                  {rememberMe && <span style={{ color: '#fff', fontSize: 12, fontWeight: 900, lineHeight: 1 }}>✓</span>}
-                </span>
-                <span onClick={() => setRememberMe(r => !r)} style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>Keep me logged in</span>
-              </label>
+              {isDesktop ? (
+                <label style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 16, cursor: 'pointer', userSelect: 'none' }}>
+                  <span onClick={() => setRememberMe(r => !r)} style={{ width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${rememberMe ? primary : 'rgba(255,255,255,0.25)'}`, background: rememberMe ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                    {rememberMe && <span style={{ color: '#fff', fontSize: 12, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                  </span>
+                  <span onClick={() => setRememberMe(r => !r)} style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>Keep me logged in</span>
+                </label>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 16 }}>
+                  <span style={{ fontSize: 13 }}>🔒</span>
+                  <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>You'll stay signed in on this device</span>
+                </div>
+              )}
               <div style={{ marginTop: 16 }}>
                 <button onClick={() => { setStep(STEPS.FORGOT); setError('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', padding: 0 }}>Forgot password?</button>
               </div>
