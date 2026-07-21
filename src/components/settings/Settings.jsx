@@ -1585,17 +1585,61 @@ function ComingSoon({ label }) {
 }
 
 
-function GroupsSection({ org }) {
+function GroupsSection({ org, refreshOrg }) {
+  const [collectionRequired, setCollectionRequired] = useState(org?.collection_recording_required !== false)
+  const [identityCheckRequired, setIdentityCheckRequired] = useState(org?.identity_check_required || false)
+  const [staffRatio, setStaffRatio] = useState(org?.default_staff_ratio || 8)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const handleSaveRegisterOptions = async () => {
+    setSaving(true)
+    await supabase.from('organisations').update({
+      collection_recording_required: collectionRequired,
+      identity_check_required: identityCheckRequired,
+      default_staff_ratio: Number(staffRatio) || 8,
+    }).eq('id', org.id)
+    if (refreshOrg) await refreshOrg()
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000)
+  }
+
   return (
     <div>
       <div style={{ background: 'linear-gradient(135deg, #0A0F1E, #1a2744)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ fontSize: 32 }}>👥</div>
+        <div style={{ fontSize: 32 }}>📋</div>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Groups & Locations</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>Define the groups and venues used across registers, sessions and reports</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Registers</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>Groups, locations, and how sign-in/sign-out works across your sessions</div>
         </div>
       </div>
-      <OrgSettingsPanel orgId={org?.id} />
+
+      <SettingCard title="Register Options" description="Control what staff are asked for when signing young people in and out.">
+        <Toggle value={collectionRequired} onChange={setCollectionRequired} label="Require collection details on sign-out" />
+        <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: -8, marginBottom: 16, paddingLeft: 2 }}>
+          When on, staff must record who's collecting each child (approved adult, parent, leaving independently, etc.) before they can sign out. Turn this off if your organisation doesn't need collection records — sign-out becomes a single tap.
+        </div>
+
+        <Toggle value={identityCheckRequired} onChange={setIdentityCheckRequired} label="Require identity check confirmation on sign-out" />
+        <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: -8, marginBottom: 16, paddingLeft: 2 }}>
+          When on, staff must tick "Identity checked" before confirming a sign-out. Only applies if collection details are required above.
+        </div>
+
+        <Field label="Default staff-to-child ratio" hint="Used to warn staff during live sessions if a session doesn't set its own ratio. Enter the number of children per 1 staff member.">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>1 :</span>
+            <input type="number" min="1" style={{ ...inp, maxWidth: 100 }} value={staffRatio} onChange={e => setStaffRatio(e.target.value)} />
+          </div>
+        </Field>
+
+        <button onClick={handleSaveRegisterOptions} disabled={saving} style={{ marginTop: 4, padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? '#9CA3AF' : '#1B9AAA', color: '#fff', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
+          {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save Register Options'}
+        </button>
+      </SettingCard>
+
+      <div style={{ marginTop: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8, paddingLeft: 2 }}>Groups & Locations</div>
+        <OrgSettingsPanel orgId={org?.id} />
+      </div>
     </div>
   )
 }
@@ -1963,7 +2007,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
       case 'notifications':  return <NotificationsSection />
       case 'integrations':   return <IntegrationsSection />
       case 'billing':        return <BillingSection org={org} session={session} isAdmin={isAdmin} refreshOrg={refreshOrg} />
-      case 'registers':      return <GroupsSection org={org} />
+      case 'registers':      return <GroupsSection org={org} refreshOrg={refreshOrg} />
       case 'sessions':       return <VenuesSection org={org} isAdmin={isAdmin} />
       case 'safeguarding':   return <SafeguardingSection org={org} />
       case 'help':           return <HelpSection />
