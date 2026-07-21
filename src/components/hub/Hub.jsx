@@ -264,7 +264,32 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
 }
 
 // ── LIVE SESSION PANEL ─────────────────────────────────────────
-function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, reflections, onOpenRegister, onNavigate, getLiveSessionStats }) {
+const COLLECTION_TYPES_HUB = [
+  { key: 'approved_adult', label: 'Approved adult' },
+  { key: 'parent_guardian', label: 'Parent or guardian' },
+  { key: 'independent', label: 'Leaving independently' },
+  { key: 'staff_transport', label: 'Staff transport' },
+  { key: 'other', label: 'Other' },
+]
+const ABSENCE_REASONS_HUB = ['Absent', 'Cancelled', 'Ill', 'Parent notified', 'No reason provided']
+const NOTE_TYPES_HUB = [
+  { key: 'general', label: 'General note', icon: '📝' },
+  { key: 'late_arrival', label: 'Late arrival', icon: '⏰' },
+  { key: 'early_collection', label: 'Early collection', icon: '🚪' },
+  { key: 'behaviour', label: 'Behaviour note', icon: '⚠️' },
+  { key: 'injury', label: 'Injury / first aid', icon: '🩹' },
+  { key: 'incident', label: 'Accident or incident', icon: '🚨' },
+]
+function hubFmtTime(d) { if (!d) return ''; return new Date(d).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' }) }
+function hubRequiredRatio(session, org) {
+  if (session?.staff_ratio) {
+    const m = session.staff_ratio.match(/(\d+)\s*:\s*(\d+)/)
+    if (m) return Number(m[2]) / Number(m[1])
+  }
+  return org?.default_staff_ratio || 8
+}
+
+function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, org, authUserId, reflections, onNavigate, getLiveSessionStats }) {
   const isMobile = useIsMobile()
   const [activeSession, setActiveSession] = useState(sessions[0])
   const [localAttendance, setLocalAttendance] = useState(attendance)
@@ -273,6 +298,39 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoToast, setPhotoToast] = useState('')
   const photoInputRef = React.useRef(null)
+
+  // ── Full register state (built in, matching the card's own dark aesthetic) ──
+  const [regTab, setRegTab] = useState('expected')
+  const [regExpanded, setRegExpanded] = useState(false)
+  const [regSearch, setRegSearch] = useState('')
+  const [signOutChild, setSignOutChild] = useState(null)
+  const [absentChild, setAbsentChild] = useState(null)
+  const [showWalkIn, setShowWalkIn] = useState(false)
+  const [showClosure, setShowClosure] = useState(false)
+  const [showNotes, setShowNotes] = useState(false)
+  const [regToast, setRegToast] = useState('')
+  const [sessionStaff, setSessionStaff] = useState([])
+  const [staffProfiles, setStaffProfiles] = useState({})
+  const [sessionNotes, setSessionNotes] = useState([])
+
+  const loadRegisterExtras = React.useCallback(async () => {
+    if (!activeSession?.id) return
+    const [{ data: ssData }, { data: noteData }] = await Promise.all([
+      supabase.from('session_staff').select('*').eq('session_id', activeSession.id),
+      supabase.from('session_notes').select('*').eq('session_id', activeSession.id).order('created_at', { ascending: false }),
+    ])
+    setSessionStaff(ssData || [])
+    setSessionNotes(noteData || [])
+    const staffIds = [...new Set((ssData || []).map(s => s.user_id).filter(Boolean))]
+    if (staffIds.length) {
+      const { data: profiles } = await supabase.from('user_profiles').select('id, full_name').in('id', staffIds)
+      const map = {}
+      ;(profiles || []).forEach(p => { map[p.id] = p.full_name })
+      setStaffProfiles(map)
+    }
+  }, [activeSession?.id])
+
+  useEffect(() => { loadRegisterExtras() }, [loadRegisterExtras])
 
   // Keep local attendance in sync
   React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
@@ -336,6 +394,116 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const bubbleGroups = [...new Set(sessionChildren.map(ch => (ch.group_name || '').trim()).filter(Boolean))]
 
   const pct = stats.percent || 0
+
+  // ── Register logic ──────────────────────────────────────────
+  const attendanceByChild = useMemo(() => {
+    const map = {}
+    sessionAttendance.forEach(a => { map[a.child_id] = a })
+    return map
+  }, [sessionAttendance])
+
+  const regRows = useMemo(() => targetedChildren.map(c => ({ child: c, att: attendanceByChild[c.id] || null })), [targetedChildren, attendanceByChild])
+
+  const regGrouped = useMemo(() => {
+    const g = { expected: [], signed_in: [], absent: [], signed_out: [] }
+    regRows.forEach(r => {
+      const status = r.att?.status
+      if (status === 'signed_in') g.signed_in.push(r)
+      else if (status === 'absent') g.absent.push(r)
+      else if (status === 'signed_out') g.signed_out.push(r)
+      else g.expected.push(r)
+    })
+    return g
+  }, [regRows])
+
+  const regSearchFiltered = (list) => {
+    if (!regSearch.trim()) return list
+    const q = regSearch.toLowerCase()
+    return list.filter(r => `${r.child.first_name} ${r.child.last_name}`.toLowerCase().includes(q))
+  }
+
+  const showRegToast = (msg) => { setRegToast(msg); setTimeout(() => setRegToast(''), 3000) }
+
+  async function upsertAttendance(childId, patch) {
+    const existing = attendanceByChild[childId]
+    if (existing) {
+      const { data } = await supabase.from('attendance').update(patch).eq('id', existing.id).select().single()
+      if (data) setLocalAttendance(prev => prev.map(a => a.id === existing.id ? data : a))
+    } else {
+      const { data } = await supabase.from('attendance').insert({ org_id: orgId, session_id: activeSession.id, child_id: childId, ...patch }).select().single()
+      if (data) setLocalAttendance(prev => [...prev, data])
+    }
+  }
+
+  const handleRegSignIn = async (child) => {
+    const now = new Date().toISOString()
+    await upsertAttendance(child.id, { status: 'signed_in', signed_in_at: now, signed_in_by: authUserId })
+    showRegToast(`${child.first_name} signed in at ${hubFmtTime(now)}`)
+  }
+
+  const handleConfirmSignOut = async (form) => {
+    const now = new Date().toISOString()
+    await upsertAttendance(signOutChild.id, {
+      status: 'signed_out', signed_out_at: now, signed_out_by: authUserId,
+      collection_type: form.collection_type, collected_by_name: form.collected_by_name || null,
+      collection_note: form.collection_note || null, identity_checked: form.identity_checked,
+    })
+    showRegToast(`${signOutChild.first_name} signed out at ${hubFmtTime(now)}`)
+    setSignOutChild(null)
+  }
+
+  const handleMarkAbsent = async (reason) => {
+    await upsertAttendance(absentChild.id, { status: 'absent', absence_reason: reason })
+    setAbsentChild(null)
+  }
+
+  const handleStaffSignIn = async (staffRow) => {
+    await supabase.from('session_staff').update({ signed_in_at: new Date().toISOString() }).eq('id', staffRow.id)
+    loadRegisterExtras()
+  }
+
+  const handleAddRegNote = async (noteType, content, childId) => {
+    if (!content.trim()) return
+    await supabase.from('session_notes').insert({ org_id: orgId, session_id: activeSession.id, child_id: childId || null, note_type: noteType, content: content.trim(), created_by: authUserId })
+    loadRegisterExtras()
+  }
+
+  const handleRaiseSafeguardingConcern = async (child, summary) => {
+    await supabase.from('safeguarding_concerns').insert({ org_id: orgId, child_id: child?.id || null, reported_by: authUserId, category: 'other', severity: 'medium', summary, status: 'open' })
+    showRegToast('Safeguarding concern raised — complete details in Safeguarding.')
+    if (onNavigate) onNavigate('safeguarding')
+  }
+
+  const handleSelectExistingWalkIn = async (child) => {
+    await handleRegSignIn(child)
+    setShowWalkIn(false)
+  }
+
+  const handleCreateWalkIn = async (form) => {
+    const { data } = await supabase.from('children').insert({
+      org_id: orgId, first_name: form.first_name.trim(), last_name: form.last_name.trim() || '',
+      emergency_contact_name: form.emergency_contact_name || null, emergency_contact_phone: form.emergency_contact_phone || null,
+      is_walk_in: true, profile_incomplete: true, active: true,
+    }).select().single()
+    if (data) { await handleRegSignIn(data) }
+    setShowWalkIn(false)
+  }
+
+  const handleMarkAllRemainingAbsent = async () => {
+    await Promise.all(regGrouped.expected.map(r => upsertAttendance(r.child.id, { status: 'absent', absence_reason: 'No reason provided' })))
+  }
+
+  const handleCloseRegister = async () => {
+    await supabase.from('sessions').update({ closed_at: new Date().toISOString(), closed_by: authUserId, register_status: 'closed' }).eq('id', activeSession.id)
+    setActiveSession(prev => ({ ...prev, closed_at: new Date().toISOString() }))
+    setShowClosure(false)
+  }
+
+  const requiredRatio = hubRequiredRatio(activeSession, org)
+  const signedInStaffCount = sessionStaff.filter(s => s.signed_in_at).length || sessionStaff.length
+  const currentRatio = signedInStaffCount > 0 ? stats.signedIn / signedInStaffCount : null
+  const ratioBreached = currentRatio !== null && signedInStaffCount > 0 && currentRatio > requiredRatio
+  const processedCount = regGrouped.signed_in.length + regGrouped.absent.length + regGrouped.signed_out.length
 
   const [nowTick, setNowTick] = React.useState(() => new Date())
   React.useEffect(() => {
@@ -422,7 +590,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                 onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
                 {photoUploading ? 'Uploading…' : '📷 Add Photo'}
               </button>
-              <button onClick={() => onOpenRegister(activeSession.id)}
+              <button onClick={() => setShowWalkIn(true)}
                 style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s' }}
                 onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
                 onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
@@ -488,7 +656,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
               style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: photoUploading ? 'default' : 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
               {photoUploading ? 'Uploading…' : '📷 Add Photo'}
             </button>
-            <button onClick={() => onOpenRegister(activeSession.id)}
+            <button onClick={() => setShowWalkIn(true)}
               style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
               + Walk-in
             </button>
@@ -522,7 +690,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#C084FC', icon: '↩' },
           { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#60A5FA', icon: '👥' },
         ].map((s, i) => (
-          <button key={s.key} onClick={() => onOpenRegister(activeSession.id)}
+          <button key={s.key} onClick={() => { setRegTab(s.key); setRegExpanded(true) }}
             style={{ background: 'transparent', border: 'none', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.12)' : 'none', padding: isMobile ? '10px 4px' : '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 8 }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
@@ -566,6 +734,115 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         {stats.absent > 0 && (
           <div style={{ marginTop: 10, fontSize: 11, color: '#FB923C', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
             ⚠ {stats.absent} marked absent
+          </div>
+        )}
+
+        {ratioBreached && (
+          <div style={{ marginTop: 12, background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 12, padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#FCA5A5' }}>
+            ⚠ Staff-to-child ratio is currently 1:{currentRatio.toFixed(1)}. Required ratio: 1:{requiredRatio}.
+          </div>
+        )}
+
+        <div style={{ marginTop: 12, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+          Register progress: {processedCount} of {regRows.length} processed
+        </div>
+
+        <button onClick={() => setRegExpanded(x => !x)}
+          style={{ marginTop: 12, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>
+          <span>📋 Register</span>
+          <span style={{ color: 'rgba(255,255,255,0.5)' }}>{regExpanded ? '▲ Hide' : '▼ Open'}</span>
+        </button>
+
+        {regExpanded && (
+          <div style={{ marginTop: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 14 }}>
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: 4, marginBottom: 10, overflowX: 'auto' }}>
+              {[
+                { key: 'expected', label: 'Expected', count: regGrouped.expected.length },
+                { key: 'signed_in', label: 'Signed in', count: regGrouped.signed_in.length },
+                { key: 'absent', label: 'Absent', count: regGrouped.absent.length },
+                { key: 'signed_out', label: 'Signed out', count: regGrouped.signed_out.length },
+              ].map(t => (
+                <button key={t.key} onClick={() => setRegTab(t.key)}
+                  style={{ flex: 1, padding: '8px 6px', borderRadius: 9, border: 'none', background: regTab === t.key ? primary : 'rgba(255,255,255,0.06)', color: regTab === t.key ? '#fff' : 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  {t.label} {t.count}
+                </button>
+              ))}
+            </div>
+
+            <input value={regSearch} onChange={e => setRegSearch(e.target.value)} placeholder="🔍 Search young people..."
+              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12.5, marginBottom: 10, outline: 'none' }} />
+
+            <div style={{ maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {regSearchFiltered(regGrouped[regTab] || []).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 20, color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Nobody in this list{regSearch ? ' matching your search' : ''}.</div>
+              ) : regSearchFiltered(regGrouped[regTab] || []).map(({ child, att }) => {
+                const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
+                const gColor = getBubbleColor(child.group_name)
+                return (
+                  <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: gColor + '30', border: `1.5px solid ${gColor}60`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                      {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {child.first_name} {child.last_name}
+                        {child.is_walk_in && child.profile_incomplete && <span style={{ marginLeft: 6, fontSize: 8.5, fontWeight: 800, color: '#FCD34D', background: 'rgba(251,191,36,0.15)', borderRadius: 6, padding: '1px 5px' }}>WALK-IN</span>}
+                      </div>
+                      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>
+                        {child.group_name || 'No group'}
+                        {att?.status === 'signed_in' && ` · in at ${hubFmtTime(att.signed_in_at)}`}
+                        {att?.status === 'signed_out' && ` · out at ${hubFmtTime(att.signed_out_at)}`}
+                        {att?.status === 'absent' && ` · ${att.absence_reason || 'Absent'}`}
+                      </div>
+                      {(child.allergies || child.medical_notes || child.has_epipen || child.has_asthma) && (
+                        <span style={{ fontSize: 8.5, fontWeight: 800, color: '#FCA5A5', background: 'rgba(239,68,68,0.15)', borderRadius: 6, padding: '1px 5px', marginTop: 2, display: 'inline-block' }}>⚕ Medical</span>
+                      )}
+                    </div>
+                    {att?.status === 'signed_in' ? (
+                      <button onClick={() => setSignOutChild(child)} style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#2563EB', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Sign out</button>
+                    ) : att?.status === 'signed_out' || att?.status === 'absent' ? null : (
+                      <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                        <button onClick={() => handleRegSignIn(child)} style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#16A34A', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Sign in</button>
+                        <button onClick={() => setAbsentChild(child)} style={{ padding: '8px 10px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Absent</button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Staff panel */}
+            {sessionStaff.length > 0 && (
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Session team</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {sessionStaff.map(s => (
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5 }}>
+                      <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>{staffProfiles[s.user_id] || 'Team member'} <span style={{ color: 'rgba(255,255,255,0.35)' }}>· {s.role}</span></span>
+                      {s.signed_in_at ? (
+                        <span style={{ color: '#4ADE80', fontWeight: 700 }}>In {hubFmtTime(s.signed_in_at)}</span>
+                      ) : (
+                        <button onClick={() => handleStaffSignIn(s)} style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>Sign in</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+              <button onClick={() => setShowNotes(true)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>📝 Notes ({sessionNotes.length})</button>
+              {!activeSession?.closed_at && (
+                <button onClick={() => setShowClosure(true)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>Close register</button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {regToast && (
+          <div style={{ marginTop: 10, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, padding: '8px 14px', fontSize: 11.5, fontWeight: 700, color: '#fff', textAlign: 'center' }}>
+            {regToast}
           </div>
         )}
 
@@ -621,9 +898,218 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       </div>
       <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
 
+      {signOutChild && (
+        <HubSignOutSheet child={signOutChild} onClose={() => setSignOutChild(null)} onConfirm={handleConfirmSignOut} />
+      )}
+      {absentChild && (
+        <HubAbsentSheet child={absentChild} onClose={() => setAbsentChild(null)} onMark={handleMarkAbsent} />
+      )}
+      {showWalkIn && (
+        <HubWalkInModal allChildren={childList} onClose={() => setShowWalkIn(false)} onSelectExisting={handleSelectExistingWalkIn} onCreate={handleCreateWalkIn} />
+      )}
+      {showNotes && (
+        <HubNotesPanel notes={sessionNotes} childList={targetedChildren} onClose={() => setShowNotes(false)} onAdd={handleAddRegNote} onRaiseSafeguarding={handleRaiseSafeguardingConcern} />
+      )}
+      {showClosure && (
+        <HubClosureFlow grouped={regGrouped} onClose={() => setShowClosure(false)} onMarkAllAbsent={handleMarkAllRemainingAbsent} onCloseRegister={handleCloseRegister} primary={primary} secondary={secondary} />
+      )}
     </div>
   )
 }
+
+function HubSignOutSheet({ child, onClose, onConfirm }) {
+  const [collectionType, setCollectionType] = useState('')
+  const [collectedByName, setCollectedByName] = useState('')
+  const [note, setNote] = useState('')
+  const [identityChecked, setIdentityChecked] = useState(false)
+  const contacts = child.collection_contacts || []
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: 20, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Who is {child.first_name} leaving with?</div>
+        {contacts.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+            {contacts.map((c, i) => (
+              <button key={i} onClick={() => { setCollectionType('approved_adult'); setCollectedByName(`${c.name}${c.relationship ? ' · ' + c.relationship : ''}`) }}
+                style={{ padding: '8px 14px', borderRadius: 10, border: collectedByName.startsWith(c.name) ? '2px solid #7C3AED' : '1.5px solid rgba(255,255,255,0.14)', background: collectedByName.startsWith(c.name) ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                {c.name}{c.relationship ? ` · ${c.relationship}` : ''}
+              </button>
+            ))}
+          </div>
+        )}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+          {COLLECTION_TYPES_HUB.map(t => (
+            <button key={t.key} onClick={() => setCollectionType(t.key)} style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === t.key ? '2px solid #7C3AED' : '1.5px solid rgba(255,255,255,0.14)', background: collectionType === t.key ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{t.label}</button>
+          ))}
+        </div>
+        {collectionType && collectionType !== 'independent' && (
+          <input value={collectedByName} onChange={e => setCollectedByName(e.target.value)} placeholder="Name of person collecting" style={hubInp} />
+        )}
+        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Collection note (optional)" style={{ ...hubInp, minHeight: 44, marginTop: 10 }} />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '14px 0 18px', fontSize: 12.5, color: 'rgba(255,255,255,0.75)' }}>
+          <input type="checkbox" checked={identityChecked} onChange={e => setIdentityChecked(e.target.checked)} /> Identity checked
+        </label>
+        <button onClick={() => onConfirm({ collection_type: collectionType || 'other', collected_by_name: collectedByName, collection_note: note, identity_checked: identityChecked })}
+          disabled={!collectionType} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: !collectionType ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: !collectionType ? 'not-allowed' : 'pointer' }}>
+          Confirm Sign Out
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function HubAbsentSheet({ child, onClose, onMark }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 340 }} onClick={e => e.stopPropagation()}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Mark {child.first_name} as...</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {ABSENCE_REASONS_HUB.map(r => (
+            <button key={r} onClick={() => onMark(r)} style={{ padding: '11px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 600, textAlign: 'left', cursor: 'pointer' }}>{r}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HubWalkInModal({ allChildren, onClose, onSelectExisting, onCreate }) {
+  const [search, setSearch] = useState('')
+  const [form, setForm] = useState({ first_name: '', last_name: '', emergency_contact_name: '', emergency_contact_phone: '', consent: false })
+  const [saving, setSaving] = useState(false)
+  const matches = search.trim() ? allChildren.filter(c => `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase())) : []
+
+  const handleCreate = async () => {
+    if (!form.first_name.trim() || !form.consent) return
+    setSaving(true)
+    await onCreate(form)
+    setSaving(false)
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 400, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Add Walk-in</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 14 }}>Search existing young people first — don't create a duplicate record.</div>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..." style={{ ...hubInp, marginBottom: 10 }} />
+        {matches.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+            {matches.slice(0, 8).map(c => (
+              <button key={c.id} onClick={() => onSelectExisting(c)} style={{ padding: '9px 12px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', textAlign: 'left', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{c.first_name} {c.last_name}</button>
+            ))}
+          </div>
+        )}
+        {search.trim() && matches.length === 0 && (
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>No existing match — create a temporary walk-in record below.</div>
+        )}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 14, marginTop: 4 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>Create temporary walk-in</div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <input value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} placeholder="First name *" style={{ ...hubInp, flex: 1 }} />
+            <input value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} placeholder="Last name" style={{ ...hubInp, flex: 1 }} />
+          </div>
+          <input value={form.emergency_contact_name} onChange={e => setForm({ ...form, emergency_contact_name: e.target.value })} placeholder="Emergency contact name" style={{ ...hubInp, marginBottom: 8 }} />
+          <input value={form.emergency_contact_phone} onChange={e => setForm({ ...form, emergency_contact_phone: e.target.value })} placeholder="Emergency contact phone" style={{ ...hubInp, marginBottom: 8 }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, fontSize: 12.5, color: 'rgba(255,255,255,0.75)' }}>
+            <input type="checkbox" checked={form.consent} onChange={e => setForm({ ...form, consent: e.target.checked })} /> Consent confirmed for today's session
+          </label>
+          <button onClick={handleCreate} disabled={!form.first_name.trim() || !form.consent || saving} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: (!form.first_name.trim() || !form.consent) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            {saving ? 'Adding...' : 'Create & Sign In'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HubNotesPanel({ notes, childList, onClose, onAdd, onRaiseSafeguarding }) {
+  const [noteType, setNoteType] = useState('general')
+  const [content, setContent] = useState('')
+  const [childId, setChildId] = useState('')
+
+  const handleAdd = () => {
+    if (noteType === 'incident' && window.confirm('Incidents involving safeguarding should go through the Safeguarding workflow instead. Raise a safeguarding concern instead?')) {
+      const child = childList.find(c => c.id === childId)
+      onRaiseSafeguarding(child, content)
+      setContent('')
+      return
+    }
+    onAdd(noteType, content, childId || null)
+    setContent('')
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', justifyContent: 'flex-end' }} onClick={onClose}>
+      <div style={{ width: 380, maxWidth: '100%', height: '100%', background: '#0F172A', borderLeft: '1px solid rgba(255,255,255,0.12)', overflowY: 'auto', padding: 20 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Session Notes</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#fff', cursor: 'pointer' }}>×</button>
+        </div>
+        <select value={noteType} onChange={e => setNoteType(e.target.value)} style={{ ...hubInp, marginBottom: 8 }}>
+          {NOTE_TYPES_HUB.map(t => <option key={t.key} value={t.key}>{t.icon} {t.label}</option>)}
+        </select>
+        <select value={childId} onChange={e => setChildId(e.target.value)} style={{ ...hubInp, marginBottom: 8 }}>
+          <option value="">Not about a specific child</option>
+          {childList.map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>)}
+        </select>
+        <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Note..." style={{ ...hubInp, minHeight: 60, marginBottom: 10 }} />
+        <button onClick={handleAdd} disabled={!content.trim()} style={{ width: '100%', padding: 11, borderRadius: 9, border: 'none', background: !content.trim() ? 'rgba(255,255,255,0.1)' : '#7C3AED', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 18 }}>Add Note</button>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {notes.map(n => {
+            const nt = NOTE_TYPES_HUB.find(t => t.key === n.note_type)
+            return (
+              <div key={n.id} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 10, fontSize: 12.5 }}>
+                <div style={{ fontWeight: 700, color: '#fff', marginBottom: 2 }}>{nt?.icon} {nt?.label}</div>
+                <div style={{ color: 'rgba(255,255,255,0.7)' }}>{n.content}</div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10.5, marginTop: 4 }}>{new Date(n.created_at).toLocaleString('en-GB')}</div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HubClosureFlow({ grouped, onClose, onMarkAllAbsent, onCloseRegister, primary, secondary }) {
+  const stillSignedIn = grouped.signed_in.length
+  const unaccounted = grouped.expected.length
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 22, width: 420, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Close Register</div>
+
+        {stillSignedIn > 0 && (
+          <div style={{ background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 10, padding: 12, marginBottom: 12, fontSize: 13, fontWeight: 700, color: '#FCA5A5' }}>
+            ⚠ {stillSignedIn} young people are still marked on site. Sign them out before closing, or confirm this is expected.
+          </div>
+        )}
+        {unaccounted > 0 && (
+          <div style={{ background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 13, color: '#FCD34D' }}>
+            {unaccounted} young people have no attendance status.
+          </div>
+        )}
+
+        {unaccounted > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            <button onClick={onMarkAllAbsent} style={{ padding: '11px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>Mark all remaining absent</button>
+            <button onClick={onClose} style={{ padding: '11px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>Review individually</button>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Leave Open</button>
+          <button onClick={onCloseRegister} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Close and Lock Register</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const hubInp = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, outline: 'none', fontFamily: 'inherit' }
 
 function ordinalSuffix(day) {
   if (day > 3 && day < 21) return 'th'
@@ -1179,6 +1665,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               primary={primary}
               secondary={secondary}
               orgId={org?.id}
+              org={org}
+              authUserId={session?.user?.id}
               reflections={reflections}
               onOpenRegister={openRegisterForSession}
               onNavigate={go}
