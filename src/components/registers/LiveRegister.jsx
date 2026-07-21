@@ -151,6 +151,12 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
     if (ok) { showToast(`${child.first_name} signed in at ${fmtTime(now)}`); load() }
   }
 
+  const handleQuickSignOut = async (child) => {
+    const now = new Date().toISOString()
+    const ok = await upsertAttendance(child.id, { status: 'signed_out', signed_out_at: now, signed_out_by: authUserId })
+    if (ok) { showToast(`${child.first_name} signed out at ${fmtTime(now)}`); load() }
+  }
+
   const handleConfirmSignOut = async (form) => {
     const now = new Date().toISOString()
     const ok = await upsertAttendance(signOutChild.id, {
@@ -249,7 +255,7 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {activeList.map(({ child, att }) => (
               <RegisterRow key={child.id} child={child} att={att} onOpen={() => setSelectedChild(child)}
-                onSignIn={() => handleSignIn(child)} onSignOut={() => setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} />
+                onSignIn={() => handleSignIn(child)} onSignOut={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} />
             ))}
           </div>
         )}
@@ -289,7 +295,7 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
       )}
 
       {signOutChild && (
-        <SignOutSheet child={signOutChild} onClose={() => setSignOutChild(null)} onConfirm={handleConfirmSignOut} />
+        <SignOutSheet child={signOutChild} onClose={() => setSignOutChild(null)} onConfirm={handleConfirmSignOut} identityCheckRequired={!!org?.identity_check_required} />
       )}
       {absentChild && (
         <AbsentSheet child={absentChild} onClose={() => setAbsentChild(null)} onMark={handleMarkAbsent} />
@@ -367,7 +373,7 @@ function alertPill(color, bg) { return { fontSize: 9.5, fontWeight: 800, color, 
 function actionBtn(color) { return { padding: '9px 14px', borderRadius: 9, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' } }
 const ghostBtn = { padding: '8px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }
 
-function SignOutSheet({ child, onClose, onConfirm }) {
+function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
   const [collectionType, setCollectionType] = useState('')
   const [collectedByName, setCollectedByName] = useState('')
   const [note, setNote] = useState('')
@@ -401,10 +407,10 @@ function SignOutSheet({ child, onClose, onConfirm }) {
         )}
         <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Collection note (optional)" style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, minHeight: 44, marginBottom: 10 }} />
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, fontSize: 12.5, color: '#374151' }}>
-          <input type="checkbox" checked={identityChecked} onChange={e => setIdentityChecked(e.target.checked)} /> Identity checked
+          <input type="checkbox" checked={identityChecked} onChange={e => setIdentityChecked(e.target.checked)} /> Identity checked{identityCheckRequired && ' *'}
         </label>
         <button onClick={() => onConfirm({ collection_type: collectionType || 'other', collected_by_name: collectedByName, collection_note: note, identity_checked: identityChecked })}
-          disabled={!collectionType} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: !collectionType ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: !collectionType ? 'not-allowed' : 'pointer' }}>
+          disabled={!collectionType || (identityCheckRequired && !identityChecked)} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: (!collectionType || (identityCheckRequired && !identityChecked)) ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: (!collectionType || (identityCheckRequired && !identityChecked)) ? 'not-allowed' : 'pointer' }}>
           Confirm Sign Out
         </button>
       </div>
