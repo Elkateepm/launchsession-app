@@ -41,7 +41,8 @@ export default async function handler(req, res) {
       { src: icon, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
     ],
     start_url: slug ? `/?org=${encodeURIComponent(slug)}` : '/',
-    display: 'fullscreen',
+    display: 'standalone',
+    display_override: ['fullscreen', 'standalone', 'minimal-ui', 'browser'],
     theme_color: themeColor,
     background_color: '#06091A',
   }
