@@ -514,7 +514,16 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   }
 
   const handleRaiseSafeguardingConcern = async (child, summary) => {
-    await supabase.from('safeguarding_concerns').insert({ org_id: orgId, child_id: child?.id || null, reported_by: authUserId, category: 'other', severity: 'medium', summary, status: 'open' })
+    const { data: profile } = await supabase.from('user_profiles').select('full_name').eq('id', authUserId).maybeSingle()
+    const childName = child ? `${child.first_name} ${child.last_name}`.trim() : null
+    await supabase.from('cause_for_concern').insert({
+      org_id: orgId, submitted_by: authUserId, submitter_name: profile?.full_name || 'Team member',
+      child_name: childName, concern_type: 'other', description: summary,
+      date_of_incident: new Date().toISOString().slice(0, 10),
+      location: activeSession?.location || 'Not specified',
+      session_id: activeSession?.id || null,
+      status: 'open', priority: 'medium',
+    })
     showRegToast('Safeguarding concern raised — complete details in Safeguarding.')
     if (onNavigate) onNavigate('safeguarding')
   }
@@ -1401,7 +1410,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     ] = await Promise.all([
       supabase.from("sessions").select("*").eq("org_id", orgId).order("session_date", { ascending: true }).order("start_time", { ascending: true }),
       supabase.from("attendance").select("*").eq("org_id", orgId),
-      supabase.from("safeguarding_concerns").select("*").eq("org_id", orgId).eq("status", "open"),
+      supabase.from("cause_for_concern").select("*").eq("org_id", orgId).eq("status", "open"),
       supabase.from("children").select("*").eq("org_id", orgId).eq("active", true).order("first_name", { ascending: true }),
       supabase.from("session_reflections").select("*").eq("org_id", orgId),
       supabase.from("volunteers").select("id").eq("org_id", orgId),
@@ -1427,7 +1436,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   // Live updates: Realtime on desktop/Android, polling fallback on iOS (WebKit crash risk)
   useRealtimeTable("attendance", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
   useRealtimeTable("sessions", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
-  useRealtimeTable("safeguarding_concerns", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
+  useRealtimeTable("cause_for_concern", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
   useRealtimeTable("children", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
   useRealtimeTable("organisations", loadHub, { filter: orgId ? `id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 5000 });
   useRealtimeTable("session_reflections", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 5000 });
@@ -1501,7 +1510,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const todaySessionIds = useMemo(() => new Set(todaySessions.map(s => s.id)), [todaySessions]);
   const todayAttendance = useMemo(() => attendance.filter(a => todaySessionIds.has(a.session_id)), [attendance, todaySessionIds]);
   const signedIn = todayAttendance.filter(a => a.status === "signed_in").length;
-  const medicalAlerts = children.filter(c => c.allergies || c.medical_notes).length;
+  const medicalAlerts = children.filter(c => c.allergies || c.medical_notes || c.has_medication || c.has_asthma || c.has_epipen || c.has_diabetes).length;
   const attendanceRate = children.length > 0 ? Math.round((signedIn / children.length) * 100) : 0;
   const strictlyTodaySessions = useMemo(() => todaySessions.filter(s => s.session_date === today), [todaySessions, today]);
   const sessionsEndedToday = useMemo(() => {

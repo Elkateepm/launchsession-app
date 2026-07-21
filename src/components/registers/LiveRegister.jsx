@@ -184,7 +184,16 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
   }
 
   const handleRaiseSafeguardingConcern = async (child, summary) => {
-    await supabase.from('safeguarding_concerns').insert({ org_id: org.id, child_id: child?.id || null, reported_by: authUserId, category: 'other', severity: 'medium', summary, status: 'open' })
+    const { data: profile } = await supabase.from('user_profiles').select('full_name').eq('id', authUserId).maybeSingle()
+    const childName = child ? `${child.first_name} ${child.last_name}`.trim() : null
+    await supabase.from('cause_for_concern').insert({
+      org_id: org.id, submitted_by: authUserId, submitter_name: profile?.full_name || 'Team member',
+      child_name: childName, concern_type: 'other', description: summary,
+      date_of_incident: new Date().toISOString().slice(0, 10),
+      location: session?.location || 'Not specified',
+      session_id: session?.id || null,
+      status: 'open', priority: 'medium',
+    })
     showToast('Safeguarding concern raised — complete details in Safeguarding.')
     if (onNavigate) onNavigate('safeguarding')
   }
