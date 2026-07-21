@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     const { data: form, error: formErr } = await adminClient.from('org_forms').select('id, name, description, org_id').eq('id', form_id).eq('org_id', profile.org_id).maybeSingle()
     if (formErr || !form) return res.status(404).json({ error: 'Form not found for your organisation' })
 
-    const { data: org, error: orgErr } = await adminClient.from('organisations').select('name, slug, primary_color, logo_url, email_logo_url, email_footer_text, email_sender_name, contact_email').eq('id', profile.org_id).maybeSingle()
+    const { data: org, error: orgErr } = await adminClient.from('organisations').select('name, slug, primary_color, secondary_color, logo_url, email_logo_url, email_footer_text, email_sender_name, contact_email').eq('id', profile.org_id).maybeSingle()
     if (orgErr || !org?.slug) return res.status(404).json({ error: 'Organisation not found' })
 
     const formUrl = `https://app.launchsession.co.uk/forms/${org.slug}/${form.id}`
@@ -49,6 +49,7 @@ export default async function handler(req, res) {
           email,
           org_name: org.name,
           org_color: org.primary_color,
+          org_color2: org.secondary_color,
           org_logo: org.email_logo_url || org.logo_url,
           org_sender_name: org.email_sender_name,
           org_footer_text: org.email_footer_text,
