@@ -876,8 +876,9 @@ export default function Forms({ org, session, isAdmin }) {
   }
 
   const deleteForm = async (form) => {
-    if (!window.confirm(`Delete "${form.name}"? All submissions will be lost.`)) return
-    await supabase.from('org_forms').delete().eq('id', form.id)
+    if (!window.confirm(`Delete "${form.name}"? All submissions will be lost, and it will be detached from any sessions it's linked to.`)) return
+    const { error } = await supabase.from('org_forms').delete().eq('id', form.id)
+    if (error) { window.alert('Could not delete this form: ' + error.message); return }
     setForms(f => f.filter(x => x.id !== form.id))
   }
 
