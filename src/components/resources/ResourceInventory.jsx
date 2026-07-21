@@ -3,15 +3,20 @@ import { CATEGORIES } from '../../lib/resourceHelpers'
 import ResourceCard from './ResourceCard'
 import ResourceEmptyState from './ResourceEmptyState'
 
-export default function ResourceInventory({ resources, bookings, onBook, onOpen, onQuickAction, onAddResource }) {
+export default function ResourceInventory({ resources, bookings, venues, onBook, onOpen, onQuickAction, onAddResource }) {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('all')
   const [availability, setAvailability] = useState('all')
   const [location, setLocation] = useState('all')
+  const [venueId, setVenueId] = useState('all')
   const [view, setView] = useState('grid')
   const [sort, setSort] = useState('name')
 
-  const locations = useMemo(() => [...new Set(resources.map(r => r.location).filter(Boolean))], [resources])
+  // Resources at a saved venue are filtered by venue_id; ad-hoc resources (no venue_id)
+  // still fall back to the free-text location filter.
+  const usedVenueIds = useMemo(() => new Set(resources.map(r => r.venue_id).filter(Boolean)), [resources])
+  const venueOptions = useMemo(() => (venues || []).filter(v => usedVenueIds.has(v.id)), [venues, usedVenueIds])
+  const locations = useMemo(() => [...new Set(resources.filter(r => !r.venue_id).map(r => r.location).filter(Boolean))], [resources])
 
   const filtered = useMemo(() => {
     let list = resources.filter(r => !r.archived_at)
@@ -21,12 +26,13 @@ export default function ResourceInventory({ resources, bookings, onBook, onOpen,
     }
     if (category !== 'all') list = list.filter(r => r.category === category)
     if (availability !== 'all') list = list.filter(r => r.status === availability)
+    if (venueId !== 'all') list = list.filter(r => r.venue_id === venueId)
     if (location !== 'all') list = list.filter(r => r.location === location)
     if (sort === 'name') list = [...list].sort((a, b) => a.name.localeCompare(b.name))
     if (sort === 'category') list = [...list].sort((a, b) => a.category.localeCompare(b.category))
     if (sort === 'status') list = [...list].sort((a, b) => a.status.localeCompare(b.status))
     return list
-  }, [resources, search, category, availability, location, sort])
+  }, [resources, search, category, availability, venueId, location, sort])
 
   const nextBookingFor = (resourceId) => {
     const now = Date.now()
@@ -53,9 +59,15 @@ export default function ResourceInventory({ resources, bookings, onBook, onOpen,
           <option value="maintenance">Maintenance</option>
           <option value="unavailable">Unavailable</option>
         </select>
+        {venueOptions.length > 0 && (
+          <select value={venueId} onChange={e => setVenueId(e.target.value)} style={selStyle}>
+            <option value="all">All venues</option>
+            {venueOptions.map(v => <option key={v.id} value={v.id}>📍 {v.name}</option>)}
+          </select>
+        )}
         {locations.length > 0 && (
           <select value={location} onChange={e => setLocation(e.target.value)} style={selStyle}>
-            <option value="all">All locations</option>
+            <option value="all">All other locations</option>
             {locations.map(l => <option key={l} value={l}>{l}</option>)}
           </select>
         )}

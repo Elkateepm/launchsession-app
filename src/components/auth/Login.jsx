@@ -99,7 +99,7 @@ export default function Login({ org }) {
 
           {step === STEPS.EMAIL && (
             <div>
-              <button onClick={() => { try { localStorage.removeItem('launchsession_org_slug') } catch (e) {}; window.location.href = '/' }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, padding: 0 }}>← Back</button>
+              <button onClick={() => { try { localStorage.removeItem('launchsession_org_slug') } catch (e) {}; window.location.href = '/org-search' }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, padding: 0 }}>← Back</button>
               <div style={{ marginBottom: 28 }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Sign in to {orgName}</div>
                 <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)' }}>Your organisation workspace</div>

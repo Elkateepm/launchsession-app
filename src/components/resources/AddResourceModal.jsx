@@ -17,10 +17,12 @@ function Toggle({ checked, onChange, label: text }) {
   )
 }
 
-export default function AddResourceModal({ org, staff, existingResource, onClose, onSaved }) {
+export default function AddResourceModal({ org, staff, venues, existingResource, onClose, onSaved }) {
   const r = existingResource
+  const activeVenues = (venues || []).filter(v => v.is_active)
   const [form, setForm] = useState({
     name: r?.name || '', category: r?.category || 'room', description: r?.description || '', location: r?.location || '',
+    venue_id: r?.venue_id || null,
     quantity_total: r?.quantity_total ?? 1, capacity: r?.capacity || '', reference_number: r?.reference_number || '',
     requires_approval: r?.requires_approval || false, allows_checkout: r?.allows_checkout || false,
     booking_limit_minutes: r?.booking_limit_minutes || '', buffer_minutes: r?.buffer_minutes || 0,
@@ -28,6 +30,7 @@ export default function AddResourceModal({ org, staff, existingResource, onClose
     low_stock_threshold: r?.low_stock_threshold || '', notes: r?.notes || '',
     metadata: r?.metadata || {},
   })
+  const [useCustomLocation, setUseCustomLocation] = useState((!r?.venue_id && !!r?.location) || activeVenues.length === 0)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -38,7 +41,7 @@ export default function AddResourceModal({ org, staff, existingResource, onClose
     setSaving(true); setError('')
     const payload = {
       org_id: org.id, name: form.name.trim(), category: form.category, description: form.description || null,
-      location: form.location || null, quantity_total: Number(form.quantity_total) || 1,
+      location: form.location || null, venue_id: form.venue_id || null, quantity_total: Number(form.quantity_total) || 1,
       quantity_available: r ? r.quantity_available : (Number(form.quantity_total) || 1),
       capacity: form.capacity ? Number(form.capacity) : null, reference_number: form.reference_number || null,
       requires_approval: form.requires_approval, allows_checkout: form.allows_checkout,
@@ -87,7 +90,31 @@ export default function AddResourceModal({ org, staff, existingResource, onClose
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ ...field, flex: 1 }}>
             <label style={label}>Location</label>
-            <input style={inp} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="e.g. Main Depot" />
+            {activeVenues.length > 0 && !useCustomLocation ? (
+              <>
+                <select style={inp} value={form.venue_id || ''} onChange={e => {
+                  const v = activeVenues.find(x => x.id === e.target.value)
+                  setForm(f => ({ ...f, venue_id: e.target.value || null, location: v ? v.name : '' }))
+                }}>
+                  <option value="">— Select a venue —</option>
+                  {activeVenues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                </select>
+                <button type="button" onClick={() => { setUseCustomLocation(true); setForm(f => ({ ...f, venue_id: null })) }}
+                  style={{ background: 'none', border: 'none', padding: '5px 0 0', fontSize: 11, fontWeight: 700, color: '#7C3AED', cursor: 'pointer' }}>
+                  Use a one-off location instead
+                </button>
+              </>
+            ) : (
+              <>
+                <input style={inp} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="e.g. Main Depot" />
+                {activeVenues.length > 0 && (
+                  <button type="button" onClick={() => setUseCustomLocation(false)}
+                    style={{ background: 'none', border: 'none', padding: '5px 0 0', fontSize: 11, fontWeight: 700, color: '#7C3AED', cursor: 'pointer' }}>
+                    Choose a saved venue instead
+                  </button>
+                )}
+              </>
+            )}
           </div>
           <div style={{ ...field, flex: 1 }}>
             <label style={label}>Reference / asset no.</label>

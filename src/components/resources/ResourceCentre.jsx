@@ -26,6 +26,7 @@ export default function ResourceCentre({ org, session: authSession }) {
   const [checkouts, setCheckouts] = useState([])
   const [sessions, setSessions] = useState([])
   const [staff, setStaff] = useState([])
+  const [venues, setVenues] = useState([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('overview')
   const [detailsResource, setDetailsResource] = useState(null)
@@ -35,18 +36,20 @@ export default function ResourceCentre({ org, session: authSession }) {
 
   const load = useCallback(async () => {
     if (!org?.id) return
-    const [{ data: res }, { data: book }, { data: co }, { data: sess }, { data: st }] = await Promise.all([
+    const [{ data: res }, { data: book }, { data: co }, { data: sess }, { data: st }, { data: vs }] = await Promise.all([
       supabase.from('resources').select('*').eq('org_id', org.id).order('name'),
       supabase.from('resource_bookings').select('*').eq('org_id', org.id).order('start_time'),
       supabase.from('resource_checkouts').select('*').eq('org_id', org.id).order('checked_out_at', { ascending: false }),
-      supabase.from('sessions').select('id, title, session_date').eq('org_id', org.id).order('session_date', { ascending: false }).limit(100),
+      supabase.from('sessions').select('id, title, session_date, venue_id').eq('org_id', org.id).order('session_date', { ascending: false }).limit(100),
       supabase.from('user_profiles').select('id, full_name').eq('org_id', org.id).in('role', ['admin', 'staff', 'volunteer']),
+      supabase.from('venues').select('*').eq('org_id', org.id).order('name'),
     ])
     setResources(res || [])
     setBookings(book || [])
     setCheckouts(co || [])
     setSessions(sess || [])
     setStaff(st || [])
+    setVenues(vs || [])
     setLoading(false)
   }, [org?.id])
 
@@ -123,11 +126,11 @@ export default function ResourceCentre({ org, session: authSession }) {
       {tab === 'overview' && (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.8fr 1fr', gap: 18, alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18, order: isMobile ? 2 : 1 }}>
-            <ResourceInventory resources={activeResources} bookings={bookings} onBook={handleBook} onOpen={setDetailsResource} onQuickAction={handleQuickAction} onAddResource={() => setShowAddModal(true)} />
+            <ResourceInventory resources={activeResources} bookings={bookings} venues={venues} onBook={handleBook} onOpen={setDetailsResource} onQuickAction={handleQuickAction} onAddResource={() => setShowAddModal(true)} />
             <UpcomingBookings bookings={bookings} resources={resources} sessions={sessions} staff={staff} onChanged={load} onViewCalendar={() => setTab('calendar')} onViewAll={() => setTab('calendar')} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18, order: isMobile ? 1 : 2, position: isMobile ? 'static' : 'sticky', top: 16 }} id="quick-booking-panel">
-            <QuickBookingPanel org={org} resources={activeResources} bookings={bookings} sessions={sessions} staff={staff} authUserId={authUserId} presetResourceId={presetBookingResourceId} onBooked={load} />
+            <QuickBookingPanel org={org} resources={activeResources} bookings={bookings} sessions={sessions} staff={staff} venues={venues} authUserId={authUserId} presetResourceId={presetBookingResourceId} onBooked={load} />
             <InventoryAlerts resources={resources} checkouts={checkouts} bookings={bookings}
               onViewStock={r => setDetailsResource(r)} onViewBooking={() => setTab('checkinout')} onViewAll={() => setTab('inventory')} />
           </div>
@@ -156,7 +159,7 @@ export default function ResourceCentre({ org, session: authSession }) {
       )}
 
       {(showAddModal || editResource) && (
-        <AddResourceModal org={org} staff={staff} existingResource={editResource} onClose={() => { setShowAddModal(false); setEditResource(null) }} onSaved={() => { setShowAddModal(false); setEditResource(null); load() }} />
+        <AddResourceModal org={org} staff={staff} venues={venues} existingResource={editResource} onClose={() => { setShowAddModal(false); setEditResource(null) }} onSaved={() => { setShowAddModal(false); setEditResource(null); load() }} />
       )}
     </div>
   )

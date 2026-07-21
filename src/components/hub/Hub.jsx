@@ -295,6 +295,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const [localAttendance, setLocalAttendance] = useState(attendance)
   const [bubbleFilter, setBubbleFilter] = useState('all')
   const [linkedRA, setLinkedRA] = useState(undefined) // undefined = loading, null = none, object = found
+  const [showRAPicker, setShowRAPicker] = useState(false)
+  const [raOptions, setRaOptions] = useState([])
+  const [raPickerSearch, setRaPickerSearch] = useState('')
+  const [raPickerBusy, setRaPickerBusy] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoToast, setPhotoToast] = useState('')
   const photoInputRef = React.useRef(null)
@@ -338,14 +342,49 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   const loadLinkedRA = React.useCallback(() => {
     if (!activeSession?.id) { setLinkedRA(null); return }
-    supabase.from('risk_assessment_sessions').select('risk_assessments(id, title, risk_rating, status)').eq('session_id', activeSession.id).limit(1)
-      .then(({ data }) => setLinkedRA(data && data.length > 0 ? data[0].risk_assessments : null))
+    supabase.from('risk_assessment_sessions').select('risk_assessments(id, name, risk_rating, status)').eq('session_id', activeSession.id).limit(1)
+      .then(({ data, error }) => {
+        if (error) { setLinkedRA(null); return }
+        setLinkedRA(data && data.length > 0 ? data[0].risk_assessments : null)
+      })
       .catch(() => setLinkedRA(null))
   }, [activeSession?.id])
 
   React.useEffect(() => { setLinkedRA(undefined); loadLinkedRA() }, [loadLinkedRA])
   useRealtimeTable('risk_assessment_sessions', loadLinkedRA, { filter: activeSession?.id ? `session_id=eq.${activeSession.id}` : undefined, enabled: !!activeSession?.id, pollInterval: 5000 })
   useRealtimeTable('risk_assessments', loadLinkedRA, { filter: linkedRA?.id ? `id=eq.${linkedRA.id}` : undefined, enabled: !!linkedRA?.id, pollInterval: 5000 })
+
+  const openRAPicker = async () => {
+    setShowRAPicker(true)
+    setRaPickerSearch('')
+    const { data } = await supabase.from('risk_assessments').select('id, name, activity_type, risk_rating, status')
+      .eq('org_id', orgId).eq('archived', false).eq('is_template', false).order('name').limit(50)
+    setRaOptions(data || [])
+  }
+
+  const attachExistingRA = async (a) => {
+    setRaPickerBusy(true)
+    await supabase.from('risk_assessment_sessions').insert({ assessment_id: a.id, session_id: activeSession.id, org_id: orgId })
+    await supabase.from('risk_assessment_audit').insert({ assessment_id: a.id, org_id: orgId, action: 'attached', detail: `Attached to session "${activeSession.title}"`, actor_id: authUserId })
+    setRaPickerBusy(false)
+    setShowRAPicker(false)
+    loadLinkedRA()
+  }
+
+  const createAndAttachRA = async () => {
+    setRaPickerBusy(true)
+    const { data: ra, error } = await supabase.from('risk_assessments').insert({
+      org_id: orgId, name: activeSession.title?.trim() || 'Untitled Session', status: 'draft',
+      location: activeSession.location || null, venue_id: activeSession.venue_id || null,
+      created_by: authUserId,
+    }).select().single()
+    if (error) { setRaPickerBusy(false); return }
+    await supabase.from('risk_assessment_sessions').insert({ assessment_id: ra.id, session_id: activeSession.id, org_id: orgId })
+    await supabase.from('risk_assessment_audit').insert({ assessment_id: ra.id, org_id: orgId, action: 'created', detail: `Created for session "${activeSession.title}"`, actor_id: authUserId })
+    setRaPickerBusy(false)
+    setShowRAPicker(false)
+    loadLinkedRA()
+  }
 
   const sessionAttendance = localAttendance.filter(a => a.session_id === activeSession?.id)
 
@@ -640,7 +679,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             <button onClick={() => onNavigate && onNavigate('risk_assessments', { openAssessmentId: linkedRA.id })}
               style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 99, padding: '5px 12px 5px 10px', cursor: 'pointer' }}>
               <span style={{ fontSize: 12 }}>🛡️</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{linkedRA.title}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{linkedRA.name}</span>
               <span style={{
                 fontSize: 9.5, fontWeight: 900, letterSpacing: 0.4, textTransform: 'uppercase', borderRadius: 99, padding: '2px 8px',
                 background: RA_RATING_COLORS[linkedRA.risk_rating]?.bg || 'rgba(148,163,184,0.16)',
@@ -649,10 +688,12 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
               <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>View →</span>
             </button>
           ) : (
-            <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.18)', borderRadius: 99, padding: '5px 12px' }}>
+            <button onClick={openRAPicker}
+              style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.18)', borderRadius: 99, padding: '5px 12px', cursor: 'pointer' }}>
               <span style={{ fontSize: 12 }}>🛡️</span>
               <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>No risk assessment attached</span>
-            </div>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.75)' }}>+ Attach</span>
+            </button>
           )}
         </div>
 
@@ -919,6 +960,50 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       {showClosure && (
         <HubClosureFlow grouped={regGrouped} onClose={() => setShowClosure(false)} onMarkAllAbsent={handleMarkAllRemainingAbsent} onCloseRegister={handleCloseRegister} primary={primary} secondary={secondary} />
       )}
+      {showRAPicker && (
+        <HubRAPicker
+          options={raOptions} search={raPickerSearch} onSearchChange={setRaPickerSearch} busy={raPickerBusy}
+          onAttach={attachExistingRA} onCreate={createAndAttachRA} onClose={() => setShowRAPicker(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+function HubRAPicker({ options, search, onSearchChange, busy, onAttach, onCreate, onClose }) {
+  const filtered = options.filter(o => !search.trim() || o.name.toLowerCase().includes(search.toLowerCase()))
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, width: '100%', maxWidth: 420, padding: 20, boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>🛡️ Attach Risk Assessment</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>✕</button>
+        </div>
+        <button onClick={onCreate} disabled={busy} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 14, opacity: busy ? 0.6 : 1 }}>
+          {busy ? 'Working…' : '+ Create new for this session'}
+        </button>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Or attach existing</div>
+        <input autoFocus value={search} onChange={e => onSearchChange(e.target.value)} placeholder="Search risk assessments…"
+          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', marginBottom: 10 }} />
+        <div style={{ maxHeight: 220, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 14, color: 'rgba(255,255,255,0.4)', fontSize: 12.5 }}>No assessments found.</div>
+          ) : filtered.map(a => (
+            <button key={a.id} onClick={() => onAttach(a)} disabled={busy}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', cursor: busy ? 'default' : 'pointer', textAlign: 'left' }}>
+              <span style={{ fontSize: 13 }}>🛡️</span>
+              <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</span>
+              {a.risk_rating && (
+                <span style={{
+                  fontSize: 9.5, fontWeight: 900, letterSpacing: 0.4, textTransform: 'uppercase', borderRadius: 99, padding: '2px 8px',
+                  background: RA_RATING_COLORS[a.risk_rating]?.bg || 'rgba(148,163,184,0.16)',
+                  color: RA_RATING_COLORS[a.risk_rating]?.color || '#CBD5E1',
+                }}>{a.risk_rating}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

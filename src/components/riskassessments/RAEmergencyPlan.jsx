@@ -14,11 +14,15 @@ const FIELDS = [
   ['weather_contingency', '🌧️ Weather Contingency', 'Plan for adverse weather'],
 ]
 
-export default function RAEmergencyPlan({ assessment, org }) {
+export default function RAEmergencyPlan({ assessment, org, venues }) {
   const primary = org?.primary_color || '#7C5CFC'
   const [form, setForm] = useState({})
   const [savingKey, setSavingKey] = useState(null)
   const timers = useRef({})
+
+  const venue = assessment.venue_id ? (venues || []).find(v => v.id === assessment.venue_id) : null
+  const VENUE_SOURCE = { meeting_point: 'default_meeting_point', nearest_hospital: 'nearest_hospital', defibrillator_location: 'defibrillator_location' }
+  const fillableFromVenue = venue ? Object.entries(VENUE_SOURCE).filter(([localKey, venueKey]) => venue[venueKey] && !form[localKey]) : []
 
   useEffect(() => {
     const init = {}
@@ -36,8 +40,18 @@ export default function RAEmergencyPlan({ assessment, org }) {
     }, 600)
   }
 
+  const fillFromVenue = () => {
+    fillableFromVenue.forEach(([localKey, venueKey]) => save(localKey, venue[venueKey]))
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {venue && fillableFromVenue.length > 0 && (
+        <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, color: '#166534', fontWeight: 700, flex: 1 }}>📍 {venue.name} has {fillableFromVenue.length} emergency detail(s) on file</span>
+          <button onClick={fillFromVenue} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Fill from venue</button>
+        </div>
+      )}
       {FIELDS.map(([key, label, hint]) => (
         <div key={key}>
           <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>

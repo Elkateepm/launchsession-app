@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { findConflict, suggestNextSlot, fmtDate, fmtTime } from '../../lib/resourceHelpers'
 
-export default function QuickBookingPanel({ org, resources, bookings, sessions, staff, authUserId, presetResourceId, onBooked }) {
+export default function QuickBookingPanel({ org, resources, bookings, sessions, staff, venues, authUserId, presetResourceId, onBooked }) {
   const today = new Date().toISOString().slice(0, 10)
   const [form, setForm] = useState({
     resource_id: presetResourceId || '', date: today, start_time: '09:00', end_time: '10:00',
@@ -16,6 +16,17 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
   const [error, setError] = useState('')
 
   const resource = resources.find(r => r.id === form.resource_id)
+  const linkedSession = form.session_id ? sessions.find(s => s.id === form.session_id) : null
+  const sessionVenue = linkedSession?.venue_id ? (venues || []).find(v => v.id === linkedSession.venue_id) : null
+  const sortedResources = useMemo(() => {
+    if (!sessionVenue) return resources
+    return [...resources].sort((a, b) => {
+      const aMatch = a.venue_id === sessionVenue.id ? 0 : 1
+      const bMatch = b.venue_id === sessionVenue.id ? 0 : 1
+      return aMatch - bMatch
+    })
+  }, [resources, sessionVenue])
+  const resourceVenue = resource?.venue_id ? (venues || []).find(v => v.id === resource.venue_id) : null
   const step = useMemo(() => {
     if (!form.resource_id) return 1
     if (!form.date || !form.start_time || !form.end_time) return 2
@@ -120,8 +131,15 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
       <FieldLabel>Resource *</FieldLabel>
       <select style={inp} value={form.resource_id} onChange={e => handleFieldChange({ resource_id: e.target.value })}>
         <option value="">Search resources...</option>
-        {resources.map(r => <option key={r.id} value={r.id} disabled={r.status === 'maintenance' || r.status === 'unavailable'}>{r.name} {r.status !== 'available' ? `(${r.status})` : ''}</option>)}
+        {sortedResources.map(r => (
+          <option key={r.id} value={r.id} disabled={r.status === 'maintenance' || r.status === 'unavailable'}>
+            {sessionVenue && r.venue_id === sessionVenue.id ? '📍 ' : ''}{r.name} {r.status !== 'available' ? `(${r.status})` : ''}
+          </option>
+        ))}
       </select>
+      {sessionVenue && (
+        <div style={{ fontSize: 11, color: '#7C3AED', marginTop: 4, fontWeight: 600 }}>📍 Resources at {sessionVenue.name} are shown first, to match this session's venue.</div>
+      )}
 
       <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
         <div style={{ flex: 1 }}>
@@ -175,7 +193,7 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
 
       {resource && (
         <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 8 }}>
-          📍 {resource.location || 'No location set'} {resource.requires_approval && <span style={{ color: '#D97706', fontWeight: 700 }}> · Requires approval</span>}
+          📍 {resourceVenue ? resourceVenue.name : (resource.location || 'No location set')} {resource.requires_approval && <span style={{ color: '#D97706', fontWeight: 700 }}> · Requires approval</span>}
         </div>
       )}
 

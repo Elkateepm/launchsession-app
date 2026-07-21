@@ -22,6 +22,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
 
   const [assessments, setAssessments] = useState([])
   const [staff, setStaff] = useState([])
+  const [venues, setVenues] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [selectedHazards, setSelectedHazards] = useState([])
@@ -36,12 +37,14 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
   const perPage = 10
 
   const loadAll = useCallback(async () => {
-    const [{ data: ra }, { data: st }] = await Promise.all([
+    const [{ data: ra }, { data: st }, { data: vs }] = await Promise.all([
       supabase.from('risk_assessments').select('*').eq('org_id', org.id).eq('is_template', false).order('created_at', { ascending: false }),
       supabase.from('user_profiles').select('id, full_name, role, photo_url').eq('org_id', org.id).in('role', ['admin', 'staff']),
+      supabase.from('venues').select('*').eq('org_id', org.id).order('name'),
     ])
     setAssessments(ra || [])
     setStaff(st || [])
+    setVenues(vs || [])
     setLoading(false)
   }, [org.id])
 
@@ -81,18 +84,26 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
     return data
   }
 
-  const createAssessment = async ({ name, activity_type, location, summary, hazards, template_source_id }) => {
-    const top = (hazards || []).reduce((m, h) => Math.max(m, riskScore(h.likelihood, h.severity)), 0)
+  const createAssessment = async ({ name, activity_type, location, summary, hazards, template_source_id, venue_id }) => {
+    // If a venue was picked and no hazards were supplied some other way (e.g. a template),
+    // seed the assessment with that venue's default hazards so common site-specific risks
+    // (uneven terrain, water hazards, etc.) don't have to be re-typed every time.
+    const venue = venue_id ? venues.find(v => v.id === venue_id) : null
+    const seededHazards = (!hazards || hazards.length === 0) && venue?.default_hazards?.length
+      ? venue.default_hazards.map(h => ({ ...h }))
+      : (hazards || [])
+    const top = seededHazards.reduce((m, h) => Math.max(m, riskScore(h.likelihood, h.severity)), 0)
     const { data: ra, error } = await supabase.from('risk_assessments').insert({
-      org_id: org.id, name, activity_type, location, summary, status: 'draft',
+      org_id: org.id, name, activity_type, location, summary, status: 'draft', venue_id: venue_id || null,
       risk_score: top, risk_rating: riskRating(top), created_by: authSession?.user?.id,
       template_source_id: template_source_id || null,
     }).select().single()
     if (error) { alert('Failed to create: ' + error.message); return }
-    if (hazards?.length) {
-      await supabase.from('risk_assessment_hazards').insert(hazards.map((h, i) => ({ ...h, assessment_id: ra.id, org_id: org.id, sort_order: i })))
+    if (seededHazards.length) {
+      await supabase.from('risk_assessment_hazards').insert(seededHazards.map((h, i) => ({ ...h, assessment_id: ra.id, org_id: org.id, sort_order: i })))
     }
-    await logAudit(ra.id, 'created', `Created "${name}"`)
+    const usedVenueDefaults = (!hazards || hazards.length === 0) && venue?.default_hazards?.length > 0
+    await logAudit(ra.id, 'created', usedVenueDefaults ? `Created "${name}" with ${seededHazards.length} hazard(s) from ${venue.name}` : `Created "${name}"`)
     setShowCreate(false); setShowTemplates(false)
     await loadAll()
     setSelected(ra); setTab('overview')
@@ -107,7 +118,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
   const duplicate = async (a) => {
     const { data: hz } = await supabase.from('risk_assessment_hazards').select('*').eq('assessment_id', a.id)
     await createAssessment({
-      name: `${a.name} (Copy)`, activity_type: a.activity_type, location: a.location, summary: a.summary,
+      name: `${a.name} (Copy)`, activity_type: a.activity_type, location: a.location, summary: a.summary, venue_id: a.venue_id,
       hazards: (hz || []).map(({ id, assessment_id, org_id, created_at, ...rest }) => rest),
     })
   }
@@ -369,13 +380,13 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                 </div>
               </div>
             )}
-            {tab === 'hazards' && <RAHazards assessment={selected} org={org} session={authSession} onHazardsChanged={(score, rating) => { setSelected(s => ({ ...s, risk_score: score, risk_rating: rating })); supabase.from('risk_assessment_hazards').select('*').eq('assessment_id', selected.id).order('sort_order').then(({ data }) => setSelectedHazards(data || [])) }} />}
+            {tab === 'hazards' && <RAHazards assessment={selected} org={org} session={authSession} venues={venues} onHazardsChanged={(score, rating) => { setSelected(s => ({ ...s, risk_score: score, risk_rating: rating })); supabase.from('risk_assessment_hazards').select('*').eq('assessment_id', selected.id).order('sort_order').then(({ data }) => setSelectedHazards(data || [])) }} />}
             {tab === 'matrix' && (
               <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
                 <RiskMatrix hazards={selectedHazards} />
               </div>
             )}
-            {tab === 'emergency' && <RAEmergencyPlan assessment={selected} org={org} />}
+            {tab === 'emergency' && <RAEmergencyPlan assessment={selected} org={org} venues={venues} />}
             {tab === 'attachments' && <RAAttachments assessment={selected} org={org} session={authSession} />}
             {tab === 'sessions' && <RALinkedSessions assessment={selected} org={org} session={authSession} />}
             {tab === 'reviews' && <ReviewHistory assessment={selected} org={org} staff={staff} />}
@@ -400,6 +411,12 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                 </div>
                 <div style={glass({ padding: 18 })}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Details</div>
+                  {selected.venue_id && (() => {
+                    const v = venues.find(x => x.id === selected.venue_id)
+                    return v ? (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Venue</span><span style={{ fontWeight: 700 }}>📍 {v.name}</span></div>
+                    ) : null
+                  })()}
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Created by</span><span style={{ fontWeight: 700 }}>{reviewerName(selected.created_by)}</span></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Reviewer</span><span style={{ fontWeight: 700 }}>{reviewerName(selected.assigned_reviewer_id)}</span></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Last reviewed</span><span style={{ fontWeight: 700 }}>{selected.last_reviewed_at ? new Date(selected.last_reviewed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</span></div>
@@ -471,7 +488,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
 
       {/* CREATE MODAL */}
       <AnimatePresence>
-        {showCreate && <CreateModal org={org} staff={staff} onClose={() => setShowCreate(false)} onCreate={createAssessment} primary={primary} />}
+        {showCreate && <CreateModal org={org} staff={staff} venues={venues} onClose={() => setShowCreate(false)} onCreate={createAssessment} primary={primary} />}
       </AnimatePresence>
 
       {/* TEMPLATES MODAL */}
@@ -529,11 +546,14 @@ function ReviewHistory({ assessment, org, staff }) {
 }
 
 // ── Create modal ──
-function CreateModal({ org, staff, onClose, onCreate, primary }) {
-  const [form, setForm] = useState({ name: '', activity_type: '', location: '', summary: '' })
+function CreateModal({ org, staff, venues, onClose, onCreate, primary }) {
+  const activeVenues = (venues || []).filter(v => v.is_active)
+  const [form, setForm] = useState({ name: '', activity_type: '', location: '', venue_id: null, summary: '' })
+  const [useCustomLocation, setUseCustomLocation] = useState(activeVenues.length === 0)
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const submit = async () => { if (!form.name.trim()) return; setSaving(true); await onCreate({ ...form, hazards: [] }) }
+  const selectedVenue = form.venue_id ? activeVenues.find(v => v.id === form.venue_id) : null
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
@@ -557,7 +577,36 @@ function CreateModal({ org, staff, onClose, onCreate, primary }) {
           </div>
           <div>
             <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Location</label>
-            <input style={inputStyle} value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Watford Leisure Centre" />
+            {activeVenues.length > 0 && !useCustomLocation ? (
+              <>
+                <select style={inputStyle} value={form.venue_id || ''} onChange={e => {
+                  const v = activeVenues.find(x => x.id === e.target.value)
+                  setForm(f => ({ ...f, venue_id: e.target.value || null, location: v ? v.name : '' }))
+                }}>
+                  <option value="">— Select a venue —</option>
+                  {activeVenues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                </select>
+                <button type="button" onClick={() => { setUseCustomLocation(true); setForm(f => ({ ...f, venue_id: null })) }}
+                  style={{ background: 'none', border: 'none', padding: '6px 0 0', fontSize: 11.5, fontWeight: 700, color: primary, cursor: 'pointer' }}>
+                  Use a one-off location instead
+                </button>
+                {selectedVenue?.default_hazards?.length > 0 && (
+                  <div style={{ marginTop: 6, fontSize: 11, color: '#15803D', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, padding: '6px 10px', fontWeight: 700 }}>
+                    ✓ {selectedVenue.default_hazards.length} default hazard(s) for this venue will be added automatically
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <input style={inputStyle} value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Watford Leisure Centre" />
+                {activeVenues.length > 0 && (
+                  <button type="button" onClick={() => setUseCustomLocation(false)}
+                    style={{ background: 'none', border: 'none', padding: '6px 0 0', fontSize: 11.5, fontWeight: 700, color: primary, cursor: 'pointer' }}>
+                    Choose a saved venue instead
+                  </button>
+                )}
+              </>
+            )}
           </div>
           <div>
             <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Summary</label>

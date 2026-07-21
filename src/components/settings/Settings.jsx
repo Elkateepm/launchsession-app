@@ -1650,7 +1650,7 @@ function VenuesSection({ org, isAdmin }) {
   const [error, setError] = useState('')
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  const emptyForm = { name: '', address: '', capacity: '', default_meeting_point: '', notes: '' }
+  const emptyForm = { name: '', address: '', capacity: '', default_meeting_point: '', notes: '', defibrillator_location: '', nearest_hospital: '', default_hazards: [] }
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
 
@@ -1665,7 +1665,10 @@ function VenuesSection({ org, isAdmin }) {
 
   function startAdd() { setForm(emptyForm); setEditingId(null); setAdding(true) }
   function startEdit(v) {
-    setForm({ name: v.name, address: v.address || '', capacity: v.capacity || '', default_meeting_point: v.default_meeting_point || '', notes: v.notes || '' })
+    setForm({
+      name: v.name, address: v.address || '', capacity: v.capacity || '', default_meeting_point: v.default_meeting_point || '', notes: v.notes || '',
+      defibrillator_location: v.defibrillator_location || '', nearest_hospital: v.nearest_hospital || '', default_hazards: v.default_hazards || [],
+    })
     setEditingId(v.id); setAdding(true)
   }
 
@@ -1679,6 +1682,9 @@ function VenuesSection({ org, isAdmin }) {
       capacity: form.capacity ? parseInt(form.capacity, 10) : null,
       default_meeting_point: form.default_meeting_point.trim() || null,
       notes: form.notes.trim() || null,
+      defibrillator_location: form.defibrillator_location.trim() || null,
+      nearest_hospital: form.nearest_hospital.trim() || null,
+      default_hazards: form.default_hazards.filter(h => h.hazard && h.hazard.trim()),
     }
     const { error } = editingId
       ? await supabase.from('venues').update(payload).eq('id', editingId)
@@ -1726,9 +1732,10 @@ function VenuesSection({ org, isAdmin }) {
                   {v.name} {!v.is_active && <span style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', marginLeft: 6 }}>INACTIVE</span>}
                 </div>
                 {v.address && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{v.address}</div>}
-                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4, display: 'flex', gap: 12 }}>
+                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   {v.capacity && <span>👥 Capacity {v.capacity}</span>}
                   {v.default_meeting_point && <span>📍 Meet at {v.default_meeting_point}</span>}
+                  {v.default_hazards?.length > 0 && <span>🛡️ {v.default_hazards.length} default hazard{v.default_hazards.length === 1 ? '' : 's'}</span>}
                 </div>
               </div>
               {isAdmin && (
@@ -1755,13 +1762,64 @@ function VenuesSection({ org, isAdmin }) {
               <div style={{ flex: 1 }}><Field label="Default meeting point"><input style={inp} value={form.default_meeting_point} onChange={e => setForm({ ...form, default_meeting_point: e.target.value })} placeholder="e.g. Main entrance" /></Field></div>
             </div>
             <Field label="Notes" hint="Access codes, parking, anything staff should know"><textarea style={{ ...inp, minHeight: 60, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></Field>
-            <div style={{ display: 'flex', gap: 8 }}>
+
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 8, marginBottom: 6 }}>Emergency details (used by Risk Assessments)</div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}><Field label="Nearest hospital / A&E"><input style={inp} value={form.nearest_hospital} onChange={e => setForm({ ...form, nearest_hospital: e.target.value })} placeholder="Name and address" /></Field></div>
+              <div style={{ flex: 1 }}><Field label="Defibrillator location"><input style={inp} value={form.defibrillator_location} onChange={e => setForm({ ...form, defibrillator_location: e.target.value })} placeholder="e.g. Main reception" /></Field></div>
+            </div>
+
+            <VenueDefaultHazardsEditor hazards={form.default_hazards} onChange={h => setForm(f => ({ ...f, default_hazards: h }))} />
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
               <button onClick={handleSave} disabled={saving} style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: '#1B9AAA', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Add Venue')}</button>
               <button onClick={() => { setAdding(false); setEditingId(null); setError('') }} style={{ padding: '9px 18px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         )}
       </SettingCard>
+    </div>
+  )
+}
+
+// Lightweight repeatable list for a venue's default hazards — these get offered
+// (and can auto-seed) whenever this venue is picked on a new Risk Assessment.
+function VenueDefaultHazardsEditor({ hazards, onChange }) {
+  const add = () => onChange([...(hazards || []), { hazard: '', who_at_risk: '', likelihood: 2, severity: 2, control_measures: '' }])
+  const update = (i, patch) => onChange(hazards.map((h, idx) => idx === i ? { ...h, ...patch } : h))
+  const remove = (i) => onChange(hazards.filter((_, idx) => idx !== i))
+  const smallInp = { ...inp, padding: '7px 9px', fontSize: 12.5 }
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Default hazards for this venue</div>
+      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>Added automatically (or offered) whenever a Risk Assessment is created for this venue — e.g. water hazards, uneven terrain.</div>
+      {(hazards || []).length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+          {hazards.map((h, i) => (
+            <div key={i} style={{ background: '#F8FAFC', border: '1px solid var(--border)', borderRadius: 9, padding: 10 }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                <input style={{ ...smallInp, flex: 1 }} value={h.hazard} onChange={e => update(i, { hazard: e.target.value })} placeholder="e.g. Slips on wet flooring" />
+                <button onClick={() => remove(i)} style={{ padding: '0 10px', borderRadius: 7, border: '1px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+              </div>
+              <input style={{ ...smallInp, width: '100%', boxSizing: 'border-box', marginBottom: 6 }} value={h.control_measures || ''} onChange={e => update(i, { control_measures: e.target.value })} placeholder="Control measures" />
+              <div style={{ display: 'flex', gap: 12 }}>
+                <label style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 6 }}>Likelihood
+                  <select style={{ ...smallInp, width: 50 }} value={h.likelihood || 2} onChange={e => update(i, { likelihood: Number(e.target.value) })}>
+                    {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </label>
+                <label style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 6 }}>Severity
+                  <select style={{ ...smallInp, width: 50 }} value={h.severity || 2} onChange={e => update(i, { severity: Number(e.target.value) })}>
+                    {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </label>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <button type="button" onClick={add} style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px dashed var(--border)', background: 'none', fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>+ Add default hazard</button>
     </div>
   )
 }

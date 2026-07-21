@@ -4,11 +4,15 @@ import { supabase } from '../../lib/supabase'
 import { btnPrimary, btnGhost } from '../volunteers/vh_shared'
 import { riskScore, riskRating, RatingBadge, RiskMatrix, LIKELIHOOD_LABELS, SEVERITY_LABELS } from './ra_shared'
 
-export default function RAHazards({ assessment, org, session: authSession, onHazardsChanged }) {
+export default function RAHazards({ assessment, org, session: authSession, venues, onHazardsChanged }) {
   const primary = org?.primary_color || '#7C5CFC'
   const [hazards, setHazards] = useState([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(null)
+  const [addingDefaults, setAddingDefaults] = useState(false)
+
+  const venue = assessment.venue_id ? (venues || []).find(v => v.id === assessment.venue_id) : null
+  const availableDefaults = (venue?.default_hazards || []).filter(dh => !hazards.some(h => h.hazard === dh.hazard))
 
   const load = useCallback(async () => {
     const { data } = await supabase.from('risk_assessment_hazards').select('*').eq('assessment_id', assessment.id).order('sort_order').order('created_at')
@@ -30,6 +34,19 @@ export default function RAHazards({ assessment, org, session: authSession, onHaz
       likelihood: 2, severity: 2, residual_likelihood: 1, residual_severity: 2, sort_order: hazards.length,
     }).select().single()
     if (data) { const next = [...hazards, data]; setHazards(next); setExpanded(data.id); recalcAssessment(next) }
+  }
+
+  const addVenueDefaults = async () => {
+    if (!availableDefaults.length) return
+    setAddingDefaults(true)
+    const rows = availableDefaults.map((h, i) => ({
+      hazard: h.hazard, who_at_risk: h.who_at_risk || '', likelihood: h.likelihood || 2, severity: h.severity || 2,
+      control_measures: h.control_measures || '', residual_likelihood: h.residual_likelihood || 1, residual_severity: h.residual_severity || 2,
+      owner: h.owner || '', assessment_id: assessment.id, org_id: org.id, sort_order: hazards.length + i,
+    }))
+    const { data } = await supabase.from('risk_assessment_hazards').insert(rows).select()
+    if (data) { const next = [...hazards, ...data]; setHazards(next); recalcAssessment(next) }
+    setAddingDefaults(false)
   }
 
   // debounced field save
@@ -142,6 +159,14 @@ export default function RAHazards({ assessment, org, session: authSession, onHaz
             )
           })}
         </AnimatePresence>
+      )}
+      {availableDefaults.length > 0 && (
+        <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: 12, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, color: '#166534', fontWeight: 700, flex: 1 }}>📍 {venue.name} has {availableDefaults.length} default hazard(s) not yet on this assessment</span>
+          <button onClick={addVenueDefaults} disabled={addingDefaults} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            {addingDefaults ? 'Adding…' : `+ Add ${availableDefaults.length} from venue`}
+          </button>
+        </div>
       )}
       <button onClick={addHazard} style={btnPrimary(primary)}>+ Add Hazard</button>
     </div>
