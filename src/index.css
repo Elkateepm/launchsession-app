@@ -1,10 +1,28 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body, #root {
+/* html/body stay pinned at exactly one viewport - this is what stops iOS's
+   rubber-band bounce and pull-to-refresh from fighting the app's own UI.
+   #root is the one that actually scrolls: most pages build their own
+   internal scroll container (header/nav pinned, middle section scrolls),
+   which is unaffected by this since it never needs the fallback. But if
+   any page's content is taller than the viewport and doesn't set up its
+   own scroll container, #root scrolling is what stops it from being
+   silently clipped and unreachable - a safety net, not the primary
+   scroll mechanism. */
+html, body {
   width: 100%;
   height: 100%;
   height: 100dvh;
   overflow: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
