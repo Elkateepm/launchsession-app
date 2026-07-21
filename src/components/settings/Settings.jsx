@@ -577,6 +577,7 @@ function BrandingSection({ org, refreshOrg }) {
   const [uiDensity, setUiDensity] = useState(org?.ui_density || 'rounded')
   const [welcomeMessage, setWelcomeMessage] = useState(org?.welcome_message || '')
   const [emailFooterText, setEmailFooterText] = useState(org?.email_footer_text || '')
+  const [emailSenderName, setEmailSenderName] = useState(org?.email_sender_name || '')
   const [recentColors, setRecentColors] = useState(org?.recent_colors || [])
 
   const [logoPreview, setLogoPreview] = useState(org?.logo_url || '')
@@ -625,7 +626,7 @@ function BrandingSection({ org, refreshOrg }) {
   const savedSnapshot = useRef(null)
   const currentSnapshot = () => JSON.stringify({
     name, slogan, color, secondaryColor, accentColor, uiDensity,
-    welcomeMessage, emailFooterText,
+    welcomeMessage, emailFooterText, emailSenderName,
     logoPreview, iconPreview, loginBgPreview, emailLogoPreview, logoTransform, iconTransform,
   })
   useEffect(() => {
@@ -703,7 +704,7 @@ function BrandingSection({ org, refreshOrg }) {
       ui_density: uiDensity,
       slogan, logo_url: logoUrl, icon_url: iconUrl, logo_transform: logoTransform, icon_transform: iconTransform,
       login_background_url: loginBgUrl, welcome_message: welcomeMessage,
-      email_logo_url: emailLogoUrl, email_footer_text: emailFooterText, recent_colors: recentColors,
+      email_logo_url: emailLogoUrl, email_footer_text: emailFooterText, email_sender_name: emailSenderName, recent_colors: recentColors,
     }).eq('id', org?.id)
 
     if (error) {
@@ -951,6 +952,9 @@ function BrandingSection({ org, refreshOrg }) {
                 </div>
               </div>
             </div>
+            <Field label="Email sender name" hint="Shown as the sender when we email people on your behalf (e.g. form invites). Defaults to your organisation name.">
+              <input style={inp} value={emailSenderName} onChange={e => setEmailSenderName(e.target.value.slice(0, 60))} placeholder={name || 'e.g. Solidarity Sports'} maxLength={60} />
+            </Field>
             <Field label="Email footer text" hint={`${emailFooterText.length}/80`}>
               <textarea style={{ ...inp, minHeight: 60, resize: 'vertical' }} value={emailFooterText} onChange={e => setEmailFooterText(e.target.value.slice(0, 80))} placeholder="e.g. Solidarity Sports · Registered Charity No. 123456" maxLength={80} />
             </Field>
