@@ -119,9 +119,26 @@ function AuthedApp({ session, org, onReady }) {
   return <Dashboard session={session} org={org} />
 }
 
+// True when running as an installed home-screen app (iOS Safari's
+// `navigator.standalone`, or the standard `display-mode` media query used
+// by Android/desktop PWA installs). iOS ignores the manifest's start_url
+// entirely for "Add to Home Screen" - it just bookmarks whatever URL was
+// showing at the moment, so an icon can end up bound to the bare marketing
+// domain instead of app.*. There's no legitimate case where someone
+// installs the icon to browse marketing content, so treat any standalone
+// launch as an app entry regardless of which domain/alias it lands on.
+function isStandalonePWA() {
+  try {
+    return window.navigator.standalone === true
+      || window.matchMedia('(display-mode: standalone)').matches
+      || window.matchMedia('(display-mode: fullscreen)').matches
+  } catch (e) { return false }
+}
+
 // Decide up-front, before any rendering, whether this is a bare root visit
 // that should go straight to the marketing landing page.
 function shouldGoToLanding() {
+  if (isStandalonePWA()) return false
   const pathname = window.location.pathname
   const hostname = window.location.hostname
   const hasOrg = new URLSearchParams(window.location.search).get('org')
