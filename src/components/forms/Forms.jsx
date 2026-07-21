@@ -55,6 +55,19 @@ const CATEGORY_COLOR = {
 
 const FORM_ACCENTS = ['#6D5DF6', '#2563EB', '#059669', '#D97706', '#DB2777', '#0EA5E9', '#7C3AED']
 
+// "Type" tag shown on each form row/card — distinct from the audience CATEGORIES
+// above (which classify templates), this is the purpose of the form itself.
+const TAG_OPTIONS = ['Registration', 'Consent', 'Application', 'Survey', 'Report', 'Request', 'Other']
+const TAG_COLOR = {
+  Registration: '#2563EB', Consent: '#0EA5E9', Application: '#D97706',
+  Survey: '#7C3AED', Report: '#DC2626', Request: '#059669', Other: '#64748B',
+}
+const STATUS_STYLE = {
+  active:   { label: 'Active',   bg: '#F0FDF4', color: '#16A34A', dot: '#16A34A' },
+  draft:    { label: 'Draft',    bg: '#FFF7ED', color: '#D97706', dot: '#D97706' },
+  archived: { label: 'Archived', bg: '#F1F5F9', color: '#64748B', dot: '#94A3B8' },
+}
+
 const TEMPLATES = [
   // ── YOUTH ──
   { name: 'Youth Registration', icon: '📋', category: 'youth', desc: 'Collect participant information for new members', fields: [
@@ -338,8 +351,8 @@ function FieldPreview({ field }) {
 function FormBuilder({ org, initial, onSave, onCancel }) {
   const isMobile = useIsMobile()
   const [form, setForm] = useState(() => {
-    const base = initial || { name: '', description: '', fields: [] }
-    return { ...base, fields: (base.fields || []).map((f, i) => ({ ...f, id: f.id || (Date.now() + i) })) }
+    const base = initial || { name: '', description: '', fields: [], tag: 'Other', visibility: 'public' }
+    return { ...base, tag: base.tag || 'Other', visibility: base.visibility || 'public', fields: (base.fields || []).map((f, i) => ({ ...f, id: f.id || (Date.now() + i) })) }
   })
   const [saving, setSaving] = useState(false)
   const [mode, setMode] = useState('edit') // 'edit' | 'preview'
@@ -407,7 +420,7 @@ function FormBuilder({ org, initial, onSave, onCancel }) {
 
       {/* Form meta */}
       <div style={{ ...glass, borderRadius: 20, padding: 18, marginBottom: 20 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14, marginBottom: 14 }}>
           <div>
             <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 5, letterSpacing: 0.4 }}>FORM NAME *</label>
             <input value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); if (triedSave) setTriedSave(false) }} placeholder="e.g. Trip Consent Form"
@@ -417,6 +430,21 @@ function FormBuilder({ org, initial, onSave, onCancel }) {
           <div>
             <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 5, letterSpacing: 0.4 }}>DESCRIPTION</label>
             <input value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="What is this form for?" style={inp} />
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '200px 200px', gap: 14 }}>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 5, letterSpacing: 0.4 }}>TYPE</label>
+            <select value={form.tag} onChange={e => setForm(f => ({ ...f, tag: e.target.value }))} style={inp}>
+              {TAG_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 5, letterSpacing: 0.4 }}>VISIBILITY</label>
+            <select value={form.visibility} onChange={e => setForm(f => ({ ...f, visibility: e.target.value }))} style={inp}>
+              <option value="public">🌐 Public — anyone with the link</option>
+              <option value="private">🔒 Private — shared internally only</option>
+            </select>
           </div>
         </div>
       </div>
@@ -667,17 +695,138 @@ function EmailFormModal({ form, primary, onClose }) {
   )
 }
 
-export default function Forms({ org, isAdmin }) {
+const AVATAR_COLORS = ['#6D5DF6', '#2563EB', '#059669', '#D97706', '#DB2777', '#0EA5E9', '#7C3AED', '#DC2626']
+function avatarColor(seed) {
+  const s = String(seed || '')
+  let hash = 0
+  for (let i = 0; i < s.length; i++) hash = (hash + s.charCodeAt(i)) % AVATAR_COLORS.length
+  return AVATAR_COLORS[hash]
+}
+
+// Submissions store answers as { [fieldLabel]: value }, not a fixed schema —
+// heuristically pick whatever looks like a name so the recent-submissions
+// panel has something more useful to show than "Anonymous" every time.
+function extractSubmitterName(data) {
+  if (!data || typeof data !== 'object') return 'Anonymous'
+  const entries = Object.entries(data)
+  const nameEntry = entries.find(([label, value]) => /name/i.test(label) && typeof value === 'string' && value.trim())
+  return nameEntry ? nameEntry[1].trim() : 'Anonymous'
+}
+
+function timeAgo(dateStr) {
+  const d = new Date(dateStr)
+  const diffMs = Date.now() - d.getTime()
+  const mins = Math.floor(diffMs / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
+  return format(d, 'd MMM')
+}
+
+function Sparkline({ points, color }) {
+  const w = 64, h = 22
+  const max = Math.max(1, ...points)
+  const step = w / Math.max(1, points.length - 1)
+  const coords = points.map((p, i) => `${(i * step).toFixed(1)},${(h - (p / max) * (h - 4) - 2).toFixed(1)}`).join(' ')
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+      <polyline points={coords} fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function ImportFormModal({ onClose, onImport }) {
+  const [text, setText] = useState('')
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const handleImport = async () => {
+    let parsed
+    try { parsed = JSON.parse(text) } catch (e) { setError('That doesn\'t look like valid JSON.'); return }
+    if (!parsed?.name || !Array.isArray(parsed.fields)) { setError('Needs at least a "name" and a "fields" array.'); return }
+    setError(''); setSaving(true)
+    await onImport({ name: parsed.name, description: parsed.description || '', tag: parsed.tag, fields: parsed.fields })
+    setSaving(false)
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 480, boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>📥 Import a form</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
+        </div>
+        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 14 }}>Paste form JSON — <code style={{ fontSize: 11, background: '#F1F5F9', padding: '1px 5px', borderRadius: 4 }}>{'{ name, description, fields: [{ type, label, required }] }'}</code></div>
+        <textarea value={text} onChange={e => setText(e.target.value)} rows={8} placeholder='{"name": "Trip Consent", "fields": [{"type":"text","label":"Child Name","required":true}]}'
+          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 12.5, fontFamily: 'monospace', outline: 'none', resize: 'vertical' }} />
+        {error && <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', fontSize: 13, fontWeight: 600 }}>{error}</div>}
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
+          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={handleImport} disabled={saving || !text.trim()}
+            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving || !text.trim() ? '#9CA3AF' : 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: saving || !text.trim() ? 'default' : 'pointer' }}>
+            {saving ? 'Importing...' : 'Import as draft'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DuplicatePickerModal({ forms, onClose, onDuplicate }) {
+  const [busyId, setBusyId] = useState(null)
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 22, width: '100%', maxWidth: 440, maxHeight: '70vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>📋 Duplicate a form</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
+        </div>
+        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {forms.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 24, color: '#94A3B8', fontSize: 13 }}>No forms to duplicate yet.</div>
+          ) : forms.map(f => (
+            <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: '1px solid #F1F5F9' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</div>
+                <div style={{ fontSize: 11, color: '#94A3B8' }}>{(f.fields || []).length} fields</div>
+              </div>
+              <button onClick={async () => { setBusyId(f.id); await onDuplicate(f); setBusyId(null) }} disabled={busyId === f.id}
+                style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: busyId === f.id ? '#9CA3AF' : 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12, fontWeight: 800, cursor: busyId === f.id ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                {busyId === f.id ? 'Copying…' : 'Duplicate'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function Forms({ org, session, isAdmin }) {
   const isMobile = useIsMobile()
+  const authUserId = session?.user?.id
   const [forms, setForms] = useState([])
+  const [submissions, setSubmissions] = useState([])
+  const [staff, setStaff] = useState([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('list') // 'list' | 'builder' | 'submissions'
   const [selectedForm, setSelectedForm] = useState(null)
-  const [showTemplates, setShowTemplates] = useState(false)
+  const [tab, setTab] = useState('all') // 'all' | 'active' | 'draft' | 'archived' | 'templates'
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('all')
+  const [templateSearch, setTemplateSearch] = useState('')
+  const [templateCategory, setTemplateCategory] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('updated')
+  const [listMode, setListMode] = useState('list') // 'list' | 'grid'
+  const [period, setPeriod] = useState('month') // 'month' | 'week' | 'all'
   const [copiedId, setCopiedId] = useState(null)
   const [emailModalFor, setEmailModalFor] = useState(null)
+  const [rowMenuFor, setRowMenuFor] = useState(null)
+  const [showImport, setShowImport] = useState(false)
+  const [showDuplicatePicker, setShowDuplicatePicker] = useState(false)
   const primary = org?.primary_color || '#1B9AAA'
 
   const copyFormLink = async (form) => {
@@ -693,18 +842,33 @@ export default function Forms({ org, isAdmin }) {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase.from('org_forms').select('*, form_submissions(count)').eq('org_id', org.id).order('created_at', { ascending: false })
-    setForms(data || [])
+    const [{ data: formRows }, { data: subRows }, { data: staffRows }] = await Promise.all([
+      supabase.from('org_forms').select('*').eq('org_id', org.id).order('updated_at', { ascending: false }),
+      supabase.from('form_submissions').select('id, form_id, data, created_at').eq('org_id', org.id).order('created_at', { ascending: false }).limit(3000),
+      supabase.from('user_profiles').select('id, full_name').eq('org_id', org.id),
+    ])
+    setForms(formRows || [])
+    setSubmissions(subRows || [])
+    setStaff(staffRows || [])
     setLoading(false)
   }, [org.id])
 
   useEffect(() => { load() }, [load])
 
+  const staffName = (id) => staff.find(s => s.id === id)?.full_name || null
+
   const saveForm = async (formData) => {
     const isEdit = !!selectedForm?.id
+    const status = formData.status || 'draft'
+    const payload = {
+      name: formData.name, description: formData.description, fields: formData.fields,
+      tag: formData.tag || 'Other', visibility: formData.visibility || 'public',
+      status, is_active: status === 'active',
+      updated_at: new Date().toISOString(), updated_by: authUserId || null,
+    }
     const { error } = isEdit
-      ? await supabase.from('org_forms').update({ name: formData.name, description: formData.description, fields: formData.fields }).eq('id', selectedForm.id)
-      : await supabase.from('org_forms').insert({ org_id: org.id, name: formData.name, description: formData.description, fields: formData.fields })
+      ? await supabase.from('org_forms').update(payload).eq('id', selectedForm.id)
+      : await supabase.from('org_forms').insert({ org_id: org.id, ...payload })
     if (error) { window.alert('Could not save this form: ' + error.message); return }
     load()
     setView('list')
@@ -717,289 +881,427 @@ export default function Forms({ org, isAdmin }) {
     setForms(f => f.filter(x => x.id !== form.id))
   }
 
-  const toggleActive = async (form) => {
-    const updated = !form.is_active
-    await supabase.from('org_forms').update({ is_active: updated }).eq('id', form.id)
-    setForms(f => f.map(x => x.id === form.id ? { ...x, is_active: updated } : x))
+  const setFormStatus = async (form, status) => {
+    const is_active = status === 'active'
+    await supabase.from('org_forms').update({ status, is_active, updated_at: new Date().toISOString(), updated_by: authUserId || null }).eq('id', form.id)
+    setForms(f => f.map(x => x.id === form.id ? { ...x, status, is_active, updated_at: new Date().toISOString(), updated_by: authUserId } : x))
+    setRowMenuFor(null)
   }
 
-  if (view === 'builder') return <FormBuilder org={org} initial={selectedForm} onSave={saveForm} onCancel={() => { setView('list'); setSelectedForm(null) }} />
-  if (view === 'submissions' && selectedForm) return <SubmissionsView form={selectedForm} org={org} onBack={() => { setView('list'); setSelectedForm(null); load() }} />
+  const duplicateForm = async (form) => {
+    const { data } = await supabase.from('org_forms').insert({
+      org_id: org.id, name: `${form.name} (Copy)`, description: form.description, fields: form.fields,
+      tag: form.tag || 'Other', visibility: form.visibility || 'public', status: 'draft', is_active: false,
+      updated_by: authUserId || null,
+    }).select().single()
+    if (data) setForms(f => [data, ...f])
+    setShowDuplicatePicker(false)
+  }
 
-  const totalSubmissions = forms.reduce((s, f) => s + (f.form_submissions?.[0]?.count || 0), 0)
-  const activeCount = forms.filter(f => f.is_active).length
+  const importForm = async (parsed) => {
+    const { data } = await supabase.from('org_forms').insert({
+      org_id: org.id, name: parsed.name, description: parsed.description,
+      fields: parsed.fields.map((f, i) => ({ ...f, id: Date.now() + i })),
+      tag: TAG_OPTIONS.includes(parsed.tag) ? parsed.tag : 'Other', visibility: 'public', status: 'draft', is_active: false,
+      updated_by: authUserId || null,
+    }).select().single()
+    if (data) setForms(f => [data, ...f])
+    setShowImport(false)
+  }
+
+  // ── derived stats ──
+  const now = new Date()
+  const inRange = (dateStr, start, end) => { const t = new Date(dateStr).getTime(); return t >= start && t < end }
+  const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1).getTime()
+  const thisMonthStart = startOfMonth(now)
+  const lastMonthStart = startOfMonth(new Date(now.getFullYear(), now.getMonth() - 1, 1))
+  const weekMs = 7 * 24 * 60 * 60 * 1000
+
+  const responsesThisPeriod = period === 'all'
+    ? submissions.length
+    : period === 'week'
+      ? submissions.filter(s => inRange(s.created_at, now.getTime() - weekMs, now.getTime() + 1)).length
+      : submissions.filter(s => inRange(s.created_at, thisMonthStart, now.getTime() + 1)).length
+  const responsesPrevPeriod = period === 'week'
+    ? submissions.filter(s => inRange(s.created_at, now.getTime() - weekMs * 2, now.getTime() - weekMs)).length
+    : period === 'month'
+      ? submissions.filter(s => inRange(s.created_at, lastMonthStart, thisMonthStart)).length
+      : null
+  const periodChangePct = responsesPrevPeriod === null ? null
+    : responsesPrevPeriod === 0 ? (responsesThisPeriod > 0 ? 100 : 0)
+    : Math.round(((responsesThisPeriod - responsesPrevPeriod) / responsesPrevPeriod) * 100)
+
+  const totalForms = forms.length
+  const liveCount = forms.filter(f => f.status === 'active').length
+  const draftCount = forms.filter(f => f.status === 'draft').length
+  const livePct = totalForms ? Math.round((liveCount / totalForms) * 100) : 0
+  const draftPct = totalForms ? Math.round((draftCount / totalForms) * 100) : 0
+
+  const statCards = [
+    { key: 'total', label: 'Total Forms', value: totalForms, icon: '📝', color: '#6D5DF6', sub: 'All time' },
+    { key: 'live', label: 'Live Forms', value: liveCount, icon: '✅', color: '#16A34A', sub: `${livePct}% of total` },
+    { key: 'responses', label: `Responses ${period === 'all' ? '(All Time)' : period === 'week' ? 'This Week' : 'This Month'}`, value: responsesThisPeriod, icon: '📈', color: '#2563EB',
+      sub: periodChangePct === null ? 'All-time total' : `${periodChangePct >= 0 ? '↑' : '↓'} ${Math.abs(periodChangePct)}% vs last ${period}`, subColor: periodChangePct === null ? undefined : (periodChangePct >= 0 ? '#16A34A' : '#DC2626') },
+    { key: 'drafts', label: 'Drafts', value: draftCount, icon: '📄', color: '#D97706', sub: `${draftPct}% of total` },
+  ]
+
+  // per-form submission lookups
+  const submissionsByForm = React.useMemo(() => {
+    const map = {}
+    submissions.forEach(s => { (map[s.form_id] = map[s.form_id] || []).push(s) })
+    return map
+  }, [submissions])
+
+  const sparklineFor = (formId) => {
+    const rows = submissionsByForm[formId] || []
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (6 - i)).getTime()
+      const dayEnd = dayStart + 24 * 60 * 60 * 1000
+      return rows.filter(r => inRange(r.created_at, dayStart, dayEnd)).length
+    })
+    return days
+  }
+
+  const recentSubmissions = React.useMemo(() => submissions.slice(0, 6).map(s => ({
+    ...s, formName: forms.find(f => f.id === s.form_id)?.name || 'Unknown form', submitterName: extractSubmitterName(s.data),
+  })), [submissions, forms])
+
+  const availableTypes = React.useMemo(() => [...new Set(forms.map(f => f.tag).filter(Boolean))], [forms])
+
+  const tabCounts = {
+    all: forms.length,
+    active: forms.filter(f => f.status === 'active').length,
+    draft: forms.filter(f => f.status === 'draft').length,
+    archived: forms.filter(f => f.status === 'archived').length,
+    templates: TEMPLATES.length,
+  }
+
+  const filteredForms = React.useMemo(() => {
+    let list = forms
+    if (tab !== 'all' && tab !== 'templates') list = list.filter(f => f.status === tab)
+    if (typeFilter !== 'all') list = list.filter(f => f.tag === typeFilter)
+    if (search.trim()) {
+      const q = search.trim().toLowerCase()
+      list = list.filter(f => f.name.toLowerCase().includes(q) || (f.description || '').toLowerCase().includes(q))
+    }
+    const sorters = {
+      updated: (a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at),
+      name: (a, b) => a.name.localeCompare(b.name),
+      submissions: (a, b) => (submissionsByForm[b.id]?.length || 0) - (submissionsByForm[a.id]?.length || 0),
+      newest: (a, b) => new Date(b.created_at) - new Date(a.created_at),
+    }
+    return [...list].sort(sorters[sortBy] || sorters.updated)
+  }, [forms, tab, typeFilter, search, sortBy, submissionsByForm])
 
   const filteredTemplates = TEMPLATES.filter(t => {
-    const matchCategory = category === 'all' || t.category === category
-    const matchSearch = !search.trim() || `${t.name} ${t.desc}`.toLowerCase().includes(search.trim().toLowerCase())
+    const matchCategory = templateCategory === 'all' || t.category === templateCategory
+    const matchSearch = !templateSearch.trim() || `${t.name} ${t.desc}`.toLowerCase().includes(templateSearch.trim().toLowerCase())
     return matchCategory && matchSearch
   })
 
   const applyTemplate = (t) => {
-    setSelectedForm({ name: t.name, description: t.desc, fields: t.fields.map((f, i) => ({ ...f, id: Date.now() + i })) })
+    setSelectedForm({ name: t.name, description: t.desc, tag: 'Registration', fields: t.fields.map((f, i) => ({ ...f, id: Date.now() + i })) })
     setView('builder')
   }
 
-  const statCards = [
-    { key: 'total', label: 'Total Forms', value: forms.length, icon: '📝', color: '#6D5DF6' },
-    { key: 'active', label: 'Active', value: activeCount, icon: '✅', color: '#30C48D' },
-    { key: 'submissions', label: 'Submissions', value: totalSubmissions, icon: '📬', color: '#5B8DEF' },
-    { key: 'drafts', label: 'Drafts', value: forms.filter(f => !f.is_active).length, icon: '📄', color: '#FFB648' },
-  ]
+  const sel = { padding: '9px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', fontSize: 12.5, color: '#374151', fontWeight: 600, outline: 'none' }
+  const iconBtn = { width: 32, height: 32, borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', color: '#64748B', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
+
+  const openForSubmissions = (form) => { setSelectedForm(form); setView('submissions') }
+  const openForEdit = (form) => { setSelectedForm({ ...form, fields: form.fields || [] }); setView('builder') }
+
+  if (view === 'builder') return <FormBuilder org={org} initial={selectedForm} onSave={saveForm} onCancel={() => { setView('list'); setSelectedForm(null) }} />
+  if (view === 'submissions' && selectedForm) return <SubmissionsView form={selectedForm} org={org} onBack={() => { setView('list'); setSelectedForm(null); load() }} />
 
   return (
-    <div style={{ background: 'radial-gradient(circle at 15% 0%, #6D5DF60C, transparent 40%), radial-gradient(circle at 85% 15%, #30C48D0C, transparent 40%), #F6F8FC', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
+    <div style={{ background: '#F8FAFC', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
 
-      {/* HERO */}
-      <motion.div
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45 }}
-        style={{
-          position: 'relative', overflow: 'hidden', borderRadius: 28, padding: isMobile ? '24px 20px' : '32px 36px',
-          background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.7)', boxShadow: '0 20px 60px -20px rgba(30,41,59,0.15), inset 0 1px 0 rgba(255,255,255,0.9)',
-          marginBottom: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: isMobile ? 'wrap' : 'nowrap', gap: 16,
-        }}
-      >
-        <div style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, #6D5DF635, transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -70, left: '20%', width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, #30C48D28, transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-            <span style={{ fontSize: 26 }}>📝</span>
-            <span style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>Forms</span>
+      {/* HEADER */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 13, background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 8px 20px -8px rgba(109,93,246,0.5)' }}>📝</div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>Forms</span>
+              <select value={period} onChange={e => setPeriod(e.target.value)} style={{ ...sel, fontWeight: 700 }}>
+                <option value="month">This month</option>
+                <option value="week">This week</option>
+                <option value="all">All time</option>
+              </select>
+            </div>
+            <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>Build digital forms, applications and consent packs.</div>
           </div>
-          <div style={{ fontSize: 14, color: '#475569' }}>Build digital forms, applications and consent packs.</div>
         </div>
         {isAdmin && (
-          <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 10 }}>
-            <motion.button
-              onClick={() => setShowTemplates(v => !v)}
-              whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
-              style={{ padding: '13px 22px', borderRadius: 14, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              📋 Browse Templates
-            </motion.button>
-            <motion.button
-              onClick={() => { setSelectedForm(null); setView('builder') }}
-              whileHover={{ y: -3, boxShadow: '0 16px 40px -10px rgba(109,93,246,0.5)' }} whileTap={{ scale: 0.97 }}
-              style={{ padding: '13px 22px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 10px 30px -8px rgba(109,93,246,0.4)', whiteSpace: 'nowrap' }}>
-              + Create Form
-            </motion.button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={() => setTab('templates')} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>📋 Browse Templates</button>
+            <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '11px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(109,93,246,0.4)', whiteSpace: 'nowrap' }}>+ Create Form</button>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* STATS */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14, marginBottom: 22 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
         {statCards.map((s, i) => (
-          <motion.div
-            key={s.key}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: i * 0.06 }}
-            whileHover={{ scale: 1.03, y: -3 }}
-            style={{
-              background: `linear-gradient(150deg, ${s.color}14, rgba(255,255,255,0.65) 55%)`, backdropFilter: 'blur(14px)',
-              borderRadius: 20, border: `1px solid ${s.color}30`, boxShadow: `0 8px 28px -14px ${s.color}50, inset 0 1px 0 rgba(255,255,255,0.85)`,
-              padding: '18px 18px',
-            }}
-          >
-            <div style={{ width: 38, height: 38, borderRadius: 12, background: `${s.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginBottom: 10 }}>{s.icon}</div>
-            <div style={{ fontSize: 28, fontWeight: 900, color: s.color, letterSpacing: -0.5, lineHeight: 1 }}><CountUp value={s.value} /></div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginTop: 6 }}>{s.label}</div>
+          <motion.div key={s.key} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: i * 0.05 }}
+            style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '18px' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${s.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}>{s.icon}</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5, lineHeight: 1 }}><CountUp value={s.value} /></div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginTop: 4 }}>{s.label}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: s.subColor || '#94A3B8', marginTop: 6 }}>{s.sub}</div>
           </motion.div>
         ))}
       </div>
 
-      {/* TEMPLATE LIBRARY */}
-      <AnimatePresence>
-        {showTemplates && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-            style={{ overflow: 'hidden', marginBottom: 22 }}
-          >
-            <div style={{ background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.7)', borderRadius: 24, padding: isMobile ? 16 : 22 }}>
-              {/* Search */}
-              <div style={{ position: 'relative', marginBottom: 16 }}>
-                <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: '#94A3B8' }}>🔍</span>
-                <input
-                  value={search} onChange={e => setSearch(e.target.value)}
-                  placeholder="Search templates..."
-                  style={{ width: '100%', padding: '12px 40px', borderRadius: 16, border: '1px solid rgba(0,0,0,0.08)', background: 'rgba(255,255,255,0.7)', fontSize: 14, color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
-                />
-                {search && (
-                  <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', border: 'none', background: '#F1F5F9', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 11, color: '#64748B' }}>×</button>
-                )}
-              </div>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: 20, alignItems: 'start' }}>
+        <div>
+          {/* SEARCH + FILTERS */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+            <div style={{ position: 'relative', flex: '1 1 200px' }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}>🔍</span>
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search forms..."
+                style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1px solid #E2E8F0', fontSize: 13, outline: 'none' }} />
+            </div>
+            <select value={tab === 'templates' ? 'all' : tab} onChange={e => setTab(e.target.value)} style={sel}>
+              <option value="all">Status: All</option>
+              <option value="active">Active</option>
+              <option value="draft">Draft</option>
+              <option value="archived">Archived</option>
+            </select>
+            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={sel}>
+              <option value="all">Type: All</option>
+              {availableTypes.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={sel}>
+              <option value="updated">Sort: Last updated</option>
+              <option value="name">Sort: Name</option>
+              <option value="submissions">Sort: Most submissions</option>
+              <option value="newest">Sort: Newest</option>
+            </select>
+            <div style={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: 10, overflow: 'hidden' }}>
+              <button onClick={() => setListMode('list')} style={{ padding: '8px 12px', border: 'none', background: listMode === 'list' ? '#6D5DF6' : '#fff', color: listMode === 'list' ? '#fff' : '#64748B', cursor: 'pointer' }}>☰</button>
+              <button onClick={() => setListMode('grid')} style={{ padding: '8px 12px', border: 'none', background: listMode === 'grid' ? '#6D5DF6' : '#fff', color: listMode === 'grid' ? '#fff' : '#64748B', cursor: 'pointer' }}>▦</button>
+            </div>
+          </div>
 
-              {/* Category pills */}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18 }}>
+          {/* TABS */}
+          <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '1px solid #E2E8F0', overflowX: 'auto' }}>
+            {[
+              { key: 'all', label: 'All' }, { key: 'active', label: 'Active' }, { key: 'draft', label: 'Drafts' },
+              { key: 'archived', label: 'Archived' }, { key: 'templates', label: 'Templates' },
+            ].map(t => (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                style={{ padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #6D5DF6' : '2.5px solid transparent', background: 'none', color: tab === t.key ? '#6D5DF6' : '#64748B', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+                {t.label} <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? '#6D5DF6' : '#94A3B8', background: tab === t.key ? '#6D5DF618' : '#F1F5F9', borderRadius: 99, padding: '1px 7px' }}>{tabCounts[t.key]}</span>
+              </button>
+            ))}
+          </div>
+
+          {tab === 'templates' ? (
+            <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: isMobile ? 16 : 20 }}>
+              <div style={{ position: 'relative', marginBottom: 14 }}>
+                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8' }}>🔍</span>
+                <input value={templateSearch} onChange={e => setTemplateSearch(e.target.value)} placeholder="Search templates..."
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px 11px 38px', borderRadius: 12, border: '1px solid #E2E8F0', fontSize: 13.5, outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
                 {CATEGORIES.map(c => (
-                  <button key={c.key} onClick={() => setCategory(c.key)}
-                    style={{ padding: '7px 15px', borderRadius: 99, border: 'none', background: category === c.key ? 'linear-gradient(135deg, #6D5DF6, #5B8DEF)' : 'rgba(0,0,0,0.04)', color: category === c.key ? '#fff' : '#64748B', fontSize: 12.5, fontWeight: category === c.key ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <button key={c.key} onClick={() => setTemplateCategory(c.key)}
+                    style={{ padding: '7px 15px', borderRadius: 99, border: 'none', background: templateCategory === c.key ? 'linear-gradient(135deg, #6D5DF6, #5B8DEF)' : '#F1F5F9', color: templateCategory === c.key ? '#fff' : '#64748B', fontSize: 12.5, fontWeight: templateCategory === c.key ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     {c.icon} {c.label}
                   </button>
                 ))}
               </div>
-
-              {/* Template grid */}
               {filteredTemplates.length === 0 ? (
-                <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>No templates match "{search}"</div>
+                <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>No templates match "{templateSearch}"</div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
-                  {filteredTemplates.map((t, i) => {
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(230px, 1fr))', gap: 12 }}>
+                  {filteredTemplates.map(t => {
                     const color = CATEGORY_COLOR[t.category] || primary
                     return (
-                      <motion.button
-                        key={t.name}
-                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: Math.min(i * 0.02, 0.3) }}
-                        onClick={() => applyTemplate(t)}
-                        whileHover={{ y: -4, boxShadow: `0 16px 32px -12px ${color}50` }}
-                        style={{ padding: 16, borderRadius: 18, border: `1px solid ${color}25`, background: `linear-gradient(150deg, ${color}0C, rgba(255,255,255,0.8))`, cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 11, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, marginBottom: 10, boxShadow: `0 6px 14px -6px ${color}70` }}>{t.icon}</div>
+                      <button key={t.name} onClick={() => applyTemplate(t)}
+                        style={{ padding: 16, borderRadius: 16, border: `1px solid ${color}25`, background: `${color}08`, cursor: 'pointer', textAlign: 'left' }}>
+                        <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}>{t.icon}</div>
                         <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{t.name}</div>
                         <div style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.4, marginBottom: 10 }}>{t.desc}</div>
                         <div style={{ fontSize: 10.5, fontWeight: 700, color, background: color + '14', borderRadius: 99, padding: '3px 9px', display: 'inline-block' }}>{t.fields.length} fields</div>
-                      </motion.button>
+                      </button>
                     )
                   })}
                 </div>
               )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Forms list */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>Loading forms...</div>
-      ) : forms.length === 0 ? (
-        <div style={{ position: 'relative', padding: '56px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(14px)', borderRadius: 24, border: '1px solid rgba(255,255,255,0.7)' }}>
-          <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} style={{ fontSize: 44, marginBottom: 14 }}>📝</motion.div>
-          {isAdmin ? (
-            <>
-              <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Ready to build something amazing?</div>
-              <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 22 }}>Choose one of our professionally designed templates or create your own.</div>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <motion.button onClick={() => setShowTemplates(true)} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
-                  style={{ padding: '12px 24px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
-                  📋 Browse Templates
-                </motion.button>
-                <motion.button onClick={() => { setSelectedForm(null); setView('builder') }} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
-                  style={{ padding: '12px 24px', borderRadius: 14, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
-                  Create From Scratch
-                </motion.button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>No forms yet</div>
-              <div style={{ fontSize: 13.5, color: '#64748B' }}>An admin hasn't built any forms yet — check back soon.</div>
-            </>
-          )}
-        </div>
-      ) : (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 14 }}>
-            <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>Your Forms</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#94A3B8' }}>{forms.length}</div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-            {forms.map((form, i) => {
-              const subCount = form.form_submissions?.[0]?.count || 0
-              const accent = FORM_ACCENTS[i % FORM_ACCENTS.length]
-              const fieldCount = (form.fields || []).length
-              return (
-                <motion.div key={form.id}
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.3) }}
-                  whileHover={{ y: -4, boxShadow: `0 20px 40px -18px ${accent}55` }}
-                  onClick={() => {
-                    if (isAdmin) { setSelectedForm({ ...form, fields: form.fields || [] }); setView('builder') }
-                    else { setSelectedForm(form); setView('submissions') }
-                  }}
-                  style={{ position: 'relative', cursor: 'pointer', overflow: 'hidden', background: `linear-gradient(150deg, ${accent}0E, rgba(255,255,255,0.85) 60%)`, backdropFilter: 'blur(14px)', border: `1px solid ${accent}25`, borderRadius: 20, padding: 18, boxShadow: '0 6px 20px -14px rgba(30,41,59,0.18)', display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-                  <div style={{ position: 'absolute', top: -30, right: -30, width: 110, height: 110, borderRadius: '50%', background: `radial-gradient(circle, ${accent}22, transparent 70%)`, pointerEvents: 'none' }} />
-
-                  {/* Top row: icon + status */}
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div style={{ width: 42, height: 42, borderRadius: 13, background: `linear-gradient(135deg, ${accent}, ${accent}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, boxShadow: `0 8px 18px -8px ${accent}70` }}>📝</div>
-                    {isAdmin ? (
-                      <button onClick={e => { e.stopPropagation(); toggleActive(form) }}
-                        style={{ padding: '4px 10px', borderRadius: 99, border: `1px solid ${form.is_active ? '#16A34A40' : '#e5e7eb'}`, background: form.is_active ? '#F0FDF4' : '#F9FAFB', color: form.is_active ? '#16A34A' : '#9CA3AF', fontSize: 10.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                        {form.is_active ? '● Active' : '⏸ Inactive'}
-                      </button>
-                    ) : (
-                      <span style={{ padding: '4px 10px', borderRadius: 99, border: `1px solid ${form.is_active ? '#16A34A40' : '#e5e7eb'}`, background: form.is_active ? '#F0FDF4' : '#F9FAFB', color: form.is_active ? '#16A34A' : '#9CA3AF', fontSize: 10.5, fontWeight: 800, whiteSpace: 'nowrap' }}>
-                        {form.is_active ? '● Active' : '⏸ Inactive'}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Name + description */}
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 4, lineHeight: 1.25 }}>{form.name}</div>
-                    <div style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {form.description || 'No description'}
+          ) : loading ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>Loading forms...</div>
+          ) : filteredForms.length === 0 ? (
+            <div style={{ padding: '48px 20px', textAlign: 'center', background: '#fff', borderRadius: 16, border: '1px solid #EEF1F6' }}>
+              <div style={{ fontSize: 38, marginBottom: 12 }}>📝</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{forms.length === 0 ? 'No forms yet' : 'No matching forms'}</div>
+              <div style={{ fontSize: 13, color: '#64748B' }}>{forms.length === 0 ? (isAdmin ? 'Create your first form or start from a template.' : "An admin hasn't built any forms yet.") : 'Try adjusting your search or filters.'}</div>
+            </div>
+          ) : listMode === 'grid' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+              {filteredForms.map((form, i) => {
+                const accent = FORM_ACCENTS[i % FORM_ACCENTS.length]
+                const subCount = submissionsByForm[form.id]?.length || 0
+                return (
+                  <div key={form.id} onClick={() => isAdmin ? openForEdit(form) : openForSubmissions(form)}
+                    style={{ cursor: 'pointer', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TAG_COLOR[form.tag] || accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📝</div>
+                      <span style={{ fontSize: 10.5, fontWeight: 800, padding: '3px 9px', borderRadius: 99, background: STATUS_STYLE[form.status]?.bg, color: STATUS_STYLE[form.status]?.color }}>● {STATUS_STYLE[form.status]?.label}</span>
+                    </div>
+                    <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{form.name}</div>
+                    <div style={{ fontSize: 12, color: '#64748B', marginBottom: 10, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{form.description || 'No description'}</div>
+                    <div style={{ display: 'flex', gap: 10, fontSize: 11.5, fontWeight: 700, color: '#475569' }}>
+                      <span>📋 {(form.fields || []).length} fields</span>
+                      <span>📬 {subCount} submissions</span>
                     </div>
                   </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {filteredForms.map((form, i) => {
+                const accent = TAG_COLOR[form.tag] || FORM_ACCENTS[i % FORM_ACCENTS.length]
+                const subCount = submissionsByForm[form.id]?.length || 0
+                const subThisMonth = (submissionsByForm[form.id] || []).filter(s => inRange(s.created_at, thisMonthStart, now.getTime() + 1)).length
+                const st = STATUS_STYLE[form.status] || STATUS_STYLE.draft
+                const updaterName = staffName(form.updated_by)
+                return (
+                  <div key={form.id} style={{ position: 'relative', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+                    <div onClick={() => isAdmin ? openForEdit(form) : openForSubmissions(form)} style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, cursor: 'pointer' }}>📝</div>
 
-                  {/* Stats */}
-                  <div style={{ position: 'relative', display: 'flex', gap: 14, fontSize: 12, fontWeight: 700, color: '#475569' }}>
-                    <span>📋 {fieldCount} field{fieldCount !== 1 ? 's' : ''}</span>
-                    <span>📬 {subCount} submission{subCount !== 1 ? 's' : ''}</span>
+                    <div onClick={() => isAdmin ? openForEdit(form) : openForSubmissions(form)} style={{ flex: '1 1 220px', minWidth: 180, cursor: 'pointer' }}>
+                      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 2 }}>{form.name}</div>
+                      <div style={{ fontSize: 12, color: '#64748B', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{form.description || 'No description'}</div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 9px', borderRadius: 99, background: `${accent}15`, color: accent }}>{form.tag || 'Other'}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 9px', borderRadius: 99, background: '#F1F5F9', color: '#64748B' }}>{form.visibility === 'private' ? '🔒 Private' : '🌐 Public'}</span>
+                      </div>
+                    </div>
+
+                    <span style={{ flexShrink: 0, fontSize: 10.5, fontWeight: 800, padding: '4px 11px', borderRadius: 99, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>● {st.label}</span>
+
+                    {!isMobile && (
+                      <>
+                        <div style={{ textAlign: 'center', width: 60, flexShrink: 0 }}>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>{(form.fields || []).length}</div>
+                          <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 700 }}>Fields</div>
+                        </div>
+                        <div style={{ textAlign: 'center', width: 90, flexShrink: 0 }} title={`${subCount} all time`}>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>{subThisMonth}</div>
+                          <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 700, marginBottom: 3 }}>Submissions{isMobile ? '' : ' this mo.'}</div>
+                          <Sparkline points={sparklineFor(form.id)} color={accent} />
+                        </div>
+                        <div style={{ width: 110, flexShrink: 0, fontSize: 11 }}>
+                          <div style={{ fontWeight: 700, color: '#334155' }}>{format(new Date(form.updated_at || form.created_at), 'd MMM yyyy')}</div>
+                          <div style={{ color: '#94A3B8' }}>Last updated{updaterName ? ` · by ${updaterName.split(' ')[0]}` : ''}</div>
+                        </div>
+                      </>
+                    )}
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: isMobile ? 0 : 'auto' }}>
+                      {isAdmin ? (
+                        <button onClick={() => openForEdit(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>✏️ Edit</button>
+                      ) : (
+                        <button onClick={() => openForSubmissions(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>📬 View</button>
+                      )}
+                      <button onClick={() => window.open(`/forms/${org?.slug}/${form.id}`, '_blank')} title="Preview" style={iconBtn}>👁</button>
+                      <button onClick={() => copyFormLink(form)} disabled={!form.is_active} title={form.is_active ? 'Copy public link' : 'Activate to get a link'}
+                        style={{ ...iconBtn, color: !form.is_active ? '#D1D5DB' : copiedId === form.id ? '#16A34A' : '#64748B', borderColor: copiedId === form.id ? '#16A34A40' : '#E2E8F0', cursor: form.is_active ? 'pointer' : 'default' }}>
+                        {copiedId === form.id ? '✅' : '🔗'}
+                      </button>
+                      <button onClick={() => setEmailModalFor(form)} disabled={!form.is_active} title={form.is_active ? 'Email this form' : 'Activate to email it'} style={{ ...iconBtn, color: !form.is_active ? '#D1D5DB' : '#64748B', cursor: form.is_active ? 'pointer' : 'default' }}>✉️</button>
+                      {isAdmin && (
+                        <div style={{ position: 'relative' }}>
+                          <button onClick={() => setRowMenuFor(id => id === form.id ? null : form.id)} style={iconBtn}>⋯</button>
+                          <AnimatePresence>
+                            {rowMenuFor === form.id && (
+                              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                                style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 12px 32px -12px rgba(0,0,0,0.2)', zIndex: 30, minWidth: 170, overflow: 'hidden' }}>
+                                {form.status !== 'active' && <button onClick={() => setFormStatus(form, 'active')} style={menuItemStyle}>● Set Active</button>}
+                                {form.status !== 'draft' && <button onClick={() => setFormStatus(form, 'draft')} style={menuItemStyle}>📄 Move to Draft</button>}
+                                {form.status !== 'archived' && <button onClick={() => setFormStatus(form, 'archived')} style={menuItemStyle}>🗄 Archive</button>}
+                                <button onClick={() => { setRowMenuFor(null); deleteForm(form) }} style={{ ...menuItemStyle, color: '#DC2626' }}>🗑️ Delete</button>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+                    </div>
                   </div>
-
-                  <div style={{ position: 'relative', height: 1, background: 'rgba(15,23,42,0.07)', margin: '2px 0' }} />
-
-                  {/* Actions */}
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {isAdmin ? (
-                      <button onClick={e => { e.stopPropagation(); setSelectedForm({ ...form, fields: form.fields || [] }); setView('builder') }}
-                        style={{ flex: 1, padding: '8px 12px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
-                        ✏️ Edit
-                      </button>
-                    ) : (
-                      <button onClick={e => { e.stopPropagation(); setSelectedForm(form); setView('submissions') }}
-                        style={{ flex: 1, padding: '8px 12px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
-                        📬 View submissions
-                      </button>
-                    )}
-                    {isAdmin && (
-                      <button onClick={e => { e.stopPropagation(); setSelectedForm(form); setView('submissions') }} title="View submissions"
-                        style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', color: '#374151', fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
-                        📬
-                      </button>
-                    )}
-                    <button onClick={e => { e.stopPropagation(); copyFormLink(form) }} disabled={!form.is_active} title={form.is_active ? 'Copy public link' : 'Activate to get a link'}
-                      style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${copiedId === form.id ? '#16A34A40' : 'rgba(0,0,0,0.08)'}`, background: copiedId === form.id ? '#F0FDF4' : '#fff', color: !form.is_active ? '#D1D5DB' : copiedId === form.id ? '#16A34A' : '#374151', fontSize: 13, cursor: form.is_active ? 'pointer' : 'default', flexShrink: 0 }}>
-                      {copiedId === form.id ? '✅' : '🔗'}
-                    </button>
-                    <button onClick={e => { e.stopPropagation(); setEmailModalFor(form) }} disabled={!form.is_active} title={form.is_active ? 'Email this form' : 'Activate to email it'}
-                      style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', color: !form.is_active ? '#D1D5DB' : '#374151', fontSize: 13, cursor: form.is_active ? 'pointer' : 'default', flexShrink: 0 }}>
-                      ✉️
-                    </button>
-                    {isAdmin && (
-                      <button onClick={e => { e.stopPropagation(); deleteForm(form) }} title="Delete form"
-                        style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid rgba(220,38,38,0.2)', background: 'rgba(220,38,38,0.05)', color: '#DC2626', fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
-                        🗑️
-                      </button>
-                    )}
-                  </div>
-                </motion.div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* SIDEBAR */}
+        {!isMobile && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 16 }}>
+            <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 18 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>Recent submissions</div>
+                {recentSubmissions.length > 0 && (
+                  <button onClick={() => openForSubmissions(forms.find(f => f.id === recentSubmissions[0].form_id))} style={{ background: 'none', border: 'none', fontSize: 11.5, fontWeight: 800, color: '#6D5DF6', cursor: 'pointer' }}>View all</button>
+                )}
+              </div>
+              {recentSubmissions.length === 0 ? (
+                <div style={{ fontSize: 12, color: '#94A3B8', padding: '10px 0' }}>No submissions yet.</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {recentSubmissions.map(s => (
+                    <div key={s.id} onClick={() => { const f = forms.find(x => x.id === s.form_id); if (f) openForSubmissions(f) }} style={{ display: 'flex', gap: 10, cursor: 'pointer' }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: avatarColor(s.submitterName), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 800, flexShrink: 0 }}>{s.submitterName.charAt(0).toUpperCase()}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A' }}>{s.submitterName}</div>
+                        <div style={{ fontSize: 11.5, color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.formName}</div>
+                        <div style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 1 }}>{timeAgo(s.created_at)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {isAdmin && (
+              <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 18 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Quick actions</div>
+                {[
+                  ['📋 Create from template', () => setTab('templates')],
+                  ['📥 Import form', () => setShowImport(true)],
+                  ['🗂 Duplicate existing form', () => setShowDuplicatePicker(true)],
+                  ['📚 View all templates', () => setTab('templates')],
+                ].map(([label, fn]) => (
+                  <button key={label} onClick={fn} style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '9px 2px', border: 'none', borderTop: '1px solid #F1F5F9', background: 'none', fontSize: 12.5, fontWeight: 700, color: '#334155', cursor: 'pointer' }}>
+                    <span style={{ flex: 1 }}>{label}</span><span style={{ color: '#CBD5E1' }}>›</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div style={{ background: 'linear-gradient(150deg, #6D5DF6, #5B8DEF)', borderRadius: 16, padding: 20, color: '#fff' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 6 }}>Need inspiration?</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, marginBottom: 14 }}>Browse our template gallery to get started quickly.</div>
+              <button onClick={() => setTab('templates')} style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>Browse Templates</button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {emailModalFor && (
-        <EmailFormModal
-          form={emailModalFor}
-          primary={primary}
-          onClose={() => setEmailModalFor(null)}
-        />
+        <EmailFormModal form={emailModalFor} primary={primary} onClose={() => setEmailModalFor(null)} />
+      )}
+      {showImport && (
+        <ImportFormModal onClose={() => setShowImport(false)} onImport={importForm} />
+      )}
+      {showDuplicatePicker && (
+        <DuplicatePickerModal forms={forms} onClose={() => setShowDuplicatePicker(false)} onDuplicate={duplicateForm} />
       )}
     </div>
   )
 }
+
+const menuItemStyle = { display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: '#334155', cursor: 'pointer' }
