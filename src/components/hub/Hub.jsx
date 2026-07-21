@@ -441,6 +441,12 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     showRegToast(`${child.first_name} signed in at ${hubFmtTime(now)}`)
   }
 
+  const handleQuickSignOut = async (child) => {
+    const now = new Date().toISOString()
+    await upsertAttendance(child.id, { status: 'signed_out', signed_out_at: now, signed_out_by: authUserId })
+    showRegToast(`${child.first_name} signed out at ${hubFmtTime(now)}`)
+  }
+
   const handleConfirmSignOut = async (form) => {
     const now = new Date().toISOString()
     await upsertAttendance(signOutChild.id, {
@@ -800,7 +806,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                       )}
                     </div>
                     {att?.status === 'signed_in' ? (
-                      <button onClick={() => setSignOutChild(child)} style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#2563EB', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Sign out</button>
+                      <button onClick={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#2563EB', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Sign out</button>
                     ) : att?.status === 'signed_out' || att?.status === 'absent' ? null : (
                       <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
                         <button onClick={() => handleRegSignIn(child)} style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#16A34A', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Sign in</button>
@@ -899,7 +905,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
 
       {signOutChild && (
-        <HubSignOutSheet child={signOutChild} onClose={() => setSignOutChild(null)} onConfirm={handleConfirmSignOut} />
+        <HubSignOutSheet child={signOutChild} onClose={() => setSignOutChild(null)} onConfirm={handleConfirmSignOut} identityCheckRequired={!!org?.identity_check_required} />
       )}
       {absentChild && (
         <HubAbsentSheet child={absentChild} onClose={() => setAbsentChild(null)} onMark={handleMarkAbsent} />
@@ -917,7 +923,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   )
 }
 
-function HubSignOutSheet({ child, onClose, onConfirm }) {
+function HubSignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
   const [collectionType, setCollectionType] = useState('')
   const [collectedByName, setCollectedByName] = useState('')
   const [note, setNote] = useState('')
@@ -948,10 +954,10 @@ function HubSignOutSheet({ child, onClose, onConfirm }) {
         )}
         <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Collection note (optional)" style={{ ...hubInp, minHeight: 44, marginTop: 10 }} />
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '14px 0 18px', fontSize: 12.5, color: 'rgba(255,255,255,0.75)' }}>
-          <input type="checkbox" checked={identityChecked} onChange={e => setIdentityChecked(e.target.checked)} /> Identity checked
+          <input type="checkbox" checked={identityChecked} onChange={e => setIdentityChecked(e.target.checked)} /> Identity checked{identityCheckRequired && ' *'}
         </label>
         <button onClick={() => onConfirm({ collection_type: collectionType || 'other', collected_by_name: collectedByName, collection_note: note, identity_checked: identityChecked })}
-          disabled={!collectionType} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: !collectionType ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: !collectionType ? 'not-allowed' : 'pointer' }}>
+          disabled={!collectionType || (identityCheckRequired && !identityChecked)} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: (!collectionType || (identityCheckRequired && !identityChecked)) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: (!collectionType || (identityCheckRequired && !identityChecked)) ? 'not-allowed' : 'pointer' }}>
           Confirm Sign Out
         </button>
       </div>
