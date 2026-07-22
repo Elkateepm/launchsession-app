@@ -250,7 +250,7 @@ export default function CreatePassword() {
       {/* Left: brand / marketing panel (desktop only) */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px 64px', position: 'relative', zIndex: 2, minWidth: 0 }} className="cp-left">
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 44 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, #A855F7)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>🚀</div>
+          <img src="/launchsession-badge.png" alt="LaunchSession" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: `0 6px 18px -4px ${primary}80` }} />
           <div>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>LaunchSession</div>
             <div style={{ fontSize: 11, fontWeight: 700, color: primary, letterSpacing: 1 }}>EMPOWERING YOUTH. EVERY SESSION.</div>
