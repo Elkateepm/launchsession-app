@@ -27,7 +27,7 @@ function normaliseBubbles(groups) {
 const GROUP_PRESETS = ['Under 7s','Under 10s','Under 12s','Under 14s','Under 16s','Beginners','Intermediate','Advanced','Team A','Team B']
 const GROUP_COLOR_SWATCHES = ['#4F6EF7','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4','#F97316','#EC4899']
 
-function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) {
+export function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) {
   const primary = org?.primary_color || '#1B9AAA'
   const [groups, setGroups] = useState(initialGroups || org?.custom_groups || [])
   const [newLabel, setNewLabel] = useState('')

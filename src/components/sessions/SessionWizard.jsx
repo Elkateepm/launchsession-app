@@ -3,6 +3,8 @@ import { format, addDays } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence } from 'framer-motion'
+import { FormBuilder, EmailFormModal } from '../forms/Forms'
+import { GroupsQuickSetupModal } from '../registers/Registers'
 
 // ─── CONSTANTS ──────────────────────────────────────────────────
 
@@ -88,10 +90,23 @@ const emptyForm = () => ({
 
 // ─── SHARED STYLES ──────────────────────────────────────────────
 
+const ACCENT = '#6D5DF6'
 const card = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 16 }
 const inp = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)', color: 'var(--text)' }
 const label = { fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 5 }
 const sectionTitle = { fontSize: 13, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 12 }
+
+function SectionHeader({ icon, title, subtitle }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 18 }}>
+      <div style={{ width: 38, height: 38, borderRadius: 11, background: `${ACCENT}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>{icon}</div>
+      <div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{title}</div>
+        {subtitle && <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 1 }}>{subtitle}</div>}
+      </div>
+    </div>
+  )
+}
 
 function Toggle({ value, onChange, label: text }) {
   return (
@@ -107,18 +122,19 @@ function Toggle({ value, onChange, label: text }) {
 function StepDot({ n, active, done, label: text, onClick }) {
   return (
     <button onClick={onClick} disabled={!done && !active} style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: 'none', border: 'none',
-      cursor: done || active ? 'pointer' : 'default', flex: 1, padding: 0,
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, background: 'none', border: 'none',
+      cursor: done || active ? 'pointer' : 'default', position: 'relative', zIndex: 1,
     }}>
       <div style={{
-        width: 30, height: 30, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 13, fontWeight: 800, color: active || done ? '#fff' : 'var(--text3)',
-        background: active ? '#1B9AAA' : done ? '#22C55E' : 'var(--surface2)',
+        width: 34, height: 34, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 14, fontWeight: 800, color: active || done ? '#fff' : 'var(--text3)',
+        background: active ? ACCENT : done ? '#16A34A' : 'var(--surface)',
         border: active || done ? 'none' : '1.5px solid var(--border)',
+        boxShadow: active ? `0 0 0 4px ${ACCENT}22` : 'none', transition: 'all 0.15s',
       }}>
         {done && !active ? '✓' : n}
       </div>
-      <span style={{ fontSize: 10.5, fontWeight: 700, color: active ? '#1B9AAA' : 'var(--text3)', textAlign: 'center' }}>{text}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: active ? ACCENT : done ? '#16A34A' : 'var(--text3)', textAlign: 'center', whiteSpace: 'nowrap' }}>{text}</span>
     </button>
   )
 }
@@ -126,25 +142,54 @@ function StepDot({ n, active, done, label: text, onClick }) {
 // ─── LIVE SUMMARY PANEL ─────────────────────────────────────────
 
 function LiveSummary({ form, leadName, expectedCount }) {
+  const initials = (leadName || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase()
   return (
-    <div style={{ ...card, background: 'var(--surface2)', position: 'sticky', top: 0 }}>
-      <div style={sectionTitle}>Live summary</div>
-      <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
+    <div style={{ ...card, position: 'sticky', top: 0, marginBottom: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <span style={{ fontSize: 15 }}>📶</span>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Live Summary</div>
+      </div>
+
+      <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 800, letterSpacing: 0.5, color: ACCENT, background: `${ACCENT}15`, borderRadius: 99, padding: '3px 10px', marginBottom: 10 }}>PREVIEW</span>
+
+      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>
         {form.title || 'Untitled session'}
       </div>
-      <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 2 }}>
-        {form.session_date ? format(new Date(form.session_date), 'EEEE d MMMM') : '—'}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text2)' }}>
+          <span style={{ width: 16, textAlign: 'center' }}>📅</span>
+          {form.session_date ? format(new Date(form.session_date), 'EEEE d MMMM') : '—'}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text2)' }}>
+          <span style={{ width: 16, textAlign: 'center' }}>🕐</span>
+          {form.start_time || '--:--'} – {form.end_time || '--:--'}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text2)' }}>
+          <span style={{ width: 16, textAlign: 'center' }}>📍</span>
+          {form.location || 'No location set'}
+        </div>
       </div>
-      <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 2 }}>
-        {form.start_time || '--:--'}–{form.end_time || '--:--'}
-      </div>
-      <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 10 }}>{form.location || 'No location set'}</div>
-      {leadName && <div style={{ fontSize: 12.5, color: 'var(--text2)', marginBottom: 4 }}>Led by <strong>{leadName}</strong></div>}
+
+      {leadName && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 12, borderTop: '1px solid var(--border)', marginBottom: 12 }}>
+          <div style={{ width: 26, height: 26, borderRadius: '50%', background: ACCENT, color: '#fff', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{initials || '?'}</div>
+          <div style={{ fontSize: 12.5, color: 'var(--text2)' }}>Led by <strong style={{ color: 'var(--text)' }}>{leadName}</strong></div>
+        </div>
+      )}
+
       {form.max_capacity && (
-        <div style={{ fontSize: 12.5, color: 'var(--text2)' }}>
+        <div style={{ fontSize: 12.5, color: 'var(--text2)', marginBottom: 12 }}>
           {expectedCount} expected · Capacity {form.max_capacity} · {Math.max(0, form.max_capacity - expectedCount)} spaces left
         </div>
       )}
+
+      <div style={{ display: 'flex', gap: 8, background: `${ACCENT}0C`, border: `1px solid ${ACCENT}25`, borderRadius: 12, padding: '10px 12px' }}>
+        <span style={{ fontSize: 13 }}>ℹ️</span>
+        <div style={{ fontSize: 11.5, color: 'var(--text2)', lineHeight: 1.5 }}>
+          This is a preview of your session. Complete the remaining steps to publish and share.
+        </div>
+      </div>
     </div>
   )
 }
@@ -159,7 +204,7 @@ function StepType({ form, setForm }) {
   }
   return (
     <div style={card}>
-      <div style={sectionTitle}>What kind of session is this?</div>
+      <SectionHeader icon="🏃" title="What kind of session is this?" subtitle="This sets sensible defaults you can adjust later" />
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 12 }}>
         {WIZARD_TYPES.map(t => {
           const active = form.session_type === t.key
@@ -186,9 +231,10 @@ function StepType({ form, setForm }) {
 
 // ─── STEP 2: DETAILS ────────────────────────────────────────────
 
-function StepDetails({ form, setForm, bubbleDefs, staff, org }) {
+function StepDetails({ form, setForm, bubbleDefs, staff, org, onGroupsChanged }) {
   const [venues, setVenues] = useState([])
   const [useCustomLocation, setUseCustomLocation] = useState(false)
+  const [showGroupsModal, setShowGroupsModal] = useState(false)
 
   useEffect(() => {
     if (!org?.id) return
@@ -218,85 +264,113 @@ function StepDetails({ form, setForm, bubbleDefs, staff, org }) {
   }
 
   return (
-    <div style={card}>
-      <div style={sectionTitle}>Session details</div>
-      <div style={{ marginBottom: 14 }}>
-        <label style={label}>Session title *</label>
-        <input style={inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Football Skills Session" />
+    <>
+      <div style={card}>
+        <SectionHeader icon="📅" title="Session Details" subtitle="When is your session taking place?" />
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
+          <div><label style={label}>Session title *</label><input style={inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Football Skills Session" /></div>
+          <div><label style={label}>Date *</label><input type="date" style={inp} value={form.session_date} onChange={e => set('session_date', e.target.value)} /></div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><label style={label}>Start time *</label><input type="time" style={inp} value={form.start_time} onChange={e => onStartTimeChange(e.target.value)} /></div>
+          <div><label style={label}>End time *</label><input type="time" style={inp} value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value, _endTouched: true }))} /></div>
+        </div>
       </div>
-      <div style={{ marginBottom: 14 }}>
-        <label style={label}>Date *</label>
-        <input type="date" style={inp} value={form.session_date} onChange={e => set('session_date', e.target.value)} />
+
+      <div style={card}>
+        <SectionHeader icon="📍" title="Location & Capacity" subtitle="Where will your session take place?" />
+        <div style={{ marginBottom: 14 }}>
+          <label style={label}>Location / Venue *</label>
+          {venues.length > 0 && !useCustomLocation ? (
+            <>
+              <select style={inp} value={form.venue_id || ''} onChange={e => {
+                const v = venues.find(x => x.id === e.target.value)
+                setForm(f => ({ ...f, venue_id: e.target.value || null, location: v ? v.name : '', meeting_point: v?.default_meeting_point || f.meeting_point }))
+              }}>
+                <option value="">— Select a venue —</option>
+                {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+              </select>
+              <button type="button" onClick={() => { setUseCustomLocation(true); setForm(f => ({ ...f, venue_id: null })) }}
+                style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>
+                📍 Use a one-off location instead
+              </button>
+            </>
+          ) : (
+            <>
+              <input style={inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Cassiobury Park" />
+              {venues.length > 0 && (
+                <button type="button" onClick={() => setUseCustomLocation(false)}
+                  style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>
+                  Choose a saved venue instead
+                </button>
+              )}
+            </>
+          )}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
+          <div><label style={label}>Meeting point</label><input style={inp} value={form.meeting_point} onChange={e => set('meeting_point', e.target.value)} placeholder="e.g. Main entrance" /></div>
+          <div>
+            <label style={label}>Capacity *</label>
+            <div style={{ position: 'relative' }}>
+              <input type="number" style={{ ...inp, paddingRight: 34 }} value={form.max_capacity} onChange={e => set('max_capacity', e.target.value)} placeholder="e.g. 24" />
+              <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, opacity: 0.4, pointerEvents: 'none' }}>👥</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
-        <div><label style={label}>Start time *</label><input type="time" style={inp} value={form.start_time} onChange={e => onStartTimeChange(e.target.value)} /></div>
-        <div><label style={label}>End time *</label><input type="time" style={inp} value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value, _endTouched: true }))} /></div>
-      </div>
-      <div style={{ marginBottom: 14 }}>
-        <label style={label}>Location *</label>
-        {venues.length > 0 && !useCustomLocation ? (
-          <>
-            <select style={inp} value={form.venue_id || ''} onChange={e => {
-              const v = venues.find(x => x.id === e.target.value)
-              setForm(f => ({ ...f, venue_id: e.target.value || null, location: v ? v.name : '', meeting_point: v?.default_meeting_point || f.meeting_point }))
-            }}>
-              <option value="">— Select a venue —</option>
-              {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+
+      <div style={card}>
+        <SectionHeader icon="👥" title="Delivery Setup" subtitle="Who is leading and who is this session for?" />
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
+          <div>
+            <label style={label}>Session lead *</label>
+            <select style={inp} value={form.lead_staff_id} onChange={e => set('lead_staff_id', e.target.value)}>
+              <option value="">— Select lead —</option>
+              {staff.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
             </select>
-            <button type="button" onClick={() => { setUseCustomLocation(true); setForm(f => ({ ...f, venue_id: null })) }}
-              style={{ background: 'none', border: 'none', color: 'var(--accent, #1B9AAA)', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>
-              Use a one-off location instead
-            </button>
-          </>
-        ) : (
-          <>
-            <input style={inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Cassiobury Park" />
-            {venues.length > 0 && (
-              <button type="button" onClick={() => setUseCustomLocation(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--accent, #1B9AAA)', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>
-                Choose a saved venue instead
+          </div>
+          <div>
+            <label style={label}>Delivery group(s)</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 2 }}>
+              {(bubbleDefs || []).map(b => {
+                const active = form.bubbles.includes(b.label)
+                return (
+                  <button key={b.key} onClick={() => set('bubbles', active ? form.bubbles.filter(x => x !== b.label) : [...form.bubbles, b.label])}
+                    style={{ padding: '7px 14px', borderRadius: 99, border: active ? `2px solid ${b.color}` : '1.5px solid var(--border)', background: active ? `${b.color}18` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', color: 'var(--text)' }}>
+                    {b.label}
+                  </button>
+                )
+              })}
+              <button onClick={() => setShowGroupsModal(true)}
+                style={{ padding: '7px 14px', borderRadius: 99, border: `1.5px dashed ${ACCENT}60`, background: `${ACCENT}0A`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
+                + Add group
               </button>
-            )}
-          </>
-        )}
+            </div>
+          </div>
+        </div>
+        <div style={{ maxWidth: isMobile ? '100%' : '50%' }}>
+          <label style={label}>Age range</label>
+          <input style={inp} value={form.age_range} onChange={e => set('age_range', e.target.value)} placeholder="e.g. 8-12" />
+        </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1.3fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
+
+      <div style={card}>
+        <SectionHeader icon="📝" title="Notes" subtitle="Optional context for your team and for parents" />
+        <div style={{ marginBottom: 14 }}>
+          <label style={label}>Description</label>
+          <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} />
+        </div>
         <div>
-          <label style={label}>Session lead *</label>
-          <select style={inp} value={form.lead_staff_id} onChange={e => set('lead_staff_id', e.target.value)}>
-            <option value="">— Select lead —</option>
-            {staff.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
-          </select>
-        </div>
-        <div><label style={label}>Capacity *</label><input type="number" style={inp} value={form.max_capacity} onChange={e => set('max_capacity', e.target.value)} placeholder="e.g. 24" /></div>
-      </div>
-      <div style={{ marginBottom: 14 }}>
-        <label style={label}>Delivery group(s)</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {(bubbleDefs || []).map(b => {
-            const active = form.bubbles.includes(b.label)
-            return (
-              <button key={b.key} onClick={() => set('bubbles', active ? form.bubbles.filter(x => x !== b.label) : [...form.bubbles, b.label])}
-                style={{ padding: '7px 14px', borderRadius: 99, border: active ? `2px solid ${b.color}` : '1.5px solid var(--border)', background: active ? `${b.color}18` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', color: 'var(--text)' }}>
-                {b.label}
-              </button>
-            )
-          })}
+          <label style={label}>Internal notes <span style={{ fontWeight: 400, color: 'var(--text3)' }}>(staff only, not shown to parents)</span></label>
+          <textarea style={{ ...inp, minHeight: 50, resize: 'vertical' }} value={form.internal_notes} onChange={e => set('internal_notes', e.target.value)} />
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
-        <div><label style={label}>Age range</label><input style={inp} value={form.age_range} onChange={e => set('age_range', e.target.value)} placeholder="e.g. 8-12" /></div>
-        <div><label style={label}>Meeting point</label><input style={inp} value={form.meeting_point} onChange={e => set('meeting_point', e.target.value)} placeholder="e.g. Main entrance" /></div>
-      </div>
-      <div style={{ marginBottom: 14 }}>
-        <label style={label}>Description</label>
-        <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} />
-      </div>
-      <div>
-        <label style={label}>Internal notes <span style={{ fontWeight: 400, color: 'var(--text3)' }}>(staff only, not shown to parents)</span></label>
-        <textarea style={{ ...inp, minHeight: 50, resize: 'vertical' }} value={form.internal_notes} onChange={e => set('internal_notes', e.target.value)} />
-      </div>
-    </div>
+
+      {showGroupsModal && (
+        <GroupsQuickSetupModal org={org} initialGroups={org?.custom_groups || []} onClose={() => setShowGroupsModal(false)}
+          onSaved={() => { setShowGroupsModal(false); if (onGroupsChanged) onGroupsChanged() }} />
+      )}
+    </>
   )
 }
 
@@ -318,7 +392,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount }) {
   return (
     <>
       <div style={card}>
-        <div style={sectionTitle}>Young people</div>
+        <SectionHeader icon="🧒" title="Young People" subtitle="Who is this session for?" />
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
           {[
             ['group', 'Add a delivery group'],
@@ -354,7 +428,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount }) {
       </div>
 
       <div style={card}>
-        <div style={sectionTitle}>Staff</div>
+        <SectionHeader icon="🧑‍💼" title="Staff" subtitle="Who's running the session?" />
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div><label style={label}>Minimum staff required</label><input type="number" style={inp} value={form.min_staff} onChange={e => set('min_staff', e.target.value)} /></div>
           <div><label style={label}>Staff-to-child ratio</label><input style={inp} value={form.staff_ratio} onChange={e => set('staff_ratio', e.target.value)} placeholder="e.g. 1:8" /></div>
@@ -375,7 +449,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount }) {
       </div>
 
       <div style={card}>
-        <div style={sectionTitle}>Volunteers</div>
+        <SectionHeader icon="❤️" title="Volunteers" subtitle="Open up volunteer roles for this session" />
         {form.volunteer_slots.map((slot, i) => (
           <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
             <input style={{ ...inp, flex: 1 }} value={slot.role} onChange={e => updateSlot(i, { role: e.target.value })} placeholder="Role e.g. General helper" />
@@ -393,16 +467,35 @@ function StepPeople({ form, setForm, staff, children, expectedCount }) {
 
 // ─── STEP 4: REQUIREMENTS ───────────────────────────────────────
 
-function StepRequirements({ form, setForm, orgForms }) {
+function StepRequirements({ form, setForm, orgForms, org, onFormCreated }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const toggleForm = (id) => set('form_ids', form.form_ids.includes(id) ? form.form_ids.filter(x => x !== id) : [...form.form_ids, id])
   const toggleOutcome = (a) => set('outcome_areas', form.outcome_areas.includes(a) ? form.outcome_areas.filter(x => x !== a) : [...form.outcome_areas, a])
+  const [showFormBuilder, setShowFormBuilder] = useState(false)
+  const [emailFormFor, setEmailFormFor] = useState(null)
+  const primary = org?.primary_color || '#1B9AAA'
+
+  const handleCreateForm = async (formData) => {
+    const { data, error } = await supabase.from('org_forms').insert({
+      org_id: org.id, name: formData.name, description: formData.description, fields: formData.fields,
+      tag: formData.tag || 'Other', visibility: formData.visibility || 'public', status: 'active', is_active: true,
+    }).select().single()
+    if (!error && data) {
+      if (onFormCreated) onFormCreated(data)
+      set('form_ids', [...form.form_ids, data.id])
+    }
+    setShowFormBuilder(false)
+  }
+
+  if (showFormBuilder) {
+    return <FormBuilder org={org} initial={null} onSave={handleCreateForm} onCancel={() => setShowFormBuilder(false)} />
+  }
 
   return (
     <>
       {REQUIREMENT_TOGGLES.map(group => (
         <div key={group.group} style={card}>
-          <div style={sectionTitle}>{group.group}</div>
+          <SectionHeader icon={group.group === 'Safeguarding' ? '🛡️' : '⚙️'} title={group.group} />
           {group.items.map(item => (
             <Toggle key={item.key} value={form[item.key]} onChange={v => set(item.key, v)} label={item.label} />
           ))}
@@ -410,18 +503,33 @@ function StepRequirements({ form, setForm, orgForms }) {
       ))}
 
       <div style={card}>
-        <div style={sectionTitle}>Attach forms</div>
+        <SectionHeader icon="📎" title="Attach Forms" subtitle="Consent, registration, or info forms parents will need for this session" />
         {orgForms.length === 0 ? (
-          <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>No active forms in your form library yet.</div>
-        ) : orgForms.map(f => (
-          <label key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', cursor: 'pointer', fontSize: 13 }}>
-            <input type="checkbox" checked={form.form_ids.includes(f.id)} onChange={() => toggleForm(f.id)} /> {f.name}
-          </label>
-        ))}
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 12 }}>No active forms in your form library yet.</div>
+        ) : orgForms.map(f => {
+          const checked = form.form_ids.includes(f.id)
+          return (
+            <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, flex: 1 }}>
+                <input type="checkbox" checked={checked} onChange={() => toggleForm(f.id)} /> {f.name}
+              </label>
+              {checked && (
+                <button onClick={() => setEmailFormFor(f)} title="Email this form to parents now"
+                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, color: ACCENT, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  ✉️ Email parents
+                </button>
+              )}
+            </div>
+          )
+        })}
+        <button onClick={() => setShowFormBuilder(true)}
+          style={{ marginTop: 12, padding: '9px 16px', borderRadius: 10, border: `1.5px dashed ${ACCENT}60`, background: `${ACCENT}0A`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
+          + Create new form
+        </button>
       </div>
 
       <div style={card}>
-        <div style={sectionTitle}>Outcomes to measure</div>
+        <SectionHeader icon="🎯" title="Outcomes to measure" subtitle="What impact should this session track?" />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {OUTCOME_AREAS.map(a => {
             const active = form.outcome_areas.includes(a)
@@ -435,6 +543,8 @@ function StepRequirements({ form, setForm, orgForms }) {
           })}
         </div>
       </div>
+
+      {emailFormFor && <EmailFormModal form={emailFormFor} primary={primary} onClose={() => setEmailFormFor(null)} />}
     </>
   )
 }
@@ -464,7 +574,7 @@ function StepReview({ form, staff, expectedCount, primary }) {
   return (
     <>
       <div style={card}>
-        <div style={sectionTitle}>Session</div>
+        <SectionHeader icon="📋" title="Session" />
         <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{form.title || 'Untitled session'}</div>
         <div style={{ fontSize: 13, color: 'var(--text3)' }}>
           {form.session_date && format(new Date(form.session_date), 'EEEE d MMMM')} · {form.start_time}–{form.end_time}
@@ -472,7 +582,7 @@ function StepReview({ form, staff, expectedCount, primary }) {
         <div style={{ fontSize: 13, color: 'var(--text3)' }}>{form.location}</div>
       </div>
       <div style={card}>
-        <div style={sectionTitle}>People</div>
+        <SectionHeader icon="👥" title="People" />
         <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>{expectedCount} young people expected</div>
         <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>
           {(form.lead_staff_id ? 1 : 0) + form.supporting_staff_ids.length} staff assigned{leadName ? ` (lead: ${leadName})` : ''}
@@ -482,7 +592,7 @@ function StepReview({ form, staff, expectedCount, primary }) {
         </div>
       </div>
       <div style={card}>
-        <div style={sectionTitle}>Readiness</div>
+        <SectionHeader icon="✅" title="Readiness" />
         {checks.map((c, i) => <ReadinessRow key={i} {...c} />)}
       </div>
     </>

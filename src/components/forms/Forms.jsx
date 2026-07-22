@@ -348,7 +348,7 @@ function FieldPreview({ field }) {
   }
 }
 
-function FormBuilder({ org, initial, onSave, onCancel }) {
+export function FormBuilder({ org, initial, onSave, onCancel }) {
   const isMobile = useIsMobile()
   const [form, setForm] = useState(() => {
     const base = initial || { name: '', description: '', fields: [], tag: 'Other', visibility: 'public' }
@@ -631,7 +631,7 @@ function SubmissionsView({ form, org, onBack }) {
   )
 }
 
-function EmailFormModal({ form, primary, onClose }) {
+export function EmailFormModal({ form, primary, onClose }) {
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState(null) // { sent, failed } | { error }
