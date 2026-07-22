@@ -265,7 +265,7 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {activeList.map(({ child, att }) => (
-              <RegisterRow key={child.id} child={child} att={att} onOpen={() => setSelectedChild(child)}
+              <RegisterRow key={child.id} child={child} att={att} onOpen={() => setSelectedChild(child)} groupLabel={groupLabel}
                 onSignIn={() => handleSignIn(child)} onSignOut={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} />
             ))}
           </div>
@@ -324,7 +324,7 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
         }} />
       )}
       {selectedChild && (
-        <ChildQuickInfo child={selectedChild} att={attendanceByChild[selectedChild.id]} onClose={() => setSelectedChild(null)} />
+        <ChildQuickInfo child={selectedChild} att={attendanceByChild[selectedChild.id]} onClose={() => setSelectedChild(null)} groupLabel={groupLabel} />
       )}
     </div>
   )
@@ -339,7 +339,7 @@ function MiniStat({ label, value, color }) {
   )
 }
 
-function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent }) {
+function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, groupLabel }) {
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const status = att?.status
   return (
@@ -597,7 +597,7 @@ function ClosureFlow({ session, grouped, onClose, org, authUserId, onClosed, onM
   )
 }
 
-function ChildQuickInfo({ child, att, onClose }) {
+function ChildQuickInfo({ child, att, onClose, groupLabel }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 340 }} onClick={e => e.stopPropagation()}>
