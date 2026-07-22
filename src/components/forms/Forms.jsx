@@ -695,6 +695,92 @@ function EmailFormModal({ form, primary, onClose }) {
   )
 }
 
+function AccessModal({ form, staff, currentUserId, primary, onClose, onSave }) {
+  const [mode, setMode] = useState(form.submission_view_mode || 'admins')
+  const [selected, setSelected] = useState(new Set(form.submission_viewer_ids || []))
+  const [search, setSearch] = useState('')
+
+  const admins = staff.filter(s => s.role === 'admin' || s.role === 'owner')
+  const others = staff
+    .filter(s => s.role !== 'admin' && s.role !== 'owner')
+    .filter(s => !search.trim() || (s.full_name || '').toLowerCase().includes(search.trim().toLowerCase()))
+
+  const toggle = (id) => setSelected(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 460, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>🔒 Who can view submissions</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
+        </div>
+        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 18 }}>{form.name}</div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'admins' ? primary : '#E2E8F0'}`, cursor: 'pointer', background: mode === 'admins' ? `${primary}0D` : '#fff' }}>
+            <input type="radio" checked={mode === 'admins'} onChange={() => setMode('admins')} style={{ marginTop: 3 }} />
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>Admins only</div>
+              <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>The safest default. Only people with the Admin role can see who filled this in.</div>
+            </div>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'custom' ? primary : '#E2E8F0'}`, cursor: 'pointer', background: mode === 'custom' ? `${primary}0D` : '#fff' }}>
+            <input type="radio" checked={mode === 'custom'} onChange={() => setMode('custom')} style={{ marginTop: 3 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>Admins + specific people</div>
+              <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>Choose exactly who else can see responses to this form.</div>
+            </div>
+          </label>
+        </div>
+
+        {mode === 'custom' && (
+          <div style={{ border: '1px solid #EEF1F6', borderRadius: 14, padding: 14, marginBottom: 8 }}>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search your team…"
+              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none', marginBottom: 10 }}
+            />
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 6 }}>ALWAYS INCLUDED</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {admins.length === 0 ? (
+                <div style={{ fontSize: 12, color: '#94A3B8' }}>No admins found</div>
+              ) : admins.map(a => (
+                <span key={a.id} style={{ fontSize: 12, fontWeight: 700, color: '#334155', background: '#F1F5F9', padding: '5px 10px', borderRadius: 99 }}>{a.full_name}{a.id === currentUserId ? ' (you)' : ''}</span>
+              ))}
+            </div>
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 6 }}>ALSO ALLOW</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
+              {others.length === 0 ? (
+                <div style={{ fontSize: 12, color: '#94A3B8', padding: '8px 0' }}>No matching team members</div>
+              ) : others.map(person => (
+                <label key={person.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, cursor: 'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <input type="checkbox" checked={selected.has(person.id)} onChange={() => toggle(person.id)} />
+                  <span style={{ fontSize: 13, color: '#0F172A', fontWeight: 600 }}>{person.full_name || 'Unnamed'}</span>
+                  {person.role && <span style={{ fontSize: 10.5, color: '#94A3B8', textTransform: 'capitalize' }}>· {person.role}</span>}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
+          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={() => onSave(mode, mode === 'custom' ? Array.from(selected) : [])}
+            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const AVATAR_COLORS = ['#6D5DF6', '#2563EB', '#059669', '#D97706', '#DB2777', '#0EA5E9', '#7C3AED', '#DC2626']
 function avatarColor(seed) {
   const s = String(seed || '')
@@ -827,7 +913,20 @@ export default function Forms({ org, session, isAdmin }) {
   const [rowMenuFor, setRowMenuFor] = useState(null)
   const [showImport, setShowImport] = useState(false)
   const [showDuplicatePicker, setShowDuplicatePicker] = useState(false)
+  const [accessModalFor, setAccessModalFor] = useState(null)
   const primary = org?.primary_color || '#1B9AAA'
+
+  const canViewSubmissions = (form) =>
+    isAdmin || (form.submission_view_mode === 'custom' && (form.submission_viewer_ids || []).includes(authUserId))
+
+  const saveSubmissionAccess = async (form, mode, viewerIds) => {
+    const { error } = await supabase.from('org_forms')
+      .update({ submission_view_mode: mode, submission_viewer_ids: viewerIds })
+      .eq('id', form.id)
+    if (error) { window.alert('Could not update access: ' + error.message); return }
+    setForms(f => f.map(x => x.id === form.id ? { ...x, submission_view_mode: mode, submission_viewer_ids: viewerIds } : x))
+    setAccessModalFor(null)
+  }
 
   const copyFormLink = async (form) => {
     const link = `${window.location.origin}/forms/${org?.slug}/${form.id}`
@@ -845,7 +944,7 @@ export default function Forms({ org, session, isAdmin }) {
     const [{ data: formRows }, { data: subRows }, { data: staffRows }] = await Promise.all([
       supabase.from('org_forms').select('*').eq('org_id', org.id).order('updated_at', { ascending: false }),
       supabase.from('form_submissions').select('id, form_id, data, created_at').eq('org_id', org.id).order('created_at', { ascending: false }).limit(3000),
-      supabase.from('user_profiles').select('id, full_name').eq('org_id', org.id),
+      supabase.from('user_profiles').select('id, full_name, role').eq('org_id', org.id),
     ])
     setForms(formRows || [])
     setSubmissions(subRows || [])
@@ -1145,8 +1244,9 @@ export default function Forms({ org, session, isAdmin }) {
               {filteredForms.map((form, i) => {
                 const accent = FORM_ACCENTS[i % FORM_ACCENTS.length]
                 const subCount = submissionsByForm[form.id]?.length || 0
+                const canView = canViewSubmissions(form)
                 return (
-                  <div key={form.id} onClick={() => isAdmin ? openForEdit(form) : openForSubmissions(form)}
+                  <div key={form.id} onClick={() => isAdmin ? openForEdit(form) : (canView && openForSubmissions(form))}
                     style={{ cursor: 'pointer', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 16 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                       <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TAG_COLOR[form.tag] || accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📝</div>
@@ -1159,7 +1259,15 @@ export default function Forms({ org, session, isAdmin }) {
                       <span>📬 {subCount} submissions</span>
                     </div>
                     {isAdmin && (
-                      <button onClick={(e) => { e.stopPropagation(); openForSubmissions(form) }} style={{ width: '100%', padding: '8px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>📬 View submissions</button>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={(e) => { e.stopPropagation(); openForSubmissions(form) }} style={{ flex: 1, padding: '8px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>📬 View submissions</button>
+                        <button onClick={(e) => { e.stopPropagation(); setAccessModalFor(form) }} title="Choose who can view submissions" style={{ padding: '8px 10px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                          {form.submission_view_mode === 'custom' ? `🔓 ${(form.submission_viewer_ids || []).length}` : '🔒'}
+                        </button>
+                      </div>
+                    )}
+                    {!isAdmin && !canView && (
+                      <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700 }}>🔒 Only admins can view responses</div>
                     )}
                   </div>
                 )
@@ -1173,11 +1281,13 @@ export default function Forms({ org, session, isAdmin }) {
                 const subThisMonth = (submissionsByForm[form.id] || []).filter(s => inRange(s.created_at, thisMonthStart, now.getTime() + 1)).length
                 const st = STATUS_STYLE[form.status] || STATUS_STYLE.draft
                 const updaterName = staffName(form.updated_by)
+                const canView = canViewSubmissions(form)
+                const rowClick = () => { if (isAdmin) openForEdit(form); else if (canView) openForSubmissions(form) }
                 return (
                   <div key={form.id} style={{ position: 'relative', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-                    <div onClick={() => isAdmin ? openForEdit(form) : openForSubmissions(form)} style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, cursor: 'pointer' }}>📝</div>
+                    <div onClick={rowClick} style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, cursor: 'pointer' }}>📝</div>
 
-                    <div onClick={() => isAdmin ? openForEdit(form) : openForSubmissions(form)} style={{ flex: '1 1 220px', minWidth: 180, cursor: 'pointer' }}>
+                    <div onClick={rowClick} style={{ flex: '1 1 220px', minWidth: 180, cursor: 'pointer' }}>
                       <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 2 }}>{form.name}</div>
                       <div style={{ fontSize: 12, color: '#64748B', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{form.description || 'No description'}</div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -1208,12 +1318,19 @@ export default function Forms({ org, session, isAdmin }) {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: isMobile ? 0 : 'auto' }}>
                       {isAdmin && (
+                        <button onClick={() => setAccessModalFor(form)} title="Choose who can view submissions" style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                          {form.submission_view_mode === 'custom' ? `🔓 ${(form.submission_viewer_ids || []).length}` : '🔒 Admins only'}
+                        </button>
+                      )}
+                      {isAdmin && (
                         <button onClick={() => openForSubmissions(form)} style={{ padding: '9px 14px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>📬 Submissions{subCount ? ` (${subCount})` : ''}</button>
                       )}
                       {isAdmin ? (
                         <button onClick={() => openForEdit(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>✏️ Edit</button>
-                      ) : (
+                      ) : canView ? (
                         <button onClick={() => openForSubmissions(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>📬 View</button>
+                      ) : (
+                        <span style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 700, padding: '9px 4px', whiteSpace: 'nowrap' }}>🔒 Admins only</span>
                       )}
                       <button onClick={() => window.open(`/forms/${org?.slug}/${form.id}`, '_blank')} title="Preview" style={iconBtn}>👁</button>
                       <button onClick={() => copyFormLink(form)} disabled={!form.is_active} title={form.is_active ? 'Copy public link' : 'Activate to get a link'}
@@ -1306,6 +1423,16 @@ export default function Forms({ org, session, isAdmin }) {
       )}
       {showDuplicatePicker && (
         <DuplicatePickerModal forms={forms} onClose={() => setShowDuplicatePicker(false)} onDuplicate={duplicateForm} />
+      )}
+      {accessModalFor && (
+        <AccessModal
+          form={accessModalFor}
+          staff={staff}
+          currentUserId={authUserId}
+          primary={primary}
+          onClose={() => setAccessModalFor(null)}
+          onSave={(mode, viewerIds) => saveSubmissionAccess(accessModalFor, mode, viewerIds)}
+        />
       )}
     </div>
   )
