@@ -747,9 +747,9 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#60A5FA', icon: '👥' },
         ].map((s, i) => (
           <button key={s.key} onClick={() => { setRegTab(s.key); setRegExpanded(true) }}
-            style={{ background: 'transparent', border: 'none', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.12)' : 'none', padding: isMobile ? '10px 4px' : '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 8 }}
+            style={{ background: regTab === s.key && regExpanded ? 'rgba(255,255,255,0.12)' : 'transparent', border: 'none', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.12)' : 'none', boxShadow: regTab === s.key && regExpanded ? `inset 0 -2px 0 ${s.color}` : 'none', padding: isMobile ? '10px 4px' : '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 8 }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+            onMouseLeave={e => e.currentTarget.style.background = regTab === s.key && regExpanded ? 'rgba(255,255,255,0.12)' : 'transparent'}>
             <span style={{ fontSize: 12, color: s.color }}>{s.icon}</span>
             <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: s.color, letterSpacing: -0.3, fontFamily: 'var(--font-display, sans-serif)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>{s.value}</span>
             <span style={{ fontSize: isMobile ? 9 : 10, color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.label}</span>
@@ -811,21 +811,12 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
         {regExpanded && (
           <div style={{ marginTop: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 14 }}>
-            {/* Tabs */}
-            <div style={{ display: 'flex', gap: 4, marginBottom: 10, overflowX: 'auto' }}>
-              {[
-                { key: 'expected', label: 'Expected', count: regGrouped.expected.length },
-                { key: 'signed_in', label: 'Signed in', count: regGrouped.signed_in.length },
-                { key: 'absent', label: 'Absent', count: regGrouped.absent.length },
-                { key: 'signed_out', label: 'Signed out', count: regGrouped.signed_out.length },
-              ].map(t => (
-                <button key={t.key} onClick={() => setRegTab(t.key)}
-                  style={{ flex: 1, padding: '8px 6px', borderRadius: 9, border: 'none', background: regTab === t.key ? primary : 'rgba(255,255,255,0.06)', color: regTab === t.key ? '#fff' : 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  {t.label} {t.count}
-                </button>
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {{ expected: 'Expected', signed_in: 'Signed in', absent: 'Absent', signed_out: 'Signed out' }[regTab]}
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>{(regGrouped[regTab] || []).length}</span>
             </div>
-
             <input value={regSearch} onChange={e => setRegSearch(e.target.value)} placeholder="🔍 Search young people..."
               style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12.5, marginBottom: 10, outline: 'none' }} />
 
