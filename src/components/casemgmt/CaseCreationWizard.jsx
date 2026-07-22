@@ -122,7 +122,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                           <Avatar name={c.first_name} photoUrl={c.photo_url} size={28} />
                           <div>
                             <div style={{ fontSize: 13, fontWeight: 700 }}>{c.first_name} {c.last_name}</div>
-                            <div style={{ fontSize: 11, color: '#94A3B8' }}>{c.group_name || 'No group'}</div>
+                            <div style={{ fontSize: 11, color: '#94A3B8' }}>{c.group_name || 'Ungrouped'}</div>
                           </div>
                         </div>
                       ))}

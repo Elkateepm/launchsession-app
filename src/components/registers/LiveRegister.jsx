@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useOrgSettings } from '../../hooks/useOrgSettings'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -50,6 +51,9 @@ function fmtTime(d) {
 }
 
 export default function LiveRegister({ session, org, authUserId, onClose, onNavigate }) {
+  const { groups: orgGroups } = useOrgSettings(org?.id)
+  const configuredGroupLabels = useMemo(() => new Map((orgGroups || []).map(g => [(g.label || '').trim().toLowerCase(), g.label])), [orgGroups])
+  const groupLabel = (name) => configuredGroupLabels.get((name || '').trim().toLowerCase()) || 'Ungrouped'
   const [children, setChildren] = useState([])
   const [attendance, setAttendance] = useState([])
   const [staffRows, setStaffRows] = useState([])
@@ -349,7 +353,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent }) 
           {child.is_walk_in && child.profile_incomplete && <span style={{ marginLeft: 6, fontSize: 9.5, fontWeight: 800, color: '#D97706', background: '#FFFBEB', borderRadius: 6, padding: '1px 6px' }}>WALK-IN · PROFILE INCOMPLETE</span>}
         </div>
         <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>
-          {child.group_name || 'No group'}
+          {groupLabel(child.group_name)}
           {status === 'signed_in' && ` · Signed in at ${fmtTime(att.signed_in_at)}`}
           {status === 'signed_out' && ` · Signed out at ${fmtTime(att.signed_out_at)}`}
           {status === 'absent' && ` · ${att.absence_reason || 'Absent'}`}
@@ -598,7 +602,7 @@ function ChildQuickInfo({ child, att, onClose }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 340 }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>{child.first_name} {child.last_name}</div>
-        <div style={{ fontSize: 12.5, color: '#6B7280', marginBottom: 12 }}>{child.group_name || 'No group'}{child.date_of_birth ? ` · ${new Date().getFullYear() - new Date(child.date_of_birth).getFullYear()} yrs` : ''}</div>
+        <div style={{ fontSize: 12.5, color: '#6B7280', marginBottom: 12 }}>{groupLabel(child.group_name)}{child.date_of_birth ? ` · ${new Date().getFullYear() - new Date(child.date_of_birth).getFullYear()} yrs` : ''}</div>
         {child.allergies && <InfoLine label="Allergies" value={child.allergies} />}
         {child.medical_notes && <InfoLine label="Medical notes" value={child.medical_notes} />}
         {child.emergency_contact_name && <InfoLine label="Emergency contact" value={`${child.emergency_contact_name} · ${child.emergency_contact_phone || ''}`} />}

@@ -403,12 +403,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   }, [activeSession, sessionAttendance])
 
   const { groups: orgGroups } = useOrgSettings(orgId)
-  const LEGACY_BUBBLE_COLORS = { red: '#D0021B', orange: '#F97316', yellow: '#F97316', blue: '#1B4FA8', purple: '#7B2D8B', teens: '#1A1A1A' }
   const getBubbleColor = (groupName) => {
-    const name = (groupName || '').toLowerCase()
-    const match = (orgGroups || []).find(g => (g.label || '').toLowerCase() === name)
-    if (match?.color) return match.color
-    return LEGACY_BUBBLE_COLORS[name] || '#9CA3AF'
+    const name = (groupName || '').trim().toLowerCase()
+    const match = (orgGroups || []).find(g => (g.label || '').trim().toLowerCase() === name)
+    return match?.color || '#9CA3AF'
   }
 
   // All children with an attendance record for this session — this is the
@@ -427,7 +425,15 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const sessionChildIds = new Set(sessionAttendance.map(a => a.child_id))
   const targetedChildIds = new Set(targetedChildren.map(c => c.id))
   const sessionChildren = childList.filter(ch => sessionChildIds.has(ch.id) || targetedChildIds.has(ch.id))
-  const bubbleGroups = [...new Set(sessionChildren.map(ch => (ch.group_name || '').trim()).filter(Boolean))]
+  // Only ever show pills for groups that actually exist in org settings right now —
+  // a child's group_name can go stale (group renamed/deleted) without the child
+  // record itself being touched, and that shouldn't resurrect a phantom group.
+  const configuredGroupLabels = new Map((orgGroups || []).map(g => [(g.label || '').trim().toLowerCase(), g.label]))
+  const bubbleGroups = [...new Set(
+    sessionChildren
+      .map(ch => configuredGroupLabels.get((ch.group_name || '').trim().toLowerCase()))
+      .filter(Boolean)
+  )]
 
   const pct = stats.percent || 0
 
@@ -834,7 +840,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                         {child.is_walk_in && child.profile_incomplete && <span style={{ marginLeft: 6, fontSize: 8.5, fontWeight: 800, color: '#FCD34D', background: 'rgba(251,191,36,0.15)', borderRadius: 6, padding: '1px 5px' }}>WALK-IN</span>}
                       </div>
                       <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>
-                        {child.group_name || 'No group'}
+                        {configuredGroupLabels.get((child.group_name || '').trim().toLowerCase()) || 'Ungrouped'}
                         {att?.status === 'signed_in' && ` · in at ${hubFmtTime(att.signed_in_at)}`}
                         {att?.status === 'signed_out' && ` · out at ${hubFmtTime(att.signed_out_at)}`}
                         {att?.status === 'absent' && ` · ${att.absence_reason || 'Absent'}`}

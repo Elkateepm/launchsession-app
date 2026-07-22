@@ -1087,7 +1087,7 @@ function PastSessionsInsights({ pastSessions, org }) {
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.child.first_name} {a.child.last_name}</div>
-                          <div style={{ fontSize: 10.5, color: '#94A3B8' }}>{a.child.group_name || 'No group'}{topReason ? ` · "${topReason[0]}"` : ''}</div>
+                          <div style={{ fontSize: 10.5, color: '#94A3B8' }}>{a.child.group_name || 'Ungrouped'}{topReason ? ` · "${topReason[0]}"` : ''}</div>
                         </div>
                         <span style={{ fontSize: 11, fontWeight: 800, color: '#DC2626', background: '#FEF2F2', borderRadius: 99, padding: '3px 9px', flexShrink: 0 }}>{a.count} missed</span>
                       </div>

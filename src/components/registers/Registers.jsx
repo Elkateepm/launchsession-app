@@ -65,7 +65,9 @@ function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) {
       if (err) throw err
 
       if (removedLabels.length > 0) {
-        await supabase.from('children').update({ group_name: null }).eq('org_id', org.id).in('group_name', removedLabels)
+        for (const label of removedLabels) {
+          await supabase.from('children').update({ group_name: null }).eq('org_id', org.id).ilike('group_name', label)
+        }
       }
 
       onSaved(groups, removedLabels)
@@ -750,9 +752,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
             {child.first_name} {child.last_name}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
-            {(bubble || child.group_name) && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: bColor }}>{bubble?.label || child.group_name}</span>
-            )}
+            <span style={{ fontSize: 11, fontWeight: 700, color: bubble ? bColor : '#94A3B8' }}>{bubble?.label || 'Ungrouped'}</span>
             {child.allergies && (
               <span style={{ fontSize: 10, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
             )}
@@ -852,7 +852,7 @@ export default function Registers({ org, onNavigate }) {
       const alerts = [c.allergies && '⚠ Allergy', c.medical_notes && '✚ Medical', c.has_epipen && '💉 EpiPen'].filter(Boolean).join('  ')
       return `<tr>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:700">${c.first_name} ${c.last_name}</td>
-        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:${bubble?.color || '#64748b'};font-weight:700">${bubble?.label || c.group_name || 'Ungrouped'}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:${bubble?.color || '#64748b'};font-weight:700">${bubble?.label || 'Ungrouped'}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#dc2626">${alerts}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:800;color:${status === 'signed_in' ? '#16a34a' : status === 'absent' ? '#dc2626' : '#64748b'}">${statusLabel}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:#94a3b8;font-size:12px">_______________</td>
@@ -937,13 +937,10 @@ export default function Registers({ org, onNavigate }) {
     signed_out: children.filter(c => getStatus(c.id) === 'signed_out').length,
   }
 
-  // Available groups from org settings + any from children
-  const availableGroups = React.useMemo(() => {
-    const fromBubbles = bubbles.map(b => b.label)
-    const fromChildren = [...new Set(children.map(c => c.group_name).filter(Boolean))]
-    const all = [...new Set([...fromBubbles, ...fromChildren])]
-    return all
-  }, [bubbles, children])
+  // Available groups — configured groups only. A child's group_name that no
+  // longer matches a configured group (e.g. the group was since deleted or
+  // renamed) is treated as ungrouped, not surfaced as a phantom filter tab.
+  const availableGroups = React.useMemo(() => bubbles.map(b => b.label), [bubbles])
 
   const filtered = children.filter(c => {
     const nameOk = !search.trim() || `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase())

@@ -178,8 +178,21 @@ function RegisterGroupsManager({ org }) {
   }
 
   const handleRename = async (id, newLabel) => {
-    if (!newLabel.trim()) return
-    await persistGroups(groups.map(g => g.id === id ? { ...g, label: newLabel.trim() } : g))
+    const trimmed = newLabel.trim()
+    if (!trimmed) return
+    const group = groups.find(g => g.id === id)
+    const oldLabel = group?.label
+    await persistGroups(groups.map(g => g.id === id ? { ...g, label: trimmed } : g))
+    if (oldLabel && oldLabel !== trimmed) {
+      await supabase.from('children').update({ group_name: trimmed }).eq('org_id', orgId).ilike('group_name', oldLabel)
+      setCounts(prev => {
+        const next = { ...prev }
+        const oldCount = next[oldLabel.toLowerCase()] || 0
+        delete next[oldLabel.toLowerCase()]
+        next[trimmed.toLowerCase()] = oldCount
+        return next
+      })
+    }
   }
 
   const handleColorChange = async (id, color) => {
@@ -190,10 +203,14 @@ function RegisterGroupsManager({ org }) {
     const group = groups.find(g => g.id === id)
     const count = counts[(group?.label || '').toLowerCase()] || 0
     const msg = count > 0
-      ? `Delete "${group.label}"? ${count} ${count === 1 ? 'child is' : 'children are'} currently in this group — they will keep the group name on their record, but it will no longer appear as a managed group.`
+      ? `Delete "${group.label}"? ${count} ${count === 1 ? 'child is' : 'children are'} currently in this group — they will become ungrouped.`
       : `Delete "${group?.label}"?`
     if (!window.confirm(msg)) return
     await persistGroups(groups.filter(g => g.id !== id))
+    if (group?.label) {
+      await supabase.from('children').update({ group_name: null }).eq('org_id', orgId).ilike('group_name', group.label)
+      setCounts(prev => ({ ...prev, [group.label.toLowerCase()]: 0 }))
+    }
   }
 
   return (
