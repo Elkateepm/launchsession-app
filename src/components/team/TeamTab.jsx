@@ -148,6 +148,21 @@ export default function TeamTab({ org, session }) {
     }
   }
 
+  const [cancellingId, setCancellingId] = useState(null)
+  const cancelInvite = async (member) => {
+    if (!window.confirm(`Cancel the invite to ${member.email}? They'll no longer be able to use that invite link.`)) return
+    setCancellingId(member.id)
+    setError(''); setInviteSuccess('')
+    const { error: deleteError } = await supabase.from('admin_invites').delete().eq('id', member.id)
+    setCancellingId(null)
+    if (deleteError) {
+      setError(`Couldn't cancel the invite for ${member.email}: ${deleteError.message}`)
+      return
+    }
+    setMembers(prev => prev.filter(m => m.id !== member.id))
+    setInviteSuccess(`Invite to ${member.email} was cancelled.`)
+  }
+
   const [updatingRoleId, setUpdatingRoleId] = useState(null)
   const updateMemberRole = async (member, newRole) => {
     if (newRole === member.role) return
@@ -245,7 +260,7 @@ export default function TeamTab({ org, session }) {
             </div>
           ) : pendingMembers.map((member, index) => (
             <div key={member.id}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: index < pendingMembers.length - 1 ? '1px solid #f3f4f6' : 'none', transition: 'background 0.15s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: isMobile ? 'wrap' : 'nowrap', padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: index < pendingMembers.length - 1 ? '1px solid #f3f4f6' : 'none', transition: 'background 0.15s' }}
               onMouseEnter={e => e.currentTarget.style.background = '#FAFBFC'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               <div style={{ width: 40, height: 40, borderRadius: 12, background: roleColors[member.role] || primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
@@ -261,6 +276,11 @@ export default function TeamTab({ org, session }) {
               </span>
               <button onClick={() => resendInvite(member)} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
                 Resend
+              </button>
+              <button onClick={() => cancelInvite(member)} disabled={cancellingId === member.id}
+                title="Cancel invite"
+                style={{ border: '1px solid #FCA5A5', background: 'var(--surface)', color: '#DC2626', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: cancellingId === member.id ? 'default' : 'pointer', opacity: cancellingId === member.id ? 0.6 : 1 }}>
+                {cancellingId === member.id ? 'Cancelling…' : 'Cancel'}
               </button>
             </div>
           ))}
