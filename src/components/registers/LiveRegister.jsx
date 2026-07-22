@@ -68,11 +68,8 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
 
   const load = useCallback(async () => {
     if (!session?.id) return
-    const bubbleFilter = session.bubbles && session.bubbles.length > 0 ? session.bubbles : null
     const [{ data: childData }, { data: attData }, { data: ssData }, { data: noteData }] = await Promise.all([
-      bubbleFilter
-        ? supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).in('group_name', bubbleFilter).order('first_name')
-        : supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).order('first_name'),
+      supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).order('first_name'),
       supabase.from('attendance').select('*').eq('session_id', session.id),
       supabase.from('session_staff').select('*').eq('session_id', session.id),
       supabase.from('session_notes').select('*').eq('session_id', session.id).order('created_at', { ascending: false }),
@@ -103,8 +100,9 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const rows = useMemo(() => {
-    return children.map(c => ({ child: c, att: attendanceByChild[c.id] || null }))
-  }, [children, attendanceByChild])
+    const attendedIds = new Set(attendance.map(a => a.child_id))
+    return children.filter(c => attendedIds.has(c.id)).map(c => ({ child: c, att: attendanceByChild[c.id] || null }))
+  }, [children, attendance, attendanceByChild])
 
   const grouped = useMemo(() => {
     const g = { expected: [], signed_in: [], absent: [], signed_out: [] }

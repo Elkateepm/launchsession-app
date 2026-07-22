@@ -388,22 +388,19 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   const sessionAttendance = localAttendance.filter(a => a.session_id === activeSession?.id)
 
-  // Compute stats from local state so they update immediately on sign-in
+  // Compute stats straight from this session's attendance rows — session creation
+  // (create_session_with_dependencies) already writes one 'expected' row per child
+  // targeted by group OR by individual selection, so this is the real roster,
+  // not something to re-derive from bubbles on the client.
   const stats = React.useMemo(() => {
     if (!activeSession) return { signedIn: 0, expected: 0, absent: 0, signedOut: 0, percent: 0 }
-    const targetGroups = Array.isArray(activeSession.bubbles) ? activeSession.bubbles.map(g => (g || '').toLowerCase()) : []
-    const targetedChildren = targetGroups.length > 0
-      ? childList.filter(c => targetGroups.includes((c.group_name || '').toLowerCase()))
-      : childList
     const si = sessionAttendance.filter(a => a.status === 'signed_in').length
     const so = sessionAttendance.filter(a => a.status === 'signed_out').length
     const absent = sessionAttendance.filter(a => a.status === 'absent').length
-    const signedInIds = new Set(sessionAttendance.filter(a => a.status === 'signed_in').map(a => a.child_id))
-    const expected = targetedChildren.filter(c => !signedInIds.has(c.id)).length
-      + sessionAttendance.filter(a => a.status === 'signed_in' && !targetedChildren.find(c => c.id === a.child_id)).length
-    const total = Math.max(targetedChildren.length, sessionAttendance.length)
+    const expected = sessionAttendance.filter(a => a.status === 'expected').length
+    const total = sessionAttendance.length
     return { signedIn: si, absent, signedOut: so, expected, percent: total > 0 ? Math.round((si / total) * 100) : 0 }
-  }, [activeSession, sessionAttendance, childList])
+  }, [activeSession, sessionAttendance])
 
   const { groups: orgGroups } = useOrgSettings(orgId)
   const LEGACY_BUBBLE_COLORS = { red: '#D0021B', orange: '#F97316', yellow: '#F97316', blue: '#1B4FA8', purple: '#7B2D8B', teens: '#1A1A1A' }
@@ -414,14 +411,14 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     return LEGACY_BUBBLE_COLORS[name] || '#9CA3AF'
   }
 
-  // All children targeted by this session (respects group targeting)
+  // All children with an attendance record for this session — this is the
+  // real roster session creation wrote (bubbles, individual selection, or
+  // walk-ins added since), not a re-derivation from bubbles alone.
   const targetedChildren = useMemo(() => {
     if (!activeSession) return []
-    const targetGroups = Array.isArray(activeSession?.bubbles) ? activeSession.bubbles.map(g => (g || '').toLowerCase()) : []
-    return targetGroups.length > 0
-      ? childList.filter(c => targetGroups.includes((c.group_name || '').toLowerCase()))
-      : childList
-  }, [activeSession, childList])
+    const ids = new Set(sessionAttendance.map(a => a.child_id))
+    return childList.filter(c => ids.has(c.id))
+  }, [activeSession, sessionAttendance, childList])
 
   // Live group breakdown — union of children targeted by this session's bubbles AND any
   // walk-ins who have an attendance record but weren't in a targeted group. Using attendance
@@ -1543,12 +1540,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const si = records.filter(a => a.status === "signed_in").length;
     const absent = records.filter(a => a.status === "absent").length;
     const so = records.filter(a => a.status === "signed_out").length;
-    const targetGroups = Array.isArray(item?.bubbles) ? item.bubbles.map(g => (g || '').toLowerCase()) : [];
-    const targetedChildren = targetGroups.length > 0
-      ? children.filter(c => targetGroups.includes((c.group_name || '').toLowerCase()))
-      : children;
-    const expected = Math.max(targetedChildren.length, records.length);
-    return { signedIn: si, absent, signedOut: so, expected, percent: expected > 0 ? Math.round((si / expected) * 100) : 0 };
+    const expected = records.filter(a => a.status === "expected").length;
+    const total = records.length;
+    return { signedIn: si, absent, signedOut: so, expected, percent: total > 0 ? Math.round((si / total) * 100) : 0 };
   };
 
   const [liveRegisterSessionId, setLiveRegisterSessionId] = useState(null)
