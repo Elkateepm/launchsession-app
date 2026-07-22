@@ -155,7 +155,6 @@ export default function Onboarding({ session, org, onComplete }) {
   )
 
 
-  const COLOR_SWATCHES = ['#4F6EF7','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4','#F97316','#EC4899']
   const PRESET_GROUPS = ['Under 7s','Under 10s','Under 12s','Under 14s','Under 16s','Beginners','Intermediate','Advanced','Team A','Team B']
 
   const addGroup = () => {
@@ -200,22 +199,23 @@ export default function Onboarding({ session, org, onComplete }) {
       )}
 
       {/* Custom add */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 20 }}>
-        <input
-          style={{ ...inp, marginBottom: 0, flex: 1 }}
-          placeholder="Custom group name..."
-          value={newGroupLabel}
-          onChange={e => setNewGroupLabel(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && addGroup()}
-        />
-        <div style={{ display: 'flex', gap: 4 }}>
-          {COLOR_SWATCHES.map(c => (
-            <button key={c} onClick={() => setNewGroupColor(c)}
-              style={{ width: 18, height: 18, borderRadius: '50%', background: c, border: newGroupColor === c ? '2px solid #fff' : 'none', cursor: 'pointer', flexShrink: 0 }} />
-          ))}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
+          <input
+            style={{ ...inp, marginBottom: 0, flex: 1, padding: '15px 18px', fontSize: 16 }}
+            placeholder="Custom group name..."
+            value={newGroupLabel}
+            onChange={e => setNewGroupLabel(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addGroup()}
+          />
+          <label title="Pick a colour" style={{ position: 'relative', width: 54, height: 54, borderRadius: 14, flexShrink: 0, background: newGroupColor, border: '2px solid rgba(255,255,255,0.25)', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <input type="color" value={newGroupColor} onChange={e => setNewGroupColor(e.target.value)}
+              style={{ position: 'absolute', inset: -4, width: 'calc(100% + 8px)', height: 'calc(100% + 8px)', border: 'none', padding: 0, cursor: 'pointer', opacity: 0 }} />
+            <span style={{ fontSize: 16, pointerEvents: 'none', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>🎨</span>
+          </label>
         </div>
         <button onClick={addGroup}
-          style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#4F6EF7', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add</button>
+          style={{ width: '100%', padding: '13px 16px', borderRadius: 12, border: 'none', background: '#4F6EF7', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ Add Group</button>
       </div>
 
       <button style={btn(false)} onClick={next}>Continue →</button>

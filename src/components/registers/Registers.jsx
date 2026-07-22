@@ -114,16 +114,18 @@ function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) {
         )}
 
         {/* Custom add */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 22 }}>
-          <input value={newLabel} onChange={e => setNewLabel(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCustom()}
-            placeholder="Custom group name..."
-            style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, outline: 'none' }} />
-          <div style={{ display: 'flex', gap: 4 }}>
-            {GROUP_COLOR_SWATCHES.map(c => (
-              <button key={c} onClick={() => setNewColor(c)} style={{ width: 20, height: 20, borderRadius: '50%', background: c, border: c === newColor ? '2px solid #fff' : '2px solid transparent', cursor: 'pointer' }} />
-            ))}
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
+            <input value={newLabel} onChange={e => setNewLabel(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCustom()}
+              placeholder="Custom group name..."
+              style={{ flex: 1, padding: '15px 18px', borderRadius: 12, border: '1.5px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 16, outline: 'none' }} />
+            <label title="Pick a colour" style={{ position: 'relative', width: 54, height: 54, borderRadius: 14, flexShrink: 0, background: newColor, border: '2px solid rgba(255,255,255,0.25)', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)}
+                style={{ position: 'absolute', inset: -4, width: 'calc(100% + 8px)', height: 'calc(100% + 8px)', border: 'none', padding: 0, cursor: 'pointer', opacity: 0 }} />
+              <span style={{ fontSize: 16, pointerEvents: 'none', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>🎨</span>
+            </label>
           </div>
-          <button onClick={addCustom} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add</button>
+          <button onClick={addCustom} style={{ width: '100%', padding: '13px 16px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ Add Group</button>
         </div>
 
         <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 13, borderRadius: 12, border: 'none', background: saving ? '#6B7280' : `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
