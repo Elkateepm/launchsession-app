@@ -1286,7 +1286,7 @@ export default function Forms({ org, session, isAdmin }) {
                 const canView = canViewSubmissions(form)
                 const rowClick = () => { if (isAdmin) openForEdit(form); else if (canView) openForSubmissions(form) }
                 return (
-                  <div key={form.id} style={{ position: 'relative', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: isCompact ? 'wrap' : 'nowrap' }}>
+                  <div key={form.id} style={{ position: 'relative', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                     <div onClick={rowClick} style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, cursor: 'pointer' }}>📝</div>
 
                     <div onClick={rowClick} style={{ flex: '1 1 220px', minWidth: 180, cursor: 'pointer' }}>
@@ -1320,12 +1320,13 @@ export default function Forms({ org, session, isAdmin }) {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, flexWrap: 'wrap', marginLeft: isCompact ? 0 : 'auto' }}>
                       {isAdmin && (
-                        <button onClick={() => setAccessModalFor(form)} title="Choose who can view submissions" style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                          {form.submission_view_mode === 'custom' ? `🔓 ${(form.submission_viewer_ids || []).length}` : '🔒 Admins only'}
+                        <button onClick={() => setAccessModalFor(form)} title="Choose who can view submissions"
+                          style={{ ...iconBtn, width: 'auto', minWidth: 32, padding: '0 10px', fontSize: 12, fontWeight: 800, color: '#334155' }}>
+                          {form.submission_view_mode === 'custom' ? `🔓 ${(form.submission_viewer_ids || []).length}` : '🔒'}
                         </button>
                       )}
                       {isAdmin && (
-                        <button onClick={() => openForSubmissions(form)} style={{ padding: '9px 14px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>📬 Submissions{subCount ? ` (${subCount})` : ''}</button>
+                        <button onClick={() => openForSubmissions(form)} title="View submissions" style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>📬{subCount ? ` ${subCount}` : ''}</button>
                       )}
                       {isAdmin ? (
                         <button onClick={() => openForEdit(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>✏️ Edit</button>
