@@ -40,7 +40,7 @@ const SUPERPOWERS = [
 
 function RocketScene() {
   return (
-    <div style={{ position: 'relative', width: '100%', maxWidth: 420, height: 260, margin: '0 auto', overflow: 'visible' }}>
+    <div style={{ position: 'relative', width: '100%', maxWidth: 420, height: 280, margin: '32px auto 0', overflow: 'visible' }}>
       {[...Array(18)].map((_, i) => (
         <motion.div key={i}
           initial={{ opacity: 0.15 }}
@@ -55,8 +55,8 @@ function RocketScene() {
         src="https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/hero-illustration.png"
         alt=""
         style={{
-          position: 'absolute', bottom: 20, left: -180,
-          width: 880, maxWidth: '210%', height: 'auto',
+          position: 'absolute', bottom: 10, left: -60,
+          height: 260, width: 'auto', maxWidth: 'none',
         }} />
     </div>
   )
