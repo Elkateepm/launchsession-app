@@ -1154,10 +1154,13 @@ export default function Forms({ org, session, isAdmin }) {
                     </div>
                     <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{form.name}</div>
                     <div style={{ fontSize: 12, color: '#64748B', marginBottom: 10, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{form.description || 'No description'}</div>
-                    <div style={{ display: 'flex', gap: 10, fontSize: 11.5, fontWeight: 700, color: '#475569' }}>
+                    <div style={{ display: 'flex', gap: 10, fontSize: 11.5, fontWeight: 700, color: '#475569', marginBottom: isAdmin ? 10 : 0 }}>
                       <span>📋 {(form.fields || []).length} fields</span>
                       <span>📬 {subCount} submissions</span>
                     </div>
+                    {isAdmin && (
+                      <button onClick={(e) => { e.stopPropagation(); openForSubmissions(form) }} style={{ width: '100%', padding: '8px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>📬 View submissions</button>
+                    )}
                   </div>
                 )
               })}
@@ -1204,6 +1207,9 @@ export default function Forms({ org, session, isAdmin }) {
                     )}
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: isMobile ? 0 : 'auto' }}>
+                      {isAdmin && (
+                        <button onClick={() => openForSubmissions(form)} style={{ padding: '9px 14px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>📬 Submissions{subCount ? ` (${subCount})` : ''}</button>
+                      )}
                       {isAdmin ? (
                         <button onClick={() => openForEdit(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>✏️ Edit</button>
                       ) : (
