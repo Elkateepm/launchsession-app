@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import SessionWizard, { EVENT_TYPE_KEYS, EVENT_TYPE_META } from '../sessions/SessionWizard'
+import { useOrgSettings } from '../../hooks/useOrgSettings'
 
 const STATUS_META = {
   planning:  { label: 'Planning',  bg: '#FEF3C7', color: '#B45309', dotColor: '#F59E0B' },
@@ -288,6 +289,10 @@ export default function EventsTrips({ org, session, onNavigate }) {
   const isMobile = useIsMobile()
   const orgId = org?.id
   const primary = org?.primary_color || '#7C3AED'
+  // Realtime-backed, same as Session Planner — a group added/renamed/removed
+  // from Registers (or anywhere else) shows up here without a page reload.
+  const { groups: orgGroups } = useOrgSettings(orgId)
+  const bubbleDefs = (orgGroups || []).map(g => ({ key: (g.id || g.label).toString(), label: g.label, color: g.color || '#1B9AAA' }))
   const [sessions, setSessions] = useState([])
   const [attendance, setAttendance] = useState([])
   const [staffRows, setStaffRows] = useState([])
@@ -380,7 +385,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
   if (showWizard) {
     return (
       <SessionWizard
-        org={org} session={session} bubbleDefs={[]}
+        org={org} session={session} bubbleDefs={bubbleDefs}
         initialType="trip"
         onCancel={() => setShowWizard(false)}
         onNavigate={onNavigate}

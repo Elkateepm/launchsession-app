@@ -366,7 +366,7 @@ function StepDetails({ form, setForm, bubbleDefs, staff, org, onGroupsChanged })
       </div>
 
       {showGroupsModal && (
-        <GroupsQuickSetupModal org={org} initialGroups={org?.custom_groups || []} onClose={() => setShowGroupsModal(false)}
+        <GroupsQuickSetupModal org={org} initialGroups={(bubbleDefs || []).map(b => ({ id: b.key, label: b.label, color: b.color }))} onClose={() => setShowGroupsModal(false)}
           onSaved={() => { setShowGroupsModal(false); if (onGroupsChanged) onGroupsChanged() }} />
       )}
     </>
