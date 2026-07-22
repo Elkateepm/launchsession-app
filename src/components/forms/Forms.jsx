@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
-import { useIsMobile } from '../../hooks/useIsMobile'
+import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function CountUp({ value, duration = 0.6 }) {
@@ -893,6 +893,8 @@ function DuplicatePickerModal({ forms, onClose, onDuplicate }) {
 
 export default function Forms({ org, session, isAdmin }) {
   const isMobile = useIsMobile()
+  const { isTablet } = useBreakpoint()
+  const isCompact = isMobile || isTablet // iPad-width and below: same simplified layout as phone
   const authUserId = session?.user?.id
   const [forms, setForms] = useState([])
   const [submissions, setSubmissions] = useState([])
@@ -1141,7 +1143,7 @@ export default function Forms({ org, session, isAdmin }) {
       </div>
 
       {/* STATS */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isCompact ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
         {statCards.map((s, i) => (
           <motion.div key={s.key} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: i * 0.05 }}
             style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '18px' }}>
@@ -1153,7 +1155,7 @@ export default function Forms({ org, session, isAdmin }) {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: 20, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 320px', gap: 20, alignItems: 'start' }}>
         <div>
           {/* SEARCH + FILTERS */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -1284,7 +1286,7 @@ export default function Forms({ org, session, isAdmin }) {
                 const canView = canViewSubmissions(form)
                 const rowClick = () => { if (isAdmin) openForEdit(form); else if (canView) openForSubmissions(form) }
                 return (
-                  <div key={form.id} style={{ position: 'relative', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+                  <div key={form.id} style={{ position: 'relative', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: isCompact ? 'wrap' : 'nowrap' }}>
                     <div onClick={rowClick} style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, cursor: 'pointer' }}>📝</div>
 
                     <div onClick={rowClick} style={{ flex: '1 1 220px', minWidth: 180, cursor: 'pointer' }}>
@@ -1298,7 +1300,7 @@ export default function Forms({ org, session, isAdmin }) {
 
                     <span style={{ flexShrink: 0, fontSize: 10.5, fontWeight: 800, padding: '4px 11px', borderRadius: 99, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>● {st.label}</span>
 
-                    {!isMobile && (
+                    {!isCompact && (
                       <>
                         <div style={{ textAlign: 'center', width: 60, flexShrink: 0 }}>
                           <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>{(form.fields || []).length}</div>
@@ -1306,7 +1308,7 @@ export default function Forms({ org, session, isAdmin }) {
                         </div>
                         <div style={{ textAlign: 'center', width: 90, flexShrink: 0 }} title={`${subCount} all time`}>
                           <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>{subThisMonth}</div>
-                          <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 700, marginBottom: 3 }}>Submissions{isMobile ? '' : ' this mo.'}</div>
+                          <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 700, marginBottom: 3 }}>Submissions this mo.</div>
                           <Sparkline points={sparklineFor(form.id)} color={accent} />
                         </div>
                         <div style={{ width: 110, flexShrink: 0, fontSize: 11 }}>
@@ -1316,7 +1318,7 @@ export default function Forms({ org, session, isAdmin }) {
                       </>
                     )}
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: isMobile ? 0 : 'auto' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, flexWrap: 'wrap', marginLeft: isCompact ? 0 : 'auto' }}>
                       {isAdmin && (
                         <button onClick={() => setAccessModalFor(form)} title="Choose who can view submissions" style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                           {form.submission_view_mode === 'custom' ? `🔓 ${(form.submission_viewer_ids || []).length}` : '🔒 Admins only'}
