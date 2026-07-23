@@ -749,10 +749,10 @@ function InviteParentModal({ org, onClose }) {
     setSendResult(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/send-registration-invite', {
+      const res = await fetch('/api/send-form-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ emails: [parentEmail], parent_name: parentName.trim() || null }),
+        body: JSON.stringify({ type: 'registration', emails: [parentEmail], parent_name: parentName.trim() || null }),
       })
       const data = await res.json()
       if (!res.ok || data.error || (data.failed || []).length > 0) {
