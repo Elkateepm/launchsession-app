@@ -470,6 +470,18 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   async function upsertAttendance(childId, patch) {
     const existing = attendanceByChild[childId]
+
+    // Closed registers are read-only — any correction needs a reason and an audit record.
+    if (activeSession?.closed_at) {
+      const reason = window.prompt('This register is closed. To make a correction, enter a reason (this will be recorded in the audit log):')
+      if (!reason || !reason.trim()) return
+      await supabase.from('attendance_corrections').insert({
+        org_id: orgId, session_id: activeSession.id, attendance_id: existing?.id || null, child_id: childId,
+        previous_status: existing?.status || null, new_status: patch.status || existing?.status || null,
+        reason: reason.trim(), corrected_by: authUserId,
+      })
+    }
+
     if (existing) {
       const { data } = await supabase.from('attendance').update(patch).eq('id', existing.id).select().single()
       if (data) setLocalAttendance(prev => prev.map(a => a.id === existing.id ? data : a))
@@ -597,14 +609,49 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     return endDateTime < nowTick
   }, [activeSession, nowTick])
 
-  const hasNotStarted = React.useMemo(() => {
-    if (!activeSession?.session_date || !activeSession?.start_time) return false
-    const startDateTime = new Date(`${activeSession.session_date}T${activeSession.start_time}`)
-    return startDateTime > nowTick
-  }, [activeSession, nowTick])
-
   const activeReflection = (reflections || []).find(r => r.session_id === activeSession?.id) || null
   const hasReflection = !!activeReflection
+
+  // ── Session lifecycle: Upcoming → Live → Ending → Closed ──
+  // Register opens 30 min before start (or when the lead starts the session early);
+  // "Live" begins only when the lead taps Start Session (opened_at), not just because
+  // the clock passed start time. "Ending" begins 15 min before scheduled end.
+  const sessionStartDT = activeSession?.session_date && activeSession?.start_time ? new Date(`${activeSession.session_date}T${activeSession.start_time}`) : null
+  const minsToStart = sessionStartDT ? Math.round((sessionStartDT - nowTick) / 60000) : null
+  const registerOpen = !!activeSession && !activeSession.closed_at && (
+    !!activeSession.opened_at || !!activeSession.register_opened_at || (minsToStart !== null && minsToStart <= 30)
+  )
+  const sessionPhase = React.useMemo(() => {
+    if (!activeSession) return 'upcoming'
+    if (activeSession.closed_at) return 'closed'
+    if (!activeSession.opened_at) return 'upcoming'
+    if (isSessionEnded) return 'ending'
+    const endDT = activeSession.session_date && activeSession.end_time ? new Date(`${activeSession.session_date}T${activeSession.end_time}`) : null
+    if (endDT && (endDT - nowTick) <= 15 * 60000) return 'ending'
+    return 'live'
+  }, [activeSession, isSessionEnded, nowTick])
+
+  const handleStartSession = async () => {
+    const now = new Date().toISOString()
+    await supabase.from('sessions').update({ opened_at: now, opened_by: authUserId, register_opened_at: activeSession.register_opened_at || now }).eq('id', activeSession.id)
+    setActiveSession(prev => ({ ...prev, opened_at: now, register_opened_at: prev.register_opened_at || now }))
+    setRegExpanded(true)
+    setRegToast('✓ Session started — register is live')
+    setTimeout(() => setRegToast(''), 3000)
+  }
+
+  // Closure readiness checks (surfaced as warnings in the closure flow)
+  const closureIssues = React.useMemo(() => {
+    const issues = []
+    const stillIn = regGrouped.signed_in.length
+    const noStatus = regGrouped.expected.length
+    if (stillIn > 0) issues.push(`${stillIn} young ${stillIn === 1 ? 'person is' : 'people are'} still signed in.`)
+    if (noStatus > 0) issues.push(`${noStatus} expected attendee${noStatus === 1 ? ' has' : 's have'} no status.`)
+    const staffStillIn = sessionStaff.filter(s => s.signed_in_at && !s.signed_out_at).length
+    if (staffStillIn > 0) issues.push(`${staffStillIn} staff ${staffStillIn === 1 ? 'member is' : 'members are'} still signed in.`)
+    if (!hasReflection) issues.push('Session reflection is incomplete.')
+    return issues
+  }, [regGrouped, sessionStaff, hasReflection])
 
   const handleAddPhotoFiles = async (fileList) => {
     const files = Array.from(fileList || [])
@@ -667,15 +714,20 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
         <div style={{ textAlign: 'center', marginBottom: 14, padding: isMobile ? '0' : '0 130px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 7 }}>
-            {isSessionEnded ? (
+            {sessionPhase === 'closed' ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#CBD5E1', letterSpacing: 0.8 }}>
                 <span style={{ width: 5, height: 5, background: '#94A3B8', borderRadius: '50%' }}></span>
-                SESSION ENDED
+                CLOSED
               </span>
-            ) : hasNotStarted ? (
+            ) : sessionPhase === 'ending' ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(249,115,22,0.14)', border: '1px solid rgba(249,115,22,0.35)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#FB923C', letterSpacing: 0.8 }}>
+                <span style={{ width: 5, height: 5, background: '#FB923C', borderRadius: '50%', animation: 'pulse-live 1.5s infinite' }}></span>
+                ENDING
+              </span>
+            ) : sessionPhase === 'upcoming' ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(251,191,36,0.14)', border: '1px solid rgba(251,191,36,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#FBBF24', letterSpacing: 0.8 }}>
                 <span style={{ width: 5, height: 5, background: '#FBBF24', borderRadius: '50%' }}></span>
-                NOT STARTED
+                {registerOpen ? 'REGISTER OPEN' : 'UPCOMING'}
               </span>
             ) : (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8, boxShadow: '0 2px 10px rgba(34,197,94,0.15)' }}>
@@ -710,6 +762,38 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             </button>
           )}
         </div>
+
+        {/* ── Lifecycle prompts ── */}
+        {sessionPhase === 'upcoming' && !activeSession?.closed_at && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '0 0 14px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 14, padding: '12px 16px', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
+              {minsToStart !== null && minsToStart > 0
+                ? `${activeSession.title} starts in ${minsToStart >= 60 ? `${Math.floor(minsToStart / 60)}h ${minsToStart % 60}m` : `${minsToStart} min`}.${registerOpen ? ' Register is open for arrivals.' : ''}`
+                : `${activeSession.title} is due to start now.`}
+            </div>
+            {(minsToStart === null || minsToStart <= 30) ? (
+              <button onClick={handleStartSession}
+                style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #16A34A, #22C55E)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 14px rgba(34,197,94,0.35)' }}>
+                ▶ Start session
+              </button>
+            ) : (
+              <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>Can start from 30 min before</span>
+            )}
+          </div>
+        )}
+        {sessionPhase === 'ending' && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '0 0 14px', background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 14, padding: '12px 16px', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
+              {isSessionEnded
+                ? (closureIssues.length > 0 ? `This session has ended — ${closureIssues[0].toLowerCase().replace(/\.$/, '')}.` : 'This session has ended and everything is resolved.')
+                : 'This session ends soon. Begin closing checks?'}
+            </div>
+            <button onClick={() => setShowClosure(true)}
+              style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #F97316, #FB923C)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
+              Review and close session
+            </button>
+          </div>
+        )}
 
         {isMobile && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
@@ -808,11 +892,26 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           Register progress: {processedCount} of {regRows.length} processed
         </div>
 
-        <button onClick={() => setRegExpanded(x => !x)}
-          style={{ marginTop: 12, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>
-          <span>📋 Register</span>
-          <span style={{ color: 'rgba(255,255,255,0.5)' }}>{regExpanded ? '▲ Hide' : '▼ Open'}</span>
+        <button onClick={() => registerOpen ? setRegExpanded(x => !x) : null} disabled={!registerOpen}
+          style={{ marginTop: 12, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: registerOpen ? 'pointer' : 'default', opacity: registerOpen ? 1 : 0.55 }}>
+          <span>📋 Register{activeSession?.closed_at ? ' (read-only)' : ''}</span>
+          <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+            {!registerOpen
+              ? (activeSession?.closed_at ? '🔒 Closed' : `🔒 Opens ${minsToStart !== null && minsToStart > 30 ? `${minsToStart - 30} min before arrivals` : 'soon'}`)
+              : regExpanded ? '▲ Hide' : '▼ Open'}
+          </span>
         </button>
+        {!registerOpen && !activeSession?.closed_at && minsToStart !== null && minsToStart > 30 && (
+          <button onClick={async () => {
+            const now = new Date().toISOString()
+            await supabase.from('sessions').update({ register_opened_at: now }).eq('id', activeSession.id)
+            setActiveSession(prev => ({ ...prev, register_opened_at: now }))
+            setRegExpanded(true)
+          }}
+            style={{ marginTop: 8, width: '100%', padding: '9px 14px', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.22)', background: 'transparent', color: 'rgba(255,255,255,0.65)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
+            Open register early (trips / off-site meeting points)
+          </button>
+        )}
 
         <AnimatePresence initial={false}>
           {regExpanded && (
@@ -974,7 +1073,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         <HubNotesPanel notes={sessionNotes} childList={targetedChildren} onClose={() => setShowNotes(false)} onAdd={handleAddRegNote} onRaiseSafeguarding={handleRaiseSafeguardingConcern} />
       )}
       {showClosure && (
-        <HubClosureFlow grouped={regGrouped} onClose={() => setShowClosure(false)} onMarkAllAbsent={handleMarkAllRemainingAbsent} onCloseRegister={handleCloseRegister} primary={primary} secondary={secondary} />
+        <HubClosureFlow grouped={regGrouped} issues={closureIssues} onClose={() => setShowClosure(false)} onMarkAllAbsent={handleMarkAllRemainingAbsent} onCloseRegister={handleCloseRegister} primary={primary} secondary={secondary} />
       )}
       {showRAPicker && (
         <HubRAPicker
@@ -1281,23 +1380,45 @@ function HubNotesPanel({ notes, childList, onClose, onAdd, onRaiseSafeguarding }
   )
 }
 
-function HubClosureFlow({ grouped, onClose, onMarkAllAbsent, onCloseRegister, primary, secondary }) {
+function HubClosureFlow({ grouped, onClose, onMarkAllAbsent, onCloseRegister, primary, secondary, issues = [] }) {
   const stillSignedIn = grouped.signed_in.length
   const unaccounted = grouped.expected.length
+  const [overrideOnSite, setOverrideOnSite] = useState(false)
+  const blocked = stillSignedIn > 0 && !overrideOnSite
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 22, width: 420, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Close Register</div>
+        <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Review and close session</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 14 }}>Once closed, attendance is locked and the register becomes read-only. Later corrections need a reason and are audited.</div>
+
+        {issues.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+            {issues.map((iss, i) => (
+              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5, fontWeight: 600, color: '#FCD34D' }}>
+                <span>⚠</span><span>{iss}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {issues.length === 0 && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5, fontWeight: 600, color: '#4ADE80', marginBottom: 14 }}>
+            ✓ Everything is resolved — safe to close.
+          </div>
+        )}
 
         {stillSignedIn > 0 && (
           <div style={{ background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 10, padding: 12, marginBottom: 12, fontSize: 13, fontWeight: 700, color: '#FCA5A5' }}>
-            ⚠ {stillSignedIn} young people are still marked on site. Sign them out before closing, or confirm this is expected.
+            ⚠ {stillSignedIn} young {stillSignedIn === 1 ? 'person is' : 'people are'} still marked on site. Sign them out before closing.
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.75)', cursor: 'pointer' }}>
+              <input type="checkbox" checked={overrideOnSite} onChange={e => setOverrideOnSite(e.target.checked)} />
+              Override — I confirm responsibility for these young people has safely ended
+            </label>
           </div>
         )}
         {unaccounted > 0 && (
           <div style={{ background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 13, color: '#FCD34D' }}>
-            {unaccounted} young people have no attendance status.
+            {unaccounted} young {unaccounted === 1 ? 'person has' : 'people have'} no attendance status.
           </div>
         )}
 
@@ -1310,7 +1431,10 @@ function HubClosureFlow({ grouped, onClose, onMarkAllAbsent, onCloseRegister, pr
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Leave Open</button>
-          <button onClick={onCloseRegister} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Close and Lock Register</button>
+          <button onClick={onCloseRegister} disabled={blocked}
+            style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: blocked ? 'rgba(148,163,184,0.35)' : `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: blocked ? 'default' : 'pointer' }}>
+            {blocked ? 'Resolve on-site first' : 'Close and Lock Register'}
+          </button>
         </div>
       </div>
     </div>
