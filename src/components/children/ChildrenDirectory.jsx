@@ -41,25 +41,30 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
   const [consents, setConsents] = useState([])
   const [attendance, setAttendance] = useState([])
   const [sessionNotes, setSessionNotes] = useState([])
+  const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [groupFilter, setGroupFilter] = useState('all')
   const [quickFilter, setQuickFilter] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [showInvite, setShowInvite] = useState(false)
+  const [mainTab, setMainTab] = useState('directory')
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [{ data: kids }, { data: cons }, { data: att }, { data: notes }] = await Promise.all([
+    const [{ data: kids }, { data: cons }, { data: att }, { data: notes }, { data: regs }] = await Promise.all([
       supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).order('first_name'),
       supabase.from('child_consents').select('*').eq('org_id', org.id),
       supabase.from('attendance').select('*').eq('org_id', org.id).order('created_at', { ascending: false }).limit(3000),
       supabase.from('session_notes').select('*').eq('org_id', org.id).order('created_at', { ascending: false }).limit(500),
+      supabase.from('child_registration_requests').select('*').eq('org_id', org.id).order('submitted_at', { ascending: false }),
     ])
     setChildren(kids || [])
     setConsents(cons || [])
     setAttendance(att || [])
     setSessionNotes(notes || [])
+    setRegistrations(regs || [])
     setLoading(false)
   }, [org.id])
 
@@ -95,7 +100,8 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
     incomplete: children.filter(c => c.profile_incomplete).length,
     medical: children.filter(hasMedicalAlert).length,
     consentIssues: children.filter(c => consentIssue(c.id)).length,
-  }), [children, activeThisMonthIds, latestAttByChild, consentIssue])
+    pendingRegs: registrations.filter(r => r.status === 'pending').length,
+  }), [children, activeThisMonthIds, latestAttByChild, consentIssue, registrations])
 
   const groupLabel = (name) => (orgGroups || []).find(g => (g.label || '').toLowerCase() === (name || '').trim().toLowerCase())?.label
 
@@ -138,10 +144,31 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
           { label: 'Medical alerts', value: stats.medical, icon: '❤️', color: '#DC2626' },
           { label: 'Consent issues', value: stats.consentIssues, icon: '🔏', color: '#7C3AED' },
         ]}
-        actions={[{ label: 'Add young person', icon: '+', variant: 'primary', onClick: () => setShowAdd(true) }]}
+        actions={[
+          { label: 'Invite / Register', icon: '✉️', variant: 'ghost', onClick: () => setShowInvite(true) },
+          { label: 'Add young person', icon: '+', variant: 'primary', onClick: () => setShowAdd(true) },
+        ]}
       />
 
+      <div style={{ display: 'flex', gap: 4, padding: isMobile ? '10px 14px 0' : '14px 24px 0', overflowX: 'auto', flexShrink: 0 }}>
+        {[
+          ['directory', '📇 Directory'],
+          ['onsite', `📍 On Site${stats.onSite ? ` (${stats.onSite})` : ''}`],
+          ['groups', '👥 Groups'],
+          ['consents', `🔏 Consents${stats.consentIssues ? ` (${stats.consentIssues})` : ''}`],
+          ['medical', `❤️ Medical & Support${stats.medical ? ` (${stats.medical})` : ''}`],
+          ['requests', `📥 Registration Requests${stats.pendingRegs ? ` (${stats.pendingRegs})` : ''}`],
+        ].map(([key, label]) => (
+          <button key={key} onClick={() => { setMainTab(key); setSelectedId(null) }}
+            style={{ padding: '9px 14px', borderRadius: '10px 10px 0 0', border: 'none', borderBottom: mainTab === key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: mainTab === key ? '#fff' : 'transparent', color: mainTab === key ? primary : '#64748B', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 14 : 24 }}>
+        {mainTab === 'directory' && (
+        <>
         {/* Quick-filter chips mirroring the stat cards */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
           {[
@@ -237,9 +264,28 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
             />
           )}
         </div>
+        </>
+        )}
+
+        {mainTab === 'onsite' && (
+          <OnSiteTab children={children} latestAttByChild={latestAttByChild} groupLabel={groupLabel} primary={primary} org={org} authUserId={authUserId} onReload={load} />
+        )}
+        {mainTab === 'groups' && (
+          <GroupsTab children={children} orgGroups={orgGroups} latestAttByChild={latestAttByChild} primary={primary} onSelectGroup={g => { setGroupFilter(g); setMainTab('directory') }} />
+        )}
+        {mainTab === 'consents' && (
+          <ConsentsTab children={children.filter(c => consentIssue(c.id))} consentsByChild={consentsByChild} groupLabel={groupLabel} primary={primary} onOpenChild={id => { setSelectedId(id); setMainTab('directory') }} />
+        )}
+        {mainTab === 'medical' && (
+          <MedicalTab children={children.filter(hasMedicalAlert)} groupLabel={groupLabel} primary={primary} onOpenChild={id => { setSelectedId(id); setMainTab('directory') }} />
+        )}
+        {mainTab === 'requests' && (
+          <RegistrationRequestsTab registrations={registrations} org={org} authUserId={authUserId} primary={primary} onReload={load} />
+        )}
       </div>
 
       {showAdd && <AddChildQuickModal org={org} onClose={() => setShowAdd(false)} onAdded={() => { setShowAdd(false); load() }} />}
+      {showInvite && <InviteParentModal org={org} onClose={() => setShowInvite(false)} />}
     </div>
   )
 }
@@ -423,6 +469,291 @@ function AddChildQuickModal({ org, onClose, onAdded }) {
           <button onClick={onClose} style={{ flex: 1, ...btnGhost }}>Cancel</button>
           <button onClick={save} disabled={saving || !form.first_name.trim()} style={{ flex: 1, ...btnPrimary('#7C5CFC'), border: 'none', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Add'}</button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function OnSiteTab({ children, latestAttByChild, groupLabel, primary, org, authUserId, onReload }) {
+  const onSite = children.filter(c => latestAttByChild[c.id]?.status === 'signed_in')
+
+  const signOut = async (childId) => {
+    const att = latestAttByChild[childId]
+    if (!att) return
+    await supabase.from('attendance').update({ status: 'signed_out', signed_out_at: new Date().toISOString(), signed_out_by: authUserId }).eq('id', att.id)
+    onReload()
+  }
+
+  return (
+    <div style={glass({ padding: 0, overflow: 'hidden' })}>
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: '#0F172A' }}>
+        {onSite.length} young {onSite.length === 1 ? 'person' : 'people'} currently on site
+      </div>
+      {onSite.length === 0 ? (
+        <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>Nobody is currently signed in anywhere.</div>
+      ) : onSite.map(c => {
+        const att = latestAttByChild[c.id]
+        return (
+          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)' }}>
+            <Avatar name={`${c.first_name} ${c.last_name}`} photoUrl={c.photo_url} size={36} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>
+              <div style={{ fontSize: 11, color: '#94A3B8' }}>{groupLabel(c.group_name) || 'Ungrouped'} · Signed in {att?.signed_in_at ? new Date(att.signed_in_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
+            </div>
+            {hasMedicalAlert(c) && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#B91C1C', background: '#FEE2E2', borderRadius: 99, padding: '2px 8px' }}>❤️ Alert</span>}
+            <button onClick={() => signOut(c.id)} style={{ padding: '7px 14px', borderRadius: 9, border: `1px solid ${primary}40`, background: '#fff', color: primary, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Sign out</button>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function GroupsTab({ children, orgGroups, latestAttByChild, primary, onSelectGroup }) {
+  const groups = (orgGroups || [])
+  const ungroupedCount = children.filter(c => !groups.some(g => (g.label || '').toLowerCase() === (c.group_name || '').toLowerCase())).length
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
+      {groups.map(g => {
+        const members = children.filter(c => (c.group_name || '').toLowerCase() === (g.label || '').toLowerCase())
+        const onSiteCount = members.filter(c => latestAttByChild[c.id]?.status === 'signed_in').length
+        return (
+          <div key={g.id || g.label} onClick={() => onSelectGroup(g.label)} style={{ ...glass({ padding: 18 }), cursor: 'pointer' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: g.color || primary }} />
+              <span style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>{g.label}</span>
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: primary }}>{members.length}</div>
+            <div style={{ fontSize: 11.5, color: '#94A3B8' }}>young {members.length === 1 ? 'person' : 'people'}{onSiteCount > 0 ? ` · ${onSiteCount} on site` : ''}</div>
+          </div>
+        )
+      })}
+      {ungroupedCount > 0 && (
+        <div onClick={() => onSelectGroup('')} style={{ ...glass({ padding: 18 }), cursor: 'pointer', opacity: 0.85 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#64748B', marginBottom: 10 }}>Ungrouped</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: '#94A3B8' }}>{ungroupedCount}</div>
+          <div style={{ fontSize: 11.5, color: '#94A3B8' }}>young {ungroupedCount === 1 ? 'person' : 'people'}</div>
+        </div>
+      )}
+      {groups.length === 0 && ungroupedCount === 0 && (
+        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#94A3B8', fontSize: 13 }}>No groups configured yet — set these up from Registers.</div>
+      )}
+    </div>
+  )
+}
+
+function ConsentsTab({ children, consentsByChild, groupLabel, primary, onOpenChild }) {
+  return (
+    <div style={glass({ padding: 0, overflow: 'hidden' })}>
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: '#0F172A' }}>
+        {children.length} {children.length === 1 ? 'record needs' : 'records need'} consent follow-up
+      </div>
+      {children.length === 0 ? (
+        <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>✅ All consents are up to date.</div>
+      ) : children.map(c => {
+        const rec = consentsByChild[c.id] || {}
+        const missing = CONSENT_TYPES.filter(t => rec[t.key]?.status !== 'granted')
+        return (
+          <div key={c.id} onClick={() => onOpenChild(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer' }}>
+            <Avatar name={`${c.first_name} ${c.last_name}`} photoUrl={c.photo_url} size={36} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>
+              <div style={{ fontSize: 11, color: '#94A3B8' }}>{groupLabel(c.group_name) || 'Ungrouped'}{c.parent_name ? ` · ${c.parent_name}` : ''}</div>
+            </div>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 220 }}>
+              {missing.map(t => <span key={t.key} style={{ fontSize: 9.5, fontWeight: 800, color: '#7C3AED', background: '#EDE9FE', borderRadius: 99, padding: '2px 8px' }}>{t.label}</span>)}
+            </div>
+            <span style={{ color: primary, fontSize: 12, fontWeight: 700 }}>View →</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function MedicalTab({ children, groupLabel, primary, onOpenChild }) {
+  return (
+    <div style={glass({ padding: 0, overflow: 'hidden' })}>
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: '#0F172A' }}>
+        {children.length} {children.length === 1 ? 'record has' : 'records have'} a medical alert
+      </div>
+      {children.length === 0 ? (
+        <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>No medical alerts recorded.</div>
+      ) : children.map(c => (
+        <div key={c.id} onClick={() => onOpenChild(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer' }}>
+          <Avatar name={`${c.first_name} ${c.last_name}`} photoUrl={c.photo_url} size={36} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>
+            <div style={{ fontSize: 11, color: '#94A3B8' }}>{groupLabel(c.group_name) || 'Ungrouped'}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 220 }}>
+            {medicalAlerts(c).map(ch => <span key={ch.label} style={{ fontSize: 9.5, fontWeight: 800, color: ch.color, background: ch.bg, borderRadius: 99, padding: '2px 8px' }}>{ch.label}</span>)}
+          </div>
+          <span style={{ color: primary, fontSize: 12, fontWeight: 700 }}>View →</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function RegistrationRequestsTab({ registrations, org, authUserId, primary, onReload }) {
+  const [openId, setOpenId] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [rejectReasonFor, setRejectReasonFor] = useState(null)
+  const [reason, setReason] = useState('')
+
+  const pending = registrations.filter(r => r.status === 'pending')
+  const reviewed = registrations.filter(r => r.status !== 'pending')
+  const open = registrations.find(r => r.id === openId)
+
+  const approve = async (req) => {
+    setBusy(true)
+    const { data: child, error } = await supabase.from('children').insert({
+      org_id: org.id, first_name: req.first_name, last_name: req.last_name,
+      date_of_birth: req.date_of_birth, group_name: req.group_name, school: req.school,
+      parent_name: req.parent_name, parent_phone: req.parent_phone,
+      emergency_contact_name: req.emergency_contact_name, emergency_contact_phone: req.emergency_contact_phone,
+      allergies: req.allergies, medical_notes: req.medical_notes, has_asthma: req.has_asthma,
+      has_diabetes: req.has_diabetes, takes_medication: req.takes_medication, medication_details: req.medication_details,
+      has_epipen: req.has_epipen, has_behaviour_plan: req.has_behaviour_plan, behaviour_plan_notes: req.behaviour_plan_notes,
+      travel_consent: req.travel_consent, notes: req.notes, active: true, profile_incomplete: false,
+    }).select().single()
+    if (error) { setBusy(false); window.alert('Could not create the child record: ' + error.message); return }
+
+    const consentRows = [
+      { consent_type: 'photo', status: req.consent_photo ? 'granted' : 'not_granted' },
+      { consent_type: 'trip', status: req.consent_trip ? 'granted' : 'not_granted' },
+      { consent_type: 'medical', status: req.consent_medical ? 'granted' : 'not_granted' },
+      { consent_type: 'data_sharing', status: req.consent_data_sharing ? 'granted' : 'not_granted' },
+    ].map(c => ({ ...c, org_id: org.id, child_id: child.id, granted_by: c.status === 'granted' ? authUserId : null, granted_at: c.status === 'granted' ? new Date().toISOString() : null }))
+    await supabase.from('child_consents').insert(consentRows)
+
+    await supabase.from('child_registration_requests').update({
+      status: 'approved', reviewed_by: authUserId, reviewed_at: new Date().toISOString(), resulting_child_id: child.id,
+    }).eq('id', req.id)
+
+    setBusy(false)
+    setOpenId(null)
+    onReload()
+  }
+
+  const reject = async (req) => {
+    setBusy(true)
+    await supabase.from('child_registration_requests').update({
+      status: 'rejected', reviewed_by: authUserId, reviewed_at: new Date().toISOString(), rejection_reason: reason.trim() || null,
+    }).eq('id', req.id)
+    setBusy(false)
+    setRejectReasonFor(null)
+    setReason('')
+    setOpenId(null)
+    onReload()
+  }
+
+  const Row = ({ label, value }) => value ? (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '6px 0', fontSize: 12.5, borderBottom: '1px solid #F1F5F9' }}>
+      <span style={{ color: '#64748B' }}>{label}</span><span style={{ fontWeight: 700, color: '#0F172A', textAlign: 'right' }}>{String(value)}</span>
+    </div>
+  ) : null
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: open ? '1fr 1.3fr' : '1fr', gap: 16, alignItems: 'start' }}>
+      <div style={glass({ padding: 0, overflow: 'hidden' })}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: '#0F172A' }}>
+          {pending.length} pending registration{pending.length === 1 ? '' : 's'}
+        </div>
+        {pending.length === 0 ? (
+          <div style={{ padding: 30, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>No pending registrations.</div>
+        ) : pending.map(r => (
+          <div key={r.id} onClick={() => setOpenId(r.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: openId === r.id ? `${primary}0c` : 'transparent' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{r.first_name} {r.last_name}</div>
+              <div style={{ fontSize: 11, color: '#94A3B8' }}>Submitted {new Date(r.submitted_at).toLocaleDateString('en-GB')} · {r.parent_name}</div>
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 800, color: '#B45309', background: '#FEF3C7', borderRadius: 99, padding: '2px 9px' }}>Pending</span>
+          </div>
+        ))}
+        {reviewed.length > 0 && (
+          <>
+            <div style={{ padding: '10px 18px', fontSize: 11, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, borderTop: '1px solid rgba(15,23,42,0.06)' }}>Reviewed</div>
+            {reviewed.slice(0, 20).map(r => (
+              <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)' }}>
+                <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: '#475569' }}>{r.first_name} {r.last_name}</div>
+                <span style={{ fontSize: 10, fontWeight: 800, color: r.status === 'approved' ? '#15803D' : '#B91C1C', background: r.status === 'approved' ? '#DCFCE7' : '#FEE2E2', borderRadius: 99, padding: '2px 9px' }}>{r.status}</span>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+
+      {open && (
+        <div style={glass({ padding: 20 })}>
+          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A', marginBottom: 4 }}>{open.first_name} {open.last_name}</div>
+          <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 16 }}>Submitted {new Date(open.submitted_at).toLocaleDateString('en-GB')}</div>
+
+          <Row label="Date of birth" value={open.date_of_birth} />
+          <Row label="School" value={open.school} />
+          <Row label="Parent / carer" value={open.parent_name} />
+          <Row label="Phone" value={open.parent_phone} />
+          <Row label="Email" value={open.parent_email} />
+          <Row label="Emergency contact" value={[open.emergency_contact_name, open.emergency_contact_phone].filter(Boolean).join(' · ')} />
+          <Row label="Allergies" value={open.allergies} />
+          <Row label="Medical notes" value={open.medical_notes} />
+          <Row label="Medical flags" value={[open.has_asthma && 'Asthma', open.has_diabetes && 'Diabetes', open.takes_medication && 'Medication', open.has_epipen && 'EpiPen'].filter(Boolean).join(', ') || null} />
+          <Row label="Support plan" value={open.has_behaviour_plan ? (open.behaviour_plan_notes || 'Yes') : null} />
+          <Row label="Consents given" value={[open.consent_photo && 'Photo', open.consent_trip && 'Trip', open.consent_medical && 'Medical', open.consent_data_sharing && 'Data sharing', open.travel_consent && 'Independent travel'].filter(Boolean).join(', ') || 'None selected'} />
+          <Row label="Additional notes" value={open.notes} />
+
+          {open.status === 'pending' ? (
+            rejectReasonFor === open.id ? (
+              <div style={{ marginTop: 16 }}>
+                <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Reason for declining (optional, shown internally only)" style={{ width: '100%', boxSizing: 'border-box', padding: 10, borderRadius: 9, border: '1px solid #E2E8F0', fontSize: 12.5, minHeight: 60, marginBottom: 10 }} />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setRejectReasonFor(null)} style={{ flex: 1, ...btnGhost }}>Cancel</button>
+                  <button onClick={() => reject(open)} disabled={busy} style={{ flex: 1, padding: '10px', borderRadius: 9, border: 'none', background: '#DC2626', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{busy ? 'Declining…' : 'Confirm decline'}</button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <button onClick={() => setRejectReasonFor(open.id)} style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Decline</button>
+                <button onClick={() => approve(open)} disabled={busy} style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: '#16A34A', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Approving…' : '✓ Approve & create profile'}</button>
+              </div>
+            )
+          ) : (
+            <div style={{ marginTop: 16, fontSize: 12.5, fontWeight: 700, color: open.status === 'approved' ? '#15803D' : '#B91C1C' }}>
+              {open.status === 'approved' ? '✓ Approved — profile created.' : `✕ Declined${open.rejection_reason ? `: ${open.rejection_reason}` : '.'}`}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function InviteParentModal({ org, onClose }) {
+  const link = `${window.location.origin}/register-child/${org.slug}`
+  const [copied, setCopied] = useState(false)
+
+  const copy = () => {
+    navigator.clipboard.writeText(link)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 460 }}>
+        <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Invite a parent to register their child</div>
+        <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 16 }}>Share this link — anyone with it can submit a registration request for {org.name}. Every submission lands in Registration Requests for you to approve first; nothing is added automatically.</div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+          <input readOnly value={link} style={{ ...inputStyle, flex: 1, fontSize: 12.5 }} onFocus={e => e.target.select()} />
+          <button onClick={copy} style={{ padding: '0 16px', borderRadius: 10, border: 'none', background: org.primary_color || '#7C5CFC', color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>{copied ? '✓ Copied' : 'Copy link'}</button>
+        </div>
+        <a href={`mailto:?subject=${encodeURIComponent('Register your child with ' + org.name)}&body=${encodeURIComponent(`Please use the link below to register your child with ${org.name}:\n\n${link}`)}`}
+          style={{ display: 'block', textAlign: 'center', padding: '11px', borderRadius: 10, border: `1.5px solid ${org.primary_color || '#7C5CFC'}40`, color: org.primary_color || '#7C5CFC', fontWeight: 700, fontSize: 13, textDecoration: 'none', marginBottom: 10 }}>
+          ✉️ Open email to send this link
+        </a>
+        <button onClick={onClose} style={{ width: '100%', ...btnGhost }}>Close</button>
       </div>
     </div>
   )
