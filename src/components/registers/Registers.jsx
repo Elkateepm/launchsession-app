@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
@@ -474,8 +474,112 @@ function NotesTab({ child }) {
   )
 }
 
+// ─── PHOTOS TAB ───────────────────────────────────────────────
+// Multiple attached images for a child (distinct from the single avatar
+// photo on children.photo_url) — session photos, consent docs, etc. —
+// each with who uploaded it, when, and an optional caption.
+function PhotosTab({ child, org }) {
+  const [attachments, setAttachments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [viewing, setViewing] = useState(null)
+  const [authUserId, setAuthUserId] = useState(null)
+  const fileInputRef = React.useRef()
+
+  const load = React.useCallback(async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('child_attachments')
+      .select('*, uploader:uploaded_by(full_name)')
+      .eq('child_id', child.id)
+      .order('created_at', { ascending: false })
+    setAttachments(data || [])
+    setLoading(false)
+  }, [child.id])
+
+  useEffect(() => {
+    load()
+    supabase.auth.getUser().then(({ data }) => setAuthUserId(data?.user?.id || null))
+  }, [load])
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    const ext = file.name.split('.').pop()
+    const path = `children/${child.id}/attachments/${Date.now()}.${ext}`
+    const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
+    if (!upErr) {
+      const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(path)
+      await supabase.from('child_attachments').insert({
+        org_id: org?.id, child_id: child.id, url: urlData.publicUrl, storage_path: path, uploaded_by: authUserId,
+      })
+      await load()
+    }
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleDelete = async (att) => {
+    if (!window.confirm('Remove this photo?')) return
+    await supabase.from('child_attachments').delete().eq('id', att.id)
+    if (att.storage_path) await supabase.storage.from('gallery').remove([att.storage_path])
+    setViewing(null)
+    setAttachments(prev => prev.filter(a => a.id !== att.id))
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>Photos attached to {child.first_name}'s record</div>
+        <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+          style={{ padding: '6px 12px', borderRadius: 9, border: '1.5px dashed #CBD5E1', background: '#F8FAFC', color: '#334155', fontSize: 11.5, fontWeight: 700, cursor: uploading ? 'default' : 'pointer' }}>
+          {uploading ? 'Uploading…' : '+ Add photo'}
+        </button>
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} style={{ display: 'none' }} />
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 30, color: '#9CA3AF', fontSize: 12.5 }}>Loading…</div>
+      ) : attachments.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 30, color: '#9CA3AF', fontSize: 12.5, background: '#F8FAFC', borderRadius: 14, border: '1px dashed #E2E8F0' }}>
+          No photos attached yet.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {attachments.map(att => (
+            <button key={att.id} onClick={() => setViewing(att)} style={{ padding: 0, border: '1px solid #E2E8F0', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', aspectRatio: '1', background: '#F1F5F9' }}>
+              <img src={att.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {viewing && (
+        <div onClick={() => setViewing(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 18, maxWidth: 420, width: '100%', overflow: 'hidden' }}>
+            <img src={viewing.url} alt="" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }} />
+            <div style={{ padding: 16 }}>
+              <div style={{ fontSize: 12.5, color: '#334155', fontWeight: 700, marginBottom: 2 }}>
+                Uploaded {format(new Date(viewing.created_at), 'd MMM yyyy \'at\' HH:mm')}
+              </div>
+              <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 14 }}>
+                by {viewing.uploader?.full_name || 'Unknown'}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setViewing(null)} style={{ flex: 1, padding: '9px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Close</button>
+                <button onClick={() => handleDelete(viewing)} style={{ flex: 1, padding: '9px', borderRadius: 9, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── CHILD DRAWER ─────────────────────────────────────────────
-function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], onClose, primary, hasSession, onGroupChange, onChildUpdated }) {
+function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], onClose, primary, org, hasSession, onGroupChange, onChildUpdated }) {
   const isMobile = useIsMobile()
   const [drawerTab, setDrawerTab] = useState('info')
   const [photoUrl, setPhotoUrl] = useState(child.photo_url || null)
@@ -570,6 +674,10 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                 )}
                 <span style={{ fontSize: 12, fontWeight: 800, color: sc.color, background: sc.bg, borderRadius: 99, padding: '2px 9px' }}>{sc.icon} {sc.label}</span>
               </div>
+              <button onClick={() => setDrawerTab('photos')}
+                style={{ marginTop: 8, background: 'none', border: 'none', color: bColor, fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+                ℹ️ More info — attached photos
+              </button>
             </div>
           </div>
 
@@ -614,6 +722,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
           {[
             ['info', 'Info'],
             ['notes', 'Notes'],
+            ['photos', '📷 Photos'],
             ['edit', 'Edit'],
           ].map(([key, label]) => (
             <button key={key} onClick={() => setDrawerTab(key)}
@@ -695,6 +804,8 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
           )}
 
           {drawerTab === 'notes' && <NotesTab child={child} />}
+
+          {drawerTab === 'photos' && <PhotosTab child={child} org={org} />}
 
           {/* EDIT */}
           {drawerTab === 'edit' && <EditChildForm child={child} onSaved={() => onChildUpdated ? onChildUpdated(child.id) : onClose()} />}
@@ -1259,6 +1370,7 @@ export default function Registers({ org, onNavigate }) {
           bubble={getBubble(selectedChild.child)}
           bubbles={bubbles}
           primary={primary}
+          org={org}
           hasSession={!!session}
           onClose={() => setSelectedChild(null)}
           onUpdateStatus={(id, status, extra) => { handleUpdateStatus(id, status, extra); setSelectedChild(null) }}
