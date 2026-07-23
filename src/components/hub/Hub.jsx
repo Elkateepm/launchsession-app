@@ -7,6 +7,7 @@ import { useRealtimeTable } from "../../lib/useRealtimeTable";
 import { useOrgSettings } from "../../hooks/useOrgSettings";
 import CauseForConcernForm from "../safeguarding/CauseForConcernForm";
 import LiveRegister from "../registers/LiveRegister";
+import { InviteParentModal } from "../children/ChildrenDirectory";
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -1555,6 +1556,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [search, setSearch] = React.useState('')
   const [searchResults, setSearchResults] = React.useState(null)
   const [showConcernForm, setShowConcernForm] = React.useState(false)
+  const [showInviteChild, setShowInviteChild] = React.useState(false)
 
   const getGreeting = () => {
     const h = new Date().getHours()
@@ -1941,7 +1943,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
         {/* Greeting row */}
         {!isMobile ? (
-          <div style={{ padding: '14px 0 12px' }}>
+          <div style={{ padding: '14px 0 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--text, #0f172a)', lineHeight: 1.15, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.3px' }}>
               {getGreeting()}, {hubUserName.split(' ')[0]}! 👋
             </h1>
@@ -1957,6 +1960,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>{children.length} young people</span>
               )}
             </div>
+            </div>
+            <button onClick={() => setShowInviteChild(true)}
+              style={{ padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${primary}40`, background: `${primary}0D`, color: primary, fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+              🧒 Invite Child
+            </button>
           </div>
         ) : (
           <div style={{ padding: '10px 0 12px' }}>
@@ -1975,6 +1983,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               {hasModule('registers') && <HeaderQuickAction icon="📋" label="Register" onClick={() => go('registers')} primary={primary} />}
               <HeaderQuickAction icon="💬" label="Messages" onClick={() => go('messaging')} primary={primary} />
               {hasModule('volunteers') && <HeaderQuickAction icon="👥" label="Volunteers" onClick={() => go('volunteers')} primary={primary} />}
+              <HeaderQuickAction icon="🧒" label="Invite Child" onClick={() => setShowInviteChild(true)} primary={primary} />
             </div>
           </div>
         )}
@@ -2294,6 +2303,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           </div>
         </>
       )}
+
+      {showInviteChild && <InviteParentModal org={org} onClose={() => setShowInviteChild(false)} />}
+
 
       {liveRegisterSessionId && sessions.find(s => s.id === liveRegisterSessionId) && (
         <LiveRegister

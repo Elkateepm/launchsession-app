@@ -730,7 +730,7 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
   )
 }
 
-function InviteParentModal({ org, onClose }) {
+export function InviteParentModal({ org, onClose }) {
   const link = `${window.location.origin}/register-child/${org.slug}`
   const [copied, setCopied] = useState(false)
   const [parentEmail, setParentEmail] = useState('')
