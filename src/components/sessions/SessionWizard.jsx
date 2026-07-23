@@ -230,10 +230,9 @@ function StepType({ form, setForm }) {
 
 // ─── STEP 2: DETAILS ────────────────────────────────────────────
 
-function StepDetails({ form, setForm, bubbleDefs, staff, org, onGroupsChanged }) {
+function StepDetails({ form, setForm, staff, org }) {
   const [venues, setVenues] = useState([])
   const [useCustomLocation, setUseCustomLocation] = useState(false)
-  const [showGroupsModal, setShowGroupsModal] = useState(false)
 
   useEffect(() => {
     if (!org?.id) return
@@ -319,8 +318,8 @@ function StepDetails({ form, setForm, bubbleDefs, staff, org, onGroupsChanged })
       </div>
 
       <div style={card}>
-        <SectionHeader icon="👥" title="Delivery Setup" subtitle="Who is leading and who is this session for?" />
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
+        <SectionHeader icon="🧑‍💼" title="Session Lead" subtitle="Who is running this session?" />
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
           <div>
             <label style={label}>Session lead *</label>
             <select style={inp} value={form.lead_staff_id} onChange={e => set('lead_staff_id', e.target.value)}>
@@ -329,27 +328,9 @@ function StepDetails({ form, setForm, bubbleDefs, staff, org, onGroupsChanged })
             </select>
           </div>
           <div>
-            <label style={label}>Delivery group(s)</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 2 }}>
-              {(bubbleDefs || []).map(b => {
-                const active = form.bubbles.includes(b.label)
-                return (
-                  <button key={b.key} onClick={() => set('bubbles', active ? form.bubbles.filter(x => x !== b.label) : [...form.bubbles, b.label])}
-                    style={{ padding: '7px 14px', borderRadius: 99, border: active ? `2px solid ${b.color}` : '1.5px solid var(--border)', background: active ? `${b.color}18` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', color: 'var(--text)' }}>
-                    {b.label}
-                  </button>
-                )
-              })}
-              <button onClick={() => setShowGroupsModal(true)}
-                style={{ padding: '7px 14px', borderRadius: 99, border: `1.5px dashed ${ACCENT}60`, background: `${ACCENT}0A`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
-                + Add group
-              </button>
-            </div>
+            <label style={label}>Age range</label>
+            <input style={inp} value={form.age_range} onChange={e => set('age_range', e.target.value)} placeholder="e.g. 8-12" />
           </div>
-        </div>
-        <div style={{ maxWidth: isMobile ? '100%' : '50%' }}>
-          <label style={label}>Age range</label>
-          <input style={inp} value={form.age_range} onChange={e => set('age_range', e.target.value)} placeholder="e.g. 8-12" />
         </div>
       </div>
 
@@ -364,22 +345,18 @@ function StepDetails({ form, setForm, bubbleDefs, staff, org, onGroupsChanged })
           <textarea style={{ ...inp, minHeight: 50, resize: 'vertical' }} value={form.internal_notes} onChange={e => set('internal_notes', e.target.value)} />
         </div>
       </div>
-
-      {showGroupsModal && (
-        <GroupsQuickSetupModal org={org} initialGroups={(bubbleDefs || []).map(b => ({ id: b.key, label: b.label, color: b.color }))} onClose={() => setShowGroupsModal(false)}
-          onSaved={() => { setShowGroupsModal(false); if (onGroupsChanged) onGroupsChanged() }} />
-      )}
     </>
   )
 }
 
 // ─── STEP 3: PEOPLE ─────────────────────────────────────────────
 
-function StepPeople({ form, setForm, staff, children, expectedCount }) {
+function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs, org, onGroupsChanged }) {
   const isMobile = useIsMobile()
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const staffCount = (form.lead_staff_id ? 1 : 0) + form.supporting_staff_ids.length
   const minStaffUnmet = form.min_staff && staffCount < parseInt(form.min_staff, 10)
+  const [showGroupsModal, setShowGroupsModal] = useState(false)
 
   const toggleChild = (id) => set('child_ids', form.child_ids.includes(id) ? form.child_ids.filter(x => x !== id) : [...form.child_ids, id])
   const toggleSupport = (id) => set('supporting_staff_ids', form.supporting_staff_ids.includes(id) ? form.supporting_staff_ids.filter(x => x !== id) : [...form.supporting_staff_ids, id])
@@ -406,6 +383,26 @@ function StepPeople({ form, setForm, staff, children, expectedCount }) {
             }}>{txt}</button>
           ))}
         </div>
+        {form.participant_mode === 'group' && (
+          <div style={{ marginBottom: 14 }}>
+            <label style={label}>Delivery group(s)</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 2 }}>
+              {(bubbleDefs || []).map(b => {
+                const active = form.bubbles.includes(b.label)
+                return (
+                  <button key={b.key} onClick={() => set('bubbles', active ? form.bubbles.filter(x => x !== b.label) : [...form.bubbles, b.label])}
+                    style={{ padding: '7px 14px', borderRadius: 99, border: active ? `2px solid ${b.color}` : '1.5px solid var(--border)', background: active ? `${b.color}18` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', color: 'var(--text)' }}>
+                    {b.label}
+                  </button>
+                )
+              })}
+              <button onClick={() => setShowGroupsModal(true)}
+                style={{ padding: '7px 14px', borderRadius: 99, border: `1.5px dashed ${ACCENT}60`, background: `${ACCENT}0A`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
+                + Add group
+              </button>
+            </div>
+          </div>
+        )}
         {form.participant_mode === 'individual' && (
           <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, padding: 8 }}>
             {children.map(c => (
@@ -460,6 +457,11 @@ function StepPeople({ form, setForm, staff, children, expectedCount }) {
           + Add volunteer role
         </button>
       </div>
+
+      {showGroupsModal && (
+        <GroupsQuickSetupModal org={org} initialGroups={(bubbleDefs || []).map(b => ({ id: b.key, label: b.label, color: b.color }))} onClose={() => setShowGroupsModal(false)}
+          onSaved={() => { setShowGroupsModal(false); if (onGroupsChanged) onGroupsChanged() }} />
+      )}
     </>
   )
 }
@@ -768,8 +770,8 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.15 }}>
               {step === 1 && <StepType form={form} setForm={setForm} />}
-              {step === 2 && <StepDetails form={form} setForm={setForm} bubbleDefs={bubbleDefs} staff={staff} org={org} />}
-              {step === 3 && <StepPeople form={form} setForm={setForm} staff={staff} children={children} expectedCount={expectedCount} />}
+              {step === 2 && <StepDetails form={form} setForm={setForm} staff={staff} org={org} />}
+              {step === 3 && <StepPeople form={form} setForm={setForm} staff={staff} children={children} expectedCount={expectedCount} bubbleDefs={bubbleDefs} org={org} />}
               {step === 4 && <StepRequirements form={form} setForm={setForm} orgForms={orgForms} />}
               {step === 5 && <StepReview form={form} staff={staff} expectedCount={expectedCount} primary={primary} />}
             </motion.div>
