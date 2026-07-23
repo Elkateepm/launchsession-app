@@ -43,19 +43,25 @@ export default function Signup() {
   const [done, setDone]                          = useState(false)
   const [emailFailed, setEmailFailed]            = useState(false)
   const [error, setError]                        = useState('')
+  const [agreedToTerms, setAgreedToTerms]        = useState(false)
+  const [legalModal, setLegalModal]              = useState(null) // null | 'terms' | 'privacy'
 
   const currentKey = STEP_KEYS[stepIndex]
   const canContinue = {
     org: organisationName.trim().length > 1,
     type: !!orgType,
     you: fullName.trim().length > 1 && /\S+@\S+\.\S+/.test(email.trim()),
-    review: true,
+    review: agreedToTerms,
   }[currentKey]
 
   const goNext = () => { if (canContinue && stepIndex < STEP_KEYS.length - 1) setStepIndex(i => i + 1) }
   const goBack = () => { if (stepIndex > 0) setStepIndex(i => i - 1) }
 
   const handleSubmit = async () => {
+    if (!agreedToTerms) {
+      setError('Please agree to the Terms of Service and Privacy Policy to continue.')
+      return
+    }
     setLoading(true)
     setError('')
 
@@ -68,6 +74,8 @@ export default function Signup() {
         email: email.trim().toLowerCase(),
         org_type: orgType,
         status: 'new',
+        terms_agreed: agreedToTerms,
+        terms_agreed_at: agreedToTerms ? new Date().toISOString() : null,
       }])
       .select()
       .single()
@@ -276,6 +284,21 @@ export default function Signup() {
                     <Row k="Email" v={email} last />
                   </div>
 
+                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 16, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={e => setAgreedToTerms(e.target.checked)}
+                      style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: '#3B82F6', cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+                      I agree to LaunchSession's{' '}
+                      <a href="/terms.html" onClick={e => { e.preventDefault(); setLegalModal('terms') }} style={{ color: '#60A5FA', fontWeight: 700, textDecoration: 'underline' }}>Terms of Service</a>
+                      {' '}and{' '}
+                      <a href="/privacy.html" onClick={e => { e.preventDefault(); setLegalModal('privacy') }} style={{ color: '#60A5FA', fontWeight: 700, textDecoration: 'underline' }}>Privacy Policy</a>.
+                    </span>
+                  </label>
+
                   {loading && submitStep && (
                     <div style={{ margin: '16px 0 0', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: '14px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -288,6 +311,8 @@ export default function Signup() {
               )}
             </motion.div>
           </AnimatePresence>
+
+          {legalModal && <LegalModal doc={legalModal} onClose={() => setLegalModal(null)} onAgree={() => { setAgreedToTerms(true); setLegalModal(null) }} />}
 
           {/* Nav buttons */}
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
@@ -313,6 +338,36 @@ export default function Signup() {
         </div>
 
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    </div>
+  )
+}
+
+const LEGAL_DOCS = {
+  terms:   { title: 'Terms of Service', src: '/terms.html' },
+  privacy: { title: 'Privacy Policy',   src: '/privacy.html' },
+}
+
+function LegalModal({ doc, onClose, onAgree }) {
+  const { title, src } = LEGAL_DOCS[doc]
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(2,7,17,0.75)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ width: '100%', maxWidth: 640, height: '85vh', maxHeight: 720, background: '#06091A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, boxShadow: '0 40px 100px rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+          <span style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{title}</span>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: 'rgba(255,255,255,0.6)', width: 30, height: 30, borderRadius: 9, cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>✕</button>
+        </div>
+        <iframe title={title} src={src} style={{ flex: 1, width: '100%', border: 'none', background: '#06091A' }} />
+        <div style={{ display: 'flex', gap: 10, padding: '14px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+          <button type="button" onClick={onClose} style={{ ...ghostBtn, flex: 1, padding: '12px' }}>Close</button>
+          <button type="button" onClick={onAgree} style={{ ...primaryBtn, flex: 1, padding: '12px' }}>I agree →</button>
+        </div>
       </div>
     </div>
   )
