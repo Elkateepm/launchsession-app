@@ -48,19 +48,19 @@ export default function PublicChildRegistration() {
   const submit = async () => {
     setSubmitting(true)
     setError('')
-    const { error: err } = await supabase.from('child_registration_requests').insert({
-      org_id: org.id,
-      first_name: form.first_name.trim(), last_name: form.last_name.trim() || null,
-      date_of_birth: form.date_of_birth || null, school: form.school || null,
-      parent_name: form.parent_name.trim(), parent_phone: form.parent_phone || null, parent_email: form.parent_email || null,
-      emergency_contact_name: form.emergency_contact_name || null, emergency_contact_phone: form.emergency_contact_phone || null,
-      allergies: form.allergies || null, medical_notes: form.medical_notes || null,
-      has_asthma: form.has_asthma, has_diabetes: form.has_diabetes, takes_medication: form.takes_medication,
-      medication_details: form.medication_details || null, has_epipen: form.has_epipen,
-      has_behaviour_plan: form.has_behaviour_plan, behaviour_plan_notes: form.behaviour_plan_notes || null,
-      travel_consent: form.travel_consent, consent_photo: form.consent_photo, consent_trip: form.consent_trip,
-      consent_medical: form.consent_medical, consent_data_sharing: form.consent_data_sharing,
-      notes: form.notes || null, status: 'pending',
+    const { error: err } = await supabase.rpc('submit_child_registration', {
+      p_org_slug: org.slug,
+      p_first_name: form.first_name.trim(), p_last_name: form.last_name.trim() || null,
+      p_date_of_birth: form.date_of_birth || null, p_school: form.school || null,
+      p_parent_name: form.parent_name.trim(), p_parent_phone: form.parent_phone || null, p_parent_email: form.parent_email || null,
+      p_emergency_contact_name: form.emergency_contact_name || null, p_emergency_contact_phone: form.emergency_contact_phone || null,
+      p_allergies: form.allergies || null, p_medical_notes: form.medical_notes || null,
+      p_has_asthma: form.has_asthma, p_has_diabetes: form.has_diabetes, p_takes_medication: form.takes_medication,
+      p_medication_details: form.medication_details || null, p_has_epipen: form.has_epipen,
+      p_has_behaviour_plan: form.has_behaviour_plan, p_behaviour_plan_notes: form.behaviour_plan_notes || null,
+      p_travel_consent: form.travel_consent, p_consent_photo: form.consent_photo, p_consent_trip: form.consent_trip,
+      p_consent_medical: form.consent_medical, p_consent_data_sharing: form.consent_data_sharing,
+      p_notes: form.notes || null,
     })
     setSubmitting(false)
     if (err) { setError("Something went wrong submitting this — please try again, or contact the organisation directly."); return }
