@@ -1381,6 +1381,46 @@ function HubNotesPanel({ notes, childList, onClose, onAdd, onRaiseSafeguarding }
   )
 }
 
+function EndSessionConfirmModal({ sess, attendance, primary, secondary, onClose, onConfirm }) {
+  const [saving, setSaving] = useState(false)
+  const sessAttendance = (attendance || []).filter(a => a.session_id === sess.id)
+  const stillSignedIn = sessAttendance.filter(a => a.status === 'signed_in').length
+  const unresolved = sessAttendance.filter(a => a.status !== 'signed_in' && a.status !== 'absent' && a.status !== 'signed_out').length
+
+  const handleConfirm = async () => {
+    setSaving(true)
+    await onConfirm()
+    setSaving(false)
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 400, maxWidth: '92vw' }} onClick={e => e.stopPropagation()}>
+        <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>Close {sess.title}?</div>
+        <div style={{ fontSize: 12.5, color: '#6B7280', marginBottom: 14 }}>This locks the register into a read-only historical record. Corrections can still be made with an audit trail, or the register can be reopened later.</div>
+
+        {stillSignedIn > 0 && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 12.5, fontWeight: 700, color: '#B91C1C' }}>
+            ⚠ {stillSignedIn} young {stillSignedIn === 1 ? 'person is' : 'people are'} still marked on site.
+          </div>
+        )}
+        {unresolved > 0 && (
+          <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 12.5, color: '#92400E' }}>
+            {unresolved} expected {unresolved === 1 ? 'attendee has' : 'attendees have'} no attendance status.
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={handleConfirm} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
+            {saving ? 'Closing...' : 'Close and lock register'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function HubClosureFlow({ grouped, onClose, onMarkAllAbsent, onCloseRegister, primary, secondary, issues = [] }) {
   const stillSignedIn = grouped.signed_in.length
   const unaccounted = grouped.expected.length
@@ -1723,6 +1763,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     return sessions
       .filter(s => {
         if (!s.session_date) return false
+        if (s.closed_at) return false // closed sessions live in the Ended sessions area instead
         if (s.session_date === today) {
           // Keep today's sessions visible all day, even after they've ended —
           // the hero badge below distinguishes Live Now / Not Started / Ended.
@@ -1733,6 +1774,16 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       .sort((a, b) => (a.session_date + (a.start_time || '')).localeCompare(b.session_date + (b.start_time || '')))
       .slice(0, 6)
   }, [sessions, today]);
+  const endedSessions = useMemo(() => {
+    const now = new Date()
+    const sevenDaysAgo = new Date(now)
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const sevenDaysAgoStr = toLocalDateStr(sevenDaysAgo)
+    return sessions
+      .filter(s => s.closed_at && s.session_date >= sevenDaysAgoStr)
+      .sort((a, b) => new Date(b.closed_at) - new Date(a.closed_at))
+      .slice(0, 8)
+  }, [sessions]);
   const completedWithoutReflection = useMemo(() => {
     const now = new Date();
     return sessions.filter(s => {
@@ -1794,6 +1845,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [liveRegisterSessionId, setLiveRegisterSessionId] = useState(null)
   const openRegisterForSession = (sessionId) => {
     setLiveRegisterSessionId(sessionId)
+  };
+
+  const [closingSession, setClosingSession] = useState(null)
+  const handleCloseSessionFromCard = async (sess) => {
+    const now = new Date().toISOString()
+    await supabase.from('sessions').update({ closed_at: now, closed_by: session?.user?.id, register_status: 'closed' }).eq('id', sess.id)
+    setSessions(prev => prev.map(x => x.id === sess.id ? { ...x, closed_at: now, closed_by: session?.user?.id, register_status: 'closed' } : x))
+    setClosingSession(null)
   };
 
   if (loading) return <div style={styles.page}><div style={styles.loading}>Loading...</div></div>;
@@ -2211,6 +2270,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                             style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
                             🟢 Open Register
                           </button>
+                          {hasEnded && (
+                            <button onClick={e => { e.stopPropagation(); setClosingSession(s) }}
+                              style={{ flex: 1, background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
+                              🔒 Close session
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -2219,6 +2284,31 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               </div>
             )}
           </div>
+
+          {/* ENDED SESSIONS */}
+          {endedSessions.length > 0 && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}>🔒 Ended sessions</h3>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {endedSessions.map(s => (
+                  <div key={s.id} onClick={() => openRegisterForSession(s.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 16, padding: '14px 16px', cursor: 'pointer' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🔒</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 800, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                      <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>{formatDate(s.session_date)} · Closed {new Date(s.closed_at).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}</div>
+                    </div>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: '#6B7280', background: '#E5E7EB', borderRadius: 99, padding: '4px 10px', flexShrink: 0 }}>CLOSED</span>
+                    <span style={{ fontSize: 16, color: '#CBD5E1', flexShrink: 0 }}>→</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* PHOTO CAROUSEL */}
           <PhotoCarousel orgId={orgId} primary={primary} userId={session?.user?.id} />
@@ -2305,6 +2395,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       )}
 
       {showInviteChild && <InviteParentModal org={org} onClose={() => setShowInviteChild(false)} />}
+
+      {closingSession && (
+        <EndSessionConfirmModal
+          sess={closingSession}
+          attendance={attendance}
+          primary={primary}
+          secondary={secondary}
+          onClose={() => setClosingSession(null)}
+          onConfirm={() => handleCloseSessionFromCard(closingSession)}
+        />
+      )}
 
 
       {liveRegisterSessionId && sessions.find(s => s.id === liveRegisterSessionId) && (
