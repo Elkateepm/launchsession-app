@@ -297,6 +297,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const [bubbleFilter, setBubbleFilter] = useState('all')
   const [linkedRA, setLinkedRA] = useState(undefined) // undefined = loading, null = none, object = found
   const [showRAPicker, setShowRAPicker] = useState(false)
+  const [viewingRA, setViewingRA] = useState(false)
   const [raOptions, setRaOptions] = useState([])
   const [raPickerSearch, setRaPickerSearch] = useState('')
   const [raPickerBusy, setRaPickerBusy] = useState(false)
@@ -689,7 +690,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             {activeSession?.location ? ` · ${activeSession.location}` : ''}
           </p>
           {linkedRA === undefined ? null : linkedRA ? (
-            <button onClick={() => onNavigate && onNavigate('risk_assessments', { openAssessmentId: linkedRA.id })}
+            <button onClick={() => setViewingRA(true)}
               style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 99, padding: '5px 12px 5px 10px', cursor: 'pointer' }}>
               <span style={{ fontSize: 12 }}>🛡️</span>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{linkedRA.name}</span>
@@ -981,6 +982,9 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           onAttach={attachExistingRA} onCreate={createAndAttachRA} onClose={() => setShowRAPicker(false)}
         />
       )}
+      {viewingRA && linkedRA && (
+        <HubRAPreviewModal assessmentId={linkedRA.id} onClose={() => setViewingRA(false)} onNavigate={onNavigate} />
+      )}
     </div>
   )
 }
@@ -1018,6 +1022,104 @@ function HubRAPicker({ options, search, onSearchChange, busy, onAttach, onCreate
             </button>
           ))}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function HubRAPreviewModal({ assessmentId, onClose, onNavigate }) {
+  const [ra, setRa] = useState(null)
+  const [hazards, setHazards] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    Promise.all([
+      supabase.from('risk_assessments').select('*').eq('id', assessmentId).single(),
+      supabase.from('risk_assessment_hazards').select('*').eq('assessment_id', assessmentId).order('sort_order'),
+    ]).then(([{ data: raData }, { data: hazardData }]) => {
+      if (cancelled) return
+      setRa(raData || null)
+      setHazards(hazardData || [])
+      setLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [assessmentId])
+
+  const emergencyFields = ra ? [
+    ['Meeting point', ra.meeting_point],
+    ['Nearest hospital', ra.nearest_hospital],
+    ['Defibrillator location', ra.defibrillator_location],
+    ['Emergency contacts', ra.emergency_contacts],
+  ].filter(([, v]) => v) : []
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, width: '100%', maxWidth: 540, maxHeight: '86vh', overflowY: 'auto', padding: 22, boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Loading…</div>
+        ) : !ra ? (
+          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Couldn't load this risk assessment.</div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+              <div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', marginBottom: 4 }}>🛡️ {ra.name}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{ra.activity_type || 'Session'}{ra.location ? ` · ${ra.location}` : ''}</div>
+              </div>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', flexShrink: 0 }}>✕</button>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, margin: '14px 0' }}>
+              <span style={{
+                fontSize: 10.5, fontWeight: 900, letterSpacing: 0.4, textTransform: 'uppercase', borderRadius: 99, padding: '3px 10px',
+                background: RA_RATING_COLORS[ra.risk_rating]?.bg || 'rgba(148,163,184,0.16)',
+                color: RA_RATING_COLORS[ra.risk_rating]?.color || '#CBD5E1',
+              }}>{ra.risk_rating || 'Unrated'}</span>
+              <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.4, textTransform: 'uppercase', borderRadius: 99, padding: '3px 10px', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}>{ra.status || 'draft'}</span>
+            </div>
+
+            {ra.summary && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, marginBottom: 16 }}>{ra.summary}</div>}
+
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+              Hazards ({hazards.length})
+            </div>
+            {hazards.length === 0 ? (
+              <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>No hazards logged yet.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+                {hazards.map(h => (
+                  <div key={h.id} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: h.control_measures ? 4 : 0 }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: '#fff' }}>{h.hazard}</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', flexShrink: 0 }}>L{h.likelihood}×S{h.severity} = {(h.likelihood || 0) * (h.severity || 0)}</span>
+                    </div>
+                    {h.control_measures && <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.55)' }}>{h.control_measures}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {emergencyFields.length > 0 && (
+              <>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Emergency plan</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 18 }}>
+                  {emergencyFields.map(([k, v]) => (
+                    <div key={k} style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.7)' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>{k}: </span>{v}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <button onClick={() => { onClose(); onNavigate && onNavigate('risk_assessments', { openAssessmentId: assessmentId }) }}
+              style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+              Open full assessment to edit →
+            </button>
+          </>
+        )}
       </div>
     </div>
   )
