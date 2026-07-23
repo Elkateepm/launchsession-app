@@ -733,6 +733,10 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
 function InviteParentModal({ org, onClose }) {
   const link = `${window.location.origin}/register-child/${org.slug}`
   const [copied, setCopied] = useState(false)
+  const [parentEmail, setParentEmail] = useState('')
+  const [parentName, setParentName] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sendResult, setSendResult] = useState(null) // { ok: true } | { error: '...' }
 
   const copy = () => {
     navigator.clipboard.writeText(link)
@@ -740,19 +744,58 @@ function InviteParentModal({ org, onClose }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const sendEmail = async () => {
+    setSending(true)
+    setSendResult(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/send-registration-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ emails: [parentEmail], parent_name: parentName.trim() || null }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error || (data.failed || []).length > 0) {
+        setSendResult({ error: data.error || 'Could not send that email — please try again.' })
+      } else {
+        setSendResult({ ok: true })
+        setParentEmail('')
+        setParentName('')
+      }
+    } catch {
+      setSendResult({ error: 'Could not reach the server — please try again.' })
+    }
+    setSending(false)
+  }
+
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 460 }}>
         <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Invite a parent to register their child</div>
-        <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 16 }}>Share this link — anyone with it can submit a registration request for {org.name}. Every submission lands in Registration Requests for you to approve first; nothing is added automatically.</div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-          <input readOnly value={link} style={{ ...inputStyle, flex: 1, fontSize: 12.5 }} onFocus={e => e.target.select()} />
-          <button onClick={copy} style={{ padding: '0 16px', borderRadius: 10, border: 'none', background: org.primary_color || '#7C5CFC', color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>{copied ? '✓ Copied' : 'Copy link'}</button>
+        <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 18 }}>Every submission lands in Registration Requests for you to approve first; nothing is added automatically.</div>
+
+        <div style={{ fontSize: 11.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Send a branded email</div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <input value={parentName} onChange={e => setParentName(e.target.value)} placeholder="Parent's name (optional)" style={{ ...inputStyle, flex: 1, fontSize: 12.5 }} />
         </div>
-        <a href={`mailto:?subject=${encodeURIComponent('Register your child with ' + org.name)}&body=${encodeURIComponent(`Please use the link below to register your child with ${org.name}:\n\n${link}`)}`}
-          style={{ display: 'block', textAlign: 'center', padding: '11px', borderRadius: 10, border: `1.5px solid ${org.primary_color || '#7C5CFC'}40`, color: org.primary_color || '#7C5CFC', fontWeight: 700, fontSize: 13, textDecoration: 'none', marginBottom: 10 }}>
-          ✉️ Open email to send this link
-        </a>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <input value={parentEmail} onChange={e => setParentEmail(e.target.value)} type="email" placeholder="parent@example.com" style={{ ...inputStyle, flex: 1, fontSize: 12.5 }} />
+          <button onClick={sendEmail} disabled={sending || !parentEmail.trim()}
+            style={{ padding: '0 18px', borderRadius: 10, border: 'none', background: org.primary_color || '#7C5CFC', color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: sending ? 'default' : 'pointer', opacity: sending || !parentEmail.trim() ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+            {sending ? 'Sending…' : 'Send'}
+          </button>
+        </div>
+        {sendResult?.ok && <div style={{ fontSize: 12, color: '#15803D', fontWeight: 700, marginBottom: 14 }}>✓ Invite sent.</div>}
+        {sendResult?.error && <div style={{ fontSize: 12, color: '#DC2626', fontWeight: 700, marginBottom: 14 }}>{sendResult.error}</div>}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 16px' }}>
+          <div style={{ flex: 1, height: 1, background: '#E2E8F0' }} /><span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700 }}>OR</span><div style={{ flex: 1, height: 1, background: '#E2E8F0' }} />
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          <input readOnly value={link} style={{ ...inputStyle, flex: 1, fontSize: 12.5 }} onFocus={e => e.target.select()} />
+          <button onClick={copy} style={{ padding: '0 16px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>{copied ? '✓ Copied' : 'Copy link'}</button>
+        </div>
         <button onClick={onClose} style={{ width: '100%', ...btnGhost }}>Close</button>
       </div>
     </div>
