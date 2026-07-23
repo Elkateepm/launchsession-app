@@ -21,6 +21,7 @@ import Gallery from '../gallery/Gallery'
 import Messaging from '../messaging/Messaging'
 import Forms from '../forms/Forms'
 import CaseManagement from '../casemgmt/CaseManagement'
+import ChildrenDirectory from '../children/ChildrenDirectory'
 import RiskAssessments from '../riskassessments/RiskAssessments'
 import ImpactOutcomes from '../impact/ImpactOutcomes'
 import Fundraising from '../fundraising/Fundraising'
@@ -701,6 +702,7 @@ export default function Dashboard({ session, org }) {
           <NavSection collapsed={sidebarCollapsed} title="Delivery" packColor="#3B82F6">
             <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => handleSetTab('calendar')} primary={primary} collapsed={sidebarCollapsed} />
             <NavItem icon="🗓️" label="Sessions" active={tab === 'planner'} onClick={() => handleSetTab('planner')} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="🧒" label="Children" active={tab === 'children'} onClick={() => handleSetTab('children')} primary={primary} collapsed={sidebarCollapsed} />
             {/* Paid delivery modules — show all, locked ones navigate to locked screen */}
             {[
               { key: 'registers', label: 'Registers', icon: '📋' },
@@ -870,6 +872,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} onNavigate={handleSetTab} />}
           {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
           {tab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
+          {tab === 'children'    && <ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'team'       && (isAdmin ? <TeamTab org={org} session={session} /> : <RestrictedModule label="Team & Staff" icon="👥" onNavigate={handleSetTab} />)}
           {tab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} />)}
           {tab === 'settings'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} />)}
@@ -901,7 +904,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','reports','impact_outcomes','fundraising','hr','resource_booking','mentoring','parent_portal'].includes(tab) && (
+          {!['home','planner','calendar','events_trips','children','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','reports','impact_outcomes','fundraising','hr','resource_booking','mentoring','parent_portal'].includes(tab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
