@@ -429,6 +429,8 @@ export default function Dashboard({ session, org }) {
   const [registersKey, setRegistersKey] = useState(0)
   const [reflectSessionId, setReflectSessionId] = useState(null)
   const [openAssessmentId, setOpenAssessmentId] = useState(null)
+  const [openCaseId, setOpenCaseId] = useState(null)
+  const [openConcernId, setOpenConcernId] = useState(null)
   const [initialThreadId, setInitialThreadId] = useState(null)
   const [autoOpenWizard, setAutoOpenWizard] = useState(false)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
@@ -464,6 +466,8 @@ export default function Dashboard({ session, org }) {
     if (t === 'registers') setRegistersKey(k => k + 1)
     setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
     setOpenAssessmentId(t === 'risk_assessments' && payload?.openAssessmentId ? payload.openAssessmentId : null)
+    setOpenCaseId(t === 'case_management' && payload?.openCaseId ? payload.openCaseId : null)
+    setOpenConcernId(t === 'safeguarding' && payload?.openConcernId ? payload.openConcernId : null)
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
     setTab(t)
@@ -878,9 +882,9 @@ export default function Dashboard({ session, org }) {
           {tab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} />)}
 
           {/* ── SAFEGUARDING PACK ── */}
-          {tab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingGate org={org} session={session}><Safeguarding org={org} session={session} /></SafeguardingGate>                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} />)}
+          {tab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingGate org={org} session={session}><Safeguarding org={org} session={session} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} /></SafeguardingGate>                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} />)}
           {tab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} />)}
-          {tab === 'case_management' && (hasModule('case_management') ? <CaseManagement org={org} session={session} />                        : <LockedModule moduleKey="case_management" label="Case Management" icon="📁" onNavigate={handleSetTab} />)}
+          {tab === 'case_management' && (hasModule('case_management') ? <CaseManagement org={org} session={session} initialOpenCaseId={openCaseId} />                        : <LockedModule moduleKey="case_management" label="Case Management" icon="📁" onNavigate={handleSetTab} />)}
           {tab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} />)}
 
           {/* ── GROWTH PACK ── */}

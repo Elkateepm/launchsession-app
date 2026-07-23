@@ -12,7 +12,7 @@ import CaseReportModal, { exportCasesToCSV } from './CaseReports'
 
 const RISK_SCORE = { low: 1, medium: 2, high: 3, critical: 4 }
 
-export default function CaseManagement({ org, session: authSession }) {
+export default function CaseManagement({ org, session: authSession, onNavigate, initialOpenCaseId }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#7C5CFC'
 
@@ -60,6 +60,13 @@ export default function CaseManagement({ org, session: authSession }) {
       if (fresh && fresh !== selectedCase) setSelectedCase(fresh)
     }
   }, [cases]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Deep-link from Safeguarding: a concern was just escalated into this case, open it.
+  useEffect(() => {
+    if (!initialOpenCaseId || cases.length === 0) return
+    const match = cases.find(c => c.id === initialOpenCaseId)
+    if (match) { setSelectedCase(match); setTab('timeline') }
+  }, [initialOpenCaseId, cases])
 
   const logAudit = async (caseId, action, detail) => {
     await supabase.from('case_audit_log').insert({ case_id: caseId, org_id: org.id, action, detail, actor_id: authSession?.user?.id })
@@ -350,6 +357,16 @@ export default function CaseManagement({ org, session: authSession }) {
         {(!isMobile || selectedCase) && selectedCase && (
           <div style={glass({ padding: 20 })}>
             <button onClick={() => setSelectedCase(null)} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}>← Back to cases</button>
+
+            {selectedCase.source_concern_id && (
+              <div style={{ background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 12, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: 12.5, color: '#5B21B6', fontWeight: 600 }}>🛡️ Escalated from a safeguarding concern</div>
+                <button onClick={() => onNavigate && onNavigate('safeguarding', { openConcernId: selectedCase.source_concern_id })}
+                  style={{ background: 'none', border: 'none', color: '#6D28D9', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>
+                  View original concern →
+                </button>
+              </div>
+            )}
 
             {/* Risk banner */}
             {(selectedCase.risk_level === 'high' || selectedCase.priority === 'high') && (

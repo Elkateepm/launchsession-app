@@ -46,10 +46,11 @@ async function logAudit(orgId, caseId, eventType, detail, userId) {
 }
 
 // ── CASE DETAIL MODAL ─────────────────────────────────────────
-function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId }) {
+function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate }) {
   const [status, setStatus] = useState(c.status)
   const [notes, setNotes] = useState(c.resolution_notes || '')
   const [saving, setSaving] = useState(false)
+  const [escalating, setEscalating] = useState(false)
 
   const handleSave = async () => {
     setSaving(true)
@@ -61,6 +62,32 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId }) {
     }
     setSaving(false)
     if (!error) { onStatusChange(); onClose() }
+  }
+
+  const RISK_MAP = { urgent: 'critical', high: 'high', medium: 'medium', low: 'low' }
+
+  const handleEscalate = async () => {
+    setEscalating(true)
+    // Best-effort match to an existing child record so the case links properly; falls back to name-only.
+    const { data: childMatch } = await supabase.from('children').select('id').eq('org_id', orgId)
+      .ilike('first_name', (c.child_name || '').split(' ')[0] || '').maybeSingle()
+    const { data: newCase, error } = await supabase.from('cases').insert({
+      org_id: orgId, child_id: childMatch?.id || null, child_name: c.child_name,
+      category: c.concern_type || 'Other', risk_level: RISK_MAP[c.priority] || 'medium',
+      summary: c.description, status: 'open', created_by: userId, source_concern_id: c.id,
+      requires_dsl: !!c.dsl_notified,
+    }).select().single()
+    if (error) { setEscalating(false); window.alert('Could not create the case: ' + error.message); return }
+    await supabase.from('case_events').insert({
+      case_id: newCase.id, org_id: orgId, event_type: 'concern_logged',
+      body: `Escalated from a safeguarding concern reported ${new Date(c.created_at).toLocaleDateString('en-GB')}.`, created_by: userId,
+    })
+    await supabase.from('cause_for_concern').update({ escalated_to_case_id: newCase.id }).eq('id', c.id)
+    await logAudit(orgId, c.id, 'escalated', 'Escalated to Case Management', userId)
+    setEscalating(false)
+    onStatusChange()
+    onClose()
+    if (onNavigate) onNavigate('case_management', { openCaseId: newCase.id })
   }
 
   const Row = ({ label, value }) => value ? (
@@ -134,9 +161,22 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId }) {
           <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add resolution notes, outcomes, or case updates..." style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 13, outline: 'none', resize: 'vertical', minHeight: 90, boxSizing: 'border-box' }} />
         </div>
 
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleSave} disabled={saving} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: saving ? 'rgba(37,99,235,0.4)' : 'linear-gradient(90deg,#2563EB,#7C3AED)', color: '#fff', fontWeight: 900, cursor: saving ? 'not-allowed' : 'pointer' }}>{saving ? 'Saving...' : 'Save Changes'}</button>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', flexWrap: 'wrap' }}>
+          {c.escalated_to_case_id ? (
+            <button onClick={() => { onClose(); onNavigate && onNavigate('case_management', { openCaseId: c.escalated_to_case_id }) }}
+              style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: PRIMARY, fontWeight: 800, cursor: 'pointer' }}>
+              📁 View linked case →
+            </button>
+          ) : (
+            <button onClick={handleEscalate} disabled={escalating}
+              style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', fontWeight: 800, cursor: escalating ? 'default' : 'pointer', opacity: escalating ? 0.6 : 1 }}>
+              {escalating ? 'Escalating…' : '📁 Escalate to Case →'}
+            </button>
+          )}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={onClose} style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={handleSave} disabled={saving} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: saving ? 'rgba(37,99,235,0.4)' : 'linear-gradient(90deg,#2563EB,#7C3AED)', color: '#fff', fontWeight: 900, cursor: saving ? 'not-allowed' : 'pointer' }}>{saving ? 'Saving...' : 'Save Changes'}</button>
+          </div>
         </div>
       </div>
     </>
@@ -591,7 +631,7 @@ function EmergencyGuidanceModal({ onClose }) {
 }
 
 // ── MAIN DASHBOARD ─────────────────────────────────────────
-export default function SafeguardingDashboard({ org, session, onReportConcern }) {
+export default function SafeguardingDashboard({ org, session, onReportConcern, onNavigate, initialOpenConcernId }) {
   const isMobile = useIsMobile()
   const [cases, setCases] = useState([])
   const [loading, setLoading] = useState(true)
@@ -610,6 +650,13 @@ export default function SafeguardingDashboard({ org, session, onReportConcern })
   }, [org.id])
 
   useEffect(() => { load() }, [load])
+
+  // Deep-link back from a case that originated here (Case Management's "View originating concern")
+  useEffect(() => {
+    if (!initialOpenConcernId || cases.length === 0) return
+    const match = cases.find(c => c.id === initialOpenConcernId)
+    if (match) { setTab('cases'); setSelected(match) }
+  }, [initialOpenConcernId, cases])
 
   const stats = {
     open: cases.filter(c => c.status === 'open').length,
@@ -687,7 +734,7 @@ export default function SafeguardingDashboard({ org, session, onReportConcern })
         </div>
       </div>
 
-      {selected && <CaseDetailModal c={selected} onClose={() => setSelected(null)} onStatusChange={load} orgId={org.id} userId={userId} />}
+      {selected && <CaseDetailModal c={selected} onClose={() => setSelected(null)} onStatusChange={load} orgId={org.id} userId={userId} onNavigate={onNavigate} />}
       {showEmergency && <EmergencyGuidanceModal onClose={() => setShowEmergency(false)} />}
     </div>
   )
