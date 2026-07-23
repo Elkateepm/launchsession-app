@@ -2312,6 +2312,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           session={sessions.find(s => s.id === liveRegisterSessionId)}
           org={org}
           authUserId={session?.user?.id}
+          userRole={userProfile?.role}
           onNavigate={onNavigate}
           onClose={() => setLiveRegisterSessionId(null)}
         />
