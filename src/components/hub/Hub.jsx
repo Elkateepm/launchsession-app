@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { supabase } from "../../lib/supabase";
 import { useIsMobile } from "../../hooks/useIsMobile";
@@ -812,7 +813,16 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           <span style={{ color: 'rgba(255,255,255,0.5)' }}>{regExpanded ? '▲ Hide' : '▼ Open'}</span>
         </button>
 
-        {regExpanded && (
+        <AnimatePresence initial={false}>
+          {regExpanded && (
+            <motion.div
+              key="register-panel"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ height: { duration: 0.32, ease: [0.4, 0, 0.2, 1] }, opacity: { duration: 0.22 } }}
+              style={{ overflow: 'hidden' }}
+            >
           <div style={{ marginTop: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
@@ -888,7 +898,9 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
               )}
             </div>
           </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {regToast && (
           <div style={{ marginTop: 10, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, padding: '8px 14px', fontSize: 11.5, fontWeight: 700, color: '#fff', textAlign: 'center' }}>

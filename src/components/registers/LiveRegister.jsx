@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 
@@ -207,7 +208,11 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 200, display: 'flex', flexDirection: 'column' }}>
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
+      style={{ position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 200, display: 'flex', flexDirection: 'column' }}>
       {/* HEADER */}
       <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '14px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -326,7 +331,7 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
       {selectedChild && (
         <ChildQuickInfo child={selectedChild} att={attendanceByChild[selectedChild.id]} onClose={() => setSelectedChild(null)} groupLabel={groupLabel} />
       )}
-    </div>
+    </motion.div>
   )
 }
 
