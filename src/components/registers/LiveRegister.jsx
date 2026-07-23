@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
+import PastSessionRegister from './PastSessionRegister'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -51,7 +52,7 @@ function fmtTime(d) {
   return new Date(d).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })
 }
 
-export default function LiveRegister({ session, org, authUserId, onClose, onNavigate }) {
+export default function LiveRegister({ session, org, authUserId, userRole, onClose, onNavigate }) {
   const { groups: orgGroups } = useOrgSettings(org?.id)
   const configuredGroupLabels = useMemo(() => new Map((orgGroups || []).map(g => [(g.label || '').trim().toLowerCase(), g.label])), [orgGroups])
   const groupLabel = (name) => configuredGroupLabels.get((name || '').trim().toLowerCase()) || 'Ungrouped'
@@ -60,6 +61,8 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
   const [staffRows, setStaffRows] = useState([])
   const [staffProfiles, setStaffProfiles] = useState({})
   const [notes, setNotes] = useState([])
+  const [auditLog, setAuditLog] = useState([])
+  const [safeguardingCount, setSafeguardingCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('expected')
   const [search, setSearch] = useState('')
@@ -73,20 +76,28 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
 
   const load = useCallback(async () => {
     if (!session?.id) return
-    const [{ data: childData }, { data: attData }, { data: ssData }, { data: noteData }] = await Promise.all([
+    const [{ data: childData }, { data: attData }, { data: ssData }, { data: noteData }, { data: auditData }, { count: sgCount }] = await Promise.all([
       supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).order('first_name'),
       supabase.from('attendance').select('*').eq('session_id', session.id),
       supabase.from('session_staff').select('*').eq('session_id', session.id),
       supabase.from('session_notes').select('*').eq('session_id', session.id).order('created_at', { ascending: false }),
+      supabase.from('attendance_audit_log').select('*').eq('session_id', session.id),
+      supabase.from('cause_for_concern').select('id', { count: 'exact', head: true }).eq('session_id', session.id),
     ])
     setChildren(childData || [])
     setAttendance(attData || [])
     setStaffRows(ssData || [])
     setNotes(noteData || [])
+    setAuditLog(auditData || [])
+    setSafeguardingCount(sgCount || 0)
 
-    const staffIds = [...new Set((ssData || []).map(s => s.user_id).filter(Boolean))]
-    if (staffIds.length) {
-      const { data: profiles } = await supabase.from('user_profiles').select('id, full_name').in('id', staffIds)
+    const staffIds = new Set((ssData || []).map(s => s.user_id).filter(Boolean))
+    ;(attData || []).forEach(a => { if (a.signed_in_by) staffIds.add(a.signed_in_by); if (a.signed_out_by) staffIds.add(a.signed_out_by) })
+    ;(auditData || []).forEach(a => { if (a.changed_by) staffIds.add(a.changed_by) })
+    if (session.closed_by) staffIds.add(session.closed_by)
+    if (session.reopened_by) staffIds.add(session.reopened_by)
+    if (staffIds.size) {
+      const { data: profiles } = await supabase.from('user_profiles').select('id, full_name').in('id', [...staffIds])
       const map = {}
       ;(profiles || []).forEach(p => { map[p.id] = p.full_name })
       setStaffProfiles(map)
@@ -205,6 +216,29 @@ export default function LiveRegister({ session, org, authUserId, onClose, onNavi
 
   if (loading) {
     return <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>Loading register...</div>
+  }
+
+  if (registerState === 'closed') {
+    return (
+      <>
+        <PastSessionRegister
+          session={session} org={org} grouped={grouped} rows={rows} staffRows={staffRows}
+          peopleProfiles={staffProfiles} notes={notes} auditLog={auditLog}
+          userRole={userRole} authUserId={authUserId} groupLabel={groupLabel}
+          safeguardingCount={safeguardingCount}
+          onClose={onClose}
+          onOpenNotes={() => setShowNotes(true)}
+          onOpenChild={(child) => setSelectedChild(child)}
+          onReload={load}
+        />
+        {showNotes && (
+          <NotesPanel notes={notes} onClose={() => setShowNotes(false)} onAdd={handleAddNote} onRaiseSafeguarding={handleRaiseSafeguardingConcern} children={children} />
+        )}
+        {selectedChild && (
+          <ChildQuickInfo child={selectedChild} att={attendanceByChild[selectedChild.id]} onClose={() => setSelectedChild(null)} groupLabel={groupLabel} />
+        )}
+      </>
+    )
   }
 
   return (
