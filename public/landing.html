@@ -202,7 +202,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
 .fd-close svg{width:17px;height:17px}
 .fd-icon{width:60px;height:60px;border-radius:16px;background:var(--fd-bg,rgba(59,130,246,.12));
   display:flex;align-items:center;justify-content:center;margin-bottom:16px;border:1px solid rgba(255,255,255,.08)}
-.fd-icon img{width:38px;height:38px}
+.fd-icon img{width:38px;height:38px;mix-blend-mode:screen}
 .fd-tag{display:inline-block;padding:4px 11px;border-radius:99px;font-size:10.5px;font-weight:800;
   letter-spacing:.6px;text-transform:uppercase;color:var(--fd-color,#3B82F6);
   background:var(--fd-bg,rgba(59,130,246,.12));border:1px solid var(--fd-color,#3B82F6);margin-bottom:12px}
@@ -403,14 +403,36 @@ section{padding:96px 5%}
 /* ── FEATURES ────────────────────────────────────────────── */
 #features{background:var(--navy2)}
 .features-intro{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;margin-bottom:56px;flex-wrap:wrap}
-.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.feature-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:22px;transition:all 0.25s;position:relative;overflow:hidden}
-.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--feat-color,#3B82F6);opacity:0;transition:opacity 0.3s}
-.feat-icon-wrap{width:52px;height:52px;border-radius:13px;overflow:hidden;margin-bottom:14px;background:var(--feat-bg,rgba(59,130,246,0.12))}
-.feat-icon-wrap img{width:100%;height:100%;object-fit:cover;display:block}
-.feat-title{font-size:15px;font-weight:800;color:#fff;margin-bottom:6px}
-.feat-desc{font-size:12px;color:var(--text2);line-height:1.6}
-.feat-tag{display:inline-block;margin-top:10px;font-size:10px;font-weight:700;padding:2px 9px;border-radius:99px;background:rgba(59,130,246,0.1);color:#60A5FA;letter-spacing:0.5px}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+
+/* Card is a text column on the left with the illustration bleeding off the
+   right edge, over an accent glow tinted to that module's colour. */
+.feature-card{position:relative;overflow:hidden;display:flex;flex-direction:column;
+  min-height:266px;padding:20px;border-radius:18px;
+  background:#0B1020;border:1px solid rgba(255,255,255,.07);
+  transition:border-color .25s,transform .18s,box-shadow .25s}
+.feature-card::before{content:'';position:absolute;top:-34%;right:-28%;width:80%;height:112%;
+  border-radius:50%;pointer-events:none;opacity:.17;transition:opacity .3s;
+  background:radial-gradient(ellipse at center,var(--feat-color,#3B82F6),transparent 68%)}
+.feat-tag{align-self:flex-start;position:relative;z-index:2;margin-bottom:14px;
+  padding:4px 10px;border-radius:7px;font-size:10px;font-weight:800;letter-spacing:.9px;
+  text-transform:uppercase;color:#fff;background:var(--feat-color,#3B82F6);
+  box-shadow:0 4px 14px -4px var(--feat-color,#3B82F6)}
+.feat-title{position:relative;z-index:2;max-width:57%;margin-bottom:10px;
+  font-size:19.5px;font-weight:800;color:#fff;letter-spacing:-.35px;line-height:1.18}
+.feat-desc{position:relative;z-index:2;max-width:57%;
+  font-size:13px;color:rgba(255,255,255,.52);line-height:1.55}
+.feat-more{position:relative;z-index:2;margin-top:auto;padding-top:18px;
+  display:flex;align-items:center;gap:7px;
+  font-size:12.5px;font-weight:700;color:var(--feat-color,#3B82F6)}
+.feat-more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.4;
+  stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.feat-icon-wrap{position:absolute;z-index:1;right:-8px;top:50%;transform:translateY(-50%);
+  width:46%;max-width:178px;pointer-events:none;background:none}
+/* The icon PNGs are opaque 260x260 tiles with a near-black navy baked in.
+   Screen blending drops that background to nothing while keeping the bright
+   illustration and its glow, so the art sits directly on the card. */
+.feat-icon-wrap img{width:100%;height:auto;display:block;mix-blend-mode:screen}
 
 /* ── PACKAGES / PRICING ──────────────────────────────────── */
 #pricing{background:var(--navy)}
@@ -565,8 +587,10 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
    looking permanently "selected" — a mobile Safari :hover quirk. */
 @media (hover: hover) and (pointer: fine) {
   .step-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 16px 40px rgba(0,0,0,0.35)}
-  .feature-card:hover{border-color:rgba(59,130,246,0.3);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.3)}
-  .feature-card:hover::before{opacity:1}
+  .feature-card:hover{border-color:color-mix(in srgb,var(--feat-color,#3B82F6) 40%,transparent);
+    transform:translateY(-3px);box-shadow:0 18px 44px rgba(0,0,0,.45)}
+  .feature-card:hover::before{opacity:.28}
+  .feature-card:hover .feat-more svg{transform:translateX(3px)}
   .pricing-card:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(0,0,0,0.3)}
   .pricing-card.popular:hover{box-shadow:0 24px 60px rgba(59,130,246,0.2),0 0 0 1px rgba(59,130,246,0.2) inset}
 }
@@ -607,7 +631,10 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
   .trust-org { font-size: 12.5px }
 
   /* Card padding — desktop values waste horizontal space on a phone. */
-  .feature-card { padding: 18px }
+  .feature-card { padding: 18px; min-height: 240px }
+  .feat-title { font-size: 18px; max-width: 58% }
+  .feat-desc { max-width: 58%; font-size: 12.5px }
+  .feat-icon-wrap { width: 44% }
   .testi-card { padding: 20px }
   .pricing-card { padding: 26px 20px }
   .fo-box { padding: 36px 22px }
@@ -1005,95 +1032,110 @@ async function submitFoundingOffer(e) {
       <p class="section-sub" style="margin:0">From daily registers to long-term impact reporting — all the tools youth workers actually use, without the complexity.</p>
     </div>
     <div class="features-grid">
-      <div class="feature-card" style="--feat-color:#22C55E;--feat-bg:rgba(34,197,94,0.1)" data-feat="live_registers" role="button" tabindex="0" onclick="openFeature('live_registers')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('live_registers')}"><div class="feat-icon-wrap"><img src="/icons/feat-live_registers.png" alt="Live Registers" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#22C55E;--feat-bg:rgba(34,197,94,0.1)" data-feat="live_registers" role="button" tabindex="0" onclick="openFeature('live_registers')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('live_registers')}">
+        <div class="feat-tag">Core</div>
         <div class="feat-title">Live Registers</div>
         <div class="feat-desc">Take attendance in real time. Sign young people in and out, track latecomers, and flag medical alerts automatically.</div>
-        <div class="feat-tag">Core</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-live_registers.png" alt="Live Registers" loading="lazy" width="260" height="260" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#3B82F6;--feat-bg:rgba(59,130,246,0.1)" data-feat="session_planner" role="button" tabindex="0" onclick="openFeature('session_planner')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('session_planner')}"><div class="feat-icon-wrap"><img src="/icons/feat-session_planner.png" alt="Session Planner" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#3B82F6;--feat-bg:rgba(59,130,246,0.1)" data-feat="session_planner" role="button" tabindex="0" onclick="openFeature('session_planner')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('session_planner')}">
+        <div class="feat-tag">Core</div>
         <div class="feat-title">Session Planner</div>
         <div class="feat-desc">Plan activities, trips and workshops weeks ahead. Assign volunteers, set capacity limits and track outcomes.</div>
-        <div class="feat-tag">Core</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-session_planner.png" alt="Session Planner" loading="lazy" width="260" height="260" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#8B5CF6;--feat-bg:rgba(139,92,246,0.1)" data-feat="safeguarding" role="button" tabindex="0" onclick="openFeature('safeguarding')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('safeguarding')}"><div class="feat-icon-wrap"><img src="/icons/feat-safeguarding.png" alt="Safeguarding" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#8B5CF6;--feat-bg:rgba(139,92,246,0.1)" data-feat="safeguarding" role="button" tabindex="0" onclick="openFeature('safeguarding')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('safeguarding')}">
+        <div class="feat-tag">Core</div>
         <div class="feat-title">Safeguarding</div>
         <div class="feat-desc">Log causes for concern, track follow-ups and ensure no safeguarding alert falls through the cracks.</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-safeguarding.png" alt="Safeguarding" loading="lazy" width="260" height="260" /></div>
+      </div>
+      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="notifications_centre" role="button" tabindex="0" onclick="openFeature('notifications_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('notifications_centre')}">
         <div class="feat-tag">Core</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </div>
-      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="volunteer_mgmt" role="button" tabindex="0" onclick="openFeature('volunteer_mgmt')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('volunteer_mgmt')}"><div class="feat-icon-wrap"><img src="/icons/feat-volunteer_mgmt.png" alt="Volunteer Management" loading="lazy" width="52" height="52" /></div>
-        <div class="feat-title">Volunteer Management</div>
-        <div class="feat-desc">Manage your volunteer workforce with sign-up flows, DBS tracking, availability matching and QR check-in.</div>
-        <div class="feat-tag">Pro+</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </div>
-      <div class="feature-card" style="--feat-color:#EC4899;--feat-bg:rgba(236,72,153,0.1)" data-feat="parent_portal" role="button" tabindex="0" onclick="openFeature('parent_portal')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('parent_portal')}"><div class="feat-icon-wrap"><img src="/icons/feat-parent_portal.png" alt="Parent Portal" loading="lazy" width="52" height="52" /></div>
-        <div class="feat-title">Parent Portal</div>
-        <div class="feat-desc">Give parents visibility into their child's attendance, upcoming sessions and key information — no app download needed.</div>
-        <div class="feat-tag">Pro+</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </div>
-      <div class="feature-card" style="--feat-color:#1B9AAA;--feat-bg:rgba(27,154,170,0.1)" data-feat="impact_outcomes" role="button" tabindex="0" onclick="openFeature('impact_outcomes')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('impact_outcomes')}"><div class="feat-icon-wrap"><img src="/icons/feat-impact_outcomes.png" alt="Impact & Outcomes" loading="lazy" width="52" height="52" /></div>
-        <div class="feat-title">Impact & Outcomes</div>
-        <div class="feat-desc">AI-refined insights, outcome tracking and visual reporting — generate funder-ready evidence of your programme's impact in one click.</div>
-        <div class="feat-tag">All plans</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </div>
-      <div class="feature-card" style="--feat-color:#DC2626;--feat-bg:rgba(220,38,38,0.1)" data-feat="risk_assessments" role="button" tabindex="0" onclick="openFeature('risk_assessments')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('risk_assessments')}"><div class="feat-icon-wrap"><img src="/icons/feat-risk_assessments.png" alt="Risk Assessments" loading="lazy" width="52" height="52" /></div>
-        <div class="feat-title">Risk Assessments</div>
-        <div class="feat-desc">HSE-standard 5×5 risk matrix, hazard tracking, session linking and one-click PDF export. Keep every activity properly assessed.</div>
-        <div class="feat-tag">Pro+</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </div>
-      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="bulk_import" role="button" tabindex="0" onclick="openFeature('bulk_import')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('bulk_import')}"><div class="feat-icon-wrap"><img src="/icons/feat-bulk_import.png" alt="Bulk Import" loading="lazy" width="52" height="52" /></div>
-        <div class="feat-title">Bulk Import</div>
-        <div class="feat-desc">Already have a spreadsheet of young people? Import up to thousands of records in seconds with our CSV import tool.</div>
-        <div class="feat-tag">All plans</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </div>
-      <div class="feature-card" style="--feat-color:#BA7517;--feat-bg:rgba(186,117,23,0.1)" data-feat="fundraising_hub" role="button" tabindex="0" onclick="openFeature('fundraising_hub')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('fundraising_hub')}"><div class="feat-icon-wrap"><img src="/icons/feat-fundraising_hub.png" alt="Fundraising Hub" loading="lazy" width="52" height="52" /></div>
-        <div class="feat-title">Fundraising Hub</div>
-        <div class="feat-desc">Track campaigns and donations, discover real UK grants matched to your work, and get AI-refined fundraising insights — all in one place.</div>
-        <div class="feat-tag">Pro+</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </div>
-      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)" data-feat="branding_centre" role="button" tabindex="0" onclick="openFeature('branding_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('branding_centre')}"><div class="feat-icon-wrap"><img src="/icons/feat-branding_centre.png" alt="Branding Centre" loading="lazy" width="52" height="52" /></div>
-        <div class="feat-title">Branding Centre</div>
-        <div class="feat-desc">Upload your logo, set brand colours and your volunteers and parents see a fully branded experience on every screen.</div>
-        <div class="feat-tag">Pro+</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </div>
-      <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)" data-feat="mentoring" role="button" tabindex="0" onclick="openFeature('mentoring')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('mentoring')}"><div class="feat-icon-wrap"><img src="/icons/feat-mentoring.png" alt="Mentoring" loading="lazy" width="52" height="52" /></div>
-        <div class="feat-title">Mentoring</div>
-        <div class="feat-desc">Match mentors and mentees, track session notes, log milestones and measure the impact of 1:1 relationships.</div>
-        <div class="feat-tag">Enterprise</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </div>
-      <div class="feature-card" style="--feat-color:#E11D48;--feat-bg:rgba(225,29,72,0.1)" data-feat="policies_docs" role="button" tabindex="0" onclick="openFeature('policies_docs')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('policies_docs')}"><div class="feat-icon-wrap"><img src="/icons/feat-policies_docs.png" alt="Policies & Documents" loading="lazy" width="52" height="52" /></div>
-        <div class="feat-title">Policies & Documents</div>
-        <div class="feat-desc">Store, organise and share policies, consents and key documents with staff, volunteers and parents.</div>
-        <div class="feat-tag">Pro+</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </div>
-      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="notifications_centre" role="button" tabindex="0" onclick="openFeature('notifications_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('notifications_centre')}"><div class="feat-icon-wrap"><img src="/icons/feat-notifications_centre.png" alt="Notifications Centre" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Notifications Centre</div>
         <div class="feat-desc">Send targeted emails, SMS and in-app notifications. Keep your team, volunteers and parents always in the loop.</div>
-        <div class="feat-tag">Core</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-notifications_centre.png" alt="Notifications Centre" loading="lazy" width="260" height="260" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="team_staff" role="button" tabindex="0" onclick="openFeature('team_staff')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('team_staff')}"><div class="feat-icon-wrap"><img src="/icons/feat-team_staff.png" alt="Team & Staff" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="team_staff" role="button" tabindex="0" onclick="openFeature('team_staff')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('team_staff')}">
+        <div class="feat-tag">Core</div>
         <div class="feat-title">Team & Staff</div>
         <div class="feat-desc">Manage staff roles, permissions and access. See who's available and what everyone is responsible for.</div>
-        <div class="feat-tag">Core</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-team_staff.png" alt="Team & Staff" loading="lazy" width="260" height="260" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)" data-feat="settings_integrations" role="button" tabindex="0" onclick="openFeature('settings_integrations')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('settings_integrations')}"><div class="feat-icon-wrap"><img src="/icons/feat-settings_integrations.png" alt="Settings & Integrations" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)" data-feat="settings_integrations" role="button" tabindex="0" onclick="openFeature('settings_integrations')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('settings_integrations')}">
+        <div class="feat-tag">Core</div>
         <div class="feat-title">Settings & Integrations</div>
         <div class="feat-desc">Configure your organisation settings and connect with tools you already use.</div>
-        <div class="feat-tag">Core</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-settings_integrations.png" alt="Settings & Integrations" loading="lazy" width="260" height="260" /></div>
+      </div>
+      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)" data-feat="branding_centre" role="button" tabindex="0" onclick="openFeature('branding_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('branding_centre')}">
+        <div class="feat-tag">Pro+</div>
+        <div class="feat-title">Branding Centre</div>
+        <div class="feat-desc">Upload your logo, set brand colours and your volunteers and parents see a fully branded experience on every screen.</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-branding_centre.png" alt="Branding Centre" loading="lazy" width="260" height="260" /></div>
+      </div>
+      <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)" data-feat="mentoring" role="button" tabindex="0" onclick="openFeature('mentoring')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('mentoring')}">
+        <div class="feat-tag">Enterprise</div>
+        <div class="feat-title">Mentoring</div>
+        <div class="feat-desc">Match mentors and mentees, track session notes, log milestones and measure the impact of 1:1 relationships.</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-mentoring.png" alt="Mentoring" loading="lazy" width="260" height="260" /></div>
+      </div>
+      <div class="feature-card" style="--feat-color:#E11D48;--feat-bg:rgba(225,29,72,0.1)" data-feat="policies_docs" role="button" tabindex="0" onclick="openFeature('policies_docs')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('policies_docs')}">
+        <div class="feat-tag">Pro+</div>
+        <div class="feat-title">Policies & Documents</div>
+        <div class="feat-desc">Store, organise and share policies, consents and key documents with staff, volunteers and parents.</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-policies_docs.png" alt="Policies & Documents" loading="lazy" width="260" height="260" /></div>
+      </div>
+      <div class="feature-card" style="--feat-color:#DC2626;--feat-bg:rgba(220,38,38,0.1)" data-feat="risk_assessments" role="button" tabindex="0" onclick="openFeature('risk_assessments')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('risk_assessments')}">
+        <div class="feat-tag">Pro+</div>
+        <div class="feat-title">Risk Assessments</div>
+        <div class="feat-desc">HSE-standard 5×5 risk matrix, hazard tracking, session linking and one-click PDF export. Keep every activity properly assessed.</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-risk_assessments.png" alt="Risk Assessments" loading="lazy" width="260" height="260" /></div>
+      </div>
+      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="bulk_import" role="button" tabindex="0" onclick="openFeature('bulk_import')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('bulk_import')}">
+        <div class="feat-tag">All plans</div>
+        <div class="feat-title">Bulk Import</div>
+        <div class="feat-desc">Already have a spreadsheet of young people? Import up to thousands of records in seconds with our CSV import tool.</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-bulk_import.png" alt="Bulk Import" loading="lazy" width="260" height="260" /></div>
+      </div>
+      <div class="feature-card" style="--feat-color:#BA7517;--feat-bg:rgba(186,117,23,0.1)" data-feat="fundraising_hub" role="button" tabindex="0" onclick="openFeature('fundraising_hub')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('fundraising_hub')}">
+        <div class="feat-tag">Pro+</div>
+        <div class="feat-title">Fundraising Hub</div>
+        <div class="feat-desc">Track campaigns and donations, discover real UK grants matched to your work, and get AI-refined fundraising insights — all in one place.</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-fundraising_hub.png" alt="Fundraising Hub" loading="lazy" width="260" height="260" /></div>
+      </div>
+      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="volunteer_mgmt" role="button" tabindex="0" onclick="openFeature('volunteer_mgmt')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('volunteer_mgmt')}">
+        <div class="feat-tag">Pro+</div>
+        <div class="feat-title">Volunteer Management</div>
+        <div class="feat-desc">Manage your volunteer workforce with sign-up flows, DBS tracking, availability matching and QR check-in.</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-volunteer_mgmt.png" alt="Volunteer Management" loading="lazy" width="260" height="260" /></div>
+      </div>
+      <div class="feature-card" style="--feat-color:#EC4899;--feat-bg:rgba(236,72,153,0.1)" data-feat="parent_portal" role="button" tabindex="0" onclick="openFeature('parent_portal')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('parent_portal')}">
+        <div class="feat-tag">Pro+</div>
+        <div class="feat-title">Parent Portal</div>
+        <div class="feat-desc">Give parents visibility into their child's attendance, upcoming sessions and key information — no app download needed.</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-parent_portal.png" alt="Parent Portal" loading="lazy" width="260" height="260" /></div>
+      </div>
+      <div class="feature-card" style="--feat-color:#1B9AAA;--feat-bg:rgba(27,154,170,0.1)" data-feat="impact_outcomes" role="button" tabindex="0" onclick="openFeature('impact_outcomes')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('impact_outcomes')}">
+        <div class="feat-tag">All plans</div>
+        <div class="feat-title">Impact & Outcomes</div>
+        <div class="feat-desc">AI-refined insights, outcome tracking and visual reporting — generate funder-ready evidence of your programme's impact in one click.</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-impact_outcomes.png" alt="Impact & Outcomes" loading="lazy" width="260" height="260" /></div>
       </div>
     </div>
   </div>
