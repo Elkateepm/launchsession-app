@@ -74,7 +74,83 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
 .btn-start:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,0.45)}
 .hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;gap:5px}
 .hamburger span{display:block;width:20px;height:2px;background:#fff;border-radius:2px;transition:all 0.25s}
-/* ── MOBILE MENU OVERLAY ─────────────────────────────────── */
+/* ── FEATURE CARDS: clickable affordance ─────────────────── */
+.feature-card{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.feature-card:focus-visible{outline:2px solid var(--feat-color,#3B82F6);outline-offset:3px}
+.feature-card:active{transform:scale(.99)}
+.feat-more{display:flex;align-items:center;gap:6px;margin-top:14px;
+  font-size:12.5px;font-weight:700;color:var(--feat-color,#3B82F6);opacity:.85}
+.feat-more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.feat-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+
+/* ── FEATURE DETAIL SHEET ────────────────────────────────── */
+.fd-backdrop{position:fixed;inset:0;z-index:1100;background:rgba(3,6,18,.8);backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;transition:opacity .25s}
+.fd-backdrop.open{opacity:1;pointer-events:auto}
+.fd-sheet{position:fixed;z-index:1101;background:#0B1020;border:1px solid rgba(255,255,255,.1);
+  display:flex;flex-direction:column;overflow:hidden;
+  left:50%;top:50%;transform:translate(-50%,-46%) scale(.97);width:min(620px,calc(100% - 40px));
+  max-height:min(84vh,760px);border-radius:24px;opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .25s;box-shadow:0 40px 100px -20px rgba(0,0,0,.8)}
+.fd-sheet.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.fd-glow{position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:420px;height:300px;
+  background:radial-gradient(ellipse,var(--fd-color,#3B82F6),transparent 70%);opacity:.16;pointer-events:none}
+.fd-head{position:relative;padding:28px 26px 20px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.fd-close{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;
+  display:flex;align-items:center;justify-content:center;cursor:pointer}
+.fd-close svg{width:17px;height:17px}
+.fd-icon{width:60px;height:60px;border-radius:16px;background:var(--fd-bg,rgba(59,130,246,.12));
+  display:flex;align-items:center;justify-content:center;margin-bottom:16px;border:1px solid rgba(255,255,255,.08)}
+.fd-icon img{width:38px;height:38px}
+.fd-tag{display:inline-block;padding:4px 11px;border-radius:99px;font-size:10.5px;font-weight:800;
+  letter-spacing:.6px;text-transform:uppercase;color:var(--fd-color,#3B82F6);
+  background:var(--fd-bg,rgba(59,130,246,.12));border:1px solid var(--fd-color,#3B82F6);margin-bottom:12px}
+.fd-title{font-size:26px;font-weight:900;color:#fff;letter-spacing:-.6px;line-height:1.15;margin-bottom:10px}
+.fd-lead{font-size:14.5px;color:rgba(255,255,255,.62);line-height:1.65}
+.fd-body{padding:22px 26px 26px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
+.fd-sub{font-size:11px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;
+  color:rgba(255,255,255,.4);margin-bottom:14px}
+.fd-list{display:flex;flex-direction:column;gap:13px;margin-bottom:24px}
+.fd-item{display:flex;gap:12px;align-items:flex-start}
+.fd-check{width:19px;height:19px;flex-shrink:0;border-radius:50%;margin-top:1px;
+  background:var(--fd-bg,rgba(59,130,246,.12));border:1px solid var(--fd-color,#3B82F6);
+  display:flex;align-items:center;justify-content:center}
+.fd-check svg{width:10px;height:10px;stroke:var(--fd-color,#3B82F6);fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+.fd-item-txt{font-size:14px;color:rgba(255,255,255,.72);line-height:1.55}
+.fd-item-txt b{color:#fff;font-weight:700}
+.fd-note{padding:15px 17px;border-radius:14px;background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.08);font-size:13.5px;color:rgba(255,255,255,.6);line-height:1.6}
+.fd-note b{color:#fff}
+.fd-foot{padding:16px 26px calc(20px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid rgba(255,255,255,.07);display:flex;gap:10px;flex-shrink:0;background:#0B1020}
+.fd-btn{flex:1;padding:14px;border-radius:12px;border:none;cursor:pointer;font-family:var(--font);
+  font-size:14.5px;font-weight:800;background:linear-gradient(90deg,#8B5CF6,#3B82F6);color:#fff}
+.fd-btn-ghost{flex:0 0 auto;padding:14px 20px;border-radius:12px;cursor:pointer;font-family:var(--font);
+  font-size:14.5px;font-weight:700;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
+body.fd-open{overflow:hidden}
+
+/* Bottom sheet on phones */
+@media (max-width:640px){
+  .fd-sheet{left:0;right:0;bottom:0;top:auto;width:100%;max-height:92vh;
+    border-radius:24px 24px 0 0;border-bottom:none;transform:translateY(100%)}
+  .fd-sheet.open{transform:translateY(0)}
+  .fd-sheet::before{content:'';position:absolute;top:9px;left:50%;transform:translateX(-50%);
+    width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,.22);z-index:2}
+  .fd-head{padding:30px 20px 18px}
+  .fd-body{padding:20px}
+  .fd-foot{padding:14px 20px calc(18px + env(safe-area-inset-bottom,0px))}
+  .fd-title{font-size:23px}
+  .fd-icon{width:52px;height:52px}
+  .fd-icon img{width:32px;height:32px}
+}
+@media (prefers-reduced-motion:reduce){
+  .fd-sheet,.fd-backdrop{transition:none}
+}
+
+/* Anchor targets shouldn't hide under the sticky nav. */
+section[id]{scroll-margin-top:96px}
 .mobile-nav{display:none;position:fixed;inset:0;z-index:999;flex-direction:column;
   padding:calc(20px + env(safe-area-inset-top,0px)) 18px calc(20px + env(safe-area-inset-bottom,0px));
   background:#070B1A;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -788,95 +864,95 @@ async function submitFoundingOffer(e) {
       <p class="section-sub" style="margin:0">From daily registers to long-term impact reporting — all the tools youth workers actually use, without the complexity.</p>
     </div>
     <div class="features-grid">
-      <div class="feature-card" style="--feat-color:#22C55E;--feat-bg:rgba(34,197,94,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-live_registers.png" alt="Live Registers" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#22C55E;--feat-bg:rgba(34,197,94,0.1)" data-feat="live_registers" role="button" tabindex="0" onclick="openFeature('live_registers')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('live_registers')}"><div class="feat-icon-wrap"><img src="/icons/feat-live_registers.png" alt="Live Registers" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Live Registers</div>
         <div class="feat-desc">Take attendance in real time. Sign young people in and out, track latecomers, and flag medical alerts automatically.</div>
         <div class="feat-tag">Core</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#3B82F6;--feat-bg:rgba(59,130,246,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-session_planner.png" alt="Session Planner" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#3B82F6;--feat-bg:rgba(59,130,246,0.1)" data-feat="session_planner" role="button" tabindex="0" onclick="openFeature('session_planner')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('session_planner')}"><div class="feat-icon-wrap"><img src="/icons/feat-session_planner.png" alt="Session Planner" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Session Planner</div>
         <div class="feat-desc">Plan activities, trips and workshops weeks ahead. Assign volunteers, set capacity limits and track outcomes.</div>
         <div class="feat-tag">Core</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#8B5CF6;--feat-bg:rgba(139,92,246,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-safeguarding.png" alt="Safeguarding" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#8B5CF6;--feat-bg:rgba(139,92,246,0.1)" data-feat="safeguarding" role="button" tabindex="0" onclick="openFeature('safeguarding')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('safeguarding')}"><div class="feat-icon-wrap"><img src="/icons/feat-safeguarding.png" alt="Safeguarding" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Safeguarding</div>
         <div class="feat-desc">Log causes for concern, track follow-ups and ensure no safeguarding alert falls through the cracks.</div>
         <div class="feat-tag">Core</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-volunteer_mgmt.png" alt="Volunteer Management" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="volunteer_mgmt" role="button" tabindex="0" onclick="openFeature('volunteer_mgmt')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('volunteer_mgmt')}"><div class="feat-icon-wrap"><img src="/icons/feat-volunteer_mgmt.png" alt="Volunteer Management" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Volunteer Management</div>
         <div class="feat-desc">Manage your volunteer workforce with sign-up flows, DBS tracking, availability matching and QR check-in.</div>
         <div class="feat-tag">Pro+</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#EC4899;--feat-bg:rgba(236,72,153,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-parent_portal.png" alt="Parent Portal" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#EC4899;--feat-bg:rgba(236,72,153,0.1)" data-feat="parent_portal" role="button" tabindex="0" onclick="openFeature('parent_portal')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('parent_portal')}"><div class="feat-icon-wrap"><img src="/icons/feat-parent_portal.png" alt="Parent Portal" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Parent Portal</div>
         <div class="feat-desc">Give parents visibility into their child's attendance, upcoming sessions and key information — no app download needed.</div>
         <div class="feat-tag">Pro+</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#1B9AAA;--feat-bg:rgba(27,154,170,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-impact_outcomes.png" alt="Impact & Outcomes" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#1B9AAA;--feat-bg:rgba(27,154,170,0.1)" data-feat="impact_outcomes" role="button" tabindex="0" onclick="openFeature('impact_outcomes')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('impact_outcomes')}"><div class="feat-icon-wrap"><img src="/icons/feat-impact_outcomes.png" alt="Impact & Outcomes" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Impact & Outcomes</div>
         <div class="feat-desc">AI-refined insights, outcome tracking and visual reporting — generate funder-ready evidence of your programme's impact in one click.</div>
         <div class="feat-tag">All plans</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#DC2626;--feat-bg:rgba(220,38,38,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-risk_assessments.png" alt="Risk Assessments" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#DC2626;--feat-bg:rgba(220,38,38,0.1)" data-feat="risk_assessments" role="button" tabindex="0" onclick="openFeature('risk_assessments')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('risk_assessments')}"><div class="feat-icon-wrap"><img src="/icons/feat-risk_assessments.png" alt="Risk Assessments" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Risk Assessments</div>
         <div class="feat-desc">HSE-standard 5×5 risk matrix, hazard tracking, session linking and one-click PDF export. Keep every activity properly assessed.</div>
         <div class="feat-tag">Pro+</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-bulk_import.png" alt="Bulk Import" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="bulk_import" role="button" tabindex="0" onclick="openFeature('bulk_import')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('bulk_import')}"><div class="feat-icon-wrap"><img src="/icons/feat-bulk_import.png" alt="Bulk Import" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Bulk Import</div>
         <div class="feat-desc">Already have a spreadsheet of young people? Import up to thousands of records in seconds with our CSV import tool.</div>
         <div class="feat-tag">All plans</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#BA7517;--feat-bg:rgba(186,117,23,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-fundraising_hub.png" alt="Fundraising Hub" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#BA7517;--feat-bg:rgba(186,117,23,0.1)" data-feat="fundraising_hub" role="button" tabindex="0" onclick="openFeature('fundraising_hub')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('fundraising_hub')}"><div class="feat-icon-wrap"><img src="/icons/feat-fundraising_hub.png" alt="Fundraising Hub" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Fundraising Hub</div>
         <div class="feat-desc">Track campaigns and donations, discover real UK grants matched to your work, and get AI-refined fundraising insights — all in one place.</div>
         <div class="feat-tag">Pro+</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-branding_centre.png" alt="Branding Centre" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)" data-feat="branding_centre" role="button" tabindex="0" onclick="openFeature('branding_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('branding_centre')}"><div class="feat-icon-wrap"><img src="/icons/feat-branding_centre.png" alt="Branding Centre" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Branding Centre</div>
         <div class="feat-desc">Upload your logo, set brand colours and your volunteers and parents see a fully branded experience on every screen.</div>
         <div class="feat-tag">Pro+</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-mentoring.png" alt="Mentoring" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)" data-feat="mentoring" role="button" tabindex="0" onclick="openFeature('mentoring')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('mentoring')}"><div class="feat-icon-wrap"><img src="/icons/feat-mentoring.png" alt="Mentoring" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Mentoring</div>
         <div class="feat-desc">Match mentors and mentees, track session notes, log milestones and measure the impact of 1:1 relationships.</div>
         <div class="feat-tag">Enterprise</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#E11D48;--feat-bg:rgba(225,29,72,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-policies_docs.png" alt="Policies & Documents" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#E11D48;--feat-bg:rgba(225,29,72,0.1)" data-feat="policies_docs" role="button" tabindex="0" onclick="openFeature('policies_docs')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('policies_docs')}"><div class="feat-icon-wrap"><img src="/icons/feat-policies_docs.png" alt="Policies & Documents" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Policies & Documents</div>
         <div class="feat-desc">Store, organise and share policies, consents and key documents with staff, volunteers and parents.</div>
         <div class="feat-tag">Pro+</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-notifications_centre.png" alt="Notifications Centre" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="notifications_centre" role="button" tabindex="0" onclick="openFeature('notifications_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('notifications_centre')}"><div class="feat-icon-wrap"><img src="/icons/feat-notifications_centre.png" alt="Notifications Centre" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Notifications Centre</div>
         <div class="feat-desc">Send targeted emails, SMS and in-app notifications. Keep your team, volunteers and parents always in the loop.</div>
         <div class="feat-tag">Core</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-team_staff.png" alt="Team & Staff" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="team_staff" role="button" tabindex="0" onclick="openFeature('team_staff')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('team_staff')}"><div class="feat-icon-wrap"><img src="/icons/feat-team_staff.png" alt="Team & Staff" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Team & Staff</div>
         <div class="feat-desc">Manage staff roles, permissions and access. See who's available and what everyone is responsible for.</div>
         <div class="feat-tag">Core</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)">
-        <div class="feat-icon-wrap"><img src="/icons/feat-settings_integrations.png" alt="Settings & Integrations" loading="lazy" width="52" height="52" /></div>
+      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)" data-feat="settings_integrations" role="button" tabindex="0" onclick="openFeature('settings_integrations')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('settings_integrations')}"><div class="feat-icon-wrap"><img src="/icons/feat-settings_integrations.png" alt="Settings & Integrations" loading="lazy" width="52" height="52" /></div>
         <div class="feat-title">Settings & Integrations</div>
         <div class="feat-desc">Configure your organisation settings and connect with tools you already use.</div>
         <div class="feat-tag">Core</div>
+        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
     </div>
   </div>
@@ -1414,6 +1490,280 @@ document.querySelectorAll('.btn-hero-ghost').forEach(btn => {
 if (new URLSearchParams(window.location.search).get('signin') === 'true') {
   window.location.href = 'https://app.launchsession.co.uk'
 }
+</script>
+
+
+<!-- FEATURE DETAIL SHEET -->
+<div class="fd-backdrop" id="fdBackdrop" onclick="closeFeature()"></div>
+<div class="fd-sheet" id="fdSheet" role="dialog" aria-modal="true" aria-labelledby="fdTitle">
+  <div class="fd-head">
+    <div class="fd-glow"></div>
+    <button class="fd-close" onclick="closeFeature()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="fd-icon"><img id="fdIcon" src="" alt="" /></div>
+    <div class="fd-tag" id="fdTag">Core</div>
+    <h3 class="fd-title" id="fdTitle">Feature</h3>
+    <p class="fd-lead" id="fdLead"></p>
+  </div>
+  <div class="fd-body">
+    <div class="fd-sub">What you can do</div>
+    <div class="fd-list" id="fdList"></div>
+    <div class="fd-note" id="fdNote"></div>
+  </div>
+  <div class="fd-foot">
+    <button class="fd-btn-ghost" onclick="closeFeature()">Close</button>
+    <button class="fd-btn" onclick="window.location.href='/signup'">Start free trial →</button>
+  </div>
+</div>
+
+<script>
+/* ── FEATURE DETAIL CONTENT ────────────────────────────────
+   Keys match the data-feat attribute on each .feature-card. */
+const FEATURES = {
+  live_registers: {
+    lead: "The register is where a session actually happens. LaunchSession replaces the paper clipboard with a live, shared view that everyone on shift can see updating in real time.",
+    points: [
+      "<b>Sign in and out with one tap.</b> Headcount updates instantly for everyone with the register open.",
+      "<b>Medical and allergy alerts surface automatically</b> the moment a young person is signed in — no need to remember to check a folder.",
+      "<b>Latecomers and early leavers are timestamped</b>, so your attendance records reflect what really happened.",
+      "<b>Session lifecycle built in</b> — Upcoming, Register Open, Live, Ending and Closed, with a closure checklist at the end of every session.",
+      "<b>Nobody gets left behind.</b> Closing a session is blocked while any young person is still signed in as on-site.",
+      "<b>Historical registers stay editable</b> with a full audit trail of who changed what and when."
+    ],
+    note: "<b>Works offline-friendly on any device.</b> Staff run registers from a phone or tablet in the room — no laptop, no separate app to install."
+  },
+  session_planner: {
+    lead: "Plan a term of activity in one place, then let the plan drive the register, the rota and the reporting automatically.",
+    points: [
+      "<b>Build sessions weeks or months ahead</b> — one-offs, weekly clubs, trips and holiday programmes.",
+      "<b>Set capacity limits and volunteer ratios</b> so a session can't be quietly over-subscribed.",
+      "<b>Assign staff and volunteers to rotation slots</b>, and see instantly where you're short-staffed.",
+      "<b>Attach venues, meeting points and packed-lunch requirements</b> so the practical details travel with the session.",
+      "<b>Link a risk assessment</b> directly to the session — it surfaces to staff on the live session card.",
+      "<b>Capture reflections after the session</b> while it's fresh, feeding straight into your outcome reporting."
+    ],
+    note: "<b>Plan once, use everywhere.</b> A planned session automatically generates its register, appears in the parent portal and counts towards your impact figures."
+  },
+  safeguarding: {
+    lead: "A properly structured safeguarding module — not a shared inbox and a spreadsheet. Every concern is logged, owned, tracked and auditable.",
+    points: [
+      "<b>Log a cause for concern in minutes</b>, from any device, with a structured form that prompts for what matters.",
+      "<b>Assign a case owner and track follow-up actions</b> so nothing sits unattended.",
+      "<b>Escalation links connect a concern to the session, staff member and young person</b> involved, giving full context at a glance.",
+      "<b>Strict access control.</b> Safeguarding records are visible only to the people you designate — enforced at the database level, not just hidden in the interface.",
+      "<b>Full audit trail</b> of every view, edit and status change, ready for inspection or a serious case review.",
+      "<b>Case history follows the young person</b> across sessions and years, so patterns become visible."
+    ],
+    note: "<b>Built to withstand scrutiny.</b> Designed around UK safeguarding practice, with row-level security so records can't be accessed by staff outside your designated safeguarding team."
+  },
+  volunteer_mgmt: {
+    lead: "Recruit, vet, schedule and check in your volunteer workforce without the spreadsheet sprawl.",
+    points: [
+      "<b>Public sign-up form</b> on your own link — volunteers apply themselves, and applications land in an approval queue.",
+      "<b>DBS tracking with expiry dates</b>, so you know at a glance who's cleared and who's due for renewal.",
+      "<b>Availability matching</b> against your planned sessions — see who can actually cover next Thursday.",
+      "<b>QR check-in</b> for fast arrival logging on the day.",
+      "<b>A dedicated volunteer portal</b> where they see their own upcoming shifts, session details and key documents.",
+      "<b>Hours are logged automatically</b>, giving you volunteer contribution figures for funders without extra admin."
+    ],
+    note: "<b>Volunteers see only what they need.</b> Their portal is scoped to their own sessions and contains no sensitive participant data."
+  },
+  parent_portal: {
+    lead: "Give parents and carers real visibility without adding a phone call to your week — and without asking them to download anything.",
+    points: [
+      "<b>No app required.</b> Parents open a link in their browser and it works like an app on their phone.",
+      "<b>See their child's attendance history</b> and which sessions are coming up.",
+      "<b>Self-service registration</b> — parents complete your registration form themselves, and it arrives for admin approval rather than as an email to retype.",
+      "<b>Consents and permissions captured digitally</b>, with a record of who agreed to what and when.",
+      "<b>Medical and emergency contact details kept current</b> by the people who actually know them.",
+      "<b>Branded with your organisation's logo and colours</b>, so it feels like you, not like software."
+    ],
+    note: "<b>Cuts the admin at the front door.</b> Most organisations find registration paperwork is the single biggest time sink — this removes almost all of it."
+  },
+  impact_outcomes: {
+    lead: "Turn the data you're already collecting into the evidence funders ask for — without a week of spreadsheet work before every report.",
+    points: [
+      "<b>Outcome tracking against your own framework</b>, not a generic template someone else designed.",
+      "<b>Attendance, engagement and participation figures</b> generated automatically from your registers.",
+      "<b>Visual reporting</b> — charts and summaries you can drop straight into a funding application or trustee report.",
+      "<b>AI-refined insights</b> that surface patterns in your data you might not have gone looking for.",
+      "<b>Filter by programme, cohort, date range or demographic</b> to answer a specific funder's specific question.",
+      "<b>Export in one click</b> when a deadline is tomorrow."
+    ],
+    note: "<b>Available on every plan.</b> Proving your impact shouldn't be a premium feature."
+  },
+  risk_assessments: {
+    lead: "Assess every activity properly, keep the paperwork current, and put it in front of staff at the moment they actually need it.",
+    points: [
+      "<b>HSE-standard 5×5 risk matrix</b> — likelihood against severity, with automatic scoring.",
+      "<b>Hazard library</b> so you're not rewriting the same trampoline risks every term.",
+      "<b>Link an assessment to a session or venue</b> and it follows that activity wherever it's scheduled.",
+      "<b>Surfaced on the live session card</b>, so staff on shift see the relevant risks without hunting for a folder.",
+      "<b>Review dates and version history</b>, so you can show an assessment was current on the day.",
+      "<b>One-click PDF export</b> for insurers, funders and inspections."
+    ],
+    note: "<b>Assessments people actually read.</b> Putting the risks on the screen staff are already looking at is the difference between compliance and safety."
+  },
+  bulk_import: {
+    lead: "Already have years of records in a spreadsheet? Get them in without retyping a single row.",
+    points: [
+      "<b>CSV import for young people, volunteers and staff</b> — thousands of records in seconds.",
+      "<b>Column mapping</b> so your spreadsheet's headings don't have to match ours.",
+      "<b>Validation before anything is written</b>, showing you exactly which rows need attention and why.",
+      "<b>Duplicate detection</b> so you don't end up with the same child twice under two spellings.",
+      "<b>Historical attendance can be imported too</b>, so your reporting doesn't start from zero on day one.",
+      "<b>Reversible.</b> If an import isn't right, roll it back and try again."
+    ],
+    note: "<b>Included on every plan.</b> Getting your data in shouldn't cost extra — it's the thing standing between you and using the platform."
+  },
+  fundraising_hub: {
+    lead: "Track the money coming in, and find more of it, without leaving the system you already run your sessions in.",
+    points: [
+      "<b>Campaign and donation tracking</b> with progress against target.",
+      "<b>Real UK grant discovery</b> matched against the work you actually do and the people you serve.",
+      "<b>Deadline tracking</b> so an opportunity doesn't pass while it sits in someone's inbox.",
+      "<b>AI-refined fundraising insights</b> drawing on your own impact data.",
+      "<b>Pull your attendance and outcome figures straight into an application</b> — the evidence is already in the system.",
+      "<b>Record of what you applied for and what happened</b>, so next year's bid starts from something."
+    ],
+    note: "<b>The evidence and the application in one place.</b> Most funding bids stall on gathering numbers — yours are already there."
+  },
+  branding_centre: {
+    lead: "Your organisation's identity, applied consistently across every screen your staff, volunteers and parents see.",
+    points: [
+      "<b>Upload your logo and app icon</b>, set your brand colours with a full spectrum picker.",
+      "<b>Automatic WCAG contrast checking</b> warns you if a colour choice would make text hard to read.",
+      "<b>Live preview</b> across the dashboard, volunteer portal and parent portal before you commit.",
+      "<b>Branded install experience</b> — when parents add it to their home screen, they see your icon and your name.",
+      "<b>Applies everywhere automatically</b>, including emails sent from the platform.",
+      "<b>Change it any time</b> without touching a line of code or waiting on a developer."
+    ],
+    note: "<b>Trust is visual.</b> Parents engage more readily with something that looks like the organisation they already know."
+  },
+  mentoring: {
+    lead: "Structure and evidence your one-to-one work with the same rigour you apply to group sessions.",
+    points: [
+      "<b>Match mentors to mentees</b> and keep the pairing on record.",
+      "<b>Log session notes</b> against each relationship, with appropriate access restrictions.",
+      "<b>Track milestones and goals</b> over the life of the relationship.",
+      "<b>Measure distance travelled</b>, not just sessions attended.",
+      "<b>Flag concerns straight into the safeguarding module</b> when something needs escalating.",
+      "<b>Reporting on 1:1 outcomes</b> that sits alongside your group programme data."
+    ],
+    note: "<b>Available on Enterprise.</b> Built for organisations running structured mentoring alongside their open provision."
+  },
+  policies_docs: {
+    lead: "One place for the documents everyone is always asking for — and a record of who has actually seen them.",
+    points: [
+      "<b>Store policies, consent forms, handbooks and guidance</b> in a structured library.",
+      "<b>Share by audience</b> — staff, volunteers and parents each see what's relevant to them.",
+      "<b>Version control</b>, so there's no ambiguity about which safeguarding policy is current.",
+      "<b>Acknowledgement tracking</b> — see who has read and confirmed each document.",
+      "<b>Review reminders</b> before a policy goes out of date.",
+      "<b>Accessible from the portals</b>, so nobody needs to email you asking for the trip consent form again."
+    ],
+    note: "<b>Useful when an inspector asks.</b> Being able to show both the policy and the read receipts is a materially stronger position."
+  },
+  notifications_centre: {
+    lead: "Reach the right people through the channel they'll actually see, without exporting a contact list.",
+    points: [
+      "<b>Email, SMS and in-app notifications</b> from one composer.",
+      "<b>Target by group</b> — a single session's parents, all volunteers, one staff team.",
+      "<b>Automated reminders</b> for upcoming sessions, expiring DBS checks and outstanding consents.",
+      "<b>Templates</b> for the messages you send every week.",
+      "<b>Delivery tracking</b> so you know a cancellation actually landed.",
+      "<b>Branded with your organisation</b>, so messages don't look like spam."
+    ],
+    note: "<b>Contacts stay current automatically.</b> Because parents maintain their own details, you're not messaging a number that changed two years ago."
+  },
+  team_staff: {
+    lead: "Control who can see and do what, and keep an accurate picture of your team's availability and responsibilities.",
+    points: [
+      "<b>Role-based permissions</b> — admin, staff, volunteer and parent each get an appropriate view.",
+      "<b>Access enforced at the database level</b>, not just hidden in the interface.",
+      "<b>Guided onboarding for new staff</b>, so someone starting on Monday is useful by Tuesday.",
+      "<b>Staff rota</b> showing who's on which session.",
+      "<b>Qualification and training records</b> with expiry tracking.",
+      "<b>Deactivate access immediately</b> when someone leaves."
+    ],
+    note: "<b>Least-privilege by default.</b> New team members get the minimum access they need, and you widen it deliberately."
+  },
+  settings_integrations: {
+    lead: "Configure the platform around how your organisation actually works, and connect it to the tools you already use.",
+    points: [
+      "<b>Organisation profile, sites and venues</b> set up once and used everywhere.",
+      "<b>Custom fields</b> so you can record the things that matter to your provision.",
+      "<b>Custom forms</b> published to a public link for registrations, feedback or expressions of interest.",
+      "<b>Configure session types, groups and bubbles</b> to match your structure.",
+      "<b>Data export</b> whenever you want it — your data stays yours.",
+      "<b>Integrations</b> with the tools already in your workflow."
+    ],
+    note: "<b>No lock-in.</b> You can export your full dataset at any time, in a format you can actually use."
+  }
+};
+
+let fdLastFocus = null;
+
+function openFeature(key) {
+  const card = document.querySelector('.feature-card[data-feat="' + key + '"]');
+  const data = FEATURES[key];
+  if (!card || !data) return;
+
+  const title = card.querySelector('.feat-title').textContent;
+  const tag   = card.querySelector('.feat-tag').textContent;
+  const icon  = card.querySelector('.feat-icon-wrap img').getAttribute('src');
+  const cs    = getComputedStyle(card);
+  const color = cs.getPropertyValue('--feat-color').trim() || '#3B82F6';
+  const bg    = cs.getPropertyValue('--feat-bg').trim() || 'rgba(59,130,246,0.12)';
+
+  const sheet = document.getElementById('fdSheet');
+  sheet.style.setProperty('--fd-color', color);
+  sheet.style.setProperty('--fd-bg', bg);
+
+  document.getElementById('fdTitle').textContent = title;
+  document.getElementById('fdTag').textContent   = tag;
+  document.getElementById('fdLead').textContent  = data.lead;
+  const iconEl = document.getElementById('fdIcon');
+  iconEl.setAttribute('src', icon);
+  iconEl.setAttribute('alt', title);
+
+  document.getElementById('fdList').innerHTML = data.points.map(p =>
+    '<div class="fd-item"><div class="fd-check">' +
+    '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+    '<div class="fd-item-txt">' + p + '</div></div>'
+  ).join('');
+  document.getElementById('fdNote').innerHTML = data.note;
+
+  fdLastFocus = document.activeElement;
+  document.getElementById('fdBackdrop').classList.add('open');
+  sheet.classList.add('open');
+  document.body.classList.add('fd-open');
+  document.querySelector('.fd-body').scrollTop = 0;
+  setTimeout(() => document.querySelector('.fd-close').focus(), 60);
+}
+
+function closeFeature() {
+  document.getElementById('fdBackdrop').classList.remove('open');
+  document.getElementById('fdSheet').classList.remove('open');
+  document.body.classList.remove('fd-open');
+  if (fdLastFocus) { fdLastFocus.focus(); fdLastFocus = null; }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('fdSheet').classList.contains('open')) closeFeature();
+});
+
+// Keep focus inside the dialog while it's open.
+document.getElementById('fdSheet').addEventListener('keydown', e => {
+  if (e.key !== 'Tab') return;
+  const f = [...e.currentTarget.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])')]
+    .filter(el => el.offsetParent !== null);
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
 </script>
 
 </body>
