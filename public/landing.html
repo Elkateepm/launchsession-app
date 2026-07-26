@@ -88,31 +88,32 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
 .jn-rocket{position:absolute;pointer-events:none;user-select:none;z-index:0;
   top:-30px;right:-40px;width:340px;opacity:.9}
 
-/* Timeline */
+/* Timeline. One continuous dashed line runs behind every step; the
+   number circles are opaque and sit above it, masking it as it passes. */
 .jn-steps{position:relative;max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:26px;z-index:1}
+.jn-steps::before{content:'';position:absolute;left:22px;top:38px;bottom:38px;width:1px;z-index:0;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.22) 0 5px,transparent 5px 11px)}
 .jn-step{position:relative;display:flex;align-items:flex-start;gap:20px}
-.jn-num{position:relative;flex-shrink:0;width:44px;height:44px;border-radius:50%;margin-top:34px;
+.jn-num{position:relative;flex-shrink:0;width:44px;height:44px;border-radius:50%;margin-top:26px;
   border:1.5px solid var(--jn-c);background:#080D1E;color:var(--jn-c);
   display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;
   box-shadow:0 0 18px -4px var(--jn-c);z-index:2}
-/* Dashed connector runs from this number down to the next one. */
-.jn-step:not(:last-child) .jn-num::after{content:'';position:absolute;top:calc(100% + 6px);left:50%;
-  width:1px;height:calc(100% + 100px);transform:translateX(-50%);
-  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.22) 0 5px,transparent 5px 11px)}
-.jn-card{flex:1;min-width:0;display:flex;align-items:center;gap:20px;padding:22px;
+.jn-card{flex:1;min-width:0;display:grid;
+  grid-template-columns:auto 1fr auto;
+  grid-template-areas:"tile title go" "tile desc go";
+  align-items:center;column-gap:20px;row-gap:8px;padding:22px;
   border-radius:20px;background:rgba(255,255,255,.028);border:1px solid rgba(255,255,255,.07);
   border-left:2px solid var(--jn-c);cursor:pointer;transition:background .2s,transform .15s,border-color .2s;
   box-shadow:inset 24px 0 40px -34px var(--jn-c)}
 .jn-card:active{transform:scale(.99);background:rgba(255,255,255,.05)}
 .jn-card:focus-visible{outline:2px solid var(--jn-c);outline-offset:3px}
-.jn-tile{width:104px;height:104px;flex-shrink:0;border-radius:20px;
+.jn-tile{grid-area:tile;width:104px;height:104px;border-radius:20px;
   background:linear-gradient(150deg,var(--jn-bg),rgba(255,255,255,.02));
   border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center}
 .jn-tile img{width:60px;height:60px}
-.jn-txt{flex:1;min-width:0}
-.jn-t{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.4px;margin-bottom:7px}
-.jn-d{font-size:14px;color:rgba(255,255,255,.55);line-height:1.6}
-.jn-go{width:42px;height:42px;flex-shrink:0;border-radius:50%;background:var(--jn-bg);
+.jn-t{grid-area:title;align-self:end;font-size:20px;font-weight:800;color:#fff;letter-spacing:-.4px}
+.jn-d{grid-area:desc;align-self:start;font-size:14px;color:rgba(255,255,255,.55);line-height:1.6}
+.jn-go{grid-area:go;width:42px;height:42px;border-radius:50%;background:var(--jn-bg);
   border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;
   color:#fff;font-size:19px;font-weight:300;opacity:.8}
 
@@ -138,33 +139,41 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
   stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 
 @media (max-width:820px){
-  .jn-rocket{width:230px;top:-10px;right:-46px;opacity:.75}
+  .jn-rocket{width:230px;top:-6px;right:-58px;opacity:.6}
   .jn-head{margin-bottom:44px}
 }
 @media (max-width:640px){
-  .jn-rocket{width:172px;top:34px;right:-38px;opacity:.7}
-  .jn-sub{max-width:300px}
-  .jn-steps{gap:22px}
-  .jn-step{gap:12px}
-  .jn-num{width:38px;height:38px;font-size:14.5px;margin-top:28px}
-  .jn-card{padding:16px;gap:14px;border-radius:18px}
-  .jn-tile{width:78px;height:78px;border-radius:16px}
-  .jn-tile img{width:46px;height:46px}
-  .jn-t{font-size:17.5px}
-  .jn-d{font-size:13px}
-  .jn-go{width:34px;height:34px;font-size:17px}
+  /* Rocket becomes background texture — it must not crowd the heading. */
+  .jn-rocket{width:190px;top:96px;right:-70px;opacity:.45}
+  .jn-sub{max-width:320px}
+  .jn-steps{gap:20px}
+  .jn-steps::before{left:19px;top:30px;bottom:30px}
+  .jn-step{gap:11px}
+  .jn-num{width:38px;height:38px;font-size:14.5px;margin-top:22px}
+
+  /* Icon + title share the top row; the description gets the full
+     card width beneath, instead of a narrow column beside the icon. */
+  .jn-card{grid-template-areas:"tile title go" "desc desc desc";
+    column-gap:13px;row-gap:12px;padding:16px;border-radius:18px}
+  .jn-tile{width:62px;height:62px;border-radius:15px;align-self:center}
+  .jn-tile img{width:38px;height:38px}
+  .jn-t{align-self:center;font-size:17.5px;line-height:1.25}
+  .jn-d{font-size:13.5px;line-height:1.55}
+  .jn-go{width:32px;height:32px;font-size:17px;align-self:center}
+
   .jn-foot{padding:16px;border-radius:20px}
   .jn-foot-row{flex-direction:column;gap:12px}
   .jn-trust{gap:8px 16px}
   .jn-trust-item{font-size:11.5px}
 }
 @media (max-width:380px){
-  .jn-tile{width:66px;height:66px}
-  .jn-tile img{width:40px;height:40px}
-  .jn-card{padding:14px;gap:11px}
+  .jn-tile{width:54px;height:54px;border-radius:13px}
+  .jn-tile img{width:33px;height:33px}
+  .jn-card{padding:14px;column-gap:11px}
   .jn-t{font-size:16px}
   .jn-d{font-size:12.5px}
   .jn-go{display:none}
+  .jn-card{grid-template-areas:"tile title" "desc desc";grid-template-columns:auto 1fr}
 }
 .feature-card{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .feature-card:focus-visible{outline:2px solid var(--feat-color,#3B82F6);outline-offset:3px}
@@ -923,10 +932,8 @@ async function submitFoundingOffer(e) {
         <div class="jn-card" role="button" tabindex="0" onclick="openStep('plan')"
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openStep('plan')}">
           <div class="jn-tile"><img src="/icons/step-1.png" alt="" loading="lazy" /></div>
-          <div class="jn-txt">
-            <div class="jn-t">Choose your plan</div>
-            <div class="jn-d">Pick Starter, Advanced or Pro+ based on your organisation's size and needs. Upgrade any time as you grow.</div>
-          </div>
+          <div class="jn-t">Choose your plan</div>
+          <div class="jn-d">Pick Starter, Advanced or Pro+ based on your organisation's size and needs. Upgrade any time as you grow.</div>
           <div class="jn-go">›</div>
         </div>
       </div>
@@ -936,10 +943,8 @@ async function submitFoundingOffer(e) {
         <div class="jn-card" role="button" tabindex="0" onclick="openStep('team')"
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openStep('team')}">
           <div class="jn-tile"><img src="/icons/step-2.png" alt="" loading="lazy" /></div>
-          <div class="jn-txt">
-            <div class="jn-t">Add your team</div>
-            <div class="jn-d">Invite staff, volunteers and admins with a single email link. Role-based access means everyone sees exactly what they need.</div>
-          </div>
+          <div class="jn-t">Add your team</div>
+          <div class="jn-d">Invite staff, volunteers and admins with a single email link. Role-based access means everyone sees exactly what they need.</div>
           <div class="jn-go">›</div>
         </div>
       </div>
@@ -949,10 +954,8 @@ async function submitFoundingOffer(e) {
         <div class="jn-card" role="button" tabindex="0" onclick="openStep('session')"
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openStep('session')}">
           <div class="jn-tile"><img src="/icons/step-3.png" alt="" loading="lazy" /></div>
-          <div class="jn-txt">
-            <div class="jn-t">Start your first session</div>
-            <div class="jn-d">Create a session, add your young people and take the register live. Safeguarding alerts and volunteer cover all tracked automatically.</div>
-          </div>
+          <div class="jn-t">Start your first session</div>
+          <div class="jn-d">Create a session, add your young people and take the register live. Safeguarding alerts and volunteer cover all tracked automatically.</div>
           <div class="jn-go">›</div>
         </div>
       </div>
