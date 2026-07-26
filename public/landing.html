@@ -74,7 +74,98 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
 .btn-start:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,0.45)}
 .hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;gap:5px}
 .hamburger span{display:block;width:20px;height:2px;background:#fff;border-radius:2px;transition:all 0.25s}
-/* ── FEATURE CARDS: clickable affordance ─────────────────── */
+/* ── HOW IT WORKS: JOURNEY ───────────────────────────────── */
+#how{position:relative;overflow:hidden}
+.jn-head{position:relative;text-align:center;max-width:620px;margin:0 auto 56px;z-index:1}
+.jn-pill{display:inline-block;padding:8px 20px;border-radius:99px;border:1px solid rgba(59,130,246,.5);
+  background:rgba(59,130,246,.08);color:#60A5FA;font-size:11.5px;font-weight:800;
+  letter-spacing:1.4px;text-transform:uppercase;margin-bottom:22px}
+.jn-title{font-size:clamp(30px,5vw,46px);font-weight:900;color:#fff;letter-spacing:-1.4px;
+  line-height:1.12;margin-bottom:16px}
+.jn-title span{background:linear-gradient(100deg,#60A5FA,#818CF8 55%,#A78BFA);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.jn-sub{font-size:15.5px;color:rgba(255,255,255,.55);line-height:1.65;max-width:420px;margin:0 auto}
+.jn-rocket{position:absolute;pointer-events:none;user-select:none;z-index:0;
+  top:-30px;right:-40px;width:340px;opacity:.9}
+
+/* Timeline */
+.jn-steps{position:relative;max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:26px;z-index:1}
+.jn-step{position:relative;display:flex;align-items:flex-start;gap:20px}
+.jn-num{position:relative;flex-shrink:0;width:44px;height:44px;border-radius:50%;margin-top:34px;
+  border:1.5px solid var(--jn-c);background:#080D1E;color:var(--jn-c);
+  display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;
+  box-shadow:0 0 18px -4px var(--jn-c);z-index:2}
+/* Dashed connector runs from this number down to the next one. */
+.jn-step:not(:last-child) .jn-num::after{content:'';position:absolute;top:calc(100% + 6px);left:50%;
+  width:1px;height:calc(100% + 100px);transform:translateX(-50%);
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.22) 0 5px,transparent 5px 11px)}
+.jn-card{flex:1;min-width:0;display:flex;align-items:center;gap:20px;padding:22px;
+  border-radius:20px;background:rgba(255,255,255,.028);border:1px solid rgba(255,255,255,.07);
+  border-left:2px solid var(--jn-c);cursor:pointer;transition:background .2s,transform .15s,border-color .2s;
+  box-shadow:inset 24px 0 40px -34px var(--jn-c)}
+.jn-card:active{transform:scale(.99);background:rgba(255,255,255,.05)}
+.jn-card:focus-visible{outline:2px solid var(--jn-c);outline-offset:3px}
+.jn-tile{width:104px;height:104px;flex-shrink:0;border-radius:20px;
+  background:linear-gradient(150deg,var(--jn-bg),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center}
+.jn-tile img{width:60px;height:60px}
+.jn-txt{flex:1;min-width:0}
+.jn-t{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.4px;margin-bottom:7px}
+.jn-d{font-size:14px;color:rgba(255,255,255,.55);line-height:1.6}
+.jn-go{width:42px;height:42px;flex-shrink:0;border-radius:50%;background:var(--jn-bg);
+  border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:19px;font-weight:300;opacity:.8}
+
+/* Bottom action bar */
+.jn-foot{max-width:820px;margin:44px auto 0;padding:20px;border-radius:22px;
+  background:rgba(255,255,255,.028);border:1px solid rgba(255,255,255,.08);position:relative;z-index:1}
+.jn-foot-row{display:flex;align-items:stretch;gap:18px}
+.jn-foot-signin{flex:1;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;
+  background:none;border:1px solid rgba(255,255,255,.09);cursor:pointer;font-family:var(--font);text-align:left}
+.jn-foot-signin svg{width:26px;height:26px;stroke:#60A5FA;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.jn-foot-t{font-size:16px;font-weight:700;color:#fff}
+.jn-foot-d{font-size:12.5px;color:rgba(255,255,255,.45);margin-top:2px}
+.jn-foot-cta{flex:1.15;display:flex;align-items:center;justify-content:center;gap:12px;padding:16px;
+  border-radius:14px;border:none;cursor:pointer;font-family:var(--font);font-size:16px;font-weight:800;
+  background:linear-gradient(90deg,#6366F1,#3B82F6);color:#fff;box-shadow:0 12px 34px -10px rgba(99,102,241,.8)}
+.jn-foot-cta:active{transform:scale(.99)}
+.jn-foot-cta img{width:26px;height:26px}
+.jn-trust{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px 22px;
+  margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06)}
+.jn-trust-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.5)}
+.jn-trust-item svg{width:15px;height:15px;stroke:#A78BFA;fill:none;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+@media (max-width:820px){
+  .jn-rocket{width:230px;top:-10px;right:-46px;opacity:.75}
+  .jn-head{margin-bottom:44px}
+}
+@media (max-width:640px){
+  .jn-rocket{width:172px;top:34px;right:-38px;opacity:.7}
+  .jn-sub{max-width:300px}
+  .jn-steps{gap:22px}
+  .jn-step{gap:12px}
+  .jn-num{width:38px;height:38px;font-size:14.5px;margin-top:28px}
+  .jn-card{padding:16px;gap:14px;border-radius:18px}
+  .jn-tile{width:78px;height:78px;border-radius:16px}
+  .jn-tile img{width:46px;height:46px}
+  .jn-t{font-size:17.5px}
+  .jn-d{font-size:13px}
+  .jn-go{width:34px;height:34px;font-size:17px}
+  .jn-foot{padding:16px;border-radius:20px}
+  .jn-foot-row{flex-direction:column;gap:12px}
+  .jn-trust{gap:8px 16px}
+  .jn-trust-item{font-size:11.5px}
+}
+@media (max-width:380px){
+  .jn-tile{width:66px;height:66px}
+  .jn-tile img{width:40px;height:40px}
+  .jn-card{padding:14px;gap:11px}
+  .jn-t{font-size:16px}
+  .jn-d{font-size:12.5px}
+  .jn-go{display:none}
+}
 .feature-card{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .feature-card:focus-visible{outline:2px solid var(--feat-color,#3B82F6);outline-offset:3px}
 .feature-card:active{transform:scale(.99)}
@@ -817,39 +908,86 @@ async function submitFoundingOffer(e) {
 
 <!-- HOW IT WORKS -->
 <section id="how">
+  <img class="jn-rocket" src="/assets/rockets/rocket-trail.png" alt="" aria-hidden="true" loading="lazy" />
   <div class="container">
-    <div class="section-tag">How it works</div>
-    <h2 class="section-heading">From signup to<br>running in minutes</h2>
-    <p class="section-sub">No IT team needed. Pick your plan, add your team, and start taking registers straight away.</p>
-    <div class="steps-grid">
-      <div class="step-card">
-        <div class="step-visual">
-          <div class="step-badge"><img src="/icons/step-1.png" alt="Rocket launching" loading="lazy" width="84" height="84" /></div>
-          <div class="step-badge-num">1</div>
+
+    <div class="jn-head">
+      <div class="jn-pill">Get started</div>
+      <h2 class="jn-title">Your journey to<br><span>smarter sessions</span></h2>
+      <p class="jn-sub">Three simple steps to get your organisation up and running.</p>
+    </div>
+
+    <div class="jn-steps">
+      <div class="jn-step" style="--jn-c:#3B82F6;--jn-bg:rgba(59,130,246,.12)">
+        <div class="jn-num">1</div>
+        <div class="jn-card" role="button" tabindex="0" onclick="openStep('plan')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openStep('plan')}">
+          <div class="jn-tile"><img src="/icons/step-1.png" alt="" loading="lazy" /></div>
+          <div class="jn-txt">
+            <div class="jn-t">Choose your plan</div>
+            <div class="jn-d">Pick Starter, Advanced or Pro+ based on your organisation's size and needs. Upgrade any time as you grow.</div>
+          </div>
+          <div class="jn-go">›</div>
         </div>
-        <div class="step-tag">Step 1</div>
-        <div class="step-title">Choose your plan</div>
-        <div class="step-desc">Pick Starter, Advanced or Pro+ based on your organisation's size and needs. Upgrade any time as you grow.</div>
       </div>
-      <div class="step-card">
-        <div class="step-visual">
-          <div class="step-badge"><img src="/icons/step-2.png" alt="Team of people icon" loading="lazy" width="84" height="84" /></div>
-          <div class="step-badge-num">2</div>
+
+      <div class="jn-step" style="--jn-c:#8B5CF6;--jn-bg:rgba(139,92,246,.12)">
+        <div class="jn-num">2</div>
+        <div class="jn-card" role="button" tabindex="0" onclick="openStep('team')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openStep('team')}">
+          <div class="jn-tile"><img src="/icons/step-2.png" alt="" loading="lazy" /></div>
+          <div class="jn-txt">
+            <div class="jn-t">Add your team</div>
+            <div class="jn-d">Invite staff, volunteers and admins with a single email link. Role-based access means everyone sees exactly what they need.</div>
+          </div>
+          <div class="jn-go">›</div>
         </div>
-        <div class="step-tag">Step 2</div>
-        <div class="step-title">Add your team</div>
-        <div class="step-desc">Invite staff, volunteers and admins with a single email link. Role-based access means everyone sees exactly what they need.</div>
       </div>
-      <div class="step-card">
-        <div class="step-visual">
-          <div class="step-badge"><img src="/icons/step-3.png" alt="Calendar icon" loading="lazy" width="84" height="84" /></div>
-          <div class="step-badge-num">3</div>
+
+      <div class="jn-step" style="--jn-c:#2DD4BF;--jn-bg:rgba(45,212,191,.12)">
+        <div class="jn-num">3</div>
+        <div class="jn-card" role="button" tabindex="0" onclick="openStep('session')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openStep('session')}">
+          <div class="jn-tile"><img src="/icons/step-3.png" alt="" loading="lazy" /></div>
+          <div class="jn-txt">
+            <div class="jn-t">Start your first session</div>
+            <div class="jn-d">Create a session, add your young people and take the register live. Safeguarding alerts and volunteer cover all tracked automatically.</div>
+          </div>
+          <div class="jn-go">›</div>
         </div>
-        <div class="step-tag">Step 3</div>
-        <div class="step-title">Start your first session</div>
-        <div class="step-desc">Create a session, add your young people and take the register live. Safeguarding alerts and volunteer cover all tracked automatically.</div>
       </div>
     </div>
+
+    <div class="jn-foot">
+      <div class="jn-foot-row">
+        <button class="jn-foot-signin" onclick="window.location.href='https://app.launchsession.co.uk'">
+          <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <div>
+            <div class="jn-foot-t">Sign in</div>
+            <div class="jn-foot-d">Access your account</div>
+          </div>
+        </button>
+        <button class="jn-foot-cta" onclick="window.location.href='/signup'">
+          Start free trial →
+          <img src="/assets/rockets/rocket-icon.png" alt="" aria-hidden="true" />
+        </button>
+      </div>
+      <div class="jn-trust">
+        <div class="jn-trust-item">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          14-day free trial
+        </div>
+        <div class="jn-trust-item">
+          <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          No card required
+        </div>
+        <div class="jn-trust-item">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Cancel anytime
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -1703,37 +1841,83 @@ const FEATURES = {
   }
 };
 
+/* ── ONBOARDING STEP CONTENT ───────────────────────────────
+   Rendered through the same sheet component as the features. */
+const STEPS = {
+  plan: {
+    title: "Choose your plan", tag: "Step 1", icon: "/icons/step-1.png",
+    color: "#3B82F6", bg: "rgba(59,130,246,0.12)",
+    lead: "Start with the plan that matches where your organisation is today. There's no per-module pricing to piece together and nothing to configure before you can begin.",
+    points: [
+      "<b>Starter</b> covers the essentials — registers, session planning, safeguarding and your core team.",
+      "<b>Advanced</b> adds volunteer management, the parent portal, risk assessments and branding.",
+      "<b>Pro+</b> brings fundraising, policies and the full reporting suite for larger operations.",
+      "<b>Upgrade or downgrade at any point</b> — your data and setup carry across untouched.",
+      "<b>Monthly or annual billing</b>, with roughly 20% off when you pay annually.",
+      "<b>The trial is genuinely free.</b> No card details, and nothing charges automatically at the end."
+    ],
+    note: "<b>Not sure which fits?</b> Start on the trial with full access and decide once you've seen how your team actually uses it."
+  },
+  team: {
+    title: "Add your team", tag: "Step 2", icon: "/icons/step-2.png",
+    color: "#8B5CF6", bg: "rgba(139,92,246,0.12)",
+    lead: "Get everyone into the system in an afternoon. Invitations go out by email, and each person lands in a view that's already scoped to their role.",
+    points: [
+      "<b>Invite by email in bulk</b> — paste a list and send, rather than setting up accounts one at a time.",
+      "<b>Four roles out of the box:</b> admin, staff, volunteer and parent, each with a different level of access.",
+      "<b>Permissions are enforced at the database level</b>, so a volunteer genuinely cannot reach safeguarding records.",
+      "<b>Volunteers can sign themselves up</b> through a public link, landing in an approval queue for you to review.",
+      "<b>A guided onboarding wizard</b> walks new staff through their first login.",
+      "<b>Already have a staff spreadsheet?</b> Import it and send every invitation in one go."
+    ],
+    note: "<b>You stay in control.</b> Nobody gets access until you approve them, and you can revoke it instantly when someone leaves."
+  },
+  session: {
+    title: "Start your first session", tag: "Step 3", icon: "/icons/step-3.png",
+    color: "#2DD4BF", bg: "rgba(45,212,191,0.12)",
+    lead: "This is the point where the admin work starts paying you back. Create a session, and the register, rota and reporting all follow from it automatically.",
+    points: [
+      "<b>Create a session in under a minute</b> — date, venue, capacity and who's covering it.",
+      "<b>Add your young people</b> individually or by importing an existing spreadsheet.",
+      "<b>Open the register and go live.</b> Sign-ins update in real time across every device in the room.",
+      "<b>Medical and allergy alerts appear automatically</b> as each young person is signed in.",
+      "<b>Volunteer cover and staff ratios are tracked</b> as you go, so gaps are visible before they matter.",
+      "<b>Close the session with a checklist</b>, and your attendance and impact figures update on their own."
+    ],
+    note: "<b>Most organisations run a real session on day one.</b> There's no implementation project standing between signing up and using it."
+  }
+};
+
+function openStep(key) {
+  const d = STEPS[key];
+  if (!d) return;
+  renderSheet({
+    title: d.title, tag: d.tag, icon: d.icon, color: d.color, bg: d.bg,
+    lead: d.lead, points: d.points, note: d.note, sub: "What this involves"
+  });
+}
+
 let fdLastFocus = null;
 
-function openFeature(key) {
-  const card = document.querySelector('.feature-card[data-feat="' + key + '"]');
-  const data = FEATURES[key];
-  if (!card || !data) return;
-
-  const title = card.querySelector('.feat-title').textContent;
-  const tag   = card.querySelector('.feat-tag').textContent;
-  const icon  = card.querySelector('.feat-icon-wrap img').getAttribute('src');
-  const cs    = getComputedStyle(card);
-  const color = cs.getPropertyValue('--feat-color').trim() || '#3B82F6';
-  const bg    = cs.getPropertyValue('--feat-bg').trim() || 'rgba(59,130,246,0.12)';
-
+function renderSheet(o) {
   const sheet = document.getElementById('fdSheet');
-  sheet.style.setProperty('--fd-color', color);
-  sheet.style.setProperty('--fd-bg', bg);
+  sheet.style.setProperty('--fd-color', o.color);
+  sheet.style.setProperty('--fd-bg', o.bg);
 
-  document.getElementById('fdTitle').textContent = title;
-  document.getElementById('fdTag').textContent   = tag;
-  document.getElementById('fdLead').textContent  = data.lead;
+  document.getElementById('fdTitle').textContent = o.title;
+  document.getElementById('fdTag').textContent   = o.tag;
+  document.getElementById('fdLead').textContent  = o.lead;
+  document.querySelector('.fd-sub').textContent  = o.sub || 'What you can do';
   const iconEl = document.getElementById('fdIcon');
-  iconEl.setAttribute('src', icon);
-  iconEl.setAttribute('alt', title);
+  iconEl.setAttribute('src', o.icon);
+  iconEl.setAttribute('alt', o.title);
 
-  document.getElementById('fdList').innerHTML = data.points.map(p =>
+  document.getElementById('fdList').innerHTML = o.points.map(p =>
     '<div class="fd-item"><div class="fd-check">' +
     '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>' +
     '<div class="fd-item-txt">' + p + '</div></div>'
   ).join('');
-  document.getElementById('fdNote').innerHTML = data.note;
+  document.getElementById('fdNote').innerHTML = o.note;
 
   fdLastFocus = document.activeElement;
   document.getElementById('fdBackdrop').classList.add('open');
@@ -1741,6 +1925,22 @@ function openFeature(key) {
   document.body.classList.add('fd-open');
   document.querySelector('.fd-body').scrollTop = 0;
   setTimeout(() => document.querySelector('.fd-close').focus(), 60);
+}
+
+function openFeature(key) {
+  const card = document.querySelector('.feature-card[data-feat="' + key + '"]');
+  const data = FEATURES[key];
+  if (!card || !data) return;
+  const cs = getComputedStyle(card);
+  renderSheet({
+    title: card.querySelector('.feat-title').textContent,
+    tag:   card.querySelector('.feat-tag').textContent,
+    icon:  card.querySelector('.feat-icon-wrap img').getAttribute('src'),
+    color: cs.getPropertyValue('--feat-color').trim() || '#3B82F6',
+    bg:    cs.getPropertyValue('--feat-bg').trim() || 'rgba(59,130,246,0.12)',
+    lead:  data.lead, points: data.points, note: data.note,
+    sub:   'What you can do'
+  });
 }
 
 function closeFeature() {
