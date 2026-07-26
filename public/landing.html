@@ -435,9 +435,14 @@ section{padding:96px 5%}
   text-transform:uppercase;color:#fff;background:var(--feat-color,#3B82F6);
   box-shadow:0 4px 14px -4px var(--feat-color,#3B82F6)}
 .feat-title{position:relative;z-index:2;max-width:57%;margin-bottom:10px;
-  font-size:19.5px;font-weight:800;color:#fff;letter-spacing:-.35px;line-height:1.18}
+  font-size:19.5px;font-weight:800;color:#fff;letter-spacing:-.35px;line-height:1.18;
+  overflow-wrap:break-word;word-break:break-word;hyphens:auto}
+/* Single unbreakable words ("Safeguarding", "Mentoring") have no space to
+   wrap on, so max-width alone doesn't stop them overflowing past the text
+   column and into the icon — overflow-wrap forces a break instead. */
 .feat-desc{position:relative;z-index:2;max-width:57%;
-  font-size:13px;color:rgba(255,255,255,.52);line-height:1.55}
+  font-size:13px;color:rgba(255,255,255,.52);line-height:1.55;
+  overflow-wrap:break-word;word-break:break-word}
 .feat-more{position:relative;z-index:2;margin-top:auto;padding-top:18px;
   display:flex;align-items:center;gap:7px;
   font-size:12.5px;font-weight:700;color:var(--feat-color,#3B82F6)}
@@ -646,8 +651,8 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
 @media (max-width:600px) {
   /* Card padding — desktop values waste horizontal space on a phone. */
   .feature-card { padding: 18px; min-height: 220px }
-  .feat-title { font-size: 18px; max-width: 58% }
-  .feat-desc { max-width: 58%; font-size: 12.5px }
+  .feat-title { font-size: 18px; max-width: 54% }
+  .feat-desc { max-width: 54%; font-size: 12.5px }
   .feat-icon-wrap { width: 34%; max-width: 92px }
   .feat-icon-wrap img { max-height: 92px }
   .testi-card { padding: 20px }
