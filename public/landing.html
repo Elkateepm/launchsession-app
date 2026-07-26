@@ -332,6 +332,68 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   .pricing-card:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(0,0,0,0.3)}
   .pricing-card.popular:hover{box-shadow:0 24px 60px rgba(59,130,246,0.2),0 0 0 1px rgba(59,130,246,0.2) inset}
 }
+
+/* ── MOBILE REFINEMENTS ──────────────────────────────────────
+   Touch ergonomics, iOS quirks and small-screen spacing. */
+
+/* Kill the grey flash iOS paints over tapped elements. */
+a, button, .faq-q, .step-card, .feature-card, .pricing-card {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width:900px) {
+  /* Respect the notch / home indicator on iPhones. */
+  .nav-wrap { top: calc(env(safe-area-inset-top, 0px) + 10px) }
+  footer { padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)) }
+  .mobile-nav {
+    padding-top: calc(24px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* iOS zooms the whole page when you focus an input under 16px. */
+  input, select, textarea { font-size: 16px !important }
+
+  /* Comfortable tap targets (Apple HIG minimum is 44px). */
+  .btn-hero-cta, .btn-hero-ghost, .fo-submit,
+  #waitlistForm button, #waitlistForm input,
+  .fo-input, .faq-q { min-height: 48px }
+  .hamburger { padding: 10px; margin-right: -4px }
+
+  /* FAQ answers wrap to many more lines on a narrow screen — the
+     desktop max-height clips them mid-sentence. */
+  .faq-item.open .faq-a { max-height: 600px }
+}
+
+@media (max-width:600px) {
+  /* Trust strip reads better stacked and centred than left-ragged. */
+  .trust-bar { align-items: center; text-align: center; gap: 14px }
+  .trust-label { white-space: normal }
+  .trust-orgs { gap: 10px 18px; justify-content: center }
+  .trust-org { font-size: 12.5px }
+
+  /* Card padding — desktop values waste horizontal space on a phone. */
+  .feature-card { padding: 18px }
+  .testi-card { padding: 20px }
+  .pricing-card { padding: 26px 20px }
+  .fo-box { padding: 36px 22px }
+  .faq-q { padding: 16px 18px; font-size: 14.5px }
+  .faq-a p { padding: 0 18px 18px; font-size: 13.5px }
+
+  /* Footer reads as a centred column rather than a broken row. */
+  .footer-inner { flex-direction: column; align-items: center; text-align: center; gap: 24px }
+}
+
+/* Very small handsets (iPhone SE and similar). */
+@media (max-width:380px) {
+  section { padding: 44px 18px }
+  .hero-title { font-size: 31px !important; letter-spacing: -1.2px }
+  .hero-sub { font-size: 14.5px }
+  .section-heading { font-size: 23px }
+  .trust-orgs { gap: 8px 14px }
+  .logo img { width: 30px; height: 30px }
+  .btn-start { padding: 8px 10px; font-size: 11.5px }
+}
 </style>
 </head>
 <body>
