@@ -59,21 +59,41 @@ img{max-width:100%}
 
 /* ── NAV ──────────────────────────────────────────────────── */
 .nav-wrap{position:fixed;top:calc(var(--promo-h, 0px) + 16px);left:50%;transform:translateX(-50%);z-index:100;width:calc(100% - 40px);max-width:1160px;transition:top 0.2s}
-nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:64px;background:rgba(6,9,26,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border2);border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
-.logo{display:flex;align-items:center;gap:12px}
+/* A slim brand-gradient ring sits behind the pill and peeks out 1px on
+   every edge, so the header reads as "chrome-edged" rather than a flat
+   single-colour border. */
+.nav-wrap::before{content:'';position:absolute;inset:-1px;border-radius:19px;z-index:-1;
+  background:linear-gradient(120deg,rgba(59,130,246,.5),rgba(139,92,246,.5),rgba(45,212,191,.5));
+  opacity:.5;transition:opacity .3s}
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:64px;background:rgba(6,9,26,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border2);border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.4);transition:height .25s,background .25s,box-shadow .25s}
+/* Once the page has scrolled, the bar tightens and solidifies slightly —
+   otherwise toggling this class (see nav-scroll script) had no visible effect. */
+.nav-wrap.scrolled nav{height:56px;background:rgba(6,9,26,0.94);box-shadow:0 10px 30px rgba(0,0,0,0.55)}
+.nav-wrap.scrolled::before{opacity:.85}
+.logo{display:flex;align-items:center;gap:12px;transition:opacity .2s}
+.logo:hover{opacity:.85}
 .logo img{width:40px;height:40px;object-fit:contain}
 .logo-name{font-size:20px;font-weight:900;letter-spacing:-0.5px}
 .logo-name span{color:#60A5FA}
 .nav-links{display:flex;gap:4px}
-.nav-links a{font-size:13px;font-weight:600;color:var(--text2);padding:7px 13px;border-radius:9px;transition:all 0.2s}
+.nav-links a{font-size:13px;font-weight:600;color:var(--text2);padding:7px 13px;border-radius:9px;transition:all 0.2s;position:relative}
 .nav-links a:hover{color:#fff;background:var(--glass2)}
+/* Filled in while the corresponding section is in view (see scrollspy script) */
+.nav-links a.active{color:#fff;background:rgba(59,130,246,0.14)}
+.nav-links a.active::after{content:'';position:absolute;left:13px;right:13px;bottom:3px;height:2px;
+  border-radius:2px;background:linear-gradient(90deg,#3B82F6,#8B5CF6)}
 .nav-right{display:flex;align-items:center;gap:10px}
 .btn-signin{padding:8px 18px;border-radius:10px;border:1px solid var(--border2);background:var(--glass);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all 0.2s}
 .btn-signin:hover{background:var(--glass2)}
 .btn-start{padding:9px 20px;border-radius:10px;border:none;background:linear-gradient(135deg,#3B82F6,#6366F1);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all 0.2s;box-shadow:0 4px 16px rgba(59,130,246,0.3)}
 .btn-start:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,0.45)}
-.hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;gap:5px}
-.hamburger span{display:block;width:20px;height:2px;background:#fff;border-radius:2px;transition:all 0.25s}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;justify-content:center;gap:5px;width:32px;height:32px}
+.hamburger span{display:block;width:20px;height:2px;background:#fff;border-radius:2px;transition:all 0.25s;transform-origin:center}
+/* Bars fold into an X once the overlay is open — previously this button
+   had a transition defined but nothing ever triggered it either way. */
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 /* ── HOW IT WORKS: JOURNEY ───────────────────────────────── */
 #how{position:relative;overflow:hidden}
 .jn-head{position:relative;text-align:center;max-width:620px;margin:0 auto 56px;z-index:1}
@@ -521,8 +541,8 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   .nav-links{display:none}
   .hamburger{display:flex}
   .nav-right{gap:6px}
-  .btn-signin{display:inline-flex;align-items:center;padding:8px 10px;border:none;background:none;font-size:13px;font-weight:600;color:var(--text2)}
-  .btn-signin:hover{background:none;color:#fff}
+  .btn-signin{display:inline-flex;align-items:center;padding:8px 14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);font-size:13px;font-weight:600;color:var(--text2)}
+  .btn-signin:hover{background:var(--glass2);color:#fff}
   .btn-start{padding:9px 14px;font-size:13px}
   .hero-inner{grid-template-columns:1fr;gap:40px;text-align:center}
   .hero-sub{max-width:100%;margin-left:auto;margin-right:auto}
@@ -663,7 +683,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
     <div class="nav-right">
       <button class="btn-signin" onclick="window.location.href='https://app.launchsession.co.uk'">Sign in</button>
       <button class="btn-start" onclick="window.location.href='/signup'">Start free trial →</button>
-      <button class="hamburger" id="hamBtn" onclick="toggleMenu()" aria-label="Menu">
+      <button class="hamburger" id="hamBtn" onclick="toggleMenu()" aria-label="Menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -1805,11 +1825,39 @@ window.addEventListener('scroll', () => {
   document.getElementById('navWrap').classList.toggle('scrolled', window.scrollY > 20)
 })
 
+// ── SCROLLSPY ──────────────────────────────────────────────────
+// Highlights the nav link for whichever tracked section currently owns the
+// middle of the viewport, so the header reflects where you actually are.
+(function () {
+  const links = [...document.querySelectorAll('.nav-links a')]
+  const targets = links
+    .map(a => ({ link: a, el: document.querySelector(a.getAttribute('href')) }))
+    .filter(t => t.el)
+  if (!targets.length) return
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const target = targets.find(t => t.el === entry.target)
+      if (!target) return
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'))
+        target.link.classList.add('active')
+      }
+    })
+  }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 })
+
+  targets.forEach(t => observer.observe(t.el))
+})()
+
 // ── MOBILE MENU ────────────────────────────────────────────────
 function toggleMenu() {
   const nav = document.getElementById('mobileNav')
-  nav.classList.toggle('open')
-  document.body.classList.toggle('menu-open', nav.classList.contains('open'))
+  const open = !nav.classList.contains('open')
+  nav.classList.toggle('open', open)
+  document.body.classList.toggle('menu-open', open)
+  const btn = document.getElementById('hamBtn')
+  btn.classList.toggle('open', open)
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false')
 }
 
 // ── BILLING TOGGLE ─────────────────────────────────────────────
