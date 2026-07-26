@@ -4,13 +4,61 @@ import { useBreakpoint } from '../../hooks/useIsMobile'
 
 const STEPS = { ROLE: 'role', EMAIL: 'email', PASSWORD: 'password', MAGIC: 'magic', FORGOT: 'forgot' }
 
-const inp = {
-  width: '100%', padding: '12px 16px', borderRadius: 10,
-  border: '1px solid rgba(255,255,255,0.12)',
-  background: 'rgba(255,255,255,0.07)', color: '#fff',
-  fontSize: 15, outline: 'none', boxSizing: 'border-box',
-  transition: 'border-color 0.2s',
+const font = "'Plus Jakarta Sans', sans-serif"
+
+// Leaving an organisation has to clear BOTH keys. 'launchsession_org_slug' is
+// the working selection, but 'launchsession_remembered_org_slug' is an opt-in
+// sticky fallback that OrgContext re-applies on /login and the bare root — so
+// clearing only the first sends the user straight back into the same org.
+function leaveOrg(target) {
+  try {
+    localStorage.removeItem('launchsession_org_slug')
+    localStorage.removeItem('launchsession_remembered_org_slug')
+  } catch (e) {}
+  window.location.href = target || '/org-search'
 }
+
+const inp = {
+  width: '100%', padding: '14px 16px 14px 46px', borderRadius: 12,
+  border: '1px solid rgba(255,255,255,0.12)',
+  background: 'rgba(255,255,255,0.05)', color: '#fff',
+  fontSize: 16, outline: 'none', boxSizing: 'border-box',
+  fontFamily: font, transition: 'border-color 0.2s',
+}
+
+const label = {
+  fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.75)',
+  display: 'block', marginBottom: 8,
+}
+
+function MailIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.7"
+      style={{ position: 'absolute', left: 15, bottom: 15, width: 20, height: 20, pointerEvents: 'none' }}>
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="M22 7l-10 6L2 7" />
+    </svg>
+  )
+}
+
+// Fixed star positions — a stable list keeps the field from reshuffling on
+// every re-render, which a Math.random() field would do on each keystroke.
+const STARS = [
+  { t: 4, l: 12, s: 2, o: 0.55, tw: true }, { t: 7, l: 78, s: 1.6, o: 0.4, tw: false },
+  { t: 11, l: 34, s: 1.2, o: 0.35, tw: false }, { t: 9, l: 91, s: 2.2, o: 0.6, tw: true },
+  { t: 15, l: 62, s: 1.4, o: 0.3, tw: false }, { t: 18, l: 8, s: 1.8, o: 0.45, tw: true },
+  { t: 21, l: 48, s: 1.1, o: 0.25, tw: false }, { t: 24, l: 86, s: 1.5, o: 0.4, tw: false },
+  { t: 13, l: 21, s: 1.3, o: 0.3, tw: false }, { t: 28, l: 70, s: 2, o: 0.5, tw: true },
+  { t: 31, l: 15, s: 1.2, o: 0.28, tw: false }, { t: 34, l: 94, s: 1.7, o: 0.42, tw: false },
+  { t: 3, l: 55, s: 1.5, o: 0.38, tw: false }, { t: 38, l: 41, s: 1.1, o: 0.22, tw: false },
+  { t: 6, l: 44, s: 1.3, o: 0.32, tw: true }, { t: 42, l: 82, s: 1.4, o: 0.3, tw: false },
+  { t: 17, l: 96, s: 1.2, o: 0.28, tw: false }, { t: 26, l: 4, s: 1.6, o: 0.36, tw: false },
+  { t: 46, l: 27, s: 1.3, o: 0.26, tw: false }, { t: 52, l: 89, s: 1.5, o: 0.3, tw: true },
+  { t: 58, l: 6, s: 1.2, o: 0.24, tw: false }, { t: 64, l: 74, s: 1.4, o: 0.28, tw: false },
+  { t: 71, l: 18, s: 1.3, o: 0.22, tw: false }, { t: 78, l: 92, s: 1.5, o: 0.26, tw: true },
+  { t: 85, l: 37, s: 1.2, o: 0.2, tw: false }, { t: 91, l: 66, s: 1.4, o: 0.24, tw: false },
+  { t: 88, l: 11, s: 1.3, o: 0.22, tw: false }, { t: 95, l: 83, s: 1.2, o: 0.2, tw: false },
+]
 
 export default function Login({ org }) {
   const [step, setStep] = useState(STEPS.EMAIL)
@@ -29,6 +77,7 @@ export default function Login({ org }) {
 
   const primary = org?.primary_color || '#3B82F6'
   const orgName = org?.name || 'LaunchSession'
+  const hasOrg = !!org
 
   const handleEmailContinue = async e => {
     e.preventDefault()
@@ -76,88 +125,172 @@ export default function Login({ org }) {
     setLoading(false)
   }
 
+  const gradientBtn = disabled => ({
+    width: '100%', padding: 16, borderRadius: 12, border: 'none',
+    background: 'linear-gradient(90deg, ' + primary + ', #7C3AED)',
+    color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: font,
+    cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.55 : 1,
+    boxShadow: disabled ? 'none' : '0 12px 32px -12px ' + primary,
+    transition: 'all 0.2s',
+  })
+
+  const ghostBtn = {
+    width: '100%', padding: 15, borderRadius: 12,
+    border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.03)',
+    color: '#A78BFA', fontSize: 15, fontWeight: 600, fontFamily: font, cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    transition: 'all 0.2s',
+  }
+
+  const backLink = {
+    background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', fontSize: 13.5,
+    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 22,
+    padding: 0, fontFamily: font,
+  }
+
+  const errBox = error ? (
+    <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#FCA5A5', borderRadius: 10, padding: '11px 14px', fontSize: 13.5, marginBottom: 16, lineHeight: 1.5 }}>{error}</div>
+  ) : null
+
   return (
-    <div style={{ minHeight: '100vh', background: '#060B18', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, position: 'relative', overflow: 'hidden' }}>
-      {/* Background glow */}
-      <div style={{ position: 'absolute', top: '-200px', left: '50%', transform: 'translateX(-50%)', width: '600px', height: '600px', background: `radial-gradient(ellipse, ${primary}22 0%, transparent 70%)`, pointerEvents: 'none' }} />
+    <div style={{
+      minHeight: '100vh', background: '#050914', fontFamily: font,
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      padding: '0 20px calc(28px + env(safe-area-inset-bottom, 0px))',
+      position: 'relative', overflow: 'hidden',
+    }}>
+      <style>{'@keyframes ls-tw { 0%,100%{opacity:.2} 50%{opacity:.85} } .ls-star{position:absolute;border-radius:50%;background:#fff} .ls-in:focus{border-color:' + primary + ' !important;background:rgba(255,255,255,0.07) !important}'}</style>
 
-      <div style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
+      {/* Starfield */}
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        {STARS.map((s, i) => (
+          <span key={i} className="ls-star" style={{
+            top: s.t + '%', left: s.l + '%', width: s.s, height: s.s, opacity: s.o,
+            animation: s.tw ? 'ls-tw ' + (2.5 + (i % 4)) + 's ease-in-out ' + (i % 5) + 's infinite' : 'none',
+          }} />
+        ))}
+      </div>
 
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+      {/* Planet horizon crests just above the card */}
+      <img src="/assets/planet-horizon.png" alt="" aria-hidden="true" style={{
+        position: 'absolute', top: 200, left: '50%', transform: 'translateX(-50%)',
+        width: 'min(780px, 172%)', pointerEvents: 'none', userSelect: 'none', zIndex: 0, opacity: 0.95,
+      }} />
+
+      <div style={{
+        width: '100%', maxWidth: 430, position: 'relative', zIndex: 1,
+        paddingTop: 'calc(36px + env(safe-area-inset-top, 0px))',
+      }}>
+
+        {/* Brand */}
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
           {org?.logo_url ? (
-            <img src={org.logo_url} alt={orgName} style={{ height: 56, objectFit: 'contain', marginBottom: 16 }} />
+            <img src={org.logo_url} alt={orgName} style={{ height: 92, objectFit: 'contain', marginBottom: 12 }} />
           ) : (
-            <img src='/logo.png' alt='LaunchSession' style={{ width: 240, height: 240, objectFit: 'contain', margin: '0 auto 0px', display: 'block' }} />
+            <img src="/logo.png" alt="LaunchSession" style={{ width: 146, height: 146, objectFit: 'contain', margin: '0 auto', display: 'block' }} />
           )}
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: 0.5 }}>{orgName}</div>
+          {hasOrg ? (
+            <div style={{ fontSize: 25, fontWeight: 800, color: '#fff', letterSpacing: -0.5, marginTop: 6 }}>{orgName}</div>
+          ) : (
+            <div style={{ fontSize: 33, fontWeight: 900, color: '#fff', letterSpacing: -1, marginTop: 2 }}>
+              Launch<span style={{ background: 'linear-gradient(100deg,#3B82F6,#8B5CF6)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Session</span>
+            </div>
+          )}
+          <div style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.45)', marginTop: 5 }}>
+            {hasOrg ? 'Powered by LaunchSession' : 'Run. Engage. Inspire.'}
+          </div>
         </div>
 
         {/* Card */}
-        <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${primary}30`, boxShadow: `0 0 0 1px ${primary}10, 0 20px 60px -20px ${primary}30`, borderRadius: 24, padding: 32, backdropFilter: 'blur(12px)' }}>
-
+        <div style={{
+          background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.09)',
+          borderRadius: 26, padding: '30px 24px', backdropFilter: 'blur(16px)',
+          boxShadow: '0 30px 80px -30px rgba(0,0,0,0.9)',
+        }}>
 
           {step === STEPS.EMAIL && (
             <div>
-              <button onClick={() => { try { localStorage.removeItem('launchsession_org_slug') } catch (e) {}; window.location.href = '/org-search' }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, padding: 0 }}>← Back</button>
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Sign in to {orgName}</div>
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)' }}>Your organisation workspace</div>
+              <div style={{
+                width: 60, height: 60, borderRadius: '50%', margin: '0 auto 20px',
+                border: '1px solid ' + primary + '66', background: primary + '14',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 0 26px -6px ' + primary,
+              }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ width: 27, height: 27 }}>
+                  <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+                  <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+                  <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+                  <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+                </svg>
               </div>
-              {error && <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#FCA5A5', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
-              <form onSubmit={handleEmailContinue}>
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.45)', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.6 }}>Work email</label>
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus placeholder="you@organisation.com" style={inp} />
+
+              <div style={{ textAlign: 'center', marginBottom: 26 }}>
+                <div style={{ fontSize: 27, fontWeight: 800, color: '#fff', letterSpacing: -0.6, marginBottom: 7 }}>Welcome back</div>
+                <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)' }}>
+                  {hasOrg ? 'Sign in to ' + orgName : 'Sign in to your organisation workspace'}
                 </div>
-                <button type="submit" disabled={loading || !email.trim()} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading || !email.trim() ? 'default' : 'pointer', opacity: loading || !email.trim() ? 0.6 : 1, transition: 'all 0.2s' }}>
-                  {loading ? 'Checking...' : 'Continue →'}
+              </div>
+
+              {errBox}
+
+              <form onSubmit={handleEmailContinue}>
+                <div style={{ marginBottom: 18 }}>
+                  <label style={label}>Work email</label>
+                  <div style={{ position: 'relative' }}>
+                    <MailIcon />
+                    <input className="ls-in" type="email" value={email} onChange={e => setEmail(e.target.value)}
+                      required autoFocus autoComplete="email" placeholder="you@organisation.com" style={inp} />
+                  </div>
+                </div>
+                <button type="submit" disabled={loading || !email.trim()} style={gradientBtn(loading || !email.trim())}>
+                  {loading ? 'Checking…' : 'Continue  →'}
                 </button>
               </form>
-              <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+
+              <div style={{ margin: '20px 0 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>or</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>or</span>
                 <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
               </div>
-              <button onClick={() => { if (email.trim()) { setError(''); setStep(STEPS.FORGOT) } }} style={{ marginTop: 16, width: '100%', padding: 13, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s' }}>
-                Forgot password?
+
+              <button onClick={() => { setError(''); setStep(STEPS.FORGOT) }} style={ghostBtn}>
+                Forgot password? <span style={{ opacity: 0.7 }}>›</span>
               </button>
             </div>
           )}
 
-          {/* STEP: PASSWORD */}
           {step === STEPS.PASSWORD && (
             <div>
-              <button onClick={() => { setStep(STEPS.EMAIL); setError('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24, padding: 0 }}>
-                ← Back
-              </button>
+              <button onClick={() => { setStep(STEPS.EMAIL); setError('') }} style={backLink}>← Back</button>
               <div style={{ marginBottom: 24 }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Welcome back</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg, ${primary}, #8B5CF6)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>{orgName[0]}</div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{orgName}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{email}</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: -0.5 }}>Enter your password</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 9, background: 'linear-gradient(135deg, ' + primary + ', #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff', flexShrink: 0 }}>{orgName[0]}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#fff' }}>{orgName}</div>
+                    <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.42)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</div>
                   </div>
                 </div>
               </div>
-              {error && <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#FCA5A5', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
+              {errBox}
               <form onSubmit={handleLogin}>
                 <div style={{ marginBottom: 16, position: 'relative' }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.45)', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.6 }}>Password</label>
-                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required autoFocus placeholder="••••••••" style={{ ...inp, paddingRight: 48 }} />
-                  <button type="button" onClick={() => setShowPassword(s => !s)} style={{ position: 'absolute', right: 14, top: 38, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 13, padding: 0 }}>
+                  <label style={label}>Password</label>
+                  <input className="ls-in" type={showPassword ? 'text' : 'password'} value={password}
+                    onChange={e => setPassword(e.target.value)} required autoFocus autoComplete="current-password"
+                    placeholder="••••••••" style={{ ...inp, paddingLeft: 16, paddingRight: 62 }} />
+                  <button type="button" onClick={() => setShowPassword(s => !s)} style={{ position: 'absolute', right: 14, bottom: 15, background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: 13, padding: 0, fontFamily: font }}>
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
-                <button type="submit" disabled={loading || !password.trim()} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading || !password.trim() ? 'default' : 'pointer', opacity: loading || !password.trim() ? 0.6 : 1 }}>
-                  {loading ? 'Signing in...' : 'Sign In'}
+                <button type="submit" disabled={loading || !password.trim()} style={gradientBtn(loading || !password.trim())}>
+                  {loading ? 'Signing in…' : 'Sign in'}
                 </button>
               </form>
               {isDesktop ? (
                 <label style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 16, cursor: 'pointer', userSelect: 'none' }}>
-                  <span onClick={() => setRememberMe(r => !r)} style={{ width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${rememberMe ? primary : 'rgba(255,255,255,0.25)'}`, background: rememberMe ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
-                    {rememberMe && <span style={{ color: '#fff', fontSize: 12, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                  <span onClick={() => setRememberMe(r => !r)} style={{ width: 18, height: 18, borderRadius: 5, border: '1.5px solid ' + (rememberMe ? primary : 'rgba(255,255,255,0.25)'), background: rememberMe ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                    {rememberMe ? <span style={{ color: '#fff', fontSize: 12, fontWeight: 900, lineHeight: 1 }}>✓</span> : null}
                   </span>
                   <span onClick={() => setRememberMe(r => !r)} style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>Keep me logged in</span>
                 </label>
@@ -168,31 +301,39 @@ export default function Login({ org }) {
                 </div>
               )}
               <div style={{ marginTop: 16 }}>
-                <button onClick={() => { setStep(STEPS.FORGOT); setError('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', padding: 0 }}>Forgot password?</button>
+                <button onClick={() => { setStep(STEPS.FORGOT); setError('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', fontSize: 13.5, cursor: 'pointer', padding: 0, fontFamily: font }}>Forgot password?</button>
               </div>
             </div>
           )}
 
-          {/* STEP: FORGOT PASSWORD */}
           {step === STEPS.FORGOT && (
             <div>
-              <button onClick={() => { setStep(STEPS.PASSWORD); setError(''); setForgotSent(false) }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24, padding: 0 }}>
-                ← Back
-              </button>
+              <button onClick={() => { setStep(STEPS.EMAIL); setError(''); setForgotSent(false) }} style={backLink}>← Back</button>
               {forgotSent ? (
-                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ textAlign: 'center', padding: '16px 0' }}>
                   <div style={{ fontSize: 40, marginBottom: 16 }}>📬</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Reset link sent</div>
-                  <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>Check your email at <strong style={{ color: '#fff' }}>{email}</strong> for a password reset link.</div>
+                  <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Reset link sent</div>
+                  <div style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>Check your email at <strong style={{ color: '#fff' }}>{email}</strong> for a password reset link.</div>
                 </div>
               ) : (
                 <div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Reset password</div>
-                  <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginBottom: 24 }}>We'll send a reset link to {email}</div>
-                  {error && <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#FCA5A5', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
+                  <div style={{ fontSize: 24, fontWeight: 800, color: '#fff', marginBottom: 7, letterSpacing: -0.5 }}>Reset password</div>
+                  <div style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.5)', marginBottom: 22 }}>
+                    {email ? 'We\u2019ll send a reset link to ' + email : 'Enter the email you sign in with.'}
+                  </div>
+                  {errBox}
                   <form onSubmit={handleForgot}>
-                    <button type="submit" disabled={loading} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.7 : 1 }}>
-                      {loading ? 'Sending...' : 'Send Reset Link'}
+                    {!email && (
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={label}>Work email</label>
+                        <div style={{ position: 'relative' }}>
+                          <MailIcon />
+                          <input className="ls-in" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@organisation.com" style={inp} />
+                        </div>
+                      </div>
+                    )}
+                    <button type="submit" disabled={loading || !email.trim()} style={gradientBtn(loading || !email.trim())}>
+                      {loading ? 'Sending…' : 'Send reset link'}
                     </button>
                   </form>
                 </div>
@@ -201,13 +342,47 @@ export default function Login({ org }) {
           )}
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 24 }}>
-          <button onClick={() => window.location.href = 'https://www.launchsession.co.uk/landing.html'} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        {/* Wrong organisation? This is the escape hatch. It clears the sticky
+            "remembered org" too, otherwise the user lands right back here. */}
+        {hasOrg && (
+          <button onClick={() => leaveOrg('/org-search')} style={{
+            width: '100%', marginTop: 14, padding: '13px 16px', borderRadius: 14,
+            border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)',
+            cursor: 'pointer', fontFamily: font, display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', gap: 12, textAlign: 'left',
+          }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ width: 19, height: 19, flexShrink: 0 }}>
+                <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <polyline points="17 11 20 8 17 5" />
+                <line x1="20" y1="8" x2="14" y2="8" />
+              </svg>
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Not {orgName}?
+                </span>
+                <span style={{ display: 'block', fontSize: 12.5, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>
+                  Search for a different organisation
+                </span>
+              </span>
+            </span>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 18, flexShrink: 0 }}>›</span>
+          </button>
+        )}
+
+        {/* Security reassurance */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 22 }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" style={{ width: 15, height: 15, flexShrink: 0 }}>
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <span style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.42)' }}>Your data is secure with LaunchSession</span>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 14 }}>
+          <button onClick={() => leaveOrg('https://www.launchsession.co.uk/landing.html')} style={{ background: 'none', border: 'none', color: '#8B7BF7', fontSize: 14, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: font, padding: 8 }}>
             ← Back to launchsession.co.uk
           </button>
-        </div>
-        <div style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: 'rgba(255,255,255,0.15)' }}>
-          Powered by <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>LaunchSession</span>
         </div>
       </div>
     </div>
