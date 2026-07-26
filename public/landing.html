@@ -74,11 +74,16 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
 .btn-start:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,0.45)}
 .hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;gap:5px}
 .hamburger span{display:block;width:20px;height:2px;background:#fff;border-radius:2px;transition:all 0.25s}
-.mobile-nav{display:none;position:fixed;top:calc(var(--promo-h, 0px) + 88px);left:16px;right:16px;background:rgba(6,9,26,0.97);backdrop-filter:blur(20px);border:1px solid var(--border2);border-radius:16px;padding:12px;z-index:99;flex-direction:column;gap:4px}
+.mobile-nav{display:none;position:fixed;inset:0;background:rgba(6,9,26,0.99);backdrop-filter:blur(20px);z-index:999;flex-direction:column;padding:24px;overflow-y:auto}
 .mobile-nav.open{display:flex}
-.mobile-nav a{font-size:14px;font-weight:600;color:var(--text2);padding:10px 14px;border-radius:10px;display:block;transition:all 0.2s}
+.mobile-nav-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.mobile-nav-close{background:none;border:none;cursor:pointer;padding:8px;color:#fff;display:flex}
+.mobile-nav-close svg{width:22px;height:22px}
+.mobile-nav-links{display:flex;flex-direction:column;gap:4px;flex:1}
+.mobile-nav a{font-size:20px;font-weight:600;color:var(--text2);padding:16px 14px;border-radius:12px;display:block;transition:all 0.2s}
 .mobile-nav a:hover{color:#fff;background:var(--glass)}
-.mobile-nav-cta{display:flex;flex-direction:column;gap:8px;padding-top:12px;margin-top:4px;border-top:1px solid var(--border)}
+.mobile-nav-cta{display:flex;flex-direction:column;gap:10px;padding-top:20px;margin-top:12px;border-top:1px solid var(--border)}
+body.menu-open{overflow:hidden}
 
 /* ── HERO ─────────────────────────────────────────────────── */
 #hero{padding:calc(140px + var(--promo-h, 0px)) 5% 100px;position:relative;overflow:hidden;min-height:90vh;display:flex;align-items:center;transition:padding-top 0.2s}
@@ -360,10 +365,21 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   </nav>
 </div>
 <div class="mobile-nav" id="mobileNav">
-  <a href="#how" onclick="toggleMenu()">How it works</a>
-  <a href="#features" onclick="toggleMenu()">Features</a>
-  <a href="#community" onclick="toggleMenu()">Community</a>
-  <a href="#pricing" onclick="toggleMenu()">Pricing</a>
+  <div class="mobile-nav-header">
+    <a href="#" class="logo">
+      <img src="/logo.png" alt="LaunchSession" />
+      <div class="logo-name">Launch<span>Session</span></div>
+    </a>
+    <button class="mobile-nav-close" onclick="toggleMenu()" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  <div class="mobile-nav-links">
+    <a href="#how" onclick="toggleMenu()">How it works</a>
+    <a href="#features" onclick="toggleMenu()">Features</a>
+    <a href="#community" onclick="toggleMenu()">Community</a>
+    <a href="#pricing" onclick="toggleMenu()">Pricing</a>
+  </div>
   <div class="mobile-nav-cta">
     <button class="btn-hero-ghost" style="width:100%;justify-content:center;font-family:var(--font)" onclick="window.location.href='https://app.launchsession.co.uk'">Sign in</button>
     <button class="btn-hero-cta" style="width:100%;justify-content:center;font-family:var(--font)" onclick="window.location.href='/signup'">Start free trial →</button>
@@ -1217,7 +1233,9 @@ window.addEventListener('scroll', () => {
 
 // ── MOBILE MENU ────────────────────────────────────────────────
 function toggleMenu() {
-  document.getElementById('mobileNav').classList.toggle('open')
+  const nav = document.getElementById('mobileNav')
+  nav.classList.toggle('open')
+  document.body.classList.toggle('menu-open', nav.classList.contains('open'))
 }
 
 // ── BILLING TOGGLE ─────────────────────────────────────────────
