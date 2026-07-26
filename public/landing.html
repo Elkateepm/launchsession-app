@@ -377,10 +377,6 @@ section{padding:96px 5%}
 
 /* ── LOGOS / TRUST BAR ───────────────────────────────────── */
 #trust{padding:48px 5%;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:rgba(255,255,255,0.015)}
-.trust-bar{max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap}
-.trust-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
-.trust-orgs{display:flex;gap:32px;flex-wrap:wrap;align-items:center;justify-content:center}
-.trust-org{font-size:13px;font-weight:700;color:var(--text3);opacity:0.65}
 
 /* ── HOW IT WORKS ────────────────────────────────────────── */
 #how{background:var(--navy)}
@@ -541,7 +537,6 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   .why-grid{grid-template-columns:1fr}
   .testi-grid{grid-template-columns:1fr}
   .footer-inner{flex-direction:column;gap:32px}
-  .trust-bar{gap:20px}
   .section-heading{font-size:30px}
 }
 @media(max-width:480px){
@@ -577,7 +572,6 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   /* Hero CTA buttons */
   .btn-hero-cta,.btn-hero-ghost{padding:14px 20px;font-size:15px}
   /* Trust bar */
-  .trust-bar{flex-direction:column;gap:12px;align-items:flex-start;padding:0 5%}
   .trust-item{font-size:13px}
 }
 
@@ -624,12 +618,6 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
 }
 
 @media (max-width:600px) {
-  /* Trust strip reads better stacked and centred than left-ragged. */
-  .trust-bar { align-items: center; text-align: center; gap: 14px }
-  .trust-label { white-space: normal }
-  .trust-orgs { gap: 10px 18px; justify-content: center }
-  .trust-org { font-size: 12.5px }
-
   /* Card padding — desktop values waste horizontal space on a phone. */
   .feature-card { padding: 18px; min-height: 240px }
   .feat-title { font-size: 18px; max-width: 58% }
@@ -651,7 +639,6 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
   .hero-title { font-size: 31px !important; letter-spacing: -1.2px }
   .hero-sub { font-size: 14.5px }
   .section-heading { font-size: 23px }
-  .trust-orgs { gap: 8px 14px }
   .logo img { width: 30px; height: 30px }
   .btn-start { padding: 8px 10px; font-size: 11.5px }
 }
@@ -812,17 +799,67 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
 
 <!-- TRUST STRIP -->
 <div id="trust">
-  <div class="trust-bar">
-    <div class="trust-label">Built for organisations like yours</div>
-    <div class="trust-orgs">
-      <div class="trust-org">🏃 Youth clubs</div>
-      <div class="trust-org">❤️ Charities</div>
-      <div class="trust-org">🏫 Schools</div>
-      <div class="trust-org">⚽ Sports groups</div>
-      <div class="trust-org">🤝 Community projects</div>
+  <div class="container">
+    <div class="trust-divider"><span>Built for organisations like yours</span></div>
+    <div class="trust-chips">
+      <div class="trust-chip" style="--tc:#3B82F6">
+        <div class="trust-chip-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><path d="M9 22l1.5-6L8 13l1-5 3 1 2 3.5 3 1"/><path d="M6 9l3 1"/></svg></div>
+        Youth clubs
+      </div>
+      <div class="trust-chip" style="--tc:#F472B6">
+        <div class="trust-chip-ico"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+        Charities
+      </div>
+      <div class="trust-chip" style="--tc:#F59E0B">
+        <div class="trust-chip-ico"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1"/><path d="M9 13h1"/><path d="M14 9h1"/><path d="M14 13h1"/></svg></div>
+        Schools
+      </div>
+      <div class="trust-chip" style="--tc:#22C55E">
+        <div class="trust-chip-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 2.5v6l4.5 3-1.7 5.6-5.6-.1L6.4 12l3-4.3z"/></svg></div>
+        Sports groups
+      </div>
+      <div class="trust-chip" style="--tc:#8B5CF6">
+        <div class="trust-chip-ico"><svg viewBox="0 0 24 24"><path d="M2 12l4-2 2.5 2.5L12 9l3 3 2-2 5 2"/><path d="M7 10l2 2-2 2-3-2z"/><path d="M17 10l-2 2 2 2 3-2z"/></svg></div>
+        Community projects
+      </div>
     </div>
   </div>
 </div>
+<style>
+#trust{position:relative;padding:60px 5%;overflow:hidden;
+  background:radial-gradient(ellipse 700px 220px at 50% -10%,rgba(139,92,246,.08),transparent 70%),var(--navy2);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.trust-divider{display:flex;align-items:center;gap:18px;justify-content:center;margin-bottom:30px}
+.trust-divider::before,.trust-divider::after{content:'';flex:1;max-width:130px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.16))}
+.trust-divider::after{background:linear-gradient(90deg,rgba(255,255,255,.16),transparent)}
+.trust-divider span{font-size:11.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;
+  color:rgba(255,255,255,.42);white-space:nowrap}
+.trust-chips{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;max-width:920px;margin:0 auto}
+.trust-chip{display:flex;align-items:center;gap:11px;padding:10px 20px 10px 12px;border-radius:99px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);
+  font-size:13.5px;font-weight:700;color:rgba(255,255,255,.68);transition:all .25s;cursor:default}
+.trust-chip-ico{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;background:color-mix(in srgb,var(--tc) 16%,transparent);
+  border:1px solid color-mix(in srgb,var(--tc) 30%,transparent)}
+.trust-chip-ico svg{width:14px;height:14px;stroke:var(--tc);fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+
+@media (hover:hover) and (pointer:fine){
+  .trust-chip:hover{border-color:color-mix(in srgb,var(--tc) 45%,transparent);
+    background:rgba(255,255,255,.05);transform:translateY(-2px);
+    box-shadow:0 10px 24px -10px var(--tc);color:#fff}
+}
+@media (max-width:600px){
+  #trust{padding:44px 5%}
+  .trust-divider{gap:12px;margin-bottom:22px}
+  .trust-divider::before,.trust-divider::after{max-width:44px}
+  .trust-chips{gap:10px}
+  .trust-chip{padding:8px 15px 8px 9px;font-size:12.5px;gap:8px}
+  .trust-chip-ico{width:24px;height:24px}
+  .trust-chip-ico svg{width:12px;height:12px}
+}
+</style>
 
 <!-- FOUNDING MEMBER OFFER -->
 <section id="founding-offer">
