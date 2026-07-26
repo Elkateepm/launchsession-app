@@ -772,7 +772,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
       <p class="hero-sub">Registers, sessions, volunteers, safeguarding and parent comms — all connected, all in real time. Choose the plan that fits your organisation.</p>
       <div class="hero-ctas">
         <button class="btn-hero-cta" onclick="window.location.href='/signup'">Start your free 14-day trial →</button>
-        <button class="btn-hero-ghost" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">See packages</button>
+        <button class="btn-hero-ghost" onclick="window.location.href='/packages.html'">See packages</button>
       </div>
       <div class="hero-trust">
         <div class="trust-item"><div class="trust-dot"></div>Free 14-day trial</div>
@@ -1131,7 +1131,8 @@ async function submitFoundingOffer(e) {
         <div class="feat-icon-wrap"><img src="/icons/feat-parent_portal.png" alt="Parent Portal" loading="lazy" width="260" height="260" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#1B9AAA;--feat-bg:rgba(27,154,170,0.1)" data-feat="impact_outcomes" role="button" tabindex="0" onclick="openFeature('impact_outcomes')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('impact_outcomes')}">
-        <div class="feat-tag">Pro+</div>
+        <div class="feat-tag">All plans</div>
+        <div class="feat-title">Impact & Outcomes</div>
         <div class="feat-desc">AI-refined insights, outcome tracking and visual reporting — generate funder-ready evidence of your programme's impact in one click.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-impact_outcomes.png" alt="Impact & Outcomes" loading="lazy" width="260" height="260" /></div>
@@ -1664,9 +1665,10 @@ function toggleBilling() {
 document.querySelectorAll('.btn-signin').forEach(btn => {
   btn.onclick = () => { window.location.href = 'https://app.launchsession.co.uk' }
 })
-document.querySelectorAll('.btn-hero-ghost').forEach(btn => {
-  btn.onclick = () => { window.location.href = 'https://app.launchsession.co.uk' }
-})
+// NOTE: .btn-hero-ghost is a shared *style* class used by unrelated buttons
+// ("See packages", "Talk to us first") that each already carry their own
+// inline onclick. A blanket handler here used to overwrite both of them to
+// redirect to the app sign-in page — removed; each button keeps its own action.
 
 // Legacy ?signin=true links also just go to the app now
 if (new URLSearchParams(window.location.search).get('signin') === 'true') {
@@ -1773,7 +1775,7 @@ const FEATURES = {
       "<b>Filter by programme, cohort, date range or demographic</b> to answer a specific funder's specific question.",
       "<b>Export in one click</b> when a deadline is tomorrow."
     ],
-    note: "<b>Included on Pro+.</b> Comes bundled with fundraising and the rest of the reporting suite for organisations ready to prove impact at scale."
+    note: "<b>Available on every plan.</b> Proving your impact shouldn't be a premium feature."
   },
   risk_assessments: {
     lead: "Assess every activity properly, keep the paperwork current, and put it in front of staff at the moment they actually need it.",
