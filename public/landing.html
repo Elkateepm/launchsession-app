@@ -1583,30 +1583,17 @@ async function submitFoundingOffer(e) {
     <h2 class="section-heading">More than software.<br>A platform built around impact.</h2>
     <p class="section-sub">Youth and community teams lose hours every week to paper registers, spreadsheets and disconnected tools. LaunchSession exists so that time goes back into the young people you support — not the admin around them.</p>
     <div class="mission-values">
-      <div class="mission-value">
-        <div class="mission-value-icon">🌱</div>
-        <div class="mission-value-title">Empower young people</div>
-      </div>
-      <div class="mission-value">
-        <div class="mission-value-icon">🏢</div>
-        <div class="mission-value-title">Support organisations</div>
-      </div>
-      <div class="mission-value">
-        <div class="mission-value-icon">🤝</div>
-        <div class="mission-value-title">Strengthen communities</div>
-      </div>
-      <div class="mission-value">
-        <div class="mission-value-icon">✨</div>
-        <div class="mission-value-title">Shape brighter futures</div>
-      </div>
+      <div class="mission-value"><img src="/icons/empower-young-people.png" alt="Empower young people" loading="lazy" /></div>
+      <div class="mission-value"><img src="/icons/support-organisations.png" alt="Support organisations" loading="lazy" /></div>
+      <div class="mission-value"><img src="/icons/strengthen-communities.png" alt="Strengthen communities" loading="lazy" /></div>
+      <div class="mission-value"><img src="/icons/shape-brighter-futures.png" alt="Shape brighter futures" loading="lazy" /></div>
     </div>
   </div>
 </section>
 <style>
 .mission-values{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:48px}
-.mission-value{background:var(--glass);border:1px solid var(--border);border-radius:18px;padding:28px 20px;text-align:center}
-.mission-value-icon{font-size:28px;margin-bottom:12px}
-.mission-value-title{font-size:14px;font-weight:800;color:#fff}
+.mission-value{border-radius:18px;overflow:hidden;line-height:0}
+.mission-value img{width:100%;height:auto;display:block}
 @media (max-width:720px){.mission-values{grid-template-columns:repeat(2,1fr)}}
 </style>
 
