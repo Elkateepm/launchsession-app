@@ -925,7 +925,7 @@ function EncouragementPanel({ org, primary }) {
 }
 
 // ─── MAIN REGISTER ────────────────────────────────────────────
-export default function Registers({ org, onNavigate }) {
+export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const orgId  = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const isMobile = useIsMobile()
@@ -950,6 +950,10 @@ export default function Registers({ org, onNavigate }) {
   const [toast, setToast] = useState('')
   const [note, setNote] = useState('')
   const [showMobileTools, setShowMobileTools] = useState(false)
+
+  // Triggered by the mobile Launch menu's "Add Child" quick action — opens the same
+  // Add Child modal a person would reach via the header button, just pre-opened.
+  useEffect(() => { if (autoOpenAdd) setShowAdd(true) }, [autoOpenAdd])
 
   const getAttRec = (id) => attendance.find(a => a.child_id === id)
   const getStatus = (id) => getAttRec(id)?.status || 'unmarked'
