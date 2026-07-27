@@ -471,7 +471,7 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
 function AbsentSheet({ child, onClose, onMark }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 340 }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 340, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 14 }}>Mark {child.first_name} as...</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {ABSENCE_REASONS.map(r => (
@@ -511,7 +511,7 @@ function WalkInModal({ org, session, allChildren, onClose, onDone, onSignIn }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 400, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Add Walk-in</div>
         <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 14 }}>Search existing young people first — don't create a duplicate record.</div>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..." style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, marginBottom: 10 }} />
@@ -606,7 +606,7 @@ function ClosureFlow({ session, grouped, onClose, org, authUserId, onClosed, onM
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 420, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 14 }}>Close Register</div>
 
         {stillSignedIn > 0 && (
@@ -639,7 +639,7 @@ function ClosureFlow({ session, grouped, onClose, org, authUserId, onClosed, onM
 function ChildQuickInfo({ child, att, onClose, groupLabel }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 340 }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 340, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>{child.first_name} {child.last_name}</div>
         <div style={{ fontSize: 12.5, color: '#6B7280', marginBottom: 12 }}>{groupLabel(child.group_name)}{child.date_of_birth ? ` · ${new Date().getFullYear() - new Date(child.date_of_birth).getFullYear()} yrs` : ''}</div>
         {child.allergies && <InfoLine label="Allergies" value={child.allergies} />}
