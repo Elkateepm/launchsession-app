@@ -1358,7 +1358,7 @@ async function submitFoundingOffer(e) {
 
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:48px">
       <span id="monthlyLabel" class="active" style="font-size:14px;font-weight:700;color:var(--text2)">Monthly</span>
-      <div class="toggle-pill" id="toggleInner" onclick="toggleBilling()" role="switch" aria-checked="false" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){toggleBilling()}">
+      <div class="toggle-pill" id="togglePill" onclick="toggleBilling()" role="switch" aria-checked="false" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){toggleBilling()}">
         <div class="toggle-pill-inner" id="toggleInner"></div>
       </div>
       <span id="yearlyLabel" style="font-size:14px;font-weight:700;color:var(--text2)">Annual</span>
@@ -1882,6 +1882,7 @@ function toggleBilling() {
   annual = !annual
   const inner = document.getElementById('toggleInner')
   inner.style.transform = annual ? 'translateX(20px)' : 'translateX(0)'
+  document.getElementById('togglePill').setAttribute('aria-checked', annual)
   document.getElementById('monthlyLabel').classList.toggle('active', !annual)
   document.getElementById('yearlyLabel').classList.toggle('active', annual)
   const p = annual ? prices.annual : prices.monthly
