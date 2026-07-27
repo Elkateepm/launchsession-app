@@ -78,7 +78,7 @@ export function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) 
   }
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 10800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(160deg, #0B1023 0%, #131B33 100%)', borderRadius: 22, width: '100%', maxWidth: 480, maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', padding: '26px 28px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
           <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>🏷️ Set up your groups</div>
@@ -404,8 +404,8 @@ function MarkModal({ child, status, bColor, onClose, onMark }) {
   const name = `${child.first_name} ${child.last_name}`
   return (
     <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 700, backdropFilter: 'blur(3px)' }} />
-      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 'min(420px,100vw)', background: '#fff', borderRadius: '20px 20px 0 0', padding: '20px 20px 32px', zIndex: 701, boxShadow: '0 -8px 40px rgba(0,0,0,0.2)' }}>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 10700, backdropFilter: 'blur(3px)' }} />
+      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 'min(420px,100vw)', background: '#fff', borderRadius: '20px 20px 0 0', padding: '20px 20px 32px', zIndex: 10701, boxShadow: '0 -8px 40px rgba(0,0,0,0.2)' }}>
         <div style={{ width: 36, height: 4, borderRadius: 99, background: '#E5E7EB', margin: '0 auto 16px' }} />
         <div style={{ fontSize: 16, fontWeight: 900, color: '#111', marginBottom: 4 }}>{name}</div>
         <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 18 }}>Mark attendance for this session</div>
@@ -556,7 +556,7 @@ function PhotosTab({ child, org }) {
       )}
 
       {viewing && (
-        <div onClick={() => setViewing(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+        <div onClick={() => setViewing(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 10700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 18, maxWidth: 420, width: '100%', overflow: 'hidden' }}>
             <img src={viewing.url} alt="" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }} />
             <div style={{ padding: 16 }}>
@@ -621,7 +621,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 600, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 20 }} onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 10600, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 20 }} onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: isMobile ? '24px 24px 0 0' : 24, width: '100%', maxWidth: isMobile ? '100%' : 440, maxHeight: isMobile ? '94vh' : '92vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column' }}>
 
         {/* Mobile drag handle */}
@@ -1069,7 +1069,7 @@ export default function Registers({ org, onNavigate }) {
 
       {/* TOAST */}
       {toast && (
-        <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', borderRadius: 12, padding: '11px 20px', fontSize: 13, fontWeight: 700, zIndex: 900, boxShadow: '0 8px 24px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
+        <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', borderRadius: 12, padding: '11px 20px', fontSize: 13, fontWeight: 700, zIndex: 10900, boxShadow: '0 8px 24px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
           <span style={{ color: '#4ADE80' }}>✓</span> {toast}
         </div>
       )}
@@ -1322,7 +1322,7 @@ export default function Registers({ org, onNavigate }) {
 
       {/* MOBILE TOOLS SHEET — same actions as the desktop sidebar, surfaced as a bottom sheet */}
       {isMobile && showMobileTools && (
-        <div onClick={() => setShowMobileTools(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+        <div onClick={() => setShowMobileTools(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80vh', overflowY: 'auto', padding: '8px 16px 24px', boxShadow: '0 -20px 50px rgba(0,0,0,0.25)' }}>
             <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 10 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.12)' }} /></div>
             <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Tools</div>
@@ -1353,7 +1353,7 @@ export default function Registers({ org, onNavigate }) {
       {/* MOBILE IMPORT MODAL — the desktop sidebar renders InlineChildImport inline, but the sidebar
           is hidden on mobile, so this presents the same import flow as a bottom sheet on phones */}
       {isMobile && showImport && (
-        <div onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+        <div onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Import Children</div>
@@ -1376,7 +1376,7 @@ export default function Registers({ org, onNavigate }) {
 
       {/* MOBILE TEMPLATES MODAL — mirrors the desktop sidebar's inline TemplatePicker panel */}
       {isMobile && showTemplates && (
-        <div onClick={() => setShowTemplates(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+        <div onClick={() => setShowTemplates(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Import Templates</div>
@@ -1393,7 +1393,7 @@ export default function Registers({ org, onNavigate }) {
 
       {/* BULK ASSIGN ACTION BAR */}
       {selectedIds.size > 0 && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: '#111827', borderRadius: 16, padding: '12px 16px', boxShadow: '0 20px 50px rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 10600, background: '#111827', borderRadius: 16, padding: '12px 16px', boxShadow: '0 20px 50px rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap' }}>
             {selectedIds.size} selected
           </div>
@@ -1507,7 +1507,7 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
   }
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 440, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
         <div style={{ padding: '20px 22px 0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
