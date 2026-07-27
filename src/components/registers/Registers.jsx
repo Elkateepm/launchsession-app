@@ -949,6 +949,7 @@ export default function Registers({ org, onNavigate }) {
   const [activeImportTemplate, setActiveImportTemplate] = useState(null)
   const [toast, setToast] = useState('')
   const [note, setNote] = useState('')
+  const [showMobileTools, setShowMobileTools] = useState(false)
 
   const getAttRec = (id) => attendance.find(a => a.child_id === id)
   const getStatus = (id) => getAttRec(id)?.status || 'unmarked'
@@ -1107,6 +1108,11 @@ export default function Registers({ org, onNavigate }) {
               <button onClick={() => setShowAdd(true)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                 + Add Child
               </button>
+              {isMobile && (
+                <button onClick={() => setShowMobileTools(true)} aria-label="More register tools" style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  ⋯
+                </button>
+              )}
             </div>
           </div>
 
@@ -1311,6 +1317,77 @@ export default function Registers({ org, onNavigate }) {
 
           {/* Encouragement */}
           <EncouragementPanel org={org} primary={primary} />
+        </div>
+      )}
+
+      {/* MOBILE TOOLS SHEET — same actions as the desktop sidebar, surfaced as a bottom sheet */}
+      {isMobile && showMobileTools && (
+        <div onClick={() => setShowMobileTools(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80vh', overflowY: 'auto', padding: '8px 16px 24px', boxShadow: '0 -20px 50px rgba(0,0,0,0.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 10 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.12)' }} /></div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Tools</div>
+            {[
+              { icon: '🏷️', label: 'Manage Groups', sub: 'Quick add & colours', action: () => { setShowGroupsSetup(true); setShowMobileTools(false) } },
+              { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => { setShowImport(true); setShowMobileTools(false) } },
+              { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => { setShowTemplates(true); setShowMobileTools(false) } },
+              { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => { handlePrint(); setShowMobileTools(false) } },
+            ].map(t => (
+              <button key={t.label} onClick={t.action}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{t.icon}</div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{t.label}</div>
+                  <div style={{ fontSize: 11, color: '#9CA3AF' }}>{t.sub}</div>
+                </div>
+              </button>
+            ))}
+            {onNavigate && (
+              <button onClick={() => { setShowMobileTools(false); onNavigate('settings') }} style={{ width: '100%', textAlign: 'center', border: '1px solid #F3F4F6', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: primary, padding: '10px 8px', borderRadius: 12, marginTop: 2 }}>
+                Full Groups Settings →
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MOBILE IMPORT MODAL — the desktop sidebar renders InlineChildImport inline, but the sidebar
+          is hidden on mobile, so this presents the same import flow as a bottom sheet on phones */}
+      {isMobile && showImport && (
+        <div onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Import Children</div>
+              <button onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ width: 28, height: 28, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16 }}>×</button>
+            </div>
+            {activeImportTemplate && (
+              <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid ${primary}25`, borderRadius: 8, padding: '6px 10px' }}>
+                🧩 Using "{activeImportTemplate.name}" template
+              </div>
+            )}
+            <InlineChildImport org={org} template={activeImportTemplate} onImported={newChildren => {
+              setChildren(newChildren)
+              setShowImport(false)
+              setActiveImportTemplate(null)
+              showToast(`✅ Register updated — ${newChildren.length} children total`)
+            }} />
+          </div>
+        </div>
+      )}
+
+      {/* MOBILE TEMPLATES MODAL — mirrors the desktop sidebar's inline TemplatePicker panel */}
+      {isMobile && showTemplates && (
+        <div onClick={() => setShowTemplates(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Import Templates</div>
+              <button onClick={() => setShowTemplates(false)} style={{ width: 28, height: 28, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16 }}>×</button>
+            </div>
+            <TemplatePicker org={org} onUseTemplate={(template) => {
+              setActiveImportTemplate(template)
+              setShowTemplates(false)
+              setShowImport(true)
+            }} />
+          </div>
         </div>
       )}
 
