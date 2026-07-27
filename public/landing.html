@@ -129,8 +129,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
 .jn-card:focus-visible{outline:2px solid var(--jn-c);outline-offset:3px}
 .jn-tile{grid-area:tile;width:104px;height:104px;border-radius:20px;
   background:linear-gradient(150deg,var(--jn-bg),rgba(255,255,255,.02));
-  border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center}
-.jn-tile img{width:60px;height:60px}
+  border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.jn-tile img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
 .jn-t{grid-area:title;align-self:end;font-size:20px;font-weight:800;color:#fff;letter-spacing:-.4px}
 .jn-d{grid-area:desc;align-self:start;font-size:14px;color:rgba(255,255,255,.55);line-height:1.6}
 .jn-go{grid-area:go;width:42px;height:42px;border-radius:50%;background:var(--jn-bg);
@@ -176,7 +176,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
   .jn-card{grid-template-areas:"tile title go" "desc desc desc";
     column-gap:13px;row-gap:12px;padding:16px;border-radius:18px}
   .jn-tile{width:62px;height:62px;border-radius:15px;align-self:center}
-  .jn-tile img{width:38px;height:38px}
+  .jn-tile img{width:100%;height:100%}
   .jn-t{align-self:center;font-size:17.5px;line-height:1.25}
   .jn-d{font-size:13.5px;line-height:1.55}
   .jn-go{width:32px;height:32px;font-size:17px;align-self:center}
@@ -188,7 +188,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px
 }
 @media (max-width:380px){
   .jn-tile{width:54px;height:54px;border-radius:13px}
-  .jn-tile img{width:33px;height:33px}
+  .jn-tile img{width:100%;height:100%}
   .jn-card{padding:14px;column-gap:11px}
   .jn-t{font-size:16px}
   .jn-d{font-size:12.5px}
