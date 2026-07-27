@@ -97,7 +97,7 @@ export default function PastSessionRegister({
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 200, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 10200, display: 'flex', flexDirection: 'column' }}>
       <style>{`@media print { .no-print { display: none !important; } }`}</style>
 
       {/* HEADER */}
@@ -366,7 +366,7 @@ function AttendanceCorrectionModal({ session, org, rows, authUserId, groupLabel,
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 14 }}>Correct attendance</div>
 
@@ -433,7 +433,7 @@ function ReopenRegisterModal({ session, authUserId, onClose, onDone }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 10 }}>Reopen register</div>
         <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 14, fontSize: 12.5, color: '#B91C1C', fontWeight: 600 }}>
@@ -474,7 +474,7 @@ function SessionSummaryDrawer({ session, org, grouped, rows, staffRows, peoplePr
   const staffAttended = staffRows.filter(s => s.signed_in_at).length
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', justifyContent: 'flex-end' }} onClick={onClose}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', justifyContent: 'flex-end' }} onClick={onClose}>
       <div style={{ width: 420, maxWidth: '100%', height: '100%', background: '#fff', overflowY: 'auto', padding: 20 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ fontSize: 16, fontWeight: 800 }}>Session summary</div>
@@ -521,7 +521,7 @@ function RegisterAuditHistory({ childId, auditLog, peopleProfiles, rows, onClose
   const entries = (auditLog || []).filter(a => a.child_id === childId).sort((a, b) => new Date(b.changed_at) - new Date(a.changed_at))
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Audit history</div>
         <div style={{ fontSize: 12.5, color: '#6B7280', marginBottom: 14 }}>{child ? `${child.first_name} ${child.last_name}` : ''}</div>
