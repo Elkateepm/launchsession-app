@@ -367,7 +367,7 @@ function AttendanceCorrectionModal({ session, org, rows, authUserId, groupLabel,
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 420, maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 14 }}>Correct attendance</div>
 
         <div style={{ fontSize: 11.5, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 6 }}>1. Select child</div>
@@ -434,7 +434,7 @@ function ReopenRegisterModal({ session, authUserId, onClose, onDone }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 400 }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 10 }}>Reopen register</div>
         <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 14, fontSize: 12.5, color: '#B91C1C', fontWeight: 600 }}>
           Reopening this register will allow attendance records to be changed. All changes will be audited.
@@ -522,7 +522,7 @@ function RegisterAuditHistory({ childId, auditLog, peopleProfiles, rows, onClose
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 420, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Audit history</div>
         <div style={{ fontSize: 12.5, color: '#6B7280', marginBottom: 14 }}>{child ? `${child.first_name} ${child.last_name}` : ''}</div>
         {entries.length === 0 ? (
