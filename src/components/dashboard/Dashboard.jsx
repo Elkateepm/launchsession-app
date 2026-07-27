@@ -346,7 +346,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
             <AnimatePresence>
               {showNotifs && (
                 <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                  style={{ position: 'absolute', top: 52, right: 0, width: 280, background: '#fff', borderRadius: 16, boxShadow: '0 20px 50px rgba(15,23,42,0.18)', border: '1px solid rgba(0,0,0,0.06)', padding: 16, zIndex: 60, maxHeight: 360, overflowY: 'auto' }}>
+                  style={{ position: 'absolute', top: 52, right: 0, width: 280, maxWidth: 'calc(100vw - 24px)', boxSizing: 'border-box', background: '#fff', borderRadius: 16, boxShadow: '0 20px 50px rgba(15,23,42,0.18)', border: '1px solid rgba(0,0,0,0.06)', padding: 16, zIndex: 60, maxHeight: 360, overflowY: 'auto' }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: unreadSubs.length ? 10 : 4 }}>Notifications</div>
                   {unreadSubs.length === 0 ? (
                     <div style={{ fontSize: 12, color: '#94A3B8' }}>You're all caught up 🎉</div>
