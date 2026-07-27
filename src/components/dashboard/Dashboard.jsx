@@ -28,12 +28,7 @@ import Fundraising from '../fundraising/Fundraising'
 import FundraisingGate from '../fundraising/FundraisingGate'
 import HR from '../hr/HR'
 import ResourceCentre from '../resources/ResourceCentre'
-import iconLiveSessions from '../../assets/icons/fab/live-sessions.png'
-import iconVolunteers from '../../assets/icons/fab/volunteers.png'
-import iconCaseManagement from '../../assets/icons/fab/case-management.png'
-import iconTodaysRegister from '../../assets/icons/fab/todays-register.png'
-import iconFormsDocuments from '../../assets/icons/fab/forms-documents.png'
-import iconSessionReflection from '../../assets/icons/fab/session-reflection.png'
+import MobileBottomNav from './mobilenav/MobileBottomNav'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -434,13 +429,8 @@ export default function Dashboard({ session, org }) {
   const [openConcernId, setOpenConcernId] = useState(null)
   const [initialThreadId, setInitialThreadId] = useState(null)
   const [autoOpenWizard, setAutoOpenWizard] = useState(false)
+  const [autoOpenAddChild, setAutoOpenAddChild] = useState(false)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
-  const [showLaunchMenu, setShowLaunchMenu] = React.useState(false);
-  const [dialDragging, setDialDragging] = React.useState(false);
-  const [dialHoveredKey, setDialHoveredKey] = React.useState(null);
-  const dialCenterRef = React.useRef({ x: 0, y: 0 });
-  const dialItemsRef = React.useRef([]); // current slot list, kept in sync so the pointermove handler always has fresh angles
-  const [navContext, setNavContext] = React.useState({ mode: 'rocket', liveCount: 0 })
   const [navBadges, setNavBadges] = React.useState({ registers: 0, mentoring: 0 })
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
   const { isTablet } = useBreakpoint()
@@ -471,6 +461,7 @@ export default function Dashboard({ session, org }) {
     setOpenConcernId(t === 'safeguarding' && payload?.openConcernId ? payload.openConcernId : null)
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
+    setAutoOpenAddChild(t === 'registers' && !!payload?.autoOpenAdd)
     setTab(t)
     persistTab(t)
     if (isTablet) setTabletNavOpen(false)
@@ -484,88 +475,6 @@ export default function Dashboard({ session, org }) {
 
   // Radial dial: press-and-slide-to-select gesture. Started from the FAB's onPointerDown;
   // tracked here via window listeners so the finger can move anywhere on screen while held.
-  React.useEffect(() => {
-    if (!dialDragging) return
-    const DEADZONE = 34 // px from centre before an item counts as "hovered"
-    let hoveredNow = null // written synchronously in handleMove — no React render-cycle lag,
-                           // unlike a ref synced via useEffect, which can go stale on a fast
-                           // real-device slide-and-release (pointerup firing before the effect runs)
-
-    const handleMove = (e) => {
-      const dx = e.clientX - dialCenterRef.current.x
-      const dy = dialCenterRef.current.y - e.clientY // inverted: up = positive, matches slot convention
-      const dist = Math.hypot(dx, dy)
-      if (dist < DEADZONE) { hoveredNow = null; setDialHoveredKey(null); return }
-      const angle = Math.atan2(dx, dy) * (180 / Math.PI)
-      let closest = null, closestDiff = Infinity
-      dialItemsRef.current.forEach(item => {
-        const itemAngle = Math.atan2(item.dx, item.dy) * (180 / Math.PI)
-        const diff = Math.abs(angle - itemAngle)
-        if (diff < closestDiff) { closestDiff = diff; closest = item }
-      })
-      hoveredNow = closest ? closest.uid : null
-      setDialHoveredKey(hoveredNow)
-    }
-
-    const handleUp = () => {
-      setDialDragging(false)
-      const chosen = dialItemsRef.current.find(i => i.uid === hoveredNow)
-      setShowLaunchMenu(false)
-      setDialHoveredKey(null)
-      if (chosen) {
-        if (navigator.vibrate) navigator.vibrate(12)
-        handleSetTab(chosen.key, chosen.key === 'planner' ? { autoOpenWizard: false } : undefined)
-      }
-      // If nothing was hovered (a plain tap-and-release with no slide), leave the menu open
-      // so the person can pick an item with a normal tap instead.
-      if (!chosen) setShowLaunchMenu(true)
-    }
-
-    window.addEventListener('pointermove', handleMove)
-    window.addEventListener('pointerup', handleUp)
-    return () => {
-      window.removeEventListener('pointermove', handleMove)
-      window.removeEventListener('pointerup', handleUp)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dialDragging])
-
-  // Drives the Launch button's context-aware state: rocket (nothing today) / calendar
-  // (sessions coming up later today) / live (something running right now) / ended (today's
-  // sessions have all finished). This also drives which action set the Launch dial shows.
-  React.useEffect(() => {
-    if (!org?.id) return
-    const load = async () => {
-      const today = new Date()
-      const todayStr = today.toISOString().slice(0, 10)
-      const { data: sessions } = await supabase
-        .from('sessions').select('id, session_date, end_date, start_time, end_time, status')
-        .eq('org_id', org.id)
-        .lte('session_date', todayStr)
-        .gte('end_date', todayStr)
-        .neq('status', 'cancelled')
-      const list = sessions || []
-      const now = new Date()
-      const live = list.filter(s => {
-        if (s.session_date !== todayStr && s.end_date !== todayStr) return false
-        const startDT = s.start_time ? new Date(`${todayStr}T${s.start_time}`) : null
-        const endDT = s.end_time ? new Date(`${todayStr}T${s.end_time}`) : null
-        return (!startDT || startDT <= now) && (!endDT || endDT > now)
-      })
-      const allEnded = list.length > 0 && list.every(s => {
-        const endDT = s.end_time ? new Date(`${todayStr}T${s.end_time}`) : null
-        return endDT ? endDT <= now : false
-      })
-      if (live.length > 0) setNavContext({ mode: 'live', liveCount: live.length })
-      else if (allEnded) setNavContext({ mode: 'ended', liveCount: 0 })
-      else if (list.length > 0) setNavContext({ mode: 'calendar', liveCount: 0 })
-      else setNavContext({ mode: 'rocket', liveCount: 0 })
-    }
-    load()
-    const interval = setInterval(load, 20000)
-    return () => clearInterval(interval)
-  }, [org?.id])
-
   React.useEffect(() => {
     if (!org?.id) return
     const load = async () => {
@@ -836,7 +745,7 @@ export default function Dashboard({ session, org }) {
       )}
 
       {/* MAIN CONTENT */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingTop: isMobileBottomNav ? 'env(safe-area-inset-top, 0px)' : 0, paddingBottom: isMobileBottomNav ? 'calc(84px + env(safe-area-inset-bottom, 0px))' : 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingTop: isMobileBottomNav ? 'env(safe-area-inset-top, 0px)' : 0, paddingBottom: isMobileBottomNav ? 'calc(76px + env(safe-area-inset-bottom, 0px))' : 0 }}>
         {tab !== 'registers' && tab !== 'home' && (
           <FloatingHeader
             org={org} orgName={orgName} primary={primary} tab={tab} ALL_MODULES={ALL_MODULES}
@@ -879,7 +788,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} />)}
 
           {/* ── DELIVERY PACK ── */}
-          {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
+          {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
           {tab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} />)}
           {tab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} />)}
           {tab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} />)}
@@ -978,304 +887,19 @@ export default function Dashboard({ session, org }) {
         )}
 
         {isMobileBottomNav && (
-          <>
-            {/* Full-width nav bar, docked to the bottom edge */}
-            <div style={{
-              position: 'fixed',
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(10,15,30,0.92)',
-              backdropFilter: 'blur(18px)',
-              WebkitBackdropFilter: 'blur(18px)',
-              borderTop: '1px solid rgba(255,255,255,0.08)',
-              boxShadow: '0 -8px 24px rgba(0,0,0,0.25)',
-              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-              zIndex: 9999,
-            }}>
-            <div style={{
-              height: 64,
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) 74px minmax(0,1fr) minmax(0,1fr)',
-              alignItems: 'center',
-              padding: '0 6px',
-            }}>
-              {[
-                { key: 'home', label: 'Home', icon: '🏠', badge: 0 },
-                { key: 'registers', label: 'Register', icon: '📋', badge: navBadges.registers },
-              ].map(item => (
-                <button key={item.key} onClick={() => handleSetTab(item.key)} style={{ position: 'relative', border: 'none', background: 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 2px', cursor: 'pointer' }}>
-                  {tab === item.key && (
-                    <motion.div layoutId="navCapsule" transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                      style={{ position: 'absolute', inset: '2px 6px', borderRadius: 18, background: `linear-gradient(135deg, ${primary}33, #6366F133)` }} />
-                  )}
-                  <span style={{ fontSize: 19, position: 'relative', zIndex: 1 }}>{item.icon}</span>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: tab === item.key ? '#fff' : 'rgba(255,255,255,0.5)', position: 'relative', zIndex: 1 }}>{item.label}</span>
-                  {item.badge > 0 && (
-                    <span style={{ position: 'absolute', top: 4, right: '28%', background: '#EF4444', color: '#fff', fontSize: 9, fontWeight: 900, borderRadius: 99, minWidth: 15, height: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', zIndex: 2 }}>
-                      {item.badge > 9 ? '9+' : item.badge}
-                    </span>
-                  )}
-                </button>
-              ))}
-
-              {/* Spacer for the floating FAB */}
-              <div />
-
-              {[
-                { key: 'newsession', label: 'New Session', icon: '➕', badge: 0 },
-                { key: 'more', label: 'More', icon: '☰', badge: 0 },
-              ].map(item => (
-                <button key={item.key} onClick={() => item.key === 'more' ? setShowMobileMore(true) : handleSetTab('planner', { autoOpenWizard: true })} style={{ position: 'relative', border: 'none', background: 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 2px', cursor: 'pointer' }}>
-                  {tab === 'planner' && item.key === 'newsession' && (
-                    <motion.div layoutId="navCapsule" transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                      style={{ position: 'absolute', inset: '2px 6px', borderRadius: 18, background: `linear-gradient(135deg, ${primary}33, #6366F133)` }} />
-                  )}
-                  <span style={{ fontSize: 19, position: 'relative', zIndex: 1 }}>{item.icon}</span>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: tab === 'planner' && item.key === 'newsession' ? '#fff' : 'rgba(255,255,255,0.5)', position: 'relative', zIndex: 1 }}>{item.label}</span>
-                </button>
-              ))}
-            </div>
-            </div>
-
-            {/* Floating Launch button — context-aware: rocket / calendar / live / ended.
-                onPointerDown starts the press-slide-release gesture (see effects above); a
-                plain tap (press+release with no slide) leaves the dial open for normal taps. */}
-            <div style={{
-              position: 'fixed',
-              left: 'calc(50% - 33px)', // half of the button's own 66px width — avoids transform, which framer-motion's animate would otherwise override
-              bottom: 'calc(18px + env(safe-area-inset-bottom, 0px))', // pokes ~20px above the new 64px docked bar
-              width: 66, height: 66,
-              zIndex: 10000,
-            }}>
-              {(() => {
-                const fabGlow = navContext.mode === 'live' ? 'rgba(34,197,94,0.55)' : 'rgba(124,58,237,0.55)'
-                const fabCore = navContext.mode === 'live'
-                  ? 'radial-gradient(circle at 34% 28%, #6EE7A0, #22C55E 55%, #16803B 100%)'
-                  : navContext.mode === 'ended'
-                    ? 'radial-gradient(circle at 34% 28%, #A5B4FC, #6366F1 55%, #3730A3 100%)'
-                    : navContext.mode === 'calendar'
-                      ? 'radial-gradient(circle at 34% 28%, #C4B5FD, #7C3AED 55%, #4C1D95 100%)'
-                      : 'radial-gradient(circle at 34% 28%, #C4B5FD, #8B5CF6 55%, #5B21B6 100%)'
-                return (
-                  <>
-                    {/* Soft outer glow halo, sitting behind the ring */}
-                    <div style={{
-                      position: 'absolute', inset: -14, borderRadius: '50%',
-                      background: `radial-gradient(circle, ${fabGlow} 0%, transparent 68%)`,
-                      filter: 'blur(2px)', pointerEvents: 'none',
-                    }} />
-                    {/* Thin outer ring, offset from the sphere — echoes the "Orbit" style */}
-                    <div style={{
-                      position: 'absolute', inset: -8, borderRadius: '50%',
-                      border: `1.5px solid ${navContext.mode === 'live' ? 'rgba(34,197,94,0.45)' : 'rgba(139,92,246,0.45)'}`,
-                      pointerEvents: 'none',
-                    }} />
-                    <motion.button
-                      onPointerDown={(e) => {
-                        if (navigator.vibrate) navigator.vibrate(8)
-                        const rect = e.currentTarget.getBoundingClientRect()
-                        dialCenterRef.current = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
-                        setShowLaunchMenu(true)
-                        setDialDragging(true)
-                      }}
-                      whileTap={{ scale: 0.92 }}
-                      animate={navContext.mode === 'live' ? { scale: [1, 1.06, 1] } : { scale: 1 }}
-                      transition={navContext.mode === 'live' ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : {}}
-                      style={{
-                        position: 'relative',
-                        width: '100%', height: '100%', borderRadius: '50%',
-                        border: '3px solid rgba(10,15,30,0.9)',
-                        background: fabCore,
-                        boxShadow: `0 8px 28px -6px ${fabGlow}, inset 0 8px 14px rgba(255,255,255,0.25), inset 0 -10px 16px rgba(0,0,0,0.35)`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer', touchAction: 'none', overflow: 'hidden',
-                      }}
-                    >
-                      {/* Glossy highlight, upper-left */}
-                      <div style={{
-                        position: 'absolute', top: '10%', left: '16%', width: '46%', height: '30%',
-                        borderRadius: '50%', background: 'rgba(255,255,255,0.35)', filter: 'blur(4px)',
-                        pointerEvents: 'none',
-                      }} />
-                      {navContext.mode === 'live' || navContext.mode === 'ended' || navContext.mode === 'calendar' ? (
-                        <span style={{ fontSize: 24, position: 'relative', zIndex: 1 }}>
-                          {navContext.mode === 'live' ? '🟢' : navContext.mode === 'ended' ? '🌙' : '📆'}
-                        </span>
-                      ) : (
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{ position: 'relative', zIndex: 1 }}>
-                          <path
-                            d="M12 2 C12.6 7.2 13.4 9.2 18 10.5 C13.4 11.8 12.6 13.8 12 19 C11.4 13.8 10.6 11.8 6 10.5 C10.6 9.2 11.4 7.2 12 2 Z"
-                            fill="#FFFFFF"
-                          />
-                        </svg>
-                      )}
-                    </motion.button>
-                  </>
-                )
-              })()}
-            </div>
-          </>
+          <MobileBottomNav
+            tab={tab}
+            onNavigate={handleSetTab}
+            registersBadge={navBadges.registers}
+            isAdmin={isAdmin}
+            onOpenMore={() => setShowMobileMore(true)}
+            onNewSession={() => handleSetTab('planner', { autoOpenWizard: true })}
+            onAddChild={() => handleSetTab('registers', { autoOpenAdd: true })}
+            onCreateForm={() => handleSetTab('forms')}
+            onReportIncident={() => handleSetTab('safeguarding')}
+            onAddVolunteer={() => handleSetTab('volunteers')}
+          />
         )}
-
-
-        {/* Radial Launch Dial — quick actions orbiting tightly around the FAB.
-            Fast, intuitive, one-handed: tap the FAB to expand the dial, then either slide your
-            thumb to an action and release (no need to lift between press and select), or lift
-            immediately to leave the dial open and tap an action normally. */}
-        <AnimatePresence>
-          {isMobileBottomNav && showLaunchMenu && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowLaunchMenu(false)}
-              style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,26,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 10001 }}
-            >
-              {/* Anchor point — sits exactly at the FAB's measured centre (not CSS 50%, which can
-                  drift off the FAB if any ancestor has a transform that changes the containing
-                  block for position:fixed); every item/line below is positioned relative to this */}
-              <div
-                onClick={e => e.stopPropagation()}
-                style={{ position: 'fixed', left: dialCenterRef.current.x, top: dialCenterRef.current.y, width: 0, height: 0 }}
-              >
-                {(() => {
-                  // Six evenly-spaced positions across a tight 150° arc above the FAB — a compact
-                  // dial rather than the old wide two-tier fan. Angle 0 = straight up; positive
-                  // rotates toward +dx (matches the atan2(dx,dy) convention used for the connector lines).
-                  const RADIUS = 185
-                  const ANGLES = [-75, -45, -15, 15, 45, 75]
-                  const rawSlots = ANGLES.map(deg => {
-                    const rad = deg * (Math.PI / 180)
-                    return { dx: RADIUS * Math.sin(rad), dy: RADIUS * Math.cos(rad) }
-                  })
-                  // Guard against genuinely tiny screens where even this tighter dial's outer
-                  // items could reach past the edge — scales the whole dial down uniformly.
-                  const maxAbsDx = Math.max(...rawSlots.map(s => Math.abs(s.dx)))
-                  const vw = typeof window !== 'undefined' ? window.innerWidth : 400
-                  const safeHalfWidth = vw / 2 - 40 // 40 ≈ half the pill's own width + a little breathing room
-                  const dialScale = Math.min(1, Math.max(0.7, safeHalfWidth / maxAbsDx))
-                  const SLOTS = rawSlots.map(s => ({ dx: s.dx * dialScale, dy: s.dy * dialScale }))
-
-                  // Three action sets tailored to what's actually useful at that point in the day —
-                  // reusing only real, existing tabs (no invented routes).
-                  const CONTEXT_SETS = {
-                    live: {
-                      ctaLabel: 'Sign Child In',
-                      items: [
-                        { key: 'home', label: 'Live Sessions', icon: '🟢', image: iconLiveSessions, color: '#16A34A', gate: null },
-                        { key: 'planner', label: 'Session Planner', icon: '📅', image: iconSessionReflection, color: '#7C3AED', gate: null },
-                        { key: 'risk_assessments', label: 'Risk Assessment', icon: '🛡️', color: '#DC2626', gate: 'risk_assessments' },
-                        { key: 'registers', label: 'Add Walk-in', icon: '🚶', color: '#0891B2', gate: 'registers' },
-                        { key: 'case_management', label: 'Case Management', icon: '📁', image: iconCaseManagement, color: '#4F46E5', gate: 'case_management' },
-                        { key: 'forms', label: 'Forms & Documents', icon: '📝', image: iconFormsDocuments, color: '#2563EB', gate: 'forms' },
-                      ],
-                    },
-                    ended: {
-                      ctaLabel: 'Complete Session',
-                      items: [
-                        { key: 'planner', label: 'Session Reflection', icon: '📅', image: iconSessionReflection, color: '#7C3AED', gate: null },
-                        { key: 'home', label: 'Live Sessions', icon: '🟢', image: iconLiveSessions, color: '#16A34A', gate: null },
-                        { key: 'volunteers', label: 'Volunteers', icon: '🤝', image: iconVolunteers, color: '#EA580C', gate: 'volunteers' },
-                        { key: 'case_management', label: 'Case Management', icon: '📁', image: iconCaseManagement, color: '#4F46E5', gate: 'case_management' },
-                        { key: 'registers', label: "Today's Register", icon: '📋', image: iconTodaysRegister, color: '#0891B2', gate: 'registers' },
-                        { key: 'forms', label: 'Forms & Documents', icon: '📝', image: iconFormsDocuments, color: '#2563EB', gate: 'forms' },
-                      ],
-                    },
-                    morning: {
-                      ctaLabel: 'Open Register',
-                      items: [
-                        { key: 'registers', label: "Today's Register", icon: '📋', image: iconTodaysRegister, color: '#0891B2', gate: 'registers' },
-                        { key: 'planner', label: 'Session Planner', icon: '📅', image: iconSessionReflection, color: '#7C3AED', gate: null },
-                        { key: 'volunteers', label: 'Volunteers', icon: '🤝', image: iconVolunteers, color: '#EA580C', gate: 'volunteers' },
-                        { key: 'registers', label: 'Add Walk-in', icon: '🚶', color: '#0891B2', gate: 'registers' },
-                        { key: 'home', label: 'Live Sessions', icon: '🟢', image: iconLiveSessions, color: '#16A34A', gate: null },
-                        { key: 'forms', label: 'Forms & Documents', icon: '📝', image: iconFormsDocuments, color: '#2563EB', gate: 'forms' },
-                      ],
-                    },
-                  }
-                  const contextKey = navContext.mode === 'live' ? 'live' : navContext.mode === 'ended' ? 'ended' : 'morning'
-                  const set = CONTEXT_SETS[contextKey]
-                  const ctaTarget = { live: 'registers', ended: 'planner', morning: 'registers' }[contextKey]
-
-                  const items = set.items
-                    .map((item, i) => ({ ...item, ...SLOTS[i], uid: `${contextKey}-${item.key}-${i}` }))
-                    .filter(item => !item.gate || hasModule(item.gate))
-
-                  // Keep the drag-gesture effect's nearest-item lookup in sync with what's actually rendered.
-                  dialItemsRef.current = items
-
-                  return (
-                    <>
-                      {items.map((item, i) => {
-                        const hovered = dialHoveredKey === item.uid
-                        return (
-                          <React.Fragment key={item.uid}>
-                            {/* The action bubble itself — static centering transform on the
-                                wrapper, motion.button only animates scale/opacity. */}
-                            <div style={{ position: 'absolute', left: item.dx, bottom: item.dy, transform: 'translate(-50%, 50%)' }}>
-                              <motion.button
-                                initial={{ opacity: 0, scale: 0.3 }}
-                                animate={{ opacity: 1, scale: hovered ? 1.18 : 1 }}
-                                exit={{ opacity: 0, scale: 0.3 }}
-                                transition={{ delay: i * 0.025, type: 'spring', stiffness: 460, damping: 24 }}
-                                onPointerDown={(e) => { e.stopPropagation(); setShowLaunchMenu(false); handleSetTab(item.key, item.key === 'planner' ? { autoOpenWizard: false } : undefined) }}
-                                style={{
-                                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                                  width: 66, padding: '10px 4px', borderRadius: 18,
-                                  border: hovered ? '2px solid rgba(255,255,255,0.9)' : '1px solid rgba(255,255,255,0.12)',
-                                  background: hovered ? `${item.color}CC` : 'rgba(20,22,42,0.88)',
-                                  backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-                                  boxShadow: hovered ? `0 0 0 8px ${item.color}30, 0 10px 26px rgba(0,0,0,0.4)` : '0 8px 20px rgba(0,0,0,0.35)',
-                                  cursor: 'pointer', transition: 'background 0.12s, box-shadow 0.12s',
-                                }}
-                              >
-                                {item.image ? (
-                                  <div style={{
-                                    width: 34, height: 34, borderRadius: 10, overflow: 'hidden',
-                                    border: hovered ? '1px solid rgba(255,255,255,0.6)' : '1px solid rgba(255,255,255,0.14)',
-                                    boxShadow: hovered ? `0 0 0 6px ${item.color}30` : 'none',
-                                    flexShrink: 0,
-                                  }}>
-                                    <img src={item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                                  </div>
-                                ) : (
-                                  <div style={{
-                                    width: 30, height: 30, borderRadius: '50%',
-                                    background: hovered ? 'rgba(255,255,255,0.25)' : `${item.color}2A`,
-                                    border: hovered ? '1px solid rgba(255,255,255,0.5)' : `1px solid ${item.color}55`,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
-                                  }}>{item.icon}</div>
-                                )}
-                                <div style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>{item.label}</div>
-                              </motion.button>
-                            </div>
-                          </React.Fragment>
-                        )
-                      })}
-
-                      {/* Context-aware primary action, shown just below the dial — same fix again:
-                          static horizontal centering on the wrapper, motion.button only animates y/opacity. */}
-                      <div style={{ position: 'absolute', left: '50%', bottom: -46, transform: 'translateX(-50%)' }}>
-                        <motion.button
-                          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-                          transition={{ delay: 0.16, duration: 0.2 }}
-                          onPointerDown={(e) => { e.stopPropagation(); setShowLaunchMenu(false); handleSetTab(ctaTarget) }}
-                          style={{
-                            padding: '9px 20px', borderRadius: 99, border: 'none', whiteSpace: 'nowrap',
-                            background: navContext.mode === 'live' ? 'linear-gradient(135deg,#22C55E,#16A34A)' : navContext.mode === 'ended' ? 'linear-gradient(135deg,#6366F1,#4F46E5)' : 'linear-gradient(135deg,#7C3AED,#A855F7)',
-                            color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer',
-                            boxShadow: '0 8px 18px rgba(0,0,0,0.35)',
-                          }}
-                        >
-                          {set.ctaLabel}
-                        </motion.button>
-                      </div>
-                    </>
-                  )
-                })()}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
       {showProfile && (
         <ProfilePage
