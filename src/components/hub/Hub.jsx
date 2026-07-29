@@ -2131,47 +2131,30 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
           <Panel title="📍 Right now">
-            <div style={isMobile
-              ? { display: 'flex', flexWrap: 'wrap', gap: 10 }
-              : { display: 'flex', flexWrap: 'wrap', gap: 12 }
-            }>
+            {/* CSS Grid instead of flex+calc(): grid columns are hard limits the
+               browser cannot expand past, unlike flex-basis which is only a
+               sizing hint — this is what was letting cards blow past the
+               viewport edge on some Safari builds when combined with gap. */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(190px, 1fr))', gap: isMobile ? 10 : 12 }}>
 
               {/* WEATHER CARD */}
-              {isMobile ? (
-                <div style={{ width: 'calc(50% - 5px)', minWidth: 0, boxSizing: 'border-box' }}>
-                  <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: '14px 14px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
-                    {weatherCardInner}
-                  </div>
-                </div>
-              ) : (
-                <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', flex: '1 1 220px', minWidth: 200 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: isMobile ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
                   {weatherCardInner}
                 </div>
-              )}
+              </div>
 
-              {isMobile ? (
-                <div style={{ width: 'calc(50% - 5px)', minWidth: 0, boxSizing: 'border-box' }}>
-                  <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} compact />
-                </div>
-              ) : (
-                <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} />
-              )}
+              <div style={{ minWidth: 0 }}>
+                <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} compact={isMobile} />
+              </div>
 
-              {isMobile ? (
-                <div style={{ width: 'calc(50% - 5px)', minWidth: 0, boxSizing: 'border-box' }}>
-                  <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} compact />
-                </div>
-              ) : (
-                <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} />
-              )}
+              <div style={{ minWidth: 0 }}>
+                <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} compact={isMobile} />
+              </div>
 
-              {isMobile ? (
-                <div style={{ width: 'calc(50% - 5px)', minWidth: 0, boxSizing: 'border-box' }}>
-                  <StatCard icon="🛡️" title={concerns.length > 0 ? `${concerns.length} concern${concerns.length > 1 ? "s" : ""}` : "All clear"} text={concerns.length > 0 ? "Needs review" : "No open concerns"} button={concerns.length > 0 ? "Review now" : undefined} onClick={() => go('safeguarding')} colour={concerns.length > 0 ? '#F59E0B' : '#16A34A'} compact />
-                </div>
-              ) : (
-                <StatCard icon="🛡️" title={concerns.length > 0 ? `${concerns.length} concern${concerns.length > 1 ? "s" : ""}` : "All clear"} text={concerns.length > 0 ? "Needs review" : "No open concerns"} button={concerns.length > 0 ? "Review now" : undefined} onClick={() => go('safeguarding')} colour={concerns.length > 0 ? '#F59E0B' : '#16A34A'} />
-              )}
+              <div style={{ minWidth: 0 }}>
+                <StatCard icon="🛡️" title={concerns.length > 0 ? `${concerns.length} concern${concerns.length > 1 ? "s" : ""}` : "All clear"} text={concerns.length > 0 ? "Needs review" : "No open concerns"} button={concerns.length > 0 ? "Review now" : undefined} onClick={() => go('safeguarding')} colour={concerns.length > 0 ? '#F59E0B' : '#16A34A'} compact={isMobile} />
+              </div>
             </div>
           </Panel>
 
@@ -2192,14 +2175,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           }>
             {statsView === 'today' ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
                 <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour="#16A34A" label="Young people" sub="Expected" onClick={() => go('registers')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="So far" onClick={() => go('registers')} />
                 <GlanceStat icon="🕐" iconBg="#FEF3C7" value={strictlyTodaySessions.length} valueColour="#D97706" label="Sessions" sub="Today" onClick={() => go('planner')} />
                 <GlanceStat icon="❤️" iconBg="#EDE9FE" value={volunteersCount} valueColour="#7C3AED" label="Volunteers" sub="Involved" onClick={() => go('volunteers')} />
               </div>
             ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
                 <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour={primary} label="Young people" sub="This month" onClick={() => go('registers')} />
                 <GlanceStat icon="📅" iconBg="#EDE9FE" value={sessions.length} valueColour="#7C3AED" label="Sessions" sub="Planned" onClick={() => go('planner')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="Total" onClick={() => go('registers')} />
@@ -2509,7 +2492,7 @@ function Panel({ title, right, children }) {
 
 function GlanceStat({ icon, iconBg, value, valueColour, label, sub, onClick }) {
   return (
-    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: onClick ? 'pointer' : 'default', padding: 0, flex: '1 1 130px', minWidth: 120, textAlign: 'left' }}>
+    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: onClick ? 'pointer' : 'default', padding: 0, width: '100%', minWidth: 0, textAlign: 'left' }}>
       <span style={{ width: 34, height: 34, borderRadius: '50%', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</span>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 19, fontWeight: 900, color: valueColour, lineHeight: 1.1 }}>{value}</div>
