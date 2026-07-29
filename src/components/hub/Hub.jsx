@@ -1281,7 +1281,7 @@ function HubSignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
 function HubAbsentSheet({ child, onClose, onMark }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 340, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 340 }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Mark {child.first_name} as...</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {ABSENCE_REASONS_HUB.map(r => (
@@ -1308,7 +1308,7 @@ function HubWalkInModal({ allChildren, onClose, onSelectExisting, onCreate }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 400, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Add Walk-in</div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 14 }}>Search existing young people first — don't create a duplicate record.</div>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..." style={{ ...hubInp, marginBottom: 10 }} />
@@ -1440,7 +1440,7 @@ function HubClosureFlow({ grouped, onClose, onMarkAllAbsent, onCloseRegister, pr
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 22, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 22, width: 420, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Review and close session</div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 14 }}>Once closed, attendance is locked and the register becomes read-only. Later corrections need a reason and are audited.</div>
 
@@ -1565,7 +1565,7 @@ function NotificationBell({ primary, secondary, concernsCount, reflectionsCount,
       </button>
 
       {open && (
-        <div style={{ position: 'absolute', top: '110%', right: 0, width: 300, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 12px 40px rgba(0,0,0,0.15)', zIndex: 200, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '110%', right: 0, width: 300, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 12px 40px rgba(0,0,0,0.15)', zIndex: 200, overflow: 'hidden' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid #F3F4F6', fontSize: 13, fontWeight: 800, color: '#111' }}>Notifications</div>
           {total === 0 ? (
             <div style={{ padding: '28px 16px', textAlign: 'center', color: '#9CA3AF', fontSize: 12 }}>
@@ -1872,45 +1872,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   const pad = isMobile ? 16 : 22;
 
-  const weatherCardInner = (
-    <>
-      <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
-      {weatherError ? (
-        <div style={{ position: 'relative' }}>
-          <div style={{ fontSize: 22, marginBottom: 6 }}>🌡️</div>
-          <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.9 }}>Weather unavailable</div>
-          <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>Add a city in Settings</div>
-        </div>
-      ) : !weather ? (
-        <div style={{ position: 'relative' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.85 }}>Loading weather...</div>
-        </div>
-      ) : (
-        <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 800, opacity: 0.85, textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{weather.city}</div>
-            <div style={{ fontSize: 22, flexShrink: 0 }}>{weatherFromCode(weather.code).icon}</div>
-          </div>
-          <div style={{ fontSize: isMobile ? 26 : 34, fontWeight: 900, lineHeight: 1.1, marginTop: 4, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°<span style={{ fontSize: 14, fontWeight: 700, opacity: 0.8 }}>C</span></div>
-          <div style={{ fontSize: 11.5, fontWeight: 600, opacity: 0.9, marginTop: 2 }}>{weatherFromCode(weather.code).label}</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, fontSize: 10.5, opacity: 0.85, fontWeight: 600 }}>
-            {weather.high != null && <span>↑{weather.high}° ↓{weather.low}°</span>}
-            {!isMobile && weather.rainChance != null && <span>💧 {weather.rainChance}%</span>}
-            <span>💨 {weather.wind}mph</span>
-          </div>
-        </div>
-      )}
-    </>
-  );
-
   return (
     <div style={styles.page}>
-      {/* TEMP DEBUG BADGE — remove once we've diagnosed the mobile layout issue */}
-      <div style={{ position: 'fixed', top: 4, left: 4, zIndex: 999999, background: '#000', color: '#0f0', fontSize: 10, fontFamily: 'monospace', padding: '3px 6px', borderRadius: 4, pointerEvents: 'none' }}>
-        w:{window.innerWidth} isMobile:{String(isMobile)} dpr:{window.devicePixelRatio}
-      </div>
       {/* ── HEADER ── */}
-      <header style={{ background: `linear-gradient(120deg, ${primary}14 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid ${primary}22`, padding: `${isMobile ? 'max(env(safe-area-inset-top, 0px), 8px)' : '0'} ${pad}px 0`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px ${primary}50` }}>
+      <header style={{ background: `linear-gradient(120deg, ${primary}14 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px ${primary}50` }}>
 
         {/* Brand gradient top strip — two-tone */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${secondary}, ${primary}22, transparent)` }} />
@@ -2085,7 +2050,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
 
             {/* Quick actions row */}
-            <div className="scroll-fade-x" style={{ display: 'flex', gap: 8, marginTop: 10, overflowX: 'auto', paddingBottom: 2, paddingRight: 20 }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
               <HeaderQuickAction icon="＋" label="Session" onClick={() => go('planner', { autoOpenWizard: true })} primary={primary} filled />
               {hasModule('registers') && <HeaderQuickAction icon="📋" label="Register" onClick={() => go('registers')} primary={primary} />}
               <HeaderQuickAction icon="💬" label="Messages" onClick={() => go('messaging')} primary={primary} />
@@ -2135,36 +2100,46 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
           <Panel title="📍 Right now">
-            {/* CSS Grid instead of flex+calc(): grid columns are hard limits the
-               browser cannot expand past, unlike flex-basis which is only a
-               sizing hint — this is what was letting cards blow past the
-               viewport edge on some Safari builds when combined with gap. */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(190px, 1fr))', gap: isMobile ? 10 : 12 }}>
+            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
 
               {/* WEATHER CARD */}
-              <div style={{ minWidth: 0 }}>
-                <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: isMobile ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
-                  {weatherCardInner}
-                </div>
+              <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', flex: '1 1 220px', minWidth: 200 }}>
+                <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
+                {weatherError ? (
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ fontSize: 22, marginBottom: 6 }}>🌡️</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.9 }}>Weather unavailable</div>
+                    <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>Add a city in Settings</div>
+                  </div>
+                ) : !weather ? (
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.85 }}>Loading weather...</div>
+                  </div>
+                ) : (
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, opacity: 0.85, textTransform: 'uppercase', letterSpacing: 0.5 }}>{weather.city}</div>
+                      <div style={{ fontSize: 26 }}>{weatherFromCode(weather.code).icon}</div>
+                    </div>
+                    <div style={{ fontSize: 34, fontWeight: 900, lineHeight: 1.1, marginTop: 4, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°<span style={{ fontSize: 16, fontWeight: 700, opacity: 0.8 }}>C</span></div>
+                    <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.9, marginTop: 2 }}>{weatherFromCode(weather.code).label}</div>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 8, fontSize: 11, opacity: 0.85, fontWeight: 600 }}>
+                      {weather.high != null && <span>↑{weather.high}° ↓{weather.low}°</span>}
+                      {weather.rainChance != null && <span>💧 {weather.rainChance}%</span>}
+                      <span>💨 {weather.wind}mph</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div style={{ minWidth: 0 }}>
-                <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} compact={isMobile} />
-              </div>
-
-              <div style={{ minWidth: 0 }}>
-                <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} compact={isMobile} />
-              </div>
-
-              <div style={{ minWidth: 0 }}>
-                <StatCard icon="🛡️" title={concerns.length > 0 ? `${concerns.length} concern${concerns.length > 1 ? "s" : ""}` : "All clear"} text={concerns.length > 0 ? "Needs review" : "No open concerns"} button={concerns.length > 0 ? "Review now" : undefined} onClick={() => go('safeguarding')} colour={concerns.length > 0 ? '#F59E0B' : '#16A34A'} compact={isMobile} />
-              </div>
+              <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} />
+              <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} />
             </div>
           </Panel>
 
           {/* OVERVIEW — merged "today" and "this month" stats behind one toggle, instead of three separate stat blocks */}
           <Panel title="🧭 Overview" right={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: 99, padding: 3 }}>
                 {['today', 'month'].map(v => (
                   <button key={v} onClick={() => setStatsView(v)}
@@ -2179,14 +2154,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           }>
             {statsView === 'today' ? (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
                 <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour="#16A34A" label="Young people" sub="Expected" onClick={() => go('registers')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="So far" onClick={() => go('registers')} />
                 <GlanceStat icon="🕐" iconBg="#FEF3C7" value={strictlyTodaySessions.length} valueColour="#D97706" label="Sessions" sub="Today" onClick={() => go('planner')} />
                 <GlanceStat icon="❤️" iconBg="#EDE9FE" value={volunteersCount} valueColour="#7C3AED" label="Volunteers" sub="Involved" onClick={() => go('volunteers')} />
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
                 <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour={primary} label="Young people" sub="This month" onClick={() => go('registers')} />
                 <GlanceStat icon="📅" iconBg="#EDE9FE" value={sessions.length} valueColour="#7C3AED" label="Sessions" sub="Planned" onClick={() => go('planner')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="Total" onClick={() => go('registers')} />
@@ -2215,7 +2190,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: 10 }}>
               <QuickLinkTile icon="💬" label="Messages" onClick={() => go('messaging')} />
               <QuickLinkTile icon="📅" label="Calendar" onClick={() => go('calendar')} />
               {hasModule('volunteers') && <QuickLinkTile icon="❤️" label="Volunteers" onClick={() => go('volunteers')} />}
@@ -2485,7 +2460,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 function Panel({ title, right, children }) {
   return (
     <div style={styles.panel}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', rowGap: 8, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <h3 style={{ ...styles.panelTitle, margin: 0 }}>{title}</h3>
         {right}
       </div>
@@ -2496,7 +2471,7 @@ function Panel({ title, right, children }) {
 
 function GlanceStat({ icon, iconBg, value, valueColour, label, sub, onClick }) {
   return (
-    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: onClick ? 'pointer' : 'default', padding: 0, width: '100%', minWidth: 0, textAlign: 'left' }}>
+    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: onClick ? 'pointer' : 'default', padding: 0, flex: '1 1 130px', minWidth: 120, textAlign: 'left' }}>
       <span style={{ width: 34, height: 34, borderRadius: '50%', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</span>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 19, fontWeight: 900, color: valueColour, lineHeight: 1.1 }}>{value}</div>
@@ -2560,26 +2535,25 @@ function HeaderQuickAction({ icon, label, onClick, primary, filled }) {
   );
 }
 
-function StatCard({ icon, title, text, button, badge, onClick, colour, compact }) {
+function StatCard({ icon, title, text, button, badge, onClick, colour }) {
   return (
     <button onClick={onClick} style={{
       background: `linear-gradient(135deg, ${colour}, ${colour}CC)`,
-      borderRadius: 16, padding: compact ? '12px 12px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden',
+      borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden',
       minHeight: 128, boxShadow: `0 10px 28px -10px ${colour}80`, textAlign: 'left', cursor: 'pointer',
       border: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-      boxSizing: 'border-box',
-      ...(compact ? { minWidth: 0, width: '100%' } : { flex: '1 1 190px', minWidth: 180 }),
+      flex: '1 1 190px', minWidth: 180,
     }}>
       <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
       <div style={{ position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: compact ? 22 : 26 }}>{icon}</div>
+          <div style={{ fontSize: 26 }}>{icon}</div>
         </div>
-        <h3 style={{ fontSize: compact ? 13 : 15, fontWeight: 900, color: '#fff', margin: '10px 0 4px', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{title}</h3>
-        <p style={{ fontSize: compact ? 11 : 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{text}</p>
+        <h3 style={{ fontSize: 15, fontWeight: 900, color: '#fff', margin: '10px 0 4px', lineHeight: 1.25 }}>{title}</h3>
+        <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0 }}>{text}</p>
       </div>
       {(button || badge) && (
-        <div style={{ position: 'relative', marginTop: 10, display: 'inline-block', background: 'rgba(255,255,255,0.2)', borderRadius: 8, padding: compact ? '4px 8px' : '5px 10px', fontSize: compact ? 10 : 11, fontWeight: 800, color: '#fff', alignSelf: 'flex-start', whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ position: 'relative', marginTop: 10, display: 'inline-block', background: 'rgba(255,255,255,0.2)', borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 800, color: '#fff', alignSelf: 'flex-start' }}>
           {button || badge}
         </div>
       )}
@@ -2653,7 +2627,7 @@ const styles = {
   mainGrid: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 18 },
   leftColumn: { display: "flex", flexDirection: "column", gap: 18 },
   rightColumn: { display: "flex", flexDirection: "column", gap: 18 },
-  panel: { background: "rgba(255,255,255,0.92)", border: "1px solid #E5EAF2", borderRadius: 20, padding: 18, boxShadow: "0 12px 28px rgba(15,23,42,0.06)", boxSizing: 'border-box', width: '100%', maxWidth: '100%', overflow: 'hidden' },
+  panel: { background: "rgba(255,255,255,0.92)", border: "1px solid #E5EAF2", borderRadius: 20, padding: 18, boxShadow: "0 12px 28px rgba(15,23,42,0.06)" },
   panelTitle: { margin: "0 0 14px", fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' },
   glanceGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 },
   mobileGrid: { gridTemplateColumns: "1fr" },
