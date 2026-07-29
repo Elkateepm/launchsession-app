@@ -2139,7 +2139,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
           {/* OVERVIEW — merged "today" and "this month" stats behind one toggle, instead of three separate stat blocks */}
           <Panel title="🧭 Overview" right={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: 99, padding: 3 }}>
                 {['today', 'month'].map(v => (
                   <button key={v} onClick={() => setStatsView(v)}
@@ -2460,7 +2460,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 function Panel({ title, right, children }) {
   return (
     <div style={styles.panel}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', rowGap: 8, minWidth: 0 }}>
         <h3 style={{ ...styles.panelTitle, margin: 0 }}>{title}</h3>
         {right}
       </div>
@@ -2627,7 +2627,7 @@ const styles = {
   mainGrid: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 18 },
   leftColumn: { display: "flex", flexDirection: "column", gap: 18 },
   rightColumn: { display: "flex", flexDirection: "column", gap: 18 },
-  panel: { background: "rgba(255,255,255,0.92)", border: "1px solid #E5EAF2", borderRadius: 20, padding: 18, boxShadow: "0 12px 28px rgba(15,23,42,0.06)" },
+  panel: { background: "rgba(255,255,255,0.92)", border: "1px solid #E5EAF2", borderRadius: 20, padding: 18, boxShadow: "0 12px 28px rgba(15,23,42,0.06)", boxSizing: 'border-box', width: '100%', maxWidth: '100%', overflow: 'hidden' },
   panelTitle: { margin: "0 0 14px", fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' },
   glanceGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 },
   mobileGrid: { gridTemplateColumns: "1fr" },
