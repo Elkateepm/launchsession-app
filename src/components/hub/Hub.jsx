@@ -1875,7 +1875,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   return (
     <div style={styles.page}>
       {/* ── HEADER ── */}
-      <header style={{ background: `linear-gradient(120deg, ${primary}14 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid ${primary}22`, padding: `max(env(safe-area-inset-top, 0px), ${isMobile ? 8 : 0}px) ${pad}px 0`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px ${primary}50` }}>
+      <header style={{ background: `linear-gradient(120deg, ${primary}14 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid ${primary}22`, padding: `${isMobile ? 'max(env(safe-area-inset-top, 0px), 8px)' : '0'} ${pad}px 0`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px ${primary}50` }}>
 
         {/* Brand gradient top strip — two-tone */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${secondary}, ${primary}22, transparent)` }} />
@@ -2100,7 +2100,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
           <Panel title="📍 Right now">
-            <div className="scroll-fade-x" style={{ display: 'flex', flexWrap: 'nowrap', gap: 12, overflowX: 'auto', paddingBottom: 4, paddingRight: 20 }}>
+            <div className={isMobile ? 'scroll-fade-x' : ''} style={{ display: 'flex', flexWrap: isMobile ? 'nowrap' : 'wrap', gap: 12, overflowX: isMobile ? 'auto' : 'visible', paddingBottom: 4, paddingRight: isMobile ? 20 : 0 }}>
 
               {/* WEATHER CARD */}
               <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', flex: '1 1 220px', minWidth: 200 }}>
