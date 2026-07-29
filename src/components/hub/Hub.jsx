@@ -29,6 +29,7 @@ function PhotoCarousel({ orgId, primary, userId }) {
   const [photos, setPhotos] = React.useState([])
   const [uploading, setUploading] = React.useState(false)
   const [lightbox, setLightbox] = React.useState(null)
+  const [managing, setManaging] = React.useState(false)
   const inputRef = React.useRef(null)
 
   const load = React.useCallback(() => {
@@ -67,10 +68,18 @@ function PhotoCarousel({ orgId, primary, userId }) {
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)' }}>📸 Photos</div>
-        <button onClick={() => inputRef.current?.click()} disabled={uploading}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${primary}`, background: uploading ? '#F3F4F6' : '#fff', color: primary, fontSize: 12, fontWeight: 800, cursor: uploading ? 'default' : 'pointer' }}>
-          📷 {uploading ? 'Uploading...' : 'Add Photo'}
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {photos.length > 0 && (
+            <button onClick={() => setManaging(m => !m)}
+              style={{ padding: '6px 14px', borderRadius: 99, border: '1.5px solid #E5E7EB', background: managing ? '#F1F5F9' : '#fff', color: managing ? '#374151' : '#6B7280', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              {managing ? 'Done' : 'Manage'}
+            </button>
+          )}
+          <button onClick={() => inputRef.current?.click()} disabled={uploading}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${primary}`, background: uploading ? '#F3F4F6' : '#fff', color: primary, fontSize: 12, fontWeight: 800, cursor: uploading ? 'default' : 'pointer' }}>
+            📷 {uploading ? 'Uploading...' : 'Add Photo'}
+          </button>
+        </div>
       </div>
 
       {/* Photo strip */}
@@ -82,16 +91,18 @@ function PhotoCarousel({ orgId, primary, userId }) {
       ) : (
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6 }}>
           {photos.map(p => (
-            <div key={p.id} onClick={() => setLightbox(p)}
+            <div key={p.id} onClick={() => !managing && setLightbox(p)}
               style={{ position: 'relative', flexShrink: 0, width: 110, height: 110, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.12)', transition: 'transform 0.15s' }}
               onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
               <img src={p.url} alt={p.caption || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              {/* Delete dot */}
-              <button onClick={e => handleDelete(e, p)}
-                style={{ position: 'absolute', top: 5, right: 5, width: 20, height: 20, borderRadius: '50%', background: '#EF4444', border: '2px solid #fff', color: '#fff', fontSize: 10, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
-                ×
-              </button>
+              {/* Delete dot — only shown once "Manage" is tapped, not by default */}
+              {managing && (
+                <button onClick={e => handleDelete(e, p)}
+                  style={{ position: 'absolute', top: 5, right: 5, width: 20, height: 20, borderRadius: '50%', background: '#EF4444', border: '2px solid #fff', color: '#fff', fontSize: 10, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
+                  ×
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -1597,6 +1608,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [searchResults, setSearchResults] = React.useState(null)
   const [showConcernForm, setShowConcernForm] = React.useState(false)
   const [showInviteChild, setShowInviteChild] = React.useState(false)
+  const [statsView, setStatsView] = React.useState('today') // 'today' | 'month' — merged stats toggle
+  const [sessionsView, setSessionsView] = React.useState('upcoming') // 'upcoming' | 'ended' — merged sessions toggle
 
   const getGreeting = () => {
     const h = new Date().getHours()
@@ -2083,17 +2096,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       )}
       </div>
 
-      {isMobile && (
-        <div style={{ padding: `0 ${pad}px` }}>
-          <div className="ls-glass-stat-row">
-            <HeaderMiniStat icon="📅" value={strictlyTodaySessions.length} label="Sessions" onClick={() => go('planner')} primary={primary} tint="teal" />
-            <HeaderMiniStat icon="👥" value={children.length} label="Expected" onClick={() => go('registers')} primary={primary} tint="violet" />
-            <HeaderMiniStat icon="🙋" value={volunteersCount} label="Volunteers" onClick={() => go('volunteers')} primary={primary} tint="amber" />
-            <HeaderMiniStat icon="🛡️" value={concerns.length} label="Alerts" tone={concerns.length > 0 ? 'warn' : 'ok'} onClick={() => go('safeguarding')} primary={primary} tint="green" />
-          </div>
-        </div>
-      )}
-
       <section style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) 320px', gap: 18, padding: pad }}>
         <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
@@ -2135,16 +2137,37 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           </Panel>
 
-          {/* TODAY AT A GLANCE — summary panel */}
-          <Panel title="🧭 Today at a glance" right={
-            <button onClick={() => go('reports')} style={{ background: `${primary}14`, color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>View summary →</button>
-          }>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
-              <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour="#16A34A" label="Young people" sub="Expected" onClick={() => go('registers')} />
-              <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="So far" onClick={() => go('registers')} />
-              <GlanceStat icon="🕐" iconBg="#FEF3C7" value={strictlyTodaySessions.length} valueColour="#D97706" label="Sessions" sub="Today" onClick={() => go('planner')} />
-              <GlanceStat icon="❤️" iconBg="#EDE9FE" value={volunteersCount} valueColour="#7C3AED" label="Volunteers" sub="Involved" onClick={() => go('volunteers')} />
+          {/* OVERVIEW — merged "today" and "this month" stats behind one toggle, instead of three separate stat blocks */}
+          <Panel title="🧭 Overview" right={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: 99, padding: 3 }}>
+                {['today', 'month'].map(v => (
+                  <button key={v} onClick={() => setStatsView(v)}
+                    style={{ border: 'none', borderRadius: 99, padding: '5px 12px', fontSize: 11.5, fontWeight: 800, cursor: 'pointer',
+                      background: statsView === v ? '#fff' : 'none', color: statsView === v ? primary : '#6B7280',
+                      boxShadow: statsView === v ? '0 1px 4px rgba(0,0,0,0.12)' : 'none' }}>
+                    {v === 'today' ? 'Today' : 'This month'}
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => go('reports')} style={{ background: `${primary}14`, color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>View summary →</button>
             </div>
+          }>
+            {statsView === 'today' ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
+                <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour="#16A34A" label="Young people" sub="Expected" onClick={() => go('registers')} />
+                <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="So far" onClick={() => go('registers')} />
+                <GlanceStat icon="🕐" iconBg="#FEF3C7" value={strictlyTodaySessions.length} valueColour="#D97706" label="Sessions" sub="Today" onClick={() => go('planner')} />
+                <GlanceStat icon="❤️" iconBg="#EDE9FE" value={volunteersCount} valueColour="#7C3AED" label="Volunteers" sub="Involved" onClick={() => go('volunteers')} />
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
+                <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour={primary} label="Young people" sub="This month" onClick={() => go('registers')} />
+                <GlanceStat icon="📅" iconBg="#EDE9FE" value={sessions.length} valueColour="#7C3AED" label="Sessions" sub="Planned" onClick={() => go('planner')} />
+                <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="Total" onClick={() => go('registers')} />
+                <GlanceStat icon="✓" iconBg="#DCFCE7" value={`${attendanceRate}%`} valueColour="#059669" label="Attendance" sub="Rate" onClick={() => go('reports')} />
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
               {hasModule('registers') ? (
@@ -2175,17 +2198,53 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           </Panel>
 
-          {/* COMING UP */}
+          {/* SESSIONS — merged Live & Upcoming + Ended sessions behind one segmented control, instead of two stacked lists */}
           <div>
             <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}>📅 Live &amp; Upcoming (next 7 days)</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: 99, padding: 3 }}>
+                <button onClick={() => setSessionsView('upcoming')}
+                  style={{ border: 'none', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                    background: sessionsView === 'upcoming' ? '#fff' : 'none', color: sessionsView === 'upcoming' ? primary : '#6B7280',
+                    boxShadow: sessionsView === 'upcoming' ? '0 1px 4px rgba(0,0,0,0.12)' : 'none' }}>
+                  📅 Upcoming
+                </button>
+                <button onClick={() => setSessionsView('ended')}
+                  style={{ border: 'none', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                    background: sessionsView === 'ended' ? '#fff' : 'none', color: sessionsView === 'ended' ? primary : '#6B7280',
+                    boxShadow: sessionsView === 'ended' ? '0 1px 4px rgba(0,0,0,0.12)' : 'none' }}>
+                  🔒 Ended{endedSessions.length > 0 ? ` (${endedSessions.length})` : ''}
+                </button>
+              </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <button onClick={() => go('calendar')} style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>📆 Calendar</button>
                 <button onClick={() => go('planner')} style={{ fontSize: 11, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ New session</button>
               </div>
             </div>
-            {upcomingSessions.length === 0 ? (
+            {sessionsView === 'ended' ? (
+              endedSessions.length === 0 ? (
+                <div style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', background: '#F8FAFC', border: '1.5px dashed #E5E7EB', borderRadius: 20, padding: '36px 24px', textAlign: 'center', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
+                  No ended sessions yet
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {endedSessions.map(s => (
+                    <div key={s.id} onClick={() => openRegisterForSession(s.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 16, padding: '14px 16px', cursor: 'pointer' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🔒</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 800, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                        <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>{formatDate(s.session_date)} · Closed {new Date(s.closed_at).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}</div>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: '#6B7280', background: '#E5E7EB', borderRadius: 99, padding: '4px 10px', flexShrink: 0 }}>CLOSED</span>
+                      <span style={{ fontSize: 16, color: '#CBD5E1', flexShrink: 0 }}>→</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : upcomingSessions.length === 0 ? (
               <div style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', background: `linear-gradient(135deg, ${primary}10, ${primary}05)`, border: `1.5px dashed ${primary}30`, borderRadius: 20, padding: '36px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 6, maxWidth: 320 }}>Nothing running or planned in the next 7 days</div>
@@ -2285,83 +2344,59 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             )}
           </div>
 
-          {/* ENDED SESSIONS */}
-          {endedSessions.length > 0 && (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}>🔒 Ended sessions</h3>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {endedSessions.map(s => (
-                  <div key={s.id} onClick={() => openRegisterForSession(s.id)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 16, padding: '14px 16px', cursor: 'pointer' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 12, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🔒</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13.5, fontWeight: 800, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-                      <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>{formatDate(s.session_date)} · Closed {new Date(s.closed_at).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}</div>
-                    </div>
-                    <span style={{ fontSize: 10, fontWeight: 800, color: '#6B7280', background: '#E5E7EB', borderRadius: 99, padding: '4px 10px', flexShrink: 0 }}>CLOSED</span>
-                    <span style={{ fontSize: 16, color: '#CBD5E1', flexShrink: 0 }}>→</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        </div>
 
-          {/* PHOTO CAROUSEL */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* NEEDS ATTENTION — merged Attention Centre + Safeguarding Snapshot + Reflection Due into
+              one list, sorted by real urgency (safeguarding concerns and overdue reflections first)
+              instead of three separate panels that repeated the same numbers in different card styles. */}
+          {(() => {
+            const items = []
+            if (hasModule('safeguarding') && concerns.length > 0) {
+              items.push({ key: 'safeguarding', icon: '🛡️', label: 'Safeguarding', value: `${concerns.length} open concern${concerns.length > 1 ? 's' : ''}`, tone: 'amber', rank: 0, onClick: () => go('safeguarding') })
+            }
+            if (completedWithoutReflection.length > 0) {
+              items.push({ key: 'reflections', icon: '⭐', label: 'Reflections due', value: `${completedWithoutReflection.length} session${completedWithoutReflection.length > 1 ? 's' : ''} to write up`, tone: 'amber', rank: 0, onClick: () => go('planner', { reflectSessionId: completedWithoutReflection[0]?.id }) })
+            }
+            if (hasModule('resource_booking') && checkedOutCount > 0) {
+              items.push({ key: 'resources', icon: '↗', label: 'Resources', value: `${checkedOutCount} item${checkedOutCount > 1 ? 's' : ''} checked out`, tone: 'amber', rank: 1, onClick: () => go('resource_booking') })
+            }
+            if (medicalAlerts > 0) {
+              items.push({ key: 'medical', icon: '💊', label: 'Medical alerts', value: `${medicalAlerts} young ${medicalAlerts > 1 ? 'people' : 'person'} flagged`, tone: 'amber', rank: 1, onClick: () => go('registers') })
+            }
+            if (hasModule('registers')) {
+              items.push({ key: 'registers', icon: '📋', label: 'Registers', value: signedIn > 0 ? `${signedIn} signed in today` : 'No activity yet', tone: 'blue', rank: 2, onClick: () => go('registers') })
+            }
+            if (hasModule('safeguarding') && concerns.length === 0) {
+              items.push({ key: 'safeguarding-clear', icon: '🛡️', label: 'Safeguarding', value: 'No open concerns', tone: 'blue', rank: 3, onClick: () => go('safeguarding') })
+            }
+            if (hasModule('volunteers')) {
+              items.push({ key: 'volunteers', icon: '❤️', label: 'Volunteers', value: 'Review session cover', tone: 'blue', rank: 3, onClick: () => go('volunteers') })
+            }
+            if (hasModule('mentoring')) {
+              items.push({ key: 'mentoring', icon: '🤝', label: 'Mentoring', value: 'View active matches', tone: 'blue', rank: 3, onClick: () => go('mentoring') })
+            }
+            if (hasModule('reports')) {
+              items.push({ key: 'reports', icon: '📊', label: 'Reports', value: 'View impact data', tone: 'blue', rank: 3, onClick: () => go('reports') })
+            }
+            items.sort((a, b) => a.rank - b.rank)
+            if (items.length === 0) return null
+            return (
+              <Panel title="🔔 Needs attention">
+                {items.map(item => (
+                  <AttentionRow key={item.key} icon={item.icon} label={item.label} value={item.value} tone={item.tone} onClick={item.onClick} />
+                ))}
+              </Panel>
+            )
+          })()}
+
+          {/* PHOTO CAROUSEL — community content, kept below operational items */}
           <PhotoCarousel orgId={orgId} primary={primary} userId={session?.user?.id} />
 
           {/* ANNOUNCEMENTS — staff/admin only */}
           {['admin', 'owner', 'staff'].includes(userProfile?.role) && (
             <AnnouncementsPanel orgId={orgId} primary={primary} userId={session?.user?.id} />
           )}
-
-          {/* REFLECTIONS DUE */}
-          {completedWithoutReflection.length > 0 && (
-            <Panel title={`⭐ Reflection Due (${completedWithoutReflection.length})`}>
-              {completedWithoutReflection.map(s => (
-                <MiniRow key={s.id} icon="📝" title={s.title} text={formatDate(s.session_date)} badge="Due" onClick={() => go("planner", { reflectSessionId: s.id })} />
-              ))}
-              <button style={styles.yellowButton} onClick={() => go("planner", { reflectSessionId: completedWithoutReflection[0]?.id })}>Complete reflections →</button>
-            </Panel>
-          )}
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {/* ATTENTION CENTRE */}
-          {(hasModule('registers') || hasModule('safeguarding') || hasModule('volunteers') || hasModule('mentoring') || hasModule('reports') || (hasModule('resource_booking') && checkedOutCount > 0)) && (
-            <Panel title="🔔 Attention Centre">
-              {hasModule('registers') && <AttentionRow icon="📋" label="Registers" value={signedIn > 0 ? `${signedIn} signed in today` : "No activity yet"} tone={signedIn > 0 ? "green" : "blue"} onClick={() => go("registers")} />}
-              {hasModule('safeguarding') && <AttentionRow icon="🛡️" label="Safeguarding" value={concerns.length > 0 ? `${concerns.length} open concern${concerns.length > 1 ? "s" : ""}` : "No open concerns"} tone={concerns.length > 0 ? "amber" : "green"} onClick={() => go("safeguarding")} />}
-              {hasModule('volunteers') && <AttentionRow icon="❤️" label="Volunteers" value="Review session cover" tone="blue" onClick={() => go("volunteers")} />}
-              {hasModule('mentoring') && <AttentionRow icon="🤝" label="Mentoring" value="View active matches" tone="blue" onClick={() => go("mentoring")} />}
-              {hasModule('reports') && <AttentionRow icon="📊" label="Reports" value="View impact data" tone="blue" onClick={() => go("reports")} />}
-              {hasModule('resource_booking') && checkedOutCount > 0 && <AttentionRow icon="↗" label="Resources" value={`${checkedOutCount} item${checkedOutCount > 1 ? "s" : ""} checked out`} tone="amber" onClick={() => go("resource_booking")} />}
-            </Panel>
-          )}
-
-          {/* SAFEGUARDING SNAPSHOT */}
-          {hasModule('safeguarding') && (
-            <Panel title="🛡️ Safeguarding Snapshot">
-              <div style={styles.snapshotGrid}>
-                <SmallMetric label="Open Concerns" value={concerns.length} colour={concerns.length > 0 ? "#F59E0B" : "#059669"} onClick={() => go("safeguarding")} />
-                <SmallMetric label="Medical Alerts" value={medicalAlerts} colour="#F59E0B" onClick={() => go("registers")} />
-                <SmallMetric label="Reflections Due" value={completedWithoutReflection.length} colour={completedWithoutReflection.length > 0 ? "#DC2626" : "#059669"} onClick={() => go("planner")} />
-              </div>
-            </Panel>
-          )}
-
-          {/* IMPACT */}
-          <Panel title="💎 Impact This Month">
-            <div style={styles.impactGrid}>
-              <SmallMetric label="Young People" value={children.length} colour={primary} onClick={() => go("registers")} />
-              <SmallMetric label="Sessions" value={sessions.length} colour="#7C3AED" onClick={() => go("planner")} />
-              <SmallMetric label="Signed In" value={signedIn} colour="#2563EB" onClick={() => go("registers")} />
-              <SmallMetric label="Attendance" value={`${attendanceRate}%`} colour="#059669" onClick={() => go("reports")} />
-            </div>
-          </Panel>
         </div>
       </section>
 
@@ -2486,24 +2521,6 @@ function QuickLinkTile({ icon, label, badge, onClick }) {
   );
 }
 
-const MINI_STAT_TINTS = {
-  teal:   { glow: 'rgba(27,154,170,0.45)',  icon: '#1B9AAA' },
-  violet: { glow: 'rgba(124,58,237,0.45)',  icon: '#7C3AED' },
-  amber:  { glow: 'rgba(217,119,6,0.4)',    icon: '#D97706' },
-  green:  { glow: 'rgba(22,163,74,0.4)',    icon: '#16A34A' },
-}
-function HeaderMiniStat({ icon, value, label, tone, onClick, primary, tint }) {
-  const color = tone === 'warn' ? '#D97706' : tone === 'ok' ? '#16A34A' : primary
-  const t = MINI_STAT_TINTS[tint] || { glow: `${primary}40`, icon: color }
-  return (
-    <button onClick={onClick} className="ls-glass-stat" style={{ '--glass-glow': t.glow }}>
-      <span className="ls-glass-stat-icon" style={{ color: t.icon }}>{icon}</span>
-      <span className="ls-glass-stat-value" style={{ color: tone ? color : 'var(--text, #111)' }}>{value}</span>
-      <span className="ls-glass-stat-label">{label}</span>
-    </button>
-  );
-}
-
 function HeaderQuickAction({ icon, label, onClick, primary, filled }) {
   return (
     <button onClick={onClick} style={{
@@ -2554,28 +2571,6 @@ function AttentionRow({ icon, label, value, tone, onClick }) {
         <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>{value}</div>
       </div>
       <span style={{ ...styles.dot, background: colour }} />
-    </button>
-  );
-}
-
-function MiniRow({ icon, title, text, badge, onClick }) {
-  return (
-    <div style={{ ...styles.miniRow, cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
-      <span>{icon}</span>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text, #111)' }}>{title}</div>
-        <div style={{ fontSize: 11, color: '#6B7280' }}>{text}</div>
-      </div>
-      {badge && <span style={styles.dueBadge}>{badge}</span>}
-    </div>
-  );
-}
-
-function SmallMetric({ label, value, colour, onClick }) {
-  return (
-    <button onClick={onClick} style={{ ...styles.smallMetric, cursor: onClick ? 'pointer' : 'default' }}>
-      <strong style={{ color: colour, fontSize: 22, fontWeight: 900 }}>{value}</strong>
-      <span style={{ fontSize: 11, color: '#6B7280', marginTop: 4 }}>{label}</span>
     </button>
   );
 }
@@ -2653,4 +2648,5 @@ const styles = {
   snapshotGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 },
   impactGrid: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 },
 };
+
 
