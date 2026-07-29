@@ -2100,10 +2100,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
           <Panel title="📍 Right now">
-            <div className={isMobile ? 'scroll-fade-x' : ''} style={{ display: 'flex', flexWrap: isMobile ? 'nowrap' : 'wrap', gap: 12, overflowX: isMobile ? 'auto' : 'visible', paddingBottom: 4, paddingRight: isMobile ? 20 : 0 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, minmax(0, 1fr))', gap: isMobile ? 10 : 12 }}>
 
               {/* WEATHER CARD */}
-              <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', flex: '1 1 220px', minWidth: 200 }}>
+              <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: isMobile ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', minWidth: 0 }}>
                 <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
                 {weatherError ? (
                   <div style={{ position: 'relative' }}>
@@ -2117,23 +2117,24 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   </div>
                 ) : (
                   <div style={{ position: 'relative' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ fontSize: 11, fontWeight: 800, opacity: 0.85, textTransform: 'uppercase', letterSpacing: 0.5 }}>{weather.city}</div>
-                      <div style={{ fontSize: 26 }}>{weatherFromCode(weather.code).icon}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 800, opacity: 0.85, textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{weather.city}</div>
+                      <div style={{ fontSize: 22, flexShrink: 0 }}>{weatherFromCode(weather.code).icon}</div>
                     </div>
-                    <div style={{ fontSize: 34, fontWeight: 900, lineHeight: 1.1, marginTop: 4, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°<span style={{ fontSize: 16, fontWeight: 700, opacity: 0.8 }}>C</span></div>
-                    <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.9, marginTop: 2 }}>{weatherFromCode(weather.code).label}</div>
-                    <div style={{ display: 'flex', gap: 10, marginTop: 8, fontSize: 11, opacity: 0.85, fontWeight: 600 }}>
+                    <div style={{ fontSize: isMobile ? 26 : 34, fontWeight: 900, lineHeight: 1.1, marginTop: 4, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°<span style={{ fontSize: 14, fontWeight: 700, opacity: 0.8 }}>C</span></div>
+                    <div style={{ fontSize: 11.5, fontWeight: 600, opacity: 0.9, marginTop: 2 }}>{weatherFromCode(weather.code).label}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, fontSize: 10.5, opacity: 0.85, fontWeight: 600 }}>
                       {weather.high != null && <span>↑{weather.high}° ↓{weather.low}°</span>}
-                      {weather.rainChance != null && <span>💧 {weather.rainChance}%</span>}
+                      {!isMobile && weather.rainChance != null && <span>💧 {weather.rainChance}%</span>}
                       <span>💨 {weather.wind}mph</span>
                     </div>
                   </div>
                 )}
               </div>
 
-              <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} />
-              <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} />
+              <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} compact={isMobile} />
+              <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} compact={isMobile} />
+              <StatCard icon="🛡️" title={concerns.length > 0 ? `${concerns.length} concern${concerns.length > 1 ? "s" : ""}` : "All clear"} text={concerns.length > 0 ? "Needs review" : "No open concerns"} button={concerns.length > 0 ? "Review now" : undefined} onClick={() => go('safeguarding')} colour={concerns.length > 0 ? '#F59E0B' : '#16A34A'} compact={isMobile} />
             </div>
           </Panel>
 
@@ -2535,25 +2536,25 @@ function HeaderQuickAction({ icon, label, onClick, primary, filled }) {
   );
 }
 
-function StatCard({ icon, title, text, button, badge, onClick, colour }) {
+function StatCard({ icon, title, text, button, badge, onClick, colour, compact }) {
   return (
     <button onClick={onClick} style={{
       background: `linear-gradient(135deg, ${colour}, ${colour}CC)`,
-      borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden',
+      borderRadius: 16, padding: compact ? '12px 12px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden',
       minHeight: 128, boxShadow: `0 10px 28px -10px ${colour}80`, textAlign: 'left', cursor: 'pointer',
       border: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-      flex: '1 1 190px', minWidth: 180,
+      minWidth: 0, width: '100%', boxSizing: 'border-box',
     }}>
       <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
       <div style={{ position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: 26 }}>{icon}</div>
+          <div style={{ fontSize: compact ? 22 : 26 }}>{icon}</div>
         </div>
-        <h3 style={{ fontSize: 15, fontWeight: 900, color: '#fff', margin: '10px 0 4px', lineHeight: 1.25 }}>{title}</h3>
-        <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0 }}>{text}</p>
+        <h3 style={{ fontSize: compact ? 13 : 15, fontWeight: 900, color: '#fff', margin: '10px 0 4px', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{title}</h3>
+        <p style={{ fontSize: compact ? 11 : 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{text}</p>
       </div>
       {(button || badge) && (
-        <div style={{ position: 'relative', marginTop: 10, display: 'inline-block', background: 'rgba(255,255,255,0.2)', borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 800, color: '#fff', alignSelf: 'flex-start' }}>
+        <div style={{ position: 'relative', marginTop: 10, display: 'inline-block', background: 'rgba(255,255,255,0.2)', borderRadius: 8, padding: compact ? '4px 8px' : '5px 10px', fontSize: compact ? 10 : 11, fontWeight: 800, color: '#fff', alignSelf: 'flex-start', whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {button || badge}
         </div>
       )}
