@@ -1281,7 +1281,7 @@ function HubSignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
 function HubAbsentSheet({ child, onClose, onMark }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 340 }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 340, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Mark {child.first_name} as...</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {ABSENCE_REASONS_HUB.map(r => (
@@ -1308,7 +1308,7 @@ function HubWalkInModal({ allChildren, onClose, onSelectExisting, onCreate }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 400, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Add Walk-in</div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 14 }}>Search existing young people first — don't create a duplicate record.</div>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..." style={{ ...hubInp, marginBottom: 10 }} />
@@ -1440,7 +1440,7 @@ function HubClosureFlow({ grouped, onClose, onMarkAllAbsent, onCloseRegister, pr
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 22, width: 420, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 22, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Review and close session</div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 14 }}>Once closed, attendance is locked and the register becomes read-only. Later corrections need a reason and are audited.</div>
 
@@ -1565,7 +1565,7 @@ function NotificationBell({ primary, secondary, concernsCount, reflectionsCount,
       </button>
 
       {open && (
-        <div style={{ position: 'absolute', top: '110%', right: 0, width: 300, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 12px 40px rgba(0,0,0,0.15)', zIndex: 200, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '110%', right: 0, width: 300, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 12px 40px rgba(0,0,0,0.15)', zIndex: 200, overflow: 'hidden' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid #F3F4F6', fontSize: 13, fontWeight: 800, color: '#111' }}>Notifications</div>
           {total === 0 ? (
             <div style={{ padding: '28px 16px', textAlign: 'center', color: '#9CA3AF', fontSize: 12 }}>
