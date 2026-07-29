@@ -1872,6 +1872,37 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   const pad = isMobile ? 16 : 22;
 
+  const weatherCardInner = (
+    <>
+      <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
+      {weatherError ? (
+        <div style={{ position: 'relative' }}>
+          <div style={{ fontSize: 22, marginBottom: 6 }}>🌡️</div>
+          <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.9 }}>Weather unavailable</div>
+          <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>Add a city in Settings</div>
+        </div>
+      ) : !weather ? (
+        <div style={{ position: 'relative' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.85 }}>Loading weather...</div>
+        </div>
+      ) : (
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, opacity: 0.85, textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{weather.city}</div>
+            <div style={{ fontSize: 22, flexShrink: 0 }}>{weatherFromCode(weather.code).icon}</div>
+          </div>
+          <div style={{ fontSize: isMobile ? 26 : 34, fontWeight: 900, lineHeight: 1.1, marginTop: 4, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°<span style={{ fontSize: 14, fontWeight: 700, opacity: 0.8 }}>C</span></div>
+          <div style={{ fontSize: 11.5, fontWeight: 600, opacity: 0.9, marginTop: 2 }}>{weatherFromCode(weather.code).label}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, fontSize: 10.5, opacity: 0.85, fontWeight: 600 }}>
+            {weather.high != null && <span>↑{weather.high}° ↓{weather.low}°</span>}
+            {!isMobile && weather.rainChance != null && <span>💧 {weather.rainChance}%</span>}
+            <span>💨 {weather.wind}mph</span>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div style={styles.page}>
       {/* ── HEADER ── */}
@@ -2106,36 +2137,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             }>
 
               {/* WEATHER CARD */}
-              <div style={isMobile ? { width: 'calc(50% - 5px)', minWidth: 0, boxSizing: 'border-box' } : undefined}>
-              <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: isMobile ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', ...(isMobile ? { minWidth: 0, width: '100%', boxSizing: 'border-box' } : { flex: '1 1 220px', minWidth: 200 }) }}>
-                <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
-                {weatherError ? (
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ fontSize: 22, marginBottom: 6 }}>🌡️</div>
-                    <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.9 }}>Weather unavailable</div>
-                    <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>Add a city in Settings</div>
+              {isMobile ? (
+                <div style={{ width: 'calc(50% - 5px)', minWidth: 0, boxSizing: 'border-box' }}>
+                  <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: '14px 14px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
+                    {weatherCardInner}
                   </div>
-                ) : !weather ? (
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.85 }}>Loading weather...</div>
-                  </div>
-                ) : (
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                      <div style={{ fontSize: 10.5, fontWeight: 800, opacity: 0.85, textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{weather.city}</div>
-                      <div style={{ fontSize: 22, flexShrink: 0 }}>{weatherFromCode(weather.code).icon}</div>
-                    </div>
-                    <div style={{ fontSize: isMobile ? 26 : 34, fontWeight: 900, lineHeight: 1.1, marginTop: 4, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°<span style={{ fontSize: 14, fontWeight: 700, opacity: 0.8 }}>C</span></div>
-                    <div style={{ fontSize: 11.5, fontWeight: 600, opacity: 0.9, marginTop: 2 }}>{weatherFromCode(weather.code).label}</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, fontSize: 10.5, opacity: 0.85, fontWeight: 600 }}>
-                      {weather.high != null && <span>↑{weather.high}° ↓{weather.low}°</span>}
-                      {!isMobile && weather.rainChance != null && <span>💧 {weather.rainChance}%</span>}
-                      <span>💨 {weather.wind}mph</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              </div>
+                </div>
+              ) : (
+                <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', flex: '1 1 220px', minWidth: 200 }}>
+                  {weatherCardInner}
+                </div>
+              )}
 
               {isMobile ? (
                 <div style={{ width: 'calc(50% - 5px)', minWidth: 0, boxSizing: 'border-box' }}>
