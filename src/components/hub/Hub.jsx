@@ -2101,12 +2101,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {/* TODAY AT A GLANCE */}
           <Panel title="📍 Right now">
             <div style={isMobile
-              ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }
+              ? { display: 'flex', flexWrap: 'wrap', gap: 10 }
               : { display: 'flex', flexWrap: 'wrap', gap: 12 }
             }>
 
               {/* WEATHER CARD */}
-              <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: isMobile ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', ...(isMobile ? { minWidth: 0 } : { flex: '1 1 220px', minWidth: 200 }) }}>
+              <div style={isMobile ? { width: 'calc(50% - 5px)', minWidth: 0, boxSizing: 'border-box' } : undefined}>
+              <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: isMobile ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', ...(isMobile ? { minWidth: 0, width: '100%', boxSizing: 'border-box' } : { flex: '1 1 220px', minWidth: 200 }) }}>
                 <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
                 {weatherError ? (
                   <div style={{ position: 'relative' }}>
@@ -2134,10 +2135,31 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   </div>
                 )}
               </div>
+              </div>
 
-              <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} compact={isMobile} />
-              <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} compact={isMobile} />
-              <StatCard icon="🛡️" title={concerns.length > 0 ? `${concerns.length} concern${concerns.length > 1 ? "s" : ""}` : "All clear"} text={concerns.length > 0 ? "Needs review" : "No open concerns"} button={concerns.length > 0 ? "Review now" : undefined} onClick={() => go('safeguarding')} colour={concerns.length > 0 ? '#F59E0B' : '#16A34A'} compact={isMobile} />
+              {isMobile ? (
+                <div style={{ width: 'calc(50% - 5px)', minWidth: 0, boxSizing: 'border-box' }}>
+                  <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} compact />
+                </div>
+              ) : (
+                <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} />
+              )}
+
+              {isMobile ? (
+                <div style={{ width: 'calc(50% - 5px)', minWidth: 0, boxSizing: 'border-box' }}>
+                  <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} compact />
+                </div>
+              ) : (
+                <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} />
+              )}
+
+              {isMobile ? (
+                <div style={{ width: 'calc(50% - 5px)', minWidth: 0, boxSizing: 'border-box' }}>
+                  <StatCard icon="🛡️" title={concerns.length > 0 ? `${concerns.length} concern${concerns.length > 1 ? "s" : ""}` : "All clear"} text={concerns.length > 0 ? "Needs review" : "No open concerns"} button={concerns.length > 0 ? "Review now" : undefined} onClick={() => go('safeguarding')} colour={concerns.length > 0 ? '#F59E0B' : '#16A34A'} compact />
+                </div>
+              ) : (
+                <StatCard icon="🛡️" title={concerns.length > 0 ? `${concerns.length} concern${concerns.length > 1 ? "s" : ""}` : "All clear"} text={concerns.length > 0 ? "Needs review" : "No open concerns"} button={concerns.length > 0 ? "Review now" : undefined} onClick={() => go('safeguarding')} colour={concerns.length > 0 ? '#F59E0B' : '#16A34A'} />
+              )}
             </div>
           </Panel>
 
