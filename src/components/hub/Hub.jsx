@@ -2215,7 +2215,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 10 }}>
               <QuickLinkTile icon="💬" label="Messages" onClick={() => go('messaging')} />
               <QuickLinkTile icon="📅" label="Calendar" onClick={() => go('calendar')} />
               {hasModule('volunteers') && <QuickLinkTile icon="❤️" label="Volunteers" onClick={() => go('volunteers')} />}
