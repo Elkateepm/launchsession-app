@@ -16,6 +16,8 @@ import SplashScreen from './components/common/SplashScreen'
 import { useBreakpoint } from './hooks/useIsMobile'
 
 const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000 // 2 hours
+const MOBILE_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
+const LAST_ACTIVITY_KEY = 'ls_last_activity'
 
 // Signs the user out and returns them to the marketing landing page after a
 // sustained period with no interaction. Only active while `enabled` (a live
@@ -59,6 +61,58 @@ function useIdleLogout(enabled) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
       events.forEach(e => { window.removeEventListener(e, reset); window.removeEventListener(e, markActivity) })
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [active])
+}
+
+// Mobile/iPad counterpart to useIdleLogout: these users stay signed in
+// indefinitely across app opens, backgrounding, and device sleep - EXCEPT
+// they're auto-signed-out if the app hasn't been opened/used at all in 7
+// days (abandoned installs, lost/stolen devices, staff who've left). In-memory
+// timers don't survive a killed app process on mobile, so "last used" is
+// persisted to localStorage and checked whenever the app loads or resumes.
+function useMobileInactivityLogout(enabled) {
+  const { isDesktop } = useBreakpoint()
+  const active = enabled && !isDesktop
+
+  useEffect(() => {
+    if (!active) return
+
+    const logout = async () => {
+      try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
+      try { localStorage.removeItem(LAST_ACTIVITY_KEY) } catch (e) { /* ignore */ }
+      window.location.replace('/landing.html')
+    }
+
+    const markActivity = () => {
+      try { localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now())) } catch (e) { /* storage unavailable */ }
+    }
+
+    const checkStale = () => {
+      let last = null
+      try { last = parseInt(localStorage.getItem(LAST_ACTIVITY_KEY), 10) } catch (e) { /* storage unavailable */ }
+      if (!last || Number.isNaN(last)) { markActivity(); return }
+      if (Date.now() - last >= MOBILE_INACTIVITY_MS) logout()
+    }
+
+    // Check immediately on mount (covers reopening the app after days away)
+    // then stamp fresh activity so the 7-day clock restarts from now.
+    checkStale()
+    markActivity()
+
+    const events = ['touchstart', 'mousedown', 'keydown', 'scroll', 'click']
+    events.forEach(e => window.addEventListener(e, markActivity, { passive: true }))
+
+    // Re-check whenever the app comes back to the foreground, since that's
+    // the moment a long-dormant install would otherwise silently stay signed in.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') { checkStale(); markActivity() }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, markActivity))
       document.removeEventListener('visibilitychange', onVisible)
     }
   }, [active])
@@ -217,6 +271,8 @@ function AppContent() {
 
   // Auto-logout to landing after 2 hours of inactivity while signed in - desktop only.
   useIdleLogout(!!session)
+  // Mobile/iPad: stay signed in until manual logout, or 7 days of no use.
+  useMobileInactivityLogout(!!session)
 
   // Redirect to landing immediately if this looks like a bare/fresh visit.
   if (shouldGoToLanding() && !checkedSession) {
@@ -278,3 +334,4 @@ export default function App() {
     </OrgProvider>
   )
 }
+
