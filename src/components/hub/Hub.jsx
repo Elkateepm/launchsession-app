@@ -2100,10 +2100,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
           <Panel title="📍 Right now">
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, minmax(0, 1fr))', gap: isMobile ? 10 : 12 }}>
+            <div style={isMobile
+              ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }
+              : { display: 'flex', flexWrap: 'wrap', gap: 12 }
+            }>
 
               {/* WEATHER CARD */}
-              <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: isMobile ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', minWidth: 0 }}>
+              <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: isMobile ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', ...(isMobile ? { minWidth: 0 } : { flex: '1 1 220px', minWidth: 200 }) }}>
                 <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
                 {weatherError ? (
                   <div style={{ position: 'relative' }}>
@@ -2543,7 +2546,8 @@ function StatCard({ icon, title, text, button, badge, onClick, colour, compact }
       borderRadius: 16, padding: compact ? '12px 12px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden',
       minHeight: 128, boxShadow: `0 10px 28px -10px ${colour}80`, textAlign: 'left', cursor: 'pointer',
       border: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-      minWidth: 0, width: '100%', boxSizing: 'border-box',
+      boxSizing: 'border-box',
+      ...(compact ? { minWidth: 0, width: '100%' } : { flex: '1 1 190px', minWidth: 180 }),
     }}>
       <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
       <div style={{ position: 'relative' }}>
