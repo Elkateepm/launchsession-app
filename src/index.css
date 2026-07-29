@@ -25,6 +25,14 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Fades the trailing edge of a horizontally-scrolling row so cut-off content
+   reads as "more to scroll" instead of a broken layout. Works on any
+   background since it masks the content itself, not a color. */
+.scroll-fade-x {
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 85%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 0%, #000 85%, transparent 100%);
+}
+
 body {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
