@@ -2148,7 +2148,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               </div>
 
               <div style={{ minWidth: 0 }}>
-                <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} button={!nextSession ? "Plan now" : null} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : null} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : secondary} compact={isMobile} />
+                <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} button={!nextSession ? "Plan now" : null} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : null} onClick={() => nextSession ? go(nextSessionStatus === 'live' ? "registers" : "planner") : go('planner', { autoOpenWizard: true })} colour={nextSessionStatus === 'live' ? '#DC2626' : secondary} compact={isMobile} />
               </div>
             </div>
           </Panel>
