@@ -2050,7 +2050,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
 
             {/* Quick actions row */}
-            <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
               <HeaderQuickAction icon="＋" label="Session" onClick={() => go('planner', { autoOpenWizard: true })} primary={primary} filled />
               {hasModule('registers') && <HeaderQuickAction icon="📋" label="Register" onClick={() => go('registers')} primary={primary} />}
               <HeaderQuickAction icon="💬" label="Messages" onClick={() => go('messaging')} primary={primary} />
