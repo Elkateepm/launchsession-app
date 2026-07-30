@@ -15,7 +15,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
  *   badge      — { text, color? } small pill next to title
  *   gradient   — override gradient string
  */
-export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA', orgName, stats = [], actions = [], badge, gradient }) {
+export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA', orgName, stats = [], actions = [], badge, gradient, illustration }) {
   const isMobile = useIsMobile()
   const grad = gradient || `linear-gradient(135deg, ${primary}18 0%, ${primary}08 60%, transparent 100%)`
 
@@ -29,6 +29,11 @@ export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA',
       <div style={{ position: 'absolute', inset: 0, background: grad, pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: primary + '0C', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: -40, left: -20, width: 140, height: 140, borderRadius: '50%', background: primary + '06', pointerEvents: 'none' }} />
+
+      {/* Decorative illustration, top-right — sits behind the title/actions row */}
+      {illustration && (
+        <img src={illustration} alt="" style={{ position: 'absolute', top: isMobile ? -16 : -24, right: isMobile ? -16 : 8, width: isMobile ? 92 : 132, height: isMobile ? 92 : 132, objectFit: 'contain', pointerEvents: 'none', zIndex: 0 }} />
+      )}
 
       <div style={{ position: 'relative', zIndex: 1, padding: '20px 24px 0' }}>
         {/* Top row */}
