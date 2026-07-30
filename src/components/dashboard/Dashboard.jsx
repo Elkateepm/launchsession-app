@@ -10,7 +10,7 @@ import Hub from '../hub/Hub'
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import Registers from '../registers/Registers'
-import { useBreakpoint } from '../../hooks/useIsMobile'
+import { useBreakpoint, useIsMobile } from '../../hooks/useIsMobile'
 import EventsTrips from '../events/EventsTrips'
 import Calendar from '../calendar/Calendar';
 import Templates from '../templates/Templates'
@@ -211,14 +211,14 @@ function LiveClock() {
   )
 }
 
-function HeaderIconButton({ icon, label, onClick, badge, primary }) {
+function HeaderIconButton({ icon, label, onClick, badge, primary, isMobile }) {
   return (
     <motion.button
       onClick={onClick}
       title={label}
       whileHover={{ y: -3, scale: 1.05, boxShadow: `0 8px 20px -6px ${primary}50` }}
       whileTap={{ scale: 0.94 }}
-      style={{ position: 'relative', width: 44, height: 44, borderRadius: 14, border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+      style={{ position: 'relative', width: isMobile ? 38 : 44, height: isMobile ? 38 : 44, borderRadius: isMobile ? 12 : 14, border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: isMobile ? 15 : 17, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
     >
       <motion.span whileHover={{ rotate: 5 }}>{icon}</motion.span>
       {badge && (
@@ -244,6 +244,7 @@ function timeAgo(dateStr) {
 }
 
 function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, userProfile, onProfileClick, onNavigate, hasModule, unreadSubs = [] }) {
+  const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -268,17 +269,17 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 26 }}
       style={{
-        margin: '16px 20px 0', borderRadius: 24, padding: '16px 24px',
+        margin: isMobile ? '10px 12px 0' : '16px 20px 0', borderRadius: isMobile ? 18 : 24, padding: isMobile ? '10px 14px' : '16px 24px',
         background: 'rgba(255,255,255,0.68)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)',
         border: '1px solid rgba(255,255,255,0.55)',
         boxShadow: scrolled ? '0 14px 46px rgba(15,23,42,0.14), inset 0 1px rgba(255,255,255,0.7)' : '0 10px 40px rgba(15,23,42,0.08), inset 0 1px rgba(255,255,255,0.7)',
-        display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0, transition: 'box-shadow 0.25s ease', position: 'relative', zIndex: 50,
+        display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 20, justifyContent: 'space-between', flexShrink: 0, transition: 'box-shadow 0.25s ease', position: 'relative', zIndex: 50,
       }}
     >
       {/* LEFT — org card */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flexShrink: 0 }}>
         <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }} style={{ flexShrink: 0 }}>
-          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 3, border: `1.5px solid ${primary}30` }} />
+          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 3, border: `1.5px solid ${primary}30` }} />
         </motion.div>
         <div style={{ minWidth: 0, display: 'none' }} className="ls-header-org-text">
           <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{orgName}</div>
@@ -300,7 +301,8 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
         </div>
       </div>
 
-      {/* CENTRE — search */}
+      {/* CENTRE — search (desktop/tablet only; on mobile there's no room and Home has its own quick actions) */}
+      {!isMobile && (
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', minWidth: 0 }} className="ls-header-search">
         <motion.div
           animate={{ width: searchFocused ? 500 : 440 }}
@@ -332,12 +334,13 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
           </AnimatePresence>
         </motion.div>
       </div>
+      )}
 
       {/* RIGHT — quick actions + clock + profile */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: 8 }} className="ls-header-actions">
           <div style={{ position: 'relative' }}>
-            <HeaderIconButton icon="🔔" label="Notifications" primary={primary} badge={unreadSubs.length > 0} onClick={() => setShowNotifs(v => !v)} />
+            <HeaderIconButton icon="🔔" label="Notifications" primary={primary} badge={unreadSubs.length > 0} onClick={() => setShowNotifs(v => !v)} isMobile={isMobile} />
             <AnimatePresence>
               {showNotifs && (
                 <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.96 }}
@@ -367,11 +370,15 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
               )}
             </AnimatePresence>
           </div>
-          <HeaderIconButton icon="💬" label="Messages" primary={primary} onClick={() => onNavigate(hasModule('messaging') ? 'messaging' : 'messaging')} />
-          <HeaderIconButton icon="➕" label="Quick Add" primary={primary} onClick={() => onNavigate('planner')} />
-          <a href="mailto:hello@launchsession.co.uk?subject=Help" style={{ textDecoration: 'none' }}>
-            <HeaderIconButton icon="❓" label="Help" primary={primary} onClick={() => {}} />
-          </a>
+          <HeaderIconButton icon="💬" label="Messages" primary={primary} onClick={() => onNavigate(hasModule('messaging') ? 'messaging' : 'messaging')} isMobile={isMobile} />
+          {!isMobile && (
+            <>
+              <HeaderIconButton icon="➕" label="Quick Add" primary={primary} onClick={() => onNavigate('planner')} />
+              <a href="mailto:hello@launchsession.co.uk?subject=Help" style={{ textDecoration: 'none' }}>
+                <HeaderIconButton icon="❓" label="Help" primary={primary} onClick={() => {}} />
+              </a>
+            </>
+          )}
         </div>
 
         <div className="ls-header-clock"><LiveClock /></div>
@@ -380,10 +387,10 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
           onClick={onProfileClick}
           whileHover={{ y: -2, backgroundColor: 'rgba(255,255,255,0.75)' }}
           whileTap={{ scale: 0.97 }}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px 6px 6px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.5)', cursor: 'pointer', flexShrink: 0 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '4px' : '6px 12px 6px 6px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.5)', cursor: 'pointer', flexShrink: 0 }}
         >
           <div style={{ position: 'relative', flexShrink: 0 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden' }}>
+            <div style={{ width: isMobile ? 30 : 32, height: isMobile ? 30 : 32, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden' }}>
               {userProfile?.photo_url ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (userName[0]?.toUpperCase() || '?')}
             </div>
             <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 2, repeat: Infinity }}
@@ -393,7 +400,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
             <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 110 }}>{userName}</div>
             <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 600, textTransform: 'capitalize' }}>{userProfile?.role || 'Member'}</div>
           </div>
-          <span style={{ fontSize: 11, color: '#94A3B8' }}>▾</span>
+          {!isMobile && <span style={{ fontSize: 11, color: '#94A3B8' }}>▾</span>}
         </motion.button>
       </div>
 
