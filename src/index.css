@@ -256,3 +256,21 @@ input, select, textarea { font-family: var(--font); }
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+
+/* ── Hub "Right now" / "Overview" mobile grid safety net ──────────────────
+   These layouts previously decided column count from a JS isMobile flag
+   (window.innerWidth < 768 via React state). On at least one real device
+   that flag was evaluating incorrectly at render time, causing the 2-column
+   card grids to fall back to a 320px-sidebar / auto-fit desktop layout that
+   doesn't fit on a phone screen — cards render full-width and overflow.
+   Real CSS media queries are evaluated natively by the browser against the
+   actual current viewport, so they can't drift from reality the way a JS
+   state value can. !important is required here specifically to win over
+   the inline style the JS still sets (for browsers where the JS value is
+   correct, this is a no-op — same result either way). */
+@media (max-width: 767px) {
+  .ls-hub-outer-grid { grid-template-columns: 1fr !important; }
+  .ls-hub-rightnow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .ls-hub-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .ls-hub-livesession-grid { grid-template-columns: 1fr !important; }
+}
