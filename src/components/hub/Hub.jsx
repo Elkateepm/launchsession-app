@@ -2187,7 +2187,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
               {hasModule('registers') ? (
-                <GlanceCard icon="📋" tone="green" title="Registers" subtitle="Take today's register"
+                <GlanceCard icon="📋" iconImg="/icons/hub-registers-icon.png" tone="green" title="Registers" subtitle="Take today's register"
                   fraction={`${sessionsEndedToday} / ${strictlyTodaySessions.length}`} fractionLabel="Sessions completed"
                   onClick={() => go('registers')} />
               ) : (
@@ -2196,7 +2196,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   onClick={() => go('planner')} />
               )}
               {hasModule('safeguarding') ? (
-                <GlanceCard icon="🛡️" tone={concerns.length > 0 ? "amber" : "blue"} title="Safeguarding" subtitle={concerns.length > 0 ? "Needs attention" : "All clear"}
+                <GlanceCard icon="🛡️" iconImg="/icons/hub-safeguarding-icon.png" tone={concerns.length > 0 ? "amber" : "blue"} title="Safeguarding" subtitle={concerns.length > 0 ? "Needs attention" : "All clear"}
                   fraction={concerns.length} fractionLabel={concerns.length > 0 ? `Open concern${concerns.length > 1 ? 's' : ''}` : "No open concerns"}
                   onClick={() => go('safeguarding')} />
               ) : (
@@ -2498,7 +2498,7 @@ function GlanceStat({ icon, iconBg, value, valueColour, label, sub, onClick }) {
   );
 }
 
-function GlanceCard({ icon, tone, title, subtitle, fraction, fractionLabel, onClick }) {
+function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLabel, onClick }) {
   const tones = {
     green: { bg: 'linear-gradient(135deg, #ECFDF5, #F0FDF4)', border: '#BBF7D0', iconBg: '#16A34A', pillBg: 'rgba(22,163,74,0.12)', pillColour: '#16A34A', arrowBg: '#16A34A' },
     blue:  { bg: 'linear-gradient(135deg, #EFF6FF, #F5F8FF)', border: '#BFDBFE', iconBg: '#2563EB', pillBg: 'rgba(37,99,235,0.12)', pillColour: '#2563EB', arrowBg: '#2563EB' },
@@ -2508,7 +2508,11 @@ function GlanceCard({ icon, tone, title, subtitle, fraction, fractionLabel, onCl
   return (
     <button onClick={onClick} style={{ flex: '1 1 220px', minWidth: 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: 18, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <span style={{ width: 38, height: 38, borderRadius: 11, background: tones.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{icon}</span>
+        {iconImg ? (
+          <img src={iconImg} alt="" style={{ width: 38, height: 38, borderRadius: 11, objectFit: 'cover', display: 'block', flexShrink: 0 }} />
+        ) : (
+          <span style={{ width: 38, height: 38, borderRadius: 11, background: tones.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{icon}</span>
+        )}
       </div>
       <div>
         <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>{title}</div>
