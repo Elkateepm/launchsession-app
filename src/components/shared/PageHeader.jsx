@@ -81,13 +81,20 @@ export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA',
 
         {/* Stats row */}
         {stats.length > 0 && (
-          <div style={{ display: 'flex', gap: 0, margin: '0 -24px', borderTop: '1px solid var(--border, #e5e7eb)' }}>
+          <div style={isMobile
+            ? { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, margin: '0 -24px', borderTop: '1px solid var(--border, #e5e7eb)' }
+            : { display: 'flex', gap: 0, margin: '0 -24px', borderTop: '1px solid var(--border, #e5e7eb)' }
+          }>
             {stats.map((s, i) => (
-              <div key={i} className="ls-stat-card" style={{ flex: 1, padding: '12px 16px', borderRight: i < stats.length - 1 ? '1px solid var(--border, #e5e7eb)' : 'none', minWidth: 0 }}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3, #9CA3AF)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div key={i} className="ls-stat-card" style={{
+                flex: isMobile ? undefined : 1, padding: isMobile ? '12px 10px' : '12px 16px', minWidth: 0,
+                borderRight: isMobile ? (((i + 1) % 3 !== 0 && i < stats.length - 1) ? '1px solid var(--border, #e5e7eb)' : 'none') : (i < stats.length - 1 ? '1px solid var(--border, #e5e7eb)' : 'none'),
+                borderBottom: isMobile && i < stats.length - (stats.length % 3 === 0 ? 3 : stats.length % 3) ? '1px solid var(--border, #e5e7eb)' : 'none',
+              }}>
+                <div style={{ fontSize: isMobile ? 9.5 : 10, fontWeight: 800, color: 'var(--text3, #9CA3AF)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {s.icon && <span>{s.icon}</span>}{s.label}
                 </div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: s.color || primary, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
+                <div style={{ fontSize: isMobile ? 19 : 22, fontWeight: 900, color: s.color || primary, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
               </div>
             ))}
           </div>
