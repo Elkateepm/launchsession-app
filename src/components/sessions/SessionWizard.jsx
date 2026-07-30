@@ -195,7 +195,7 @@ function LiveSummary({ form, leadName, expectedCount }) {
 
 // ─── STEP 1: TYPE ───────────────────────────────────────────────
 
-function StepType({ form, setForm }) {
+function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate }) {
   const isMobile = useIsMobile()
   const choose = (key) => {
     const preset = TYPE_PRESETS[key] || {}
@@ -203,6 +203,29 @@ function StepType({ form, setForm }) {
   }
   return (
     <div style={card}>
+      {templates && templates.length > 0 && (
+        <div style={{ marginBottom: 22, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
+          <SectionHeader icon="🗂️" title="Start from a template" subtitle="Pick one to prefill this session, or skip and start from scratch" />
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+            {templates.map(t => {
+              const active = appliedTemplateId === t.id
+              return (
+                <button key={t.id} onClick={() => onApplyTemplate(t)} style={{
+                  flexShrink: 0, minWidth: 150, textAlign: 'left', padding: '12px 14px', borderRadius: 12, cursor: 'pointer',
+                  border: active ? '2px solid #1B9AAA' : '1.5px solid var(--border)',
+                  background: active ? 'rgba(27,154,170,0.08)' : 'var(--surface)',
+                }}>
+                  <div style={{ fontSize: 20, marginBottom: 6 }}>{t.icon || '📋'}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</div>
+                  {t.start_time && t.end_time && (
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{t.start_time}–{t.end_time}</div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
       <SectionHeader icon="🏃" title="What kind of session is this?" subtitle="This sets sensible defaults you can adjust later" />
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 12 }}>
         {WIZARD_TYPES.map(t => {
@@ -602,11 +625,29 @@ function StepReview({ form, staff, expectedCount, primary }) {
 
 // ─── MAIN WIZARD ────────────────────────────────────────────────
 
-export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPublished, onNavigate, initialType }) {
+// Map a session_templates row onto the wizard's form field shape
+function templateToFormPatch(t) {
+  if (!t) return {}
+  const fields = [
+    'session_type', 'title', 'location', 'venue_id', 'description', 'max_capacity', 'age_range',
+    'meeting_point', 'colour', 'bubbles', 'start_time', 'end_time', 'min_staff', 'staff_ratio',
+    'allow_walk_ins', 'packed_lunch', 'consent_required', 'risk_assessment_required',
+    'medical_check_required', 'collection_permissions_required', 'sign_out_required',
+    'safeguarding_lead_required', 'transport_required', 'equipment_required',
+    'medication_support_required', 'venue_confirmation_required', 'emergency_contact_sheet_required',
+    'reflection_required',
+  ]
+  const patch = {}
+  fields.forEach(k => { if (t[k] !== null && t[k] !== undefined) patch[k] = t[k] })
+  return patch
+}
+
+export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPublished, onNavigate, initialType, initialTemplate }) {
   const isMobile = useIsMobile()
   const draftKey = `ls_session_draft_${org?.id}`
   const [step, setStep] = useState(1)
   const [form, setForm] = useState(() => {
+    if (initialTemplate) return { ...emptyForm(), ...templateToFormPatch(initialTemplate) }
     try {
       const saved = localStorage.getItem(draftKey)
       if (saved) return { ...emptyForm(), ...JSON.parse(saved) }
@@ -618,12 +659,19 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   const [staff, setStaff] = useState([])
   const [children, setChildren] = useState([])
   const [orgForms, setOrgForms] = useState([])
+  const [templates, setTemplates] = useState([])
+  const [appliedTemplateId, setAppliedTemplateId] = useState(initialTemplate?.id || null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(null) // { session, publishedAs }
   const [lastSaved, setLastSaved] = useState(null)
 
   const primary = org?.primary_color || '#1B9AAA'
+
+  const applyTemplate = (t) => {
+    setForm(f => ({ ...f, ...templateToFormPatch(t) }))
+    setAppliedTemplateId(t.id)
+  }
 
   useEffect(() => {
     if (!org?.id) return
@@ -633,6 +681,8 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       .then(({ data }) => setChildren(data || []))
     supabase.from('org_forms').select('id, name').eq('org_id', org.id).eq('is_active', true)
       .then(({ data }) => setOrgForms(data || []))
+    supabase.from('session_templates').select('*').eq('org_id', org.id).order('use_count', { ascending: false })
+      .then(({ data }) => setTemplates(data || []))
   }, [org?.id])
 
   // Default lead to current user once staff list loads, if not already set
@@ -722,6 +772,9 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     setSaving(false)
     if (err) { setError(err.message); return }
     clearDraft()
+    if (appliedTemplateId) {
+      supabase.from('session_templates').update({ use_count: (templates.find(t => t.id === appliedTemplateId)?.use_count || 0) + 1, last_used_at: new Date().toISOString() }).eq('id', appliedTemplateId).then(() => {})
+    }
     setDone({ session: data.session, publishedAs: status })
     if (onPublished) onPublished(data.session)
   }
@@ -769,7 +822,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
         <div>
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.15 }}>
-              {step === 1 && <StepType form={form} setForm={setForm} />}
+              {step === 1 && <StepType form={form} setForm={setForm} templates={templates} appliedTemplateId={appliedTemplateId} onApplyTemplate={applyTemplate} />}
               {step === 2 && <StepDetails form={form} setForm={setForm} staff={staff} org={org} />}
               {step === 3 && <StepPeople form={form} setForm={setForm} staff={staff} children={children} expectedCount={expectedCount} bubbleDefs={bubbleDefs} org={org} />}
               {step === 4 && <StepRequirements form={form} setForm={setForm} orgForms={orgForms} />}
