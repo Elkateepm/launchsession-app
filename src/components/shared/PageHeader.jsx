@@ -15,7 +15,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
  *   badge      — { text, color? } small pill next to title
  *   gradient   — override gradient string
  */
-export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA', orgName, stats = [], actions = [], badge, gradient, illustration }) {
+export default function PageHeader({ icon, iconImg, title, subtitle, primary = '#1B9AAA', orgName, stats = [], actions = [], badge, gradient, illustration }) {
   const isMobile = useIsMobile()
   const grad = gradient || `linear-gradient(135deg, ${primary}18 0%, ${primary}08 60%, transparent 100%)`
 
@@ -40,9 +40,13 @@ export default function PageHeader({ icon, title, subtitle, primary = '#1B9AAA',
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-start', justifyContent: 'space-between', gap: isMobile ? 12 : 16, marginBottom: stats.length ? 16 : 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
             {/* Icon */}
-            <div className="ls-page-header-icon" style={{ width: 48, height: 48, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, ${primary}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 10px 22px -8px ${primary}55` }}>
-              {icon}
-            </div>
+            {iconImg ? (
+              <img src={iconImg} alt="" className="ls-page-header-icon" style={{ width: 48, height: 48, borderRadius: 14, objectFit: 'cover', flexShrink: 0, boxShadow: `0 10px 22px -8px ${primary}55` }} />
+            ) : (
+              <div className="ls-page-header-icon" style={{ width: 48, height: 48, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, ${primary}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 10px 22px -8px ${primary}55` }}>
+                {icon}
+              </div>
+            )}
             {/* Title block */}
             <div style={{ minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
