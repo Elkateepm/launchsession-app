@@ -2518,11 +2518,20 @@ function Panel({ title, right, children }) {
 }
 
 function GlanceStat({ icon, iconBg, value, valueColour, label, sub, onClick }) {
+  const c = valueColour || '#64748B'
   return (
-    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: onClick ? 'pointer' : 'default', padding: 0, width: '100%', minWidth: 0, textAlign: 'left' }}>
-      <span style={{ width: 34, height: 34, borderRadius: '50%', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</span>
+    <button onClick={onClick} style={{
+      display: 'flex', alignItems: 'center', gap: 10, cursor: onClick ? 'pointer' : 'default',
+      width: '100%', minWidth: 0, textAlign: 'left', boxSizing: 'border-box',
+      background: `${c}0F`, border: `1px solid ${c}28`, borderRadius: 14, padding: '11px 12px',
+    }}>
+      <span style={{
+        width: 38, height: 38, borderRadius: 11, flexShrink: 0,
+        background: `linear-gradient(135deg, ${c}, ${c}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 16, boxShadow: `0 4px 10px -3px ${c}70, inset 0 1px 0 rgba(255,255,255,0.35)`,
+      }}>{icon}</span>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 19, fontWeight: 900, color: valueColour, lineHeight: 1.1 }}>{value}</div>
+        <div style={{ fontSize: 19, fontWeight: 900, color: c, lineHeight: 1.1 }}>{value}</div>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text, #111)', marginTop: 1 }}>{label}</div>
         <div style={{ fontSize: 10.5, color: '#9CA3AF' }}>{sub}</div>
       </div>
