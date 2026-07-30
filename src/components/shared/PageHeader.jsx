@@ -41,7 +41,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
             {/* Icon */}
             {iconImg ? (
-              <img src={iconImg} alt="" className="ls-page-header-icon" style={{ width: 48, height: 48, borderRadius: 14, objectFit: 'cover', flexShrink: 0, boxShadow: `0 10px 22px -8px ${primary}55` }} />
+              <img src={iconImg} alt="" className="ls-page-header-icon" style={{ width: 96, height: 96, borderRadius: 24, objectFit: 'cover', flexShrink: 0, boxShadow: `0 10px 22px -8px ${primary}55` }} />
             ) : (
               <div className="ls-page-header-icon" style={{ width: 48, height: 48, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, ${primary}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 10px 22px -8px ${primary}55` }}>
                 {icon}
