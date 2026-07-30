@@ -2244,13 +2244,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   onClick={() => go('settings')} />
               )}
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: 10 }}>
-              <QuickLinkTile icon="💬" label="Messages" onClick={() => go('messaging')} />
-              <QuickLinkTile icon="📅" label="Calendar" onClick={() => go('calendar')} />
-              {hasModule('volunteers') && <QuickLinkTile icon="❤️" label="Volunteers" onClick={() => go('volunteers')} />}
-              {hasModule('reports') && <QuickLinkTile icon="📄" label="Reports" onClick={() => go('reports')} />}
-            </div>
           </Panel>
 
           {/* SESSIONS — merged Live & Upcoming + Ended sessions behind one segmented control, instead of two stacked lists */}
