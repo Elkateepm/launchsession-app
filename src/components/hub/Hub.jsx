@@ -2584,15 +2584,37 @@ function StatCard({ icon, title, text, button, badge, onClick, colour, gradient,
 }
 
 function AttentionRow({ icon, label, value, tone, onClick }) {
-  const colour = tone === "green" ? "#16A34A" : tone === "amber" ? "#F59E0B" : "#0EA5E9";
+  const tones = {
+    amber: { bg: '#FFFBEB', border: '#FDE68A', iconBg: 'linear-gradient(135deg, #FBBF24, #D97706)', glow: 'rgba(217,119,6,0.28)' },
+    blue:  { bg: '#F8FAFC', border: '#E2E8F0', iconBg: 'linear-gradient(135deg, #60A5FA, #2563EB)', glow: 'rgba(37,99,235,0.18)' },
+    green: { bg: '#F0FDF4', border: '#BBF7D0', iconBg: 'linear-gradient(135deg, #4ADE80, #16A34A)', glow: 'rgba(22,163,74,0.18)' },
+  }[tone] || { bg: '#F8FAFC', border: '#E2E8F0', iconBg: 'linear-gradient(135deg, #94A3B8, #64748B)', glow: 'rgba(100,116,139,0.18)' };
+
+  const urgent = tone === 'amber';
+
   return (
-    <button style={styles.attentionRow} onClick={onClick}>
-      <span style={{ ...styles.attentionIcon, fontSize: 18 }}>{icon}</span>
-      <div style={{ flex: 1, textAlign: 'left' }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)' }}>{label}</div>
-        <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>{value}</div>
+    <button onClick={onClick} style={{
+      position: 'relative', overflow: 'hidden', width: '100%', display: 'flex', alignItems: 'center', gap: 13,
+      background: tones.bg, border: `1px solid ${tones.border}`, borderRadius: 16,
+      padding: '12px 14px 12px 16px', marginBottom: 9, textAlign: 'left', cursor: 'pointer',
+      boxShadow: urgent ? `0 6px 16px -8px ${tones.glow}` : `0 3px 10px -6px ${tones.glow}`,
+    }}>
+      {urgent && (
+        <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: 'linear-gradient(180deg, #FBBF24, #D97706)' }} />
+      )}
+      <span style={{
+        width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: tones.iconBg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19,
+        boxShadow: `0 4px 12px -4px ${tones.glow}, inset 0 1px 0 rgba(255,255,255,0.35)`,
+      }}>{icon}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)' }}>{label}</div>
+        <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 1.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</div>
       </div>
-      <span style={{ ...styles.dot, background: colour }} />
+      {urgent && (
+        <span style={{ fontSize: 9, fontWeight: 900, color: '#B45309', background: 'rgba(217,119,6,0.14)', borderRadius: 99, padding: '4px 8px', flexShrink: 0, textTransform: 'uppercase', letterSpacing: 0.4 }}>Action</span>
+      )}
+      <span style={{ fontSize: 15, color: '#9CA3AF', flexShrink: 0 }}>→</span>
     </button>
   );
 }
