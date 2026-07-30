@@ -414,7 +414,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
     <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 14 : 20, flex: 1, minHeight: 0, overflowY: 'auto' }}>
       <style>{KEYFRAMES}</style>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: isMobile ? 480 : 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 24px', marginBottom: 16, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 -1px 0 ${primary}14 inset, 0 18px 40px -18px ${primary}35` }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
@@ -471,7 +471,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
           </div>
         </div>
 
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', flex: 1, minHeight: isMobile ? 320 : 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F3F4F6' }}>
             <button onClick={() => navigate(-1)} disabled={viewMode === 'list'}
               style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: viewMode === 'list' ? 'default' : 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', transition: 'all 0.15s', opacity: viewMode === 'list' ? 0.35 : 1 }}
