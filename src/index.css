@@ -286,3 +286,6 @@ input, select, textarea { font-family: var(--font); }
   .ls-hub-overview-grid > *:last-child:nth-child(odd) { width: 100% !important; max-width: 100% !important; }
   .ls-hub-livesession-grid { grid-template-columns: 1fr !important; }
 }
+
+.ls-hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.ls-hide-scrollbar::-webkit-scrollbar { display: none; }
