@@ -1638,6 +1638,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [searchResults, setSearchResults] = React.useState(null)
   const [showConcernForm, setShowConcernForm] = React.useState(false)
   const [showInviteChild, setShowInviteChild] = React.useState(false)
+  const [showReflectionsModal, setShowReflectionsModal] = React.useState(false)
   const [statsView, setStatsView] = React.useState('today') // 'today' | 'month' — merged stats toggle
   const [sessionsView, setSessionsView] = React.useState('upcoming') // 'upcoming' | 'ended' — merged sessions toggle
 
@@ -1832,7 +1833,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     return sessions.filter(s => {
       const end = new Date(`${s.session_date}T${s.end_time || "23:59"}`);
       return end < now && !reflections.some(r => r.session_id === s.id);
-    }).slice(0, 3);
+    }).sort((a, b) => new Date(b.session_date) - new Date(a.session_date));
   }, [sessions, reflections]);
 
   const todaySessionIds = useMemo(() => new Set(todaySessions.map(s => s.id)), [todaySessions]);
@@ -2021,7 +2022,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               concernsCount={concerns.length}
               reflectionsCount={completedWithoutReflection.length}
               onGoConcerns={() => go('safeguarding')}
-              onGoReflections={() => go('planner')}
+              onGoReflections={() => setShowReflectionsModal(true)}
             />
             {!isMobile && <DateTimeInline primary={primary} />}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '5px 10px 5px 5px', borderRadius: 12, border: `1.5px solid ${primary}22`, background: '#fff', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` }}
@@ -2404,7 +2405,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               items.push({ key: 'safeguarding', icon: '🛡️', label: 'Safeguarding', value: `${concerns.length} open concern${concerns.length > 1 ? 's' : ''}`, tone: 'amber', rank: 0, onClick: () => go('safeguarding') })
             }
             if (completedWithoutReflection.length > 0) {
-              items.push({ key: 'reflections', icon: '⭐', label: 'Reflections due', value: `${completedWithoutReflection.length} session${completedWithoutReflection.length > 1 ? 's' : ''} to write up`, tone: 'amber', rank: 0, onClick: () => go('planner', { reflectSessionId: completedWithoutReflection[0]?.id }) })
+              items.push({ key: 'reflections', icon: '⭐', label: 'Reflections due', value: `${completedWithoutReflection.length} session${completedWithoutReflection.length > 1 ? 's' : ''} to write up`, tone: 'amber', rank: 0, onClick: () => setShowReflectionsModal(true) })
             }
             if (hasModule('resource_booking') && checkedOutCount > 0) {
               items.push({ key: 'resources', icon: '↗', label: 'Resources', value: `${checkedOutCount} item${checkedOutCount > 1 ? 's' : ''} checked out`, tone: 'amber', rank: 1, onClick: () => go('resource_booking') })
@@ -2478,6 +2479,44 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       )}
 
       {showInviteChild && <InviteParentModal org={org} onClose={() => setShowInviteChild(false)} />}
+
+      {showReflectionsModal && createPortal(
+        <div onClick={() => setShowReflectionsModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 460, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 70px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid #F1F5F9' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ width: 36, height: 36, borderRadius: 11, background: `${primary}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>⭐</span>
+                <div>
+                  <div style={{ fontSize: 15.5, fontWeight: 900, color: 'var(--text, #111)' }}>Outstanding reflections</div>
+                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>{completedWithoutReflection.length} session{completedWithoutReflection.length > 1 ? 's' : ''} to write up</div>
+                </div>
+              </div>
+              <button onClick={() => setShowReflectionsModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: '#9CA3AF', cursor: 'pointer', lineHeight: 1, padding: 4 }}>×</button>
+            </div>
+            <div style={{ overflowY: 'auto', padding: 14, flex: 1 }}>
+              {completedWithoutReflection.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 16px', color: '#9CA3AF', fontSize: 13 }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
+                  All caught up — no reflections outstanding.
+                </div>
+              ) : (
+                completedWithoutReflection.map(s => (
+                  <button key={s.id} onClick={() => { setShowReflectionsModal(false); go('planner', { reflectSessionId: s.id }) }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', border: '1px solid #F1F5F9', background: '#FFFBEB', borderRadius: 14, padding: '12px 14px', marginBottom: 8, cursor: 'pointer' }}>
+                    <span style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #FBBF24, #D97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, color: '#fff' }}>📝</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.title || 'Untitled session'}</div>
+                      <div style={{ fontSize: 11.5, color: '#92400E', marginTop: 1 }}>{formatDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}</div>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: '#B45309', flexShrink: 0 }}>Write →</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {closingSession && (
         <EndSessionConfirmModal
