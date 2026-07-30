@@ -2592,13 +2592,15 @@ function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLa
   }[tone] || { bg: '#F8FAFC', border: '#E5E7EB', iconBg: '#64748B', pillBg: 'rgba(100,116,139,0.12)', pillColour: '#64748B', arrowBg: '#64748B' };
 
   return (
-    <button onClick={onClick} style={{ position: 'relative', flex: '1 1 220px', minWidth: 200, minHeight: iconImg ? 168 : 'auto', textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: 18, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 10, overflow: 'hidden' }}>
-      {iconImg && (
-        <img src={iconImg} alt="" style={{ position: 'absolute', bottom: -6, right: -6, width: 88, height: 88, borderRadius: 20, objectFit: 'contain', pointerEvents: 'none' }} />
-      )}
-      <div style={{ paddingRight: iconImg ? 100 : 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>{title}</div>
-        <div style={{ fontSize: 12, color: '#6B7280', marginTop: 1 }}>{subtitle}</div>
+    <button onClick={onClick} style={{ position: 'relative', flex: '1 1 220px', minWidth: 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: 18, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 14, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>{title}</div>
+          <div style={{ fontSize: 12, color: '#6B7280', marginTop: 1 }}>{subtitle}</div>
+        </div>
+        {iconImg && (
+          <img src={iconImg} alt="" style={{ width: 60, height: 60, borderRadius: 16, objectFit: 'contain', flexShrink: 0, pointerEvents: 'none' }} />
+        )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ background: tones.pillBg, borderRadius: 10, padding: '8px 12px', flex: 1, minWidth: 0 }}>
