@@ -2526,14 +2526,14 @@ function GlanceStat({ icon, iconImg, iconBg, value, valueColour, label, sub, onC
       background: `${c}0F`, border: `1px solid ${c}28`, borderRadius: 14, padding: '11px 12px',
     }}>
       {iconImg ? (
-        <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, background: `${c}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, boxSizing: 'border-box' }}>
+        <span style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: `${c}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, boxSizing: 'border-box' }}>
           <img src={iconImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </span>
       ) : (
         <span style={{
-          width: 38, height: 38, borderRadius: 11, flexShrink: 0,
+          width: 52, height: 52, borderRadius: 14, flexShrink: 0,
           background: `linear-gradient(135deg, ${c}, ${c}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 16, boxShadow: `0 4px 10px -3px ${c}70, inset 0 1px 0 rgba(255,255,255,0.35)`,
+          fontSize: 22, boxShadow: `0 4px 10px -3px ${c}70, inset 0 1px 0 rgba(255,255,255,0.35)`,
         }}>{icon}</span>
       )}
       <div style={{ minWidth: 0 }}>
