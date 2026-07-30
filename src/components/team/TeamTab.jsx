@@ -200,43 +200,59 @@ export default function TeamTab({ org, session }) {
       <div style={{ maxWidth: 1120, margin: '0 auto' }}>
 
         {/* Invite card */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 24, borderTop: `3px solid ${primary}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontSize: 18 }}>✉️</span>
-            <div style={{ fontSize: 16, fontWeight: 800 }}>Invite Staff</div>
+        <div style={{ position: 'relative', overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: isMobile ? '22px 18px' : 24, marginBottom: 24, borderTop: `3px solid ${primary}` }}>
+          {/* Decorative flourish */}
+          <div style={{ position: 'absolute', top: -10, right: -10, fontSize: 64, opacity: 0.08, transform: 'rotate(12deg)', pointerEvents: 'none' }}>✉️</div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6, position: 'relative' }}>
+            <div style={{ width: 42, height: 42, borderRadius: '50%', background: `${primary}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}>📨</div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text, #111)' }}>Invite Staff</div>
           </div>
-          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Send a branded email invite — they'll set their own password and be added to {org?.name} automatically.</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20, lineHeight: 1.5, position: 'relative' }}>Send a branded email invite — they'll set their own password and be added to {org?.name} automatically.</div>
 
           {error && <div style={{ background: '#FFF0F0', border: '1px solid #FFD0D0', color: '#C00', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>{error}</div>}
           {inviteSuccess && <div style={{ background: '#F0FFF4', border: '1px solid #B0E8C0', color: '#1A5C1A', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>✓ {inviteSuccess}</div>}
 
           <form onSubmit={handleInvite}>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1.5fr auto auto', gap: 10, alignItems: 'flex-end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1.5fr auto auto', gap: 14, alignItems: 'flex-end' }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>First name</label>
-                <input value={inviteFirstName} onChange={e => setInviteFirstName(e.target.value)} placeholder="First name"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2, #374151)', display: 'block', marginBottom: 6 }}>First name</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>👤</span>
+                  <input value={inviteFirstName} onChange={e => setInviteFirstName(e.target.value)} placeholder="First name"
+                    style={{ width: '100%', padding: '12px 14px 12px 36px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 14.5, outline: 'none', boxSizing: 'border-box' }} />
+                </div>
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Last name</label>
-                <input value={inviteLastName} onChange={e => setInviteLastName(e.target.value)} placeholder="Last name"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2, #374151)', display: 'block', marginBottom: 6 }}>Last name</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>👤</span>
+                  <input value={inviteLastName} onChange={e => setInviteLastName(e.target.value)} placeholder="Last name"
+                    style={{ width: '100%', padding: '12px 14px 12px 36px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 14.5, outline: 'none', boxSizing: 'border-box' }} />
+                </div>
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Email address</label>
-                <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} required placeholder="staff@organisation.com"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2, #374151)', display: 'block', marginBottom: 6 }}>Email address</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>✉️</span>
+                  <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} required placeholder="staff@organisation.com"
+                    style={{ width: '100%', padding: '12px 14px 12px 36px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 14.5, outline: 'none', boxSizing: 'border-box' }} />
+                </div>
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Role</label>
-                <select value={inviteRole} onChange={e => setInviteRole(e.target.value)}
-                  style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface)', cursor: 'pointer' }}>
-                  {ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
-                </select>
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2, #374151)', display: 'block', marginBottom: 6 }}>Role</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: primary, zIndex: 1 }}>🛡️</span>
+                  <select value={inviteRole} onChange={e => setInviteRole(e.target.value)}
+                    style={{ width: isMobile ? '100%' : 'auto', padding: '12px 14px 12px 36px', borderRadius: 12, border: '1.5px solid var(--border)', fontSize: 14.5, outline: 'none', background: 'var(--surface)', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box' }}>
+                    {ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
+                  </select>
+                  <span style={{ position: 'absolute', right: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: '#9CA3AF', pointerEvents: 'none' }}>▾</span>
+                </div>
               </div>
               <button type="submit" disabled={inviting || !inviteEmail.trim()}
-                style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontSize: 14, fontWeight: 700, cursor: inviting || !inviteEmail.trim() ? 'default' : 'pointer', opacity: inviting || !inviteEmail.trim() ? 0.6 : 1, whiteSpace: 'nowrap' }}>
-                {inviting ? 'Sending...' : 'Send Invite'}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px 20px', borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontSize: 14.5, fontWeight: 800, cursor: inviting || !inviteEmail.trim() ? 'default' : 'pointer', opacity: inviting || !inviteEmail.trim() ? 0.6 : 1, whiteSpace: 'nowrap', width: isMobile ? '100%' : 'auto' }}>
+                ➤ {inviting ? 'Sending...' : 'Send Invite'}
               </button>
             </div>
           </form>
