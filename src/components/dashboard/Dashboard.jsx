@@ -753,18 +753,17 @@ export default function Dashboard({ session, org }) {
 
       {/* MAIN CONTENT */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingTop: isMobileBottomNav ? 'env(safe-area-inset-top, 0px)' : 0, paddingBottom: isMobileBottomNav ? 'calc(76px + env(safe-area-inset-bottom, 0px))' : 0 }}>
-        {tab !== 'registers' && tab !== 'home' && (
-          <FloatingHeader
-            org={org} orgName={orgName} primary={primary} tab={tab} ALL_MODULES={ALL_MODULES}
-            userName={userName} userProfile={userProfile}
-            onProfileClick={() => setShowProfile(true)}
-            onNavigate={handleSetTab}
-            hasModule={hasModule}
-            unreadSubs={unreadSubs}
-          />
-        )}
-
         <div id="ls-main-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', WebkitOverflowScrolling: 'touch' }}>
+          {tab !== 'registers' && tab !== 'home' && (
+            <FloatingHeader
+              org={org} orgName={orgName} primary={primary} tab={tab} ALL_MODULES={ALL_MODULES}
+              userName={userName} userProfile={userProfile}
+              onProfileClick={() => setShowProfile(true)}
+              onNavigate={handleSetTab}
+              hasModule={hasModule}
+              unreadSubs={unreadSubs}
+            />
+          )}
           {org?.trial_expires_at && org?.plan === 'starter' && (() => {
             const expires = new Date(org.trial_expires_at)
             const daysLeft = Math.max(0, Math.ceil((expires - new Date()) / (1000 * 60 * 60 * 24)))
