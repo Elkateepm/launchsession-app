@@ -2150,6 +2150,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
             const stats = getLiveSessionStats(s)
             const attendeeTotal = stats.signedIn + stats.absent + stats.signedOut + stats.expected
+            const attendedCount = stats.signedIn + stats.signedOut
             const staffCount = sessionStaffCounts[s.id] || 0
             const timeRange = startDT && endDT ? `${hubFmtTime(startDT)} – ${hubFmtTime(endDT)}` : startDT ? `From ${hubFmtTime(startDT)}` : null
 
@@ -2170,7 +2171,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 12px', marginTop: 8 }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
-                          <span style={{ fontSize: 12 }}>🧒</span>{stats.signedIn}/{attendeeTotal} attendees
+                          <span style={{ fontSize: 12 }}>🧒</span>{attendedCount}/{attendeeTotal} attendees
                         </span>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
                           <span style={{ fontSize: 12 }}>🧑‍🤝‍🧑</span>{staffCount} staff/vols
