@@ -1874,10 +1874,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   return (
     <div style={styles.page}>
-      {/* TEMP DEBUG BADGE — remove once confirmed fixed */}
-      <div style={{ position: 'fixed', top: 4, left: 4, zIndex: 999999, background: '#000', color: '#0f0', fontSize: 10, fontFamily: 'monospace', padding: '3px 6px', borderRadius: 4, pointerEvents: 'none' }}>
-        w:{window.innerWidth} isMobile:{String(isMobile)}
-      </div>
       {/* ── HEADER ── */}
       <header style={{ background: `linear-gradient(120deg, ${primary}14 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px ${primary}50` }}>
 
