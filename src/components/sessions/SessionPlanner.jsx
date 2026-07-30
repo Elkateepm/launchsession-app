@@ -845,7 +845,7 @@ function deriveSessionStatus(s, isPast, isToday) {
   return s.status === 'ready' ? 'confirmed' : 'planning'
 }
 
-function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onView, volCounts, hasReflection, attendanceCounts, index = 0 }) {
+function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onView, onSaveTemplate, volCounts, hasReflection, attendanceCounts, index = 0 }) {
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
   const isMultiDay = session.end_date && session.end_date !== session.session_date
   const volCount = volCounts?.[session.id] || 0
@@ -865,6 +865,7 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onVie
     { key: 'edit', icon: '✏️', onClick: () => onEdit(session), color: '#6D5DF6', enabled: true },
     { key: 'vol', icon: '❤️', onClick: () => onVolunteers(session), color: '#F16063', enabled: true },
     { key: 'reflect', icon: '⭐', onClick: () => onReflect(session), color: '#FFB648', enabled: isPast },
+    { key: 'template', icon: '🗂️', onClick: () => onSaveTemplate(session), color: '#0EA5E9', enabled: !!onSaveTemplate },
     { key: 'delete', icon: '🗑', onClick: () => onDelete(session.id), color: '#F16063', enabled: true },
   ]
 
@@ -969,7 +970,7 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onVie
                 whileTap={a.enabled ? { scale: 0.92 } : {}}
                 disabled={!a.enabled}
                 style={{ width: 34, height: 34, borderRadius: 11, border: 'none', background: a.enabled ? a.color + '12' : '#F1F5F9', cursor: a.enabled ? 'pointer' : 'not-allowed', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: a.enabled ? 1 : 0.35 }}
-                title={a.key === 'reflect' && !a.enabled ? 'Available once the session has ended' : a.key}
+                title={a.key === 'reflect' && !a.enabled ? 'Available once the session has ended' : a.key === 'template' ? 'Save as template' : a.key === 'vol' ? 'Volunteers' : a.key === 'edit' ? 'Edit' : a.key === 'delete' ? 'Delete' : a.key}
               >
                 {a.icon}
               </motion.button>
@@ -1275,6 +1276,228 @@ function TipCard() {
   )
 }
 
+// ─── TEMPLATES ────────────────────────────────────────────────
+
+const TEMPLATE_ICONS = ['📋', '⚽', '🏀', '🎨', '🏊', '🚌', '🎭', '🏆', '🎉', '📚', '🛠️', '🏕️', '🎊', '🤝', '🏃', '✨']
+
+function TemplateCard({ t, primary, onUse, onEdit, onDelete }) {
+  const type = SESSION_TYPES.find(x => x.key === t.session_type) || SESSION_TYPES[0]
+  return (
+    <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 20, padding: 18, boxShadow: '0 8px 24px -14px rgba(30,41,59,0.15)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 13, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{t.icon || '📋'}</div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={() => onEdit(t)} title="Edit template" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#F1F5F9', cursor: 'pointer', fontSize: 12 }}>✏️</button>
+          <button onClick={() => onDelete(t.id)} title="Delete template" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#FFF0F0', cursor: 'pointer', fontSize: 12 }}>🗑</button>
+        </div>
+      </div>
+      <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{t.name}</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 11.5, fontWeight: 600, color: '#64748B', marginBottom: 12 }}>
+        <span>{type.icon} {type.label}</span>
+        {t.start_time && t.end_time && <span>🕐 {t.start_time}–{t.end_time}</span>}
+        {t.max_capacity && <span>👥 {t.max_capacity}</span>}
+        {t.location && <span>📍 {t.location.split(',')[0]}</span>}
+      </div>
+      {t.use_count > 0 && (
+        <div style={{ fontSize: 10.5, color: '#94A3B8', marginBottom: 12 }}>Used {t.use_count} time{t.use_count === 1 ? '' : 's'}</div>
+      )}
+      <button onClick={() => onUse(t)} style={{ width: '100%', padding: '10px 0', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
+        Use template →
+      </button>
+    </div>
+  )
+}
+
+function TemplatesView({ templates, loading, primary, onBack, onUse, onEdit, onDelete, onCreateNew, isMobile }) {
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'radial-gradient(circle at 15% 0%, #6D5DF60C, transparent 40%), radial-gradient(circle at 85% 15%, #30C48D0C, transparent 40%), #F6F8FC' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 22, flexWrap: 'wrap' }}>
+          <div>
+            <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#64748B', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 6, padding: 0 }}>← Back to sessions</button>
+            <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>🗂️ Session Templates</div>
+            <div style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>Reusable presets for sessions you run again and again.</div>
+          </div>
+          <button onClick={onCreateNew} style={{ padding: '12px 20px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+            + New Template
+          </button>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8', fontWeight: 700 }}>Loading templates...</div>
+        ) : templates.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '56px 20px', background: '#fff', borderRadius: 24, border: '1.5px dashed #E5E7EB' }}>
+            <div style={{ fontSize: 44, marginBottom: 14 }}>🗂️</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>No templates yet</div>
+            <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 22 }}>Build one from scratch, or save any existing session as a template from its card.</div>
+            <button onClick={onCreateNew} style={{ padding: '12px 26px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+              + New Template
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
+            {templates.map(t => (
+              <TemplateCard key={t.id} t={t} primary={primary} onUse={onUse} onEdit={onEdit} onDelete={onDelete} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
+  const [form, setForm] = useState({
+    name: '', icon: '📋', title: '', session_type: 'activity', description: '',
+    location: '', start_time: '09:00', end_time: '11:00', max_capacity: '', volunteer_limit: '',
+    bubbles: [], packed_lunch: false, meeting_point: '', consent_required: false,
+    risk_assessment_required: false, medical_check_required: false, transport_required: false,
+    reflection_required: true,
+    ...initial,
+  })
+  const isMobile = useIsMobile()
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  const toggleBubble = (label) => set('bubbles', form.bubbles.includes(label) ? form.bubbles.filter(x => x !== label) : [...form.bubbles, label])
+  const canSave = form.name.trim().length > 0
+  const isEditing = !!initial?.id
+
+  const fi = { width: '100%', padding: '11px 13px', borderRadius: 11, border: '1.5px solid #E5E7EB', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', color: '#111', fontFamily: 'inherit' }
+  const lb = { fontSize: 11, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, display: 'block' }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={onCancel} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)' }} />
+      <div style={{ position: 'relative', width: '100%', maxWidth: 560, maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: 24, boxShadow: '0 32px 80px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+        <div style={{ padding: '18px 22px', borderBottom: '1px solid #EEF1F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>{isEditing ? 'Edit Template' : 'New Template'}</div>
+          <button onClick={onCancel} style={{ width: 30, height: 30, borderRadius: 8, background: '#F1F5F9', border: 'none', fontSize: 16, cursor: 'pointer' }}>✕</button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: 22 }}>
+          {/* Icon + name */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={lb}>Icon</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {TEMPLATE_ICONS.map(ic => (
+                <button key={ic} onClick={() => set('icon', ic)} style={{ width: 36, height: 36, borderRadius: 10, border: form.icon === ic ? '2px solid #6D5DF6' : '1.5px solid #E5E7EB', background: form.icon === ic ? '#6D5DF614' : '#fff', fontSize: 17, cursor: 'pointer' }}>{ic}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={lb}>Template name *</label>
+            <input value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Friday Football" style={fi} autoFocus />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={lb}>Default session title</label>
+            <input value={form.title} onChange={e => set('title', e.target.value)} placeholder="Leave blank to use template name" style={fi} />
+          </div>
+
+          {/* Type */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={lb}>Session type</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 8 }}>
+              {SESSION_TYPES.map(t => {
+                const active = form.session_type === t.key
+                return (
+                  <button key={t.key} onClick={() => set('session_type', t.key)}
+                    style={{ padding: '12px 10px', borderRadius: 12, border: `2px solid ${active ? t.color : '#E5E7EB'}`, background: active ? t.color + '15' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
+                    <div style={{ fontSize: 18, marginBottom: 2 }}>{t.icon}</div>
+                    <div style={{ fontSize: 12.5, fontWeight: 800, color: active ? t.color : '#111' }}>{t.label}</div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Time */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={lb}>Default time</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
+              <input type="time" value={form.start_time || ''} onChange={e => set('start_time', e.target.value)} style={fi} />
+              <input type="time" value={form.end_time || ''} onChange={e => set('end_time', e.target.value)} style={fi} />
+            </div>
+          </div>
+
+          {/* Location */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={lb}>Location</label>
+            <input value={form.location || ''} onChange={e => set('location', e.target.value)} placeholder="e.g. Jubilee Park, Watford" style={fi} />
+          </div>
+
+          {/* Groups */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={lb}>Default groups</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {bubbleDefs.map(b => {
+                const active = (form.bubbles || []).includes(b.label)
+                return (
+                  <button key={b.key} onClick={() => toggleBubble(b.label)} style={{ padding: '6px 12px', borderRadius: 99, border: `1.5px solid ${active ? b.color : '#E5E7EB'}`, background: active ? b.color + '18' : '#fff', color: active ? b.color : '#64748B', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    {b.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Capacity */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8, marginBottom: 16 }}>
+            <div>
+              <label style={lb}>Max capacity</label>
+              <input type="number" min="0" value={form.max_capacity || ''} onChange={e => set('max_capacity', e.target.value)} style={fi} />
+            </div>
+            <div>
+              <label style={lb}>Volunteers needed</label>
+              <input type="number" min="0" value={form.volunteer_limit || ''} onChange={e => set('volunteer_limit', e.target.value)} style={fi} />
+            </div>
+          </div>
+
+          {/* Meeting point */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={lb}>Meeting point</label>
+            <input value={form.meeting_point || ''} onChange={e => set('meeting_point', e.target.value)} style={fi} />
+          </div>
+
+          {/* Description */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={lb}>Description</label>
+            <textarea value={form.description || ''} onChange={e => set('description', e.target.value)} rows={3} style={{ ...fi, resize: 'vertical' }} />
+          </div>
+
+          {/* Toggles */}
+          <div style={{ marginBottom: 8 }}>
+            <label style={lb}>Requirements</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {[
+                { key: 'packed_lunch', icon: '🥪', label: 'Packed Lunch' },
+                { key: 'consent_required', icon: '📋', label: 'Consent Form' },
+                { key: 'risk_assessment_required', icon: '🛡️', label: 'Risk Assessment' },
+                { key: 'medical_check_required', icon: '💊', label: 'Medical Check' },
+                { key: 'transport_required', icon: '🚌', label: 'Transport' },
+                { key: 'reflection_required', icon: '⭐', label: 'Reflection' },
+              ].map(opt => {
+                const active = !!form[opt.key]
+                return (
+                  <button key={opt.key} onClick={() => set(opt.key, !active)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 99, border: `1.5px solid ${active ? '#6D5DF6' : '#E5E7EB'}`, background: active ? '#6D5DF614' : '#fff', color: active ? '#6D5DF6' : '#64748B', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    <span>{opt.icon}</span>{opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: '16px 22px', borderTop: '1px solid #EEF1F6', display: 'flex', gap: 10, justifyContent: 'flex-end', flexShrink: 0 }}>
+          <button onClick={onCancel} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={() => canSave && onSave({ ...form, id: initial?.id })} disabled={!canSave || saving}
+            style={{ padding: '11px 22px', borderRadius: 11, border: 'none', background: canSave ? '#6D5DF6' : '#CBD5E1', color: '#fff', fontWeight: 800, cursor: canSave ? 'pointer' : 'default' }}>
+            {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Template'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, autoOpenWizard, onNavigate }) {
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
@@ -1299,6 +1522,11 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const [saving, setSaving] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
   const [viewingSession, setViewingSession] = useState(null)
+  const [templates, setTemplates] = useState([])
+  const [templatesLoading, setTemplatesLoading] = useState(true)
+  const [editingTemplate, setEditingTemplate] = useState(null) // template row being created/edited, or {} for new
+  const [templateSaving, setTemplateSaving] = useState(false)
+  const [initialTemplate, setInitialTemplate] = useState(null) // template to seed the wizard with
 
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
@@ -1393,6 +1621,71 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       .sort((a, b) => `${a.session_date}${a.start_time || ''}`.localeCompare(`${b.session_date}${b.start_time || ''}`))
   , [sessions, volCounts]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const loadTemplates = async () => {
+    if (!orgId) return
+    setTemplatesLoading(true)
+    const { data } = await supabase.from('session_templates').select('*').eq('org_id', orgId).order('use_count', { ascending: false }).order('name')
+    setTemplates(data || [])
+    setTemplatesLoading(false)
+  }
+
+  useEffect(() => { loadTemplates() }, [orgId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSaveTemplate = async (form) => {
+    setTemplateSaving(true)
+    const payload = {
+      org_id: orgId,
+      name: form.name,
+      icon: form.icon || '📋',
+      title: form.title || form.name,
+      session_type: form.session_type,
+      description: form.description || null,
+      location: form.location || null,
+      start_time: form.start_time || null,
+      end_time: form.end_time || null,
+      max_capacity: form.max_capacity ? parseInt(form.max_capacity, 10) : null,
+      volunteer_limit: form.volunteer_limit ? parseInt(form.volunteer_limit, 10) : null,
+      bubbles: form.bubbles || [],
+      packed_lunch: !!form.packed_lunch,
+      meeting_point: form.meeting_point || null,
+      consent_required: !!form.consent_required,
+      risk_assessment_required: !!form.risk_assessment_required,
+      medical_check_required: !!form.medical_check_required,
+      transport_required: !!form.transport_required,
+      reflection_required: !!form.reflection_required,
+    }
+    if (form.id) {
+      await supabase.from('session_templates').update(payload).eq('id', form.id)
+    } else {
+      await supabase.from('session_templates').insert({ ...payload, created_by: session?.user?.id })
+    }
+    setTemplateSaving(false)
+    setEditingTemplate(null)
+    await loadTemplates()
+  }
+
+  const handleDeleteTemplate = async (id) => {
+    if (!window.confirm('Delete this template?')) return
+    await supabase.from('session_templates').delete().eq('id', id)
+    setTemplates(prev => prev.filter(t => t.id !== id))
+  }
+
+  const handleSaveSessionAsTemplate = (s) => {
+    setEditingTemplate({
+      name: s.title, icon: '📋', title: s.title, session_type: s.session_type,
+      description: s.description, location: s.location, start_time: s.start_time, end_time: s.end_time,
+      max_capacity: s.max_capacity, volunteer_limit: s.volunteer_limit, bubbles: s.bubbles || [],
+      packed_lunch: s.packed_lunch, meeting_point: s.meeting_point, consent_required: s.consent_required,
+      risk_assessment_required: s.risk_assessment_required, medical_check_required: s.medical_check_required,
+      transport_required: s.transport_required, reflection_required: s.reflection_required,
+    })
+  }
+
+  const openNewFromTemplate = (t) => {
+    setInitialTemplate(t)
+    setView('wizard')
+  }
+
   const handleSave = async (form) => {
     setSaving(true)
     const data = {
@@ -1449,6 +1742,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   }
 
   const openNew = (date) => {
+    setInitialTemplate(null)
     setEditing({ ...EMPTY_FORM, session_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), end_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), session_type: typeFilter === 'trips' ? 'trip' : 'activity' })
     setView('wizard')
   }
@@ -1467,10 +1761,13 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         org={org}
         session={session}
         bubbleDefs={bubbleDefs}
-        onCancel={() => setView('list')}
+        initialTemplate={initialTemplate}
+        onCancel={() => { setView('list'); setInitialTemplate(null) }}
         onNavigate={onNavigate}
         onPublished={async () => {
+          setInitialTemplate(null)
           await loadData()
+          await loadTemplates()
           if (onSessionSaved) onSessionSaved()
         }}
       />
@@ -1495,7 +1792,35 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     )
   }
 
-  // ── derived list for the active tab ──
+  // ── TEMPLATES VIEW ──
+  if (view === 'templates') {
+    return (
+      <>
+        <TemplatesView
+          templates={templates}
+          loading={templatesLoading}
+          primary={primary}
+          onBack={() => setView('list')}
+          onUse={openNewFromTemplate}
+          onEdit={setEditingTemplate}
+          onDelete={handleDeleteTemplate}
+          onCreateNew={() => setEditingTemplate({})}
+          isMobile={isMobile}
+        />
+        {editingTemplate && (
+          <TemplateFormModal
+            initial={editingTemplate}
+            bubbleDefs={bubbleDefs}
+            saving={templateSaving}
+            onSave={handleSaveTemplate}
+            onCancel={() => setEditingTemplate(null)}
+          />
+        )}
+      </>
+    )
+  }
+
+
   const tabBaseList = {
     upcoming: strictlyUpcomingSessions,
     live: liveSessions,
@@ -1560,14 +1885,24 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             <div style={{ fontSize: 13, fontWeight: 600, color: '#64748B', marginBottom: 4 }}>{format(new Date(), 'EEEE d MMMM yyyy')} · {org?.name}</div>
             <div style={{ fontSize: 14, color: '#475569' }}>Manage sessions, trips and activities. <strong>{childrenExpectedCount}</strong> children expected across upcoming sessions.</div>
           </div>
-          <motion.button
-            onClick={() => openNew()}
-            whileHover={{ y: -3, boxShadow: '0 16px 40px -10px rgba(109,93,246,0.5)' }}
-            whileTap={{ scale: 0.97 }}
-            style={{ position: 'relative', zIndex: 1, padding: '14px 26px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 10px 30px -8px rgba(109,93,246,0.4)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}
-          >
-            <motion.span whileHover={{ rotate: 20 }}>➕</motion.span> New Session
-          </motion.button>
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <motion.button
+              onClick={() => setView('templates')}
+              whileHover={{ y: -3, boxShadow: '0 16px 40px -10px rgba(14,165,233,0.4)' }}
+              whileTap={{ scale: 0.97 }}
+              style={{ padding: '14px 22px', borderRadius: 16, border: '1.5px solid #E2E8F0', background: '#fff', color: '#0F172A', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}
+            >
+              🗂️ Templates {templates.length > 0 ? `(${templates.length})` : ''}
+            </motion.button>
+            <motion.button
+              onClick={() => openNew()}
+              whileHover={{ y: -3, boxShadow: '0 16px 40px -10px rgba(109,93,246,0.5)' }}
+              whileTap={{ scale: 0.97 }}
+              style={{ padding: '14px 26px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 10px 30px -8px rgba(109,93,246,0.4)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}
+            >
+              <motion.span whileHover={{ rotate: 20 }}>➕</motion.span> New Session
+            </motion.button>
+          </div>
         </motion.div>
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: 20, alignItems: 'start' }}>
@@ -1731,7 +2066,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
               <div>
                 <AnimatePresence>
                   {displayed.map((s, i) => (
-                    <SessionCard key={s.id} session={s} index={i} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} onReflect={setReflectingSession} onView={setViewingSession} volCounts={volCounts} hasReflection={!!reflections[s.id]} attendanceCounts={attendanceCounts} />
+                    <SessionCard key={s.id} session={s} index={i} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} onReflect={setReflectingSession} onView={setViewingSession} onSaveTemplate={handleSaveSessionAsTemplate} volCounts={volCounts} hasReflection={!!reflections[s.id]} attendanceCounts={attendanceCounts} />
                   ))}
                 </AnimatePresence>
               </div>
@@ -1836,6 +2171,15 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         />
       )}
       </AnimatePresence>
+      {editingTemplate && (
+        <TemplateFormModal
+          initial={editingTemplate}
+          bubbleDefs={bubbleDefs}
+          saving={templateSaving}
+          onSave={handleSaveTemplate}
+          onCancel={() => setEditingTemplate(null)}
+        />
+      )}
     </div>
   )
 }
