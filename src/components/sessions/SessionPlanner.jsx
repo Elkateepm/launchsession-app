@@ -1355,7 +1355,6 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
     reflection_required: true,
     ...initial,
   })
-  const isMobile = useIsMobile()
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const toggleBubble = (label) => set('bubbles', form.bubbles.includes(label) ? form.bubbles.filter(x => x !== label) : [...form.bubbles, label])
   const canSave = form.name.trim().length > 0
