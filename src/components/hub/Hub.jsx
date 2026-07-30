@@ -2064,14 +2064,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               )}
             </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
               <button onClick={() => setShowInviteChild(true)}
-                style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, boxShadow: `0 6px 16px -8px ${primary}80` }}>
+                style={{ padding: '12px 22px', borderRadius: 99, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 13.5, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 7, boxShadow: `0 6px 16px -8px ${primary}80` }}>
                 🧒 Invite Child
               </button>
               {hasModule('volunteers') && (
                 <button onClick={() => go('volunteers', { autoOpenInvite: true })}
-                  style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${secondary}, ${primary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, boxShadow: `0 6px 16px -8px ${secondary}80` }}>
+                  style={{ padding: '12px 22px', borderRadius: 99, border: 'none', background: `linear-gradient(135deg, ${secondary}, ${primary})`, color: '#fff', fontWeight: 800, fontSize: 13.5, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 7, boxShadow: `0 6px 16px -8px ${secondary}80` }}>
                   🤝 Invite Volunteer
                 </button>
               )}
@@ -2592,11 +2592,11 @@ function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLa
   }[tone] || { bg: '#F8FAFC', border: '#E5E7EB', iconBg: '#64748B', pillBg: 'rgba(100,116,139,0.12)', pillColour: '#64748B', arrowBg: '#64748B' };
 
   return (
-    <button onClick={onClick} style={{ position: 'relative', flex: '1 1 220px', minWidth: 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: 18, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+    <button onClick={onClick} style={{ position: 'relative', flex: '1 1 220px', minWidth: 200, minHeight: iconImg ? 168 : 'auto', textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: 18, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 10, overflow: 'hidden' }}>
       {iconImg && (
-        <img src={iconImg} alt="" style={{ position: 'absolute', top: 10, right: 10, width: 92, height: 92, borderRadius: 20, objectFit: 'contain', pointerEvents: 'none' }} />
+        <img src={iconImg} alt="" style={{ position: 'absolute', bottom: -6, right: -6, width: 88, height: 88, borderRadius: 20, objectFit: 'contain', pointerEvents: 'none' }} />
       )}
-      <div style={{ paddingRight: iconImg ? 104 : 0 }}>
+      <div style={{ paddingRight: iconImg ? 100 : 0 }}>
         <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>{title}</div>
         <div style={{ fontSize: 12, color: '#6B7280', marginTop: 1 }}>{subtitle}</div>
       </div>
