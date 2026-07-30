@@ -2557,18 +2557,6 @@ function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLa
   );
 }
 
-function QuickLinkTile({ icon, label, badge, onClick }) {
-  return (
-    <button onClick={onClick} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: '#F8FAFC', border: '1.5px solid #F1F5F9', borderRadius: 14, padding: '12px 8px', cursor: 'pointer' }}>
-      {badge > 0 && (
-        <span style={{ position: 'absolute', top: 6, right: 10, background: '#EF4444', color: '#fff', fontSize: 9.5, fontWeight: 900, borderRadius: 99, minWidth: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>{badge}</span>
-      )}
-      <span style={{ fontSize: 18 }}>{icon}</span>
-      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text, #111)' }}>{label}</span>
-    </button>
-  );
-}
-
 function HeaderQuickAction({ icon, label, onClick, primary, filled, gradientTo }) {
   return (
     <button onClick={onClick} style={{
