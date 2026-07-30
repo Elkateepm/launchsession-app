@@ -184,11 +184,11 @@ export default function TeamTab({ org, session }) {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <PageHeader
         icon="👥"
+        iconImg="/icons/team-icon-badge.png"
         title="Team & Staff"
         orgName={org?.name}
         subtitle="Invite staff, manage volunteers and build your team"
         primary={primary}
-        illustration="/icons/team-staff-illustration.png"
         stats={[
           { label: 'Members', value: members.length, icon: '👥' },
           { label: 'Admins', value: admins, icon: '🛡️', color: '#8B5CF6' },
