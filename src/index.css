@@ -270,7 +270,7 @@ input, select, textarea { font-family: var(--font); }
    correct, this is a no-op — same result either way). */
 @media (max-width: 767px) {
   .ls-hub-outer-grid { grid-template-columns: 1fr !important; }
-  .ls-hub-rightnow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .ls-hub-rightnow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; border: 5px solid red !important; }
   .ls-hub-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .ls-hub-livesession-grid { grid-template-columns: 1fr !important; }
 }
