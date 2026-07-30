@@ -269,7 +269,8 @@ input, select, textarea { font-family: var(--font); }
    the inline style the JS still sets (for browsers where the JS value is
    correct, this is a no-op — same result either way). */
 @media (max-width: 767px) {
-  .ls-hub-outer-grid { grid-template-columns: 1fr !important; border: 5px solid blue !important; }
+  .ls-hub-outer-grid { display: flex !important; flex-direction: column !important; }
+  .ls-hub-outer-grid > * { width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
   /* Switched from CSS Grid to flexbox: grid-template-columns wasn't taking
      visual effect on at least one real device despite every other property
      in the same !important rule applying correctly (border, etc). Flexbox
