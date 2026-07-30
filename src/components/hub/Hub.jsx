@@ -1874,6 +1874,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   return (
     <div style={styles.page}>
+      {/* TEMP DEBUG BADGE — remove once confirmed fixed */}
+      <div style={{ position: 'fixed', top: 4, left: 4, zIndex: 999999, background: '#000', color: '#0f0', fontSize: 10, fontFamily: 'monospace', padding: '3px 6px', borderRadius: 4, pointerEvents: 'none' }}>
+        w:{window.innerWidth} isMobile:{String(isMobile)}
+      </div>
       {/* ── HEADER ── */}
       <header style={{ background: `linear-gradient(120deg, ${primary}14 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px ${primary}50` }}>
 
@@ -2065,7 +2069,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       {/* ── LIVE SESSION HERO ── */}
       <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : todaySessions.length === 1 ? '1fr' : todaySessions.length === 2 ? '1fr 1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, padding: '0 0 8px' }}>
+        <div className="ls-hub-livesession-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : todaySessions.length === 1 ? '1fr' : todaySessions.length === 2 ? '1fr 1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, padding: '0 0 8px' }}>
           {todaySessions.slice(0, 20).map(s => (
             <LiveSessionPanel
               key={s.id}
@@ -2096,7 +2100,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       )}
       </div>
 
-      <section style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) 320px', gap: 18, padding: pad }}>
+      <section className="ls-hub-outer-grid" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) 320px', gap: 18, padding: pad }}>
         <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* TODAY AT A GLANCE */}
           <Panel title="📍 Right now">
@@ -2105,7 +2109,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                just a hint — this is what lets cards blow past the viewport
                edge on phones since 220px/190px minimums don't fit 3-up on a
                ~360-400px-wide panel. */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(190px, 1fr))', gap: isMobile ? 10 : 12 }}>
+            <div className="ls-hub-rightnow-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(190px, 1fr))', gap: isMobile ? 10 : 12 }}>
 
               {/* WEATHER CARD */}
               <div style={{ minWidth: 0 }}>
@@ -2170,14 +2174,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           }>
             {statsView === 'today' ? (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
+              <div className="ls-hub-overview-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
                 <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour="#16A34A" label="Young people" sub="Expected" onClick={() => go('registers')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="So far" onClick={() => go('registers')} />
                 <GlanceStat icon="🕐" iconBg="#FEF3C7" value={strictlyTodaySessions.length} valueColour="#D97706" label="Sessions" sub="Today" onClick={() => go('planner')} />
                 <GlanceStat icon="❤️" iconBg="#EDE9FE" value={volunteersCount} valueColour="#7C3AED" label="Volunteers" sub="Involved" onClick={() => go('volunteers')} />
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
+              <div className="ls-hub-overview-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
                 <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour={primary} label="Young people" sub="This month" onClick={() => go('registers')} />
                 <GlanceStat icon="📅" iconBg="#EDE9FE" value={sessions.length} valueColour="#7C3AED" label="Sessions" sub="Planned" onClick={() => go('planner')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="Total" onClick={() => go('registers')} />
