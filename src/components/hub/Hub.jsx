@@ -2187,7 +2187,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
               {hasModule('registers') ? (
-                <GlanceCard icon="📋" iconImg="/icons/hub-registers-icon.png" tone="green" title="Registers" subtitle="Take today's register"
+                <GlanceCard icon="📋" iconImg="/icons/hub-registers-icon-v2.png" tone="green" title="Registers" subtitle="Take today's register"
                   fraction={`${sessionsEndedToday} / ${strictlyTodaySessions.length}`} fractionLabel="Sessions completed"
                   onClick={() => go('registers')} />
               ) : (
@@ -2508,7 +2508,7 @@ function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLa
   return (
     <button onClick={onClick} style={{ position: 'relative', flex: '1 1 220px', minWidth: 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: 18, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
       {iconImg && (
-        <img src={iconImg} alt="" style={{ position: 'absolute', top: 10, right: 10, width: 92, height: 92, borderRadius: 20, objectFit: 'cover', pointerEvents: 'none' }} />
+        <img src={iconImg} alt="" style={{ position: 'absolute', top: 10, right: 10, width: 92, height: 92, borderRadius: 20, objectFit: 'contain', pointerEvents: 'none' }} />
       )}
       <div style={{ paddingRight: iconImg ? 104 : 0 }}>
         <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>{title}</div>
