@@ -2210,14 +2210,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           }>
             {statsView === 'today' ? (
               <div className="ls-hub-overview-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
-                <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour="#16A34A" label="Young people" sub="Expected" onClick={() => go('registers')} />
+                <GlanceStat icon="👥" iconImg="/icons/young-people-icon.png" iconBg="#DCFCE7" value={children.length} valueColour="#16A34A" label="Young people" sub="Expected" onClick={() => go('registers')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="So far" onClick={() => go('registers')} />
                 <GlanceStat icon="🕐" iconBg="#FEF3C7" value={strictlyTodaySessions.length} valueColour="#D97706" label="Sessions" sub="Today" onClick={() => go('planner')} />
                 <GlanceStat icon="❤️" iconBg={`${secondary}1A`} value={volunteersCount} valueColour={secondary} label="Volunteers" sub="Involved" onClick={() => go('volunteers')} />
               </div>
             ) : (
               <div className="ls-hub-overview-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
-                <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour={primary} label="Young people" sub="This month" onClick={() => go('registers')} />
+                <GlanceStat icon="👥" iconImg="/icons/young-people-icon.png" iconBg="#DCFCE7" value={children.length} valueColour={primary} label="Young people" sub="This month" onClick={() => go('registers')} />
                 <GlanceStat icon="📅" iconBg={`${secondary}1A`} value={sessions.length} valueColour={secondary} label="Sessions" sub="Planned" onClick={() => go('planner')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="Total" onClick={() => go('registers')} />
                 <GlanceStat icon="✓" iconBg="#DCFCE7" value={`${attendanceRate}%`} valueColour="#059669" label="Attendance" sub="Rate" onClick={() => go('reports')} />
@@ -2517,7 +2517,7 @@ function Panel({ title, right, children }) {
   );
 }
 
-function GlanceStat({ icon, iconBg, value, valueColour, label, sub, onClick }) {
+function GlanceStat({ icon, iconImg, iconBg, value, valueColour, label, sub, onClick }) {
   const c = valueColour || '#64748B'
   return (
     <button onClick={onClick} style={{
@@ -2525,11 +2525,17 @@ function GlanceStat({ icon, iconBg, value, valueColour, label, sub, onClick }) {
       width: '100%', minWidth: 0, textAlign: 'left', boxSizing: 'border-box',
       background: `${c}0F`, border: `1px solid ${c}28`, borderRadius: 14, padding: '11px 12px',
     }}>
-      <span style={{
-        width: 38, height: 38, borderRadius: 11, flexShrink: 0,
-        background: `linear-gradient(135deg, ${c}, ${c}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 16, boxShadow: `0 4px 10px -3px ${c}70, inset 0 1px 0 rgba(255,255,255,0.35)`,
-      }}>{icon}</span>
+      {iconImg ? (
+        <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, background: `${c}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, boxSizing: 'border-box' }}>
+          <img src={iconImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        </span>
+      ) : (
+        <span style={{
+          width: 38, height: 38, borderRadius: 11, flexShrink: 0,
+          background: `linear-gradient(135deg, ${c}, ${c}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 16, boxShadow: `0 4px 10px -3px ${c}70, inset 0 1px 0 rgba(255,255,255,0.35)`,
+        }}>{icon}</span>
+      )}
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 19, fontWeight: 900, color: c, lineHeight: 1.1 }}>{value}</div>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text, #111)', marginTop: 1 }}>{label}</div>
