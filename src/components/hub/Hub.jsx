@@ -1703,6 +1703,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [checkedOutCount, setCheckedOutCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
+  const [openLiveSessionId, setOpenLiveSessionId] = useState(null);
 
   // Local calendar date (NOT toISOString, which converts to UTC and can roll
   // the date back during the early hours of BST — e.g. 00:19 local on 8 Jul
@@ -2106,23 +2107,74 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
         <div className="ls-hub-livesession-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : todaySessions.length === 1 ? '1fr' : todaySessions.length === 2 ? '1fr 1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, padding: '0 0 8px' }}>
-          {todaySessions.slice(0, 20).map(s => (
-            <LiveSessionPanel
-              key={s.id}
-              sessions={[s]}
-              childList={children}
-              attendance={attendance}
-              primary={primary}
-              secondary={secondary}
-              orgId={org?.id}
-              org={org}
-              authUserId={session?.user?.id}
-              reflections={reflections}
-              onOpenRegister={openRegisterForSession}
-              onNavigate={go}
-              getLiveSessionStats={getLiveSessionStats}
-            />
-          ))}
+          {todaySessions.slice(0, 20).map(s => {
+            const now = new Date()
+            const startDT = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
+            const endDT = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
+            const hasEnded = !!endDT && endDT < now
+            const isLiveNow = (!startDT || startDT <= now) && !hasEnded
+            const statusLabel = hasEnded ? 'Closed' : isLiveNow ? 'Live now' : 'Upcoming'
+            const statusColour = hasEnded ? '#94A3B8' : isLiveNow ? '#DC2626' : '#FBBF24'
+
+            const panel = (
+              <LiveSessionPanel
+                key={s.id}
+                sessions={[s]}
+                childList={children}
+                attendance={attendance}
+                primary={primary}
+                secondary={secondary}
+                orgId={org?.id}
+                org={org}
+                authUserId={session?.user?.id}
+                reflections={reflections}
+                onOpenRegister={openRegisterForSession}
+                onNavigate={go}
+                getLiveSessionStats={getLiveSessionStats}
+              />
+            )
+
+            if (!isMobile) return panel
+
+            return (
+              <React.Fragment key={s.id}>
+                <button onClick={() => setOpenLiveSessionId(s.id)} style={{
+                  textAlign: 'left', width: '100%', boxSizing: 'border-box', cursor: 'pointer', border: 'none',
+                  borderRadius: 18, padding: '16px 18px', position: 'relative', overflow: 'hidden',
+                  background: `linear-gradient(160deg, ${primary}4D 0%, ${secondary}33 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
+                  boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 12px 30px -14px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusColour, animation: isLiveNow ? 'pulse-live 1.5s infinite' : 'none' }} />
+                        <span style={{ fontSize: 10, fontWeight: 900, color: statusColour, letterSpacing: 0.8, textTransform: 'uppercase' }}>{statusLabel}</span>
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>Tap to open register</div>
+                    </div>
+                    <span style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, flexShrink: 0 }}>→</span>
+                  </div>
+                </button>
+
+                {openLiveSessionId === s.id && createPortal(
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: '#0B1023', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '14px 14px 0' }}>
+                      <button onClick={() => setOpenLiveSessionId(null)} aria-label="Close" style={{
+                        width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
+                        background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 18, fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                      }}>✕</button>
+                    </div>
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px 24px' }}>
+                      {panel}
+                    </div>
+                  </div>,
+                  document.body
+                )}
+              </React.Fragment>
+            )
+          })}
         </div>
       ) : (
         <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, ${secondary})`, boxShadow: `0 16px 34px ${primary}40` }}>
