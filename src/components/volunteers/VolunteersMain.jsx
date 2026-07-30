@@ -163,10 +163,13 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
       setInviteMsg('✓ Invite sent to ' + inviteEmail.trim())
       setInviteEmail(''); setInviteName('')
       loadAll()
+      setInviting(false)
+      return true
     } catch (err) {
       setInviteMsg('Error: ' + err.message)
+      setInviting(false)
+      return false
     }
-    setInviting(false)
   }
 
   function copyLink() { navigator.clipboard.writeText(portalUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) }
@@ -240,7 +243,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
             <div style={{ fontSize: 14, color: '#334155', marginTop: 6 }}>Manage your volunteer workforce, communication and availability.</div>
             <div style={{ fontSize: 12.5, color: '#94A3B8', marginTop: 2 }}>Keep every volunteer informed, engaged and ready for every session.</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
-              <button onClick={() => setShowInviteModal(true)} style={btnPrimary(primary)}>+ Invite Volunteer</button>
+              <button onClick={() => { setInviteMsg(''); setShowInviteModal(true) }} style={btnPrimary(primary)}>+ Invite Volunteer</button>
               <button onClick={() => setShowBroadcastModal(true)} style={btnGhost}>📢 Send Broadcast</button>
               <button onClick={() => setTab('coverage')} style={btnGhost}>📅 View Coverage</button>
               <button onClick={() => setShowQR(true)} style={btnGhost}>📲 QR Portal</button>
@@ -498,7 +501,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A' }}>Invite a volunteer</div>
                 <button onClick={() => setShowInviteModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#94A3B8' }}>×</button>
               </div>
-              <form onSubmit={async e => { await handleInvite(e); if (!inviteMsg.startsWith('Error')) setShowInviteModal(false) }}>
+              <form onSubmit={async e => { const ok = await handleInvite(e); if (ok) setTimeout(() => setShowInviteModal(false), 1800) }}>
                 <div style={{ marginBottom: 14 }}>
                   <label style={{ fontSize: 12, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 5 }}>Full name (optional)</label>
                   <input value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="Jane Smith" style={inputStyle} />
@@ -507,7 +510,17 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                   <label style={{ fontSize: 12, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 5 }}>Email address</label>
                   <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="jane@email.com" required style={inputStyle} />
                 </div>
-                {inviteMsg && <div style={{ fontSize: 13, color: inviteMsg.startsWith('Error') ? '#DC2626' : '#15803D', marginBottom: 14, fontWeight: 600 }}>{inviteMsg}</div>}
+                {inviteMsg && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, fontWeight: 700, marginBottom: 16, padding: '10px 14px', borderRadius: 12,
+                    color: inviteMsg.startsWith('Error') ? '#B91C1C' : '#15803D',
+                    background: inviteMsg.startsWith('Error') ? '#FEF2F2' : '#F0FDF4',
+                    border: `1px solid ${inviteMsg.startsWith('Error') ? '#FECACA' : '#BBF7D0'}`,
+                  }}>
+                    <span style={{ fontSize: 16 }}>{inviteMsg.startsWith('Error') ? '⚠️' : '📨'}</span>
+                    <span>{inviteMsg}</span>
+                  </div>
+                )}
                 <button type="submit" disabled={inviting} style={{ ...btnPrimary(primary), width: '100%', padding: 12, opacity: inviting ? 0.7 : 1 }}>
                   {inviting ? 'Sending...' : 'Send invite →'}
                 </button>
