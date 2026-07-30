@@ -2225,24 +2225,24 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+            <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? '1fr 1fr' : undefined, gap: isMobile ? 10 : 12, flexWrap: 'wrap', marginBottom: 14 }}>
               {hasModule('registers') ? (
                 <GlanceCard icon="📋" iconImg="/icons/hub-registers-icon-v2.png" tone="green" title="Registers" subtitle="Take today's register"
                   fraction={`${sessionsEndedToday} / ${strictlyTodaySessions.length}`} fractionLabel="Sessions completed"
-                  onClick={() => go('registers')} />
+                  onClick={() => go('registers')} compact={isMobile} />
               ) : (
                 <GlanceCard icon="👥" tone="green" title="Young People" subtitle="View your roster"
                   fraction={children.length} fractionLabel="On roll"
-                  onClick={() => go('planner')} />
+                  onClick={() => go('planner')} compact={isMobile} />
               )}
               {hasModule('safeguarding') ? (
                 <GlanceCard icon="🛡️" iconImg="/icons/hub-safeguarding-icon-v2.png" tone={concerns.length > 0 ? "amber" : "blue"} title="Safeguarding" subtitle={concerns.length > 0 ? "Needs attention" : "All clear"}
                   fraction={concerns.length} fractionLabel={concerns.length > 0 ? `Open concern${concerns.length > 1 ? 's' : ''}` : "No open concerns"}
-                  onClick={() => go('safeguarding')} />
+                  onClick={() => go('safeguarding')} compact={isMobile} />
               ) : (
                 <GlanceCard icon="🚀" tone="blue" title="Grow your workspace" subtitle="Unlock more modules"
                   fraction="→" fractionLabel="Explore plans"
-                  onClick={() => go('settings')} />
+                  onClick={() => go('settings')} compact={isMobile} />
               )}
             </div>
           </Panel>
@@ -2584,7 +2584,7 @@ function GlanceStat({ icon, iconImg, iconBg, value, valueColour, label, sub, onC
   );
 }
 
-function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLabel, onClick }) {
+function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLabel, onClick, compact }) {
   const tones = {
     green: { bg: 'linear-gradient(135deg, #ECFDF5, #F0FDF4)', border: '#BBF7D0', iconBg: '#16A34A', pillBg: 'rgba(22,163,74,0.12)', pillColour: '#16A34A', arrowBg: '#16A34A' },
     blue:  { bg: 'linear-gradient(135deg, #EFF6FF, #F5F8FF)', border: '#BFDBFE', iconBg: '#2563EB', pillBg: 'rgba(37,99,235,0.12)', pillColour: '#2563EB', arrowBg: '#2563EB' },
@@ -2592,22 +2592,22 @@ function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLa
   }[tone] || { bg: '#F8FAFC', border: '#E5E7EB', iconBg: '#64748B', pillBg: 'rgba(100,116,139,0.12)', pillColour: '#64748B', arrowBg: '#64748B' };
 
   return (
-    <button onClick={onClick} style={{ position: 'relative', flex: '1 1 220px', minWidth: 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: 18, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 14, overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+    <button onClick={onClick} style={{ position: 'relative', flex: compact ? '1 1 auto' : '1 1 220px', width: compact ? '100%' : undefined, minWidth: compact ? 0 : 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: compact ? 14 : 18, padding: compact ? 12 : 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: compact ? 10 : 14, overflow: 'hidden', boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: compact ? 6 : 12 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>{title}</div>
-          <div style={{ fontSize: 12, color: '#6B7280', marginTop: 1 }}>{subtitle}</div>
+          <div style={{ fontSize: compact ? 13 : 15, fontWeight: 900, color: 'var(--text, #111)', lineHeight: 1.15 }}>{title}</div>
+          <div style={{ fontSize: compact ? 10.5 : 12, color: '#6B7280', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: compact ? 'nowrap' : 'normal' }}>{subtitle}</div>
         </div>
         {iconImg && (
-          <img src={iconImg} alt="" style={{ width: 60, height: 60, borderRadius: 16, objectFit: 'contain', flexShrink: 0, pointerEvents: 'none' }} />
+          <img src={iconImg} alt="" style={{ width: compact ? 36 : 60, height: compact ? 36 : 60, borderRadius: compact ? 10 : 16, objectFit: 'contain', flexShrink: 0, pointerEvents: 'none' }} />
         )}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ background: tones.pillBg, borderRadius: 10, padding: '8px 12px', flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: tones.pillColour, lineHeight: 1.1 }}>{fraction}</div>
-          <div style={{ fontSize: 10.5, color: tones.pillColour, opacity: 0.85, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fractionLabel}</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: compact ? 6 : 8 }}>
+        <div style={{ background: tones.pillBg, borderRadius: compact ? 8 : 10, padding: compact ? '6px 9px' : '8px 12px', flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: compact ? 13 : 16, fontWeight: 900, color: tones.pillColour, lineHeight: 1.1 }}>{fraction}</div>
+          <div style={{ fontSize: compact ? 9.5 : 10.5, color: tones.pillColour, opacity: 0.85, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fractionLabel}</div>
         </div>
-        <span style={{ width: 34, height: 34, borderRadius: '50%', background: '#fff', color: tones.arrowBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, flexShrink: 0, boxShadow: '0 2px 8px rgba(15,23,42,0.1)' }}>→</span>
+        <span style={{ width: compact ? 26 : 34, height: compact ? 26 : 34, borderRadius: '50%', background: '#fff', color: tones.arrowBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: compact ? 12 : 15, fontWeight: 900, flexShrink: 0, boxShadow: '0 2px 8px rgba(15,23,42,0.1)' }}>→</span>
       </div>
     </button>
   );
