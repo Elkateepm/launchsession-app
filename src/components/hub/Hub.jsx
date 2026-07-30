@@ -2212,13 +2212,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               <div className="ls-hub-overview-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
                 <GlanceStat icon="👥" iconImg="/icons/young-people-icon.png" iconBg="#DCFCE7" value={children.length} valueColour="#16A34A" label="Young people" sub="Expected" onClick={() => go('registers')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="So far" onClick={() => go('registers')} />
-                <GlanceStat icon="🕐" iconBg="#FEF3C7" value={strictlyTodaySessions.length} valueColour="#D97706" label="Sessions" sub="Today" onClick={() => go('planner')} />
+                <GlanceStat icon="🕐" iconImg="/icons/sessions-icon.png" iconBg="#FEF3C7" value={strictlyTodaySessions.length} valueColour="#D97706" label="Sessions" sub="Today" onClick={() => go('planner')} />
                 <GlanceStat icon="❤️" iconBg={`${secondary}1A`} value={volunteersCount} valueColour={secondary} label="Volunteers" sub="Involved" onClick={() => go('volunteers')} />
               </div>
             ) : (
               <div className="ls-hub-overview-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
                 <GlanceStat icon="👥" iconImg="/icons/young-people-icon.png" iconBg="#DCFCE7" value={children.length} valueColour={primary} label="Young people" sub="This month" onClick={() => go('registers')} />
-                <GlanceStat icon="📅" iconBg={`${secondary}1A`} value={sessions.length} valueColour={secondary} label="Sessions" sub="Planned" onClick={() => go('planner')} />
+                <GlanceStat icon="📅" iconImg="/icons/sessions-icon.png" iconBg={`${secondary}1A`} value={sessions.length} valueColour={secondary} label="Sessions" sub="Planned" onClick={() => go('planner')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="Total" onClick={() => go('registers')} />
                 <GlanceStat icon="✓" iconBg="#DCFCE7" value={`${attendanceRate}%`} valueColour="#059669" label="Attendance" sub="Rate" onClick={() => go('reports')} />
               </div>
