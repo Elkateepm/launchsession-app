@@ -2134,8 +2134,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               />
             )
 
-            if (!isMobile) return panel
-
             return (
               <React.Fragment key={s.id}>
                 <button onClick={() => setOpenLiveSessionId(s.id)} style={{
@@ -2158,16 +2156,29 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 </button>
 
                 {openLiveSessionId === s.id && createPortal(
-                  <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: '#0B1023', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '14px 14px 0' }}>
-                      <button onClick={() => setOpenLiveSessionId(null)} aria-label="Close" style={{
-                        width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
-                        background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 18, fontWeight: 700,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                      }}>✕</button>
-                    </div>
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px 24px' }}>
-                      {panel}
+                  <div style={{
+                    position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column',
+                    background: isMobile ? '#0B1023' : 'rgba(8,11,23,0.7)',
+                    alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'flex-start' : 'center',
+                    padding: isMobile ? 0 : 24, boxSizing: 'border-box',
+                  }} onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) setOpenLiveSessionId(null) }}>
+                    <div style={{
+                      width: '100%', maxWidth: isMobile ? 'none' : 720, maxHeight: isMobile ? 'none' : '90vh',
+                      display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                      borderRadius: isMobile ? 0 : 22,
+                      boxShadow: isMobile ? 'none' : '0 30px 80px -20px rgba(0,0,0,0.6)',
+                      flex: isMobile ? 1 : undefined,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '14px 14px 0', background: '#0B1023' }}>
+                        <button onClick={() => setOpenLiveSessionId(null)} aria-label="Close" style={{
+                          width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
+                          background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 18, fontWeight: 700,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                        }}>✕</button>
+                      </div>
+                      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '10px 14px 24px' : '10px 20px 24px', background: '#0B1023' }}>
+                        {panel}
+                      </div>
                     </div>
                   </div>,
                   document.body
