@@ -30,7 +30,9 @@ function PhotoCarousel({ orgId, primary, userId }) {
   const [uploading, setUploading] = React.useState(false)
   const [lightbox, setLightbox] = React.useState(null)
   const [managing, setManaging] = React.useState(false)
+  const [activeIndex, setActiveIndex] = React.useState(0)
   const inputRef = React.useRef(null)
+  const scrollRef = React.useRef(null)
 
   const load = React.useCallback(() => {
     supabase.from('gallery_photos').select('*').eq('org_id', orgId).order('created_at', { ascending: false }).limit(50)
@@ -61,6 +63,18 @@ function PhotoCarousel({ orgId, primary, userId }) {
     if (lightbox?.id === photo.id) setLightbox(null)
   }
 
+  const handleScroll = () => {
+    const el = scrollRef.current
+    if (!el || !el.clientWidth) return
+    setActiveIndex(Math.round(el.scrollLeft / el.clientWidth))
+  }
+
+  const scrollToIndex = (i) => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' })
+  }
+
   return (
     <div style={{ marginBottom: 18 }}>
       <input ref={inputRef} type="file" multiple accept="image/*" hidden onChange={e => handleUpload(e.target.files)} />
@@ -82,30 +96,46 @@ function PhotoCarousel({ orgId, primary, userId }) {
         </div>
       </div>
 
-      {/* Photo strip */}
+      {/* Photo carousel — full-width, swipeable, snaps one photo per view */}
       {photos.length === 0 ? (
         <div onClick={() => inputRef.current?.click()}
           style={{ height: 110, borderRadius: 16, border: '2px dashed #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
           <span style={{ fontSize: 22 }}>📷</span> Add your first photo
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6 }}>
-          {photos.map(p => (
-            <div key={p.id} onClick={() => !managing && setLightbox(p)}
-              style={{ position: 'relative', flexShrink: 0, width: 110, height: 110, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.12)', transition: 'transform 0.15s' }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
-              <img src={p.url} alt={p.caption || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              {/* Delete dot — only shown once "Manage" is tapped, not by default */}
-              {managing && (
-                <button onClick={e => handleDelete(e, p)}
-                  style={{ position: 'absolute', top: 5, right: 5, width: 20, height: 20, borderRadius: '50%', background: '#EF4444', border: '2px solid #fff', color: '#fff', fontSize: 10, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
-                  ×
-                </button>
-              )}
+        <>
+          <div ref={scrollRef} onScroll={handleScroll} className="ls-hide-scrollbar"
+            style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', borderRadius: 18 }}>
+            {photos.map(p => (
+              <div key={p.id} onClick={() => !managing && setLightbox(p)}
+                style={{ position: 'relative', flex: '0 0 100%', width: '100%', scrollSnapAlign: 'center', height: 230, overflow: 'hidden', cursor: 'pointer', borderRadius: 18, background: '#F1F5F9' }}>
+                <img src={p.url} alt={p.caption || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                {p.caption && (
+                  <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '28px 16px 12px', background: 'linear-gradient(0deg, rgba(0,0,0,0.55), transparent)', color: '#fff', fontSize: 12.5, fontWeight: 600 }}>
+                    {p.caption}
+                  </div>
+                )}
+                {/* Delete dot — only shown once "Manage" is tapped, not by default */}
+                {managing && (
+                  <button onClick={e => handleDelete(e, p)}
+                    style={{ position: 'absolute', top: 10, right: 10, width: 28, height: 28, borderRadius: '50%', background: '#EF4444', border: '2px solid #fff', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, boxShadow: '0 2px 8px rgba(0,0,0,0.25)' }}>
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Dot pagination */}
+          {photos.length > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 10 }}>
+              {photos.map((_, i) => (
+                <button key={i} onClick={() => scrollToIndex(i)}
+                  style={{ width: i === activeIndex ? 18 : 6, height: 6, borderRadius: 99, border: 'none', padding: 0, cursor: 'pointer', background: i === activeIndex ? primary : '#E2E8F0', transition: 'width 0.25s ease, background 0.25s ease' }} />
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {/* Lightbox — portaled to <body> so it always sits above the bottom nav pill (z-index 9999) and Launch FAB (z-index 10000), and can't get trapped inside any ancestor's stacking context */}
