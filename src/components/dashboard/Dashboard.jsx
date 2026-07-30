@@ -437,6 +437,7 @@ export default function Dashboard({ session, org }) {
   const [initialThreadId, setInitialThreadId] = useState(null)
   const [autoOpenWizard, setAutoOpenWizard] = useState(false)
   const [autoOpenAddChild, setAutoOpenAddChild] = useState(false)
+  const [autoOpenInviteVolunteer, setAutoOpenInviteVolunteer] = useState(false)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
   const [navBadges, setNavBadges] = React.useState({ registers: 0, mentoring: 0 })
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
@@ -469,6 +470,7 @@ export default function Dashboard({ session, org }) {
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
     setAutoOpenAddChild(t === 'registers' && !!payload?.autoOpenAdd)
+    setAutoOpenInviteVolunteer(t === 'volunteers' && !!payload?.autoOpenInvite)
     setTab(t)
     persistTab(t)
     if (isTablet) setTabletNavOpen(false)
@@ -795,7 +797,7 @@ export default function Dashboard({ session, org }) {
 
           {/* ── DELIVERY PACK ── */}
           {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
-          {tab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} />)}
+          {tab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} />)}
           {tab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} />)}
           {tab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} />)}
 
