@@ -37,7 +37,7 @@ const CHANNELS = [
   { key: 'push', label: 'Push', icon: '📲', wired: false },
 ]
 
-export default function VolunteersMain({ org }) {
+export default function VolunteersMain({ org, autoOpenInvite }) {
   const [volunteers, setVolunteers] = useState([])
   const [applicants, setApplicants] = useState([])
   const [sessions, setSessions] = useState([])
@@ -48,7 +48,7 @@ export default function VolunteersMain({ org }) {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('dashboard')
 
-  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(!!autoOpenInvite)
   const [showBroadcastModal, setShowBroadcastModal] = useState(false)
   const [showQR, setShowQR] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
