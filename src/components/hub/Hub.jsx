@@ -2109,7 +2109,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
               {/* WEATHER CARD */}
               <div style={{ minWidth: 0 }}>
-                <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: isMobile ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
+                <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: isMobile ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, height: '100%', boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
                   <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
                   {weatherError ? (
                     <div style={{ position: 'relative' }}>
@@ -2556,7 +2556,7 @@ function StatCard({ icon, title, text, button, badge, onClick, colour, gradient,
     <button onClick={onClick} style={{
       background: gradient || `linear-gradient(135deg, ${colour}, ${colour}CC)`,
       borderRadius: 16, padding: compact ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden',
-      minHeight: 128, boxShadow: `0 10px 28px -10px ${colour}80`, textAlign: 'left', cursor: 'pointer',
+      minHeight: 128, height: '100%', boxShadow: `0 10px 28px -10px ${colour}80`, textAlign: 'left', cursor: 'pointer',
       border: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
       width: '100%', minWidth: 0, boxSizing: 'border-box',
     }}>
