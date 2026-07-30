@@ -88,24 +88,38 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
           )}
         </div>
 
-        {/* Stats row */}
+        {/* Stats row — individual premium cards instead of a flat divided strip */}
         {stats.length > 0 && (
-          <div style={isMobile
-            ? { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, margin: '0 -24px', borderTop: '1px solid var(--border, #e5e7eb)' }
-            : { display: 'flex', gap: 0, margin: '0 -24px', borderTop: '1px solid var(--border, #e5e7eb)' }
-          }>
-            {stats.map((s, i) => (
-              <div key={i} className="ls-stat-card" style={{
-                flex: isMobile ? undefined : 1, padding: isMobile ? '12px 10px' : '12px 16px', minWidth: 0,
-                borderRight: isMobile ? (((i + 1) % 3 !== 0 && i < stats.length - 1) ? '1px solid var(--border, #e5e7eb)' : 'none') : (i < stats.length - 1 ? '1px solid var(--border, #e5e7eb)' : 'none'),
-                borderBottom: isMobile && i < stats.length - (stats.length % 3 === 0 ? 3 : stats.length % 3) ? '1px solid var(--border, #e5e7eb)' : 'none',
-              }}>
-                <div style={{ fontSize: isMobile ? 9.5 : 10, fontWeight: 800, color: 'var(--text3, #9CA3AF)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {s.icon && <span>{s.icon}</span>}{s.label}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : `repeat(${stats.length}, minmax(0, 1fr))`,
+            gap: isMobile ? 8 : 10, marginTop: 2, marginBottom: 18,
+          }}>
+            {stats.map((s, i) => {
+              const c = s.color || primary
+              const isLastOdd = isMobile && stats.length % 2 !== 0 && i === stats.length - 1
+              return (
+                <div key={i} className="ls-stat-card" style={{
+                  gridColumn: isLastOdd ? 'span 2' : undefined,
+                  display: 'flex', alignItems: 'center', gap: isMobile ? 9 : 11,
+                  background: `${c}0F`, border: `1px solid ${c}28`, borderRadius: 14,
+                  padding: isMobile ? '10px 12px' : '11px 14px', minWidth: 0,
+                  boxShadow: `0 1px 0 rgba(255,255,255,0.5) inset`,
+                }}>
+                  {s.icon && (
+                    <span style={{
+                      width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, borderRadius: 10, flexShrink: 0,
+                      background: `linear-gradient(135deg, ${c}, ${c}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: isMobile ? 14 : 16, boxShadow: `0 4px 10px -3px ${c}70, inset 0 1px 0 rgba(255,255,255,0.35)`,
+                    }}>{s.icon}</span>
+                  )}
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 900, color: c, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text3, #6B7280)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
+                  </div>
                 </div>
-                <div style={{ fontSize: isMobile ? 19 : 22, fontWeight: 900, color: s.color || primary, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
