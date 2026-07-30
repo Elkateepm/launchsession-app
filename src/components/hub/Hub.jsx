@@ -2085,7 +2085,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           ))}
         </div>
       ) : (
-        <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, #6D28D9)` }}>
+        <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, ${secondary})`, boxShadow: `0 16px 34px ${primary}40` }}>
           <div style={styles.trophy}>🏆</div>
           <div>
             <h2 style={styles.encouragementTitle}>Keep making an impact, {orgName}! ⭐</h2>
@@ -2148,7 +2148,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               </div>
 
               <div style={{ minWidth: 0 }}>
-                <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} button={!nextSession ? "Plan now" : null} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : null} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} compact={isMobile} />
+                <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} button={!nextSession ? "Plan now" : null} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : null} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : secondary} compact={isMobile} />
               </div>
             </div>
           </Panel>
@@ -2174,12 +2174,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour="#16A34A" label="Young people" sub="Expected" onClick={() => go('registers')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="So far" onClick={() => go('registers')} />
                 <GlanceStat icon="🕐" iconBg="#FEF3C7" value={strictlyTodaySessions.length} valueColour="#D97706" label="Sessions" sub="Today" onClick={() => go('planner')} />
-                <GlanceStat icon="❤️" iconBg="#EDE9FE" value={volunteersCount} valueColour="#7C3AED" label="Volunteers" sub="Involved" onClick={() => go('volunteers')} />
+                <GlanceStat icon="❤️" iconBg={`${secondary}1A`} value={volunteersCount} valueColour={secondary} label="Volunteers" sub="Involved" onClick={() => go('volunteers')} />
               </div>
             ) : (
               <div className="ls-hub-overview-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
                 <GlanceStat icon="👥" iconBg="#DCFCE7" value={children.length} valueColour={primary} label="Young people" sub="This month" onClick={() => go('registers')} />
-                <GlanceStat icon="📅" iconBg="#EDE9FE" value={sessions.length} valueColour="#7C3AED" label="Sessions" sub="Planned" onClick={() => go('planner')} />
+                <GlanceStat icon="📅" iconBg={`${secondary}1A`} value={sessions.length} valueColour={secondary} label="Sessions" sub="Planned" onClick={() => go('planner')} />
                 <GlanceStat icon="↪" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="Total" onClick={() => go('registers')} />
                 <GlanceStat icon="✓" iconBg="#DCFCE7" value={`${attendanceRate}%`} valueColour="#059669" label="Attendance" sub="Rate" onClick={() => go('reports')} />
               </div>
