@@ -278,7 +278,11 @@ input, select, textarea { font-family: var(--font); }
      and reliably avoided whatever that was. */
   .ls-hub-rightnow-grid { display: flex !important; flex-wrap: wrap !important; gap: 10px !important; }
   .ls-hub-rightnow-grid > div { flex: none !important; width: calc(50% - 5px) !important; max-width: calc(50% - 5px) !important; box-sizing: border-box !important; }
+  /* Odd item out (e.g. 3 cards: 2 up top, 1 spanning full width below)
+     instead of leaving a blank half-width gap next to it. */
+  .ls-hub-rightnow-grid > div:last-child:nth-child(odd) { width: 100% !important; max-width: 100% !important; }
   .ls-hub-overview-grid { display: flex !important; flex-wrap: wrap !important; gap: 10px !important; }
   .ls-hub-overview-grid > * { flex: none !important; width: calc(50% - 5px) !important; max-width: calc(50% - 5px) !important; box-sizing: border-box !important; }
+  .ls-hub-overview-grid > *:last-child:nth-child(odd) { width: 100% !important; max-width: 100% !important; }
   .ls-hub-livesession-grid { grid-template-columns: 1fr !important; }
 }
