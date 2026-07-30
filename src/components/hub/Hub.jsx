@@ -1887,6 +1887,20 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     return { signedIn: si, absent, signedOut: so, expected, percent: total > 0 ? Math.round((si / total) * 100) : 0 };
   };
 
+  // Staff/volunteer headcount per session, for the compact live-session launcher cards
+  const [sessionStaffCounts, setSessionStaffCounts] = useState({});
+  const todaySessionIdsKey = useMemo(() => todaySessions.map(s => s.id).sort().join(','), [todaySessions]);
+  useEffect(() => {
+    const ids = todaySessionIdsKey ? todaySessionIdsKey.split(',') : [];
+    if (ids.length === 0) { setSessionStaffCounts({}); return; }
+    supabase.from('session_staff').select('session_id').in('session_id', ids)
+      .then(({ data }) => {
+        const counts = {};
+        (data || []).forEach(row => { counts[row.session_id] = (counts[row.session_id] || 0) + 1; });
+        setSessionStaffCounts(counts);
+      });
+  }, [todaySessionIdsKey]);
+
   const [liveRegisterSessionId, setLiveRegisterSessionId] = useState(null)
   const openRegisterForSession = (sessionId) => {
     setLiveRegisterSessionId(sessionId)
@@ -2134,6 +2148,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               />
             )
 
+            const stats = getLiveSessionStats(s)
+            const attendeeTotal = stats.signedIn + stats.absent + stats.signedOut + stats.expected
+            const staffCount = sessionStaffCounts[s.id] || 0
+            const timeRange = startDT && endDT ? `${hubFmtTime(startDT)} – ${hubFmtTime(endDT)}` : startDT ? `From ${hubFmtTime(startDT)}` : null
+
             return (
               <React.Fragment key={s.id}>
                 <button onClick={() => setOpenLiveSessionId(s.id)} style={{
@@ -2149,11 +2168,24 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         <span style={{ fontSize: 10, fontWeight: 900, color: statusColour, letterSpacing: 0.8, textTransform: 'uppercase' }}>{statusLabel}</span>
                       </div>
                       <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>Tap to open register</div>
+                      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 12px', marginTop: 8 }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
+                          <span style={{ fontSize: 12 }}>🧒</span>{stats.signedIn}/{attendeeTotal} attendees
+                        </span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
+                          <span style={{ fontSize: 12 }}>🧑‍🤝‍🧑</span>{staffCount} staff/vols
+                        </span>
+                        {timeRange && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
+                            <span style={{ fontSize: 12 }}>🕐</span>{timeRange}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <span style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, flexShrink: 0 }}>→</span>
                   </div>
                 </button>
+
 
                 {openLiveSessionId === s.id && createPortal(
                   <div style={{
