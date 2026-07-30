@@ -2506,15 +2506,11 @@ function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLa
   }[tone] || { bg: '#F8FAFC', border: '#E5E7EB', iconBg: '#64748B', pillBg: 'rgba(100,116,139,0.12)', pillColour: '#64748B', arrowBg: '#64748B' };
 
   return (
-    <button onClick={onClick} style={{ flex: '1 1 220px', minWidth: 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: 18, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        {iconImg ? (
-          <img src={iconImg} alt="" style={{ width: 38, height: 38, borderRadius: 11, objectFit: 'cover', display: 'block', flexShrink: 0 }} />
-        ) : (
-          <span style={{ width: 38, height: 38, borderRadius: 11, background: tones.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{icon}</span>
-        )}
-      </div>
-      <div>
+    <button onClick={onClick} style={{ position: 'relative', flex: '1 1 220px', minWidth: 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: 18, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+      {iconImg && (
+        <img src={iconImg} alt="" style={{ position: 'absolute', top: 10, right: 10, width: 92, height: 92, borderRadius: 20, objectFit: 'cover', pointerEvents: 'none' }} />
+      )}
+      <div style={{ paddingRight: iconImg ? 104 : 0 }}>
         <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>{title}</div>
         <div style={{ fontSize: 12, color: '#6B7280', marginTop: 1 }}>{subtitle}</div>
       </div>
