@@ -2196,7 +2196,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   onClick={() => go('planner')} />
               )}
               {hasModule('safeguarding') ? (
-                <GlanceCard icon="🛡️" iconImg="/icons/hub-safeguarding-icon.png" tone={concerns.length > 0 ? "amber" : "blue"} title="Safeguarding" subtitle={concerns.length > 0 ? "Needs attention" : "All clear"}
+                <GlanceCard icon="🛡️" iconImg="/icons/hub-safeguarding-icon-v2.png" tone={concerns.length > 0 ? "amber" : "blue"} title="Safeguarding" subtitle={concerns.length > 0 ? "Needs attention" : "All clear"}
                   fraction={concerns.length} fractionLabel={concerns.length > 0 ? `Open concern${concerns.length > 1 ? 's' : ''}` : "No open concerns"}
                   onClick={() => go('safeguarding')} />
               ) : (
