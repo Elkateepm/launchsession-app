@@ -2063,10 +2063,18 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               )}
             </div>
             </div>
-            <button onClick={() => setShowInviteChild(true)}
-              style={{ padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${primary}40`, background: `${primary}0D`, color: primary, fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
-              🧒 Invite Child
-            </button>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button onClick={() => setShowInviteChild(true)}
+                style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, boxShadow: `0 6px 16px -8px ${primary}80` }}>
+                🧒 Invite Child
+              </button>
+              {hasModule('volunteers') && (
+                <button onClick={() => go('volunteers', { autoOpenInvite: true })}
+                  style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${secondary}, ${primary})`, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, boxShadow: `0 6px 16px -8px ${secondary}80` }}>
+                  🤝 Invite Volunteer
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div style={{ padding: '10px 0 12px' }}>
@@ -2085,7 +2093,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               {hasModule('registers') && <HeaderQuickAction icon="📋" label="Register" onClick={() => go('registers')} primary={primary} />}
               <HeaderQuickAction icon="💬" label="Messages" onClick={() => go('messaging')} primary={primary} />
               {hasModule('volunteers') && <HeaderQuickAction icon="👥" label="Volunteers" onClick={() => go('volunteers')} primary={primary} />}
-              <HeaderQuickAction icon="🧒" label="Invite Child" onClick={() => setShowInviteChild(true)} primary={primary} />
+              <HeaderQuickAction icon="🧒" label="Invite Child" onClick={() => setShowInviteChild(true)} primary={primary} gradientTo={secondary} filled />
+              {hasModule('volunteers') && <HeaderQuickAction icon="🤝" label="Invite Volunteer" onClick={() => go('volunteers', { autoOpenInvite: true })} primary={secondary} gradientTo={primary} filled />}
             </div>
           </div>
         )}
@@ -2567,13 +2576,13 @@ function QuickLinkTile({ icon, label, badge, onClick }) {
   );
 }
 
-function HeaderQuickAction({ icon, label, onClick, primary, filled }) {
+function HeaderQuickAction({ icon, label, onClick, primary, filled, gradientTo }) {
   return (
     <button onClick={onClick} style={{
       flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
       padding: '9px 14px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
       ...(filled
-        ? { border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', boxShadow: `0 4px 14px -6px ${primary}70` }
+        ? { border: 'none', background: `linear-gradient(135deg, ${primary}, ${gradientTo || primary + 'CC'})`, color: '#fff', boxShadow: `0 4px 14px -6px ${primary}70` }
         : { border: `1.5px solid ${primary}25`, background: '#fff', color: 'var(--text, #111)' })
     }}>
       <span>{icon}</span>{label}
