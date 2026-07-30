@@ -227,7 +227,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [viewMode, setViewMode] = useState('month')
+  const [viewMode, setViewMode] = useState(() => window.innerWidth < 768 ? 'day' : 'month')
   const [selectedSession, setSelectedSession] = useState(null)
   const [filterType, setFilterType] = useState('all')
   const [filterVenue, setFilterVenue] = useState('all')
@@ -453,11 +453,11 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
           </div>
 
           <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
-            <button onClick={() => setFilterType('all')} style={{ padding: '4px 12px', borderRadius: 99, border: `1.5px solid ${filterType === 'all' ? primary : '#e5e7eb'}`, background: filterType === 'all' ? primary + '15' : '#fff', color: filterType === 'all' ? primary : '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s' }}>
+            <button onClick={() => setFilterType('all')} style={{ padding: '5px 13px', borderRadius: 99, border: `1.5px solid ${filterType === 'all' ? primary : primary + '35'}`, background: filterType === 'all' ? primary : primary + '12', color: filterType === 'all' ? '#fff' : primary, fontSize: 11.5, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s' }}>
               All
             </button>
             {Object.entries(TYPE_CONFIG).map(([key, cfg]) => (
-              <button key={key} onClick={() => setFilterType(key)} style={{ padding: '4px 12px', borderRadius: 99, border: `1.5px solid ${filterType === key ? cfg.color : '#e5e7eb'}`, background: filterType === key ? cfg.color + '15' : '#fff', color: filterType === key ? cfg.color : '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s' }}>
+              <button key={key} onClick={() => setFilterType(key)} style={{ padding: '5px 13px', borderRadius: 99, border: `1.5px solid ${filterType === key ? cfg.color : cfg.color + '35'}`, background: filterType === key ? cfg.color : cfg.color + '12', color: filterType === key ? '#fff' : cfg.color, fontSize: 11.5, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s' }}>
                 {cfg.icon} {cfg.label}
               </button>
             ))}
@@ -713,7 +713,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
               { label: 'Types', value: [...new Set(sessions.filter(s => s.session_date?.startsWith(format(currentDate, 'yyyy-MM'))).map(s => s.session_type))].length, color: '#8B5CF6' },
               { label: 'Young People', value: monthYoungPeople, color: '#16a34a' },
             ].map(s => (
-              <div key={s.label} style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 10px' }}>
+              <div key={s.label} style={{ background: `${s.color}12`, border: `1px solid ${s.color}25`, borderRadius: 10, padding: '10px 10px' }}>
                 <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.value}</div>
                 <div style={{ fontSize: 10.5, color: '#9CA3AF', marginTop: 2 }}>{s.label}</div>
               </div>
