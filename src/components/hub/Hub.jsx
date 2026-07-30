@@ -2132,8 +2132,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 )}
               </div>
 
-              <StatCard icon="🗓️" title={todaySessions.length > 0 ? `${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today` : "No sessions today"} text={todaySessions.length > 0 ? (todayHasLiveSession ? "In progress" : "Ready for delivery") : "Plan something amazing"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} />
-              <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : "Plan now"} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} />
+              {todaySessions.length > 0 ? (
+                <StatCard icon="🗓️" title={`${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today`} text={todayHasLiveSession ? "In progress" : "Ready for delivery"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} />
+              ) : (
+                <StatCard icon="🚀" title="Create Session" text="Start planning your next activity, trip or workshop." button="+ New Session" onClick={() => go('planner', { autoOpenWizard: true })} colour="#0D9488" gradient="linear-gradient(135deg, #0F766E, #1E293B)" />
+              )}
+              <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} button={!nextSession ? "Plan now" : null} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : null} onClick={() => go(nextSessionStatus === 'live' ? "registers" : "planner")} colour={nextSessionStatus === 'live' ? '#DC2626' : "#7C3AED"} />
             </div>
           </Panel>
 
@@ -2535,10 +2539,10 @@ function HeaderQuickAction({ icon, label, onClick, primary, filled }) {
   );
 }
 
-function StatCard({ icon, title, text, button, badge, onClick, colour }) {
+function StatCard({ icon, title, text, button, badge, onClick, colour, gradient }) {
   return (
     <button onClick={onClick} style={{
-      background: `linear-gradient(135deg, ${colour}, ${colour}CC)`,
+      background: gradient || `linear-gradient(135deg, ${colour}, ${colour}CC)`,
       borderRadius: 16, padding: '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden',
       minHeight: 128, boxShadow: `0 10px 28px -10px ${colour}80`, textAlign: 'left', cursor: 'pointer',
       border: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
@@ -2553,9 +2557,15 @@ function StatCard({ icon, title, text, button, badge, onClick, colour }) {
         <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0 }}>{text}</p>
       </div>
       {(button || badge) && (
-        <div style={{ position: 'relative', marginTop: 10, display: 'inline-block', background: 'rgba(255,255,255,0.2)', borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 800, color: '#fff', alignSelf: 'flex-start' }}>
-          {button || badge}
-        </div>
+        button ? (
+          <div style={{ position: 'relative', marginTop: 10, display: 'inline-block', background: '#fff', borderRadius: 9, padding: '7px 14px', fontSize: 11.5, fontWeight: 800, color: colour, alignSelf: 'flex-start' }}>
+            {button}
+          </div>
+        ) : (
+          <div style={{ position: 'relative', marginTop: 10, display: 'inline-block', background: 'rgba(255,255,255,0.2)', borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 800, color: '#fff', alignSelf: 'flex-start' }}>
+            {badge}
+          </div>
+        )
       )}
     </button>
   );
