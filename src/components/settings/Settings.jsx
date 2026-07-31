@@ -3,6 +3,10 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { useOrg } from '../../context/OrgContext'
 import OrgSettingsPanel from './OrgSettingsPanel'
+import {
+  isPushSupported, getNotificationPermission, subscribeToPush, unsubscribeFromPush,
+  getCurrentSubscription, listMySubscriptions, revokeSubscriptionById, sendTestNotification,
+} from '../../services/pushNotifications'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -1221,36 +1225,150 @@ function SecuritySection() {
   )
 }
 
-function NotificationsSection() {
-  const [prefs, setPrefs] = useState({ safeguarding: true, sessions: true, attendance: true, volunteers: false })
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const toggle = (k) => setPrefs(p => ({ ...p, [k]: !p[k] }))
+const CATEGORY_TOGGLES = [
+  { key: 'safeguarding', icon: '🛡', label: 'Safeguarding alerts', locked: true },
+  { key: 'sessions',     icon: '📅', label: 'Session reminders' },
+  { key: 'registers',    icon: '📋', label: 'Register alerts' },
+  { key: 'messaging',    icon: '💬', label: 'Messages' },
+  { key: 'volunteers',   icon: '❤️', label: 'Volunteer cover' },
+  { key: 'forms',        icon: '📝', label: 'Forms' },
+  { key: 'consents',     icon: '✅', label: 'Consents' },
+  { key: 'medical',      icon: '💊', label: 'Medical updates' },
+  { key: 'resources',    icon: '📦', label: 'Resource bookings' },
+  { key: 'reflections',  icon: '⭐', label: 'Reflections' },
+  { key: 'reports',      icon: '📊', label: 'Reports' },
+  { key: 'security',     icon: '🔒', label: 'Security alerts', locked: true },
+]
 
-  const handleSave = async () => {
-    setSaving(true)
-    // Save to user_profiles notification_prefs for current user
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user) {
-      await supabase.from('user_profiles').update({ notification_prefs: prefs }).eq('id', session.user.id)
+function NotificationsSection({ org, session: authSession }) {
+  const userId = authSession?.user?.id
+  const supported = isPushSupported()
+  const [permission, setPermission] = useState(getNotificationPermission())
+  const [isSubscribedHere, setIsSubscribedHere] = useState(false)
+  const [devices, setDevices] = useState([])
+  const [prefs, setPrefs] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [testState, setTestState] = useState(null) // null | 'sending' | 'sent' | 'error'
+  const [error, setError] = useState('')
+
+  const load = async () => {
+    if (!userId) return
+    const sub = await getCurrentSubscription()
+    setIsSubscribedHere(!!sub)
+    setDevices(await listMySubscriptions(userId))
+    const { data } = await supabase.from('notification_preferences').select('*').eq('user_id', userId).maybeSingle()
+    setPrefs(data || { push_enabled: true, email_enabled: true, ...Object.fromEntries(CATEGORY_TOGGLES.map(c => [c.key, true])) })
+    setPermission(getNotificationPermission())
+  }
+
+  useEffect(() => { load() }, [userId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const status = !supported ? 'unsupported' : permission === 'denied' ? 'blocked' : isSubscribedHere ? 'enabled' : 'not_enabled'
+  const statusMeta = {
+    unsupported: { label: 'Unsupported', color: '#94A3B8', bg: '#F1F5F9' },
+    blocked:     { label: 'Blocked', color: '#DC2626', bg: '#FEF2F2' },
+    enabled:     { label: 'Enabled', color: '#16A34A', bg: '#F0FDF4' },
+    not_enabled: { label: 'Not enabled', color: '#D97706', bg: '#FFFBEB' },
+  }[status]
+
+  const handleEnable = async () => {
+    setError(''); setBusy(true)
+    const result = await subscribeToPush(org?.id, userId)
+    setBusy(false)
+    if (!result.success) {
+      if (result.error === 'blocked') setError('Notifications are blocked in your browser.')
+      else if (result.error !== 'dismissed') setError(result.error || 'Could not enable notifications.')
     }
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    await load()
+  }
+
+  const handleDisable = async () => {
+    setBusy(true)
+    await unsubscribeFromPush()
+    setBusy(false)
+    await load()
+  }
+
+  const handleRemoveDevice = async (id) => {
+    await revokeSubscriptionById(id)
+    await load()
+  }
+
+  const handleTest = async () => {
+    setTestState('sending')
+    const result = await sendTestNotification()
+    setTestState(result.success && result.sent > 0 ? 'sent' : 'error')
+    setTimeout(() => setTestState(null), 3500)
+  }
+
+  const savePrefs = async (next) => {
+    setPrefs(next)
+    await supabase.from('notification_preferences').upsert({ ...next, org_id: org?.id, user_id: userId, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+  }
+
+  const toggleCategory = (key, locked) => {
+    if (!prefs || locked) return
+    savePrefs({ ...prefs, [key]: !prefs[key] })
   }
 
   return (
-    <SettingCard title="Notification Preferences" description="Choose what you want to be notified about">
-      <Toggle value={prefs.safeguarding} onChange={() => toggle('safeguarding')} label="🛡 Safeguarding alerts" />
-      <Toggle value={prefs.sessions}     onChange={() => toggle('sessions')}     label="📅 Session reminders" />
-      <Toggle value={prefs.attendance}   onChange={() => toggle('attendance')}   label="📋 Attendance alerts" />
-      <Toggle value={prefs.volunteers}   onChange={() => toggle('volunteers')}   label="❤️ Volunteer updates" />
-      <div style={{ marginTop: 16 }}>
-        <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: saving ? '#9ca3af' : '#1B9AAA', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-          {saving ? 'Saving...' : saved ? '✅ Saved!' : 'Save Preferences'}
-        </button>
-      </div>
-    </SettingCard>
+    <>
+      <SettingCard title="Push Notifications" description="Get alerted the moment something needs your attention — even when LaunchSession isn't open.">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: statusMeta.color, background: statusMeta.bg, borderRadius: 99, padding: '5px 12px' }}>{statusMeta.label}</span>
+            {status === 'blocked' && <span style={{ fontSize: 12, color: '#64748B' }}>Update this in your browser's site settings, then reload.</span>}
+          </div>
+          {status === 'enabled' ? (
+            <button onClick={handleDisable} disabled={busy} style={{ padding: '9px 16px', borderRadius: 9, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+              {busy ? 'Working…' : 'Disable on this device'}
+            </button>
+          ) : status === 'not_enabled' ? (
+            <button onClick={handleEnable} disabled={busy} style={{ padding: '9px 18px', borderRadius: 9, border: 'none', background: '#1B9AAA', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
+              {busy ? 'Enabling…' : 'Enable notifications'}
+            </button>
+          ) : null}
+        </div>
+
+        {error && <div style={{ padding: '10px 14px', borderRadius: 10, background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', fontSize: 12.5, fontWeight: 600, marginBottom: 14 }}>{error}</div>}
+
+        {status === 'unsupported' && (
+          <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>Push notifications aren't supported on this browser. You'll still see everything in-app, and can turn on email notifications below.</div>
+        )}
+
+        {status === 'enabled' && (
+          <button onClick={handleTest} disabled={testState === 'sending'} style={{ padding: '9px 16px', borderRadius: 9, border: '1.5px solid #E2E8F0', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 4 }}>
+            {testState === 'sending' ? 'Sending…' : testState === 'sent' ? '✅ Sent — check your notifications' : testState === 'error' ? '⚠ Could not send' : 'Send test notification'}
+          </button>
+        )}
+      </SettingCard>
+
+      {devices.length > 0 && (
+        <SettingCard title="Your devices" description="Browsers and devices currently set up to receive push notifications for your account.">
+          {devices.map(d => (
+            <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{d.device_name || 'Unknown device'}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>Last active: {d.last_used_at ? new Date(d.last_used_at).toLocaleDateString('en-GB') : '—'}</div>
+              </div>
+              <button onClick={() => handleRemoveDevice(d.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+            </div>
+          ))}
+        </SettingCard>
+      )}
+
+      <SettingCard title="Categories" description="Choose what you want to be notified about. Safeguarding and security alerts are always on.">
+        {prefs && CATEGORY_TOGGLES.map(c => (
+          <div key={c.key} style={{ opacity: c.locked ? 0.6 : 1 }}>
+            <Toggle value={c.locked ? true : !!prefs[c.key]} onChange={() => toggleCategory(c.key, c.locked)} label={`${c.icon} ${c.label}${c.locked ? ' (required)' : ''}`} />
+          </div>
+        ))}
+      </SettingCard>
+
+      <SettingCard title="Email Notifications" description="Also receive important updates by email.">
+        <Toggle value={prefs?.email_enabled ?? true} onChange={() => prefs && savePrefs({ ...prefs, email_enabled: !prefs.email_enabled })} label="📧 Email me for the categories above" />
+      </SettingCard>
+    </>
   )
 }
 
@@ -2083,7 +2201,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
       )
       case 'users':           return <UsersSection org={org} session={session} isAdmin={isAdmin} currentUserId={session?.user?.id} />
       case 'security':       return <SecuritySection />
-      case 'notifications':  return <NotificationsSection />
+      case 'notifications':  return <NotificationsSection org={org} session={session} />
       case 'integrations':   return <IntegrationsSection />
       case 'billing':        return <BillingSection org={org} session={session} isAdmin={isAdmin} refreshOrg={refreshOrg} />
       case 'registers':      return <GroupsSection org={org} refreshOrg={refreshOrg} />
