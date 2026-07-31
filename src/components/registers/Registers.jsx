@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
@@ -1361,10 +1362,12 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
         </div>
       )}
 
-      {/* MOBILE TOOLS SHEET — same actions as the desktop sidebar, surfaced as a bottom sheet */}
-      {isMobile && showMobileTools && (
+      {/* MOBILE TOOLS SHEET — same actions as the desktop sidebar, surfaced as a bottom sheet.
+          Portaled to document.body so it escapes this panel's stacking context and always
+          renders above the fixed bottom nav bar (same fix as the Staff Rota rebuild). */}
+      {isMobile && showMobileTools && createPortal(
         <div onClick={() => setShowMobileTools(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80vh', overflowY: 'auto', padding: '8px 16px 24px', boxShadow: '0 -20px 50px rgba(0,0,0,0.25)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '8px 16px calc(24px + env(safe-area-inset-bottom))', boxShadow: '0 -20px 50px rgba(0,0,0,0.25)' }}>
             <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 10 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.12)' }} /></div>
             <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Tools</div>
             {[
@@ -1388,14 +1391,15 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               </button>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MOBILE IMPORT MODAL — the desktop sidebar renders InlineChildImport inline, but the sidebar
           is hidden on mobile, so this presents the same import flow as a bottom sheet on phones */}
-      {isMobile && showImport && (
+      {isMobile && showImport && createPortal(
         <div onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: 16 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Import Children</div>
               <button onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ width: 28, height: 28, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16 }}>×</button>
@@ -1412,13 +1416,14 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               showToast(`✅ Register updated — ${newChildren.length} children total`)
             }} />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MOBILE TEMPLATES MODAL — mirrors the desktop sidebar's inline TemplatePicker panel */}
-      {isMobile && showTemplates && (
+      {isMobile && showTemplates && createPortal(
         <div onClick={() => setShowTemplates(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: 16 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Import Templates</div>
               <button onClick={() => setShowTemplates(false)} style={{ width: 28, height: 28, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16 }}>×</button>
@@ -1429,7 +1434,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               setShowImport(true)
             }} />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* BULK ASSIGN ACTION BAR */}
