@@ -1249,6 +1249,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             {[
               { icon: '➕', label: 'Add Child', sub: 'Not on list', action: () => setShowAdd(true) },
               { icon: '🏷️', label: 'Manage Groups', sub: 'Quick add & colours', action: () => setShowGroupsSetup(true) },
+              { icon: '💊', label: 'Medical Alerts', sub: 'Review & sign off', action: () => onNavigate && onNavigate('medical_alerts') },
               { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => setShowImport(v => !v) },
               { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => setShowTemplates(v => !v) },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => handlePrint() },
@@ -1347,6 +1348,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Tools</div>
             {[
               { icon: '🏷️', label: 'Manage Groups', sub: 'Quick add & colours', action: () => { setShowGroupsSetup(true); setShowMobileTools(false) } },
+              { icon: '💊', label: 'Medical Alerts', sub: 'Review & sign off', action: () => { setShowMobileTools(false); onNavigate && onNavigate('medical_alerts') } },
               { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => { setShowImport(true); setShowMobileTools(false) } },
               { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => { setShowTemplates(true); setShowMobileTools(false) } },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => { handlePrint(); setShowMobileTools(false) } },

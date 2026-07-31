@@ -638,7 +638,6 @@ export default function Dashboard({ session, org }) {
           </NavSection>
 
           <NavSection collapsed={sidebarCollapsed} title="Safeguarding" packColor="#EF4444">
-            <NavItem icon="💊" label="Medical Alerts" active={tab === 'medical_alerts'} onClick={() => handleSetTab('medical_alerts')} primary={primary} collapsed={sidebarCollapsed} />
             {[
               { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
               { key: 'forms', label: 'Forms', icon: '📝' },
@@ -883,7 +882,6 @@ export default function Dashboard({ session, org }) {
                   { key: 'team', label: 'Team & Staff', icon: '👥' },
                   { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
                   { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
-                  { key: 'medical_alerts', label: 'Medical Alerts', icon: '💊' },
                   { key: 'reports', label: 'Reports', icon: '📊' },
                   { key: 'settings', label: 'Settings', icon: '⚙️' }
                 ].filter(item => !ADMIN_ONLY_TABS.includes(item.key) || isAdmin).map(item => (
