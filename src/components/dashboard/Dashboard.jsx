@@ -461,6 +461,7 @@ export default function Dashboard({ session, org }) {
   }
 
   const handleSetTab = (t, payload) => {
+    setShowMobileMore(false)
     if (ADMIN_ONLY_TABS.includes(t) && !isAdmin) { setTab('home'); persistTab('home'); return }
     if (t === 'registers') setRegistersKey(k => k + 1)
     setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
@@ -835,7 +836,7 @@ export default function Dashboard({ session, org }) {
               position: 'fixed',
               inset: 0,
               background: 'rgba(15,23,42,0.55)',
-              zIndex: 9998,
+              zIndex: 10050,
               display: 'flex',
               alignItems: 'flex-end'
             }}
