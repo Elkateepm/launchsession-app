@@ -2120,13 +2120,25 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       {/* ── LIVE SESSION HERO ── */}
       <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
-        <div className="ls-hub-livesession-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : todaySessions.length === 1 ? '1fr' : todaySessions.length === 2 ? '1fr 1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, padding: '0 0 8px' }}>
-          {todaySessions.slice(0, 20).map(s => {
+        (() => {
+          const getSessionMeta = (s) => {
             const now = new Date()
             const startDT = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
             const endDT = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
             const hasEnded = !!endDT && endDT < now
             const isLiveNow = (!startDT || startDT <= now) && !hasEnded
+            return { startDT, endDT, hasEnded, isLiveNow }
+          }
+
+          const todayList = todaySessions.slice(0, 20)
+          const liveGroup = todayList.filter(s => getSessionMeta(s).isLiveNow)
+          const currentGroup = todayList.filter(s => { const m = getSessionMeta(s); return !m.isLiveNow && !m.hasEnded })
+          const endedGroup = todayList.filter(s => getSessionMeta(s).hasEnded)
+
+          const gridStyle = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : todaySessions.length === 1 ? '1fr' : todaySessions.length === 2 ? '1fr 1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, padding: '0 0 8px' }
+
+          const renderCard = (s) => {
+            const { startDT, endDT, hasEnded, isLiveNow } = getSessionMeta(s)
             const statusLabel = hasEnded ? 'Closed' : isLiveNow ? 'Live now' : 'Upcoming'
             const statusColour = hasEnded ? '#94A3B8' : isLiveNow ? '#DC2626' : '#FBBF24'
 
@@ -2218,8 +2230,31 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 )}
               </React.Fragment>
             )
-          })}
-        </div>
+          }
+
+          return (
+            <React.Fragment>
+              {liveGroup.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 0.6, color: '#DC2626', textTransform: 'uppercase', marginBottom: 8 }}>🔴 Live ({liveGroup.length})</div>
+                  <div className="ls-hub-livesession-grid" style={gridStyle}>{liveGroup.map(renderCard)}</div>
+                </div>
+              )}
+              {currentGroup.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 0.6, color: '#FBBF24', textTransform: 'uppercase', marginBottom: 8 }}>🕐 Current ({currentGroup.length})</div>
+                  <div className="ls-hub-livesession-grid" style={gridStyle}>{currentGroup.map(renderCard)}</div>
+                </div>
+              )}
+              {endedGroup.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 0.6, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 8 }}>✅ Ended ({endedGroup.length})</div>
+                  <div className="ls-hub-livesession-grid" style={gridStyle}>{endedGroup.map(renderCard)}</div>
+                </div>
+              )}
+            </React.Fragment>
+          )
+        })()
       ) : (
         <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, ${secondary})`, boxShadow: `0 16px 34px ${primary}40` }}>
           <div style={styles.trophy}>🏆</div>
