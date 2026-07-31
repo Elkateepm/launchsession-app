@@ -52,6 +52,7 @@ const ALL_MODULES = [
   { key: 'forms',           label: 'Forms',            icon: '📝', group: 'safeguarding' },
   { key: 'case_management', label: 'Case Management',  icon: '📁', group: 'safeguarding' },
   { key: 'risk_assessments', label: 'Risk Assessments', icon: '🛡️', group: 'safeguarding' },
+  { key: 'medical_alerts',  label: 'Medical Alerts',    icon: '💊', group: 'safeguarding' },
   { key: 'reports',         label: 'Reports',          icon: '📊', group: 'growth' },
   { key: 'impact_outcomes', label: 'Impact & Outcomes',icon: '🌱', group: 'growth' },
   { key: 'fundraising',     label: 'Fundraising',      icon: '💷', group: 'growth' },
@@ -637,6 +638,7 @@ export default function Dashboard({ session, org }) {
           </NavSection>
 
           <NavSection collapsed={sidebarCollapsed} title="Safeguarding" packColor="#EF4444">
+            <NavItem icon="💊" label="Medical Alerts" active={tab === 'medical_alerts'} onClick={() => handleSetTab('medical_alerts')} primary={primary} collapsed={sidebarCollapsed} />
             {[
               { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
               { key: 'forms', label: 'Forms', icon: '📝' },
@@ -824,7 +826,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','reports','impact_outcomes','fundraising','hr','resource_booking','mentoring','parent_portal'].includes(tab) && (
+          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','resource_booking','mentoring','parent_portal'].includes(tab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
@@ -881,6 +883,7 @@ export default function Dashboard({ session, org }) {
                   { key: 'team', label: 'Team & Staff', icon: '👥' },
                   { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
                   { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
+                  { key: 'medical_alerts', label: 'Medical Alerts', icon: '💊' },
                   { key: 'reports', label: 'Reports', icon: '📊' },
                   { key: 'settings', label: 'Settings', icon: '⚙️' }
                 ].filter(item => !ADMIN_ONLY_TABS.includes(item.key) || isAdmin).map(item => (
