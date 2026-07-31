@@ -292,6 +292,25 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
 
 function ChildProfile({ child, org, primary, authUserId, groupLabel, consentRec, latestAtt, notes, attendanceForChild, onBack, onNavigate, onConsentChanged, isMobile }) {
   const [savingConsent, setSavingConsent] = useState(null)
+  const [editingContact, setEditingContact] = useState(false)
+  const [savingContact, setSavingContact] = useState(false)
+  const [contact, setContact] = useState({ parent_name: child.parent_name || '', parent_phone: child.parent_phone || '', parent_email: child.parent_email || '' })
+
+  const saveContact = async () => {
+    setSavingContact(true)
+    const { error } = await supabase.from('children').update({
+      parent_name: contact.parent_name.trim() || null,
+      parent_phone: contact.parent_phone.trim() || null,
+      parent_email: contact.parent_email.trim() || null,
+    }).eq('id', child.id)
+    setSavingContact(false)
+    if (!error) {
+      child.parent_name = contact.parent_name.trim() || null
+      child.parent_phone = contact.parent_phone.trim() || null
+      child.parent_email = contact.parent_email.trim() || null
+      setEditingContact(false)
+    }
+  }
 
   const toggleConsent = async (type) => {
     setSavingConsent(type)
@@ -371,13 +390,40 @@ function ChildProfile({ child, org, primary, authUserId, groupLabel, consentRec,
 
         {/* Contacts */}
         <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>📞 Contacts</div>
-          <Row label="Parent / Carer" value={child.parent_name} />
-          <Row label="Phone" value={child.parent_phone} />
-          <Row label="Emergency contact" value={child.emergency_contact_name} />
-          <Row label="Emergency phone" value={child.emergency_contact_phone} />
-          {child.parent_phone && (
-            <a href={`tel:${child.parent_phone}`} style={{ display: 'inline-block', marginTop: 8, padding: '7px 14px', borderRadius: 9, border: `1px solid ${primary}40`, color: primary, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>📞 Call parent</a>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A' }}>📞 Contacts</div>
+            {!editingContact && (
+              <button onClick={() => setEditingContact(true)} style={{ background: 'none', border: 'none', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>✏️ Edit</button>
+            )}
+          </div>
+          {editingContact ? (
+            <div>
+              {[['parent_name', 'Parent / carer name', 'text'], ['parent_phone', 'Phone', 'text'], ['parent_email', 'Email', 'email']].map(([key, lbl, type]) => (
+                <div key={key} style={{ marginBottom: 8 }}>
+                  <label style={{ fontSize: 10.5, fontWeight: 700, color: '#94A3B8', display: 'block', marginBottom: 3 }}>{lbl}</label>
+                  <input type={type} value={contact[key]} onChange={e => setContact(c => ({ ...c, [key]: e.target.value }))}
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #E2E8F0', fontSize: 12.5, outline: 'none' }} />
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <button onClick={() => { setContact({ parent_name: child.parent_name || '', parent_phone: child.parent_phone || '', parent_email: child.parent_email || '' }); setEditingContact(false) }}
+                  style={{ flex: 1, padding: '7px 0', borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', color: '#64748B', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={saveContact} disabled={savingContact}
+                  style={{ flex: 1, padding: '7px 0', borderRadius: 8, border: 'none', background: primary, color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>{savingContact ? 'Saving…' : 'Save'}</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Row label="Parent / Carer" value={child.parent_name} />
+              <Row label="Phone" value={child.parent_phone} />
+              <Row label="Email" value={child.parent_email} />
+              <Row label="Emergency contact" value={child.emergency_contact_name} />
+              <Row label="Emergency phone" value={child.emergency_contact_phone} />
+              {!child.parent_email && <div style={{ fontSize: 11, color: '#B45309', marginTop: 4 }}>⚠ No email on file — add one to enable emailing this parent.</div>}
+              {child.parent_phone && (
+                <a href={`tel:${child.parent_phone}`} style={{ display: 'inline-block', marginTop: 8, padding: '7px 14px', borderRadius: 9, border: `1px solid ${primary}40`, color: primary, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>📞 Call parent</a>
+              )}
+            </>
           )}
         </div>
 
@@ -435,7 +481,7 @@ function ChildProfile({ child, org, primary, authUserId, groupLabel, consentRec,
 }
 
 function AddChildQuickModal({ org, onClose, onAdded }) {
-  const [form, setForm] = useState({ first_name: '', last_name: '', date_of_birth: '', group_name: '', parent_name: '', parent_phone: '', school: '' })
+  const [form, setForm] = useState({ first_name: '', last_name: '', date_of_birth: '', group_name: '', parent_name: '', parent_phone: '', parent_email: '', school: '' })
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -445,7 +491,8 @@ function AddChildQuickModal({ org, onClose, onAdded }) {
     const { error } = await supabase.from('children').insert({
       org_id: org.id, first_name: form.first_name.trim(), last_name: form.last_name.trim(),
       date_of_birth: form.date_of_birth || null, group_name: form.group_name || null,
-      parent_name: form.parent_name || null, parent_phone: form.parent_phone || null, school: form.school || null,
+      parent_name: form.parent_name || null, parent_phone: form.parent_phone || null,
+      parent_email: form.parent_email.trim() || null, school: form.school || null,
       active: true, profile_incomplete: !form.date_of_birth || !form.parent_phone,
     })
     setSaving(false)
@@ -459,6 +506,7 @@ function AddChildQuickModal({ org, onClose, onAdded }) {
         {[
           ['first_name', 'First name *'], ['last_name', 'Last name'], ['date_of_birth', 'Date of birth', 'date'],
           ['group_name', 'Group'], ['school', 'School'], ['parent_name', 'Parent / carer name'], ['parent_phone', 'Parent / carer phone'],
+          ['parent_email', 'Parent / carer email', 'email'],
         ].map(([key, label, type]) => (
           <div key={key} style={{ marginBottom: 10 }}>
             <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>{label}</label>
@@ -612,7 +660,7 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
     const { data: child, error } = await supabase.from('children').insert({
       org_id: org.id, first_name: req.first_name, last_name: req.last_name,
       date_of_birth: req.date_of_birth, group_name: req.group_name, school: req.school,
-      parent_name: req.parent_name, parent_phone: req.parent_phone,
+      parent_name: req.parent_name, parent_phone: req.parent_phone, parent_email: req.parent_email,
       emergency_contact_name: req.emergency_contact_name, emergency_contact_phone: req.emergency_contact_phone,
       allergies: req.allergies, medical_notes: req.medical_notes, has_asthma: req.has_asthma,
       has_diabetes: req.has_diabetes, takes_medication: req.takes_medication, medication_details: req.medication_details,
