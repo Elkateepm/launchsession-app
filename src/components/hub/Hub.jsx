@@ -2552,6 +2552,49 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             )}
           </div>
 
+          {/* RECENT REGISTERS — dedicated last-7-days historical register section, separate from
+              the Ended tab above, so past registers are easy to find without digging through a toggle. */}
+          <div style={{ marginTop: 22 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>📜 Recent Registers</div>
+                <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 1 }}>Last 7 days</div>
+              </div>
+              <button onClick={() => go('registers')} style={{ fontSize: 11, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View all registers →</button>
+            </div>
+            {endedSessions.length === 0 ? (
+              <div style={{ boxSizing: 'border-box', width: '100%', background: '#F8FAFC', border: '1.5px dashed #E5E7EB', borderRadius: 20, padding: '28px 24px', textAlign: 'center', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
+                No sessions have closed in the last 7 days yet
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
+                {endedSessions.map(s => {
+                  const stats = getLiveSessionStats(s)
+                  const attendedTotal = stats.signedIn + stats.absent + stats.signedOut + stats.expected
+                  const attended = stats.signedIn + stats.signedOut
+                  return (
+                    <button key={s.id} onClick={() => openRegisterForSession(s.id)} style={{
+                      textAlign: 'left', cursor: 'pointer', border: '1.5px solid #EEF1F6', borderRadius: 16, padding: '14px 16px',
+                      background: '#fff', boxShadow: '0 2px 10px rgba(15,23,42,0.04)',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#EEF1F6' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 800, color: '#6B7280', background: '#F1F5F9', borderRadius: 99, padding: '3px 9px' }}>{formatDate(s.session_date)}</span>
+                        <span style={{ fontSize: 15, color: '#CBD5E1' }}>→</span>
+                      </div>
+                      <div style={{ fontSize: 13.5, fontWeight: 800, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 6 }}>{s.title}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11.5, fontWeight: 700, color: '#6B7280' }}>
+                        <span>🧒 {attended}/{attendedTotal} attended</span>
+                        <span>🔒 {new Date(s.closed_at).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}</span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
