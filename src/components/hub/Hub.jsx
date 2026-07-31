@@ -1701,6 +1701,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   }, [org?.city]);
   const [reflections, setReflections] = useState([]);
   const [checkedOutCount, setCheckedOutCount] = useState(0);
+  const [medicalReviews, setMedicalReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
   const [openLiveSessionId, setOpenLiveSessionId] = useState(null);
@@ -1726,6 +1727,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       { data: reflectionData },
       { data: volunteerData },
       { data: checkoutData },
+      { data: medicalReviewData },
     ] = await Promise.all([
       supabase.from("sessions").select("*").eq("org_id", orgId).order("session_date", { ascending: true }).order("start_time", { ascending: true }),
       supabase.from("attendance").select("*").eq("org_id", orgId),
@@ -1734,6 +1736,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       supabase.from("session_reflections").select("*").eq("org_id", orgId),
       supabase.from("volunteers").select("id").eq("org_id", orgId),
       supabase.from("resource_checkouts").select("id").eq("org_id", orgId).in("status", ["checked_out", "overdue"]),
+      supabase.from("medical_alert_reviews").select("*").eq("org_id", orgId),
     ]);
     setSessions(sessionData || []);
     setAttendance(attendanceData || []);
@@ -1742,6 +1745,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     setReflections(reflectionData || []);
     setVolunteersCount(volunteerData?.length || 0);
     setCheckedOutCount(checkoutData?.length || 0);
+    setMedicalReviews(medicalReviewData || []);
   }, [orgId]);
 
   useEffect(() => {
@@ -1757,6 +1761,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   useRealtimeTable("sessions", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
   useRealtimeTable("cause_for_concern", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
   useRealtimeTable("children", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 3000 });
+  useRealtimeTable("medical_alert_reviews", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 5000 });
   useRealtimeTable("organisations", loadHub, { filter: orgId ? `id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 5000 });
   useRealtimeTable("session_reflections", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 5000 });
   useRealtimeTable("volunteers", loadHub, { filter: orgId ? `org_id=eq.${orgId}` : undefined, enabled: !!orgId, pollInterval: 5000 });
@@ -1840,7 +1845,25 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const todaySessionIds = useMemo(() => new Set(todaySessions.map(s => s.id)), [todaySessions]);
   const todayAttendance = useMemo(() => attendance.filter(a => todaySessionIds.has(a.session_id)), [attendance, todaySessionIds]);
   const signedIn = todayAttendance.filter(a => a.status === "signed_in").length;
-  const medicalAlerts = children.filter(c => c.allergies || c.medical_notes || c.has_medication || c.has_asthma || c.has_epipen || c.has_diabetes).length;
+  const medicalReviewByChild = useMemo(() => {
+    const map = {}
+    medicalReviews.forEach(r => {
+      const existing = map[r.child_id]
+      if (!existing || new Date(r.reviewed_at) > new Date(existing.reviewed_at)) map[r.child_id] = r
+    })
+    return map
+  }, [medicalReviews]);
+  const MEDICAL_REVIEW_INTERVAL_DAYS = 180; // re-confirm medical info roughly every 6 months
+  const medicalAlertsNeedingReview = useMemo(() => {
+    const cutoff = Date.now() - MEDICAL_REVIEW_INTERVAL_DAYS * 24 * 60 * 60 * 1000
+    return children.filter(c => {
+      const flagged = c.allergies || c.medical_notes || c.has_medication || c.has_asthma || c.has_epipen || c.has_diabetes
+      if (!flagged) return false
+      const review = medicalReviewByChild[c.id]
+      if (!review) return true
+      return new Date(review.reviewed_at).getTime() < cutoff
+    }).length
+  }, [children, medicalReviewByChild]);
   const attendanceRate = children.length > 0 ? Math.round((signedIn / children.length) * 100) : 0;
   const strictlyTodaySessions = useMemo(() => todaySessions.filter(s => s.session_date === today), [todaySessions, today]);
   const sessionsEndedToday = useMemo(() => {
@@ -2546,8 +2569,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             if (hasModule('resource_booking') && checkedOutCount > 0) {
               items.push({ key: 'resources', icon: '↗', label: 'Resources', value: `${checkedOutCount} item${checkedOutCount > 1 ? 's' : ''} checked out`, tone: 'amber', rank: 1, onClick: () => go('resource_booking') })
             }
-            if (medicalAlerts > 0) {
-              items.push({ key: 'medical', icon: '💊', label: 'Medical alerts', value: `${medicalAlerts} young ${medicalAlerts > 1 ? 'people' : 'person'} flagged`, tone: 'amber', rank: 1, onClick: () => go('registers') })
+            if (medicalAlertsNeedingReview > 0) {
+              items.push({ key: 'medical', icon: '💊', label: 'Medical alerts', value: `${medicalAlertsNeedingReview} young ${medicalAlertsNeedingReview > 1 ? 'people' : 'person'} to review`, tone: 'amber', rank: 1, onClick: () => go('medical_alerts') })
             }
             if (hasModule('registers')) {
               items.push({ key: 'registers', icon: '📋', label: 'Registers', value: signedIn > 0 ? `${signedIn} signed in today` : 'No activity yet', tone: 'blue', rank: 2, onClick: () => go('registers') })
