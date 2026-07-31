@@ -2125,8 +2125,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             const now = new Date()
             const startDT = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
             const endDT = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
-            const hasEnded = !!endDT && endDT < now
-            const isLiveNow = (!startDT || startDT <= now) && !hasEnded
+            // A session is "ended" if it's actually been closed (register closed_at set),
+            // not just because the scheduled end time has passed — a manually-closed
+            // session should show as Ended everywhere, even if it's still within its
+            // scheduled window. This keeps Home in sync with the session detail panel,
+            // which already treats closed_at as the source of truth.
+            const hasEnded = !!s.closed_at || (!!endDT && endDT < now)
+            const isLiveNow = !hasEnded && (!startDT || startDT <= now)
             return { startDT, endDT, hasEnded, isLiveNow }
           }
 
