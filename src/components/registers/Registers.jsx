@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
@@ -824,31 +825,40 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
   const [hovered, setHovered] = React.useState(false)
 
   const statusConfig = {
-    signed_in:  { label: 'In',          bg: '#DCFCE7', color: '#15803D', dot: '#16A34A' },
-    signed_out: { label: 'Out',         bg: '#DBEAFE', color: '#1D4ED8', dot: '#2563EB' },
-    absent:     { label: 'Absent',      bg: '#FEE2E2', color: '#B91C1C', dot: '#DC2626' },
+    signed_in:  { label: 'In',          bg: 'linear-gradient(135deg,#DCFCE7,#BBF7D0)', color: '#15803D', dot: '#16A34A' },
+    signed_out: { label: 'Out',         bg: 'linear-gradient(135deg,#DBEAFE,#BFDBFE)', color: '#1D4ED8', dot: '#2563EB' },
+    absent:     { label: 'Absent',      bg: 'linear-gradient(135deg,#FEE2E2,#FECACA)', color: '#B91C1C', dot: '#DC2626' },
     expected:   { label: 'Expected',    bg: '#F1F5F9', color: '#94A3B8', dot: '#CBD5E1' },
     unmarked:   { label: 'Not marked',  bg: '#F1F5F9', color: '#94A3B8', dot: '#CBD5E1' },
   }
   const sc = statusConfig[status] || statusConfig.unmarked
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        padding: '10px 14px',
-        background: selected ? `${primary}12` : hovered ? `${bColor}10` : `${bColor}06`,
-        border: `1.5px solid ${selected ? primary + '40' : hovered ? bColor + '30' : bColor + '18'}`,
+        padding: '10px 14px 10px 18px',
+        overflow: 'hidden',
+        background: selected ? `${primary}14` : hovered ? `${bColor}14` : `${bColor}08`,
+        border: `1.5px solid ${selected ? primary + '45' : hovered ? bColor + '38' : bColor + '20'}`,
         borderRadius: 16,
         cursor: 'pointer',
-        transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
-        boxShadow: hovered ? `0 4px 14px -8px ${bColor}40` : '0 1px 3px rgba(0,0,0,0.03)',
+        transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s',
+        boxShadow: hovered ? `0 6px 16px -8px ${bColor}55` : '0 1px 3px rgba(0,0,0,0.04)',
+        transform: hovered ? 'translateY(-1px)' : 'none',
       }}
     >
+      {/* Group colour accent bar */}
+      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 5, background: bColor }} />
+
       {/* Checkbox */}
       <button onClick={e => { e.stopPropagation(); onToggleSelect(child.id) }}
         style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : '#D1D5DB'}`, background: selected ? primary : '#fff', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
@@ -857,7 +867,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
 
       {/* Avatar + name — opens info drawer */}
       <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 14, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 3px 10px -4px ${bColor}80`, transition: 'transform 0.15s', transform: hovered ? 'scale(1.05)' : 'none' }}>
+        <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg, ${bColor}, ${bColor}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 3px 10px -4px ${bColor}90`, transition: 'transform 0.15s', transform: hovered ? 'scale(1.06)' : 'none' }}>
           {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
         </div>
         <div style={{ minWidth: 0 }}>
@@ -865,12 +875,12 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
             {child.first_name} {child.last_name}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: bubble ? bColor : '#94A3B8' }}>{bubble?.label || 'Ungrouped'}</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: bColor, borderRadius: 99, padding: '1px 8px' }}>{bubble?.label || 'Ungrouped'}</span>
             {child.allergies && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: '#D97706', background: 'linear-gradient(135deg,#FEF3C7,#FDE68A)', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
             )}
             {child.medical_notes && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: '#DC2626', background: 'linear-gradient(135deg,#FEE2E2,#FECACA)', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
             )}
           </div>
         </div>
@@ -879,14 +889,14 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
       {/* Status badge — tappable during live session */}
       <div
         onClick={e => { e.stopPropagation(); if (onMark) onMark() }}
-        style={{ display: 'flex', alignItems: 'center', gap: 5, background: sc.bg, borderRadius: 99, padding: '5px 12px', flexShrink: 0, cursor: onMark ? 'pointer' : 'default', transition: 'transform 0.12s' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 5, background: sc.bg, borderRadius: 99, padding: '5px 12px', flexShrink: 0, cursor: onMark ? 'pointer' : 'default', transition: 'transform 0.12s', boxShadow: status === 'signed_in' || status === 'signed_out' || status === 'absent' ? '0 2px 6px -3px rgba(0,0,0,0.25)' : 'none' }}
         onMouseEnter={e => { if (onMark) e.currentTarget.style.transform = 'scale(1.06)' }}
         onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
       >
         <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.dot }} />
         <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -1139,29 +1149,36 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
           {/* Stats strip */}
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: 8, marginBottom: 12 }}>
-            <div style={{ background: '#F8FAFC', borderRadius: 14, padding: '12px 10px', border: '1.5px solid #E2E8F0', textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 900, color: '#0F172A', lineHeight: 1 }}>{counts.total}</div>
-              <div style={{ fontSize: 11, color: '#64748B', fontWeight: 600, marginTop: 4 }}>On Register</div>
-            </div>
-            <div style={{ background: '#F0FDF4', borderRadius: 14, padding: '12px 10px', border: '1.5px solid #BBF7D0', textAlign: 'center' }}>
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
+              style={{ background: `linear-gradient(155deg, ${primary}14, ${primary}05)`, borderRadius: 16, padding: '12px 10px', border: `1.5px solid ${primary}30`, textAlign: 'center', boxShadow: `0 3px 10px -6px ${primary}50` }}>
+              <div style={{ fontSize: 16, marginBottom: 2 }}>📋</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: primary, lineHeight: 1 }}>{counts.total}</div>
+              <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginTop: 4 }}>On Register</div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.05 }}
+              style={{ background: 'linear-gradient(155deg, #DCFCE7, #ECFDF5)', borderRadius: 16, padding: '12px 10px', border: '1.5px solid #86EFAC', textAlign: 'center', boxShadow: '0 3px 10px -6px rgba(22,163,74,0.35)' }}>
+              <div style={{ fontSize: 16, marginBottom: 2 }}>✅</div>
               <div style={{ fontSize: 28, fontWeight: 900, color: '#15803D', lineHeight: 1 }}>{counts.signed_in}</div>
-              <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 600, marginTop: 4 }}>Signed In</div>
-            </div>
-            <div style={{ background: '#FFFBEB', borderRadius: 14, padding: '12px 10px', border: '1.5px solid #FDE68A', textAlign: 'center' }}>
+              <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 700, marginTop: 4 }}>Signed In</div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.1 }}
+              style={{ background: 'linear-gradient(155deg, #FEF3C7, #FFFBEB)', borderRadius: 16, padding: '12px 10px', border: '1.5px solid #FCD34D', textAlign: 'center', boxShadow: '0 3px 10px -6px rgba(217,119,6,0.35)' }}>
+              <div style={{ fontSize: 16, marginBottom: 2 }}>⏳</div>
               <div style={{ fontSize: 28, fontWeight: 900, color: '#D97706', lineHeight: 1 }}>{counts.expected}</div>
-              <div style={{ fontSize: 11, color: '#D97706', fontWeight: 600, marginTop: 4 }}>Yet to Arrive</div>
-            </div>
+              <div style={{ fontSize: 11, color: '#D97706', fontWeight: 700, marginTop: 4 }}>Yet to Arrive</div>
+            </motion.div>
           </div>
 
           {/* Attendance bar */}
           {counts.total > 0 && (
             <div style={{ marginBottom: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>Attendance</span>
+                <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700 }}>Attendance</span>
                 <span style={{ fontSize: 11, fontWeight: 800, color: primary }}>{attendanceRate}%</span>
               </div>
-              <div style={{ height: 6, background: '#F3F4F6', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${attendanceRate}%`, background: `linear-gradient(90deg, ${primary}, #16A34A)`, borderRadius: 99, transition: 'width 0.5s' }} />
+              <div style={{ height: 8, background: '#F3F4F6', borderRadius: 99, overflow: 'hidden' }}>
+                <motion.div initial={{ width: 0 }} animate={{ width: `${attendanceRate}%` }} transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+                  style={{ height: '100%', background: `linear-gradient(90deg, ${primary}, #16A34A)`, borderRadius: 99 }} />
               </div>
             </div>
           )}
@@ -1186,17 +1203,20 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             {['all', ...availableGroups].map(g => {
               const bubble = g === 'all' ? null : bubbles.find(b => b.label.toLowerCase() === g.toLowerCase())
               const isActive = activeGroup === g
+              const chipColor = bubble?.color || primary
               return (
                 <button key={g} onClick={() => setActiveGroup(g)} style={{
-                  padding: '5px 14px', borderRadius: 99, border: `1.5px solid ${isActive ? (bubble?.color || primary) : '#e5e7eb'}`,
-                  background: isActive ? (bubble?.color || primary) + '18' : '#fff',
-                  color: isActive ? (bubble?.color || primary) : '#6B7280',
+                  padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${isActive ? chipColor : '#E5E7EB'}`,
+                  background: isActive ? `linear-gradient(135deg, ${chipColor}, ${chipColor}CC)` : '#fff',
+                  color: isActive ? '#fff' : '#6B7280',
                   fontSize: 12, fontWeight: isActive ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                  display: 'flex', alignItems: 'center', gap: 5
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  boxShadow: isActive ? `0 3px 10px -4px ${chipColor}90` : 'none',
+                  transition: 'all 0.15s ease',
                 }}>
-                  {bubble && <span style={{ width: 8, height: 8, borderRadius: '50%', background: bubble.color, display: 'inline-block' }} />}
+                  {bubble && <span style={{ width: 8, height: 8, borderRadius: '50%', background: isActive ? '#fff' : bubble.color, display: 'inline-block' }} />}
                   {g === 'all' ? 'All Groups' : g}
-                  <span style={{ fontSize: 10, opacity: 0.7 }}>
+                  <span style={{ fontSize: 10, opacity: isActive ? 0.9 : 0.7 }}>
                     {g === 'all' ? children.length : children.filter(c => (c.group_name || '').toLowerCase() === g.toLowerCase()).length}
                   </span>
                 </button>
