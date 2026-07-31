@@ -8,6 +8,7 @@ import VolunteersCoverage from './VolunteersCoverage'
 import VolunteersTraining from './VolunteersTraining'
 import VolunteersRecognition from './VolunteersRecognition'
 import VolunteersReports from './VolunteersReports'
+import QRShareSheet from '../shared/QRShareSheet'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one yet
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -52,6 +53,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
   const [showInviteModal, setShowInviteModal] = useState(!!autoOpenInvite)
   const [showBroadcastModal, setShowBroadcastModal] = useState(false)
   const [showQR, setShowQR] = useState(false)
+  const [showSignUpQR, setShowSignUpQR] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
   const [inviting, setInviting] = useState(false)
@@ -263,6 +265,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
               <button onClick={() => setShowBroadcastModal(true)} style={btnGhost}>📢 Send Broadcast</button>
               <button onClick={() => setTab('coverage')} style={btnGhost}>📅 View Coverage</button>
               <button onClick={() => setShowQR(true)} style={btnGhost}>📲 QR Portal</button>
+              <button onClick={() => setShowSignUpQR(true)} style={btnGhost}>🆕 Sign-Up QR</button>
               <button onClick={copyLink} style={btnGhost}>{copied ? '✓ Copied' : '🔗 Copy Portal Link'}</button>
               <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...btnGhost, textDecoration: 'none', display: 'inline-block' }}>Open Portal ↗</a>
             </div>
@@ -554,6 +557,8 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {showSignUpQR && <QRShareSheet org={org} onClose={() => setShowSignUpQR(false)} />}
 
       {/* QR MODAL */}
       <AnimatePresence>

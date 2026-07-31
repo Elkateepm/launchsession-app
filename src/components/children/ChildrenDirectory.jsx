@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import PageHeader from '../shared/PageHeader'
+import QRShareSheet from '../shared/QRShareSheet'
 import { Avatar, glass, inputStyle, btnGhost, btnPrimary } from '../volunteers/vh_shared'
 
 const CONSENT_TYPES = [
@@ -49,6 +50,7 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
   const [selectedId, setSelectedId] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
+  const [showQR, setShowQR] = useState(false)
   const [mainTab, setMainTab] = useState('directory')
 
   const load = useCallback(async () => {
@@ -146,6 +148,7 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
         ]}
         actions={[
           { label: 'Invite / Register', icon: '✉️', variant: 'ghost', onClick: () => setShowInvite(true) },
+          { label: 'Show QR', icon: '⊞', variant: 'ghost', onClick: () => setShowQR(true) },
           { label: 'Add young person', icon: '+', variant: 'primary', onClick: () => setShowAdd(true) },
         ]}
       />
@@ -286,6 +289,7 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
 
       {showAdd && <AddChildQuickModal org={org} onClose={() => setShowAdd(false)} onAdded={() => { setShowAdd(false); load() }} />}
       {showInvite && <InviteParentModal org={org} onClose={() => setShowInvite(false)} />}
+      {showQR && <QRShareSheet org={org} onClose={() => setShowQR(false)} />}
     </div>
   )
 }
