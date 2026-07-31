@@ -1110,18 +1110,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              {session && (
-                <button onClick={() => setShowAdd(true)} style={{ padding: '9px 15px', borderRadius: 11, border: `1.5px solid ${primary}35`, background: '#fff', color: primary, fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, boxShadow: `0 1px 4px -1px ${primary}20`, transition: 'transform 0.15s, box-shadow 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 4px 10px -3px ${primary}35` }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 1px 4px -1px ${primary}20` }}>
-                  + Walk-in
-                </button>
-              )}
-              <button onClick={() => setShowAdd(true)} style={{ padding: '9px 17px', borderRadius: 11, border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: `0 4px 14px -5px ${primary}90`, transition: 'transform 0.15s, box-shadow 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 6px 18px -5px ${primary}A0` }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 4px 14px -5px ${primary}90` }}>
-                + Add Child
-              </button>
               {isMobile && (
                 <button onClick={() => setShowMobileTools(true)} aria-label="More register tools" style={{ width: 38, height: 38, borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
                   ⋯
