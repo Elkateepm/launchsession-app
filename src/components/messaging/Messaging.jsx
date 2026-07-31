@@ -3,6 +3,21 @@ import { supabase } from '../../lib/supabase'
 import { format, formatDistanceToNow } from 'date-fns'
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { notifyEvent } from '../../services/notifyEvent'
+
+// Maps a thread's audience key to the user_profiles role(s) who should be
+// notified. Event-scoped threads (event_staff/event_volunteers) fall back to
+// their org-wide equivalent for notification purposes — the thread itself
+// still stays correctly scoped to the session, only the "who gets pinged"
+// resolution is simplified here.
+const AUDIENCE_ROLES = {
+  all_staff: ['admin', 'owner', 'staff'],
+  event_staff: ['admin', 'owner', 'staff'],
+  volunteers: ['volunteer'],
+  event_volunteers: ['volunteer'],
+  team: ['admin', 'owner'],
+  general: ['admin', 'owner', 'staff', 'volunteer'],
+}
 
 const AUDIENCES = [
   { key: 'all_staff',   label: 'All Staff',   icon: '👥', color: '#3B82F6' },
@@ -56,6 +71,15 @@ function ThreadView({ thread, org, session: authSession, onBack }) {
     setSending(false)
     await supabase.from('message_threads').update({ updated_at: new Date().toISOString() }).eq('id', thread.id)
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+
+    // Notify everyone in this thread's audience except the sender. Best-effort —
+    // never blocks the send flow, and the server re-validates every id against
+    // the caller's own org before anything goes out.
+    const roles = AUDIENCE_ROLES[thread.audience] || AUDIENCE_ROLES.general
+    supabase.from('user_profiles').select('id').eq('org_id', org.id).in('role', roles).then(({ data: members }) => {
+      const targetIds = (members || []).map(m => m.id).filter(id => id !== userId)
+      if (targetIds.length > 0) notifyEvent('NEW_MESSAGE', { target_user_ids: targetIds, thread_id: thread.id })
+    })
   }
 
   const handleKey = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }
