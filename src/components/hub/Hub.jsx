@@ -332,6 +332,17 @@ function hubRequiredRatio(session, org) {
   return org?.default_staff_ratio || 8
 }
 
+function ModalEdgeFade({ colour = '#0B1023' }) {
+  return (
+    <>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 44, background: `linear-gradient(to bottom, ${colour}, transparent)`, pointerEvents: 'none', zIndex: 2 }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 44, background: `linear-gradient(to top, ${colour}, transparent)`, pointerEvents: 'none', zIndex: 2 }} />
+      <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 32, background: `linear-gradient(to right, ${colour}, transparent)`, pointerEvents: 'none', zIndex: 2 }} />
+      <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 32, background: `linear-gradient(to left, ${colour}, transparent)`, pointerEvents: 'none', zIndex: 2 }} />
+    </>
+  )
+}
+
 function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, org, authUserId, reflections, onNavigate, getLiveSessionStats }) {
   const isMobile = useIsMobile()
   const [activeSession, setActiveSession] = useState(sessions[0])
@@ -2247,10 +2258,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                     padding: isMobile ? 0 : 24, boxSizing: 'border-box',
                   }} onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) setOpenLiveSessionId(null) }}>
                     <div style={{
+                      position: 'relative',
                       width: '100%', maxWidth: isMobile ? 'none' : 720, maxHeight: isMobile ? 'none' : '90vh',
                       display: 'flex', flexDirection: 'column', overflow: 'hidden',
-                      borderRadius: isMobile ? 0 : 22,
-                      boxShadow: isMobile ? 'none' : '0 30px 80px -20px rgba(0,0,0,0.6)',
                       flex: isMobile ? 1 : undefined,
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '14px 14px 0', background: '#0B1023' }}>
@@ -2263,6 +2273,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '10px 14px 24px' : '10px 20px 24px', background: '#0B1023' }}>
                         {panel}
                       </div>
+                      <ModalEdgeFade />
                     </div>
                   </div>,
                   document.body
@@ -2701,10 +2712,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             padding: isMobile ? 0 : 24, boxSizing: 'border-box',
           }} onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) setOpenLiveSessionId(null) }}>
             <div style={{
+              position: 'relative',
               width: '100%', maxWidth: isMobile ? 'none' : 720, maxHeight: isMobile ? 'none' : '90vh',
               display: 'flex', flexDirection: 'column', overflow: 'hidden',
-              borderRadius: isMobile ? 0 : 22,
-              boxShadow: isMobile ? 'none' : '0 30px 80px -20px rgba(0,0,0,0.6)',
               flex: isMobile ? 1 : undefined,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '14px 14px 0', background: '#0B1023' }}>
@@ -2730,6 +2740,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   getLiveSessionStats={getLiveSessionStats}
                 />
               </div>
+              <ModalEdgeFade />
             </div>
           </div>,
           document.body
