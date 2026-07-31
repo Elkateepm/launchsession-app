@@ -8,6 +8,8 @@ import { useOrgSettings } from "../../hooks/useOrgSettings";
 import CauseForConcernForm from "../safeguarding/CauseForConcernForm";
 import LiveRegister from "../registers/LiveRegister";
 import { InviteParentModal } from "../children/ChildrenDirectory";
+import { isPushSupported, getNotificationPermission, subscribeToPush } from "../../services/pushNotifications";
+import { notifyEvent } from "../../services/notifyEvent";
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -603,6 +605,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       session_id: activeSession?.id || null,
       status: 'open', priority: 'medium',
     })
+    notifyEvent('SAFEGUARDING_ACTION_REQUIRED')
     showRegToast('Safeguarding concern raised — complete details in Safeguarding.')
     if (onNavigate) onNavigate('safeguarding')
   }
@@ -1734,6 +1737,26 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const isMobile = useIsMobile();
   const [openLiveSessionId, setOpenLiveSessionId] = useState(null);
 
+  // ── Soft push-notification prompt (never auto-triggers the real browser
+  // permission popup — only shown once per device until dismissed or acted on) ──
+  const pushDismissKey = 'ls_push_prompt_dismissed'
+  const [showPushPrompt, setShowPushPrompt] = useState(() => {
+    try {
+      return isPushSupported() && getNotificationPermission() === 'default' && localStorage.getItem(pushDismissKey) !== 'true'
+    } catch (e) { return false }
+  })
+  const [pushEnabling, setPushEnabling] = useState(false)
+  const dismissPushPrompt = () => {
+    try { localStorage.setItem(pushDismissKey, 'true') } catch (e) {}
+    setShowPushPrompt(false)
+  }
+  const handleEnablePush = async () => {
+    setPushEnabling(true)
+    await subscribeToPush(org?.id, session?.user?.id)
+    setPushEnabling(false)
+    dismissPushPrompt()
+  }
+
   // Local calendar date (NOT toISOString, which converts to UTC and can roll
   // the date back during the early hours of BST — e.g. 00:19 local on 8 Jul
   // becomes 23:19 UTC on 7 Jul, silently hiding today's live sessions).
@@ -2168,6 +2191,27 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       </header>
 
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+      {showPushPrompt && (
+        <div style={{ padding: `${pad}px ${pad}px 0` }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+            background: `linear-gradient(135deg, ${primary}12, ${secondary}0A)`, border: `1.5px solid ${primary}30`,
+            borderRadius: 18, padding: '14px 18px',
+          }}>
+            <span style={{ fontSize: 24, flexShrink: 0 }}>🔔</span>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)' }}>Enable notifications</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>Stay updated when something important needs your attention — sessions, registers, messages and urgent alerts.</div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button onClick={dismissPushPrompt} style={{ padding: '9px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Not now</button>
+              <button onClick={handleEnablePush} disabled={pushEnabling} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                {pushEnabling ? 'Enabling…' : 'Enable notifications'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* ── LIVE SESSION HERO ── */}
       <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
