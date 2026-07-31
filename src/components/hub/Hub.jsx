@@ -384,6 +384,15 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
   React.useEffect(() => { if (sessions.length) setActiveSession(sessions[0]) }, [sessions])
 
+  // Closed sessions are historical records — open straight into the full register
+  // instead of behind an extra click, and default to the tab that's actually useful.
+  React.useEffect(() => {
+    if (activeSession?.closed_at) {
+      setRegTab(prev => prev === 'expected' ? 'signed_out' : prev)
+      setRegExpanded(true)
+    }
+  }, [activeSession?.id, activeSession?.closed_at])
+
   const loadLinkedRA = React.useCallback(() => {
     if (!activeSession?.id) { setLinkedRA(null); return }
     supabase.from('risk_assessment_sessions').select('risk_assessments(id, name, risk_rating, status)').eq('session_id', activeSession.id).limit(1)
@@ -934,13 +943,13 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           Register progress: {processedCount} of {regRows.length} processed
         </div>
 
-        <button onClick={() => registerOpen ? setRegExpanded(x => !x) : null} disabled={!registerOpen}
-          style={{ marginTop: 12, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: registerOpen ? 'pointer' : 'default', opacity: registerOpen ? 1 : 0.55 }}>
+        <button onClick={() => (registerOpen || activeSession?.closed_at) ? setRegExpanded(x => !x) : null} disabled={!registerOpen && !activeSession?.closed_at}
+          style={{ marginTop: 12, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: (registerOpen || activeSession?.closed_at) ? 'pointer' : 'default', opacity: (registerOpen || activeSession?.closed_at) ? 1 : 0.55 }}>
           <span>📋 Register{activeSession?.closed_at ? ' (read-only)' : ''}</span>
           <span style={{ color: 'rgba(255,255,255,0.5)' }}>
-            {!registerOpen
-              ? (activeSession?.closed_at ? '🔒 Closed' : `🔒 Opens ${minsToStart !== null && minsToStart > 30 ? `${minsToStart - 30} min before arrivals` : 'soon'}`)
-              : regExpanded ? '▲ Hide' : '▼ Open'}
+            {!registerOpen && !activeSession?.closed_at
+              ? `🔒 Opens ${minsToStart !== null && minsToStart > 30 ? `${minsToStart - 30} min before arrivals` : 'soon'}`
+              : regExpanded ? '▲ Hide' : (activeSession?.closed_at ? '🔒 View ▼' : '▼ Open')}
           </span>
         </button>
         {!registerOpen && !activeSession?.closed_at && minsToStart !== null && minsToStart > 30 && (
@@ -1001,7 +1010,9 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                         <span style={{ fontSize: 8.5, fontWeight: 800, color: '#FCA5A5', background: 'rgba(239,68,68,0.15)', borderRadius: 6, padding: '1px 5px', marginTop: 2, display: 'inline-block' }}>⚕ Medical</span>
                       )}
                     </div>
-                    {att?.status === 'signed_in' ? (
+                    {activeSession?.closed_at ? (
+                      att?.status && <span style={{ fontSize: 10.5, fontWeight: 800, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>{{ signed_in: 'Signed in', signed_out: 'Signed out', absent: 'Absent' }[att.status] || ''}</span>
+                    ) : att?.status === 'signed_in' ? (
                       <button onClick={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#2563EB', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Sign out</button>
                     ) : att?.status === 'signed_out' || att?.status === 'absent' ? null : (
                       <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
@@ -2567,27 +2578,22 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 No sessions have closed in the last 7 days yet
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {endedSessions.map(s => {
                   const stats = getLiveSessionStats(s)
                   const attendedTotal = stats.signedIn + stats.absent + stats.signedOut + stats.expected
                   const attended = stats.signedIn + stats.signedOut
                   return (
-                    <button key={s.id} onClick={() => openRegisterForSession(s.id)} style={{
-                      textAlign: 'left', cursor: 'pointer', border: '1.5px solid #EEF1F6', borderRadius: 16, padding: '14px 16px',
-                      background: '#fff', boxShadow: '0 2px 10px rgba(15,23,42,0.04)',
+                    <button key={s.id} onClick={() => setOpenLiveSessionId(s.id)} style={{
+                      display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: '1.5px solid #EEF1F6', borderRadius: 99, padding: '8px 14px 8px 8px',
+                      background: '#fff', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
                     }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = '#EEF1F6' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <span style={{ fontSize: 10.5, fontWeight: 800, color: '#6B7280', background: '#F1F5F9', borderRadius: 99, padding: '3px 9px' }}>{formatDate(s.session_date)}</span>
-                        <span style={{ fontSize: 15, color: '#CBD5E1' }}>→</span>
-                      </div>
-                      <div style={{ fontSize: 13.5, fontWeight: 800, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 6 }}>{s.title}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11.5, fontWeight: 700, color: '#6B7280' }}>
-                        <span>🧒 {attended}/{attendedTotal} attended</span>
-                        <span>🔒 {new Date(s.closed_at).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}</span>
-                      </div>
+                      <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🔒</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 800, color: '#374151', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280' }}>🧒 {attended}/{attendedTotal}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF' }}>· {formatDate(s.session_date)}</span>
                     </button>
                   )
                 })}
@@ -2681,6 +2687,54 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       )}
 
       {showInviteChild && <InviteParentModal org={org} onClose={() => setShowInviteChild(false)} />}
+
+      {/* Historical register modal — reuses the same dark launcher-card modal style as today's
+          live sessions, for any past session opened from outside today's list (e.g. Recent Registers). */}
+      {openLiveSessionId && !todaySessions.some(s => s.id === openLiveSessionId) && (() => {
+        const pastSession = sessions.find(s => s.id === openLiveSessionId)
+        if (!pastSession) return null
+        return createPortal(
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column',
+            background: isMobile ? '#0B1023' : 'rgba(8,11,23,0.7)',
+            alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'flex-start' : 'center',
+            padding: isMobile ? 0 : 24, boxSizing: 'border-box',
+          }} onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) setOpenLiveSessionId(null) }}>
+            <div style={{
+              width: '100%', maxWidth: isMobile ? 'none' : 720, maxHeight: isMobile ? 'none' : '90vh',
+              display: 'flex', flexDirection: 'column', overflow: 'hidden',
+              borderRadius: isMobile ? 0 : 22,
+              boxShadow: isMobile ? 'none' : '0 30px 80px -20px rgba(0,0,0,0.6)',
+              flex: isMobile ? 1 : undefined,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '14px 14px 0', background: '#0B1023' }}>
+                <button onClick={() => setOpenLiveSessionId(null)} aria-label="Close" style={{
+                  width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
+                  background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 18, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                }}>✕</button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '10px 14px 24px' : '10px 20px 24px', background: '#0B1023' }}>
+                <LiveSessionPanel
+                  sessions={[pastSession]}
+                  childList={children}
+                  attendance={attendance}
+                  primary={primary}
+                  secondary={secondary}
+                  orgId={org?.id}
+                  org={org}
+                  authUserId={session?.user?.id}
+                  reflections={reflections}
+                  onOpenRegister={openRegisterForSession}
+                  onNavigate={go}
+                  getLiveSessionStats={getLiveSessionStats}
+                />
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      })()}
 
       {showReflectionsModal && createPortal(
         <div onClick={() => setShowReflectionsModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
