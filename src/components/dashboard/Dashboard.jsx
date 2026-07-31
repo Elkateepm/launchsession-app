@@ -755,7 +755,7 @@ export default function Dashboard({ session, org }) {
       )}
 
       {/* MAIN CONTENT */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingTop: isMobileBottomNav ? 'env(safe-area-inset-top, 0px)' : 0, paddingBottom: isMobileBottomNav ? 'calc(76px + env(safe-area-inset-bottom, 0px))' : 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingTop: isMobileBottomNav ? 'env(safe-area-inset-top, 0px)' : 0, paddingBottom: isMobileBottomNav ? 'calc(64px + env(safe-area-inset-bottom, 0px))' : 0 }}>
         <div id="ls-main-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', WebkitOverflowScrolling: 'touch' }}>
           {tab !== 'registers' && tab !== 'home' && (
             <FloatingHeader
