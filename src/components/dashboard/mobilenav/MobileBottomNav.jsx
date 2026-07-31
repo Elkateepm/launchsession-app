@@ -35,6 +35,7 @@ export default function MobileBottomNav({
   onCreateForm,
   onReportIncident,
   onAddVolunteer,
+  onScanQR,
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [toast, setToast] = useState('')
@@ -47,15 +48,15 @@ export default function MobileBottomNav({
   }, [toast])
 
   const handleScanQR = () => {
-    // No camera-based QR scanner exists in the app yet (only QR *generation* for the
-    // volunteer portal link). Rather than silently do nothing, surface that clearly.
-    setToast('QR scanning is coming soon')
+    if (onScanQR) { onScanQR(); return }
+    // Fallback if no handler was wired up.
+    setToast('QR codes are not available right now')
   }
 
   const actions = [
     { key: 'newSession', label: 'New Session', icon: DEFAULT_ACTION_ICONS.newSession, color: '#7C3AED', onSelect: onNewSession },
     { key: 'addChild', label: 'Add Child', icon: DEFAULT_ACTION_ICONS.addChild, color: '#0891B2', onSelect: onAddChild },
-    { key: 'scanQR', label: 'Scan QR', icon: DEFAULT_ACTION_ICONS.scanQR, color: '#2563EB', onSelect: handleScanQR },
+    { key: 'scanQR', label: 'Sign-Up QR', icon: DEFAULT_ACTION_ICONS.scanQR, color: '#2563EB', onSelect: handleScanQR },
     { key: 'createForm', label: 'Create Form', icon: DEFAULT_ACTION_ICONS.createForm, color: '#D97706', onSelect: onCreateForm },
     { key: 'reportIncident', label: 'Report Incident', icon: DEFAULT_ACTION_ICONS.reportIncident, color: '#DC2626', onSelect: onReportIncident },
     { key: 'addVolunteer', label: 'Add Volunteer', icon: DEFAULT_ACTION_ICONS.addVolunteer, color: '#EA580C', onSelect: onAddVolunteer },

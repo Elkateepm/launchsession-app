@@ -12,7 +12,7 @@ const STAGES = [
   { key: 'withdrawn', label: 'Withdrawn', color: '#94A3B8' },
 ]
 
-export default function VolunteersApplications({ org, applicants, onDataChange }) {
+export default function VolunteersApplications({ org, applicants, onDataChange, publicApplications = [], onApprovePublic, onRejectPublic }) {
   const primary = org?.primary_color || PURPLE
   const [dragId, setDragId] = useState(null)
 
@@ -27,6 +27,42 @@ export default function VolunteersApplications({ org, applicants, onDataChange }
 
   return (
     <div>
+      {publicApplications.length > 0 && (
+        <div style={{ marginBottom: 24 }}>
+          <SectionTitle icon="📱" title="New Sign-Ups" subtitle={`${publicApplications.length} waiting from your volunteer QR code / link`} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {publicApplications.map(a => (
+              <Card key={a.id} style={{ padding: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <Avatar name={`${a.first_name} ${a.last_name || ''}`} size={36} color={primary} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{a.first_name} {a.last_name}</div>
+                    <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 1 }}>{[a.phone, a.email].filter(Boolean).join(' · ') || 'No contact provided'}</div>
+                    {(a.skills || []).length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                        {a.skills.map(s => (
+                          <span key={s} style={{ fontSize: 10, fontWeight: 700, color: primary, background: `${primary}12`, borderRadius: 6, padding: '2px 7px' }}>{s}</span>
+                        ))}
+                      </div>
+                    )}
+                    {(a.availability || []).length > 0 && (
+                      <div style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 4 }}>Available: {a.availability.join(', ')}</div>
+                    )}
+                    {a.dbs_number && <div style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 2 }}>DBS: {a.dbs_number}{a.dbs_expiry ? ` (expires ${new Date(a.dbs_expiry).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })})` : ''}</div>}
+                    {a.notes && <div style={{ fontSize: 11.5, color: '#475569', marginTop: 6, fontStyle: 'italic' }}>"{a.notes}"</div>}
+                    <div style={{ fontSize: 10, color: '#CBD5E1', marginTop: 6 }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+                    <button onClick={() => onApprovePublic?.(a)} style={{ fontSize: 11.5, fontWeight: 800, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(34,197,94,0.12)', color: '#15803D', cursor: 'pointer', whiteSpace: 'nowrap' }}>✓ Approve & Invite</button>
+                    <button onClick={() => onRejectPublic?.(a.id)} style={{ fontSize: 11.5, fontWeight: 800, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.1)', color: '#B91C1C', cursor: 'pointer' }}>Decline</button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       <SectionTitle icon="📮" title="Applications" subtitle={`${applicants.length} applicant${applicants.length !== 1 ? 's' : ''} in the pipeline`} />
       {applicants.length === 0 ? (
         <Card style={{ textAlign: 'center', padding: '48px 24px' }}>

@@ -30,6 +30,7 @@ import FundraisingGate from '../fundraising/FundraisingGate'
 import HR from '../hr/HR'
 import ResourceCentre from '../resources/ResourceCentre'
 import MobileBottomNav from './mobilenav/MobileBottomNav'
+import QRShareSheet from '../shared/QRShareSheet'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -441,6 +442,7 @@ export default function Dashboard({ session, org }) {
   const [autoOpenAddChild, setAutoOpenAddChild] = useState(false)
   const [autoOpenInviteVolunteer, setAutoOpenInviteVolunteer] = useState(false)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
+  const [showQRSheet, setShowQRSheet] = React.useState(false);
   const [navBadges, setNavBadges] = React.useState({ registers: 0, mentoring: 0 })
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
   const { isTablet } = useBreakpoint()
@@ -928,8 +930,10 @@ export default function Dashboard({ session, org }) {
             onCreateForm={() => handleSetTab('forms')}
             onReportIncident={() => handleSetTab('safeguarding')}
             onAddVolunteer={() => handleSetTab('volunteers')}
+            onScanQR={() => setShowQRSheet(true)}
           />
         )}
+        {showQRSheet && <QRShareSheet org={org} onClose={() => setShowQRSheet(false)} />}
       </div>
       {showProfile && (
         <ProfilePage

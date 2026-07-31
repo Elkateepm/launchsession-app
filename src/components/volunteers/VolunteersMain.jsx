@@ -40,6 +40,7 @@ const CHANNELS = [
 export default function VolunteersMain({ org, autoOpenInvite }) {
   const [volunteers, setVolunteers] = useState([])
   const [applicants, setApplicants] = useState([])
+  const [publicApplications, setPublicApplications] = useState([])
   const [sessions, setSessions] = useState([])
   const [sessionStaff, setSessionStaff] = useState([])
   const [training, setTraining] = useState([])
@@ -77,13 +78,14 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
   async function loadAll() {
     setLoading(true)
     const from = new Date(); from.setDate(from.getDate() - 60)
-    const [{ data: profiles }, { data: allSessions }, { data: staff }, { data: trainingRows }, { data: recognitionRows }, { data: broadcastRows }] = await Promise.all([
+    const [{ data: profiles }, { data: allSessions }, { data: staff }, { data: trainingRows }, { data: recognitionRows }, { data: broadcastRows }, { data: publicApps }] = await Promise.all([
       supabase.from('user_profiles').select('*').eq('org_id', org.id).eq('role', 'volunteer').order('created_at', { ascending: false }),
       supabase.from('sessions').select('*').eq('org_id', org.id).gte('session_date', from.toISOString().slice(0, 10)).order('session_date'),
       supabase.from('session_staff').select('*').eq('org_id', org.id),
       supabase.from('volunteer_training').select('*').eq('org_id', org.id),
       supabase.from('volunteer_recognition').select('*').eq('org_id', org.id),
       supabase.from('volunteer_broadcasts').select('*').eq('org_id', org.id).order('created_at', { ascending: false }).limit(10),
+      supabase.from('volunteer_applications').select('*').eq('org_id', org.id).eq('status', 'pending').order('created_at', { ascending: false }),
     ])
     const all = profiles || []
     setVolunteers(all.filter(v => v.status === 'active'))
@@ -93,7 +95,21 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
     setTraining(trainingRows || [])
     setRecognition(recognitionRows || [])
     setBroadcasts(broadcastRows || [])
+    setPublicApplications(publicApps || [])
     setLoading(false)
+  }
+
+  async function approvePublicApplication(app) {
+    await supabase.from('volunteer_applications').update({ status: 'accepted' }).eq('id', app.id)
+    setPublicApplications(prev => prev.filter(a => a.id !== app.id))
+    setInviteName(`${app.first_name} ${app.last_name || ''}`.trim())
+    setInviteEmail(app.email || '')
+    setShowInviteModal(true)
+  }
+
+  async function rejectPublicApplication(appId) {
+    await supabase.from('volunteer_applications').update({ status: 'rejected' }).eq('id', appId)
+    setPublicApplications(prev => prev.filter(a => a.id !== appId))
   }
 
   // ── KPIs ──────────────────────────────────────────────
@@ -420,11 +436,16 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                   )}
 
                   <Card>
-                    <SectionTitle icon="📮" title="New Applications" right={applicants.length > 0 && <Badge bg="rgba(220,38,38,0.1)" color="#DC2626">New</Badge>} />
-                    {applicants.length === 0 ? (
+                    <SectionTitle icon="📮" title="New Applications" right={(applicants.length + publicApplications.length) > 0 && <Badge bg="rgba(220,38,38,0.1)" color="#DC2626">New</Badge>} />
+                    {applicants.length === 0 && publicApplications.length === 0 ? (
                       <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No pending applications.</div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {publicApplications.length > 0 && (
+                          <div style={{ fontSize: 11.5, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.06)', borderRadius: 8, padding: '6px 10px' }}>
+                            {publicApplications.length} new sign-up{publicApplications.length !== 1 ? 's' : ''} from your volunteer QR / link
+                          </div>
+                        )}
                         {applicants.slice(0, 3).map(a => (
                           <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <Avatar name={a.full_name} photoUrl={a.photo_url} size={32} color={primary} />
@@ -435,6 +456,9 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                             <button onClick={() => setTab('applications')} style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: '#fff', fontSize: 11, fontWeight: 700, color: primary, cursor: 'pointer', whiteSpace: 'nowrap' }}>Review →</button>
                           </div>
                         ))}
+                        {applicants.length === 0 && publicApplications.length > 0 && (
+                          <button onClick={() => setTab('applications')} style={{ padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: '#fff', fontSize: 12, fontWeight: 700, color: primary, cursor: 'pointer' }}>Review sign-ups →</button>
+                        )}
                       </div>
                     )}
                   </Card>
@@ -472,7 +496,8 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
               training={training} recognition={recognition} onMessageVolunteer={openComposerFor} onDataChange={loadAll} />
           )}
           {tab === 'applications' && (
-            <VolunteersApplications org={org} applicants={applicants} onDataChange={loadAll} />
+            <VolunteersApplications org={org} applicants={applicants} onDataChange={loadAll}
+              publicApplications={publicApplications} onApprovePublic={approvePublicApplication} onRejectPublic={rejectPublicApplication} />
           )}
           {tab === 'coverage' && (
             <VolunteersCoverage org={org} sessions={sessions} sessionStaff={sessionStaff} volunteers={volunteers}

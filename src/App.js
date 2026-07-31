@@ -12,6 +12,7 @@ import VolunteerPortal from './components/volunteers/VolunteerPortal'
 import VolunteerAcceptInvite from './components/volunteers/VolunteerAcceptInvite'
 import PublicForm from './components/forms/PublicForm'
 import PublicChildRegistration from './components/children/PublicChildRegistration'
+import PublicVolunteerRegistration from './components/volunteers/PublicVolunteerRegistration'
 import SplashScreen from './components/common/SplashScreen'
 import { useBreakpoint } from './hooks/useIsMobile'
 
@@ -326,6 +327,7 @@ export default function App() {
   if (pathname.startsWith('/volunteer')) return <VolunteerPortal />
   if (pathname.startsWith('/forms/')) return <PublicForm />
   if (pathname.startsWith('/register-child/')) return <PublicChildRegistration />
+  if (pathname.startsWith('/register-volunteer/')) return <PublicVolunteerRegistration />
   if (pathname === '/signup') return <Signup />
   if (pathname === '/create-password') return <CreatePassword />
   return (
