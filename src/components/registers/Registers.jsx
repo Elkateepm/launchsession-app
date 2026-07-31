@@ -401,39 +401,6 @@ function InlineChildImport({ org, template, onImported }) {
 }
 
 // ─── MARK MODAL ───────────────────────────────────────────────
-function MarkModal({ child, status, bColor, onClose, onMark }) {
-  const [absenceReason, setAbsenceReason] = useState('')
-  const name = `${child.first_name} ${child.last_name}`
-  return (
-    <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 10700, backdropFilter: 'blur(3px)' }} />
-      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 'min(420px,100vw)', background: '#fff', borderRadius: '20px 20px 0 0', padding: '20px 20px 32px', zIndex: 10701, boxShadow: '0 -8px 40px rgba(0,0,0,0.2)' }}>
-        <div style={{ width: 36, height: 4, borderRadius: 99, background: '#E5E7EB', margin: '0 auto 16px' }} />
-        <div style={{ fontSize: 16, fontWeight: 900, color: '#111', marginBottom: 4 }}>{name}</div>
-        <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 18 }}>Mark attendance for this session</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10, marginBottom: 14 }}>
-          <button onClick={() => onMark('signed_in')} disabled={status === 'signed_in'}
-            style={{ padding: '16px 12px', borderRadius: 14, border: 'none', background: status === 'signed_in' ? '#DCFCE7' : '#16A34A', color: status === 'signed_in' ? '#16A34A' : '#fff', fontWeight: 800, fontSize: 14, cursor: status === 'signed_in' ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            ✅ {status === 'signed_in' ? 'Signed In' : 'Sign In'}
-          </button>
-          <button onClick={() => onMark('signed_out')} disabled={status !== 'signed_in'}
-            style={{ padding: '16px 12px', borderRadius: 14, border: 'none', background: status === 'signed_out' ? '#DBEAFE' : status === 'signed_in' ? bColor : '#F3F4F6', color: status === 'signed_out' ? '#1D4ED8' : status === 'signed_in' ? '#fff' : '#9CA3AF', fontWeight: 800, fontSize: 14, cursor: status === 'signed_in' ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            👋 {status === 'signed_out' ? 'Signed Out' : 'Sign Out'}
-          </button>
-        </div>
-        <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 14 }}>
-          <input value={absenceReason} onChange={e => setAbsenceReason(e.target.value)} placeholder="Absence reason (optional)..."
-            style={{ width: '100%', padding: '10px 13px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, marginBottom: 8, boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }} />
-          <button onClick={() => onMark('absent', { absence_reason: absenceReason })}
-            style={{ width: '100%', padding: 12, borderRadius: 10, border: '1.5px solid #FEE2E2', background: '#FFF5F5', color: '#DC2626', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            ✕ Mark Absent
-          </button>
-        </div>
-      </div>
-    </>
-  )
-}
-
 // ─── NOTES TAB ────────────────────────────────────────────────
 function NotesTab({ child }) {
   const [notes, setNotes] = useState(child.notes || '')
@@ -622,7 +589,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
     setUploadingPhoto(false)
   }
 
-  return (
+  return createPortal(
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 10600, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 20 }} onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: isMobile ? '24px 24px 0 0' : 24, width: '100%', maxWidth: isMobile ? '100%' : 440, maxHeight: isMobile ? '94vh' : '92vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column' }}>
 
@@ -814,7 +781,8 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         </div>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -947,12 +915,11 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const bubbles = normaliseBubbles(orgGroups)
   const { session } = useTodaySession(orgId)
   const { children, setChildren, loading } = useChildren(orgId)
-  const { attendance, updateStatus, addAttendanceRow } = useAttendance(session?.id)
+  const { attendance } = useAttendance(session?.id)
 
   const [search, setSearch] = useState('')
   const [activeGroup, setActiveGroup] = useState('all')
   const [selectedChild, setSelectedChild] = useState(null)
-  const [markChild, setMarkChild] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [selectMode, setSelectMode] = useState(false)
   const [bulkAssigning, setBulkAssigning] = useState(false)
@@ -1037,29 +1004,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       showToast(`⚠️ Could not assign group: ${e.message || 'unknown error'}`)
     }
     setBulkAssigning(false)
-  }
-
-  const handleUpdateStatus = async (childId, status, extra = {}) => {
-    const existing = attendance.find(a => a.child_id === childId)
-    const now = new Date().toISOString()
-    const child = children.find(c => c.id === childId)
-    const name = child ? `${child.first_name} ${child.last_name}` : 'Child'
-    if (existing) {
-      const updates = { status, ...extra }
-      if (status === 'signed_in' && !existing.signed_in_at) updates.signed_in_at = now
-      if (status === 'signed_out') updates.signed_out_at = now
-      await updateStatus(existing.id, status, updates)
-    } else if (session?.id) {
-      const updates = { status, org_id: orgId, ...extra }
-      if (status === 'signed_in') updates.signed_in_at = now
-      const newRow = { session_id: session.id, child_id: childId, ...updates }
-      const { data } = await supabase.from('attendance').insert([newRow]).select().single()
-      if (data) addAttendanceRow(data)
-    }
-    const t = format(new Date(), 'HH:mm')
-    if (status === 'signed_in') showToast(`✓ ${name} signed in at ${t}`)
-    else if (status === 'signed_out') showToast(`${name} signed out at ${t}`)
-    else showToast(`${name} marked absent`)
   }
 
   const counts = {
@@ -1268,7 +1212,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   selected={selectedIds.has(child.id)}
                   onToggleSelect={toggleSelect}
                   onClick={() => selectMode ? toggleSelect(child.id) : setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
-                  onMark={session && !selectMode ? () => setMarkChild({ child, status: getStatus(child.id) }) : null}
+                  onMark={null}
                 />
               ))}
             </div>
@@ -1488,20 +1432,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
         </div>
       )}
 
-      {/* MARK MODAL */}
-      {markChild && (
-        <MarkModal
-          child={markChild.child}
-          status={markChild.status}
-          bColor={getBubble(markChild.child)?.color || primary}
-          onClose={() => setMarkChild(null)}
-          onMark={(newStatus, extra = {}) => {
-            handleUpdateStatus(markChild.child.id, newStatus, extra)
-            setMarkChild(null)
-          }}
-        />
-      )}
-
       {/* CHILD DRAWER */}
       {selectedChild && (
         <ChildDrawer
@@ -1514,7 +1444,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           org={org}
           hasSession={!!session}
           onClose={() => setSelectedChild(null)}
-          onUpdateStatus={(id, status, extra) => { handleUpdateStatus(id, status, extra); setSelectedChild(null) }}
           onGroupChange={(childId, groupName) => {
             setChildren(prev => prev.map(ch => ch.id === childId ? { ...ch, group_name: groupName } : ch))
           }}
@@ -1570,7 +1499,7 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
     onAdded(data)
   }
 
-  return (
+  return createPortal(
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 440, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
         <div style={{ padding: '20px 22px 0' }}>
@@ -1603,6 +1532,7 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
