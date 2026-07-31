@@ -2261,6 +2261,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       position: 'relative',
                       width: '100%', maxWidth: isMobile ? 'none' : 720, maxHeight: isMobile ? 'none' : '90vh',
                       display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                      borderRadius: isMobile ? 0 : 26,
                       flex: isMobile ? 1 : undefined,
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '14px 14px 0', background: '#0B1023' }}>
@@ -2715,6 +2716,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               position: 'relative',
               width: '100%', maxWidth: isMobile ? 'none' : 720, maxHeight: isMobile ? 'none' : '90vh',
               display: 'flex', flexDirection: 'column', overflow: 'hidden',
+              borderRadius: isMobile ? 0 : 26,
               flex: isMobile ? 1 : undefined,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '14px 14px 0', background: '#0B1023' }}>
