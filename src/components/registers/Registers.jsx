@@ -1072,36 +1072,36 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* HEADER */}
-        <div style={{ background: `linear-gradient(165deg, ${primary}0A 0%, #fff 55%)`, borderBottom: '1px solid #EEF1F6', padding: '18px 20px 12px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, ${primary}0A 0%, #fff 55%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '12px 16px 8px' : '18px 20px 12px', flexShrink: 0, position: 'relative' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}44, transparent)` }} />
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, minWidth: 0 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 13, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0, boxShadow: `0 4px 14px -5px ${primary}90` }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: isMobile ? 8 : 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 9 : 12, minWidth: 0 }}>
+              <div style={{ width: isMobile ? 32 : 42, height: isMobile ? 32 : 42, borderRadius: isMobile ? 10 : 13, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 15 : 19, flexShrink: 0, boxShadow: `0 4px 14px -5px ${primary}90` }}>
                 📋
               </div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 19, fontWeight: 900, color: '#0B1220', fontFamily: 'var(--font-display)', letterSpacing: -0.3 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 3 : 5, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: '#0B1220', fontFamily: 'var(--font-display)', letterSpacing: -0.3 }}>
                     {session?.title || 'Register'}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', borderRadius: 99, padding: '4px 10px 4px 8px', background: registerSessionStatus.bg, color: registerSessionStatus.color }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', borderRadius: 99, padding: '3px 9px 3px 7px', background: registerSessionStatus.bg, color: registerSessionStatus.color }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: registerSessionStatus.color, flexShrink: 0 }} />
                     {registerSessionStatus.label.replace('● ', '')}
                   </span>
                 </div>
                 {session && (
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 8, padding: '3px 9px' }}>
+                  <div style={{ display: 'flex', gap: isMobile ? 4 : 6, flexWrap: 'wrap' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: isMobile ? 10.5 : 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 7, padding: isMobile ? '2px 7px' : '3px 9px' }}>
                       📅 {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
                     </span>
                     {session.start_time && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 8, padding: '3px 9px' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: isMobile ? 10.5 : 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 7, padding: isMobile ? '2px 7px' : '3px 9px' }}>
                         🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}
                       </span>
                     )}
-                    {session.location && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 8, padding: '3px 9px' }}>
+                    {session.location && !isMobile && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 7, padding: '3px 9px' }}>
                         📍 {session.location.split(',')[0]}
                       </span>
                     )}
@@ -1111,7 +1111,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               {isMobile && (
-                <button onClick={() => setShowMobileTools(true)} aria-label="More register tools" style={{ width: 38, height: 38, borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
+                <button onClick={() => setShowMobileTools(true)} aria-label="More register tools" style={{ width: 32, height: 32, borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
                   ⋯
                 </button>
               )}
@@ -1119,35 +1119,53 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           </div>
 
           {/* Stats strip */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: 8, marginBottom: 12 }}>
-            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
-              style={{ background: `linear-gradient(155deg, ${primary}14, ${primary}05)`, borderRadius: 16, padding: '12px 10px', border: `1.5px solid ${primary}30`, textAlign: 'center', boxShadow: `0 3px 10px -6px ${primary}50` }}>
-              <div style={{ fontSize: 16, marginBottom: 2 }}>📋</div>
-              <div style={{ fontSize: 28, fontWeight: 900, color: primary, lineHeight: 1 }}>{counts.total}</div>
-              <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginTop: 4 }}>On Register</div>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.05 }}
-              style={{ background: 'linear-gradient(155deg, #DCFCE7, #ECFDF5)', borderRadius: 16, padding: '12px 10px', border: '1.5px solid #86EFAC', textAlign: 'center', boxShadow: '0 3px 10px -6px rgba(22,163,74,0.35)' }}>
-              <div style={{ fontSize: 16, marginBottom: 2 }}>✅</div>
-              <div style={{ fontSize: 28, fontWeight: 900, color: '#15803D', lineHeight: 1 }}>{counts.signed_in}</div>
-              <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 700, marginTop: 4 }}>Signed In</div>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.1 }}
-              style={{ background: 'linear-gradient(155deg, #FEF3C7, #FFFBEB)', borderRadius: 16, padding: '12px 10px', border: '1.5px solid #FCD34D', textAlign: 'center', boxShadow: '0 3px 10px -6px rgba(217,119,6,0.35)' }}>
-              <div style={{ fontSize: 16, marginBottom: 2 }}>⏳</div>
-              <div style={{ fontSize: 28, fontWeight: 900, color: '#D97706', lineHeight: 1 }}>{counts.expected}</div>
-              <div style={{ fontSize: 11, color: '#D97706', fontWeight: 700, marginTop: 4 }}>Yet to Arrive</div>
-            </motion.div>
-          </div>
+          {isMobile ? (
+            <div style={{ display: 'flex', background: '#fff', borderRadius: 13, border: '1px solid #EEF1F6', boxShadow: '0 2px 8px -4px rgba(15,23,42,0.12)', marginBottom: 8, overflow: 'hidden' }}>
+              {[
+                { icon: '📋', value: counts.total, label: 'On Register', color: primary },
+                { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A' },
+                { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
+              ].map((s, i) => (
+                <div key={s.label} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 8px', borderLeft: i > 0 ? '1px solid #F1F5F9' : 'none', minWidth: 0 }}>
+                  <span style={{ fontSize: 13, flexShrink: 0 }}>{s.icon}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: s.color, lineHeight: 1.1 }}>{s.value}</div>
+                    <div style={{ fontSize: 8.5, color: '#94A3B8', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: 8, marginBottom: 12 }}>
+              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
+                style={{ background: `linear-gradient(155deg, ${primary}14, ${primary}05)`, borderRadius: 16, padding: '12px 10px', border: `1.5px solid ${primary}30`, textAlign: 'center', boxShadow: `0 3px 10px -6px ${primary}50` }}>
+                <div style={{ fontSize: 16, marginBottom: 2 }}>📋</div>
+                <div style={{ fontSize: 28, fontWeight: 900, color: primary, lineHeight: 1 }}>{counts.total}</div>
+                <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginTop: 4 }}>On Register</div>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.05 }}
+                style={{ background: 'linear-gradient(155deg, #DCFCE7, #ECFDF5)', borderRadius: 16, padding: '12px 10px', border: '1.5px solid #86EFAC', textAlign: 'center', boxShadow: '0 3px 10px -6px rgba(22,163,74,0.35)' }}>
+                <div style={{ fontSize: 16, marginBottom: 2 }}>✅</div>
+                <div style={{ fontSize: 28, fontWeight: 900, color: '#15803D', lineHeight: 1 }}>{counts.signed_in}</div>
+                <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 700, marginTop: 4 }}>Signed In</div>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.1 }}
+                style={{ background: 'linear-gradient(155deg, #FEF3C7, #FFFBEB)', borderRadius: 16, padding: '12px 10px', border: '1.5px solid #FCD34D', textAlign: 'center', boxShadow: '0 3px 10px -6px rgba(217,119,6,0.35)' }}>
+                <div style={{ fontSize: 16, marginBottom: 2 }}>⏳</div>
+                <div style={{ fontSize: 28, fontWeight: 900, color: '#D97706', lineHeight: 1 }}>{counts.expected}</div>
+                <div style={{ fontSize: 11, color: '#D97706', fontWeight: 700, marginTop: 4 }}>Yet to Arrive</div>
+              </motion.div>
+            </div>
+          )}
 
           {/* Attendance bar */}
           {counts.total > 0 && (
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: isMobile ? 6 : 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                 <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700 }}>Attendance</span>
                 <span style={{ fontSize: 11, fontWeight: 800, color: primary }}>{attendanceRate}%</span>
               </div>
-              <div style={{ height: 8, background: '#F3F4F6', borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{ height: isMobile ? 6 : 8, background: '#F3F4F6', borderRadius: 99, overflow: 'hidden' }}>
                 <motion.div initial={{ width: 0 }} animate={{ width: `${attendanceRate}%` }} transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
                   style={{ height: '100%', background: `linear-gradient(90deg, ${primary}, #16A34A)`, borderRadius: 99 }} />
               </div>
