@@ -631,8 +631,10 @@ function SubmissionsView({ form, org, onBack }) {
   )
 }
 
-export function EmailFormModal({ form, primary, onClose }) {
-  const [input, setInput] = useState('')
+export function EmailFormModal({ form, primary, onClose, recipients }) {
+  const withEmail = (recipients || []).filter(r => r.email)
+  const withoutEmail = (recipients || []).filter(r => !r.email)
+  const [input, setInput] = useState(() => withEmail.map(r => r.email).join('\n'))
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState(null) // { sent, failed } | { error }
 
@@ -665,6 +667,19 @@ export function EmailFormModal({ form, primary, onClose }) {
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
         </div>
         <div style={{ fontSize: 13, color: '#64748B', marginBottom: 16 }}>{form.name}</div>
+
+        {recipients && recipients.length > 0 && (
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#F0F9FF', border: '1px solid #BAE6FD', marginBottom: 14 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0369A1' }}>
+              Pre-filled with {withEmail.length} of {recipients.length} invited {recipients.length === 1 ? "child's" : "children's"} parent email{withEmail.length === 1 ? '' : 's'}
+            </div>
+            {withoutEmail.length > 0 && (
+              <div style={{ fontSize: 11.5, color: '#0369A1', marginTop: 4 }}>
+                No email on file for: {withoutEmail.map(r => r.name).join(', ')} — add one from their profile in Children.
+              </div>
+            )}
+          </div>
+        )}
 
         <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 6, letterSpacing: 0.4 }}>RECIPIENT EMAIL(S)</label>
         <textarea
