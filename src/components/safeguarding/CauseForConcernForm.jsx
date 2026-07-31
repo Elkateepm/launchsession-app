@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { notifyEvent } from '../../services/notifyEvent'
 
 const iStyle = { width: '100%', padding: '11px 13px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface2)', color: 'var(--text)', boxSizing: 'border-box' }
 const taStyle = { ...iStyle, resize: 'vertical', minHeight: 90, lineHeight: 1.5 }
@@ -126,6 +127,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
     })
     setSaving(false)
     if (err) { setError('Failed to submit: ' + err.message); return }
+    notifyEvent('SAFEGUARDING_ACTION_REQUIRED')
     setStep('done')
     if (onSubmitted) onSubmitted()
   }
