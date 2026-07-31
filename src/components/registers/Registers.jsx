@@ -820,7 +820,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 
 
 // ─── CHILD CARD ───────────────────────────────────────────────
-function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, onToggleSelect }) {
+function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, selectMode, onToggleSelect }) {
   const bColor = bubble?.color || primary || '#1B9AAA'
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const [hovered, setHovered] = React.useState(false)
@@ -841,6 +841,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
       transition={{ duration: 0.2 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
       style={{
         position: 'relative',
         display: 'flex',
@@ -860,14 +861,16 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
       {/* Group colour accent bar */}
       <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 5, background: bColor }} />
 
-      {/* Checkbox */}
-      <button onClick={e => { e.stopPropagation(); onToggleSelect(child.id) }}
-        style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : '#D1D5DB'}`, background: selected ? primary : '#fff', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
-        {selected ? '✓' : ''}
-      </button>
+      {/* Checkbox — only shown once "Select" mode is switched on */}
+      {selectMode && (
+        <button onClick={e => { e.stopPropagation(); onToggleSelect(child.id) }}
+          style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : '#D1D5DB'}`, background: selected ? primary : '#fff', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
+          {selected ? '✓' : ''}
+        </button>
+      )}
 
-      {/* Avatar + name — opens info drawer */}
-      <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+      {/* Avatar + name */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
         <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg, ${bColor}, ${bColor}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 3px 10px -4px ${bColor}90`, transition: 'transform 0.15s', transform: hovered ? 'scale(1.06)' : 'none' }}>
           {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
         </div>
@@ -887,7 +890,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
         </div>
       </div>
 
-      {/* Status badge — tappable during live session */}
+      {/* Status badge — tappable during live session (not in select mode) */}
       <div
         onClick={e => { e.stopPropagation(); if (onMark) onMark() }}
         style={{ display: 'flex', alignItems: 'center', gap: 5, background: sc.bg, borderRadius: 99, padding: '5px 12px', flexShrink: 0, cursor: onMark ? 'pointer' : 'default', transition: 'transform 0.12s', boxShadow: status === 'signed_in' || status === 'signed_out' || status === 'absent' ? '0 2px 6px -3px rgba(0,0,0,0.25)' : 'none' }}
@@ -951,6 +954,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const [selectedChild, setSelectedChild] = useState(null)
   const [markChild, setMarkChild] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
+  const [selectMode, setSelectMode] = useState(false)
   const [bulkAssigning, setBulkAssigning] = useState(false)
   const [showBulkGroupPicker, setShowBulkGroupPicker] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
@@ -1184,17 +1188,29 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             </div>
           )}
 
-          {/* Search */}
-          <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>🔍</span>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search by name..."
-              style={{ width: '100%', boxSizing: 'border-box', padding: isMobile ? '8px 10px 8px 32px' : '9px 12px 9px 36px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
-              onFocus={e => e.target.style.borderColor = primary}
-              onBlur={e => e.target.style.borderColor = primary + '25'}
-            />
+          {/* Search + select toggle */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>🔍</span>
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search by name..."
+                style={{ width: '100%', boxSizing: 'border-box', padding: isMobile ? '8px 10px 8px 32px' : '9px 12px 9px 36px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
+                onFocus={e => e.target.style.borderColor = primary}
+                onBlur={e => e.target.style.borderColor = primary + '25'}
+              />
+            </div>
+            <button
+              onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
+              style={{
+                padding: '0 14px', borderRadius: 10, border: `1.5px solid ${selectMode ? primary : '#E5E7EB'}`,
+                background: selectMode ? primary : '#fff', color: selectMode ? '#fff' : '#6B7280',
+                fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+              }}
+            >
+              {selectMode ? 'Cancel' : 'Select'}
+            </button>
           </div>
         </div>
 
@@ -1248,10 +1264,11 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   status={getStatus(child.id)}
                   bubble={getBubble(child)}
                   primary={primary}
+                  selectMode={selectMode}
                   selected={selectedIds.has(child.id)}
                   onToggleSelect={toggleSelect}
-                  onClick={() => setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
-                  onMark={session ? () => setMarkChild({ child, status: getStatus(child.id) }) : null}
+                  onClick={() => selectMode ? toggleSelect(child.id) : setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
+                  onMark={session && !selectMode ? () => setMarkChild({ child, status: getStatus(child.id) }) : null}
                 />
               ))}
             </div>
