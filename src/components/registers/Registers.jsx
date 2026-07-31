@@ -1072,38 +1072,58 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* HEADER */}
-        <div style={{ background: '#fff', borderBottom: `2px solid ${primary}18`, padding: '14px 20px 10px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, ${primary}0A 0%, #fff 55%)`, borderBottom: '1px solid #EEF1F6', padding: '18px 20px 12px', flexShrink: 0, position: 'relative' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}44, transparent)` }} />
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                <span style={{ fontSize: 18, fontWeight: 900, color: '#111', fontFamily: 'var(--font-display)' }}>
-                  {session?.title || 'Register'}
-                </span>
-                <span style={{ fontSize: 11, fontWeight: 800, borderRadius: 99, padding: '3px 10px', background: registerSessionStatus.bg, color: registerSessionStatus.color }}>
-                  {registerSessionStatus.label}
-                </span>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, minWidth: 0 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 13, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0, boxShadow: `0 4px 14px -5px ${primary}90` }}>
+                📋
               </div>
-              {session && (
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 12, color: '#9CA3AF' }}>📅 {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                  {session.start_time && <span style={{ fontSize: 12, color: '#9CA3AF' }}>🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}</span>}
-                  {session.location && <span style={{ fontSize: 12, color: '#9CA3AF' }}>📍 {session.location.split(',')[0]}</span>}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 19, fontWeight: 900, color: '#0B1220', fontFamily: 'var(--font-display)', letterSpacing: -0.3 }}>
+                    {session?.title || 'Register'}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', borderRadius: 99, padding: '4px 10px 4px 8px', background: registerSessionStatus.bg, color: registerSessionStatus.color }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: registerSessionStatus.color, flexShrink: 0 }} />
+                    {registerSessionStatus.label.replace('● ', '')}
+                  </span>
                 </div>
-              )}
+                {session && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 8, padding: '3px 9px' }}>
+                      📅 {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    </span>
+                    {session.start_time && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 8, padding: '3px 9px' }}>
+                        🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}
+                      </span>
+                    )}
+                    {session.location && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 8, padding: '3px 9px' }}>
+                        📍 {session.location.split(',')[0]}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               {session && (
-                <button onClick={() => setShowAdd(true)} style={{ padding: '8px 14px', borderRadius: 10, border: `1.5px solid ${primary}40`, background: primary + '10', color: primary, fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <button onClick={() => setShowAdd(true)} style={{ padding: '9px 15px', borderRadius: 11, border: `1.5px solid ${primary}35`, background: '#fff', color: primary, fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, boxShadow: `0 1px 4px -1px ${primary}20`, transition: 'transform 0.15s, box-shadow 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 4px 10px -3px ${primary}35` }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 1px 4px -1px ${primary}20` }}>
                   + Walk-in
                 </button>
               )}
-              <button onClick={() => setShowAdd(true)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button onClick={() => setShowAdd(true)} style={{ padding: '9px 17px', borderRadius: 11, border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: `0 4px 14px -5px ${primary}90`, transition: 'transform 0.15s, box-shadow 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 6px 18px -5px ${primary}A0` }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 4px 14px -5px ${primary}90` }}>
                 + Add Child
               </button>
               {isMobile && (
-                <button onClick={() => setShowMobileTools(true)} aria-label="More register tools" style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <button onClick={() => setShowMobileTools(true)} aria-label="More register tools" style={{ width: 38, height: 38, borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
                   ⋯
                 </button>
               )}
