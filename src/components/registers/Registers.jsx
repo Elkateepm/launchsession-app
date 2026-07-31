@@ -1068,6 +1068,23 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
   const attendanceRate = counts.total > 0 ? Math.round((counts.signed_in / counts.total) * 100) : 0
 
+  // Session status for the header badge — must agree with Hub and the session
+  // detail panel: closed_at (actually closed) takes priority over the scheduled
+  // time window, otherwise a manually-closed session still shows as "Live" here
+  // just because a session object exists.
+  const registerSessionStatus = (() => {
+    if (!session) return { label: 'No Session', bg: '#F3F4F6', color: '#9CA3AF' }
+    if (session.closed_at) return { label: '● Closed', bg: '#F1F5F9', color: '#64748B' }
+    const now = new Date()
+    const startDT = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
+    const endDT = session.end_time ? new Date(`${session.session_date}T${session.end_time}`) : null
+    const hasEnded = !!endDT && endDT < now
+    const isLiveNow = !hasEnded && (!startDT || startDT <= now)
+    if (hasEnded) return { label: '● Ended', bg: '#F1F5F9', color: '#64748B' }
+    if (isLiveNow) return { label: '● Live', bg: '#DCFCE7', color: '#15803D' }
+    return { label: '● Upcoming', bg: '#FEF9C3', color: '#92400E' }
+  })()
+
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#F8FAFC' }}>
 
@@ -1091,8 +1108,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 <span style={{ fontSize: 18, fontWeight: 900, color: '#111', fontFamily: 'var(--font-display)' }}>
                   {session?.title || 'Register'}
                 </span>
-                <span style={{ fontSize: 11, fontWeight: 800, borderRadius: 99, padding: '3px 10px', background: session ? '#DCFCE7' : '#F3F4F6', color: session ? '#15803D' : '#9CA3AF' }}>
-                  {session ? '● Live' : 'No Session'}
+                <span style={{ fontSize: 11, fontWeight: 800, borderRadius: 99, padding: '3px 10px', background: registerSessionStatus.bg, color: registerSessionStatus.color }}>
+                  {registerSessionStatus.label}
                 </span>
               </div>
               {session && (
