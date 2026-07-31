@@ -491,7 +491,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
 
 // ─── STEP 4: REQUIREMENTS ───────────────────────────────────────
 
-function StepRequirements({ form, setForm, orgForms, org, onFormCreated }) {
+function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expectedChildren }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const toggleForm = (id) => set('form_ids', form.form_ids.includes(id) ? form.form_ids.filter(x => x !== id) : [...form.form_ids, id])
   const toggleOutcome = (a) => set('outcome_areas', form.outcome_areas.includes(a) ? form.outcome_areas.filter(x => x !== a) : [...form.outcome_areas, a])
@@ -533,15 +533,22 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated }) {
         ) : orgForms.map(f => {
           const checked = form.form_ids.includes(f.id)
           return (
-            <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, flex: 1 }}>
-                <input type="checkbox" checked={checked} onChange={() => toggleForm(f.id)} /> {f.name}
-              </label>
-              {checked && (
-                <button onClick={() => setEmailFormFor(f)} title="Email this form to parents now"
-                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, color: ACCENT, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  ✉️ Email parents
-                </button>
+            <div key={f.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, flex: 1 }}>
+                  <input type="checkbox" checked={checked} onChange={() => toggleForm(f.id)} /> {f.name}
+                </label>
+                {checked && (
+                  <button onClick={() => setEmailFormFor(f)} title="Email this form to invited parents"
+                    style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, color: ACCENT, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    ✉️ Email parents
+                  </button>
+                )}
+              </div>
+              {checked && expectedChildren && expectedChildren.length > 0 && (
+                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4, paddingLeft: 26 }}>
+                  {expectedChildren.filter(c => c.parent_email).length} of {expectedChildren.length} invited {expectedChildren.length === 1 ? 'child has' : 'children have'} an email on file
+                </div>
               )}
             </div>
           )
@@ -568,7 +575,14 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated }) {
         </div>
       </div>
 
-      {emailFormFor && <EmailFormModal form={emailFormFor} primary={primary} onClose={() => setEmailFormFor(null)} />}
+      {emailFormFor && (
+        <EmailFormModal
+          form={emailFormFor}
+          primary={primary}
+          onClose={() => setEmailFormFor(null)}
+          recipients={(expectedChildren || []).map(c => ({ name: `${c.first_name} ${c.last_name}`, email: c.parent_email }))}
+        />
+      )}
     </>
   )
 }
@@ -677,7 +691,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     if (!org?.id) return
     supabase.from('user_profiles').select('id, full_name').eq('org_id', org.id).in('role', ['admin', 'staff'])
       .then(({ data }) => setStaff(data || []))
-    supabase.from('children').select('id, first_name, last_name, group_name').eq('org_id', org.id).eq('active', true)
+    supabase.from('children').select('id, first_name, last_name, group_name, parent_email').eq('org_id', org.id).eq('active', true)
       .then(({ data }) => setChildren(data || []))
     supabase.from('org_forms').select('id, name').eq('org_id', org.id).eq('is_active', true)
       .then(({ data }) => setOrgForms(data || []))
@@ -713,6 +727,14 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     }
     if (form.participant_mode === 'individual') return form.child_ids.length
     return 0
+  }, [form.participant_mode, form.bubbles, form.child_ids, children])
+
+  // The actual list of expected children (not just a count) — used to prefill
+  // "email the consent form to invited parents" with their addresses.
+  const expectedChildren = useMemo(() => {
+    if (form.participant_mode === 'group') return children.filter(c => form.bubbles.includes(c.group_name))
+    if (form.participant_mode === 'individual') return children.filter(c => form.child_ids.includes(c.id))
+    return []
   }, [form.participant_mode, form.bubbles, form.child_ids, children])
 
   const STEPS = ['Type', 'Details', 'People', 'Requirements', 'Review']
@@ -825,7 +847,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
               {step === 1 && <StepType form={form} setForm={setForm} templates={templates} appliedTemplateId={appliedTemplateId} onApplyTemplate={applyTemplate} />}
               {step === 2 && <StepDetails form={form} setForm={setForm} staff={staff} org={org} />}
               {step === 3 && <StepPeople form={form} setForm={setForm} staff={staff} children={children} expectedCount={expectedCount} bubbleDefs={bubbleDefs} org={org} />}
-              {step === 4 && <StepRequirements form={form} setForm={setForm} orgForms={orgForms} />}
+              {step === 4 && <StepRequirements form={form} setForm={setForm} orgForms={orgForms} expectedChildren={expectedChildren} />}
               {step === 5 && <StepReview form={form} staff={staff} expectedCount={expectedCount} primary={primary} />}
             </motion.div>
           </AnimatePresence>
