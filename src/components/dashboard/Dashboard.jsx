@@ -829,9 +829,15 @@ export default function Dashboard({ session, org }) {
 
 
         {/* Mobile More Menu */}
+        <AnimatePresence>
         {isMobileBottomNav && showMobileMore && (
-          <div
+          <motion.div
+            key="more-overlay"
             onClick={() => setShowMobileMore(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             style={{
               position: 'fixed',
               inset: 0,
@@ -841,17 +847,28 @@ export default function Dashboard({ session, org }) {
               alignItems: 'flex-end'
             }}
           >
-            <div
+            <motion.div
               onClick={e => e.stopPropagation()}
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 400 }}
+              dragElastic={{ top: 0.05, bottom: 0.6 }}
+              onDragEnd={(e, info) => {
+                if (info.offset.y > 90 || info.velocity.y > 500) setShowMobileMore(false)
+              }}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 32, stiffness: 320 }}
               style={{
                 width: '100%',
                 background: '#fff',
                 borderRadius: '24px 24px 0 0',
                 padding: '18px 16px 96px',
-                boxShadow: '0 -20px 60px rgba(15,23,42,0.25)'
+                boxShadow: '0 -20px 60px rgba(15,23,42,0.25)',
+                touchAction: 'none',
               }}
             >
-              <div style={{ width: 42, height: 5, borderRadius: 99, background: 'var(--border)', margin: '0 auto 16px' }} />
+              <div style={{ width: 42, height: 5, borderRadius: 99, background: 'var(--border)', margin: '0 auto 16px', cursor: 'grab' }} />
               <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>More</div>
               <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Open another LaunchSession area</div>
 
@@ -891,9 +908,10 @@ export default function Dashboard({ session, org }) {
                   </button>
                 ))}
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {isMobileBottomNav && (
           <MobileBottomNav
