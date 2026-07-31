@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion'
+import { createPortal } from 'react-dom'
 
 function CountUp({ value, duration = 0.6 }) {
   const [display, setDisplay] = React.useState(value)
@@ -356,14 +357,14 @@ export function FormBuilder({ org, initial, onSave, onCancel }) {
   })
   const [saving, setSaving] = useState(false)
   const [mode, setMode] = useState('edit') // 'edit' | 'preview'
-  const [dragIndex, setDragIndex] = useState(null)
-  const [dragOverIndex, setDragOverIndex] = useState(null)
   const [triedSave, setTriedSave] = useState(false)
+  const [showAddField, setShowAddField] = useState(false)
   const primary = org?.primary_color || '#1B9AAA'
 
   const addField = (type) => {
     const newField = { id: Date.now(), type, label: FIELD_TYPES.find(f => f.key === type)?.label || type, required: false, options: type === 'select' ? ['Option 1', 'Option 2'] : undefined }
     setForm(f => ({ ...f, fields: [...f.fields, newField] }))
+    setShowAddField(false)
   }
 
   const updateField = (id, changes) => setForm(f => ({ ...f, fields: f.fields.map(field => field.id === id ? { ...field, ...changes } : field) }))
@@ -385,11 +386,6 @@ export function FormBuilder({ org, initial, onSave, onCancel }) {
       return { ...f, fields }
     })
   }
-  const handleDrop = (idx) => {
-    if (dragIndex !== null && dragIndex !== idx) moveField(dragIndex, idx)
-    setDragIndex(null)
-    setDragOverIndex(null)
-  }
 
   const handleSave = async () => {
     if (!form.name) { setTriedSave(true); return }
@@ -402,20 +398,37 @@ export function FormBuilder({ org, initial, onSave, onCancel }) {
   const glass = { background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.7)' }
 
   return (
-    <div style={{ background: 'radial-gradient(circle at 15% 0%, #6D5DF60C, transparent 40%), radial-gradient(circle at 85% 15%, #30C48D0C, transparent 40%), #F6F8FC', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-        <button onClick={onCancel} style={{ background: 'none', border: 'none', color: primary, fontWeight: 800, fontSize: 13, cursor: 'pointer', padding: 0 }}>← Back</button>
-        <div style={{ flex: 1, fontSize: 19, fontWeight: 900, color: '#0F172A' }}>{initial ? 'Edit Form' : 'Build New Form'}</div>
-
-        <div style={{ display: 'flex', gap: 4, background: 'rgba(0,0,0,0.05)', borderRadius: 12, padding: 4 }}>
-          <button onClick={() => setMode('edit')} style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: mode === 'edit' ? '#fff' : 'transparent', color: mode === 'edit' ? '#0F172A' : '#64748B', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', boxShadow: mode === 'edit' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none' }}>✏️ Edit</button>
-          <button onClick={() => setMode('preview')} style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: mode === 'preview' ? '#fff' : 'transparent', color: mode === 'preview' ? '#0F172A' : '#64748B', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', boxShadow: mode === 'preview' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none' }}>👀 Preview</button>
+    <div style={{ background: 'radial-gradient(circle at 15% 0%, #6D5DF60C, transparent 40%), radial-gradient(circle at 85% 15%, #30C48D0C, transparent 40%), #F6F8FC', minHeight: '100%', padding: isMobile ? 16 : 24, paddingBottom: isMobile ? 90 : 24 }}>
+      {/* HEADER — two rows on mobile so nothing wraps awkwardly */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: isMobile ? 12 : 0 }}>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: primary, fontWeight: 800, fontSize: 13, cursor: 'pointer', padding: 0, flexShrink: 0 }}>← Back</button>
+          <div style={{ flex: 1, fontSize: isMobile ? 17 : 19, fontWeight: 900, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{initial ? 'Edit Form' : 'Build New Form'}</div>
+          {!isMobile && (
+            <>
+              <div style={{ display: 'flex', gap: 4, background: 'rgba(0,0,0,0.05)', borderRadius: 12, padding: 4 }}>
+                <button onClick={() => setMode('edit')} style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: mode === 'edit' ? '#fff' : 'transparent', color: mode === 'edit' ? '#0F172A' : '#64748B', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', boxShadow: mode === 'edit' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none' }}>✏️ Edit</button>
+                <button onClick={() => setMode('preview')} style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: mode === 'preview' ? '#fff' : 'transparent', color: mode === 'preview' ? '#0F172A' : '#64748B', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', boxShadow: mode === 'preview' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none' }}>👀 Preview</button>
+              </div>
+              <motion.button onClick={handleSave} disabled={saving} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                style={{ padding: '11px 22px', borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13.5, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 10px 24px -8px rgba(109,93,246,0.45)' }}>
+                {saving ? 'Saving...' : '💾 Save Form'}
+              </motion.button>
+            </>
+          )}
         </div>
-
-        <motion.button onClick={handleSave} disabled={saving} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
-          style={{ padding: '11px 22px', borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13.5, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 10px 24px -8px rgba(109,93,246,0.45)' }}>
-          {saving ? 'Saving...' : '💾 Save Form'}
-        </motion.button>
+        {isMobile && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 4, background: 'rgba(0,0,0,0.05)', borderRadius: 12, padding: 4, flex: 1 }}>
+              <button onClick={() => setMode('edit')} style={{ flex: 1, padding: '9px 10px', borderRadius: 9, border: 'none', background: mode === 'edit' ? '#fff' : 'transparent', color: mode === 'edit' ? '#0F172A' : '#64748B', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', boxShadow: mode === 'edit' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none' }}>✏️ Edit</button>
+              <button onClick={() => setMode('preview')} style={{ flex: 1, padding: '9px 10px', borderRadius: 9, border: 'none', background: mode === 'preview' ? '#fff' : 'transparent', color: mode === 'preview' ? '#0F172A' : '#64748B', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', boxShadow: mode === 'preview' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none' }}>👀 Preview</button>
+            </div>
+            <motion.button onClick={handleSave} disabled={saving} whileTap={{ scale: 0.97 }}
+              style={{ padding: '9px 18px', borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 10px 24px -8px rgba(109,93,246,0.45)', flexShrink: 0 }}>
+              {saving ? '...' : '💾 Save'}
+            </motion.button>
+          </div>
+        )}
       </div>
 
       {/* Form meta */}
@@ -473,95 +486,165 @@ export function FormBuilder({ org, initial, onSave, onCancel }) {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: 20, alignItems: 'start' }}>
-          {/* Add fields panel */}
-          <div style={{ ...glass, borderRadius: 20, padding: 16, position: isMobile ? 'static' : 'sticky', top: 20 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>Add a field</div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : '1fr', gap: 8 }}>
-              {FIELD_TYPES.map(ft => (
-                <motion.button key={ft.key} onClick={() => addField(ft.key)} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${primary}25`, background: primary + '0A', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}>
-                  <span style={{ fontSize: 15 }}>{ft.icon}</span> {ft.label}
-                </motion.button>
-              ))}
+          {/* Add fields panel — desktop only; mobile uses a floating button + bottom sheet instead */}
+          {!isMobile && (
+            <div style={{ ...glass, borderRadius: 20, padding: 16, position: 'sticky', top: 20 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>Add a field</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
+                {FIELD_TYPES.map(ft => (
+                  <motion.button key={ft.key} onClick={() => addField(ft.key)} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${primary}25`, background: primary + '0A', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}>
+                    <span style={{ fontSize: 15 }}>{ft.icon}</span> {ft.label}
+                  </motion.button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Fields canvas */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <div style={{ fontSize: 11.5, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.6 }}>Form Fields ({form.fields.length})</div>
-              {form.fields.length > 0 && <div style={{ fontSize: 11.5, color: '#94A3B8' }}>Drag ⠿ or use the arrows to reorder</div>}
+              {form.fields.length > 0 && !isMobile && <div style={{ fontSize: 11.5, color: '#94A3B8' }}>Drag ⠿ or use the arrows to reorder</div>}
+              {form.fields.length > 0 && isMobile && <div style={{ fontSize: 11.5, color: '#94A3B8' }}>Hold ⠿ to reorder</div>}
             </div>
             {form.fields.length === 0 ? (
               <div style={{ padding: 40, textAlign: 'center', ...glass, borderRadius: 20, border: '1.5px dashed rgba(0,0,0,0.1)', color: '#94A3B8' }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>📝</div>
-                Add fields from the left to build your form
+                {isMobile ? 'Tap the + button below to add your first field' : 'Add fields from the left to build your form'}
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Reorder.Group axis="y" values={form.fields} onReorder={(fields) => setForm(f => ({ ...f, fields }))} style={{ display: 'flex', flexDirection: 'column', gap: 8, listStyle: 'none', margin: 0, padding: 0 }}>
                 <AnimatePresence initial={false}>
                   {form.fields.map((field, idx) => (
-                    <motion.div key={field.id} layout
-                      initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
-                      draggable
-                      onDragStart={() => setDragIndex(idx)}
-                      onDragOver={e => { e.preventDefault(); setDragOverIndex(idx) }}
-                      onDrop={() => handleDrop(idx)}
-                      onDragEnd={() => { setDragIndex(null); setDragOverIndex(null) }}
-                      style={{ background: '#fff', border: `1.5px solid ${dragOverIndex === idx ? primary : '#E5E7EB'}`, borderRadius: 14, padding: '14px 16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, paddingTop: 4 }}>
-                          <div style={{ fontSize: 16, cursor: 'grab', opacity: 0.35 }}>⠿</div>
-                          <button onClick={() => moveField(idx, idx - 1)} disabled={idx === 0} style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? '#D1D5DB' : '#64748B', fontSize: 12, padding: 0 }}>▲</button>
-                          <button onClick={() => moveField(idx, idx + 1)} disabled={idx === form.fields.length - 1} style={{ background: 'none', border: 'none', cursor: idx === form.fields.length - 1 ? 'default' : 'pointer', color: idx === form.fields.length - 1 ? '#D1D5DB' : '#64748B', fontSize: 12, padding: 0 }}>▼</button>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                            <input value={field.label} onChange={e => updateField(field.id, { label: e.target.value })} style={{ ...inp, flex: 1, minWidth: 120, fontSize: 13, fontWeight: 700 }} placeholder="Field label" />
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F1F5F9', borderRadius: 8, padding: '0 10px', fontSize: 11, fontWeight: 700, color: '#64748B', flexShrink: 0 }}>
-                              {FIELD_TYPES.find(f => f.key === field.type)?.icon} {FIELD_TYPES.find(f => f.key === field.type)?.label}
-                            </div>
-                          </div>
-
-                          {field.type === 'select' && (
-                            <div style={{ marginBottom: 8 }}>
-                              <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginBottom: 6 }}>OPTIONS</div>
-                              {(field.options || []).map((opt, oi) => (
-                                <div key={oi} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-                                  <input value={opt} onChange={e => {
-                                    const options = [...field.options]; options[oi] = e.target.value
-                                    updateField(field.id, { options })
-                                  }} style={{ ...inp, flex: 1, fontSize: 12.5 }} />
-                                  <button onClick={() => updateField(field.id, { options: field.options.filter((_, i) => i !== oi) })}
-                                    style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', fontSize: 16, padding: '0 6px' }}>×</button>
-                                </div>
-                              ))}
-                              <button onClick={() => updateField(field.id, { options: [...(field.options || []), `Option ${(field.options || []).length + 1}`] })}
-                                style={{ padding: '6px 12px', borderRadius: 8, border: `1.5px dashed ${primary}40`, background: 'none', color: primary, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>+ Add option</button>
-                            </div>
-                          )}
-
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, flexWrap: 'wrap', gap: 8 }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748B', cursor: 'pointer' }}>
-                              <input type="checkbox" checked={field.required || false} onChange={e => updateField(field.id, { required: e.target.checked })} />
-                              Required field
-                            </label>
-                            <div style={{ display: 'flex', gap: 12 }}>
-                              <button onClick={() => duplicateField(field.id)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: 0 }}>⧉ Duplicate</button>
-                              <button onClick={() => removeField(field.id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: 0 }}>🗑 Remove</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
+                    <FormFieldRow
+                      key={field.id}
+                      field={field}
+                      idx={idx}
+                      total={form.fields.length}
+                      isMobile={isMobile}
+                      inp={inp}
+                      primary={primary}
+                      updateField={updateField}
+                      removeField={removeField}
+                      duplicateField={duplicateField}
+                      moveField={moveField}
+                    />
                   ))}
                 </AnimatePresence>
-              </div>
+              </Reorder.Group>
             )}
           </div>
         </div>
       )}
+
+      {/* Mobile floating Add Field button */}
+      {isMobile && mode === 'edit' && (
+        <motion.button onClick={() => setShowAddField(true)} whileTap={{ scale: 0.94 }}
+          style={{ position: 'fixed', right: 18, bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', width: 56, height: 56, borderRadius: 18, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 26, fontWeight: 400, cursor: 'pointer', boxShadow: '0 10px 28px -8px rgba(109,93,246,0.6)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          +
+        </motion.button>
+      )}
+
+      {/* Mobile Add Field bottom sheet */}
+      {isMobile && showAddField && createPortal(
+        <AddFieldSheet primary={primary} onPick={addField} onClose={() => setShowAddField(false)} />,
+        document.body
+      )}
     </div>
+  )
+}
+
+function AddFieldSheet({ primary, onPick, onClose }) {
+  const dragControls = useDragControls()
+  return (
+    <div onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <motion.div
+        onClick={e => e.stopPropagation()}
+        drag="y"
+        dragListener={false}
+        dragControls={dragControls}
+        dragConstraints={{ top: 0, bottom: 400 }}
+        dragElastic={{ top: 0.05, bottom: 0.6 }}
+        onDragEnd={(e, info) => { if (info.offset.y > 90 || info.velocity.y > 500) onClose() }}
+        initial={{ y: '100%' }} animate={{ y: 0 }} transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 560, maxHeight: '80vh', overflowY: 'auto', boxSizing: 'border-box', boxShadow: '0 -20px 60px rgba(0,0,0,0.25)' }}
+      >
+        <div onPointerDown={e => dragControls.start(e)} style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4, cursor: 'grab', touchAction: 'none' }}>
+          <div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.12)' }} />
+        </div>
+        <div style={{ padding: '8px 20px 24px' }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A', marginBottom: 14 }}>Add a field</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {FIELD_TYPES.map(ft => (
+              <button key={ft.key} onClick={() => onPick(ft.key)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 12px', borderRadius: 14, border: `1.5px solid ${primary}25`, background: primary + '0A', color: '#374151', fontWeight: 700, fontSize: 13.5, cursor: 'pointer', textAlign: 'left' }}>
+                <span style={{ fontSize: 18 }}>{ft.icon}</span> {ft.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+function FormFieldRow({ field, idx, total, isMobile, inp, primary, updateField, removeField, duplicateField, moveField }) {
+  const dragControls = useDragControls()
+  return (
+    <Reorder.Item
+      value={field}
+      dragListener={false}
+      dragControls={dragControls}
+      initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
+      style={{ background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, padding: isMobile ? '12px 12px' : '14px 16px', listStyle: 'none' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, paddingTop: 4 }}>
+          <div onPointerDown={e => dragControls.start(e)} style={{ fontSize: isMobile ? 20 : 16, cursor: 'grab', opacity: 0.4, padding: isMobile ? '4px 6px' : 0, touchAction: 'none' }}>⠿</div>
+          <button onClick={() => moveField(idx, idx - 1)} disabled={idx === 0} style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? '#D1D5DB' : '#64748B', fontSize: isMobile ? 14 : 12, padding: isMobile ? 4 : 0 }}>▲</button>
+          <button onClick={() => moveField(idx, idx + 1)} disabled={idx === total - 1} style={{ background: 'none', border: 'none', cursor: idx === total - 1 ? 'default' : 'pointer', color: idx === total - 1 ? '#D1D5DB' : '#64748B', fontSize: isMobile ? 14 : 12, padding: isMobile ? 4 : 0 }}>▼</button>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+            <input value={field.label} onChange={e => updateField(field.id, { label: e.target.value })} style={{ ...inp, flex: 1, minWidth: 120, fontSize: 13, fontWeight: 700 }} placeholder="Field label" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F1F5F9', borderRadius: 8, padding: '0 10px', fontSize: 11, fontWeight: 700, color: '#64748B', flexShrink: 0 }}>
+              {FIELD_TYPES.find(f => f.key === field.type)?.icon} {FIELD_TYPES.find(f => f.key === field.type)?.label}
+            </div>
+          </div>
+
+          {field.type === 'select' && (
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginBottom: 6 }}>OPTIONS</div>
+              {(field.options || []).map((opt, oi) => (
+                <div key={oi} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                  <input value={opt} onChange={e => {
+                    const options = [...field.options]; options[oi] = e.target.value
+                    updateField(field.id, { options })
+                  }} style={{ ...inp, flex: 1, fontSize: 12.5 }} />
+                  <button onClick={() => updateField(field.id, { options: field.options.filter((_, i) => i !== oi) })}
+                    style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', fontSize: 16, padding: '0 6px' }}>×</button>
+                </div>
+              ))}
+              <button onClick={() => updateField(field.id, { options: [...(field.options || []), `Option ${(field.options || []).length + 1}`] })}
+                style={{ padding: '6px 12px', borderRadius: 8, border: `1.5px dashed ${primary}40`, background: 'none', color: primary, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>+ Add option</button>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, flexWrap: 'wrap', gap: 8 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748B', cursor: 'pointer' }}>
+              <input type="checkbox" checked={field.required || false} onChange={e => updateField(field.id, { required: e.target.checked })} />
+              Required field
+            </label>
+            <div style={{ display: 'flex', gap: isMobile ? 16 : 12 }}>
+              <button onClick={() => duplicateField(field.id)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: isMobile ? 13 : 12, fontWeight: 700, padding: isMobile ? '6px 0' : 0 }}>⧉ Duplicate</button>
+              <button onClick={() => removeField(field.id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', fontSize: isMobile ? 13 : 12, fontWeight: 700, padding: isMobile ? '6px 0' : 0 }}>🗑 Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Reorder.Item>
   )
 }
 
@@ -1134,12 +1217,12 @@ export default function Forms({ org, session, isAdmin }) {
     <div style={{ background: '#F8FAFC', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
 
       {/* HEADER */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'flex-start', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
           <div style={{ width: 44, height: 44, borderRadius: 13, background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 8px 20px -8px rgba(109,93,246,0.5)' }}>📝</div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>Forms</span>
+              <span style={{ fontSize: isMobile ? 21 : 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>Forms</span>
               <select value={period} onChange={e => setPeriod(e.target.value)} style={{ ...sel, fontWeight: 700 }}>
                 <option value="month">This month</option>
                 <option value="week">This week</option>
@@ -1150,10 +1233,14 @@ export default function Forms({ org, session, isAdmin }) {
           </div>
         </div>
         {isAdmin && (
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={() => setTab('templates')} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>📋 Browse Templates</button>
-            <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '11px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(109,93,246,0.4)', whiteSpace: 'nowrap' }}>+ Create Form</button>
-          </div>
+          isMobile ? (
+            <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '13px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(109,93,246,0.4)', width: '100%' }}>+ Create Form</button>
+          ) : (
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setTab('templates')} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>📋 Browse Templates</button>
+              <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '11px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(109,93,246,0.4)', whiteSpace: 'nowrap' }}>+ Create Form</button>
+            </div>
+          )
         )}
       </div>
 
@@ -1173,31 +1260,31 @@ export default function Forms({ org, session, isAdmin }) {
       <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 320px', gap: 20, alignItems: 'start' }}>
         <div>
           {/* SEARCH + FILTERS */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-            <div style={{ position: 'relative', flex: '1 1 200px' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}>🔍</span>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search forms..."
-                style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1px solid #E2E8F0', fontSize: 13, outline: 'none' }} />
-            </div>
-            <select value={tab === 'templates' ? 'all' : tab} onChange={e => setTab(e.target.value)} style={sel}>
+          <div style={{ position: 'relative', marginBottom: 8 }}>
+            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}>🔍</span>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search forms..."
+              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1px solid #E2E8F0', fontSize: 13, outline: 'none' }} />
+          </div>
+          <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? '1fr 1fr' : undefined, gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+            <select value={tab === 'templates' ? 'all' : tab} onChange={e => setTab(e.target.value)} style={{ ...sel, width: isMobile ? '100%' : undefined }}>
               <option value="all">Status: All</option>
               <option value="active">Active</option>
               <option value="draft">Draft</option>
               <option value="archived">Archived</option>
             </select>
-            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={sel}>
+            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ ...sel, width: isMobile ? '100%' : undefined }}>
               <option value="all">Type: All</option>
               {availableTypes.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
-            <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={sel}>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ ...sel, width: isMobile ? '100%' : undefined, gridColumn: isMobile ? '1 / -1' : undefined }}>
               <option value="updated">Sort: Last updated</option>
               <option value="name">Sort: Name</option>
               <option value="submissions">Sort: Most submissions</option>
               <option value="newest">Sort: Newest</option>
             </select>
-            <div style={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: 10, overflow: 'hidden' }}>
-              <button onClick={() => setListMode('list')} style={{ padding: '8px 12px', border: 'none', background: listMode === 'list' ? '#6D5DF6' : '#fff', color: listMode === 'list' ? '#fff' : '#64748B', cursor: 'pointer' }}>☰</button>
-              <button onClick={() => setListMode('grid')} style={{ padding: '8px 12px', border: 'none', background: listMode === 'grid' ? '#6D5DF6' : '#fff', color: listMode === 'grid' ? '#fff' : '#64748B', cursor: 'pointer' }}>▦</button>
+            <div style={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: 10, overflow: 'hidden', gridColumn: isMobile ? '1 / -1' : undefined }}>
+              <button onClick={() => setListMode('list')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'list' ? '#6D5DF6' : '#fff', color: listMode === 'list' ? '#fff' : '#64748B', cursor: 'pointer' }}>☰ List</button>
+              <button onClick={() => setListMode('grid')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'grid' ? '#6D5DF6' : '#fff', color: listMode === 'grid' ? '#fff' : '#64748B', cursor: 'pointer' }}>▦ Grid</button>
             </div>
           </div>
 
