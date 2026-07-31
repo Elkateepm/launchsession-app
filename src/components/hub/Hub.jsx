@@ -749,6 +749,12 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
       {/* Header */}
       <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
+        <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={org?.name || ''} style={{
+          position: 'absolute', top: 20, left: 22, zIndex: 1,
+          width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 12, objectFit: 'contain',
+          background: 'rgba(255,255,255,0.96)', padding: 3.5, border: '1.5px solid rgba(255,255,255,0.25)',
+          boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset, 0 6px 16px -6px rgba(0,0,0,0.4)',
+        }} />
         {!isMobile && (
           <>
             <div style={{ position: 'absolute', top: 20, right: 22, display: 'flex', gap: 8, zIndex: 1 }}>
@@ -774,7 +780,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           </div>
         )}
 
-        <div style={{ textAlign: 'center', marginBottom: 14, padding: isMobile ? '0' : '0 130px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 14, padding: isMobile ? '0 46px' : '0 130px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 7 }}>
             {sessionPhase === 'closed' ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#CBD5E1', letterSpacing: 0.8 }}>
