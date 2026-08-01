@@ -2866,7 +2866,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   </div>
                 </motion.div>
 
-                {openLiveSessionId === s.id && createPortal(
+                {openLiveSessionId === s.id && !hasEnded && createPortal(
                   <div style={{
                     position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column',
                     background: isMobile ? '#0B1023' : 'rgba(8,11,23,0.7)',
@@ -3369,9 +3369,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
       {/* Historical register modal — reuses the same dark launcher-card modal style as today's
           live sessions, for any past session opened from outside today's list (e.g. Recent Registers). */}
-      {openLiveSessionId && !todaySessions.some(s => s.id === openLiveSessionId) && (() => {
+      {openLiveSessionId && (() => {
         const pastSession = sessions.find(s => s.id === openLiveSessionId)
         if (!pastSession) return null
+        // The live hero section has its own inline modal for today's still-open sessions —
+        // defer to that one only when this session is part of today's list AND hasn't
+        // ended yet. Ended sessions (closed_at set) always come through here, whether
+        // they're from today (e.g. Recent Registers) or an earlier day.
+        const handledByHeroInlineModal = !pastSession.closed_at && todaySessions.some(s => s.id === openLiveSessionId)
+        if (handledByHeroInlineModal) return null
         return createPortal(
           <div style={{
             position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column',
