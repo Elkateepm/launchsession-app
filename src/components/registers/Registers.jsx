@@ -1134,13 +1134,13 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button onClick={() => setShowPastRegisters(true)} aria-label="Past Registers"
-                style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 32 : 36, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
-                <img src="/icons/past-registers-icon.png" alt="" style={{ width: isMobile ? 18 : 20, height: isMobile ? 18 : 20, objectFit: 'contain', flexShrink: 0 }} />
+                style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 56 : 62, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
+                <img src="/icons/past-registers-icon.png" alt="" style={{ width: isMobile ? 54 : 60, height: isMobile ? 54 : 60, objectFit: 'contain', flexShrink: 0 }} />
                 {!isMobile && <span>Past Registers</span>}
               </button>
               <button onClick={() => onNavigate && onNavigate('medical_alerts')} aria-label="Medical Alerts"
-                style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 32 : 36, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
-                <img src="/icons/medical-icon.png" alt="" style={{ width: isMobile ? 18 : 20, height: isMobile ? 18 : 20, objectFit: 'contain', flexShrink: 0 }} />
+                style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 56 : 62, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
+                <img src="/icons/medical-icon.png" alt="" style={{ width: isMobile ? 54 : 60, height: isMobile ? 54 : 60, objectFit: 'contain', flexShrink: 0 }} />
                 {!isMobile && <span>Medical Alerts</span>}
               </button>
               {isMobile && (
