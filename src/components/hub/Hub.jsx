@@ -2505,9 +2505,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         )}
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                        <AttendanceRing signedIn={attendedCount} total={attendeeTotal} primary={primary} secondary={secondary} />
-                        <TimeRing status={cardStatus} target={countdownTarget} totalSeconds={timeRingTotalSeconds} />
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexShrink: 0 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                          <AttendanceRing signedIn={attendedCount} total={attendeeTotal} primary={primary} secondary={secondary} />
+                          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>Attendees</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                          <TimeRing status={cardStatus} target={countdownTarget} totalSeconds={timeRingTotalSeconds} />
+                          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                            {cardStatus === 'live' ? 'Ends in' : cardStatus === 'upcoming' ? 'Begins in' : 'Closed'}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
