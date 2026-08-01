@@ -91,7 +91,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
     setAuditLog(auditData || [])
     setSafeguardingCount(sgCount || 0)
 
-    const staffIds = new Set((ssData || []).map(s => s.user_id).filter(Boolean))
+    const staffIds = new Set((ssData || []).map(s => s.user_id || s.volunteer_id).filter(Boolean))
     ;(attData || []).forEach(a => { if (a.signed_in_by) staffIds.add(a.signed_in_by); if (a.signed_out_by) staffIds.add(a.signed_out_by) })
     ;(auditData || []).forEach(a => { if (a.changed_by) staffIds.add(a.changed_by) })
     if (session.closed_by) staffIds.add(session.closed_by)
@@ -141,7 +141,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
   const signedInCount = grouped.signed_in.length
   const registerState = computeRegisterState(session, attendance)
   const requiredRatio = getRequiredRatio(session, org)
-  const signedInStaffCount = staffRows.filter(s => s.signed_in_at).length || staffRows.length // fall back if nobody's using staff sign-in yet
+  const signedInStaffCount = staffRows.filter(s => s.signed_in_at && !s.signed_out_at).length || staffRows.length // fall back if nobody's using staff sign-in yet
   const currentRatio = signedInStaffCount > 0 ? signedInCount / signedInStaffCount : null
   const ratioBreached = currentRatio !== null && signedInStaffCount > 0 && currentRatio > requiredRatio
   const processedCount = grouped.signed_in.length + grouped.absent.length + grouped.signed_out.length
@@ -187,7 +187,12 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
   }
 
   const handleStaffSignIn = async (staffRow) => {
-    await supabase.from('session_staff').update({ signed_in_at: new Date().toISOString() }).eq('id', staffRow.id)
+    await supabase.from('session_staff').update({ signed_in_at: new Date().toISOString(), signed_out_at: null }).eq('id', staffRow.id)
+    load()
+  }
+
+  const handleStaffSignOut = async (staffRow) => {
+    await supabase.from('session_staff').update({ signed_out_at: new Date().toISOString() }).eq('id', staffRow.id)
     load()
   }
 
@@ -317,16 +322,27 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
             <div style={{ fontSize: 12, color: '#9CA3AF' }}>No staff assigned to this session.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {staffRows.map(s => (
-                <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5 }}>
-                  <span style={{ fontWeight: 600, color: '#374151' }}>{staffProfiles[s.user_id] || 'Team member'} <span style={{ color: '#9CA3AF', fontWeight: 500 }}>· {s.role}</span></span>
-                  {s.signed_in_at ? (
-                    <span style={{ color: '#16A34A', fontWeight: 700 }}>Signed in {fmtTime(s.signed_in_at)}</span>
-                  ) : (
-                    <button onClick={() => handleStaffSignIn(s)} style={{ ...ghostBtn, padding: '4px 10px', fontSize: 11 }}>Sign in</button>
-                  )}
-                </div>
-              ))}
+              {staffRows.map(s => {
+                const pid = s.user_id || s.volunteer_id
+                return (
+                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5 }}>
+                    <span style={{ fontWeight: 600, color: '#374151' }}>{staffProfiles[pid] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: '#9CA3AF', fontWeight: 500 }}>· {s.role}</span></span>
+                    {s.signed_out_at ? (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ color: '#9CA3AF', fontWeight: 700 }}>Signed out {fmtTime(s.signed_out_at)}</span>
+                        <button onClick={() => handleStaffSignIn(s)} style={{ ...ghostBtn, padding: '4px 10px', fontSize: 11 }}>Sign back in</button>
+                      </span>
+                    ) : s.signed_in_at ? (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ color: '#16A34A', fontWeight: 700 }}>Signed in {fmtTime(s.signed_in_at)}</span>
+                        <button onClick={() => handleStaffSignOut(s)} style={{ ...ghostBtn, padding: '4px 10px', fontSize: 11 }}>Sign out</button>
+                      </span>
+                    ) : (
+                      <button onClick={() => handleStaffSignIn(s)} style={{ ...ghostBtn, padding: '4px 10px', fontSize: 11 }}>Sign in</button>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>

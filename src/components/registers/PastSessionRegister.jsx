@@ -313,7 +313,7 @@ function SessionTeamCard({ staffRows, peopleProfiles }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {staffRows.map(s => (
             <div key={s.id} style={{ fontSize: 12.5 }}>
-              <div style={{ fontWeight: 700, color: '#374151' }}>{peopleProfiles[s.user_id] || 'Team member'} <span style={{ color: '#9CA3AF', fontWeight: 500 }}>· {s.role}</span></div>
+              <div style={{ fontWeight: 700, color: '#374151' }}>{peopleProfiles[s.user_id || s.volunteer_id] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: '#9CA3AF', fontWeight: 500 }}>· {s.role}</span></div>
               <div style={{ color: '#9CA3AF', fontSize: 11 }}>
                 {s.signed_in_at ? `Signed in ${fmtTime(s.signed_in_at)}` : 'Did not sign in'}
                 {s.signed_out_at ? ` · Signed out ${fmtTime(s.signed_out_at)}` : ''}
