@@ -3053,7 +3053,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
             <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? '1fr 1fr' : undefined, gap: isMobile ? 10 : 12, flexWrap: 'wrap', marginBottom: 14 }}>
               {hasModule('registers') ? (
-                <GlanceCard icon="📋" iconImg="/icons/hub-registers-icon-v2.png" tone="green" title="Registers" subtitle="Take today's register"
+                <GlanceCard icon="📋" iconImg="/icons/registers-icon.png" tone="green" title="Registers" subtitle="Take today's register"
                   fraction={`${sessionsEndedToday} / ${strictlyTodaySessions.length}`} fractionLabel="Sessions completed"
                   onClick={() => go('registers')} compact={isMobile} />
               ) : (
@@ -3289,7 +3289,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               items.push({ key: 'medical', icon: '💊', iconImg: '/icons/medical-icon.png', label: 'Medical alerts', value: `${medicalAlertsNeedingReview} young ${medicalAlertsNeedingReview > 1 ? 'people' : 'person'} to review`, tone: 'amber', rank: 1, onClick: () => go('medical_alerts') })
             }
             if (hasModule('registers')) {
-              items.push({ key: 'registers', icon: '📋', label: 'Registers', value: signedIn > 0 ? `${signedIn} signed in today` : 'No activity yet', tone: 'blue', rank: 2, onClick: () => go('registers') })
+              items.push({ key: 'registers', icon: '📋', iconImg: '/icons/registers-icon.png', label: 'Registers', value: signedIn > 0 ? `${signedIn} signed in today` : 'No activity yet', tone: 'blue', rank: 2, onClick: () => go('registers') })
             }
             if (hasModule('safeguarding') && concerns.length === 0) {
               items.push({ key: 'safeguarding-clear', icon: '🛡️', label: 'Safeguarding', value: 'No open concerns', tone: 'blue', rank: 3, onClick: () => go('safeguarding') })

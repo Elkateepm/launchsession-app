@@ -1101,7 +1101,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: isMobile ? 8 : 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 9 : 12, minWidth: 0 }}>
               <div style={{ width: isMobile ? 32 : 42, height: isMobile ? 32 : 42, borderRadius: isMobile ? 10 : 13, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 15 : 19, flexShrink: 0, boxShadow: `0 4px 14px -5px ${primary}90` }}>
-                📋
+                <img src="/icons/registers-icon.png" alt="" style={{ width: isMobile ? 22 : 28, height: isMobile ? 22 : 28, objectFit: 'contain' }} />
               </div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 3 : 5, flexWrap: 'wrap' }}>
