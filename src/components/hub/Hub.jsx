@@ -726,7 +726,12 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   }
 
   const handleStaffSignIn = async (staffRow) => {
-    await supabase.from('session_staff').update({ signed_in_at: new Date().toISOString() }).eq('id', staffRow.id)
+    await supabase.from('session_staff').update({ signed_in_at: new Date().toISOString(), signed_out_at: null }).eq('id', staffRow.id)
+    loadRegisterExtras()
+  }
+
+  const handleStaffSignOut = async (staffRow) => {
+    await supabase.from('session_staff').update({ signed_out_at: new Date().toISOString() }).eq('id', staffRow.id)
     loadRegisterExtras()
   }
 
@@ -1193,12 +1198,20 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Session team</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   {sessionStaff.map(s => (
-                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5 }}>
-                      <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>{staffProfiles[s.user_id] || 'Team member'} <span style={{ color: 'rgba(255,255,255,0.35)' }}>· {s.role}</span></span>
-                      {s.signed_in_at ? (
-                        <span style={{ color: '#4ADE80', fontWeight: 700 }}>In {hubFmtTime(s.signed_in_at)}</span>
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5, gap: 8 }}>
+                      <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{staffProfiles[s.user_id] || 'Team member'} <span style={{ color: 'rgba(255,255,255,0.35)' }}>· {s.role}</span></span>
+                      {s.signed_in_at && !s.signed_out_at ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                          <span style={{ color: '#4ADE80', fontWeight: 700, whiteSpace: 'nowrap' }}>In {hubFmtTime(s.signed_in_at)}</span>
+                          <button onClick={() => handleStaffSignOut(s)} style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>Sign out</button>
+                        </span>
+                      ) : s.signed_out_at ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                          <span style={{ color: '#C4B5FD', fontWeight: 700, whiteSpace: 'nowrap' }}>Out {hubFmtTime(s.signed_out_at)}</span>
+                          <button onClick={() => handleStaffSignIn(s)} style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>Sign in</button>
+                        </span>
                       ) : (
-                        <button onClick={() => handleStaffSignIn(s)} style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>Sign in</button>
+                        <button onClick={() => handleStaffSignIn(s)} style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Sign in</button>
                       )}
                     </div>
                   ))}
