@@ -107,6 +107,7 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F8FAFC' }}>
       <PageHeader
         icon="💊"
+        iconImg="/icons/medical-icon.png"
         title="Medical Alerts"
         subtitle="Review and sign off medical information for young people in your care"
         primary={primary}

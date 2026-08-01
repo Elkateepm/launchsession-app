@@ -3286,7 +3286,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               items.push({ key: 'resources', icon: '↗', label: 'Resources', value: `${checkedOutCount} item${checkedOutCount > 1 ? 's' : ''} checked out`, tone: 'amber', rank: 1, onClick: () => go('resource_booking') })
             }
             if (medicalAlertsNeedingReview > 0) {
-              items.push({ key: 'medical', icon: '💊', label: 'Medical alerts', value: `${medicalAlertsNeedingReview} young ${medicalAlertsNeedingReview > 1 ? 'people' : 'person'} to review`, tone: 'amber', rank: 1, onClick: () => go('medical_alerts') })
+              items.push({ key: 'medical', icon: '💊', iconImg: '/icons/medical-icon.png', label: 'Medical alerts', value: `${medicalAlertsNeedingReview} young ${medicalAlertsNeedingReview > 1 ? 'people' : 'person'} to review`, tone: 'amber', rank: 1, onClick: () => go('medical_alerts') })
             }
             if (hasModule('registers')) {
               items.push({ key: 'registers', icon: '📋', label: 'Registers', value: signedIn > 0 ? `${signedIn} signed in today` : 'No activity yet', tone: 'blue', rank: 2, onClick: () => go('registers') })
@@ -3308,7 +3308,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             return (
               <Panel title="🔔 Needs attention">
                 {items.map(item => (
-                  <AttentionRow key={item.key} icon={item.icon} label={item.label} value={item.value} tone={item.tone} onClick={item.onClick} />
+                  <AttentionRow key={item.key} icon={item.icon} iconImg={item.iconImg} label={item.label} value={item.value} tone={item.tone} onClick={item.onClick} />
                 ))}
               </Panel>
             )
@@ -3580,7 +3580,7 @@ function StatCard({ icon, title, text, button, badge, onClick, colour, gradient,
   );
 }
 
-function AttentionRow({ icon, label, value, tone, onClick }) {
+function AttentionRow({ icon, iconImg, label, value, tone, onClick }) {
   const tones = {
     amber: { bg: '#FFFBEB', border: '#FDE68A', iconBg: 'linear-gradient(135deg, #FBBF24, #D97706)', glow: 'rgba(217,119,6,0.28)' },
     blue:  { bg: '#F8FAFC', border: '#E2E8F0', iconBg: 'linear-gradient(135deg, #60A5FA, #2563EB)', glow: 'rgba(37,99,235,0.18)' },
@@ -3603,7 +3603,7 @@ function AttentionRow({ icon, label, value, tone, onClick }) {
         width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: tones.iconBg,
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19,
         boxShadow: `0 4px 12px -4px ${tones.glow}, inset 0 1px 0 rgba(255,255,255,0.35)`,
-      }}>{icon}</span>
+      }}>{iconImg ? <img src={iconImg} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} /> : icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)' }}>{label}</div>
         <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 1.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</div>
