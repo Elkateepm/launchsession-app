@@ -1496,6 +1496,84 @@ function HubAbsentSheet({ child, onClose, onMark }) {
   )
 }
 
+function SessionInfoModal({ session, attendance, allChildren, primary, onClose, onAddExisting, onCreateWalkIn }) {
+  const [showAddChild, setShowAddChild] = useState(false)
+  const s = session
+
+  const sessAttendance = (attendance || []).filter(a => a.session_id === s.id)
+  const childById = useMemo(() => {
+    const m = {}
+    ;(allChildren || []).forEach(c => { m[c.id] = c })
+    return m
+  }, [allChildren])
+
+  const statusMeta = {
+    signed_in: { label: 'Signed in', color: '#16A34A' },
+    expected: { label: 'Expected', color: 'rgba(255,255,255,0.5)' },
+    absent: { label: 'Absent', color: '#DC2626' },
+    signed_out: { label: 'Signed out', color: '#7C3AED' },
+  }
+
+  const rows = sessAttendance
+    .map(a => ({ att: a, child: childById[a.child_id] }))
+    .filter(r => r.child)
+    .sort((a, b) => `${a.child.first_name}`.localeCompare(b.child.first_name))
+
+  const alreadyOnSession = new Set(sessAttendance.map(a => a.child_id))
+  const eligibleChildren = (allChildren || []).filter(c => !alreadyOnSession.has(c.id))
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 450, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
+      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 18, padding: 20, width: 420, maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>{s.title}</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.6)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16, fontSize: 12.5, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+          <div>📅 {s.session_date}{s.start_time ? ` · ${s.start_time}${s.end_time ? ` – ${s.end_time}` : ''}` : ''}</div>
+          {s.location && <div>📍 {s.location}</div>}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            Attendees ({rows.length})
+          </div>
+          <button onClick={() => setShowAddChild(true)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 800, color: primary, background: `${primary}18`, border: `1px solid ${primary}40`, borderRadius: 99, padding: '5px 10px', cursor: 'pointer' }}>
+            + Add child
+          </button>
+        </div>
+
+        {rows.length === 0 ? (
+          <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.4)', padding: '10px 0' }}>No attendees on this session yet.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {rows.map(r => {
+              const meta = statusMeta[r.att.status] || { label: r.att.status || '—', color: 'rgba(255,255,255,0.5)' }
+              return (
+                <div key={r.att.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 12px' }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{r.child.first_name} {r.child.last_name}</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 800, color: meta.color }}>{meta.label}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {showAddChild && (
+        <HubWalkInModal
+          allChildren={eligibleChildren}
+          onClose={() => setShowAddChild(false)}
+          onSelectExisting={async (child) => { await onAddExisting(s.id, child); setShowAddChild(false) }}
+          onCreate={async (form) => { await onCreateWalkIn(s.id, form); setShowAddChild(false) }}
+        />
+      )}
+    </div>
+  )
+}
+
 function HubWalkInModal({ allChildren, onClose, onSelectExisting, onCreate }) {
   const [search, setSearch] = useState('')
   const [form, setForm] = useState({ first_name: '', last_name: '', emergency_contact_name: '', emergency_contact_phone: '', consent: false })
@@ -1885,6 +1963,25 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
   const [openLiveSessionId, setOpenLiveSessionId] = useState(null);
+  const [infoModalSession, setInfoModalSession] = useState(null);
+
+  const handleInfoAddExisting = async (sessionId, child) => {
+    if (!orgId) return;
+    const already = attendance.some(a => a.session_id === sessionId && a.child_id === child.id);
+    if (already) return;
+    await supabase.from('attendance').insert({ org_id: orgId, session_id: sessionId, child_id: child.id, status: 'expected' });
+    loadHub();
+  };
+
+  const handleInfoCreateWalkIn = async (sessionId, form) => {
+    if (!orgId) return;
+    const { data } = await supabase.from('children').insert({
+      org_id: orgId, first_name: form.first_name.trim(), last_name: form.last_name.trim() || '',
+      emergency_contact_name: form.emergency_contact_name || null, emergency_contact_phone: form.emergency_contact_phone || null,
+      is_walk_in: true, profile_incomplete: true, active: true,
+    }).select().single();
+    if (data) await handleInfoAddExisting(sessionId, data);
+  };
 
   // ── Soft push-notification prompt (never auto-triggers the real browser
   // permission popup — only shown once per device until dismissed or acted on) ──
@@ -3025,9 +3122,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       {/* Bottom action bar for today's session */}
                       {isToday && hasModule('registers') && (
                         <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.2)', display: 'flex', gap: 8 }}>
-                          <button onClick={e => { e.stopPropagation(); openRegisterForSession(s.id) }}
+                          <button onClick={e => { e.stopPropagation(); setInfoModalSession(s) }}
                             style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                            🟢 Open Register
+                            ℹ️ Session info
                           </button>
                           {hasEnded && (
                             <button onClick={e => { e.stopPropagation(); setClosingSession(s) }}
@@ -3168,6 +3265,18 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       )}
 
       {showInviteChild && <InviteParentModal org={org} onClose={() => setShowInviteChild(false)} />}
+
+      {infoModalSession && (
+        <SessionInfoModal
+          session={infoModalSession}
+          attendance={attendance}
+          allChildren={children}
+          primary={primary}
+          onClose={() => setInfoModalSession(null)}
+          onAddExisting={handleInfoAddExisting}
+          onCreateWalkIn={handleInfoCreateWalkIn}
+        />
+      )}
 
       {/* Historical register modal — reuses the same dark launcher-card modal style as today's
           live sessions, for any past session opened from outside today's list (e.g. Recent Registers). */}
