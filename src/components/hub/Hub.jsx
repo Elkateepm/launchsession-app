@@ -1809,6 +1809,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
   const [search, setSearch] = React.useState('')
   const [searchResults, setSearchResults] = React.useState(null)
+  const [showMobileSearch, setShowMobileSearch] = React.useState(false)
   const [showConcernForm, setShowConcernForm] = React.useState(false)
   const [showInviteChild, setShowInviteChild] = React.useState(false)
   const [showReflectionsModal, setShowReflectionsModal] = React.useState(false)
@@ -2261,6 +2262,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
           {/* Right: notifications + avatar + date */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto', flexShrink: 0 }}>
+            {isMobile && (
+              <button
+                onClick={() => setShowMobileSearch(v => !v)}
+                aria-label={showMobileSearch ? 'Close search' : 'Search'}
+                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${primary}${showMobileSearch ? '55' : '22'}`, background: showMobileSearch ? `${primary}12` : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: primary, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset` }}>
+                {showMobileSearch ? '✕' : '🔍'}
+              </button>
+            )}
             <NotificationBell
               primary={primary}
               secondary={secondary}
@@ -2289,7 +2298,60 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           </div>
         </div>
 
-        {/* Greeting row */}
+        {/* Mobile search — toggled open by the magnifying-glass button */}
+        {isMobile && showMobileSearch && (
+          <div style={{ padding: '10px 0 2px', position: 'relative' }}>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}>🔍</span>
+              <input
+                autoFocus
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onKeyDown={e => e.key === 'Escape' && (setSearch(''), setShowMobileSearch(false))}
+                placeholder="Search young people, sessions..."
+                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid ${primary}30`, background: '#fff', fontSize: 14, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px ${primary}25` }}
+              />
+            </div>
+            {searchResults && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 16px 40px -8px rgba(0,0,0,0.18)', zIndex: 100, marginTop: 6, overflow: 'hidden' }}>
+                {searchResults.children.length === 0 && searchResults.sessions.length === 0 ? (
+                  <div style={{ padding: '14px 16px', fontSize: 13, color: '#6B7280', textAlign: 'center' }}>No results for "{search}"</div>
+                ) : (
+                  <>
+                    {searchResults.children.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Young People</div>
+                        {searchResults.children.map(c => (
+                          <button key={c.id} onClick={() => { go('registers'); setSearch(''); setShowMobileSearch(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                            <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{c.first_name} {c.last_name}</div>
+                              {c.group_name && <div style={{ fontSize: 11, color: '#6B7280' }}>{c.group_name}</div>}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {searchResults.sessions.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
+                        {searchResults.sessions.map(s => (
+                          <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch(''); setShowMobileSearch(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                            <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
+                              <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time || 'No time'}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         {!isMobile ? (
           <div style={{ padding: '14px 0 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div>
