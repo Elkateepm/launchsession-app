@@ -2885,7 +2885,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {endedSessions.map(s => (
+                  {endedSessions.map(s => {
+                    const hasReflection = reflections.some(r => r.session_id === s.id)
+                    return (
                     <div key={s.id} onClick={() => openRegisterForSession(s.id)}
                       style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 16, padding: '14px 16px', cursor: 'pointer' }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
@@ -2896,9 +2898,18 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>{formatDate(s.session_date)} · Closed {new Date(s.closed_at).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}</div>
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 800, color: '#6B7280', background: '#E5E7EB', borderRadius: 99, padding: '4px 10px', flexShrink: 0 }}>CLOSED</span>
+                      {hasReflection ? (
+                        <span style={{ fontSize: 10, fontWeight: 800, color: '#16A34A', background: '#DCFCE7', border: '1px solid #BBF7D0', borderRadius: 99, padding: '4px 10px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>✓ Reflected</span>
+                      ) : (
+                        <button onClick={e => { e.stopPropagation(); go('planner', { reflectSessionId: s.id }) }}
+                          style={{ fontSize: 10.5, fontWeight: 800, color: '#B45309', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 99, padding: '5px 11px', flexShrink: 0, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                          ⭐ Write reflection
+                        </button>
+                      )}
                       <span style={{ fontSize: 16, color: '#CBD5E1', flexShrink: 0 }}>→</span>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )
             ) : upcomingSessions.length === 0 ? (
