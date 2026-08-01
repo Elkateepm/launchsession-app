@@ -2625,7 +2625,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{cardStatus === 'ended' ? 'Attended' : 'Signed in'}</span>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{cardStatus === 'upcoming' ? attendeeTotal : stats.absent}</span>
+                        <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{cardStatus === 'upcoming' ? stats.expected : stats.absent}</span>
                         <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{cardStatus === 'upcoming' ? 'Expected' : 'Absent'}</span>
                       </div>
                       <div style={{ flex: 1 }} />
