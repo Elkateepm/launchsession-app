@@ -2490,7 +2490,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px 10px', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{stats.signedIn}</span>
                         <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Signed in</span>
@@ -2512,16 +2512,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           )}
                         </div>
                       )}
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 900, color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '6px 12px 6px 13px', marginLeft: 10 }}>
-                        {ctaLabel} <span className="ls-card-arrow" style={{ display: 'inline-block' }}>→</span>
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', marginTop: 10 }}>
                       {volunteerList.length > 0 ? (
                         <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: '#FDA4AF',
-                          background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.28)', borderRadius: 99, padding: '5px 11px',
+                          display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: '#FDA4AF',
+                          background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.28)', borderRadius: 99, padding: '5px 10px',
                         }}>
                           ❤️ {volunteerList.length} volunteer{volunteerList.length > 1 ? 's' : ''}
                         </span>
@@ -2529,12 +2523,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         <button
                           onClick={(e) => { e.stopPropagation(); go('volunteers', { autoOpenInvite: true }) }}
                           style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.65)',
-                            background: 'transparent', border: '1px dashed rgba(255,255,255,0.24)', borderRadius: 99, padding: '5px 11px', cursor: 'pointer',
+                            display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: 'rgba(255,255,255,0.65)',
+                            background: 'transparent', border: '1px dashed rgba(255,255,255,0.24)', borderRadius: 99, padding: '5px 10px', cursor: 'pointer',
                           }}>
                           + Add volunteers
                         </button>
                       )}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 900, color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '6px 12px 6px 13px' }}>
+                        {ctaLabel} <span className="ls-card-arrow" style={{ display: 'inline-block' }}>→</span>
+                      </span>
                     </div>
                   </div>
                 </motion.div>
