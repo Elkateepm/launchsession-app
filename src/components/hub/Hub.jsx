@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { supabase } from "../../lib/supabase";
@@ -8,6 +8,7 @@ import { useOrgSettings } from "../../hooks/useOrgSettings";
 import CauseForConcernForm from "../safeguarding/CauseForConcernForm";
 import LiveRegister from "../registers/LiveRegister";
 import { InviteParentModal } from "../children/ChildrenDirectory";
+import AddVolunteersToSessionModal from "../volunteers/AddVolunteersToSessionModal";
 import { isPushSupported, getNotificationPermission, subscribeToPush } from "../../services/pushNotifications";
 import { notifyEvent } from "../../services/notifyEvent";
 
@@ -2104,33 +2105,30 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   // Staff/volunteer names per session, for the compact live-session launcher cards' avatar stack
   const [sessionStaffList, setSessionStaffList] = useState({});
   const todaySessionIdsKey = useMemo(() => todaySessions.map(s => s.id).sort().join(','), [todaySessions]);
+  const loadSessionStaff = useCallback(async (ids) => {
+    if (!ids || ids.length === 0) { setSessionStaffList({}); return; }
+    const { data } = await supabase.from('session_staff').select('session_id, user_id, volunteer_id').in('session_id', ids);
+    const rows = data || [];
+    const personIds = Array.from(new Set(rows.map(r => r.user_id || r.volunteer_id).filter(Boolean)));
+    let names = {};
+    if (personIds.length > 0) {
+      const { data: profiles } = await supabase.from('user_profiles').select('id, full_name').in('id', personIds);
+      (profiles || []).forEach(p => { names[p.id] = p.full_name; });
+    }
+    const list = {};
+    rows.forEach(row => {
+      const pid = row.user_id || row.volunteer_id;
+      if (!pid) return;
+      if (!list[row.session_id]) list[row.session_id] = [];
+      list[row.session_id].push({ id: pid, name: names[pid] || 'Staff', type: row.volunteer_id ? 'volunteer' : 'staff' });
+    });
+    setSessionStaffList(list);
+  }, []);
   useEffect(() => {
-    const ids = todaySessionIdsKey ? todaySessionIdsKey.split(',') : [];
-    if (ids.length === 0) { setSessionStaffList({}); return; }
-    let alive = true;
-    supabase.from('session_staff').select('session_id, user_id, volunteer_id').in('session_id', ids)
-      .then(async ({ data }) => {
-        if (!alive) return;
-        const rows = data || [];
+    loadSessionStaff(todaySessionIdsKey ? todaySessionIdsKey.split(',') : []);
+  }, [todaySessionIdsKey, loadSessionStaff]);
 
-        const personIds = Array.from(new Set(rows.map(r => r.user_id || r.volunteer_id).filter(Boolean)));
-        let names = {};
-        if (personIds.length > 0) {
-          const { data: profiles } = await supabase.from('user_profiles').select('id, full_name').in('id', personIds);
-          (profiles || []).forEach(p => { names[p.id] = p.full_name; });
-        }
-        if (!alive) return;
-        const list = {};
-        rows.forEach(row => {
-          const pid = row.user_id || row.volunteer_id;
-          if (!pid) return;
-          if (!list[row.session_id]) list[row.session_id] = [];
-          list[row.session_id].push({ id: pid, name: names[pid] || 'Staff', type: row.volunteer_id ? 'volunteer' : 'staff' });
-        });
-        setSessionStaffList(list);
-      });
-    return () => { alive = false; };
-  }, [todaySessionIdsKey]);
+  const [addVolunteersSessionId, setAddVolunteersSessionId] = useState(null);
 
   const [liveRegisterSessionId, setLiveRegisterSessionId] = useState(null)
   const openRegisterForSession = (sessionId) => {
@@ -2511,15 +2509,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         </div>
                       )}
                       {volunteerList.length > 0 ? (
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: '#FDA4AF',
-                          background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.28)', borderRadius: 99, padding: '5px 10px',
-                        }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setAddVolunteersSessionId(s.id) }}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: '#FDA4AF',
+                            background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.28)', borderRadius: 99, padding: '5px 10px', cursor: 'pointer',
+                          }}>
                           ❤️ {volunteerList.length} volunteer{volunteerList.length > 1 ? 's' : ''}
-                        </span>
+                        </button>
                       ) : (
                         <button
-                          onClick={(e) => { e.stopPropagation(); go('volunteers', { autoOpenInvite: true }) }}
+                          onClick={(e) => { e.stopPropagation(); setAddVolunteersSessionId(s.id) }}
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: 'rgba(255,255,255,0.65)',
                             background: 'transparent', border: '1px dashed rgba(255,255,255,0.24)', borderRadius: 99, padding: '5px 10px', cursor: 'pointer',
@@ -2562,6 +2562,22 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                     </div>
                   </div>,
                   document.body
+                )}
+
+                {addVolunteersSessionId === s.id && (
+                  <AddVolunteersToSessionModal
+                    session={s}
+                    orgId={org?.id}
+                    primary={primary}
+                    secondary={secondary}
+                    alreadyAssignedIds={(sessionStaffList[s.id] || []).filter(p => p.type === 'volunteer').map(p => p.id)}
+                    isMobile={isMobile}
+                    onClose={() => setAddVolunteersSessionId(null)}
+                    onDone={() => {
+                      setAddVolunteersSessionId(null)
+                      loadSessionStaff(todaySessionIdsKey ? todaySessionIdsKey.split(',') : [])
+                    }}
+                  />
                 )}
               </React.Fragment>
             )

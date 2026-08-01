@@ -28,7 +28,7 @@ const EVENT_TEMPLATES = {
 // Which event types are actually wired up to resolve real recipients today.
 // Anything else is documented (has copy above) but intentionally rejected
 // rather than silently resolving to nobody or the wrong audience.
-const IMPLEMENTED_EVENTS = new Set(['TEST_NOTIFICATION', 'SAFEGUARDING_ACTION_REQUIRED', 'NEW_MESSAGE'])
+const IMPLEMENTED_EVENTS = new Set(['TEST_NOTIFICATION', 'SAFEGUARDING_ACTION_REQUIRED', 'NEW_MESSAGE', 'STAFF_ADDED_TO_SESSION'])
 
 export default async function handler(req, res) {
   try {
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     // ── Push notifications (shares this function to stay within the Hobby
     // plan's 12-serverless-functions-per-deployment limit) ──
     if (req.body?.type === 'push') {
-      const { event_type, target_user_ids, thread_id } = req.body || {}
+      const { event_type, target_user_ids, thread_id, session_id } = req.body || {}
       if (!event_type || !EVENT_TEMPLATES[event_type]) return res.status(400).json({ error: 'Unknown or missing event_type' })
       if (!IMPLEMENTED_EVENTS.has(event_type)) return res.status(400).json({ error: 'This event type is not yet wired to a recipient list' })
 
@@ -86,6 +86,19 @@ export default async function handler(req, res) {
         const { data: members } = await adminClient.from('user_profiles').select('id').eq('org_id', profile.org_id).in('id', requested)
         recipientIds = (members || []).map(m => m.id).filter(id => id !== user.id)
         if (thread_id) notifUrl = `/?tab=messaging&thread=${thread_id}`
+      } else if (event_type === 'STAFF_ADDED_TO_SESSION') {
+        const requested = Array.isArray(target_user_ids) ? target_user_ids.slice(0, 200) : []
+        if (requested.length === 0) return res.status(400).json({ error: 'Missing target_user_ids' })
+        // Re-filter by org — a client can't push a colleague from another org this way.
+        const { data: members } = await adminClient.from('user_profiles').select('id').eq('org_id', profile.org_id).in('id', requested)
+        recipientIds = (members || []).map(m => m.id)
+        if (session_id) {
+          const { data: sessionRow } = await adminClient.from('sessions').select('id, title').eq('id', session_id).eq('org_id', profile.org_id).maybeSingle()
+          if (sessionRow) {
+            notifBody = `You've been added to "${sessionRow.title}".`
+            notifUrl = `/?tab=registers&session=${sessionRow.id}`
+          }
+        }
       }
 
       recipientIds = [...new Set(recipientIds)].slice(0, 500) // hard cap — basic abuse guard
