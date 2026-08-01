@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { supabase } from "../../lib/supabase";
@@ -20,6 +20,146 @@ const RA_RATING_COLORS = {
   medium: { bg: 'rgba(245,158,11,0.18)', color: '#FDE047' },
   high: { bg: 'rgba(239,68,68,0.18)', color: '#FCA5A5' },
   critical: { bg: 'rgba(124,58,237,0.2)', color: '#C4B5FD' },
+}
+
+// ── LIVE SESSION CARD: dual progress rings ──────────────────────
+const RING_R = 17
+const RING_C = 2 * Math.PI * RING_R // ≈ 106.8
+
+function getInitials(name) {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
+function formatCountdown(totalSeconds) {
+  const s = Math.max(0, Math.round(totalSeconds))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  if (h > 0) return `${h}h${String(m).padStart(2, '0')}m`
+  return `${m}:${String(sec).padStart(2, '0')}`
+}
+
+// Attendance ring — draws in on mount, fires a one-off confetti burst
+// the moment everyone expected is signed in.
+function AttendanceRing({ signedIn, total, primary, secondary }) {
+  const fraction = total > 0 ? Math.max(0, Math.min(1, signedIn / total)) : 0
+  const offset = RING_C * (1 - fraction)
+  const isFull = total > 0 && signedIn === total
+  const firedRef = useRef(false)
+  const [celebrate, setCelebrate] = useState(false)
+
+  useEffect(() => {
+    if (isFull && !firedRef.current) {
+      firedRef.current = true
+      setCelebrate(true)
+      const t = setTimeout(() => setCelebrate(false), 900)
+      return () => clearTimeout(t)
+    }
+    if (!isFull) firedRef.current = false
+  }, [isFull])
+
+  const confettiColours = ['#4ADE80', primary, secondary, '#FBBF24']
+
+  return (
+    <div style={{ position: 'relative', width: 42, height: 42, flexShrink: 0 }}>
+      <svg width="42" height="42" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx="21" cy="21" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
+        <motion.circle
+          cx="21" cy="21" r={RING_R} fill="none" stroke="#4ADE80" strokeWidth="4" strokeLinecap="round"
+          strokeDasharray={RING_C}
+          initial={{ strokeDashoffset: RING_C }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1.1, ease: [0.16, 0.85, 0.3, 1] }}
+        />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 900, color: '#fff' }}>
+        {signedIn}/{total}
+      </div>
+      {celebrate && (
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible' }}>
+          {Array.from({ length: 12 }).map((_, i) => {
+            const angle = Math.random() * Math.PI * 2
+            const dist = 26 + Math.random() * 36
+            return (
+              <motion.span
+                key={i}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
+                animate={{ x: Math.cos(angle) * dist, y: Math.sin(angle) * dist - 8, opacity: 0, scale: 0.3, rotate: Math.random() * 360 }}
+                transition={{ duration: 0.85, delay: Math.random() * 0.15, ease: [0.2, 0.7, 0.4, 1] }}
+                style={{ position: 'absolute', top: '50%', left: '50%', marginTop: -2.5, marginLeft: -2.5, width: 5, height: 5, borderRadius: 1, background: confettiColours[i % confettiColours.length] }}
+              />
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Time ring — counts down to session end while live, to session start
+// while upcoming, and settles into a solid tick once closed. The fill
+// starts full and drains as the target time approaches, using whatever
+// was remaining at first mount as the ring's "100%" reference.
+function TimeRing({ status, target }) {
+  const initialRef = useRef(null)
+  const [remaining, setRemaining] = useState(() => (target ? Math.max(0, Math.floor((target.getTime() - Date.now()) / 1000)) : 0))
+
+  useEffect(() => {
+    if (!target || status === 'ended') return
+    if (initialRef.current == null) initialRef.current = Math.max(1, Math.floor((target.getTime() - Date.now()) / 1000))
+    const tick = () => setRemaining(Math.max(0, Math.floor((target.getTime() - Date.now()) / 1000)))
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [target, status])
+
+  if (status === 'ended') {
+    return (
+      <div style={{ position: 'relative', width: 42, height: 42, flexShrink: 0 }}>
+        <svg width="42" height="42" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="21" cy="21" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
+          <circle cx="21" cy="21" r={RING_R} fill="none" stroke="#94A3B8" strokeWidth="4" strokeLinecap="round" strokeDasharray={RING_C} strokeDashoffset={0} />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#4ADE80' }}>✓</div>
+      </div>
+    )
+  }
+
+  if (!target) {
+    return (
+      <div style={{ position: 'relative', width: 42, height: 42, flexShrink: 0 }}>
+        <svg width="42" height="42" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="21" cy="21" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.4)' }}>–</div>
+      </div>
+    )
+  }
+
+  const total = initialRef.current || remaining || 1
+  const fraction = Math.max(0, Math.min(1, remaining / total))
+  const offset = RING_C * (1 - fraction)
+  const colour = status === 'live' ? '#2EC5CE' : '#FBBF24'
+
+  return (
+    <div style={{ position: 'relative', width: 42, height: 42, flexShrink: 0 }}>
+      <svg width="42" height="42" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx="21" cy="21" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
+        <motion.circle
+          cx="21" cy="21" r={RING_R} fill="none" stroke={colour} strokeWidth="4" strokeLinecap="round"
+          strokeDasharray={RING_C}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1, ease: 'linear' }}
+        />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 900, color: '#fff' }}>
+        {formatCountdown(remaining)}
+      </div>
+    </div>
+  )
 }
 
 // ── ANNOUNCEMENTS PANEL ─────────────────────────────────────────
@@ -1961,18 +2101,35 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     return { signedIn: si, absent, signedOut: so, expected, percent: total > 0 ? Math.round((si / total) * 100) : 0 };
   };
 
-  // Staff/volunteer headcount per session, for the compact live-session launcher cards
-  const [sessionStaffCounts, setSessionStaffCounts] = useState({});
+  // Staff/volunteer names per session, for the compact live-session launcher cards' avatar stack
+  const [sessionStaffList, setSessionStaffList] = useState({});
   const todaySessionIdsKey = useMemo(() => todaySessions.map(s => s.id).sort().join(','), [todaySessions]);
   useEffect(() => {
     const ids = todaySessionIdsKey ? todaySessionIdsKey.split(',') : [];
-    if (ids.length === 0) { setSessionStaffCounts({}); return; }
-    supabase.from('session_staff').select('session_id').in('session_id', ids)
-      .then(({ data }) => {
-        const counts = {};
-        (data || []).forEach(row => { counts[row.session_id] = (counts[row.session_id] || 0) + 1; });
-        setSessionStaffCounts(counts);
+    if (ids.length === 0) { setSessionStaffList({}); return; }
+    let alive = true;
+    supabase.from('session_staff').select('session_id, user_id, volunteer_id').in('session_id', ids)
+      .then(async ({ data }) => {
+        if (!alive) return;
+        const rows = data || [];
+
+        const personIds = Array.from(new Set(rows.map(r => r.user_id || r.volunteer_id).filter(Boolean)));
+        let names = {};
+        if (personIds.length > 0) {
+          const { data: profiles } = await supabase.from('user_profiles').select('id, full_name').in('id', personIds);
+          (profiles || []).forEach(p => { names[p.id] = p.full_name; });
+        }
+        if (!alive) return;
+        const list = {};
+        rows.forEach(row => {
+          const pid = row.user_id || row.volunteer_id;
+          if (!pid) return;
+          if (!list[row.session_id]) list[row.session_id] = [];
+          list[row.session_id].push({ id: pid, name: names[pid] || 'Staff' });
+        });
+        setSessionStaffList(list);
       });
+    return () => { alive = false; };
   }, [todaySessionIdsKey]);
 
   const [liveRegisterSessionId, setLiveRegisterSessionId] = useState(null)
@@ -2241,6 +2398,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             const { startDT, endDT, hasEnded, isLiveNow } = getSessionMeta(s)
             const statusLabel = hasEnded ? 'Closed' : isLiveNow ? 'Live now' : 'Upcoming'
             const statusColour = hasEnded ? '#94A3B8' : isLiveNow ? '#DC2626' : '#FBBF24'
+            const cardStatus = hasEnded ? 'ended' : isLiveNow ? 'live' : 'upcoming'
+            const countdownTarget = cardStatus === 'live' ? endDT : cardStatus === 'upcoming' ? startDT : null
+            const ctaLabel = cardStatus === 'live' ? 'Open register' : cardStatus === 'upcoming' ? 'View session' : 'View summary'
 
             const panel = (
               <LiveSessionPanel
@@ -2263,42 +2423,95 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             const stats = getLiveSessionStats(s)
             const attendeeTotal = stats.signedIn + stats.absent + stats.signedOut + stats.expected
             const attendedCount = stats.signedIn + stats.signedOut
-            const staffCount = sessionStaffCounts[s.id] || 0
-            const timeRange = startDT && endDT ? `${hubFmtTime(startDT)} – ${hubFmtTime(endDT)}` : startDT ? `From ${hubFmtTime(startDT)}` : null
+            const staffList = sessionStaffList[s.id] || []
+            const visibleStaff = staffList.slice(0, 2)
+            const extraStaff = staffList.length - visibleStaff.length
 
             return (
               <React.Fragment key={s.id}>
-                <button onClick={() => setOpenLiveSessionId(s.id)} style={{
-                  textAlign: 'left', width: '100%', boxSizing: 'border-box', cursor: 'pointer', border: 'none',
-                  borderRadius: 18, padding: '16px 18px', position: 'relative', overflow: 'hidden',
-                  background: `linear-gradient(160deg, ${primary}4D 0%, ${secondary}33 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
-                  boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 12px 30px -14px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusColour, animation: isLiveNow ? 'pulse-live 1.5s infinite' : 'none' }} />
-                        <span style={{ fontSize: 10, fontWeight: 900, color: statusColour, letterSpacing: 0.8, textTransform: 'uppercase' }}>{statusLabel}</span>
+                <style>{`
+                  @keyframes lsPing1{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.6);opacity:0}}
+                  @keyframes lsPing2{0%{transform:scale(1);opacity:.5}100%{transform:scale(2.6);opacity:0}}
+                  @keyframes lsBrandFade{0%,100%{opacity:0}50%{opacity:1}}
+                  @keyframes lsOrbDrift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-10px,8px) scale(1.08)}100%{transform:translate(0,0) scale(1)}}
+                  @keyframes lsArrowNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+                  .ls-livecard:hover .ls-card-arrow{animation:lsArrowNudge .7s ease-in-out infinite}
+                `}</style>
+                <motion.button
+                  onClick={() => setOpenLiveSessionId(s.id)}
+                  className="ls-livecard"
+                  initial={{ opacity: 0, y: 18, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.985 }}
+                  transition={{ duration: 0.45, ease: [0.22, 0.9, 0.3, 1] }}
+                  style={{
+                    textAlign: 'left', width: '100%', boxSizing: 'border-box', cursor: 'pointer', border: 'none',
+                    borderRadius: 20, padding: 0, position: 'relative', overflow: 'hidden',
+                    background: `linear-gradient(160deg, #0C1226 0%, #141D3B 60%, #0F1729 100%)`,
+                    boxShadow: `0 1px 0 rgba(255,255,255,0.07) inset, 0 16px 34px -14px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)`,
+                  }}>
+                  <div style={{ height: 3, width: '100%', position: 'relative', overflow: 'hidden', background: primary }}>
+                    <div style={{ position: 'absolute', inset: 0, background: secondary, opacity: 0, animation: 'lsBrandFade 6s ease-in-out infinite' }} />
+                  </div>
+                  <div style={{ position: 'absolute', top: -40, right: -30, width: 140, height: 140, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}26 0%, transparent 70%)`, pointerEvents: 'none', animation: 'lsOrbDrift 7s ease-in-out infinite' }} />
+
+                  <div style={{ padding: '16px 18px', position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 99, padding: '3px 9px 3px 7px', marginBottom: 10,
+                          background: cardStatus === 'live' ? 'rgba(220,38,38,0.14)' : cardStatus === 'upcoming' ? 'rgba(251,191,36,0.14)' : 'rgba(148,163,184,0.14)',
+                          border: `1px solid ${cardStatus === 'live' ? 'rgba(220,38,38,0.35)' : cardStatus === 'upcoming' ? 'rgba(251,191,36,0.35)' : 'rgba(148,163,184,0.3)'}`,
+                        }}>
+                          <div style={{ position: 'relative', width: 7, height: 7 }}>
+                            {cardStatus === 'live' && (
+                              <>
+                                <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#F87171', animation: 'lsPing1 1.8s ease-out infinite' }} />
+                                <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#F87171', animation: 'lsPing2 1.8s ease-out infinite 0.9s' }} />
+                              </>
+                            )}
+                            <span style={{ position: 'relative', zIndex: 2, width: 7, height: 7, borderRadius: '50%', display: 'block', background: statusColour, animation: cardStatus === 'live' ? 'pulse-live 1.5s infinite' : 'none' }} />
+                          </div>
+                          <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.7, textTransform: 'uppercase', color: cardStatus === 'live' ? '#FCA5A5' : cardStatus === 'upcoming' ? '#FDE68A' : '#CBD5E1' }}>{statusLabel}</span>
+                        </div>
+                        <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                       </div>
-                      <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 12px', marginTop: 8 }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
-                          <span style={{ fontSize: 12 }}>🧒</span>{attendedCount}/{attendeeTotal} attendees
-                        </span>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
-                          <span style={{ fontSize: 12 }}>🧑‍🤝‍🧑</span>{staffCount} staff/vols
-                        </span>
-                        {timeRange && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
-                            <span style={{ fontSize: 12 }}>🕐</span>{timeRange}
-                          </span>
-                        )}
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                        <AttendanceRing signedIn={attendedCount} total={attendeeTotal} primary={primary} secondary={secondary} />
+                        <TimeRing status={cardStatus} target={countdownTarget} />
                       </div>
                     </div>
-                    <span style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, flexShrink: 0 }}>→</span>
-                  </div>
-                </button>
 
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{stats.signedIn}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Signed in</span>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{cardStatus === 'upcoming' ? attendeeTotal : stats.absent}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{cardStatus === 'upcoming' ? 'Expected' : 'Absent'}</span>
+                      </div>
+                      <div style={{ flex: 1 }} />
+                      {visibleStaff.length > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          {visibleStaff.map((p, i) => (
+                            <div key={p.id} style={{ width: 22, height: 22, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, ${secondary})`, border: '2px solid #131B33', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#fff', marginLeft: i === 0 ? 0 : -7 }}>
+                              {getInitials(p.name)}
+                            </div>
+                          ))}
+                          {extraStaff > 0 && (
+                            <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,255,255,0.14)', border: '2px solid #131B33', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#fff', marginLeft: -7 }}>+{extraStaff}</div>
+                          )}
+                        </div>
+                      )}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 900, color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '6px 12px 6px 13px', marginLeft: 10 }}>
+                        {ctaLabel} <span className="ls-card-arrow" style={{ display: 'inline-block' }}>→</span>
+                      </span>
+                    </div>
+                  </div>
+                </motion.button>
 
                 {openLiveSessionId === s.id && createPortal(
                   <div style={{
