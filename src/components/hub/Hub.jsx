@@ -2489,6 +2489,20 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.7, textTransform: 'uppercase', color: cardStatus === 'live' ? '#FCA5A5' : cardStatus === 'upcoming' ? '#FDE68A' : '#CBD5E1' }}>{statusLabel}</span>
                         </div>
                         <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                        {(s.start_time || s.location) && (
+                          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 10px' }}>
+                            {s.start_time && (
+                              <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <span>⏰</span> {s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}
+                              </span>
+                            )}
+                            {s.location && (
+                              <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
+                                <span>📍</span> {s.location.split(',')[0]}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
