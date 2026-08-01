@@ -1810,6 +1810,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [search, setSearch] = React.useState('')
   const [searchResults, setSearchResults] = React.useState(null)
   const [showMobileSearch, setShowMobileSearch] = React.useState(false)
+  const [expandedEndedIds, setExpandedEndedIds] = React.useState(() => new Set())
+  const toggleEndedExpanded = (id) => setExpandedEndedIds(prev => {
+    const next = new Set(prev)
+    if (next.has(id)) next.delete(id); else next.add(id)
+    return next
+  })
   const [showConcernForm, setShowConcernForm] = React.useState(false)
   const [showInviteChild, setShowInviteChild] = React.useState(false)
   const [showReflectionsModal, setShowReflectionsModal] = React.useState(false)
@@ -2591,6 +2597,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           </div>
                           <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.7, textTransform: 'uppercase', color: cardStatus === 'live' ? '#FCA5A5' : cardStatus === 'upcoming' ? '#FDE68A' : '#CBD5E1' }}>{statusLabel}</span>
                         </div>
+                        {cardStatus === 'ended' && (
+                          <button onClick={() => toggleEndedExpanded(s.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 8, marginBottom: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.55)', cursor: 'pointer' }}>
+                            ▲ Collapse
+                          </button>
+                        )}
                         <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                         {(s.start_time || s.location) && (
                           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 10px' }}>
@@ -2724,11 +2735,32 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
           return (
             <div className="ls-hub-today-sessions" style={{ display: 'flex', flexWrap: 'wrap', gap: 16, padding: '0 0 8px' }}>
-              {allToday.map(s => (
-                <div key={s.id} className="ls-hub-today-session-item" style={{ flex: `1 1 ${cardBasis}`, minWidth: allToday.length >= 3 ? 300 : 280, boxSizing: 'border-box' }}>
-                  {renderCard(s)}
-                </div>
-              ))}
+              {allToday.map(s => {
+                const meta = getSessionMeta(s)
+                if (meta.hasEnded && !expandedEndedIds.has(s.id)) {
+                  const stats = getLiveSessionStats(s)
+                  const attended = stats.signedIn + stats.signedOut
+                  const total = stats.signedIn + stats.absent + stats.signedOut + stats.expected
+                  return (
+                    <button key={s.id} onClick={() => toggleEndedExpanded(s.id)} style={{
+                      flex: '1 1 100%', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', cursor: 'pointer',
+                      background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 14, padding: '10px 14px', boxSizing: 'border-box',
+                    }}>
+                      <span style={{ width: 30, height: 30, borderRadius: 9, background: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>🔒</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 800, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                        <div style={{ fontSize: 10.5, color: '#94A3B8' }}>Closed · {attended}/{total} attended</div>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: '#94A3B8', flexShrink: 0, whiteSpace: 'nowrap' }}>▾ Expand</span>
+                    </button>
+                  )
+                }
+                return (
+                  <div key={s.id} className="ls-hub-today-session-item" style={{ flex: `1 1 ${cardBasis}`, minWidth: allToday.length >= 3 ? 300 : 280, boxSizing: 'border-box' }}>
+                    {renderCard(s)}
+                  </div>
+                )
+              })}
             </div>
           )
         })()

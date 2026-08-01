@@ -38,6 +38,15 @@ export default function PastSessionRegister({
   const canReopen = ['admin', 'owner'].includes(userRole)
   const canExport = ['admin', 'owner', 'staff'].includes(userRole)
 
+  const handleStaffSignIn = async (staffRow) => {
+    await supabase.from('session_staff').update({ signed_in_at: new Date().toISOString(), signed_out_at: null }).eq('id', staffRow.id)
+    onReload()
+  }
+  const handleStaffSignOut = async (staffRow) => {
+    await supabase.from('session_staff').update({ signed_out_at: new Date().toISOString() }).eq('id', staffRow.id)
+    onReload()
+  }
+
   const primary = org?.primary_color || '#3B82F6'
   const secondary = org?.secondary_color || '#8B5CF6'
 
@@ -192,7 +201,7 @@ export default function PastSessionRegister({
           </div>
         )}
 
-        <SessionTeamCard staffRows={staffRows} peopleProfiles={peopleProfiles} />
+        <SessionTeamCard staffRows={staffRows} peopleProfiles={peopleProfiles} canEdit={canCorrect} onSignIn={handleStaffSignIn} onSignOut={handleStaffSignOut} />
       </div>
 
       {/* STICKY FOOTER */}
@@ -303,27 +312,44 @@ function MenuItem({ children, onClick, danger }) {
   )
 }
 
-function SessionTeamCard({ staffRows, peopleProfiles }) {
+function SessionTeamCard({ staffRows, peopleProfiles, canEdit, onSignIn, onSignOut }) {
   return (
     <div style={{ marginTop: 20, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14, padding: 16 }}>
       <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', marginBottom: 10 }}>Session team</div>
       {staffRows.length === 0 ? (
         <div style={{ fontSize: 12, color: '#9CA3AF' }}>No staff assigned to this session.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {staffRows.map(s => (
-            <div key={s.id} style={{ fontSize: 12.5 }}>
-              <div style={{ fontWeight: 700, color: '#374151' }}>{peopleProfiles[s.user_id || s.volunteer_id] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: '#9CA3AF', fontWeight: 500 }}>· {s.role}</span></div>
-              <div style={{ color: '#9CA3AF', fontSize: 11 }}>
-                {s.signed_in_at ? `Signed in ${fmtTime(s.signed_in_at)}` : 'Did not sign in'}
-                {s.signed_out_at ? ` · Signed out ${fmtTime(s.signed_out_at)}` : ''}
+            <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <div style={{ minWidth: 0, fontSize: 12.5 }}>
+                <div style={{ fontWeight: 700, color: '#374151' }}>{peopleProfiles[s.user_id || s.volunteer_id] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: '#9CA3AF', fontWeight: 500 }}>· {s.role}</span></div>
+                <div style={{ color: '#9CA3AF', fontSize: 11 }}>
+                  {s.signed_in_at ? `Signed in ${fmtTime(s.signed_in_at)}` : 'Did not sign in'}
+                  {s.signed_out_at ? ` · Signed out ${fmtTime(s.signed_out_at)}` : ''}
+                </div>
               </div>
+              {canEdit && (
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  {!s.signed_in_at ? (
+                    <button onClick={() => onSignIn(s)} style={teamPillBtn('#16A34A', '#DCFCE7')}>Sign in</button>
+                  ) : !s.signed_out_at ? (
+                    <button onClick={() => onSignOut(s)} style={teamPillBtn('#2563EB', '#DBEAFE')}>Sign out</button>
+                  ) : (
+                    <button onClick={() => onSignIn(s)} style={teamPillBtn('#6B7280', '#F3F4F6')}>Re-sign in</button>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
     </div>
   )
+}
+
+function teamPillBtn(color, bg) {
+  return { fontSize: 10.5, fontWeight: 800, color, background: bg, border: 'none', borderRadius: 99, padding: '6px 11px', cursor: 'pointer', whiteSpace: 'nowrap' }
 }
 
 function AttendanceCorrectionModal({ session, org, rows, authUserId, groupLabel, onClose, onDone }) {
