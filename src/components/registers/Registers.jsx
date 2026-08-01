@@ -1135,7 +1135,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button onClick={() => setShowPastRegisters(true)} aria-label="Past Registers"
                 style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 32 : 36, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
-                📜{!isMobile && <span>Past Registers</span>}
+                <img src="/icons/past-registers-icon.png" alt="" style={{ width: isMobile ? 18 : 20, height: isMobile ? 18 : 20, objectFit: 'contain', flexShrink: 0 }} />
+                {!isMobile && <span>Past Registers</span>}
               </button>
               <button onClick={() => onNavigate && onNavigate('medical_alerts')} aria-label="Medical Alerts"
                 style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 32 : 36, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
@@ -1631,7 +1632,7 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
             color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
           }}>✕</button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>📜</div>
+            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}><img src="/icons/past-registers-icon.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} /></div>
             <div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>Past Registers</div>
               <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{sessions.length} closed session{sessions.length !== 1 ? 's' : ''}</div>
