@@ -1148,6 +1148,11 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 <img src="/icons/medical-icon.png" alt="" style={{ width: isMobile ? 54 : 60, height: isMobile ? 54 : 60, objectFit: 'contain', flexShrink: 0 }} />
                 {!isMobile && <span>Medical Alerts</span>}
               </button>
+              <button onClick={() => setShowGroupsSetup(true)} aria-label="Manage Groups"
+                style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 56 : 62, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
+                <img src="/icons/manage-groups-icon.png" alt="" style={{ width: isMobile ? 54 : 60, height: isMobile ? 54 : 60, objectFit: 'contain', flexShrink: 0 }} />
+                {!isMobile && <span>Manage Groups</span>}
+              </button>
               {isMobile && (
                 <button onClick={() => setShowMobileTools(true)} aria-label="More register tools" style={{ width: 32, height: 32, borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
                   ⋯
