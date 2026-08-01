@@ -102,15 +102,16 @@ function AttendanceRing({ signedIn, total, primary, secondary }) {
 
 // Time ring — counts down to session end while live, to session start
 // while upcoming, and settles into a solid tick once closed. The fill
-// starts full and drains as the target time approaches, using whatever
-// was remaining at first mount as the ring's "100%" reference.
-function TimeRing({ status, target }) {
-  const initialRef = useRef(null)
+// reflects real elapsed progress through a fixed, meaningful window
+// (session duration while live; time-since-creation-to-start while
+// upcoming) passed in via `totalSeconds`, so the ring's fraction is
+// stable across reloads instead of resetting to "full" every time the
+// card happens to mount.
+function TimeRing({ status, target, totalSeconds }) {
   const [remaining, setRemaining] = useState(() => (target ? Math.max(0, Math.floor((target.getTime() - Date.now()) / 1000)) : 0))
 
   useEffect(() => {
     if (!target || status === 'ended') return
-    if (initialRef.current == null) initialRef.current = Math.max(1, Math.floor((target.getTime() - Date.now()) / 1000))
     const tick = () => setRemaining(Math.max(0, Math.floor((target.getTime() - Date.now()) / 1000)))
     tick()
     const id = setInterval(tick, 1000)
@@ -140,7 +141,7 @@ function TimeRing({ status, target }) {
     )
   }
 
-  const total = initialRef.current || remaining || 1
+  const total = totalSeconds && totalSeconds > 0 ? totalSeconds : (remaining || 1)
   const fraction = Math.max(0, Math.min(1, remaining / total))
   const offset = RING_C * (1 - fraction)
   const colour = status === 'live' ? '#2EC5CE' : '#FBBF24'
@@ -2396,6 +2397,16 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             const statusColour = hasEnded ? '#94A3B8' : isLiveNow ? '#DC2626' : '#FBBF24'
             const cardStatus = hasEnded ? 'ended' : isLiveNow ? 'live' : 'upcoming'
             const countdownTarget = cardStatus === 'live' ? endDT : cardStatus === 'upcoming' ? startDT : null
+            // Fixed reference window each ring fraction is measured against, so it
+            // reflects real elapsed progress rather than resetting to "full" on
+            // every mount: session length while live, time from creation to start
+            // while upcoming.
+            const createdDT = s.created_at ? new Date(s.created_at) : null
+            const timeRingTotalSeconds = cardStatus === 'live' && startDT && endDT
+              ? Math.max(1, Math.floor((endDT.getTime() - startDT.getTime()) / 1000))
+              : cardStatus === 'upcoming' && startDT && createdDT
+              ? Math.max(1, Math.floor((startDT.getTime() - createdDT.getTime()) / 1000))
+              : null
             const ctaLabel = cardStatus === 'live' ? 'Open register' : cardStatus === 'upcoming' ? 'View session' : 'View summary'
 
             const panel = (
@@ -2482,14 +2493,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                         <AttendanceRing signedIn={attendedCount} total={attendeeTotal} primary={primary} secondary={secondary} />
-                        <TimeRing status={cardStatus} target={countdownTarget} />
+                        <TimeRing status={cardStatus} target={countdownTarget} totalSeconds={timeRingTotalSeconds} />
                       </div>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px 10px', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{stats.signedIn}</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Signed in</span>
+                        <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{attendedCount}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{cardStatus === 'ended' ? 'Attended' : 'Signed in'}</span>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{cardStatus === 'upcoming' ? attendeeTotal : stats.absent}</span>
