@@ -2038,7 +2038,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   const todaySessionIds = useMemo(() => new Set(todaySessions.map(s => s.id)), [todaySessions]);
   const todayAttendance = useMemo(() => attendance.filter(a => todaySessionIds.has(a.session_id)), [attendance, todaySessionIds]);
-  const signedIn = todayAttendance.filter(a => a.status === "signed_in").length;
+  // Cumulative attendance for the day — anyone who has arrived, whether or not they've
+  // since signed out — so this matches the "signed in + signed out" total shown on each
+  // session's live register, rather than only counting who's currently on site.
+  const signedIn = todayAttendance.filter(a => a.status === "signed_in" || a.status === "signed_out").length;
   const medicalReviewByChild = useMemo(() => {
     const map = {}
     medicalReviews.forEach(r => {
@@ -3252,25 +3255,29 @@ function GlanceStat({ icon, iconImg, iconBg, value, valueColour, label, sub, onC
   const c = valueColour || '#64748B'
   return (
     <button onClick={onClick} style={{
-      display: 'flex', alignItems: 'center', gap: 10, cursor: onClick ? 'pointer' : 'default',
+      display: 'flex', alignItems: 'center', gap: 12, cursor: onClick ? 'pointer' : 'default',
       width: '100%', minWidth: 0, textAlign: 'left', boxSizing: 'border-box',
-      background: `${c}0F`, border: `1px solid ${c}28`, borderRadius: 14, padding: '11px 12px',
-    }}>
+      background: `${c}12`, border: `1.5px solid ${c}38`, borderRadius: 16, padding: '13px 14px',
+      boxShadow: `0 4px 14px -8px ${c}60`, transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 8px 20px -8px ${c}70`; e.currentTarget.style.borderColor = `${c}55` }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 4px 14px -8px ${c}60`; e.currentTarget.style.borderColor = `${c}38` }}
+    >
       {iconImg ? (
-        <span style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: `${c}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, boxSizing: 'border-box' }}>
+        <span style={{ width: 58, height: 58, borderRadius: 16, flexShrink: 0, background: `${c}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 7, boxSizing: 'border-box', boxShadow: `inset 0 1px 0 rgba(255,255,255,0.4)` }}>
           <img src={iconImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </span>
       ) : (
         <span style={{
-          width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+          width: 58, height: 58, borderRadius: 16, flexShrink: 0,
           background: `linear-gradient(135deg, ${c}, ${c}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 22, boxShadow: `0 4px 10px -3px ${c}70, inset 0 1px 0 rgba(255,255,255,0.35)`,
+          fontSize: 24, boxShadow: `0 6px 14px -4px ${c}80, inset 0 1px 0 rgba(255,255,255,0.35)`,
         }}>{icon}</span>
       )}
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 19, fontWeight: 900, color: c, lineHeight: 1.1 }}>{value}</div>
-        <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text, #111)', marginTop: 1 }}>{label}</div>
-        <div style={{ fontSize: 10.5, color: '#9CA3AF' }}>{sub}</div>
+        <div style={{ fontSize: 23, fontWeight: 900, color: c, lineHeight: 1.05, letterSpacing: '-0.3px' }}>{value}</div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text, #111)', marginTop: 2 }}>{label}</div>
+        <div style={{ fontSize: 10.5, fontWeight: 600, color: '#94A3B8' }}>{sub}</div>
       </div>
     </button>
   );
@@ -3284,7 +3291,10 @@ function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLa
   }[tone] || { bg: '#F8FAFC', border: '#E5E7EB', iconBg: '#64748B', pillBg: 'rgba(100,116,139,0.12)', pillColour: '#64748B', arrowBg: '#64748B' };
 
   return (
-    <button onClick={onClick} style={{ position: 'relative', flex: compact ? '1 1 auto' : '1 1 220px', width: compact ? '100%' : undefined, minWidth: compact ? 0 : 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: compact ? 14 : 18, padding: compact ? 12 : 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: compact ? 10 : 14, overflow: 'hidden', boxSizing: 'border-box' }}>
+    <button onClick={onClick} style={{ position: 'relative', flex: compact ? '1 1 auto' : '1 1 220px', width: compact ? '100%' : undefined, minWidth: compact ? 0 : 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: compact ? 16 : 20, padding: compact ? 14 : 18, cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: compact ? 10 : 14, overflow: 'hidden', boxSizing: 'border-box', boxShadow: `0 8px 22px -12px ${tones.iconBg}90`, transition: 'transform 0.15s, box-shadow 0.15s' }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 12px 28px -12px ${tones.iconBg}A0` }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 8px 22px -12px ${tones.iconBg}90` }}
+    >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: compact ? 6 : 12 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: compact ? 13 : 15, fontWeight: 900, color: 'var(--text, #111)', lineHeight: 1.15 }}>{title}</div>
