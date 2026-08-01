@@ -1133,6 +1133,10 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button onClick={() => setShowPastRegisters(true)} aria-label="Past Registers"
+                style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 32 : 36, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
+                📜{!isMobile && <span>Past Registers</span>}
+              </button>
               {isMobile && (
                 <button onClick={() => setShowMobileTools(true)} aria-label="More register tools" style={{ width: 32, height: 32, borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
                   ⋯
