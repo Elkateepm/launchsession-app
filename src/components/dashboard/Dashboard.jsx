@@ -31,6 +31,7 @@ import HR from '../hr/HR'
 import ResourceCentre from '../resources/ResourceCentre'
 import MobileBottomNav from './mobilenav/MobileBottomNav'
 import QRShareSheet from '../shared/QRShareSheet'
+import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -443,6 +444,7 @@ export default function Dashboard({ session, org }) {
   const [autoOpenInviteVolunteer, setAutoOpenInviteVolunteer] = useState(false)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
   const [showQRSheet, setShowQRSheet] = React.useState(false);
+  const [showReportIncident, setShowReportIncident] = React.useState(false);
   const [navBadges, setNavBadges] = React.useState({ registers: 0, mentoring: 0 })
   const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
   const { isTablet } = useBreakpoint()
@@ -928,12 +930,25 @@ export default function Dashboard({ session, org }) {
             onNewSession={() => handleSetTab('planner', { autoOpenWizard: true })}
             onAddChild={() => handleSetTab('registers', { autoOpenAdd: true })}
             onCreateForm={() => handleSetTab('forms')}
-            onReportIncident={() => handleSetTab('safeguarding')}
+            onReportIncident={() => setShowReportIncident(true)}
             onAddVolunteer={() => handleSetTab('volunteers')}
             onScanQR={() => setShowQRSheet(true)}
           />
         )}
         {showQRSheet && <QRShareSheet org={org} onClose={() => setShowQRSheet(false)} />}
+        {showReportIncident && (
+          <>
+            <div onClick={() => setShowReportIncident(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 999, backdropFilter: 'blur(4px)' }} />
+            <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(620px,96vw)', maxHeight: '92dvh', overflowY: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 24, zIndex: 1000, boxShadow: '0 32px 80px rgba(0,0,0,0.4)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+              <CauseForConcernForm
+                org={org}
+                session={session}
+                onClose={() => setShowReportIncident(false)}
+                onSubmitted={() => {}}
+              />
+            </div>
+          </>
+        )}
       </div>
       {showProfile && (
         <ProfilePage
