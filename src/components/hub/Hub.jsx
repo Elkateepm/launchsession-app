@@ -2266,8 +2266,18 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               <button
                 onClick={() => setShowMobileSearch(v => !v)}
                 aria-label={showMobileSearch ? 'Close search' : 'Search'}
-                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${primary}${showMobileSearch ? '55' : '22'}`, background: showMobileSearch ? `${primary}12` : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: primary, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset` }}>
-                {showMobileSearch ? '✕' : '🔍'}
+                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${primary}${showMobileSearch ? '55' : '22'}`, background: showMobileSearch ? `${primary}12` : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: primary, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset`, position: 'relative', overflow: 'hidden', transition: 'background 0.2s, border-color 0.2s' }}>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={showMobileSearch ? 'close' : 'search'}
+                    initial={{ opacity: 0, rotate: -45, scale: 0.6 }}
+                    animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                    exit={{ opacity: 0, rotate: 45, scale: 0.6 }}
+                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ display: 'flex' }}>
+                    {showMobileSearch ? '✕' : '🔍'}
+                  </motion.span>
+                </AnimatePresence>
               </button>
             )}
             <NotificationBell
@@ -2299,59 +2309,87 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         </div>
 
         {/* Mobile search — toggled open by the magnifying-glass button */}
-        {isMobile && showMobileSearch && (
-          <div style={{ padding: '10px 0 2px', position: 'relative' }}>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}>🔍</span>
-              <input
-                autoFocus
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                onKeyDown={e => e.key === 'Escape' && (setSearch(''), setShowMobileSearch(false))}
-                placeholder="Search young people, sessions..."
-                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid ${primary}30`, background: '#fff', fontSize: 14, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px ${primary}25` }}
-              />
-            </div>
-            {searchResults && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 16px 40px -8px rgba(0,0,0,0.18)', zIndex: 100, marginTop: 6, overflow: 'hidden' }}>
-                {searchResults.children.length === 0 && searchResults.sessions.length === 0 ? (
-                  <div style={{ padding: '14px 16px', fontSize: 13, color: '#6B7280', textAlign: 'center' }}>No results for "{search}"</div>
-                ) : (
-                  <>
-                    {searchResults.children.length > 0 && (
-                      <div>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Young People</div>
-                        {searchResults.children.map(c => (
-                          <button key={c.id} onClick={() => { go('registers'); setSearch(''); setShowMobileSearch(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                            <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
+        <AnimatePresence initial={false}>
+          {isMobile && showMobileSearch && (
+            <motion.div
+              key="mobile-search-panel"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ height: { duration: 0.32, ease: [0.16, 1, 0.3, 1] }, opacity: { duration: 0.22 } }}
+              style={{ overflow: 'hidden' }}
+            >
+              <div style={{ padding: '10px 0 2px', position: 'relative' }}>
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.24, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ position: 'relative' }}
+                >
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}>🔍</span>
+                  <input
+                    autoFocus
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    onKeyDown={e => e.key === 'Escape' && (setSearch(''), setShowMobileSearch(false))}
+                    placeholder="Search young people, sessions..."
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid ${primary}30`, background: '#fff', fontSize: 14, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px ${primary}25`, transition: 'box-shadow 0.2s, border-color 0.2s' }}
+                    onFocus={e => { e.target.style.borderColor = primary; e.target.style.boxShadow = `0 0 0 3px ${primary}18, 0 2px 10px -4px ${primary}35` }}
+                    onBlur={e => { e.target.style.borderColor = primary + '30'; e.target.style.boxShadow = `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px ${primary}25` }}
+                  />
+                </motion.div>
+                <AnimatePresence>
+                  {searchResults && (
+                    <motion.div
+                      key="mobile-search-results"
+                      initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 16px 40px -8px rgba(0,0,0,0.18)', zIndex: 100, marginTop: 6, overflow: 'hidden', transformOrigin: 'top center' }}
+                    >
+                      {searchResults.children.length === 0 && searchResults.sessions.length === 0 ? (
+                        <div style={{ padding: '14px 16px', fontSize: 13, color: '#6B7280', textAlign: 'center' }}>No results for "{search}"</div>
+                      ) : (
+                        <>
+                          {searchResults.children.length > 0 && (
                             <div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{c.first_name} {c.last_name}</div>
-                              {c.group_name && <div style={{ fontSize: 11, color: '#6B7280' }}>{c.group_name}</div>}
+                              <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Young People</div>
+                              {searchResults.children.map(c => (
+                                <button key={c.id} onClick={() => { go('registers'); setSearch(''); setShowMobileSearch(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                                  <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
+                                  <div>
+                                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{c.first_name} {c.last_name}</div>
+                                    {c.group_name && <div style={{ fontSize: 11, color: '#6B7280' }}>{c.group_name}</div>}
+                                  </div>
+                                </button>
+                              ))}
                             </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {searchResults.sessions.length > 0 && (
-                      <div>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
-                        {searchResults.sessions.map(s => (
-                          <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch(''); setShowMobileSearch(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                            <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
+                          )}
+                          {searchResults.sessions.length > 0 && (
                             <div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
-                              <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time || 'No time'}</div>
+                              <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
+                              {searchResults.sessions.map(s => (
+                                <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch(''); setShowMobileSearch(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                                  <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
+                                  <div>
+                                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
+                                    <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time || 'No time'}</div>
+                                  </div>
+                                </button>
+                              ))}
                             </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
+                          )}
+                        </>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            )}
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
         {!isMobile ? (
           <div style={{ padding: '14px 0 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div>
