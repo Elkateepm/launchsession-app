@@ -284,7 +284,7 @@ input, select, textarea { font-family: var(--font); }
   .ls-hub-overview-grid { display: flex !important; flex-wrap: wrap !important; gap: 10px !important; }
   .ls-hub-overview-grid > * { flex: none !important; width: calc(50% - 5px) !important; max-width: calc(50% - 5px) !important; box-sizing: border-box !important; }
   .ls-hub-overview-grid > *:last-child:nth-child(odd) { width: 100% !important; max-width: 100% !important; }
-  .ls-hub-livesession-grid { grid-template-columns: 1fr !important; }
+  .ls-hub-today-sessions > .ls-hub-today-session-item { flex: none !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
 }
 
 .ls-hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }

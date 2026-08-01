@@ -2392,8 +2392,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           const currentGroup = todayList.filter(s => { const m = getSessionMeta(s); return !m.isLiveNow && !m.hasEnded })
           const endedGroup = todayList.filter(s => getSessionMeta(s).hasEnded)
 
-          const gridStyle = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : todaySessions.length === 1 ? '1fr' : todaySessions.length === 2 ? '1fr 1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, padding: '0 0 8px' }
-
           const renderCard = (s) => {
             const { startDT, endDT, hasEnded, isLiveNow } = getSessionMeta(s)
             const statusLabel = hasEnded ? 'Closed' : isLiveNow ? 'Live now' : 'Upcoming'
@@ -2569,27 +2567,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             )
           }
 
+          const allToday = [...liveGroup, ...currentGroup, ...endedGroup]
+          const cardBasis = allToday.length === 1 ? '100%' : allToday.length === 2 ? 'calc(50% - 8px)' : '340px'
+
           return (
-            <React.Fragment>
-              {liveGroup.length > 0 && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 0.6, color: '#DC2626', textTransform: 'uppercase', marginBottom: 8 }}>🔴 Live ({liveGroup.length})</div>
-                  <div className="ls-hub-livesession-grid" style={gridStyle}>{liveGroup.map(renderCard)}</div>
+            <div className="ls-hub-today-sessions" style={{ display: 'flex', flexWrap: 'wrap', gap: 16, padding: '0 0 8px' }}>
+              {allToday.map(s => (
+                <div key={s.id} className="ls-hub-today-session-item" style={{ flex: `1 1 ${cardBasis}`, minWidth: allToday.length >= 3 ? 300 : 280, boxSizing: 'border-box' }}>
+                  {renderCard(s)}
                 </div>
-              )}
-              {currentGroup.length > 0 && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 0.6, color: '#FBBF24', textTransform: 'uppercase', marginBottom: 8 }}>🕐 Current ({currentGroup.length})</div>
-                  <div className="ls-hub-livesession-grid" style={gridStyle}>{currentGroup.map(renderCard)}</div>
-                </div>
-              )}
-              {endedGroup.length > 0 && (
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 0.6, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 8 }}>✅ Ended ({endedGroup.length})</div>
-                  <div className="ls-hub-livesession-grid" style={gridStyle}>{endedGroup.map(renderCard)}</div>
-                </div>
-              )}
-            </React.Fragment>
+              ))}
+            </div>
           )
         })()
       ) : (
