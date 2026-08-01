@@ -7,6 +7,7 @@ import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { TemplatePicker } from './TemplateCreator'
+import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
 
 const DEFAULT_BUBBLES = [
   { key: 'red',    label: 'Red',    color: '#E53935', dark: '#B71C1C' },
@@ -946,6 +947,28 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const [toast, setToast] = useState('')
   const [note, setNote] = useState('')
   const [showMobileTools, setShowMobileTools] = useState(false)
+  const [showPastRegisters, setShowPastRegisters] = useState(false)
+  const [pastSessions, setPastSessions] = useState([])
+  const [pastSessionsLoading, setPastSessionsLoading] = useState(false)
+  const [viewingPastSession, setViewingPastSession] = useState(null)
+  const [viewingPastAttendance, setViewingPastAttendance] = useState([])
+  const [viewingPastLoading, setViewingPastLoading] = useState(false)
+
+  useEffect(() => {
+    if (!showPastRegisters || !orgId) return
+    setPastSessionsLoading(true)
+    supabase.from('sessions').select('*').eq('org_id', orgId).not('closed_at', 'is', null)
+      .order('closed_at', { ascending: false }).limit(300)
+      .then(({ data }) => { setPastSessions(data || []); setPastSessionsLoading(false) })
+  }, [showPastRegisters, orgId])
+
+  const openPastSession = async (s) => {
+    setViewingPastLoading(true)
+    setViewingPastSession(s)
+    const { data } = await supabase.from('attendance').select('*').eq('session_id', s.id)
+    setViewingPastAttendance(data || [])
+    setViewingPastLoading(false)
+  }
 
   // Triggered by the mobile Launch menu's "Add Child" quick action — opens the same
   // Add Child modal a person would reach via the header button, just pre-opened.
@@ -1279,6 +1302,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => setShowImport(v => !v) },
               { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => setShowTemplates(v => !v) },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => handlePrint() },
+              { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => setShowPastRegisters(true) },
             ].map(t => (
               <button key={t.label} onClick={t.action}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 6, transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease' }}
@@ -1378,6 +1402,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => { setShowImport(true); setShowMobileTools(false) } },
               { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => { setShowTemplates(true); setShowMobileTools(false) } },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => { handlePrint(); setShowMobileTools(false) } },
+              { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => { setShowPastRegisters(true); setShowMobileTools(false) } },
             ].map(t => (
               <button key={t.label} onClick={t.action}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
@@ -1519,7 +1544,133 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             }
           }} />
       )}
+
+      {/* PAST REGISTERS — full history of closed sessions, not just the last 7 days */}
+      {showPastRegisters && (
+        <PastRegistersListModal
+          sessions={pastSessions}
+          loading={pastSessionsLoading}
+          primary={primary}
+          onClose={() => setShowPastRegisters(false)}
+          onSelect={openPastSession}
+        />
+      )}
+
+      {viewingPastSession && !viewingPastLoading && (
+        <HistoricalAttendanceModal
+          session={viewingPastSession}
+          attendance={viewingPastAttendance}
+          allChildren={children}
+          primary={primary}
+          secondary={org?.secondary_color || primary}
+          onClose={() => { setViewingPastSession(null); setViewingPastAttendance([]) }}
+        />
+      )}
     </div>
+  )
+}
+
+// ─── PAST REGISTERS LIST ──────────────────────────────────────
+// Every closed session for the org, most recent first, grouped by month —
+// tap one to open its read-only timestamped attendance view.
+function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect }) {
+  const isMobile = useIsMobile()
+  const [search, setSearch] = useState('')
+
+  const filtered = sessions.filter(s => !search.trim() || (s.title || '').toLowerCase().includes(search.trim().toLowerCase()))
+
+  const monthLabel = (dateStr) => {
+    if (!dateStr) return 'Undated'
+    const d = new Date(`${dateStr}T00:00:00`)
+    if (isNaN(d.getTime())) return 'Undated'
+    return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+  }
+  const groups = []
+  filtered.forEach(s => {
+    const label = monthLabel(s.session_date)
+    let g = groups.find(g => g.label === label)
+    if (!g) { g = { label, items: [] }; groups.push(g) }
+    g.items.push(s)
+  })
+
+  const fmtDayDate = (dateStr) => {
+    if (!dateStr) return ''
+    const d = new Date(`${dateStr}T00:00:00`)
+    if (isNaN(d.getTime())) return dateStr
+    return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+  }
+
+  return createPortal(
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column',
+      background: isMobile ? '#F8FAFC' : 'rgba(15,23,42,0.45)',
+      alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'flex-start' : 'center',
+      padding: isMobile ? 0 : 24, boxSizing: 'border-box',
+    }} onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div style={{
+        position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 560, maxHeight: isMobile ? 'none' : '86vh',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        borderRadius: isMobile ? 0 : 24, flex: isMobile ? 1 : undefined,
+        background: '#F8FAFC', boxShadow: isMobile ? 'none' : '0 24px 60px -20px rgba(0,0,0,0.35)',
+      }} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ background: `linear-gradient(165deg, ${primary}0F 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+          <button onClick={onClose} aria-label="Close" style={{
+            position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
+            width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
+            color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          }}>✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>📜</div>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>Past Registers</div>
+              <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{sessions.length} closed session{sessions.length !== 1 ? 's' : ''}</div>
+            </div>
+          </div>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search sessions..."
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#111', fontSize: 12.5, outline: 'none' }} />
+        </div>
+
+        {/* List */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 16px 24px' : '16px 22px 24px', WebkitOverflowScrolling: 'touch' }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>Loading past registers…</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
+              {sessions.length === 0 ? 'No sessions have been closed yet.' : 'Nothing matches your search.'}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {groups.map(g => (
+                <div key={g.label}>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{g.label}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    {g.items.map(s => (
+                      <button key={s.id} onClick={() => onSelect(s)} style={{
+                        display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', width: '100%',
+                        background: '#fff', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
+                        cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
+                      }}>
+                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🔒</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: '#0B1220', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                          <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, marginTop: 1 }}>
+                            {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}{s.location ? ` · ${s.location}` : ''}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0 }}>→</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
   )
 }
 
