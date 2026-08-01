@@ -110,6 +110,9 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
         title="Medical Alerts"
         subtitle="Review and sign off medical information for young people in your care"
         primary={primary}
+        actions={[
+          { label: 'Back', icon: '←', variant: 'ghost', onClick: () => onNavigate && onNavigate('registers') },
+        ]}
         stats={[
           { label: 'Flagged', value: rows.length, icon: '💊' },
           { label: 'Needs review', value: needsReviewCount, icon: '⏳', color: '#D97706' },
