@@ -1496,8 +1496,9 @@ function HubAbsentSheet({ child, onClose, onMark }) {
   )
 }
 
-function SessionInfoModal({ session, attendance, allChildren, primary, onClose, onAddExisting, onCreateWalkIn }) {
+function SessionInfoModal({ session, attendance, allChildren, primary, secondary, onClose, onAddExisting, onCreateWalkIn }) {
   const [showAddChild, setShowAddChild] = useState(false)
+  const isMobile = useIsMobile()
   const s = session
 
   const sessAttendance = (attendance || []).filter(a => a.session_id === s.id)
@@ -1507,13 +1508,6 @@ function SessionInfoModal({ session, attendance, allChildren, primary, onClose, 
     return m
   }, [allChildren])
 
-  const statusMeta = {
-    signed_in: { label: 'Signed in', color: '#16A34A' },
-    expected: { label: 'Expected', color: 'rgba(255,255,255,0.5)' },
-    absent: { label: 'Absent', color: '#DC2626' },
-    signed_out: { label: 'Signed out', color: '#7C3AED' },
-  }
-
   const rows = sessAttendance
     .map(a => ({ att: a, child: childById[a.child_id] }))
     .filter(r => r.child)
@@ -1522,45 +1516,125 @@ function SessionInfoModal({ session, attendance, allChildren, primary, onClose, 
   const alreadyOnSession = new Set(sessAttendance.map(a => a.child_id))
   const eligibleChildren = (allChildren || []).filter(c => !alreadyOnSession.has(c.id))
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 450, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
-      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 18, padding: 20, width: 420, maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>{s.title}</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.6)', cursor: 'pointer', lineHeight: 1 }}>×</button>
-        </div>
+  const groupDefs = [
+    { key: 'signed_in', label: 'Signed in', color: '#4ADE80', dot: '#22C55E' },
+    { key: 'expected', label: 'Expected', color: 'rgba(255,255,255,0.65)', dot: 'rgba(255,255,255,0.4)' },
+    { key: 'signed_out', label: 'Signed out', color: '#C4B5FD', dot: '#8B5CF6' },
+    { key: 'absent', label: 'Absent', color: '#FCA5A5', dot: '#EF4444' },
+  ]
+  const grouped = groupDefs.map(g => ({ ...g, rows: rows.filter(r => (r.att.status || 'expected') === g.key) })).filter(g => g.rows.length > 0)
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16, fontSize: 12.5, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
-          <div>📅 {s.session_date}{s.start_time ? ` · ${s.start_time}${s.end_time ? ` – ${s.end_time}` : ''}` : ''}</div>
-          {s.location && <div>📍 {s.location}</div>}
-        </div>
+  const initials = (c) => `${(c.first_name || '?')[0] || ''}${(c.last_name || '')[0] || ''}`.toUpperCase()
+  const avatarColours = ['#7C3AED', '#0EA5E9', '#F59E0B', '#EC4899', '#10B981', '#F97316']
+  const avatarColour = (id) => avatarColours[Math.abs([...String(id)].reduce((h, ch) => h + ch.charCodeAt(0), 0)) % avatarColours.length]
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            Attendees ({rows.length})
+  return createPortal(
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column',
+        background: isMobile ? '#0B1023' : 'rgba(8,11,23,0.72)',
+        alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'flex-start' : 'center',
+        padding: isMobile ? 0 : 24, boxSizing: 'border-box',
+      }}
+      onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <motion.div
+        initial={isMobile ? { y: 24, opacity: 0 } : { scale: 0.97, opacity: 0 }}
+        animate={isMobile ? { y: 0, opacity: 1 } : { scale: 1, opacity: 1 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        style={{
+          position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 480, maxHeight: isMobile ? 'none' : '88vh',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          borderRadius: isMobile ? 0 : 26, flex: isMobile ? 1 : undefined,
+          background: `linear-gradient(160deg, ${primary}33 0%, ${(secondary || primary)}22 40%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
+          boxShadow: isMobile ? 'none' : '0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 200, borderRadius: '50%', background: `radial-gradient(circle, ${primary}22, transparent 70%)`, pointerEvents: 'none' }} />
+
+        {/* Header */}
+        <div style={{ padding: isMobile ? '18px 18px 16px' : '22px 24px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'relative', flexShrink: 0 }}>
+          <button onClick={onClose} aria-label="Close" style={{
+            position: 'absolute', top: isMobile ? 14 : 18, right: isMobile ? 14 : 18, zIndex: 2,
+            width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.18)',
+            background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 16, fontWeight: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          }}>✕</button>
+
+          <div style={{ paddingRight: 42 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8, marginBottom: 9 }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ADE80' }} />SESSION INFO
+            </div>
+            <h2 style={{ margin: 0, fontSize: isMobile ? 19 : 22, fontWeight: 900, color: '#fff', letterSpacing: -0.4 }}>{s.title}</h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', marginTop: 7 }}>
+              {(s.session_date || s.start_time) && (
+                <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  📅 {formatDate ? formatDate(s.session_date) : s.session_date}{s.start_time ? ` · ${s.start_time}${s.end_time ? ` – ${s.end_time}` : ''}` : ''}
+                </span>
+              )}
+              {s.location && (
+                <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  📍 {s.location}
+                </span>
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* Attendee list */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px 18px 10px' : '18px 24px 10px', WebkitOverflowScrolling: 'touch' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 900, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+              Attendees · {rows.length}
+            </div>
+          </div>
+
+          {rows.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 10px', color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 600 }}>
+              No attendees on this session yet.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {grouped.map(g => (
+                <div key={g.key}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: g.dot }} />
+                    <span style={{ fontSize: 11, fontWeight: 800, color: g.color, textTransform: 'uppercase', letterSpacing: 0.5 }}>{g.label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>{g.rows.length}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {g.rows.map(r => (
+                      <div key={r.att.id} style={{ display: 'flex', alignItems: 'center', gap: 11, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 13, padding: '9px 12px' }}>
+                        <div style={{
+                          width: 34, height: 34, borderRadius: 11, flexShrink: 0, overflow: 'hidden',
+                          background: r.child.photo_url ? 'transparent' : `linear-gradient(135deg, ${avatarColour(r.child.id)}, ${avatarColour(r.child.id)}CC)`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 12, fontWeight: 900, color: '#fff',
+                        }}>
+                          {r.child.photo_url ? <img src={r.child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(r.child)}
+                        </div>
+                        <span style={{ fontSize: 13.5, fontWeight: 700, color: '#fff', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {r.child.first_name} {r.child.last_name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Sticky footer action */}
+        <div style={{ padding: isMobile ? '12px 18px calc(14px + env(safe-area-inset-bottom))' : '14px 24px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
           <button onClick={() => setShowAddChild(true)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 800, color: primary, background: `${primary}18`, border: `1px solid ${primary}40`, borderRadius: 99, padding: '5px 10px', cursor: 'pointer' }}>
-            + Add child
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '13px 16px', borderRadius: 13, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary || primary})`, color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', boxShadow: `0 8px 22px -8px ${primary}90` }}>
+            + Add child to this session
           </button>
         </div>
-
-        {rows.length === 0 ? (
-          <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.4)', padding: '10px 0' }}>No attendees on this session yet.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {rows.map(r => {
-              const meta = statusMeta[r.att.status] || { label: r.att.status || '—', color: 'rgba(255,255,255,0.5)' }
-              return (
-                <div key={r.att.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 12px' }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{r.child.first_name} {r.child.last_name}</span>
-                  <span style={{ fontSize: 10.5, fontWeight: 800, color: meta.color }}>{meta.label}</span>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+      </motion.div>
 
       {showAddChild && (
         <HubWalkInModal
@@ -1570,7 +1644,8 @@ function SessionInfoModal({ session, attendance, allChildren, primary, onClose, 
           onCreate={async (form) => { await onCreateWalkIn(s.id, form); setShowAddChild(false) }}
         />
       )}
-    </div>
+    </motion.div>,
+    document.body
   )
 }
 
@@ -3272,6 +3347,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           attendance={attendance}
           allChildren={children}
           primary={primary}
+          secondary={secondary}
           onClose={() => setInfoModalSession(null)}
           onAddExisting={handleInfoAddExisting}
           onCreateWalkIn={handleInfoCreateWalkIn}
