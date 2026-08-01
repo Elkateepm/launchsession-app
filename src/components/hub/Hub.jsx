@@ -23,7 +23,7 @@ const RA_RATING_COLORS = {
 }
 
 // ── LIVE SESSION CARD: dual progress rings ──────────────────────
-const RING_R = 17
+const RING_R = 22
 const RING_C = 2 * Math.PI * RING_R // ≈ 106.8
 
 function getInitials(name) {
@@ -64,18 +64,18 @@ function AttendanceRing({ signedIn, total, primary, secondary }) {
   const confettiColours = ['#4ADE80', primary, secondary, '#FBBF24']
 
   return (
-    <div style={{ position: 'relative', width: 42, height: 42, flexShrink: 0 }}>
-      <svg width="42" height="42" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx="21" cy="21" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
+    <div style={{ position: 'relative', width: 54, height: 54, flexShrink: 0 }}>
+      <svg width="54" height="54" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
         <motion.circle
-          cx="21" cy="21" r={RING_R} fill="none" stroke="#4ADE80" strokeWidth="4" strokeLinecap="round"
+          cx="27" cy="27" r={RING_R} fill="none" stroke="#4ADE80" strokeWidth="5" strokeLinecap="round"
           strokeDasharray={RING_C}
           initial={{ strokeDashoffset: RING_C }}
           animate={{ strokeDashoffset: offset }}
           transition={{ duration: 1.1, ease: [0.16, 0.85, 0.3, 1] }}
         />
       </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 900, color: '#fff' }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#fff' }}>
         {signedIn}/{total}
       </div>
       {celebrate && (
@@ -118,23 +118,23 @@ function TimeRing({ status, target }) {
 
   if (status === 'ended') {
     return (
-      <div style={{ position: 'relative', width: 42, height: 42, flexShrink: 0 }}>
-        <svg width="42" height="42" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="21" cy="21" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
-          <circle cx="21" cy="21" r={RING_R} fill="none" stroke="#94A3B8" strokeWidth="4" strokeLinecap="round" strokeDasharray={RING_C} strokeDashoffset={0} />
+      <div style={{ position: 'relative', width: 54, height: 54, flexShrink: 0 }}>
+        <svg width="54" height="54" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
+          <circle cx="27" cy="27" r={RING_R} fill="none" stroke="#94A3B8" strokeWidth="5" strokeLinecap="round" strokeDasharray={RING_C} strokeDashoffset={0} />
         </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#4ADE80' }}>✓</div>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#4ADE80' }}>✓</div>
       </div>
     )
   }
 
   if (!target) {
     return (
-      <div style={{ position: 'relative', width: 42, height: 42, flexShrink: 0 }}>
-        <svg width="42" height="42" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="21" cy="21" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
+      <div style={{ position: 'relative', width: 54, height: 54, flexShrink: 0 }}>
+        <svg width="54" height="54" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
         </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.4)' }}>–</div>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: 'rgba(255,255,255,0.4)' }}>–</div>
       </div>
     )
   }
@@ -145,17 +145,17 @@ function TimeRing({ status, target }) {
   const colour = status === 'live' ? '#2EC5CE' : '#FBBF24'
 
   return (
-    <div style={{ position: 'relative', width: 42, height: 42, flexShrink: 0 }}>
-      <svg width="42" height="42" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx="21" cy="21" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
+    <div style={{ position: 'relative', width: 54, height: 54, flexShrink: 0 }}>
+      <svg width="54" height="54" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
         <motion.circle
-          cx="21" cy="21" r={RING_R} fill="none" stroke={colour} strokeWidth="4" strokeLinecap="round"
+          cx="27" cy="27" r={RING_R} fill="none" stroke={colour} strokeWidth="5" strokeLinecap="round"
           strokeDasharray={RING_C}
           animate={{ strokeDashoffset: offset }}
           transition={{ duration: 1, ease: 'linear' }}
         />
       </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 900, color: '#fff' }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#fff' }}>
         {formatCountdown(remaining)}
       </div>
     </div>
@@ -2478,7 +2478,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                         <AttendanceRing signedIn={attendedCount} total={attendeeTotal} primary={primary} secondary={secondary} />
                         <TimeRing status={cardStatus} target={countdownTarget} />
                       </div>
