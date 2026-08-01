@@ -2125,7 +2125,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           const pid = row.user_id || row.volunteer_id;
           if (!pid) return;
           if (!list[row.session_id]) list[row.session_id] = [];
-          list[row.session_id].push({ id: pid, name: names[pid] || 'Staff' });
+          list[row.session_id].push({ id: pid, name: names[pid] || 'Staff', type: row.volunteer_id ? 'volunteer' : 'staff' });
         });
         setSessionStaffList(list);
       });
@@ -2424,8 +2424,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             const attendeeTotal = stats.signedIn + stats.absent + stats.signedOut + stats.expected
             const attendedCount = stats.signedIn + stats.signedOut
             const staffList = sessionStaffList[s.id] || []
-            const visibleStaff = staffList.slice(0, 2)
-            const extraStaff = staffList.length - visibleStaff.length
+            const staffOnly = staffList.filter(p => p.type !== 'volunteer')
+            const volunteerList = staffList.filter(p => p.type === 'volunteer')
+            const visibleStaff = staffOnly.slice(0, 2)
+            const extraStaff = staffOnly.length - visibleStaff.length
 
             return (
               <React.Fragment key={s.id}>
@@ -2436,9 +2438,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   @keyframes lsOrbDrift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-10px,8px) scale(1.08)}100%{transform:translate(0,0) scale(1)}}
                   @keyframes lsArrowNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
                   .ls-livecard:hover .ls-card-arrow{animation:lsArrowNudge .7s ease-in-out infinite}
+                  .ls-livecard:focus-visible{outline:2px solid rgba(255,255,255,0.4);outline-offset:2px}
                 `}</style>
-                <motion.button
+                <motion.div
                   onClick={() => setOpenLiveSessionId(s.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenLiveSessionId(s.id) } }}
                   className="ls-livecard"
                   initial={{ opacity: 0, y: 18, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -2510,8 +2516,28 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         {ctaLabel} <span className="ls-card-arrow" style={{ display: 'inline-block' }}>→</span>
                       </span>
                     </div>
+
+                    <div style={{ display: 'flex', marginTop: 10 }}>
+                      {volunteerList.length > 0 ? (
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: '#FDA4AF',
+                          background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.28)', borderRadius: 99, padding: '5px 11px',
+                        }}>
+                          ❤️ {volunteerList.length} volunteer{volunteerList.length > 1 ? 's' : ''}
+                        </span>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); go('volunteers', { autoOpenInvite: true }) }}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.65)',
+                            background: 'transparent', border: '1px dashed rgba(255,255,255,0.24)', borderRadius: 99, padding: '5px 11px', cursor: 'pointer',
+                          }}>
+                          + Add volunteers
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </motion.button>
+                </motion.div>
 
                 {openLiveSessionId === s.id && createPortal(
                   <div style={{
