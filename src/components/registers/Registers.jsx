@@ -1163,20 +1163,19 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           </div>
 
           {/* Stats strip + search + select — one compact row */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: isMobile ? 8 : 12 }}>
-            {[
-              { icon: '📋', value: counts.total, label: 'On Register', color: primary },
-              { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A' },
-              { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
-            ].map(s => (
-              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: s.color + '10', border: `1.5px solid ${s.color}30`, flexShrink: 0 }}>
-                <span style={{ fontSize: 12 }}>{s.icon}</span>
-                <span style={{ fontSize: 13, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#64748B', whiteSpace: 'nowrap' }}>{s.label}</span>
-              </div>
-            ))}
-            <div style={{ flex: 1, minWidth: 0 }} />
-            <div ref={searchPopupRef} style={{ position: 'relative' }}>
+          <div ref={searchPopupRef}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: isMobile ? 8 : 12 }}>
+              {[
+                { icon: '📋', value: counts.total, label: 'On Register', color: primary },
+                { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A' },
+                { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
+              ].map(s => (
+                <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: s.color + '10', border: `1.5px solid ${s.color}30`, flexShrink: 0 }}>
+                  <span style={{ fontSize: 12 }}>{s.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#64748B', whiteSpace: 'nowrap' }}>{s.label}</span>
+                </div>
+              ))}
               <button
                 onClick={() => setSearchOpen(v => !v)}
                 aria-label="Search"
@@ -1194,51 +1193,47 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   <span style={{ position: 'absolute', top: -3, right: -3, width: 8, height: 8, borderRadius: '50%', background: primary, border: '1.5px solid #fff' }} />
                 )}
               </button>
-              <AnimatePresence>
-                {searchOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                    transition={{ duration: 0.16 }}
-                    style={{
-                      position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 40,
-                      width: isMobile ? 'min(84vw, 320px)' : 300,
-                      background: '#fff', border: '1px solid #EEF1F6', borderRadius: 14,
-                      boxShadow: '0 16px 40px -12px rgba(15,23,42,0.25)', padding: 10,
-                    }}
-                  >
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>🔍</span>
-                      <input
-                        autoFocus
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Escape') setSearchOpen(false) }}
-                        placeholder="Search by name..."
-                        style={{ width: '100%', boxSizing: 'border-box', padding: '9px 32px 9px 32px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
-                        onFocus={e => e.target.style.borderColor = primary}
-                        onBlur={e => e.target.style.borderColor = primary + '25'}
-                      />
-                      {search && (
-                        <button onClick={() => setSearch('')} aria-label="Clear search"
-                          style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: '#F1F5F9', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10, color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <div style={{ flex: 1, minWidth: 0 }} />
+              <button
+                onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
+                style={{
+                  padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : '#E5E7EB'}`,
+                  background: selectMode ? primary : '#fff', color: selectMode ? '#fff' : '#6B7280',
+                  fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+              >
+                {selectMode ? 'Cancel' : 'Select'}
+              </button>
             </div>
-            <button
-              onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
-              style={{
-                padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : '#E5E7EB'}`,
-                background: selectMode ? primary : '#fff', color: selectMode ? '#fff' : '#6B7280',
-                fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-              }}
-            >
-              {selectMode ? 'Cancel' : 'Select'}
-            </button>
+            <AnimatePresence initial={false}>
+              {searchOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <div style={{ position: 'relative', marginBottom: isMobile ? 8 : 12 }}>
+                    <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>🔍</span>
+                    <input
+                      autoFocus
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Escape') setSearchOpen(false) }}
+                      placeholder="Search by name..."
+                      style={{ width: '100%', boxSizing: 'border-box', padding: '10px 32px 10px 34px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
+                      onFocus={e => e.target.style.borderColor = primary}
+                      onBlur={e => e.target.style.borderColor = primary + '25'}
+                    />
+                    {search && (
+                      <button onClick={() => setSearch('')} aria-label="Clear search"
+                        style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: '#F1F5F9', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10, color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
