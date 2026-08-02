@@ -1010,8 +1010,9 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
     }).join('')
 
     const html = `<!DOCTYPE html><html><head><title>Register — ${org?.name || ''}</title>
-    <style>body{font-family:system-ui,sans-serif;color:#111;padding:24px}h1{font-size:20px;font-weight:900;margin:0 0 4px}p{margin:0 0 16px;color:#64748b;font-size:13px}table{width:100%;border-collapse:collapse}th{padding:8px 10px;text-align:left;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;border-bottom:2px solid #e5e7eb}@media print{button{display:none}}</style>
+    <style>body{font-family:system-ui,sans-serif;color:#111;padding:24px}h1{font-size:20px;font-weight:900;margin:0 0 4px}p{margin:0 0 16px;color:#64748b;font-size:13px}table{width:100%;border-collapse:collapse}th{padding:8px 10px;text-align:left;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;border-bottom:2px solid #e5e7eb}@media print{.no-print{display:none}}</style>
     </head><body>
+    <button class="no-print" onclick="window.close()" aria-label="Close" style="position:fixed;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1.5px solid #e5e7eb;background:#fff;color:#374151;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px -2px rgba(0,0,0,0.15);z-index:99">×</button>
     <h1>${session?.title || 'Register'} — ${org?.name || ''}</h1>
     <p>${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} &nbsp;·&nbsp; ${children.length} children</p>
     <table><thead><tr>
@@ -1166,48 +1167,20 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             </div>
           </div>
 
-          {/* Stats strip */}
-          {isMobile ? (
-            <div style={{ display: 'flex', background: '#fff', borderRadius: 13, border: '1px solid #EEF1F6', boxShadow: '0 2px 8px -4px rgba(15,23,42,0.12)', marginBottom: 8, overflow: 'hidden' }}>
-              {[
-                { icon: '📋', value: counts.total, label: 'On Register', color: primary },
-                { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A' },
-                { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
-              ].map((s, i) => (
-                <div key={s.label} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 8px', borderLeft: i > 0 ? '1px solid #F1F5F9' : 'none', minWidth: 0 }}>
-                  <span style={{ fontSize: 13, flexShrink: 0 }}>{s.icon}</span>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 15, fontWeight: 900, color: s.color, lineHeight: 1.1 }}>{s.value}</div>
-                    <div style={{ fontSize: 8.5, color: '#94A3B8', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: 8, marginBottom: 12 }}>
-              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
-                style={{ background: `linear-gradient(155deg, ${primary}14, ${primary}05)`, borderRadius: 16, padding: '12px 10px', border: `1.5px solid ${primary}30`, textAlign: 'center', boxShadow: `0 3px 10px -6px ${primary}50` }}>
-                <div style={{ fontSize: 16, marginBottom: 2 }}>📋</div>
-                <div style={{ fontSize: 28, fontWeight: 900, color: primary, lineHeight: 1 }}>{counts.total}</div>
-                <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginTop: 4 }}>On Register</div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.05 }}
-                style={{ background: 'linear-gradient(155deg, #DCFCE7, #ECFDF5)', borderRadius: 16, padding: '12px 10px', border: '1.5px solid #86EFAC', textAlign: 'center', boxShadow: '0 3px 10px -6px rgba(22,163,74,0.35)' }}>
-                <div style={{ fontSize: 16, marginBottom: 2 }}>✅</div>
-                <div style={{ fontSize: 28, fontWeight: 900, color: '#15803D', lineHeight: 1 }}>{counts.signed_in}</div>
-                <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 700, marginTop: 4 }}>Signed In</div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.1 }}
-                style={{ background: 'linear-gradient(155deg, #FEF3C7, #FFFBEB)', borderRadius: 16, padding: '12px 10px', border: '1.5px solid #FCD34D', textAlign: 'center', boxShadow: '0 3px 10px -6px rgba(217,119,6,0.35)' }}>
-                <div style={{ fontSize: 16, marginBottom: 2 }}>⏳</div>
-                <div style={{ fontSize: 28, fontWeight: 900, color: '#D97706', lineHeight: 1 }}>{counts.expected}</div>
-                <div style={{ fontSize: 11, color: '#D97706', fontWeight: 700, marginTop: 4 }}>Yet to Arrive</div>
-              </motion.div>
-            </div>
-          )}
-
-          {/* Search + select toggle */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {/* Stats strip + search + select — one compact row */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: isMobile ? 8 : 12 }}>
+            {[
+              { icon: '📋', value: counts.total, label: 'On Register', color: primary },
+              { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A' },
+              { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
+            ].map(s => (
+              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: s.color + '10', border: `1.5px solid ${s.color}30`, flexShrink: 0 }}>
+                <span style={{ fontSize: 12 }}>{s.icon}</span>
+                <span style={{ fontSize: 13, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#64748B', whiteSpace: 'nowrap' }}>{s.label}</span>
+              </div>
+            ))}
+            <div style={{ flex: 1, minWidth: 0 }} />
             <div ref={searchPopupRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setSearchOpen(v => !v)}
@@ -1234,7 +1207,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                     exit={{ opacity: 0, y: -6, scale: 0.97 }}
                     transition={{ duration: 0.16 }}
                     style={{
-                      position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 40,
+                      position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 40,
                       width: isMobile ? 'min(84vw, 320px)' : 300,
                       background: '#fff', border: '1px solid #EEF1F6', borderRadius: 14,
                       boxShadow: '0 16px 40px -12px rgba(15,23,42,0.25)', padding: 10,
