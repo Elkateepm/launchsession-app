@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { motion, useDragControls } from 'framer-motion'
+import { motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
@@ -938,6 +938,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const { attendance } = useAttendance(session?.id)
 
   const [search, setSearch] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchPopupRef = useRef(null)
   const [activeGroup, setActiveGroup] = useState('all')
   const [selectedChild, setSelectedChild] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -978,6 +980,12 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   // Triggered by the mobile Launch menu's "Add Child" quick action — opens the same
   // Add Child modal a person would reach via the header button, just pre-opened.
   useEffect(() => { if (autoOpenAdd) setShowAdd(true) }, [autoOpenAdd])
+  useEffect(() => {
+    if (!searchOpen) return
+    const onDocClick = e => { if (searchPopupRef.current && !searchPopupRef.current.contains(e.target)) setSearchOpen(false) }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [searchOpen])
 
   const getAttRec = (id) => attendance.find(a => a.child_id === id)
   const getStatus = (id) => getAttRec(id)?.status || 'unmarked'
@@ -1067,7 +1075,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
     return nameOk && groupOk
   })
 
-  const attendanceRate = counts.total > 0 ? Math.round((counts.signed_in / counts.total) * 100) : 0
 
   // Session status for the header badge — must agree with Hub and the session
   // detail panel: closed_at (actually closed) takes priority over the scheduled
@@ -1199,37 +1206,65 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             </div>
           )}
 
-          {/* Attendance bar */}
-          {counts.total > 0 && (
-            <div style={{ marginBottom: isMobile ? 6 : 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700 }}>Attendance</span>
-                <span style={{ fontSize: 11, fontWeight: 800, color: primary }}>{attendanceRate}%</span>
-              </div>
-              <div style={{ height: isMobile ? 6 : 8, background: '#F3F4F6', borderRadius: 99, overflow: 'hidden' }}>
-                <motion.div initial={{ width: 0 }} animate={{ width: `${attendanceRate}%` }} transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-                  style={{ height: '100%', background: `linear-gradient(90deg, ${primary}, #16A34A)`, borderRadius: 99 }} />
-              </div>
-            </div>
-          )}
-
           {/* Search + select toggle */}
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>🔍</span>
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search by name..."
-                style={{ width: '100%', boxSizing: 'border-box', padding: isMobile ? '8px 10px 8px 32px' : '9px 12px 9px 36px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
-                onFocus={e => e.target.style.borderColor = primary}
-                onBlur={e => e.target.style.borderColor = primary + '25'}
-              />
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div ref={searchPopupRef} style={{ position: 'relative' }}>
+              <button
+                onClick={() => setSearchOpen(v => !v)}
+                aria-label="Search"
+                style={{
+                  width: isMobile ? 38 : 40, height: isMobile ? 38 : 40, borderRadius: 10, flexShrink: 0,
+                  border: `1.5px solid ${searchOpen || search ? primary : '#E2E8F0'}`,
+                  background: searchOpen || search ? primary + '10' : '#fff',
+                  color: searchOpen || search ? primary : '#6B7280',
+                  fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  position: 'relative',
+                }}
+              >
+                🔍
+                {search && !searchOpen && (
+                  <span style={{ position: 'absolute', top: -3, right: -3, width: 8, height: 8, borderRadius: '50%', background: primary, border: '1.5px solid #fff' }} />
+                )}
+              </button>
+              <AnimatePresence>
+                {searchOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                    transition={{ duration: 0.16 }}
+                    style={{
+                      position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 40,
+                      width: isMobile ? 'min(84vw, 320px)' : 300,
+                      background: '#fff', border: '1px solid #EEF1F6', borderRadius: 14,
+                      boxShadow: '0 16px 40px -12px rgba(15,23,42,0.25)', padding: 10,
+                    }}
+                  >
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>🔍</span>
+                      <input
+                        autoFocus
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Escape') setSearchOpen(false) }}
+                        placeholder="Search by name..."
+                        style={{ width: '100%', boxSizing: 'border-box', padding: '9px 32px 9px 32px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
+                        onFocus={e => e.target.style.borderColor = primary}
+                        onBlur={e => e.target.style.borderColor = primary + '25'}
+                      />
+                      {search && (
+                        <button onClick={() => setSearch('')} aria-label="Clear search"
+                          style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: '#F1F5F9', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10, color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <button
               onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
               style={{
-                padding: '0 14px', borderRadius: 10, border: `1.5px solid ${selectMode ? primary : '#E5E7EB'}`,
+                padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : '#E5E7EB'}`,
                 background: selectMode ? primary : '#fff', color: selectMode ? '#fff' : '#6B7280',
                 fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
               }}
