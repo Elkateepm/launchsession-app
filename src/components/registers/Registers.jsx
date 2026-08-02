@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { motion, AnimatePresence, useDragControls } from 'framer-motion'
+import { motion, useDragControls } from 'framer-motion'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
@@ -808,12 +808,18 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 
 
 // ─── CHILD CARD ───────────────────────────────────────────────
-function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, selectMode, onToggleSelect }) {
+function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, selectMode, onToggleSelect, dark }) {
   const bColor = bubble?.color || primary || '#1B9AAA'
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const [hovered, setHovered] = React.useState(false)
 
-  const statusConfig = {
+  const statusConfig = dark ? {
+    signed_in:  { label: 'In',          bg: 'rgba(34,197,94,0.16)', color: '#4ADE80', dot: '#22C55E' },
+    signed_out: { label: 'Out',         bg: 'rgba(59,130,246,0.16)', color: '#60A5FA', dot: '#3B82F6' },
+    absent:     { label: 'Absent',      bg: 'rgba(239,68,68,0.16)', color: '#F87171', dot: '#EF4444' },
+    expected:   { label: 'Expected',    bg: 'rgba(255,255,255,0.06)', color: '#94A3B8', dot: '#CBD5E1' },
+    unmarked:   { label: 'Not marked',  bg: 'rgba(255,255,255,0.06)', color: '#94A3B8', dot: '#CBD5E1' },
+  } : {
     signed_in:  { label: 'In',          bg: 'linear-gradient(135deg,#DCFCE7,#BBF7D0)', color: '#15803D', dot: '#16A34A' },
     signed_out: { label: 'Out',         bg: 'linear-gradient(135deg,#DBEAFE,#BFDBFE)', color: '#1D4ED8', dot: '#2563EB' },
     absent:     { label: 'Absent',      bg: 'linear-gradient(135deg,#FEE2E2,#FECACA)', color: '#B91C1C', dot: '#DC2626' },
@@ -837,22 +843,26 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
         gap: 12,
         padding: '10px 14px 10px 18px',
         overflow: 'hidden',
-        background: selected ? `${primary}14` : hovered ? `${bColor}14` : `${bColor}08`,
-        border: `1.5px solid ${selected ? primary + '45' : hovered ? bColor + '38' : bColor + '20'}`,
+        background: dark
+          ? (selected ? `${primary}22` : hovered ? 'rgba(255,255,255,0.06)' : '#161A30')
+          : (selected ? `${primary}14` : hovered ? `${bColor}14` : `${bColor}08`),
+        border: dark
+          ? `1px solid ${selected ? primary + '55' : 'rgba(255,255,255,0.08)'}`
+          : `1.5px solid ${selected ? primary + '45' : hovered ? bColor + '38' : bColor + '20'}`,
         borderRadius: 16,
         cursor: 'pointer',
         transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s',
-        boxShadow: hovered ? `0 6px 16px -8px ${bColor}55` : '0 1px 3px rgba(0,0,0,0.04)',
+        boxShadow: hovered ? `0 6px 16px -8px ${bColor}55` : (dark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)'),
         transform: hovered ? 'translateY(-1px)' : 'none',
       }}
     >
       {/* Group colour accent bar */}
-      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 5, background: bColor }} />
+      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: bColor }} />
 
       {/* Checkbox — only shown once "Select" mode is switched on */}
       {selectMode && (
         <button onClick={e => { e.stopPropagation(); onToggleSelect(child.id) }}
-          style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : '#D1D5DB'}`, background: selected ? primary : '#fff', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
+          style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : (dark ? 'rgba(255,255,255,0.25)' : '#D1D5DB')}`, background: selected ? primary : (dark ? 'transparent' : '#fff'), cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
           {selected ? '✓' : ''}
         </button>
       )}
@@ -863,30 +873,36 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
           {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: dark ? '#F1F5F9' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {child.first_name} {child.last_name}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: bColor, borderRadius: 99, padding: '1px 8px' }}>{bubble?.label || 'Ungrouped'}</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: dark ? bColor : '#fff', background: dark ? 'transparent' : bColor, borderRadius: 99, padding: dark ? '1px 0' : '1px 8px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              {dark && <span style={{ width: 6, height: 6, borderRadius: '50%', background: bColor, display: 'inline-block' }} />}
+              {bubble?.label || 'Ungrouped'}
+            </span>
             {child.allergies && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#D97706', background: 'linear-gradient(135deg,#FEF3C7,#FDE68A)', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#FBBF24' : '#D97706', background: dark ? 'rgba(251,191,36,0.14)' : 'linear-gradient(135deg,#FEF3C7,#FDE68A)', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
             )}
             {child.medical_notes && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#DC2626', background: 'linear-gradient(135deg,#FEE2E2,#FECACA)', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#F87171' : '#DC2626', background: dark ? 'rgba(248,113,113,0.14)' : 'linear-gradient(135deg,#FEE2E2,#FECACA)', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Status badge — tappable during live session (not in select mode) */}
-      <div
-        onClick={e => { e.stopPropagation(); if (onMark) onMark() }}
-        style={{ display: 'flex', alignItems: 'center', gap: 5, background: sc.bg, borderRadius: 99, padding: '5px 12px', flexShrink: 0, cursor: onMark ? 'pointer' : 'default', transition: 'transform 0.12s', boxShadow: status === 'signed_in' || status === 'signed_out' || status === 'absent' ? '0 2px 6px -3px rgba(0,0,0,0.25)' : 'none' }}
-        onMouseEnter={e => { if (onMark) e.currentTarget.style.transform = 'scale(1.06)' }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
-      >
-        <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.dot }} />
-        <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
+      {/* Status + chevron */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <div
+          onClick={e => { e.stopPropagation(); if (onMark) onMark() }}
+          style={{ display: 'flex', alignItems: 'center', gap: 5, background: dark ? 'transparent' : sc.bg, borderRadius: 99, padding: dark ? '5px 0' : '5px 12px', cursor: onMark ? 'pointer' : 'default', transition: 'transform 0.12s', boxShadow: !dark && (status === 'signed_in' || status === 'signed_out' || status === 'absent') ? '0 2px 6px -3px rgba(0,0,0,0.25)' : 'none' }}
+          onMouseEnter={e => { if (onMark) e.currentTarget.style.transform = 'scale(1.06)' }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
+        >
+          <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.dot }} />
+          <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
+        </div>
+        {dark && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>›</span>}
       </div>
     </motion.div>
   )
@@ -1094,8 +1110,24 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
     return { label: '● Upcoming', bg: '#FEF9C3', color: '#92400E' }
   })()
 
+  // Dark theme tokens — scoped to the Registers page only.
+  const dk = {
+    pageBg: 'linear-gradient(180deg, #0A0D1C 0%, #12152A 100%)',
+    headerBg: 'linear-gradient(165deg, #171B33 0%, #10132400 60%)',
+    cardBg: '#161A30',
+    cardBorder: 'rgba(255,255,255,0.08)',
+    cardBorderHi: 'rgba(255,255,255,0.14)',
+    text: '#F1F5F9',
+    textSub: '#94A3B8',
+    textMuted: '#64748B',
+    inputBg: '#12152A',
+  }
+  const actionColors = {
+    past: '#8B5CF6', medical: '#3B82F6', groups: '#14B8A6', print: '#A855F7', import: '#EC4899',
+  }
+
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#F8FAFC' }}>
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: dk.pageBg }}>
 
       {/* TOAST */}
       {toast && (
@@ -1108,149 +1140,113 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* HEADER */}
-        <div style={{ background: `linear-gradient(165deg, ${primary}0A 0%, #fff 55%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '12px 16px 8px' : '18px 20px 12px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: dk.headerBg, borderBottom: `1px solid ${dk.cardBorder}`, padding: isMobile ? '14px 16px 10px' : '20px 20px 14px', flexShrink: 0, position: 'relative' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}44, transparent)` }} />
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: isMobile ? 8 : 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 9 : 12, minWidth: 0 }}>
-              <div style={{ width: isMobile ? 32 : 42, height: isMobile ? 32 : 42, borderRadius: isMobile ? 10 : 13, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 15 : 19, flexShrink: 0, boxShadow: `0 4px 14px -5px ${primary}90` }}>
-                <img src="/icons/registers-icon.png" alt="" style={{ width: isMobile ? 22 : 28, height: isMobile ? 22 : 28, objectFit: 'contain' }} />
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: isMobile ? 10 : 16, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 10 : 12, minWidth: 0 }}>
+              <div style={{ width: isMobile ? 40 : 46, height: isMobile ? 40 : 46, borderRadius: isMobile ? 12 : 14, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 16px -5px ${primary}90` }}>
+                <img src="/icons/registers-icon.png" alt="" style={{ width: isMobile ? 24 : 28, height: isMobile ? 24 : 28, objectFit: 'contain' }} />
               </div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 3 : 5, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: '#0B1220', fontFamily: 'var(--font-display)', letterSpacing: -0.3 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: isMobile ? 22 : 26, fontWeight: 900, color: dk.text, fontFamily: 'var(--font-display)', letterSpacing: -0.5 }}>
                     {session?.title || 'Register'}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', borderRadius: 99, padding: '3px 9px 3px 7px', background: registerSessionStatus.bg, color: registerSessionStatus.color }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: registerSessionStatus.color, flexShrink: 0 }} />
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', borderRadius: 99, padding: '3px 9px 3px 7px', background: 'rgba(255,255,255,0.08)', color: dk.textSub }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: registerSessionStatus.color === '#9CA3AF' ? '#94A3B8' : registerSessionStatus.color, flexShrink: 0 }} />
                     {registerSessionStatus.label.replace('● ', '')}
                   </span>
                 </div>
-                {session && (
-                  <div style={{ display: 'flex', gap: isMobile ? 4 : 6, flexWrap: 'wrap' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: isMobile ? 10.5 : 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 7, padding: isMobile ? '2px 7px' : '3px 9px' }}>
-                      📅 {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                <div style={{ fontSize: isMobile ? 12 : 13, color: dk.textMuted, fontWeight: 600 }}>
+                  {session ? (
+                    <span>
+                      {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      {session.start_time ? ` · ${session.start_time}${session.end_time ? `–${session.end_time}` : ''}` : ''}
+                      {session.location && !isMobile ? ` · ${session.location.split(',')[0]}` : ''}
                     </span>
-                    {session.start_time && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: isMobile ? 10.5 : 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 7, padding: isMobile ? '2px 7px' : '3px 9px' }}>
-                        🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}
-                      </span>
-                    )}
-                    {session.location && !isMobile && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 7, padding: '3px 9px' }}>
-                        📍 {session.location.split(',')[0]}
-                      </span>
-                    )}
-                  </div>
-                )}
+                  ) : 'Manage attendance with ease'}
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: isMobile ? 4 : 6, alignItems: 'center', width: isMobile ? '100%' : undefined, justifyContent: isMobile ? 'space-between' : undefined, flexShrink: isMobile ? undefined : 0 }}>
-              {[
-                { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
-                { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
-                { key: 'groups', label: 'Manage Groups', icon: '/icons/manage-groups-icon.png', onClick: () => setShowGroupsSetup(true) },
-                { key: 'print', label: 'Print Register', icon: '/icons/print-register-icon.png', onClick: () => handlePrint() },
-                { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
-              ].map(a => (
-                <button key={a.key} onClick={a.onClick} aria-label={a.label}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, flex: isMobile ? '1 1 0' : '0 0 auto', minWidth: 0, width: isMobile ? undefined : 82, height: isMobile ? 68 : 80, boxSizing: 'border-box', padding: '3px 1px', borderRadius: 12, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 8.5 : 10, fontWeight: 800, cursor: 'pointer', boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', textAlign: 'center', lineHeight: 1.15 }}>
-                  <img src={a.icon} alt="" style={{ width: isMobile ? 48 : 52, height: isMobile ? 48 : 52, objectFit: 'contain', flexShrink: 0, marginBottom: -4 }} />
-                  <span style={{ maxWidth: isMobile ? 62 : 74 }}>{a.label}</span>
-                </button>
-              ))}
             </div>
           </div>
 
-          {/* Stats strip + search + select — one compact row */}
-          <div ref={searchPopupRef}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: isMobile ? 8 : 12 }}>
-              {[
-                { icon: '📋', value: counts.total, label: 'On Register', color: primary },
-                { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A' },
-                { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
-              ].map(s => (
-                <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: s.color + '10', border: `1.5px solid ${s.color}30`, flexShrink: 0 }}>
-                  <span style={{ fontSize: 12 }}>{s.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#64748B', whiteSpace: 'nowrap' }}>{s.label}</span>
+          {/* 5 action buttons — colour-coded */}
+          <div style={{ display: 'flex', gap: isMobile ? 6 : 8, alignItems: 'center', width: '100%', marginBottom: isMobile ? 10 : 14 }}>
+            {[
+              { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
+              { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
+              { key: 'groups', label: 'Manage Groups', icon: '/icons/manage-groups-icon.png', onClick: () => setShowGroupsSetup(true) },
+              { key: 'print', label: 'Print Register', icon: '/icons/print-register-icon.png', onClick: () => handlePrint() },
+              { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
+            ].map(a => {
+              const c = actionColors[a.key]
+              return (
+                <button key={a.key} onClick={a.onClick} aria-label={a.label}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, flex: '1 1 0', minWidth: 0, height: isMobile ? 76 : 88, boxSizing: 'border-box', padding: '3px 1px', borderRadius: 14, border: `1px solid ${c}3A`, background: `linear-gradient(160deg, ${c}30, ${c}12)`, color: dk.text, fontSize: isMobile ? 8.5 : 10, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 14px -8px ${c}80`, textAlign: 'center', lineHeight: 1.15 }}>
+                  <img src={a.icon} alt="" style={{ width: isMobile ? 44 : 50, height: isMobile ? 44 : 50, objectFit: 'contain', flexShrink: 0, marginBottom: -2 }} />
+                  <span style={{ maxWidth: isMobile ? 62 : 74 }}>{a.label}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Stats card — On Register / Signed In / Yet to Arrive / Select */}
+          <div style={{ display: 'flex', alignItems: 'center', background: dk.cardBg, border: `1px solid ${dk.cardBorder}`, borderRadius: 16, padding: isMobile ? '10px 12px' : '12px 16px', marginBottom: isMobile ? 8 : 12, gap: isMobile ? 6 : 10 }}>
+            {[
+              { icon: '👥', value: counts.total, label: 'On Register', color: primary },
+              { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#22C55E' },
+              { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#F59E0B' },
+            ].map(s => (
+              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                <div style={{ width: isMobile ? 30 : 34, height: isMobile ? 30 : 34, borderRadius: '50%', background: s.color + '26', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 13 : 15, flexShrink: 0 }}>{s.icon}</div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 900, color: dk.text, lineHeight: 1.1 }}>{s.value}</div>
+                  <div style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 700, color: dk.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
                 </div>
-              ))}
-              <div style={{ flex: 1, minWidth: 0 }} />
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-                <button
-                  onClick={() => setSearchOpen(v => !v)}
-                  aria-label="Search"
-                  style={{
-                    width: isMobile ? 38 : 40, height: isMobile ? 38 : 40, borderRadius: 10, flexShrink: 0,
-                    border: `1.5px solid ${searchOpen || search ? primary : '#E2E8F0'}`,
-                    background: searchOpen || search ? primary + '10' : '#fff',
-                    color: searchOpen || search ? primary : '#6B7280',
-                    fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    position: 'relative',
-                  }}
-                >
-                  🔍
-                  {search && !searchOpen && (
-                    <span style={{ position: 'absolute', top: -3, right: -3, width: 8, height: 8, borderRadius: '50%', background: primary, border: '1.5px solid #fff' }} />
-                  )}
-                </button>
-                <button
-                  onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
-                  style={{
-                    padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : '#E5E7EB'}`,
-                    background: selectMode ? primary : '#fff', color: selectMode ? '#fff' : '#6B7280',
-                    fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                  }}
-                >
-                  {selectMode ? 'Cancel' : 'Select'}
-                </button>
               </div>
-            </div>
-            <AnimatePresence initial={false}>
-              {searchOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-                  style={{ overflow: 'hidden' }}
-                >
-                  <div style={{ position: 'relative', marginBottom: isMobile ? 8 : 12 }}>
-                    <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>🔍</span>
-                    <input
-                      autoFocus
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Escape') setSearchOpen(false) }}
-                      placeholder="Search by name..."
-                      style={{ width: '100%', boxSizing: 'border-box', padding: '10px 32px 10px 34px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
-                      onFocus={e => e.target.style.borderColor = primary}
-                      onBlur={e => e.target.style.borderColor = primary + '25'}
-                    />
-                    {search && (
-                      <button onClick={() => setSearch('')} aria-label="Clear search"
-                        style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: '#F1F5F9', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10, color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            ))}
+            <button
+              onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}
+            >
+              <div style={{ width: isMobile ? 30 : 34, height: isMobile ? 30 : 34, borderRadius: '50%', background: primary + '26', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 13 : 15, flexShrink: 0 }}>{selectMode ? '✕' : '☑️'}</div>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: isMobile ? 11.5 : 12.5, fontWeight: 800, color: primary, lineHeight: 1.1 }}>{selectMode ? 'Cancel' : 'Select'}</div>
+              </div>
+            </button>
+          </div>
+
+          {/* Search bar */}
+          <div ref={searchPopupRef} style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: dk.textMuted }}>🔍</span>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search children..."
+              style={{ width: '100%', boxSizing: 'border-box', padding: isMobile ? '11px 32px 11px 38px' : '12px 32px 12px 40px', borderRadius: 12, border: `1px solid ${dk.cardBorder}`, background: dk.inputBg, color: dk.text, fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
+              onFocus={e => e.target.style.borderColor = primary}
+              onBlur={e => e.target.style.borderColor = dk.cardBorder}
+            />
+            {search && (
+              <button onClick={() => setSearch('')} aria-label="Clear search"
+                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'rgba(255,255,255,0.1)', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 11, color: dk.textSub, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+            )}
           </div>
         </div>
 
         {/* GROUP FILTER */}
         {availableGroups.length > 1 && (
-          <div style={{ display: 'flex', gap: 6, padding: '10px 16px', background: '#fff', borderBottom: '1px solid #F3F4F6', overflowX: 'auto', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 6, padding: '12px 16px', background: 'transparent', borderBottom: `1px solid ${dk.cardBorder}`, overflowX: 'auto', flexShrink: 0 }}>
             {['all', ...availableGroups].map(g => {
               const bubble = g === 'all' ? null : bubbles.find(b => b.label.toLowerCase() === g.toLowerCase())
               const isActive = activeGroup === g
               const chipColor = bubble?.color || primary
               return (
                 <button key={g} onClick={() => setActiveGroup(g)} style={{
-                  padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${isActive ? chipColor : '#E5E7EB'}`,
-                  background: isActive ? `linear-gradient(135deg, ${chipColor}, ${chipColor}CC)` : '#fff',
-                  color: isActive ? '#fff' : '#6B7280',
+                  padding: '7px 14px', borderRadius: 99, border: `1px solid ${isActive ? chipColor : dk.cardBorder}`,
+                  background: isActive ? `linear-gradient(135deg, ${chipColor}, ${chipColor}CC)` : dk.cardBg,
+                  color: isActive ? '#fff' : dk.textSub,
                   fontSize: 12, fontWeight: isActive ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                   display: 'flex', alignItems: 'center', gap: 5,
                   boxShadow: isActive ? `0 3px 10px -4px ${chipColor}90` : 'none',
@@ -1268,20 +1264,20 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
         )}
 
         {/* CHILDREN LIST */}
-        <div style={{ flex: 1, overflowY: 'auto', background: '#F8FAFC', padding: isMobile ? '10px 10px' : '12px 14px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', background: 'transparent', padding: isMobile ? '10px 10px' : '12px 14px' }}>
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontWeight: 600 }}>Loading register...</div>
+            <div style={{ padding: 40, textAlign: 'center', color: dk.textSub, fontWeight: 600 }}>Loading register...</div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: 60, textAlign: 'center' }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>👧</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#374151', marginBottom: 6 }}>{children.length === 0 ? 'No children yet' : 'No matches'}</div>
-              <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 16 }}>{children.length === 0 ? 'Add or import children to get started' : 'Try a different search or filter'}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: dk.text, marginBottom: 6 }}>{children.length === 0 ? 'No children yet' : 'No matches'}</div>
+              <div style={{ fontSize: 13, color: dk.textSub, marginBottom: 16 }}>{children.length === 0 ? 'Add or import children to get started' : 'Try a different search or filter'}</div>
               {children.length === 0 && (
                 <button onClick={() => setShowImport(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>📥 Import Children</button>
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {filtered.map(child => (
                 <ChildCard
                   key={child.id}
@@ -1294,6 +1290,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   onToggleSelect={toggleSelect}
                   onClick={() => selectMode ? toggleSelect(child.id) : setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
                   onMark={null}
+                  dark
                 />
               ))}
             </div>
