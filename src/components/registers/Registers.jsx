@@ -1145,7 +1145,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 )}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: isMobile ? '100%' : undefined, justifyContent: isMobile ? 'space-between' : undefined, flexShrink: isMobile ? undefined : 0 }}>
+            <div style={{ display: 'flex', gap: isMobile ? 6 : 8, alignItems: 'center', width: isMobile ? '100%' : undefined, overflowX: isMobile ? 'auto' : undefined, WebkitOverflowScrolling: 'touch', flexShrink: isMobile ? undefined : 0 }}>
               {[
                 { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
                 { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
