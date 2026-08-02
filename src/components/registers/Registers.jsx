@@ -1137,29 +1137,22 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 )}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              <button onClick={() => setShowPastRegisters(true)} aria-label="Past Registers"
-                style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 56 : 62, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
-                <img src="/icons/past-registers-icon.png" alt="" style={{ width: isMobile ? 54 : 60, height: isMobile ? 54 : 60, objectFit: 'contain', flexShrink: 0 }} />
-                {!isMobile && <span>Past Registers</span>}
-              </button>
-              <button onClick={() => onNavigate && onNavigate('medical_alerts')} aria-label="Medical Alerts"
-                style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 56 : 62, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
-                <img src="/icons/medical-icon.png" alt="" style={{ width: isMobile ? 54 : 60, height: isMobile ? 54 : 60, objectFit: 'contain', flexShrink: 0 }} />
-                {!isMobile && <span>Medical Alerts</span>}
-              </button>
-              <button onClick={() => setShowGroupsSetup(true)} aria-label="Manage Groups"
-                style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 56 : 62, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
-                <img src="/icons/manage-groups-icon.png" alt="" style={{ width: isMobile ? 54 : 60, height: isMobile ? 54 : 60, objectFit: 'contain', flexShrink: 0 }} />
-                {!isMobile && <span>Manage Groups</span>}
-              </button>
-              <button onClick={() => handlePrint()} aria-label="Print Register"
-                style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 56 : 62, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
-                <img src="/icons/print-register-icon.png" alt="" style={{ width: isMobile ? 54 : 60, height: isMobile ? 54 : 60, objectFit: 'contain', flexShrink: 0 }} />
-                {!isMobile && <span>Print Register</span>}
-              </button>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
+              {[
+                { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
+                { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
+                { key: 'groups', label: 'Manage Groups', icon: '/icons/manage-groups-icon.png', onClick: () => setShowGroupsSetup(true) },
+                { key: 'print', label: 'Print Register', icon: '/icons/print-register-icon.png', onClick: () => handlePrint() },
+                { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
+              ].map(a => (
+                <button key={a.key} onClick={a.onClick} aria-label={a.label}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 44 : 48, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
+                  <img src={a.icon} alt="" style={{ width: isMobile ? 30 : 32, height: isMobile ? 30 : 32, objectFit: 'contain', flexShrink: 0 }} />
+                  {!isMobile && <span>{a.label}</span>}
+                </button>
+              ))}
               {isMobile && (
-                <button onClick={() => setShowMobileTools(true)} aria-label="More register tools" style={{ width: 32, height: 32, borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
+                <button onClick={() => setShowMobileTools(true)} aria-label="More register tools" style={{ width: 44, height: 44, borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
                   ⋯
                 </button>
               )}
