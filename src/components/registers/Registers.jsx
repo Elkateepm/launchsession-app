@@ -1145,7 +1145,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 )}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : undefined, flexShrink: isMobile ? undefined : 0 }}>
+            <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : undefined, justifyContent: isMobile ? 'space-between' : undefined, flexShrink: isMobile ? undefined : 0 }}>
               {[
                 { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
                 { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
@@ -1154,7 +1154,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
               ].map(a => (
                 <button key={a.key} onClick={a.onClick} aria-label={a.label}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flex: isMobile ? '1 1 0' : '0 0 auto', minWidth: 0, height: isMobile ? 72 : 78, padding: isMobile ? '0 4px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flex: '0 0 auto', height: isMobile ? 68 : 78, padding: isMobile ? 4 : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
                   <img src={a.icon} alt="" style={{ width: isMobile ? 60 : 64, height: isMobile ? 60 : 64, objectFit: 'contain', flexShrink: 0 }} />
                   {!isMobile && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.label}</span>}
                 </button>
