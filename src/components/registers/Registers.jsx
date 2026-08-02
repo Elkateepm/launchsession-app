@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { motion, AnimatePresence, useDragControls } from 'framer-motion'
+import { motion, useDragControls } from 'framer-motion'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useTodaySession, useAttendance, useChildren, useOnlineStatus } from '../../lib/hooks'
@@ -956,8 +956,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const showOfflineBanner = !isOnline || childrenFromCache || sessionFromCache
 
   const [search, setSearch] = useState('')
-  const [searchOpen, setSearchOpen] = useState(false)
-  const searchPopupRef = useRef(null)
   const [activeGroup, setActiveGroup] = useState('all')
   const [selectedChild, setSelectedChild] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -1005,12 +1003,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   // Triggered by the mobile Launch menu's "Add Child" quick action — opens the same
   // Add Child modal a person would reach via the header button, just pre-opened.
   useEffect(() => { if (autoOpenAdd) setShowAdd(true) }, [autoOpenAdd])
-  useEffect(() => {
-    if (!searchOpen) return
-    const onDocClick = e => { if (searchPopupRef.current && !searchPopupRef.current.contains(e.target)) setSearchOpen(false) }
-    document.addEventListener('mousedown', onDocClick)
-    return () => document.removeEventListener('mousedown', onDocClick)
-  }, [searchOpen])
 
   const getAttRec = (id) => attendance.find(a => a.child_id === id)
   const getStatus = (id) => getAttRec(id)?.status || 'unmarked'
@@ -1221,7 +1213,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           </div>
 
           {/* Stats strip + search + select */}
-          <div ref={searchPopupRef}>
+          <div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: isMobile ? 8 : 10, marginBottom: isMobile ? 10 : 14 }}>
               {(session ? [
                 { icon: '📋', value: counts.total, label: 'On Register', color: primary },
@@ -1259,66 +1251,33 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               ))}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 8 : 12 }}>
-              <div style={{ flex: 1, minWidth: 0 }} />
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-                <button
-                  onClick={() => setSearchOpen(v => !v)}
-                  aria-label="Search"
-                  style={{
-                    width: isMobile ? 38 : 40, height: isMobile ? 38 : 40, borderRadius: 10, flexShrink: 0,
-                    border: `1.5px solid ${searchOpen || search ? primary : (darkMode ? 'rgba(255,255,255,0.12)' : '#E2E8F0')}`,
-                    background: searchOpen || search ? primary + '10' : (darkMode ? 'rgba(255,255,255,0.06)' : '#fff'),
-                    color: searchOpen || search ? primary : t.textSub,
-                    fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    position: 'relative',
-                  }}
-                >
-                  🔍
-                  {search && !searchOpen && (
-                    <span style={{ position: 'absolute', top: -3, right: -3, width: 8, height: 8, borderRadius: '50%', background: primary, border: '1.5px solid #fff' }} />
-                  )}
-                </button>
-                <button
-                  onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
-                  style={{
-                    padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.12)' : '#E5E7EB')}`,
-                    background: selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.06)' : '#fff'), color: selectMode ? '#fff' : t.textSub,
-                    fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                  }}
-                >
-                  {selectMode ? 'Cancel' : 'Select'}
-                </button>
+              <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: t.textMuted }}>🔍</span>
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Escape') setSearch('') }}
+                  placeholder="Search by name..."
+                  style={{ width: '100%', boxSizing: 'border-box', height: isMobile ? 38 : 40, padding: `0 32px 0 34px`, borderRadius: 10, border: `1.5px solid ${search ? primary : t.inputBorder}`, background: t.inputBg, color: t.text, fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
+                  onFocus={e => e.target.style.borderColor = primary}
+                  onBlur={e => e.target.style.borderColor = search ? primary : t.inputBorder}
+                />
+                {search && (
+                  <button onClick={() => setSearch('')} aria-label="Clear search"
+                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: darkMode ? 'rgba(255,255,255,0.1)' : '#F1F5F9', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10, color: t.textSub, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                )}
               </div>
+              <button
+                onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
+                style={{
+                  padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.12)' : '#E5E7EB')}`,
+                  background: selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.06)' : '#fff'), color: selectMode ? '#fff' : t.textSub,
+                  fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+              >
+                {selectMode ? 'Cancel' : 'Select'}
+              </button>
             </div>
-            <AnimatePresence initial={false}>
-              {searchOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-                  style={{ overflow: 'hidden' }}
-                >
-                  <div style={{ position: 'relative', marginBottom: isMobile ? 8 : 12 }}>
-                    <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: t.textMuted }}>🔍</span>
-                    <input
-                      autoFocus
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Escape') setSearchOpen(false) }}
-                      placeholder="Search by name..."
-                      style={{ width: '100%', boxSizing: 'border-box', padding: '10px 32px 10px 34px', borderRadius: 10, border: `1.5px solid ${t.inputBorder}`, background: t.inputBg, color: t.text, fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
-                      onFocus={e => e.target.style.borderColor = primary}
-                      onBlur={e => e.target.style.borderColor = t.inputBorder}
-                    />
-                    {search && (
-                      <button onClick={() => setSearch('')} aria-label="Clear search"
-                        style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: darkMode ? 'rgba(255,255,255,0.1)' : '#F1F5F9', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10, color: t.textSub, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </div>
 
