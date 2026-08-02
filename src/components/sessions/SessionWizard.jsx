@@ -92,7 +92,7 @@ const emptyForm = () => ({
 
 const ACCENT = '#6D5DF6'
 const card = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 16 }
-const inp = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)', color: 'var(--text)' }
+const inp = { width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)', color: 'var(--text)' }
 const label = { fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 5 }
 
 function SectionHeader({ icon, title, subtitle }) {
@@ -255,7 +255,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
         </div>
       )}
       <SectionHeader icon="🏃" title="What kind of session is this?" subtitle="This sets sensible defaults you can adjust later" />
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 12, minWidth: 0 }}>
         {WIZARD_TYPES.map(t => {
           const active = form.session_type === t.key
           return (
@@ -347,7 +347,7 @@ function StepDetails({ form, setForm, staff, org }) {
           <div><label style={label}>Session title *</label><input style={inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Football Skills Session" /></div>
           <div><label style={label}>Date *</label><input type="date" style={inp} value={form.session_date} onChange={e => set('session_date', e.target.value)} /></div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12 }}>
           <div><label style={label}>Start time *</label><input type="time" style={inp} value={form.start_time} onChange={e => onStartTimeChange(e.target.value)} /></div>
           <div><label style={label}>End time *</label><input type="time" style={inp} value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value, _endTouched: true }))} /></div>
         </div>
@@ -935,10 +935,10 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: compact ? 16 : 28, display: 'grid', gridTemplateColumns: showSidebar ? '1fr 300px' : '1fr', gap: 24, maxWidth: showSidebar ? 'none' : 720, margin: showSidebar ? 0 : '0 auto', width: '100%', boxSizing: 'border-box' }}>
-        <div>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: compact ? 16 : 28, display: 'grid', gridTemplateColumns: showSidebar ? '1fr 300px' : '1fr', gap: 24, maxWidth: showSidebar ? 'none' : 720, margin: showSidebar ? 0 : '0 auto', width: '100%', boxSizing: 'border-box' }}>
+        <div style={{ minWidth: 0 }}>
           <AnimatePresence mode="wait">
-            <motion.div key={step} initial={{ opacity: 0, x: 18, scale: 0.99 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: -18, scale: 0.99 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}>
+            <motion.div key={step} initial={{ opacity: 0, x: 18, scale: 0.99 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: -18, scale: 0.99 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} style={{ minWidth: 0 }}>
               {step === 1 && <StepType form={form} setForm={setForm} templates={templates} appliedTemplateId={appliedTemplateId} onApplyTemplate={applyTemplate} />}
               {step === 2 && <StepDetails form={form} setForm={setForm} staff={staff} org={org} />}
               {step === 3 && <StepPeople form={form} setForm={setForm} staff={staff} children={children} expectedCount={expectedCount} bubbleDefs={bubbleDefs} org={org} />}
