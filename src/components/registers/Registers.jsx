@@ -808,12 +808,18 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 
 
 // ─── CHILD CARD ───────────────────────────────────────────────
-function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, selectMode, onToggleSelect }) {
+function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, selectMode, onToggleSelect, dark }) {
   const bColor = bubble?.color || primary || '#1B9AAA'
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const [hovered, setHovered] = React.useState(false)
 
-  const statusConfig = {
+  const statusConfig = dark ? {
+    signed_in:  { label: 'In',          bg: 'rgba(34,197,94,0.16)', color: '#4ADE80', dot: '#22C55E' },
+    signed_out: { label: 'Out',         bg: 'rgba(59,130,246,0.16)', color: '#60A5FA', dot: '#3B82F6' },
+    absent:     { label: 'Absent',      bg: 'rgba(239,68,68,0.16)', color: '#F87171', dot: '#EF4444' },
+    expected:   { label: 'Expected',    bg: 'rgba(255,255,255,0.06)', color: '#94A3B8', dot: '#CBD5E1' },
+    unmarked:   { label: 'Not marked',  bg: 'rgba(255,255,255,0.06)', color: '#94A3B8', dot: '#CBD5E1' },
+  } : {
     signed_in:  { label: 'In',          bg: 'linear-gradient(135deg,#DCFCE7,#BBF7D0)', color: '#15803D', dot: '#16A34A' },
     signed_out: { label: 'Out',         bg: 'linear-gradient(135deg,#DBEAFE,#BFDBFE)', color: '#1D4ED8', dot: '#2563EB' },
     absent:     { label: 'Absent',      bg: 'linear-gradient(135deg,#FEE2E2,#FECACA)', color: '#B91C1C', dot: '#DC2626' },
@@ -837,22 +843,26 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
         gap: 12,
         padding: '10px 14px 10px 18px',
         overflow: 'hidden',
-        background: selected ? `${primary}14` : hovered ? `${bColor}14` : `${bColor}08`,
-        border: `1.5px solid ${selected ? primary + '45' : hovered ? bColor + '38' : bColor + '20'}`,
+        background: dark
+          ? (selected ? `${primary}22` : hovered ? 'rgba(255,255,255,0.06)' : '#161A30')
+          : (selected ? `${primary}14` : hovered ? `${bColor}14` : `${bColor}08`),
+        border: dark
+          ? `1px solid ${selected ? primary + '55' : 'rgba(255,255,255,0.08)'}`
+          : `1.5px solid ${selected ? primary + '45' : hovered ? bColor + '38' : bColor + '20'}`,
         borderRadius: 16,
         cursor: 'pointer',
         transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s',
-        boxShadow: hovered ? `0 6px 16px -8px ${bColor}55` : '0 1px 3px rgba(0,0,0,0.04)',
+        boxShadow: hovered ? `0 6px 16px -8px ${bColor}55` : (dark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)'),
         transform: hovered ? 'translateY(-1px)' : 'none',
       }}
     >
       {/* Group colour accent bar */}
-      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 5, background: bColor }} />
+      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: dark ? 4 : 5, background: bColor }} />
 
       {/* Checkbox — only shown once "Select" mode is switched on */}
       {selectMode && (
         <button onClick={e => { e.stopPropagation(); onToggleSelect(child.id) }}
-          style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : '#D1D5DB'}`, background: selected ? primary : '#fff', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
+          style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : (dark ? 'rgba(255,255,255,0.25)' : '#D1D5DB')}`, background: selected ? primary : (dark ? 'transparent' : '#fff'), cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
           {selected ? '✓' : ''}
         </button>
       )}
@@ -863,30 +873,36 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
           {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: dark ? '#F1F5F9' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {child.first_name} {child.last_name}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: bColor, borderRadius: 99, padding: '1px 8px' }}>{bubble?.label || 'Ungrouped'}</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: dark ? bColor : '#fff', background: dark ? 'transparent' : bColor, borderRadius: 99, padding: dark ? '1px 0' : '1px 8px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              {dark && <span style={{ width: 6, height: 6, borderRadius: '50%', background: bColor, display: 'inline-block' }} />}
+              {bubble?.label || 'Ungrouped'}
+            </span>
             {child.allergies && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#D97706', background: 'linear-gradient(135deg,#FEF3C7,#FDE68A)', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#FBBF24' : '#D97706', background: dark ? 'rgba(251,191,36,0.14)' : 'linear-gradient(135deg,#FEF3C7,#FDE68A)', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
             )}
             {child.medical_notes && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#DC2626', background: 'linear-gradient(135deg,#FEE2E2,#FECACA)', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#F87171' : '#DC2626', background: dark ? 'rgba(248,113,113,0.14)' : 'linear-gradient(135deg,#FEE2E2,#FECACA)', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Status badge — tappable during live session (not in select mode) */}
-      <div
-        onClick={e => { e.stopPropagation(); if (onMark) onMark() }}
-        style={{ display: 'flex', alignItems: 'center', gap: 5, background: sc.bg, borderRadius: 99, padding: '5px 12px', flexShrink: 0, cursor: onMark ? 'pointer' : 'default', transition: 'transform 0.12s', boxShadow: status === 'signed_in' || status === 'signed_out' || status === 'absent' ? '0 2px 6px -3px rgba(0,0,0,0.25)' : 'none' }}
-        onMouseEnter={e => { if (onMark) e.currentTarget.style.transform = 'scale(1.06)' }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
-      >
-        <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.dot }} />
-        <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
+      {/* Status + chevron */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <div
+          onClick={e => { e.stopPropagation(); if (onMark) onMark() }}
+          style={{ display: 'flex', alignItems: 'center', gap: 5, background: dark ? 'transparent' : sc.bg, borderRadius: 99, padding: dark ? '5px 0' : '5px 12px', cursor: onMark ? 'pointer' : 'default', transition: 'transform 0.12s', boxShadow: !dark && (status === 'signed_in' || status === 'signed_out' || status === 'absent') ? '0 2px 6px -3px rgba(0,0,0,0.25)' : 'none' }}
+          onMouseEnter={e => { if (onMark) e.currentTarget.style.transform = 'scale(1.06)' }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
+        >
+          <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.dot }} />
+          <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
+        </div>
+        {dark && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>›</span>}
       </div>
     </motion.div>
   )
@@ -954,6 +970,12 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const [toast, setToast] = useState('')
   const [note, setNote] = useState('')
   const [showMobileTools, setShowMobileTools] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return localStorage.getItem('registerDarkMode') === '1' } catch { return false }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('registerDarkMode', darkMode ? '1' : '0') } catch {}
+  }, [darkMode])
   const [showPastRegisters, setShowPastRegisters] = useState(false)
   const [pastSessions, setPastSessions] = useState([])
   const [pastSessionsLoading, setPastSessionsLoading] = useState(false)
@@ -1094,8 +1116,32 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
     return { label: '● Upcoming', bg: '#FEF9C3', color: '#92400E' }
   })()
 
+  // Theme tokens — light values match the original design exactly; dark values
+  // only apply when the Dark Mode toggle (in Register Options) is switched on.
+  const t = {
+    pageBg: darkMode ? 'linear-gradient(180deg, #0A0D1C 0%, #12152A 100%)' : '#F8FAFC',
+    headerBg: darkMode ? 'linear-gradient(165deg, #171B33 0%, rgba(16,19,36,0) 60%)' : `linear-gradient(165deg, ${primary}0A 0%, #fff 55%)`,
+    headerBorder: darkMode ? 'rgba(255,255,255,0.08)' : '#EEF1F6',
+    text: darkMode ? '#F1F5F9' : '#0B1220',
+    textSub: darkMode ? '#94A3B8' : '#64748B',
+    textMuted: darkMode ? '#64748B' : '#9CA3AF',
+    miniChipBg: darkMode ? 'rgba(255,255,255,0.06)' : '#F8FAFC',
+    miniChipBorder: darkMode ? 'rgba(255,255,255,0.1)' : '#EEF1F6',
+    btnBg: darkMode ? null : '#fff',
+    btnBorder: darkMode ? null : '#E2E8F0',
+    btnShadow: darkMode ? null : '0 1px 4px -1px rgba(0,0,0,0.06)',
+    cardBg: darkMode ? '#161A30' : '#fff',
+    cardBorder: darkMode ? 'rgba(255,255,255,0.08)' : '#E5E7EB',
+    inputBg: darkMode ? '#12152A' : (primary + '06'),
+    inputBorder: darkMode ? 'rgba(255,255,255,0.1)' : (primary + '25'),
+    filterBg: darkMode ? 'transparent' : '#fff',
+    filterBorder: darkMode ? 'rgba(255,255,255,0.08)' : '#F3F4F6',
+    listBg: darkMode ? 'transparent' : '#F8FAFC',
+  }
+  const actionColors = { past: '#8B5CF6', medical: '#3B82F6', groups: '#14B8A6', print: '#A855F7', import: '#EC4899' }
+
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#F8FAFC' }}>
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: t.pageBg }}>
 
       {/* TOAST */}
       {toast && (
@@ -1108,7 +1154,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* HEADER */}
-        <div style={{ background: `linear-gradient(165deg, ${primary}0A 0%, #fff 55%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '12px 16px 8px' : '18px 20px 12px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: t.headerBg, borderBottom: `1px solid ${t.headerBorder}`, padding: isMobile ? '12px 16px 8px' : '18px 20px 12px', flexShrink: 0, position: 'relative' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}44, transparent)` }} />
 
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: isMobile ? 8 : 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
@@ -1118,26 +1164,26 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               </div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 3 : 5, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: '#0B1220', fontFamily: 'var(--font-display)', letterSpacing: -0.3 }}>
+                  <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: t.text, fontFamily: 'var(--font-display)', letterSpacing: -0.3 }}>
                     {session?.title || 'Register'}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', borderRadius: 99, padding: '3px 9px 3px 7px', background: registerSessionStatus.bg, color: registerSessionStatus.color }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', borderRadius: 99, padding: '3px 9px 3px 7px', background: darkMode ? 'rgba(255,255,255,0.08)' : registerSessionStatus.bg, color: darkMode ? t.textSub : registerSessionStatus.color }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: registerSessionStatus.color, flexShrink: 0 }} />
                     {registerSessionStatus.label.replace('● ', '')}
                   </span>
                 </div>
                 {session && (
                   <div style={{ display: 'flex', gap: isMobile ? 4 : 6, flexWrap: 'wrap' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: isMobile ? 10.5 : 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 7, padding: isMobile ? '2px 7px' : '3px 9px' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: isMobile ? 10.5 : 11.5, fontWeight: 600, color: t.textSub, background: t.miniChipBg, border: `1px solid ${t.miniChipBorder}`, borderRadius: 7, padding: isMobile ? '2px 7px' : '3px 9px' }}>
                       📅 {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
                     </span>
                     {session.start_time && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: isMobile ? 10.5 : 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 7, padding: isMobile ? '2px 7px' : '3px 9px' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: isMobile ? 10.5 : 11.5, fontWeight: 600, color: t.textSub, background: t.miniChipBg, border: `1px solid ${t.miniChipBorder}`, borderRadius: 7, padding: isMobile ? '2px 7px' : '3px 9px' }}>
                         🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}
                       </span>
                     )}
                     {session.location && !isMobile && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 600, color: '#64748B', background: '#F8FAFC', border: '1px solid #EEF1F6', borderRadius: 7, padding: '3px 9px' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 600, color: t.textSub, background: t.miniChipBg, border: `1px solid ${t.miniChipBorder}`, borderRadius: 7, padding: '3px 9px' }}>
                         📍 {session.location.split(',')[0]}
                       </span>
                     )}
@@ -1145,6 +1191,12 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 )}
               </div>
             </div>
+            {isMobile && (
+              <button onClick={() => setShowMobileTools(true)} aria-label="Register options"
+                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.12)' : '#E2E8F0'}`, background: darkMode ? 'rgba(255,255,255,0.06)' : '#fff', color: t.textSub, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                ⚙️
+              </button>
+            )}
             <div style={{ display: 'flex', gap: isMobile ? 4 : 6, alignItems: 'center', width: isMobile ? '100%' : undefined, justifyContent: isMobile ? 'space-between' : undefined, flexShrink: isMobile ? undefined : 0 }}>
               {[
                 { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
@@ -1152,13 +1204,16 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 { key: 'groups', label: 'Manage Groups', icon: '/icons/manage-groups-icon.png', onClick: () => setShowGroupsSetup(true) },
                 { key: 'print', label: 'Print Register', icon: '/icons/print-register-icon.png', onClick: () => handlePrint() },
                 { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
-              ].map(a => (
-                <button key={a.key} onClick={a.onClick} aria-label={a.label}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, flex: isMobile ? '1 1 0' : '0 0 auto', minWidth: 0, width: isMobile ? undefined : 82, height: isMobile ? 68 : 80, boxSizing: 'border-box', padding: '3px 1px', borderRadius: 12, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 8.5 : 10, fontWeight: 800, cursor: 'pointer', boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', textAlign: 'center', lineHeight: 1.15 }}>
-                  <img src={a.icon} alt="" style={{ width: isMobile ? 48 : 52, height: isMobile ? 48 : 52, objectFit: 'contain', flexShrink: 0, marginBottom: -4 }} />
-                  <span style={{ maxWidth: isMobile ? 62 : 74 }}>{a.label}</span>
-                </button>
-              ))}
+              ].map(a => {
+                const ac = actionColors[a.key]
+                return (
+                  <button key={a.key} onClick={a.onClick} aria-label={a.label}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, flex: isMobile ? '1 1 0' : '0 0 auto', minWidth: 0, width: isMobile ? undefined : 82, height: isMobile ? 68 : 80, boxSizing: 'border-box', padding: '3px 1px', borderRadius: 12, border: darkMode ? `1px solid ${ac}3A` : '1.5px solid #E2E8F0', background: darkMode ? `linear-gradient(160deg, ${ac}30, ${ac}12)` : '#fff', color: darkMode ? t.text : '#374151', fontSize: isMobile ? 8.5 : 10, fontWeight: 800, cursor: 'pointer', boxShadow: darkMode ? `0 4px 14px -8px ${ac}80` : '0 1px 4px -1px rgba(0,0,0,0.06)', textAlign: 'center', lineHeight: 1.15 }}>
+                    <img src={a.icon} alt="" style={{ width: isMobile ? 48 : 52, height: isMobile ? 48 : 52, objectFit: 'contain', flexShrink: 0, marginBottom: -4 }} />
+                    <span style={{ maxWidth: isMobile ? 62 : 74 }}>{a.label}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
@@ -1170,10 +1225,10 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A' },
                 { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
               ].map(s => (
-                <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: s.color + '10', border: `1.5px solid ${s.color}30`, flexShrink: 0 }}>
+                <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: s.color + (darkMode ? '1A' : '10'), border: `1.5px solid ${s.color}30`, flexShrink: 0 }}>
                   <span style={{ fontSize: 12 }}>{s.icon}</span>
                   <span style={{ fontSize: 13, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#64748B', whiteSpace: 'nowrap' }}>{s.label}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: t.textSub, whiteSpace: 'nowrap' }}>{s.label}</span>
                 </div>
               ))}
               <div style={{ flex: 1, minWidth: 0 }} />
@@ -1183,9 +1238,9 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   aria-label="Search"
                   style={{
                     width: isMobile ? 38 : 40, height: isMobile ? 38 : 40, borderRadius: 10, flexShrink: 0,
-                    border: `1.5px solid ${searchOpen || search ? primary : '#E2E8F0'}`,
-                    background: searchOpen || search ? primary + '10' : '#fff',
-                    color: searchOpen || search ? primary : '#6B7280',
+                    border: `1.5px solid ${searchOpen || search ? primary : (darkMode ? 'rgba(255,255,255,0.12)' : '#E2E8F0')}`,
+                    background: searchOpen || search ? primary + '10' : (darkMode ? 'rgba(255,255,255,0.06)' : '#fff'),
+                    color: searchOpen || search ? primary : t.textSub,
                     fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     position: 'relative',
                   }}
@@ -1198,8 +1253,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 <button
                   onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
                   style={{
-                    padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : '#E5E7EB'}`,
-                    background: selectMode ? primary : '#fff', color: selectMode ? '#fff' : '#6B7280',
+                    padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.12)' : '#E5E7EB')}`,
+                    background: selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.06)' : '#fff'), color: selectMode ? '#fff' : t.textSub,
                     fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                   }}
                 >
@@ -1217,20 +1272,20 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   style={{ overflow: 'hidden' }}
                 >
                   <div style={{ position: 'relative', marginBottom: isMobile ? 8 : 12 }}>
-                    <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>🔍</span>
+                    <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: t.textMuted }}>🔍</span>
                     <input
                       autoFocus
                       value={search}
                       onChange={e => setSearch(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Escape') setSearchOpen(false) }}
                       placeholder="Search by name..."
-                      style={{ width: '100%', boxSizing: 'border-box', padding: '10px 32px 10px 34px', borderRadius: 10, border: `1.5px solid ${primary}25`, background: primary + '06', fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
+                      style={{ width: '100%', boxSizing: 'border-box', padding: '10px 32px 10px 34px', borderRadius: 10, border: `1.5px solid ${t.inputBorder}`, background: t.inputBg, color: t.text, fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
                       onFocus={e => e.target.style.borderColor = primary}
-                      onBlur={e => e.target.style.borderColor = primary + '25'}
+                      onBlur={e => e.target.style.borderColor = t.inputBorder}
                     />
                     {search && (
                       <button onClick={() => setSearch('')} aria-label="Clear search"
-                        style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: '#F1F5F9', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10, color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                        style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: darkMode ? 'rgba(255,255,255,0.1)' : '#F1F5F9', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10, color: t.textSub, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                     )}
                   </div>
                 </motion.div>
@@ -1241,16 +1296,16 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
         {/* GROUP FILTER */}
         {availableGroups.length > 1 && (
-          <div style={{ display: 'flex', gap: 6, padding: '10px 16px', background: '#fff', borderBottom: '1px solid #F3F4F6', overflowX: 'auto', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 6, padding: '10px 16px', background: t.filterBg, borderBottom: `1px solid ${t.filterBorder}`, overflowX: 'auto', flexShrink: 0 }}>
             {['all', ...availableGroups].map(g => {
               const bubble = g === 'all' ? null : bubbles.find(b => b.label.toLowerCase() === g.toLowerCase())
               const isActive = activeGroup === g
               const chipColor = bubble?.color || primary
               return (
                 <button key={g} onClick={() => setActiveGroup(g)} style={{
-                  padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${isActive ? chipColor : '#E5E7EB'}`,
-                  background: isActive ? `linear-gradient(135deg, ${chipColor}, ${chipColor}CC)` : '#fff',
-                  color: isActive ? '#fff' : '#6B7280',
+                  padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${isActive ? chipColor : (darkMode ? 'rgba(255,255,255,0.1)' : '#E5E7EB')}`,
+                  background: isActive ? `linear-gradient(135deg, ${chipColor}, ${chipColor}CC)` : (darkMode ? '#161A30' : '#fff'),
+                  color: isActive ? '#fff' : t.textSub,
                   fontSize: 12, fontWeight: isActive ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                   display: 'flex', alignItems: 'center', gap: 5,
                   boxShadow: isActive ? `0 3px 10px -4px ${chipColor}90` : 'none',
@@ -1268,14 +1323,14 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
         )}
 
         {/* CHILDREN LIST */}
-        <div style={{ flex: 1, overflowY: 'auto', background: '#F8FAFC', padding: isMobile ? '10px 10px' : '12px 14px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', background: t.listBg, padding: isMobile ? '10px 10px' : '12px 14px' }}>
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontWeight: 600 }}>Loading register...</div>
+            <div style={{ padding: 40, textAlign: 'center', color: t.textMuted, fontWeight: 600 }}>Loading register...</div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: 60, textAlign: 'center' }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>👧</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#374151', marginBottom: 6 }}>{children.length === 0 ? 'No children yet' : 'No matches'}</div>
-              <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 16 }}>{children.length === 0 ? 'Add or import children to get started' : 'Try a different search or filter'}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: t.text, marginBottom: 6 }}>{children.length === 0 ? 'No children yet' : 'No matches'}</div>
+              <div style={{ fontSize: 13, color: t.textMuted, marginBottom: 16 }}>{children.length === 0 ? 'Add or import children to get started' : 'Try a different search or filter'}</div>
               {children.length === 0 && (
                 <button onClick={() => setShowImport(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>📥 Import Children</button>
               )}
@@ -1294,6 +1349,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   onToggleSelect={toggleSelect}
                   onClick={() => selectMode ? toggleSelect(child.id) : setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
                   onMark={null}
+                  dark={darkMode}
                 />
               ))}
             </div>
@@ -1413,7 +1469,20 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
         <div onClick={() => setShowMobileTools(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '8px 16px calc(24px + env(safe-area-inset-bottom))', boxShadow: '0 -20px 50px rgba(0,0,0,0.25)' }}>
             <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 10 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.12)' }} /></div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Tools</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Options</div>
+            <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{darkMode ? '🌙' : '☀️'}</div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>Dark Mode</div>
+                  <div style={{ fontSize: 11, color: '#9CA3AF' }}>{darkMode ? 'On for this register' : 'Off'}</div>
+                </div>
+              </div>
+              <button onClick={() => setDarkMode(v => !v)} aria-label="Toggle dark mode"
+                style={{ width: 46, height: 26, borderRadius: 99, border: 'none', background: darkMode ? primary : '#D1D5DB', position: 'relative', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s' }}>
+                <span style={{ position: 'absolute', top: 3, left: darkMode ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.15s' }} />
+              </button>
+            </div>
             {[
               { icon: '🏷️', label: 'Manage Groups', sub: 'Quick add & colours', action: () => { setShowGroupsSetup(true); setShowMobileTools(false) } },
               { icon: '💊', label: 'Medical Alerts', sub: 'Review & sign off', action: () => { setShowMobileTools(false); onNavigate && onNavigate('medical_alerts') } },
