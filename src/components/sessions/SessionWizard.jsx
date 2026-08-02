@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { format, addDays } from 'date-fns'
 import { supabase } from '../../lib/supabase'
-import { useIsMobile } from '../../hooks/useIsMobile'
+import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FormBuilder, EmailFormModal } from '../forms/Forms'
 import { GroupsQuickSetupModal } from '../registers/Registers'
@@ -118,15 +118,16 @@ function Toggle({ value, onChange, label: text }) {
   )
 }
 
-function StepDot({ n, active, done, label: text, onClick }) {
+function StepDot({ n, active, done, label: text, onClick, compact }) {
+  const size = compact ? 28 : 34
   return (
     <motion.button
       onClick={onClick}
       disabled={!done && !active}
       whileTap={done || active ? { scale: 0.9 } : {}}
       style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, background: 'none', border: 'none',
-        cursor: done || active ? 'pointer' : 'default', position: 'relative', zIndex: 1,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: compact ? 5 : 8, background: 'none', border: 'none',
+        cursor: done || active ? 'pointer' : 'default', position: 'relative', zIndex: 1, flex: '1 1 0', minWidth: 0,
       }}>
       <motion.div
         animate={{
@@ -136,9 +137,9 @@ function StepDot({ n, active, done, label: text, onClick }) {
         }}
         transition={{ type: 'spring', stiffness: 400, damping: 26 }}
         style={{
-          width: 34, height: 34, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 14, fontWeight: 800, color: active || done ? '#fff' : 'var(--text3)',
-          border: active || done ? 'none' : '1.5px solid var(--border)',
+          width: size, height: size, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: compact ? 12 : 14, fontWeight: 800, color: active || done ? '#fff' : 'var(--text3)',
+          border: active || done ? 'none' : '1.5px solid var(--border)', flexShrink: 0,
         }}>
         <AnimatePresence mode="wait" initial={false}>
           {done && !active ? (
@@ -148,7 +149,7 @@ function StepDot({ n, active, done, label: text, onClick }) {
           )}
         </AnimatePresence>
       </motion.div>
-      <span style={{ fontSize: 11, fontWeight: 700, color: active ? ACCENT : done ? '#16A34A' : 'var(--text3)', textAlign: 'center', whiteSpace: 'nowrap', transition: 'color 0.25s ease' }}>{text}</span>
+      <span style={{ fontSize: compact ? 9.5 : 11, fontWeight: 700, color: active ? ACCENT : done ? '#16A34A' : 'var(--text3)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', transition: 'color 0.25s ease' }}>{text}</span>
     </motion.button>
   )
 }
@@ -221,7 +222,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
       {templates && templates.length > 0 && (
         <div style={{ marginBottom: 22, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
           <SectionHeader icon="🗂️" title="Start from a template" subtitle="Pick one to prefill this session, or skip and start from scratch" />
-          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', overflowY: 'hidden', paddingBottom: 4, paddingTop: 6, WebkitOverflowScrolling: 'touch' }}>
             {templates.map(t => {
               const active = appliedTemplateId === t.id
               return (
@@ -239,7 +240,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
                   <AnimatePresence>
                     {active && (
                       <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                        style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: '#1B9AAA', color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(27,154,170,0.4)' }}>✓</motion.div>
+                        style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: '50%', background: '#1B9AAA', color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(27,154,170,0.4)' }}>✓</motion.div>
                     )}
                   </AnimatePresence>
                   <div style={{ fontSize: 20, marginBottom: 6 }}>{t.icon || '📋'}</div>
@@ -712,6 +713,11 @@ function templateToFormPatch(t) {
 
 export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPublished, onNavigate, initialType, initialTemplate }) {
   const isMobile = useIsMobile()
+  const { isTablet, isDesktop } = useBreakpoint()
+  // Sidebar only earns its keep once there's real width to spare (iPad landscape / desktop).
+  // On phones and iPad portrait it would crush the main column, so those get a focused single-column flow.
+  const showSidebar = isDesktop
+  const compact = isMobile || isTablet
   const draftKey = `ls_session_draft_${org?.id}`
   const [step, setStep] = useState(1)
   const [form, setForm] = useState(() => {
@@ -899,22 +905,22 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   return (
     <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--surface)' }}>
       {/* Header / progress */}
-      <div style={{ padding: isMobile ? '14px 16px' : '18px 28px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+      <div style={{ padding: compact ? '14px 16px' : '18px 28px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Create Session</div>
           <button onClick={onCancel} style={{ background: 'none', border: 'none', fontSize: 13, color: 'var(--text3)', cursor: 'pointer', fontWeight: 700 }}>Cancel</button>
         </div>
         <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 17, left: `${100 / STEPS.length / 2}%`, right: `${100 / STEPS.length / 2}%`, height: 2, background: 'var(--border)', borderRadius: 2, zIndex: 0 }} />
+          <div style={{ position: 'absolute', top: compact ? 14 : 17, left: `${100 / STEPS.length / 2}%`, right: `${100 / STEPS.length / 2}%`, height: 2, background: 'var(--border)', borderRadius: 2, zIndex: 0 }} />
           <motion.div
             initial={false}
             animate={{ width: `${((step - 1) / (STEPS.length - 1)) * 100}%` }}
             transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-            style={{ position: 'absolute', top: 17, left: `${100 / STEPS.length / 2}%`, right: `${100 / STEPS.length / 2}%`, height: 2, background: `linear-gradient(90deg, #16A34A, ${ACCENT})`, borderRadius: 2, zIndex: 0, maxWidth: `calc(100% - ${100 / STEPS.length}%)` }}
+            style={{ position: 'absolute', top: compact ? 14 : 17, left: `${100 / STEPS.length / 2}%`, right: `${100 / STEPS.length / 2}%`, height: 2, background: `linear-gradient(90deg, #16A34A, ${ACCENT})`, borderRadius: 2, zIndex: 0, maxWidth: `calc(100% - ${100 / STEPS.length}%)` }}
           />
-          <div style={{ display: 'flex', gap: 4, position: 'relative' }}>
+          <div style={{ display: 'flex', gap: compact ? 2 : 4, position: 'relative' }}>
             {STEPS.map((s, i) => (
-              <StepDot key={s} n={i + 1} label={s} active={step === i + 1} done={step > i + 1} onClick={() => step > i + 1 && setStep(i + 1)} />
+              <StepDot key={s} n={i + 1} label={s} active={step === i + 1} done={step > i + 1} onClick={() => step > i + 1 && setStep(i + 1)} compact={compact} />
             ))}
           </div>
         </div>
@@ -929,7 +935,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 28, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: 24 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: compact ? 16 : 28, display: 'grid', gridTemplateColumns: showSidebar ? '1fr 300px' : '1fr', gap: 24, maxWidth: showSidebar ? 'none' : 720, margin: showSidebar ? 0 : '0 auto', width: '100%', boxSizing: 'border-box' }}>
         <div>
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0, x: 18, scale: 0.99 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: -18, scale: 0.99 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}>
@@ -942,11 +948,15 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
           </AnimatePresence>
           {error && <div style={{ color: '#DC2626', fontWeight: 700, fontSize: 13, marginTop: 8 }}>{error}</div>}
         </div>
-        {!isMobile && <LiveSummary form={form} leadName={staff.find(s => s.id === form.lead_staff_id)?.full_name} expectedCount={expectedCount} />}
+        {showSidebar && <LiveSummary form={form} leadName={staff.find(s => s.id === form.lead_staff_id)?.full_name} expectedCount={expectedCount} />}
       </div>
 
       {/* Footer */}
-      <div style={{ padding: isMobile ? 14 : '16px 28px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
+      <div style={{
+        padding: compact ? '12px 16px' : '16px 28px', borderTop: '1px solid var(--border)', flexShrink: 0,
+        display: 'flex', flexDirection: compact && step === 5 ? 'column-reverse' : 'row',
+        justifyContent: 'space-between', alignItems: compact && step === 5 ? 'stretch' : 'center', gap: compact && step === 5 ? 10 : 0,
+      }}>
         <motion.button
           onClick={() => setStep(s => Math.max(1, s - 1))}
           disabled={step === 1}
@@ -954,7 +964,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
           whileTap={step === 1 ? {} : { scale: 0.95 }}
           animate={{ opacity: step === 1 ? 0.4 : 1 }}
           transition={{ duration: 0.15 }}
-          style={{ padding: '11px 22px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: step === 1 ? 'default' : 'pointer' }}>
+          style={{ padding: compact ? '13px 22px' : '11px 22px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: step === 1 ? 'default' : 'pointer', flexShrink: 0 }}>
           Back
         </motion.button>
         {step < 5 ? (
@@ -965,27 +975,27 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
             whileTap={canContinue() ? { scale: 0.95 } : {}}
             animate={{ backgroundColor: canContinue() ? primary : '#9CA3AF' }}
             transition={{ duration: 0.18 }}
-            style={{ padding: '11px 26px', borderRadius: 10, border: 'none', color: '#fff', fontWeight: 700, cursor: canContinue() ? 'pointer' : 'default' }}>
+            style={{ padding: compact ? '13px 26px' : '11px 26px', borderRadius: 10, border: 'none', color: '#fff', fontWeight: 700, cursor: canContinue() ? 'pointer' : 'default', flexShrink: 0 }}>
             Continue
           </motion.button>
         ) : (
-          <div style={{ display: 'flex', gap: 10 }}>
-            <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('draft')} disabled={saving} style={{ padding: '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>Save as Draft</motion.button>
-            <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('scheduled')} disabled={saving} style={{ padding: '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>Schedule Session</motion.button>
+          <div style={{ display: 'flex', flexDirection: compact ? 'column' : 'row', gap: 10, width: compact ? '100%' : 'auto' }}>
+            <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('draft')} disabled={saving} style={{ padding: compact ? '13px 18px' : '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', order: compact ? 3 : 0 }}>Save as Draft</motion.button>
+            <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('scheduled')} disabled={saving} style={{ padding: compact ? '13px 18px' : '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', order: compact ? 2 : 0 }}>Schedule Session</motion.button>
             <motion.button
               whileHover={{ y: -1, boxShadow: `0 6px 16px ${ACCENT}45` }}
               whileTap={{ scale: 0.95 }}
               onClick={() => publish('ready')}
               disabled={saving}
-              style={{ padding: '11px 22px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', minWidth: 140, textAlign: 'center' }}>
+              style={{ padding: compact ? '13px 22px' : '11px 22px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', minWidth: 140, textAlign: 'center', order: compact ? 1 : 0 }}>
               <AnimatePresence mode="wait" initial={false}>
                 {saving ? (
-                  <motion.span key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <motion.span key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }} style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', display: 'inline-block' }} />
                     Publishing...
                   </motion.span>
                 ) : (
-                  <motion.span key="publish" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>Publish Session</motion.span>
+                  <motion.span key="publish" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'block' }}>Publish Session</motion.span>
                 )}
               </AnimatePresence>
             </motion.button>
