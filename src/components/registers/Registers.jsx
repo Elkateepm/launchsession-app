@@ -1154,8 +1154,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
               ].map(a => (
                 <button key={a.key} onClick={a.onClick} aria-label={a.label}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flex: isMobile ? '1 1 0' : '0 0 auto', minWidth: 0, height: isMobile ? 44 : 48, padding: isMobile ? '0 6px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
-                  <img src={a.icon} alt="" style={{ width: isMobile ? 30 : 32, height: isMobile ? 30 : 32, objectFit: 'contain', flexShrink: 0 }} />
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flex: isMobile ? '1 1 0' : '0 0 auto', minWidth: 0, height: isMobile ? 84 : 92, padding: isMobile ? '0 4px' : '0 14px', borderRadius: 16, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
+                  <img src={a.icon} alt="" style={{ width: isMobile ? 60 : 64, height: isMobile ? 60 : 64, objectFit: 'contain', flexShrink: 0 }} />
                   {!isMobile && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.label}</span>}
                 </button>
               ))}
