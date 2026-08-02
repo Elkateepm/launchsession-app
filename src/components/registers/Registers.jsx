@@ -1176,34 +1176,36 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   <span style={{ fontSize: 10, fontWeight: 700, color: '#64748B', whiteSpace: 'nowrap' }}>{s.label}</span>
                 </div>
               ))}
-              <button
-                onClick={() => setSearchOpen(v => !v)}
-                aria-label="Search"
-                style={{
-                  width: isMobile ? 38 : 40, height: isMobile ? 38 : 40, borderRadius: 10, flexShrink: 0,
-                  border: `1.5px solid ${searchOpen || search ? primary : '#E2E8F0'}`,
-                  background: searchOpen || search ? primary + '10' : '#fff',
-                  color: searchOpen || search ? primary : '#6B7280',
-                  fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  position: 'relative',
-                }}
-              >
-                🔍
-                {search && !searchOpen && (
-                  <span style={{ position: 'absolute', top: -3, right: -3, width: 8, height: 8, borderRadius: '50%', background: primary, border: '1.5px solid #fff' }} />
-                )}
-              </button>
               <div style={{ flex: 1, minWidth: 0 }} />
-              <button
-                onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
-                style={{
-                  padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : '#E5E7EB'}`,
-                  background: selectMode ? primary : '#fff', color: selectMode ? '#fff' : '#6B7280',
-                  fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                }}
-              >
-                {selectMode ? 'Cancel' : 'Select'}
-              </button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+                <button
+                  onClick={() => setSearchOpen(v => !v)}
+                  aria-label="Search"
+                  style={{
+                    width: isMobile ? 38 : 40, height: isMobile ? 38 : 40, borderRadius: 10, flexShrink: 0,
+                    border: `1.5px solid ${searchOpen || search ? primary : '#E2E8F0'}`,
+                    background: searchOpen || search ? primary + '10' : '#fff',
+                    color: searchOpen || search ? primary : '#6B7280',
+                    fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  🔍
+                  {search && !searchOpen && (
+                    <span style={{ position: 'absolute', top: -3, right: -3, width: 8, height: 8, borderRadius: '50%', background: primary, border: '1.5px solid #fff' }} />
+                  )}
+                </button>
+                <button
+                  onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
+                  style={{
+                    padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : '#E5E7EB'}`,
+                    background: selectMode ? primary : '#fff', color: selectMode ? '#fff' : '#6B7280',
+                    fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                  }}
+                >
+                  {selectMode ? 'Cancel' : 'Select'}
+                </button>
+              </div>
             </div>
             <AnimatePresence initial={false}>
               {searchOpen && (
