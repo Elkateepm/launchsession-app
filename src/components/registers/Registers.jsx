@@ -1057,13 +1057,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
     setBulkAssigning(false)
   }
 
-  const counts = {
-    total:      children.length,
-    signed_in:  children.filter(c => getStatus(c.id) === 'signed_in').length,
-    absent:     children.filter(c => getStatus(c.id) === 'absent').length,
-    expected:   children.filter(c => getStatus(c.id) === 'expected').length,
-    signed_out: children.filter(c => getStatus(c.id) === 'signed_out').length,
-  }
 
   // Available groups — configured groups only. A child's group_name that no
   // longer matches a configured group (e.g. the group was since deleted or
@@ -1145,7 +1138,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 )}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: isMobile ? 4 : 6, alignItems: 'center', width: isMobile ? '100%' : undefined, overflowX: isMobile ? 'auto' : undefined, WebkitOverflowScrolling: 'touch', flexShrink: isMobile ? undefined : 0 }}>
+            <div style={{ display: 'flex', gap: isMobile ? 3 : 6, alignItems: 'center', width: isMobile ? '100%' : undefined, overflowX: isMobile ? 'auto' : undefined, WebkitOverflowScrolling: 'touch', flexShrink: isMobile ? undefined : 0 }}>
               {[
                 { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
                 { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
@@ -1154,8 +1147,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
               ].map(a => (
                 <button key={a.key} onClick={a.onClick} aria-label={a.label}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, flex: '0 0 auto', width: isMobile ? 70 : 82, padding: '3px 1px', borderRadius: 12, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 9.5 : 11, fontWeight: 800, cursor: 'pointer', boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', textAlign: 'center', lineHeight: 1.15 }}>
-                  <img src={a.icon} alt="" style={{ width: isMobile ? 60 : 64, height: isMobile ? 60 : 64, objectFit: 'contain', flexShrink: 0 }} />
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, flex: '0 0 auto', width: isMobile ? 62 : 82, padding: '3px 1px', borderRadius: 12, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 9 : 11, fontWeight: 800, cursor: 'pointer', boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', textAlign: 'center', lineHeight: 1.15 }}>
+                  <img src={a.icon} alt="" style={{ width: isMobile ? 54 : 64, height: isMobile ? 54 : 64, objectFit: 'contain', flexShrink: 0 }} />
                   <span style={{ maxWidth: isMobile ? 64 : 76 }}>{a.label}</span>
                 </button>
               ))}
@@ -1167,19 +1160,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             </div>
           </div>
 
-          {/* Stats strip + search + select — one compact row */}
+          {/* Search + select — stats chips removed (redundant with header) */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: isMobile ? 8 : 12 }}>
-            {[
-              { icon: '📋', value: counts.total, label: 'On Register', color: primary },
-              { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A' },
-              { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
-            ].map(s => (
-              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: s.color + '10', border: `1.5px solid ${s.color}30`, flexShrink: 0 }}>
-                <span style={{ fontSize: 12 }}>{s.icon}</span>
-                <span style={{ fontSize: 13, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#64748B', whiteSpace: 'nowrap' }}>{s.label}</span>
-              </div>
-            ))}
             <div style={{ flex: 1, minWidth: 0 }} />
             <div ref={searchPopupRef} style={{ position: 'relative' }}>
               <button
