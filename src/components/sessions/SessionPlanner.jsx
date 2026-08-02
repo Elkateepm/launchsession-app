@@ -114,7 +114,7 @@ function RotationPlanner({ slots, onChange, selectedBubbles, bubbleDefs }) {
 }
 
 // ─── SESSION FORM ─────────────────────────────────────────────
-function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNavigate }) {
+function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNavigate, compact }) {
   const [form, setForm] = useState(initial || EMPTY_FORM)
   const [step, setStep] = useState(0)
   const [raLinked, setRaLinked] = useState(null) // null = unknown/loading, true/false once RASessionCard reports in
@@ -134,14 +134,14 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
   const canNext0 = !!form.title.trim() && !!form.session_date
   const canSave  = canNext0
 
-  const fi = { width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', fontSize: 15, outline: 'none', background: 'var(--surface, #fff)', boxSizing: 'border-box', color: 'var(--text, #111)', fontFamily: 'inherit' }
+  const fi = { width: '100%', padding: compact ? '13px 14px' : '12px 14px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', fontSize: 15, outline: 'none', background: 'var(--surface, #fff)', boxSizing: 'border-box', color: 'var(--text, #111)', fontFamily: 'inherit' }
   const lb = { fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, display: 'block' }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
       {/* ── HEADER ── */}
-      <div style={{ background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, padding: '20px 24px 16px', flexShrink: 0 }}>
+      <div style={{ background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, padding: compact ? '16px 18px 14px' : '20px 24px 16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{type.icon}</div>
@@ -150,26 +150,40 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{form.title || 'Untitled session'}</div>
             </div>
           </div>
-          <button onClick={onCancel} style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}>✕</button>
+          <motion.button onClick={onCancel} whileTap={{ scale: 0.9 }} style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}>✕</motion.button>
         </div>
 
         {/* Step dots */}
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: compact ? 4 : 6, alignItems: 'center' }}>
           {STEPS.map((s, i) => (
             <React.Fragment key={i}>
-              <button onClick={() => i < step || (i === 1 && canNext0) ? setStep(i) : null}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 99, border: 'none', background: i === step ? 'rgba(255,255,255,0.9)' : i < step ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.12)', color: i === step ? type.color : '#fff', fontSize: 11, fontWeight: 800, cursor: i <= step ? 'pointer' : 'default', transition: 'all 0.2s' }}>
-                <span>{i < step ? '✓' : s.icon}</span>
-                <span style={{ display: i === step ? 'inline' : 'none' }}>{s.label}</span>
-              </button>
-              {i < STEPS.length - 1 && <div style={{ flex: 1, height: 2, borderRadius: 99, background: i < step ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)' }} />}
+              <motion.button
+                onClick={() => i < step || (i === 1 && canNext0) ? setStep(i) : null}
+                whileTap={i <= step ? { scale: 0.92 } : {}}
+                animate={{ background: i === step ? 'rgba(255,255,255,0.9)' : i < step ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.12)' }}
+                transition={{ duration: 0.2 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: compact ? '5px 9px' : '4px 10px', borderRadius: 99, border: 'none', color: i === step ? type.color : '#fff', fontSize: compact ? 10.5 : 11, fontWeight: 800, cursor: i <= step ? 'pointer' : 'default', flexShrink: 0 }}>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span key={i < step ? 'done' : 'icon'} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }}>
+                    {i < step ? '✓' : s.icon}
+                  </motion.span>
+                </AnimatePresence>
+                <span style={{ display: i === step ? 'inline' : 'none', whiteSpace: 'nowrap' }}>{s.label}</span>
+              </motion.button>
+              {i < STEPS.length - 1 && (
+                <div style={{ flex: 1, height: 2, borderRadius: 99, background: 'rgba(255,255,255,0.2)', overflow: 'hidden' }}>
+                  <motion.div initial={false} animate={{ width: i < step ? '100%' : '0%' }} transition={{ duration: 0.25, ease: 'easeOut' }} style={{ height: '100%', background: 'rgba(255,255,255,0.6)' }} />
+                </div>
+              )}
             </React.Fragment>
           ))}
         </div>
       </div>
 
       {/* ── BODY ── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 24px 0' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: compact ? '20px 18px 0' : '24px 24px 0', WebkitOverflowScrolling: 'touch' }}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={step} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
 
         {/* STEP 0 — TYPE & WHEN */}
         {step === 0 && (
@@ -181,11 +195,11 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
                 {SESSION_TYPES.map(t => {
                   const active = form.session_type === t.key
                   return (
-                    <button key={t.key} onClick={() => set('session_type', t.key)}
-                      style={{ padding: '14px 12px', borderRadius: 14, border: `2px solid ${active ? t.color : 'var(--border, #e5e7eb)'}`, background: active ? t.color + '15' : 'var(--surface, #fff)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                    <motion.button key={t.key} onClick={() => set('session_type', t.key)} whileTap={{ scale: 0.97 }}
+                      style={{ padding: compact ? '16px 12px' : '14px 12px', borderRadius: 14, border: `2px solid ${active ? t.color : 'var(--border, #e5e7eb)'}`, background: active ? t.color + '15' : 'var(--surface, #fff)', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s, background 0.15s' }}>
                       <div style={{ fontSize: 24, marginBottom: 4 }}>{t.icon}</div>
                       <div style={{ fontSize: 13, fontWeight: 800, color: active ? t.color : 'var(--text, #111)' }}>{t.label}</div>
-                    </button>
+                    </motion.button>
                   )
                 })}
               </div>
@@ -196,7 +210,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
               <label style={lb}>Session name *</label>
               <input value={form.title} onChange={e => set('title', e.target.value)}
                 placeholder={isTrip ? 'e.g. Alton Towers Trip' : 'e.g. Multi-Sport Morning'}
-                style={fi} autoFocus />
+                style={fi} autoFocus={!compact} />
             </div>
 
             {/* Date */}
@@ -259,10 +273,10 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
                 {(bubbleDefs || DEFAULT_BUBBLE_DEFS).map(b => {
                   const active = (form.bubbles || []).includes(b.label)
                   return (
-                    <button key={b.key} onClick={() => toggleBubble(b.label)}
-                      style={{ padding: '10px 18px', borderRadius: 99, border: `2px solid ${active ? b.color : 'var(--border, #e5e7eb)'}`, background: active ? b.color : 'var(--surface, #fff)', color: active ? '#fff' : 'var(--text, #111)', fontSize: 13, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <motion.button key={b.key} onClick={() => toggleBubble(b.label)} whileTap={{ scale: 0.95 }}
+                      style={{ padding: compact ? '11px 18px' : '10px 18px', borderRadius: 99, border: `2px solid ${active ? b.color : 'var(--border, #e5e7eb)'}`, background: active ? b.color : 'var(--surface, #fff)', color: active ? '#fff' : 'var(--text, #111)', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                       {active && <span>✓</span>} {b.label}
-                    </button>
+                    </motion.button>
                   )
                 })}
               </div>
@@ -313,11 +327,11 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
                     { key: 'packed_lunch', icon: '🥪', label: 'Packed Lunch' },
                     { key: 'consent_required', icon: '📋', label: 'Consent Form' },
                   ].map(opt => (
-                    <button key={opt.key} onClick={() => set(opt.key, !form[opt.key])}
-                      style={{ padding: '14px', borderRadius: 12, border: `2px solid ${form[opt.key] ? '#1B9AAA' : 'var(--border, #e5e7eb)'}`, background: form[opt.key] ? '#E8F7F9' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 13, fontWeight: 800, color: form[opt.key] ? '#1B9AAA' : 'var(--text3, #6B7280)', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.15s' }}>
+                    <motion.button key={opt.key} onClick={() => set(opt.key, !form[opt.key])} whileTap={{ scale: 0.97 }}
+                      style={{ padding: compact ? '15px 14px' : '14px', borderRadius: 12, border: `2px solid ${form[opt.key] ? '#1B9AAA' : 'var(--border, #e5e7eb)'}`, background: form[opt.key] ? '#E8F7F9' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 13, fontWeight: 800, color: form[opt.key] ? '#1B9AAA' : 'var(--text3, #6B7280)', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 20 }}>{opt.icon}</span> {opt.label}
                       {form[opt.key] && <span style={{ marginLeft: 'auto', fontSize: 16 }}>✓</span>}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
@@ -355,35 +369,42 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
             </div>
           </div>
         )}
+          </motion.div>
+        </AnimatePresence>
+        <div style={{ height: compact ? 20 : 0 }} />
       </div>
 
       {/* ── FOOTER ── */}
-      <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border, #e5e7eb)', flexShrink: 0, display: 'flex', gap: 10, background: 'var(--surface, #fff)' }}>
+      <div style={{ padding: compact ? '12px 18px' : '16px 24px', borderTop: '1px solid var(--border, #e5e7eb)', flexShrink: 0, display: 'flex', gap: 10, background: 'var(--surface, #fff)' }}>
         {step > 0 && (
-          <button onClick={() => setStep(s => s - 1)}
-            style={{ padding: '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
+          <motion.button onClick={() => setStep(s => s - 1)} whileTap={{ scale: 0.95 }}
+            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
             ← Back
-          </button>
+          </motion.button>
         )}
         {step === 0 && (
-          <button onClick={onCancel}
-            style={{ padding: '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
+          <motion.button onClick={onCancel} whileTap={{ scale: 0.95 }}
+            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
             Cancel
-          </button>
+          </motion.button>
         )}
         {step < 2 ? (
-          <button onClick={() => setStep(s => s + 1)} disabled={step === 0 && !canNext0}
-            style={{ flex: 1, padding: '13px', borderRadius: 12, border: 'none', background: step === 0 && !canNext0 ? '#9ca3af' : type.color, color: '#fff', fontSize: 15, fontWeight: 900, cursor: step === 0 && !canNext0 ? 'default' : 'pointer', transition: 'all 0.15s' }}>
+          <motion.button onClick={() => setStep(s => s + 1)} disabled={step === 0 && !canNext0}
+            whileHover={step === 0 && !canNext0 ? {} : { y: -1 }} whileTap={step === 0 && !canNext0 ? {} : { scale: 0.97 }}
+            animate={{ backgroundColor: step === 0 && !canNext0 ? '#9ca3af' : type.color }} transition={{ duration: 0.15 }}
+            style={{ flex: 1, padding: compact ? '14px' : '13px', borderRadius: 12, border: 'none', color: '#fff', fontSize: 15, fontWeight: 900, cursor: step === 0 && !canNext0 ? 'default' : 'pointer' }}>
             Continue →
-          </button>
+          </motion.button>
         ) : (
-          <button onClick={() => {
+          <motion.button onClick={() => {
             if (raLinked === false && !window.confirm('This session has no risk assessment attached. Continue anyway?')) return
             onSave({ ...form, _pendingRiskAssessmentId: pendingRaId })
           }} disabled={saving || !canSave}
-            style={{ flex: 1, padding: '13px', borderRadius: 12, border: 'none', background: saving || !canSave ? '#9ca3af' : type.color, color: '#fff', fontSize: 15, fontWeight: 900, cursor: saving || !canSave ? 'default' : 'pointer' }}>
+            whileHover={saving || !canSave ? {} : { y: -1 }} whileTap={saving || !canSave ? {} : { scale: 0.97 }}
+            animate={{ backgroundColor: saving || !canSave ? '#9ca3af' : type.color }} transition={{ duration: 0.15 }}
+            style={{ flex: 1, padding: compact ? '14px' : '13px', borderRadius: 12, border: 'none', color: '#fff', fontSize: 15, fontWeight: 900, cursor: saving || !canSave ? 'default' : 'pointer' }}>
             {saving ? 'Saving...' : isEditing ? '✓ Save Changes' : '🚀 Create Session'}
-          </button>
+          </motion.button>
         )}
       </div>
 
@@ -1775,18 +1796,18 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
   // ── FORM VIEW ──
   if (view === 'form') {
-    // Mobile: centred modal. Desktop: full page inline
-    if (!isMobile) return (
+    // Desktop: full page inline. Phone & iPad: full-screen edge-to-edge, same
+    // treatment as the Create Session wizard, instead of a centred floating
+    // dialog (which read as a desktop pattern transplanted onto a small screen).
+    const compact = isMobile || isTablet
+    if (!compact) return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--surface, #fff)' }}>
-        <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} org={org} onNavigate={onNavigate} />
+        <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} org={org} onNavigate={onNavigate} compact={false} />
       </div>
     )
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 10200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-        <div onClick={() => { setView('list'); setEditing(null) }} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)' }} />
-        <div style={{ position: 'relative', width: '100%', maxWidth: 560, maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: 'var(--surface, #fff)', borderRadius: 24, boxShadow: '0 32px 80px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
-          <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} org={org} onNavigate={onNavigate} />
-        </div>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 10200, background: 'var(--surface, #fff)' }}>
+        <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} org={org} onNavigate={onNavigate} compact />
       </div>
     )
   }
