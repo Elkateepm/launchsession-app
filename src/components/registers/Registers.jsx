@@ -1222,11 +1222,15 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           {/* Stats strip + search + select — one compact row */}
           <div ref={searchPopupRef}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: isMobile ? 8 : 12 }}>
-              {[
+              {(session ? [
                 { icon: '📋', value: counts.total, label: 'On Register', color: primary },
                 { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A' },
                 { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
-              ].map(s => (
+              ] : [
+                { icon: '📋', value: counts.total, label: 'On Register', color: primary },
+                { icon: '⚠️', value: children.filter(c => c.allergies).length, label: 'Allergies', color: '#D97706' },
+                { icon: '✚', value: children.filter(c => c.medical_notes).length, label: 'Medical Alerts', color: '#DC2626' },
+              ]).map(s => (
                 <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: s.color + (darkMode ? '1A' : '10'), border: `1.5px solid ${s.color}30`, flexShrink: 0 }}>
                   <span style={{ fontSize: 12 }}>{s.icon}</span>
                   <span style={{ fontSize: 13, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</span>
