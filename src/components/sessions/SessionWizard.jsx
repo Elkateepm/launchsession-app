@@ -9,18 +9,18 @@ import { GroupsQuickSetupModal } from '../registers/Registers'
 // ─── CONSTANTS ──────────────────────────────────────────────────
 
 const WIZARD_TYPES = [
-  { key: 'activity',    label: 'Regular Session',  icon: '🏃' },
-  { key: 'trip',        label: 'Trip',              icon: '🚌' },
-  { key: 'workshop',     label: 'Workshop',          icon: '🛠️' },
-  { key: 'mentoring',    label: 'Mentoring',         icon: '🤝' },
-  { key: 'sports',       label: 'Sports Event',      icon: '⚽' },
-  { key: 'residential',  label: 'Residential',       icon: '🏕️' },
-  { key: 'theatre',      label: 'Theatre Visit',     icon: '🎭' },
-  { key: 'competition',  label: 'Competition',       icon: '🏆' },
-  { key: 'community',    label: 'Community Event',   icon: '🎉' },
-  { key: 'celebration',  label: 'Celebration',       icon: '🎊' },
-  { key: 'training',     label: 'Training',          icon: '📚' },
-  { key: 'custom',       label: 'Custom Session',    icon: '✨' },
+  { key: 'activity',    label: 'Regular Session',  icon: '🏃', color: '#6D5DF6' },
+  { key: 'trip',        label: 'Trip',              icon: '🚌', color: '#F59E0B' },
+  { key: 'workshop',     label: 'Workshop',          icon: '🛠️', color: '#0EA5E9' },
+  { key: 'mentoring',    label: 'Mentoring',         icon: '🤝', color: '#EC4899' },
+  { key: 'sports',       label: 'Sports Event',      icon: '⚽', color: '#16A34A' },
+  { key: 'residential',  label: 'Residential',       icon: '🏕️', color: '#059669' },
+  { key: 'theatre',      label: 'Theatre Visit',     icon: '🎭', color: '#7C3AED' },
+  { key: 'competition',  label: 'Competition',       icon: '🏆', color: '#D97706' },
+  { key: 'community',    label: 'Community Event',   icon: '🎉', color: '#DB2777' },
+  { key: 'celebration',  label: 'Celebration',       icon: '🎊', color: '#E11D48' },
+  { key: 'training',     label: 'Training',          icon: '📚', color: '#2563EB' },
+  { key: 'custom',       label: 'Custom Session',    icon: '✨', color: '#6D5DF6' },
 ]
 
 // Session types that show up in the Events & Trips centre rather than the plain Session Planner list.
@@ -95,10 +95,12 @@ const card = { background: 'var(--surface)', border: '1px solid var(--border)', 
 const inp = { width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)', color: 'var(--text)' }
 const label = { fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 5 }
 
-function SectionHeader({ icon, title, subtitle }) {
+function SectionHeader({ icon, title, subtitle, color = ACCENT }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 18 }}>
-      <div style={{ width: 38, height: 38, borderRadius: 11, background: `${ACCENT}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>{icon}</div>
+      <motion.div
+        initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+        style={{ width: 38, height: 38, borderRadius: 11, background: `linear-gradient(135deg, ${color}26, ${color}0D)`, boxShadow: `0 2px 8px ${color}22, inset 0 0 0 1px ${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>{icon}</motion.div>
       <div>
         <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{title}</div>
         {subtitle && <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 1 }}>{subtitle}</div>}
@@ -118,7 +120,7 @@ function Toggle({ value, onChange, label: text }) {
   )
 }
 
-function StepDot({ n, active, done, label: text, onClick, compact }) {
+function StepDot({ n, active, done, label: text, onClick, compact, color = ACCENT }) {
   const size = compact ? 28 : 34
   return (
     <motion.button
@@ -132,8 +134,8 @@ function StepDot({ n, active, done, label: text, onClick, compact }) {
       <motion.div
         animate={{
           scale: active ? 1.12 : 1,
-          backgroundColor: active ? ACCENT : done ? '#16A34A' : 'var(--surface)',
-          boxShadow: active ? `0 0 0 5px ${ACCENT}22, 0 4px 10px ${ACCENT}40` : '0 0 0 0px transparent',
+          backgroundColor: active ? color : done ? '#16A34A' : 'var(--surface)',
+          boxShadow: active ? `0 0 0 5px ${color}22, 0 4px 10px ${color}40` : '0 0 0 0px transparent',
         }}
         transition={{ type: 'spring', stiffness: 400, damping: 26 }}
         style={{
@@ -149,7 +151,7 @@ function StepDot({ n, active, done, label: text, onClick, compact }) {
           )}
         </AnimatePresence>
       </motion.div>
-      <span style={{ fontSize: compact ? 9.5 : 11, fontWeight: 700, color: active ? ACCENT : done ? '#16A34A' : 'var(--text3)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', transition: 'color 0.25s ease' }}>{text}</span>
+      <span style={{ fontSize: compact ? 9.5 : 11, fontWeight: 700, color: active ? color : done ? '#16A34A' : 'var(--text3)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', transition: 'color 0.25s ease' }}>{text}</span>
     </motion.button>
   )
 }
@@ -221,7 +223,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
     <div style={card}>
       {templates && templates.length > 0 && (
         <div style={{ marginBottom: 22, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
-          <SectionHeader icon="🗂️" title="Start from a template" subtitle="Pick one to prefill this session, or skip and start from scratch" />
+          <SectionHeader icon="🗂️" title="Start from a template" subtitle="Pick one to prefill this session, or skip and start from scratch" color={ACCENT} />
           <div style={{ display: 'flex', gap: 10, overflowX: 'auto', overflowY: 'hidden', paddingBottom: 4, paddingTop: 6, WebkitOverflowScrolling: 'touch' }}>
             {templates.map(t => {
               const active = appliedTemplateId === t.id
@@ -229,9 +231,9 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
                 <motion.button
                   key={t.id}
                   onClick={() => onApplyTemplate(t)}
-                  whileHover={{ y: -2, boxShadow: '0 6px 16px rgba(0,0,0,0.08)' }}
+                  whileHover={{ y: -2, boxShadow: `0 8px 18px ${ACCENT}25` }}
                   whileTap={{ scale: 0.96 }}
-                  animate={{ borderColor: active ? '#1B9AAA' : 'var(--border)', backgroundColor: active ? 'rgba(27,154,170,0.08)' : 'var(--surface)' }}
+                  animate={{ borderColor: active ? ACCENT : 'var(--border)', background: active ? `linear-gradient(150deg, ${ACCENT}1C, ${ACCENT}08)` : 'var(--surface)' }}
                   transition={{ duration: 0.18, ease: 'easeOut' }}
                   style={{
                     flexShrink: 0, minWidth: 150, textAlign: 'left', padding: '12px 14px', borderRadius: 12, cursor: 'pointer',
@@ -240,7 +242,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
                   <AnimatePresence>
                     {active && (
                       <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                        style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: '50%', background: '#1B9AAA', color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(27,154,170,0.4)' }}>✓</motion.div>
+                        style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: '50%', background: ACCENT, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${ACCENT}66` }}>✓</motion.div>
                     )}
                   </AnimatePresence>
                   <div style={{ fontSize: 20, marginBottom: 6 }}>{t.icon || '📋'}</div>
@@ -254,7 +256,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
           </div>
         </div>
       )}
-      <SectionHeader icon="🏃" title="What kind of session is this?" subtitle="This sets sensible defaults you can adjust later" />
+      <SectionHeader icon="🏃" title="What kind of session is this?" subtitle="This sets sensible defaults you can adjust later" color={ACCENT} />
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 12, minWidth: 0 }}>
         {WIZARD_TYPES.map(t => {
           const active = form.session_type === t.key
@@ -262,12 +264,13 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
             <motion.button
               key={t.key}
               onClick={() => choose(t.key)}
-              whileHover={{ y: -3, boxShadow: '0 8px 18px rgba(0,0,0,0.08)' }}
+              whileHover={{ y: -3, boxShadow: `0 10px 20px ${t.color}30` }}
               whileTap={{ scale: 0.94 }}
               animate={{
-                borderColor: active ? '#1B9AAA' : 'var(--border)',
-                backgroundColor: active ? 'rgba(27,154,170,0.08)' : 'var(--surface)',
+                borderColor: active ? t.color : 'var(--border)',
+                background: active ? `linear-gradient(150deg, ${t.color}1C, ${t.color}08)` : 'var(--surface)',
                 scale: active ? 1.02 : 1,
+                boxShadow: active ? `0 6px 16px ${t.color}30` : '0 0 0 0 transparent',
               }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
               style={{
@@ -277,11 +280,11 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
               <AnimatePresence>
                 {active && (
                   <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                    style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: '#1B9AAA', color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(27,154,170,0.4)' }}>✓</motion.div>
+                    style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: t.color, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${t.color}66` }}>✓</motion.div>
                 )}
               </AnimatePresence>
               <motion.div animate={{ scale: active ? 1.08 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }} style={{ fontSize: isMobile ? 22 : 28, marginBottom: isMobile ? 6 : 8 }}>{t.icon}</motion.div>
-              <div style={{ fontSize: isMobile ? 11.5 : 13, fontWeight: 700, color: 'var(--text)', lineHeight: 1.25 }}>{t.label}</div>
+              <div style={{ fontSize: isMobile ? 11.5 : 13, fontWeight: 700, color: active ? t.color : 'var(--text)', lineHeight: 1.25, transition: 'color 0.18s' }}>{t.label}</div>
             </motion.button>
           )
         })}
@@ -342,7 +345,7 @@ function StepDetails({ form, setForm, staff, org }) {
   return (
     <>
       <div style={card}>
-        <SectionHeader icon="📅" title="Session Details" subtitle="When is your session taking place?" />
+        <SectionHeader icon="📅" title="Session Details" subtitle="When is your session taking place?" color="#2563EB" />
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
           <div><label style={label}>Session title *</label><input style={inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Football Skills Session" /></div>
           <div><label style={label}>Date *</label><input type="date" style={inp} value={form.session_date} onChange={e => set('session_date', e.target.value)} /></div>
@@ -354,7 +357,7 @@ function StepDetails({ form, setForm, staff, org }) {
       </div>
 
       <div style={card}>
-        <SectionHeader icon="📍" title="Location & Capacity" subtitle="Where will your session take place?" />
+        <SectionHeader icon="📍" title="Location & Capacity" subtitle="Where will your session take place?" color="#F59E0B" />
         <div style={{ marginBottom: 14 }}>
           <label style={label}>Location / Venue *</label>
           {venues.length > 0 && !useCustomLocation ? (
@@ -396,7 +399,7 @@ function StepDetails({ form, setForm, staff, org }) {
       </div>
 
       <div style={card}>
-        <SectionHeader icon="🧑‍💼" title="Session Lead" subtitle="Who is running this session?" />
+        <SectionHeader icon="🧑‍💼" title="Session Lead" subtitle="Who is running this session?" color="#EC4899" />
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
           <div>
             <label style={label}>Session lead *</label>
@@ -413,7 +416,7 @@ function StepDetails({ form, setForm, staff, org }) {
       </div>
 
       <div style={card}>
-        <SectionHeader icon="📝" title="Notes" subtitle="Optional context for your team and for parents" />
+        <SectionHeader icon="📝" title="Notes" subtitle="Optional context for your team and for parents" color="#64748B" />
         <div style={{ marginBottom: 14 }}>
           <label style={label}>Description</label>
           <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} />
@@ -446,7 +449,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
   return (
     <>
       <div style={card}>
-        <SectionHeader icon="🧒" title="Young People" subtitle="Who is this session for?" />
+        <SectionHeader icon="🧒" title="Young People" subtitle="Who is this session for?" color="#16A34A" />
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
           {[
             ['group', 'Add a delivery group'],
@@ -502,7 +505,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
       </div>
 
       <div style={card}>
-        <SectionHeader icon="🧑‍💼" title="Staff" subtitle="Who's running the session?" />
+        <SectionHeader icon="🧑‍💼" title="Staff" subtitle="Who's running the session?" color="#0EA5E9" />
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div><label style={label}>Minimum staff required</label><input type="number" style={inp} value={form.min_staff} onChange={e => set('min_staff', e.target.value)} /></div>
           <div><label style={label}>Staff-to-child ratio</label><input style={inp} value={form.staff_ratio} onChange={e => set('staff_ratio', e.target.value)} placeholder="e.g. 1:8" /></div>
@@ -523,7 +526,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
       </div>
 
       <div style={card}>
-        <SectionHeader icon="❤️" title="Volunteers" subtitle="Open up volunteer roles for this session" />
+        <SectionHeader icon="❤️" title="Volunteers" subtitle="Open up volunteer roles for this session" color="#EF4444" />
         {form.volunteer_slots.map((slot, i) => (
           <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
             <input style={{ ...inp, flex: 1 }} value={slot.role} onChange={e => updateSlot(i, { role: e.target.value })} placeholder="Role e.g. General helper" />
@@ -574,7 +577,7 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
     <>
       {REQUIREMENT_TOGGLES.map(group => (
         <div key={group.group} style={card}>
-          <SectionHeader icon={group.group === 'Safeguarding' ? '🛡️' : '⚙️'} title={group.group} />
+          <SectionHeader icon={group.group === 'Safeguarding' ? '🛡️' : '⚙️'} title={group.group} color={group.group === 'Safeguarding' ? '#DC2626' : '#6B7280'} />
           {group.items.map(item => (
             <Toggle key={item.key} value={form[item.key]} onChange={v => set(item.key, v)} label={item.label} />
           ))}
@@ -582,7 +585,7 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
       ))}
 
       <div style={card}>
-        <SectionHeader icon="📎" title="Attach Forms" subtitle="Consent, registration, or info forms parents will need for this session" />
+        <SectionHeader icon="📎" title="Attach Forms" subtitle="Consent, registration, or info forms parents will need for this session" color="#7C3AED" />
         {orgForms.length === 0 ? (
           <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 12 }}>No active forms in your form library yet.</div>
         ) : orgForms.map(f => {
@@ -615,7 +618,7 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
       </div>
 
       <div style={card}>
-        <SectionHeader icon="🎯" title="Outcomes to measure" subtitle="What impact should this session track?" />
+        <SectionHeader icon="🎯" title="Outcomes to measure" subtitle="What impact should this session track?" color="#059669" />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {OUTCOME_AREAS.map(a => {
             const active = form.outcome_areas.includes(a)
@@ -667,7 +670,7 @@ function StepReview({ form, staff, expectedCount, primary }) {
   return (
     <>
       <div style={card}>
-        <SectionHeader icon="📋" title="Session" />
+        <SectionHeader icon="📋" title="Session" color={ACCENT} />
         <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{form.title || 'Untitled session'}</div>
         <div style={{ fontSize: 13, color: 'var(--text3)' }}>
           {form.session_date && format(new Date(form.session_date), 'EEEE d MMMM')} · {form.start_time}–{form.end_time}
@@ -675,7 +678,7 @@ function StepReview({ form, staff, expectedCount, primary }) {
         <div style={{ fontSize: 13, color: 'var(--text3)' }}>{form.location}</div>
       </div>
       <div style={card}>
-        <SectionHeader icon="👥" title="People" />
+        <SectionHeader icon="👥" title="People" color="#0EA5E9" />
         <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>{expectedCount} young people expected</div>
         <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>
           {(form.lead_staff_id ? 1 : 0) + form.supporting_staff_ids.length} staff assigned{leadName ? ` (lead: ${leadName})` : ''}
@@ -685,7 +688,7 @@ function StepReview({ form, staff, expectedCount, primary }) {
         </div>
       </div>
       <div style={card}>
-        <SectionHeader icon="✅" title="Readiness" />
+        <SectionHeader icon="✅" title="Readiness" color="#16A34A" />
         {checks.map((c, i) => <ReadinessRow key={i} {...c} />)}
       </div>
     </>
@@ -741,6 +744,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   const [lastSaved, setLastSaved] = useState(null)
 
   const primary = org?.primary_color || '#1B9AAA'
+  const typeColor = (WIZARD_TYPES.find(t => t.key === form.session_type) || WIZARD_TYPES[0]).color
 
   const applyTemplate = (t) => {
     setForm(f => ({ ...f, ...templateToFormPatch(t) }))
@@ -870,17 +874,35 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       ...(form.risk_assessment_required ? [{ key: 'ra', label: 'Complete Risk Assessment', onClick: () => onNavigate && onNavigate('risk_assessments') }] : []),
       { key: 'msg', label: 'Message Team', onClick: () => onNavigate && onNavigate('messaging') },
     ]
+    const doneType = (WIZARD_TYPES.find(t => t.key === done.session.session_type) || WIZARD_TYPES[0])
+    const burstColors = [ACCENT, '#16A34A', '#F59E0B', '#EC4899', '#0EA5E9', doneType.color]
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} style={{ maxWidth: 480, margin: '10vh auto', textAlign: 'center', padding: '0 20px' }}>
-        <motion.div
-          initial={{ scale: 0, rotate: -20 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.05 }}
-          style={{ fontSize: 48, marginBottom: 16 }}>🚀</motion.div>
+        <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto 16px' }}>
+          {burstColors.map((c, i) => {
+            const angle = (i / burstColors.length) * Math.PI * 2
+            return (
+              <motion.span key={i}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                animate={{ x: Math.cos(angle) * 60, y: Math.sin(angle) * 60, opacity: 0, scale: 0.4 }}
+                transition={{ duration: 0.7, delay: 0.05, ease: 'easeOut' }}
+                style={{ position: 'absolute', top: '50%', left: '50%', width: 8, height: 8, borderRadius: '50%', background: c, marginTop: -4, marginLeft: -4 }} />
+            )
+          })}
+          <motion.div
+            initial={{ scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.05 }}
+            style={{ width: 80, height: 80, borderRadius: '50%', background: `radial-gradient(circle, ${doneType.color}22, transparent 70%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, position: 'relative' }}>🚀</motion.div>
+        </div>
         <motion.h2 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.3 }} style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Your session is ready for launch</motion.h2>
-        <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.3 }} style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 28 }}>
+        <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.3 }} style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 14 }}>
           <strong>{done.session.title}</strong> has been {label} successfully.
         </motion.p>
+        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.26, duration: 0.25 }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${doneType.color}15`, color: doneType.color, fontSize: 12, fontWeight: 800, borderRadius: 99, padding: '5px 14px', marginBottom: 28 }}>
+          <span>{doneType.icon}</span>{doneType.label}
+        </motion.div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
           {actions.map((a, i) => (
             <motion.button
@@ -889,10 +911,10 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.28 + i * 0.06, duration: 0.25 }}
-              whileHover={{ y: -1, boxShadow: a.primary ? `0 6px 16px ${ACCENT}45` : '0 4px 12px rgba(0,0,0,0.06)' }}
+              whileHover={{ y: -1, boxShadow: a.primary ? `0 8px 20px ${doneType.color}45` : '0 4px 12px rgba(0,0,0,0.06)' }}
               whileTap={{ scale: 0.97 }}
               style={a.primary
-                ? { padding: 12, borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }
+                ? { padding: 12, borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${doneType.color})`, color: '#fff', fontWeight: 700, cursor: 'pointer' }
                 : { padding: 12, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>
               {a.label}
             </motion.button>
@@ -903,11 +925,22 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   }
 
   return (
-    <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--surface)' }}>
+    <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--surface)', position: 'relative' }}>
+      <motion.div
+        animate={{ background: `radial-gradient(circle, ${typeColor}20, transparent 70%)` }}
+        transition={{ duration: 0.5 }}
+        style={{ position: 'absolute', top: -120, right: -120, width: 320, height: 320, borderRadius: '50%', pointerEvents: 'none', zIndex: 0, filter: 'blur(10px)' }}
+      />
       {/* Header / progress */}
-      <div style={{ padding: compact ? '14px 16px' : '18px 28px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+      <motion.div
+        animate={{ background: `linear-gradient(135deg, ${typeColor}14, ${typeColor}03 55%, transparent)` }}
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+        style={{ padding: compact ? '14px 16px' : '18px 28px', borderBottom: '1px solid var(--border)', flexShrink: 0, position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Create Session</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <motion.span animate={{ background: typeColor }} transition={{ duration: 0.35 }} style={{ width: 8, height: 8, borderRadius: '50%', display: 'inline-block', boxShadow: `0 0 0 4px ${typeColor}22` }} />
+            <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Create Session</div>
+          </div>
           <button onClick={onCancel} style={{ background: 'none', border: 'none', fontSize: 13, color: 'var(--text3)', cursor: 'pointer', fontWeight: 700 }}>Cancel</button>
         </div>
         <div style={{ position: 'relative' }}>
@@ -916,11 +949,11 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
             initial={false}
             animate={{ width: `${((step - 1) / (STEPS.length - 1)) * 100}%` }}
             transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-            style={{ position: 'absolute', top: compact ? 14 : 17, left: `${100 / STEPS.length / 2}%`, right: `${100 / STEPS.length / 2}%`, height: 2, background: `linear-gradient(90deg, #16A34A, ${ACCENT})`, borderRadius: 2, zIndex: 0, maxWidth: `calc(100% - ${100 / STEPS.length}%)` }}
+            style={{ position: 'absolute', top: compact ? 14 : 17, left: `${100 / STEPS.length / 2}%`, right: `${100 / STEPS.length / 2}%`, height: 2, background: `linear-gradient(90deg, #16A34A, ${typeColor})`, borderRadius: 2, zIndex: 0, maxWidth: `calc(100% - ${100 / STEPS.length}%)` }}
           />
           <div style={{ display: 'flex', gap: compact ? 2 : 4, position: 'relative' }}>
             {STEPS.map((s, i) => (
-              <StepDot key={s} n={i + 1} label={s} active={step === i + 1} done={step > i + 1} onClick={() => step > i + 1 && setStep(i + 1)} compact={compact} />
+              <StepDot key={s} n={i + 1} label={s} active={step === i + 1} done={step > i + 1} onClick={() => step > i + 1 && setStep(i + 1)} compact={compact} color={typeColor} />
             ))}
           </div>
         </div>
@@ -932,10 +965,10 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       {/* Body */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: compact ? 16 : 28, display: 'grid', gridTemplateColumns: showSidebar ? '1fr 300px' : '1fr', gap: 24, maxWidth: showSidebar ? 'none' : 720, margin: showSidebar ? 0 : '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: compact ? 16 : 28, display: 'grid', gridTemplateColumns: showSidebar ? '1fr 300px' : '1fr', gap: 24, maxWidth: showSidebar ? 'none' : 720, margin: showSidebar ? 0 : '0 auto', width: '100%', boxSizing: 'border-box', position: 'relative', zIndex: 1 }}>
         <div style={{ minWidth: 0 }}>
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0, x: 18, scale: 0.99 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: -18, scale: 0.99 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} style={{ minWidth: 0 }}>
@@ -971,10 +1004,10 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
           <motion.button
             onClick={() => canContinue() && setStep(s => s + 1)}
             disabled={!canContinue()}
-            whileHover={canContinue() ? { y: -1, boxShadow: `0 6px 16px ${ACCENT}45` } : {}}
+            whileHover={canContinue() ? { y: -1, boxShadow: `0 8px 20px ${typeColor}45` } : {}}
             whileTap={canContinue() ? { scale: 0.95 } : {}}
-            animate={{ backgroundColor: canContinue() ? primary : '#9CA3AF' }}
-            transition={{ duration: 0.18 }}
+            animate={{ background: canContinue() ? `linear-gradient(135deg, ${primary}, ${typeColor})` : '#9CA3AF' }}
+            transition={{ duration: 0.25 }}
             style={{ padding: compact ? '13px 26px' : '11px 26px', borderRadius: 10, border: 'none', color: '#fff', fontWeight: 700, cursor: canContinue() ? 'pointer' : 'default', flexShrink: 0 }}>
             Continue
           </motion.button>
@@ -983,11 +1016,11 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
             <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('draft')} disabled={saving} style={{ padding: compact ? '13px 18px' : '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', order: compact ? 3 : 0 }}>Save as Draft</motion.button>
             <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('scheduled')} disabled={saving} style={{ padding: compact ? '13px 18px' : '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', order: compact ? 2 : 0 }}>Schedule Session</motion.button>
             <motion.button
-              whileHover={{ y: -1, boxShadow: `0 6px 16px ${ACCENT}45` }}
+              whileHover={{ y: -1, boxShadow: `0 8px 20px ${typeColor}45` }}
               whileTap={{ scale: 0.95 }}
               onClick={() => publish('ready')}
               disabled={saving}
-              style={{ padding: compact ? '13px 22px' : '11px 22px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', minWidth: 140, textAlign: 'center', order: compact ? 1 : 0 }}>
+              style={{ padding: compact ? '13px 22px' : '11px 22px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${typeColor})`, color: '#fff', fontWeight: 800, cursor: 'pointer', minWidth: 140, textAlign: 'center', order: compact ? 1 : 0 }}>
               <AnimatePresence mode="wait" initial={false}>
                 {saving ? (
                   <motion.span key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
