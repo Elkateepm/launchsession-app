@@ -66,8 +66,8 @@ function AttendanceRing({ signedIn, total, primary, secondary }) {
   const confettiColours = ['#4ADE80', primary, secondary, '#FBBF24']
 
   return (
-    <div style={{ position: 'relative', width: 54, height: 54, flexShrink: 0 }}>
-      <svg width="54" height="54" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+    <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+      <svg width="60" height="60" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
         <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
         <motion.circle
           cx="27" cy="27" r={RING_R} fill="none" stroke="#4ADE80" strokeWidth="5" strokeLinecap="round"
@@ -122,8 +122,8 @@ function TimeRing({ status, target, totalSeconds }) {
 
   if (status === 'ended') {
     return (
-      <div style={{ position: 'relative', width: 54, height: 54, flexShrink: 0 }}>
-        <svg width="54" height="54" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+      <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+        <svg width="60" height="60" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
           <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
           <circle cx="27" cy="27" r={RING_R} fill="none" stroke="#94A3B8" strokeWidth="5" strokeLinecap="round" strokeDasharray={RING_C} strokeDashoffset={0} />
         </svg>
@@ -134,8 +134,8 @@ function TimeRing({ status, target, totalSeconds }) {
 
   if (!target) {
     return (
-      <div style={{ position: 'relative', width: 54, height: 54, flexShrink: 0 }}>
-        <svg width="54" height="54" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+      <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+        <svg width="60" height="60" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
           <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: 'rgba(255,255,255,0.4)' }}>–</div>
@@ -154,8 +154,8 @@ function TimeRing({ status, target, totalSeconds }) {
   const colour = status === 'live' ? '#2EC5CE' : '#FBBF24'
 
   return (
-    <div style={{ position: 'relative', width: 54, height: 54, flexShrink: 0 }}>
-      <svg width="54" height="54" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+    <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+      <svg width="60" height="60" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
         <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
         <motion.circle
           cx="27" cy="27" r={RING_R} fill="none" stroke={colour} strokeWidth="5" strokeLinecap="round"
