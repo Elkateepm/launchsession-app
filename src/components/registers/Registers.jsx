@@ -1220,9 +1220,9 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             </div>
           </div>
 
-          {/* Stats strip + search + select — one compact row */}
+          {/* Stats strip + search + select */}
           <div ref={searchPopupRef}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: isMobile ? 8 : 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: isMobile ? 8 : 10, marginBottom: isMobile ? 10 : 14 }}>
               {(session ? [
                 { icon: '📋', value: counts.total, label: 'On Register', color: primary },
                 { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A' },
@@ -1232,13 +1232,33 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 { icon: '⚠️', value: children.filter(c => c.allergies).length, label: 'Allergies', color: '#D97706', onClick: () => setStatListModal('allergies') },
                 { icon: '✚', value: children.filter(c => c.medical_notes).length, label: 'Medical Alerts', color: '#DC2626', onClick: () => setStatListModal('medical') },
               ]).map(s => (
-                <button key={s.label} onClick={s.onClick} disabled={!s.onClick}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: s.color + (darkMode ? '1A' : '10'), border: `1.5px solid ${s.color}30`, flexShrink: 0, cursor: s.onClick ? 'pointer' : 'default', font: 'inherit' }}>
-                  <span style={{ fontSize: 12 }}>{s.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: t.textSub, whiteSpace: 'nowrap' }}>{s.label}</span>
-                </button>
+                <motion.button key={s.label} onClick={s.onClick} disabled={!s.onClick}
+                  whileHover={s.onClick ? { y: -2, boxShadow: `0 10px 22px -8px ${s.color}45` } : {}}
+                  whileTap={s.onClick ? { scale: 0.97 } : {}}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, minWidth: 0,
+                    padding: isMobile ? '10px 10px' : '13px 14px', borderRadius: 16,
+                    background: darkMode ? `linear-gradient(160deg, ${s.color}22, ${s.color}0C)` : `linear-gradient(160deg, ${s.color}12, #fff)`,
+                    border: `1.5px solid ${darkMode ? s.color + '30' : s.color + '22'}`,
+                    boxShadow: darkMode ? 'none' : '0 1px 3px rgba(15,23,42,0.04)',
+                    cursor: s.onClick ? 'pointer' : 'default', font: 'inherit', textAlign: 'left',
+                  }}>
+                  <span style={{
+                    width: isMobile ? 32 : 38, height: isMobile ? 32 : 38, borderRadius: 11, flexShrink: 0,
+                    background: `linear-gradient(135deg, ${s.color}, ${s.color}CC)`, boxShadow: `0 4px 10px -3px ${s.color}70`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 14 : 16,
+                  }}>{s.icon}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: 900, color: t.text, lineHeight: 1.1 }}>{s.value}</div>
+                    <div style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 700, color: t.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
+                  </div>
+                  {s.onClick && (
+                    <span style={{ marginLeft: 'auto', fontSize: 12, color: s.color, opacity: 0.6, flexShrink: 0 }}>→</span>
+                  )}
+                </motion.button>
               ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 8 : 12 }}>
               <div style={{ flex: 1, minWidth: 0 }} />
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
                 <button
