@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
-import { useTodaySession, useAttendance, useChildren } from '../../lib/hooks'
+import { useTodaySession, useAttendance, useChildren, useOnlineStatus } from '../../lib/hooks'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { TemplatePicker } from './TemplateCreator'
@@ -949,9 +949,11 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const isMobile = useIsMobile()
   const { groups: orgGroups, refetch: refetchOrgSettings } = useOrgSettings(orgId)
   const bubbles = normaliseBubbles(orgGroups)
-  const { session } = useTodaySession(orgId)
-  const { children, setChildren, loading } = useChildren(orgId)
+  const { session, fromCache: sessionFromCache } = useTodaySession(orgId)
+  const { children, setChildren, loading, fromCache: childrenFromCache } = useChildren(orgId)
   const { attendance } = useAttendance(session?.id)
+  const isOnline = useOnlineStatus()
+  const showOfflineBanner = !isOnline || childrenFromCache || sessionFromCache
 
   const [search, setSearch] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -1293,6 +1295,16 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             </AnimatePresence>
           </div>
         </div>
+
+        {/* OFFLINE BANNER */}
+        {showOfflineBanner && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: darkMode ? 'rgba(217,119,6,0.16)' : '#FFFBEB', borderBottom: `1px solid ${darkMode ? 'rgba(217,119,6,0.3)' : '#FDE68A'}`, flexShrink: 0 }}>
+            <span style={{ fontSize: 13 }}>📡</span>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: darkMode ? '#FBBF24' : '#92400E' }}>
+              {isOnline ? 'Reconnecting…' : "You're offline"} — showing the last saved register{isOnline ? '' : '. Changes made elsewhere won\'t appear until you\'re back online'}.
+            </span>
+          </div>
+        )}
 
         {/* GROUP FILTER */}
         {availableGroups.length > 1 && (
