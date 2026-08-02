@@ -972,6 +972,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const [toast, setToast] = useState('')
   const [note, setNote] = useState('')
   const [showMobileTools, setShowMobileTools] = useState(false)
+  const [statListModal, setStatListModal] = useState(null) // 'allergies' | 'medical' | null
   const [darkMode, setDarkMode] = useState(() => {
     try { return localStorage.getItem('registerDarkMode') === '1' } catch { return false }
   })
@@ -1228,14 +1229,15 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
               ] : [
                 { icon: '📋', value: counts.total, label: 'On Register', color: primary },
-                { icon: '⚠️', value: children.filter(c => c.allergies).length, label: 'Allergies', color: '#D97706' },
-                { icon: '✚', value: children.filter(c => c.medical_notes).length, label: 'Medical Alerts', color: '#DC2626' },
+                { icon: '⚠️', value: children.filter(c => c.allergies).length, label: 'Allergies', color: '#D97706', onClick: () => setStatListModal('allergies') },
+                { icon: '✚', value: children.filter(c => c.medical_notes).length, label: 'Medical Alerts', color: '#DC2626', onClick: () => setStatListModal('medical') },
               ]).map(s => (
-                <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: s.color + (darkMode ? '1A' : '10'), border: `1.5px solid ${s.color}30`, flexShrink: 0 }}>
+                <button key={s.label} onClick={s.onClick} disabled={!s.onClick}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: s.color + (darkMode ? '1A' : '10'), border: `1.5px solid ${s.color}30`, flexShrink: 0, cursor: s.onClick ? 'pointer' : 'default', font: 'inherit' }}>
                   <span style={{ fontSize: 12 }}>{s.icon}</span>
                   <span style={{ fontSize: 13, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</span>
                   <span style={{ fontSize: 10, fontWeight: 700, color: t.textSub, whiteSpace: 'nowrap' }}>{s.label}</span>
-                </div>
+                </button>
               ))}
               <div style={{ flex: 1, minWidth: 0 }} />
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
@@ -1669,6 +1671,18 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           onClose={() => { setViewingPastSession(null); setViewingPastAttendance([]) }}
         />
       )}
+
+      {statListModal && (
+        <ChildrenFieldListModal
+          title={statListModal === 'allergies' ? 'Allergies' : 'Medical Alerts'}
+          icon={statListModal === 'allergies' ? '⚠️' : '✚'}
+          color={statListModal === 'allergies' ? '#D97706' : '#DC2626'}
+          items={children.filter(c => statListModal === 'allergies' ? c.allergies : c.medical_notes)}
+          getFieldText={c => statListModal === 'allergies' ? c.allergies : c.medical_notes}
+          onClose={() => setStatListModal(null)}
+          onSelectChild={c => { setStatListModal(null); setSelectedChild({ child: c, status: getStatus(c.id), attRec: getAttRec(c.id) }) }}
+        />
+      )}
     </div>
   )
 }
@@ -1676,6 +1690,85 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 // ─── PAST REGISTERS LIST ──────────────────────────────────────
 // Every closed session for the org, most recent first, grouped by month —
 // tap one to open its read-only timestamped attendance view.
+// ─── STAT CHIP CHILDREN LIST ────────────────────────────────────
+// Shown when tapping the Allergies / Medical Alerts stat chips — a quick
+// scan of who has the flag and what it says, without leaving the register.
+function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClose, onSelectChild }) {
+  const isMobile = useIsMobile()
+  const [search, setSearch] = useState('')
+  const filtered = items.filter(c => !search.trim() || `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.trim().toLowerCase()))
+  const sorted = [...filtered].sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`))
+
+  return createPortal(
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 10900, display: 'flex', flexDirection: 'column',
+      background: isMobile ? '#F8FAFC' : 'rgba(15,23,42,0.45)',
+      alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'flex-start' : 'center',
+      padding: isMobile ? 0 : 24, boxSizing: 'border-box',
+    }} onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div style={{
+        position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 560, maxHeight: isMobile ? 'none' : '86vh',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        borderRadius: isMobile ? 0 : 24, flex: isMobile ? 1 : undefined,
+        background: '#F8FAFC', boxShadow: isMobile ? 'none' : '0 24px 60px -20px rgba(0,0,0,0.35)',
+      }} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ background: `linear-gradient(165deg, ${color}12 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+          <button onClick={onClose} aria-label="Close" style={{
+            position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
+            width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
+            color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          }}>✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</div>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>{title}</div>
+              <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{items.length} child{items.length !== 1 ? 'ren' : ''} on register</div>
+            </div>
+          </div>
+          {items.length > 5 && (
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search by name..."
+              style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#111', fontSize: 12.5, outline: 'none' }} />
+          )}
+        </div>
+
+        {/* List */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 16px 24px' : '16px 22px 24px', WebkitOverflowScrolling: 'touch' }}>
+          {sorted.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
+              {items.length === 0 ? `No children have a ${title.toLowerCase()} flag.` : 'Nothing matches your search.'}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {sorted.map(c => (
+                <button key={c.id} onClick={() => onSelectChild(c)} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10, textAlign: 'left', width: '100%',
+                  background: '#fff', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
+                  cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
+                }}>
+                  <span style={{ width: 34, height: 34, borderRadius: '50%', background: color + '18', color, fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {(c.first_name?.[0] || '') + (c.last_name?.[0] || '')}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: '#0B1220' }}>{c.first_name} {c.last_name}</span>
+                      {c.group_name && <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8' }}>· {c.group_name}</span>}
+                    </div>
+                    <div style={{ fontSize: 12, color, fontWeight: 600, marginTop: 3, lineHeight: 1.4 }}>{getFieldText(c)}</div>
+                  </div>
+                  <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0, marginTop: 4 }}>→</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
 function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect }) {
   const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
