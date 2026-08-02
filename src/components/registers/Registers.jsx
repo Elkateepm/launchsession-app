@@ -1154,8 +1154,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
               ].map(a => (
                 <button key={a.key} onClick={a.onClick} aria-label={a.label}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, flex: '0 0 auto', padding: '3px 1px', borderRadius: 12, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 9.5 : 11, fontWeight: 800, cursor: 'pointer', boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', textAlign: 'center', lineHeight: 1.15 }}>
-                  <img src={a.icon} alt="" style={{ width: isMobile ? 60 : 64, height: isMobile ? 60 : 64, objectFit: 'contain', flexShrink: 0 }} />
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, flex: '0 0 auto', padding: '3px 1px', borderRadius: 12, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 9.5 : 11, fontWeight: 800, cursor: 'pointer', boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', textAlign: 'center', lineHeight: 1.15 }}>
+                  <img src={a.icon} alt="" style={{ width: a.key === 'print' ? (isMobile ? 120 : 128) : (isMobile ? 60 : 64), height: isMobile ? 60 : 64, objectFit: 'contain', flexShrink: 0 }} />
                   <span style={{ maxWidth: isMobile ? 64 : 76 }}>{a.label}</span>
                 </button>
               ))}
