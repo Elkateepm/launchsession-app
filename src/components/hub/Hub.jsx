@@ -105,9 +105,10 @@ function AttendanceRing({ signedIn, total, primary, secondary }) {
 // while upcoming, and settles into a solid tick once closed. The fill
 // reflects real elapsed progress through a fixed, meaningful window
 // (session duration while live; time-since-creation-to-start while
-// upcoming) passed in via `totalSeconds`, so the ring's fraction is
-// stable across reloads instead of resetting to "full" every time the
-// card happens to mount.
+// upcoming) passed in via `totalSeconds`, and fills up (empty → full) as
+// that window elapses, matching the attendance ring's fill language.
+// If no reference window is available, the ring stays empty rather than
+// defaulting to misleadingly full.
 function TimeRing({ status, target, totalSeconds }) {
   const [remaining, setRemaining] = useState(() => (target ? Math.max(0, Math.floor((target.getTime() - Date.now()) / 1000)) : 0))
 
@@ -142,8 +143,13 @@ function TimeRing({ status, target, totalSeconds }) {
     )
   }
 
-  const total = totalSeconds && totalSeconds > 0 ? totalSeconds : (remaining || 1)
-  const fraction = Math.max(0, Math.min(1, remaining / total))
+  // Fraction represents *elapsed* progress toward the target, so the ring
+  // fills up as start/end approaches — same visual language as the
+  // attendance ring (empty → full), rather than draining from full. If we
+  // don't have a real reference window, default to an empty ring instead of
+  // a misleading full one.
+  const total = totalSeconds && totalSeconds > 0 ? totalSeconds : null
+  const fraction = total ? Math.max(0, Math.min(1, (total - remaining) / total)) : 0
   const offset = RING_C * (1 - fraction)
   const colour = status === 'live' ? '#2EC5CE' : '#FBBF24'
 
