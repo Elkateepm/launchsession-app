@@ -1145,7 +1145,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 )}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
+            <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : undefined, flexShrink: isMobile ? undefined : 0 }}>
               {[
                 { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
                 { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
@@ -1154,9 +1154,9 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
               ].map(a => (
                 <button key={a.key} onClick={a.onClick} aria-label={a.label}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, height: isMobile ? 44 : 48, padding: isMobile ? '0 10px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flex: isMobile ? '1 1 0' : '0 0 auto', minWidth: 0, height: isMobile ? 44 : 48, padding: isMobile ? '0 6px' : '0 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', boxShadow: '0 1px 4px -1px rgba(0,0,0,0.06)', whiteSpace: 'nowrap' }}>
                   <img src={a.icon} alt="" style={{ width: isMobile ? 30 : 32, height: isMobile ? 30 : 32, objectFit: 'contain', flexShrink: 0 }} />
-                  {!isMobile && <span>{a.label}</span>}
+                  {!isMobile && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.label}</span>}
                 </button>
               ))}
               {isMobile && (
@@ -1207,7 +1207,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                     exit={{ opacity: 0, y: -6, scale: 0.97 }}
                     transition={{ duration: 0.16 }}
                     style={{
-                      position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 40,
+                      position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 40,
                       width: isMobile ? 'min(84vw, 320px)' : 300,
                       background: '#fff', border: '1px solid #EEF1F6', borderRadius: 14,
                       boxShadow: '0 16px 40px -12px rgba(15,23,42,0.25)', padding: 10,
