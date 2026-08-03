@@ -31,20 +31,24 @@ const EVENT_TEMPLATES = {
 // Which event types are actually wired up to resolve real recipients today.
 // Anything else is documented (has copy above) but intentionally rejected
 // rather than silently resolving to nobody or the wrong audience.
-// SESSION_CANCELLED, REGISTER_INCOMPLETE, FORM_SUBMISSION_RECEIVED,
-// MEDICAL_INFO_UPDATED, RESOURCE_BOOKING_UPDATE, REFLECTION_DUE, and
-// INVITATION_ACCEPTED are handled by DB triggers (see the
-// notification_coverage_triggers migration) that write directly to the
-// notifications table — that's what makes them fire for every code path,
-// including anonymous public-form submitters who have no session to call
-// this endpoint with. Deliberately not duplicated here to avoid double
-// notification rows if a client-side call is ever added for the same event.
-// SESSION_STARTING_SOON and REGISTER_LEFT_OPEN are time-based rather than
+// SESSION_CANCELLED, FORM_SUBMISSION_RECEIVED, MEDICAL_INFO_UPDATED,
+// RESOURCE_BOOKING_UPDATE, and INVITATION_ACCEPTED are handled by DB
+// triggers (see the notification_coverage_triggers migration) that write
+// directly to the notifications table — bell-only, no real push. That's
+// what makes them fire for every code path, including anonymous public-form
+// submitters who have no session to call this endpoint with.
+// REGISTER_INCOMPLETE and REFLECTION_DUE are raised by trg_notify_session_closed:
+// REGISTER_INCOMPLETE stays bell-only; REFLECTION_DUE also fires a real push
+// (lead_staff_id only) via the db_event_push path below, same pattern as
+// SESSION_CREATED/EDITED.
+// SESSION_STARTING_SOON, REGISTER_LEFT_OPEN, RISK_ASSESSMENT_DUE,
+// CONSENT_EXPIRING, and VOLUNTEER_COVER_REQUIRED are time-based rather than
 // event-based, so they're handled by the `cron_reminders` branch further
 // down, polled by an external cron (see `starting_soon_notified_at` /
-// `register_open_reminder_sent_at` on `sessions` for the dedup mechanism —
-// note this deliberately never auto-closes a register itself, only alerts
-// the people who can).
+// `register_open_reminder_sent_at` / `review_reminder_sent_at` /
+// `expiry_reminder_sent_at` / `volunteer_cover_reminder_sent_at` for the
+// dedup mechanism — note this deliberately never auto-resolves anything
+// itself, only alerts the people who can).
 // SESSION_CREATED and SESSION_EDITED are handled by a DB trigger too
 // (notify_session_created_or_edited migration) but — unlike the
 // bell-only trigger group above — that trigger also fires an actual push
@@ -54,6 +58,10 @@ const EVENT_TEMPLATES = {
 // external poll). This covers every place a session gets created/edited
 // (wizard, session form, trip/event editor, future ones) from one place
 // instead of instrumenting each call site separately.
+// SECURITY_ALERT is raised by trg_notify_role_escalation on user_profiles
+// (a user promoted to admin/owner) — org-wide rather than session-scoped, so
+// it passes an explicit recipient_ids array to db_event_push instead of a
+// session_id.
 const IMPLEMENTED_EVENTS = new Set(['TEST_NOTIFICATION', 'SAFEGUARDING_ACTION_REQUIRED', 'NEW_MESSAGE', 'STAFF_ADDED_TO_SESSION'])
 
 // Shared delivery path for the cron_reminders sweeps below — resolves
@@ -127,29 +135,51 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Push notifications are not configured on the server yet' })
       }
 
-      const { event_type, session_id, actor_user_id } = req.body || {}
+      const { event_type, session_id, actor_user_id, recipient_ids, org_id: bodyOrgId, body_override } = req.body || {}
       if (!event_type || !EVENT_TEMPLATES[event_type]) return res.status(400).json({ error: 'Unknown or missing event_type' })
-      if (!session_id) return res.status(400).json({ error: 'Missing session_id' })
 
       const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
       webpush.setVapidDetails(VAPID_SUBJECT || 'mailto:support@launchsession.co.uk', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
-      const { data: sessionRow, error: sessionErr } = await adminClient.from('sessions').select('id, org_id, title, lead_staff_id').eq('id', session_id).maybeSingle()
-      if (sessionErr || !sessionRow) return res.status(404).json({ error: 'Session not found' })
-
-      const { data: staffRows } = await adminClient.from('session_staff').select('user_id').eq('session_id', session_id).not('user_id', 'is', null)
-      // Never notify whoever just made the change about their own action.
-      const recipientIds = [sessionRow.lead_staff_id, ...(staffRows || []).map(r => r.user_id)].filter(id => id && id !== actor_user_id)
-
       const template = EVENT_TEMPLATES[event_type]
-      const verb = event_type === 'SESSION_CREATED' ? 'created' : 'updated'
+      let orgId, recipientIds, notifBody = body_override || template.body, notifUrl = template.url
+
+      if (session_id) {
+        // Session-scoped events: SESSION_CREATED, SESSION_EDITED, REFLECTION_DUE.
+        const { data: sessionRow, error: sessionErr } = await adminClient.from('sessions').select('id, org_id, title, lead_staff_id').eq('id', session_id).maybeSingle()
+        if (sessionErr || !sessionRow) return res.status(404).json({ error: 'Session not found' })
+        orgId = sessionRow.org_id
+
+        if (event_type === 'REFLECTION_DUE') {
+          // Only the lead needs to write the reflection — not the whole team.
+          recipientIds = [sessionRow.lead_staff_id].filter(Boolean)
+          notifBody = `The session "${sessionRow.title}" is ready for its reflection to be written up.`
+          notifUrl = `/?tab=registers&session=${sessionRow.id}`
+        } else {
+          const { data: staffRows } = await adminClient.from('session_staff').select('user_id').eq('session_id', session_id).not('user_id', 'is', null)
+          // Never notify whoever just made the change about their own action.
+          recipientIds = [sessionRow.lead_staff_id, ...(staffRows || []).map(r => r.user_id)].filter(id => id && id !== actor_user_id)
+          const verb = event_type === 'SESSION_CREATED' ? 'created' : 'updated'
+          notifBody = `"${sessionRow.title}" has been ${verb}.`
+          notifUrl = `/?tab=registers&session=${sessionRow.id}`
+        }
+      } else if (bodyOrgId && Array.isArray(recipient_ids)) {
+        // Org-wide events with no single session to hang off, e.g. SECURITY_ALERT.
+        // The trigger computes and passes the recipient list itself since it
+        // already has the context (role change, etc.) that decided who cares.
+        orgId = bodyOrgId
+        recipientIds = recipient_ids.filter(id => id && id !== actor_user_id)
+      } else {
+        return res.status(400).json({ error: 'Missing session_id or (org_id + recipient_ids)' })
+      }
+
       const sent = await deliverSweepPush(adminClient, {
-        org_id: sessionRow.org_id,
+        org_id: orgId,
         event_type,
         category: template.category,
         title: template.title,
-        body: `"${sessionRow.title}" has been ${verb}.`,
-        url: `/?tab=registers&session=${sessionRow.id}`,
+        body: notifBody,
+        url: notifUrl,
         priority: template.priority,
         recipientIds,
       })
@@ -293,12 +323,146 @@ export default async function handler(req, res) {
         await adminClient.from('sessions').update({ register_open_reminder_sent_at: new Date().toISOString() }).eq('id', session.id)
       }
 
+      // ── RISK_ASSESSMENT_DUE — non-archived assessments whose next review
+      // date is today or already passed, or due within the next 7 days.
+      // Notified once per due-window via review_reminder_sent_at; a new
+      // review (which should update next_review_date) naturally re-arms it. ──
+      const dueWindow = new Date(now)
+      dueWindow.setUTCDate(dueWindow.getUTCDate() + 7)
+      const dueWindowStr = dueWindow.toISOString().slice(0, 10)
+
+      const { data: dueAssessments, error: raErr } = await adminClient
+        .from('risk_assessments')
+        .select('id, org_id, name, next_review_date, assigned_reviewer_id')
+        .eq('archived', false)
+        .not('next_review_date', 'is', null)
+        .lte('next_review_date', dueWindowStr)
+        .is('review_reminder_sent_at', null)
+
+      if (raErr) console.error('send-form-email(cron_reminders): failed to query risk_assessments', raErr)
+
+      const raTemplate = EVENT_TEMPLATES.RISK_ASSESSMENT_DUE
+      let raSent = 0
+      for (const ra of (dueAssessments || [])) {
+        const { data: admins } = await adminClient.from('user_profiles').select('id').eq('org_id', ra.org_id).in('role', ['admin', 'owner'])
+        const recipientIds = [ra.assigned_reviewer_id, ...(admins || []).map(a => a.id)]
+        const overdue = ra.next_review_date <= todayStr
+        raSent += await deliverSweepPush(adminClient, {
+          org_id: ra.org_id,
+          event_type: 'RISK_ASSESSMENT_DUE',
+          category: raTemplate.category,
+          title: raTemplate.title,
+          body: `"${ra.name}" ${overdue ? 'was due for review on' : 'is due for review on'} ${ra.next_review_date}.`,
+          url: '/?tab=risk_assessments',
+          priority: raTemplate.priority,
+          recipientIds,
+        })
+        await adminClient.from('risk_assessments').update({ review_reminder_sent_at: new Date().toISOString() }).eq('id', ra.id)
+      }
+
+      // ── CONSENT_EXPIRING — granted consents with an expiry date within the
+      // next 7 days. expires_at is optional/nullable (most consent types
+      // don't expire), so this only ever fires for the ones that are set. ──
+      const { data: expiringConsents, error: ceErr } = await adminClient
+        .from('child_consents')
+        .select('id, org_id, child_id, consent_type, expires_at')
+        .eq('status', 'granted')
+        .not('expires_at', 'is', null)
+        .lte('expires_at', dueWindow.toISOString())
+        .is('expiry_reminder_sent_at', null)
+
+      if (ceErr) console.error('send-form-email(cron_reminders): failed to query child_consents', ceErr)
+
+      const ceTemplate = EVENT_TEMPLATES.CONSENT_EXPIRING
+      let ceSent = 0
+      for (const consent of (expiringConsents || [])) {
+        const { data: child } = await adminClient.from('children').select('first_name, last_name').eq('id', consent.child_id).maybeSingle()
+        const { data: admins } = await adminClient.from('user_profiles').select('id').eq('org_id', consent.org_id).in('role', ['admin', 'owner'])
+        const recipientIds = (admins || []).map(a => a.id)
+        const childName = child ? `${child.first_name} ${child.last_name}` : 'A child'
+        ceSent += await deliverSweepPush(adminClient, {
+          org_id: consent.org_id,
+          event_type: 'CONSENT_EXPIRING',
+          category: ceTemplate.category,
+          title: ceTemplate.title,
+          body: `${childName}'s ${consent.consent_type} consent expires on ${new Date(consent.expires_at).toISOString().slice(0, 10)}.`,
+          url: '/?tab=children',
+          priority: ceTemplate.priority,
+          recipientIds,
+        })
+        await adminClient.from('child_consents').update({ expiry_reminder_sent_at: new Date().toISOString() }).eq('id', consent.id)
+      }
+
+      // ── VOLUNTEER_COVER_REQUIRED — sessions starting within 24h that are
+      // short of their volunteer_limit. Alerts admins (they arrange cover),
+      // not the assigned team, since the team can't fix a staffing gap
+      // themselves. Uses the same today/tomorrow UK-date approach as the
+      // other sweeps rather than a single date, so anything within a
+      // rolling 24h window is caught regardless of where in the day we are. ──
+      const t = new Date(now)
+      t.setUTCDate(t.getUTCDate() + 1)
+      const tParts = Object.fromEntries(
+        new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit',
+        }).formatToParts(t).map(p => [p.type, p.value])
+      )
+      const tomorrowStr = `${tParts.year}-${tParts.month}-${tParts.day}`
+
+      const { data: coverCandidates, error: vcErr } = await adminClient
+        .from('sessions')
+        .select('id, org_id, title, session_date, start_time, volunteer_limit')
+        .in('session_date', [todayStr, tomorrowStr])
+        .is('cancelled_at', null)
+        .is('closed_at', null)
+        .not('volunteer_limit', 'is', null)
+        .gt('volunteer_limit', 0)
+        .is('volunteer_cover_reminder_sent_at', null)
+
+      if (vcErr) console.error('send-form-email(cron_reminders): failed to query sessions for volunteer cover', vcErr)
+
+      const withinNext24h = (coverCandidates || []).filter(s => {
+        const [h, m] = String(s.start_time || '').split(':').map(Number)
+        if (Number.isNaN(h) || Number.isNaN(m)) return false
+        const startMinutes = h * 60 + m
+        const diff = s.session_date === todayStr ? (startMinutes - nowMinutes) : (startMinutes + 1440 - nowMinutes)
+        return diff >= 0 && diff <= 1440
+      })
+
+      const vcTemplate = EVENT_TEMPLATES.VOLUNTEER_COVER_REQUIRED
+      let vcSent = 0
+      for (const session of withinNext24h) {
+        const { count } = await adminClient.from('session_staff').select('id', { count: 'exact', head: true }).eq('session_id', session.id).not('volunteer_id', 'is', null)
+        if ((count || 0) >= session.volunteer_limit) {
+          await adminClient.from('sessions').update({ volunteer_cover_reminder_sent_at: new Date().toISOString() }).eq('id', session.id)
+          continue
+        }
+        const { data: admins } = await adminClient.from('user_profiles').select('id').eq('org_id', session.org_id).in('role', ['admin', 'owner'])
+        const recipientIds = (admins || []).map(a => a.id)
+        vcSent += await deliverSweepPush(adminClient, {
+          org_id: session.org_id,
+          event_type: 'VOLUNTEER_COVER_REQUIRED',
+          category: vcTemplate.category,
+          title: vcTemplate.title,
+          body: `"${session.title}" has ${count || 0}/${session.volunteer_limit} volunteers signed up and starts soon.`,
+          url: `/?tab=registers&session=${session.id}`,
+          priority: vcTemplate.priority,
+          recipientIds,
+        })
+        await adminClient.from('sessions').update({ volunteer_cover_reminder_sent_at: new Date().toISOString() }).eq('id', session.id)
+      }
+
       return res.status(200).json({
         success: true,
         sessions_starting_soon: due.length,
         starting_soon_pushes: startingSoonSent,
         registers_left_open: overdue.length,
         left_open_pushes: openSent,
+        risk_assessments_due: (dueAssessments || []).length,
+        risk_assessment_pushes: raSent,
+        consents_expiring: (expiringConsents || []).length,
+        consent_pushes: ceSent,
+        volunteer_cover_candidates: withinNext24h.length,
+        volunteer_cover_pushes: vcSent,
       })
     }
 
