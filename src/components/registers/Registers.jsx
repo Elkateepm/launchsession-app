@@ -987,7 +987,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   useEffect(() => {
     if (!showPastRegisters || !orgId) return
     setPastSessionsLoading(true)
-    supabase.from('sessions').select('*').eq('org_id', orgId).not('closed_at', 'is', null)
+    // Archived registers live in the Archive tab instead, so they're excluded here.
+    supabase.from('sessions').select('*').eq('org_id', orgId).not('closed_at', 'is', null).is('archived_at', null)
       .order('closed_at', { ascending: false }).limit(300)
       .then(({ data }) => { setPastSessions(data || []); setPastSessionsLoading(false) })
   }, [showPastRegisters, orgId])
@@ -998,6 +999,41 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
     const { data } = await supabase.from('attendance').select('*').eq('session_id', s.id)
     setViewingPastAttendance(data || [])
     setViewingPastLoading(false)
+  }
+
+  // ── ARCHIVE — closed registers the retention sweep has moved out of
+  // Past Registers (see register_retention_months in Settings). Still
+  // fully viewable/restorable here right up until they're permanently
+  // deleted per the org's grace-period setting. ──
+  const [showArchive, setShowArchive] = useState(false)
+  const [archivedSessions, setArchivedSessions] = useState([])
+  const [archivedSessionsLoading, setArchivedSessionsLoading] = useState(false)
+  const [viewingArchivedSession, setViewingArchivedSession] = useState(null)
+  const [viewingArchivedAttendance, setViewingArchivedAttendance] = useState([])
+  const [viewingArchivedLoading, setViewingArchivedLoading] = useState(false)
+
+  const loadArchivedSessions = React.useCallback(() => {
+    if (!orgId) return
+    setArchivedSessionsLoading(true)
+    supabase.from('sessions').select('*').eq('org_id', orgId).not('archived_at', 'is', null)
+      .order('archived_at', { ascending: false }).limit(300)
+      .then(({ data }) => { setArchivedSessions(data || []); setArchivedSessionsLoading(false) })
+  }, [orgId])
+
+  useEffect(() => { if (showArchive) loadArchivedSessions() }, [showArchive, loadArchivedSessions])
+
+  const openArchivedSession = async (s) => {
+    setViewingArchivedLoading(true)
+    setViewingArchivedSession(s)
+    const { data } = await supabase.from('attendance').select('*').eq('session_id', s.id)
+    setViewingArchivedAttendance(data || [])
+    setViewingArchivedLoading(false)
+  }
+
+  const handleRestoreSession = async (s) => {
+    await supabase.from('sessions').update({ archived_at: null }).eq('id', s.id)
+    setArchivedSessions(prev => prev.filter(x => x.id !== s.id))
+    showToast(`"${s.title}" restored to Past Registers`)
   }
 
   // Triggered by the mobile Launch menu's "Add Child" quick action — opens the same
@@ -1133,7 +1169,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
     filterBorder: darkMode ? 'rgba(255,255,255,0.08)' : '#F3F4F6',
     listBg: darkMode ? 'transparent' : '#F8FAFC',
   }
-  const actionColors = { past: '#8B5CF6', medical: '#3B82F6', groups: '#14B8A6', print: '#A855F7', import: '#EC4899' }
+  const actionColors = { past: '#8B5CF6', archive: '#6366F1', medical: '#3B82F6', groups: '#14B8A6', print: '#A855F7', import: '#EC4899' }
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: t.pageBg }}>
@@ -1195,6 +1231,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             <div style={{ display: 'flex', gap: isMobile ? 4 : 6, alignItems: 'center', width: isMobile ? '100%' : undefined, justifyContent: isMobile ? 'space-between' : undefined, flexShrink: isMobile ? undefined : 0 }}>
               {[
                 { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
+                { key: 'archive', label: 'Archive', icon: '🗄️', onClick: () => setShowArchive(true) },
                 { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
                 { key: 'groups', label: 'Manage Groups', icon: '/icons/manage-groups-icon.png', onClick: () => setShowGroupsSetup(true) },
                 { key: 'print', label: 'Print Register', icon: '/icons/print-register-icon.png', onClick: () => handlePrint() },
@@ -1204,7 +1241,11 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 return (
                   <button key={a.key} onClick={a.onClick} aria-label={a.label}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, flex: isMobile ? '1 1 0' : '0 0 auto', minWidth: 0, width: isMobile ? undefined : 82, height: isMobile ? 68 : 80, boxSizing: 'border-box', padding: '3px 1px', borderRadius: 12, border: darkMode ? `1px solid ${ac}3A` : '1.5px solid #E2E8F0', background: darkMode ? `linear-gradient(160deg, ${ac}30, ${ac}12)` : '#fff', color: darkMode ? t.text : '#374151', fontSize: isMobile ? 8.5 : 10, fontWeight: 800, cursor: 'pointer', boxShadow: darkMode ? `0 4px 14px -8px ${ac}80` : '0 1px 4px -1px rgba(0,0,0,0.06)', textAlign: 'center', lineHeight: 1.15 }}>
-                    <img src={a.icon} alt="" style={{ width: isMobile ? 48 : 52, height: isMobile ? 48 : 52, objectFit: 'contain', flexShrink: 0, marginBottom: -4 }} />
+                    {a.icon.startsWith('/') ? (
+                      <img src={a.icon} alt="" style={{ width: isMobile ? 48 : 52, height: isMobile ? 48 : 52, objectFit: 'contain', flexShrink: 0, marginBottom: -4 }} />
+                    ) : (
+                      <span style={{ fontSize: isMobile ? 34 : 38, lineHeight: 1, marginBottom: -2 }}>{a.icon}</span>
+                    )}
                     <span style={{ maxWidth: isMobile ? 62 : 74 }}>{a.label}</span>
                   </button>
                 )
@@ -1374,6 +1415,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => setShowTemplates(v => !v) },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => handlePrint() },
               { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => setShowPastRegisters(true) },
+              { icon: '🗄️', label: 'Archive', sub: 'Older closed registers', action: () => setShowArchive(true) },
             ].map(t => (
               <button key={t.label} onClick={t.action}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 6, transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease' }}
@@ -1487,6 +1529,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => { setShowTemplates(true); setShowMobileTools(false) } },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => { handlePrint(); setShowMobileTools(false) } },
               { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => { setShowPastRegisters(true); setShowMobileTools(false) } },
+              { icon: '🗄️', label: 'Archive', sub: 'Older closed registers', action: () => { setShowArchive(true); setShowMobileTools(false) } },
             ].map(t => (
               <button key={t.label} onClick={t.action}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
@@ -1648,6 +1691,30 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           primary={primary}
           secondary={org?.secondary_color || primary}
           onClose={() => { setViewingPastSession(null); setViewingPastAttendance([]) }}
+        />
+      )}
+
+      {/* ARCHIVE — registers the retention policy has moved out of Past Registers */}
+      {showArchive && (
+        <ArchiveListModal
+          sessions={archivedSessions}
+          loading={archivedSessionsLoading}
+          primary={primary}
+          org={org}
+          onClose={() => setShowArchive(false)}
+          onSelect={openArchivedSession}
+          onRestore={handleRestoreSession}
+        />
+      )}
+
+      {viewingArchivedSession && !viewingArchivedLoading && (
+        <HistoricalAttendanceModal
+          session={viewingArchivedSession}
+          attendance={viewingArchivedAttendance}
+          allChildren={children}
+          primary={primary}
+          secondary={org?.secondary_color || primary}
+          onClose={() => { setViewingArchivedSession(null); setViewingArchivedAttendance([]) }}
         />
       )}
 
@@ -1849,7 +1916,136 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
   )
 }
 
-// ─── ADD CHILD MODAL ──────────────────────────────────────────
+// ─── ARCHIVE LIST ─────────────────────────────────────────────
+// Registers the retention sweep has moved out of Past Registers (see
+// register_retention_months in Settings > Registers). Still fully
+// viewable and restorable here — if the org has also set a deletion
+// grace period, each row shows how long until it's permanently removed.
+function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, onRestore }) {
+  const isMobile = useIsMobile()
+  const [search, setSearch] = useState('')
+
+  const filtered = sessions.filter(s => !search.trim() || (s.title || '').toLowerCase().includes(search.trim().toLowerCase()))
+
+  const monthLabel = (dateStr) => {
+    if (!dateStr) return 'Undated'
+    const d = new Date(`${dateStr}T00:00:00`)
+    if (isNaN(d.getTime())) return 'Undated'
+    return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+  }
+  const groups = []
+  filtered.forEach(s => {
+    const label = monthLabel(s.session_date)
+    let g = groups.find(g => g.label === label)
+    if (!g) { g = { label, items: [] }; groups.push(g) }
+    g.items.push(s)
+  })
+
+  const fmtDayDate = (dateStr) => {
+    if (!dateStr) return ''
+    const d = new Date(`${dateStr}T00:00:00`)
+    if (isNaN(d.getTime())) return dateStr
+    return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+  }
+
+  const deletionInfo = (s) => {
+    if (org?.register_deletion_grace_months == null || !s.archived_at) return null
+    const deleteDate = new Date(s.archived_at)
+    deleteDate.setMonth(deleteDate.getMonth() + org.register_deletion_grace_months)
+    const daysLeft = Math.ceil((deleteDate.getTime() - Date.now()) / 86400000)
+    if (daysLeft <= 0) return 'Pending deletion'
+    if (daysLeft === 1) return 'Deletes tomorrow'
+    if (daysLeft <= 31) return `Deletes in ${daysLeft} days`
+    return `Deletes ${deleteDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+  }
+
+  return createPortal(
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column',
+      background: isMobile ? '#F8FAFC' : 'rgba(15,23,42,0.45)',
+      alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'flex-start' : 'center',
+      padding: isMobile ? 0 : 24, boxSizing: 'border-box',
+    }} onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div style={{
+        position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 560, maxHeight: isMobile ? 'none' : '86vh',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        borderRadius: isMobile ? 0 : 24, flex: isMobile ? 1 : undefined,
+        background: '#F8FAFC', boxShadow: isMobile ? 'none' : '0 24px 60px -20px rgba(0,0,0,0.35)',
+      }} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ background: `linear-gradient(165deg, ${primary}0F 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+          <button onClick={onClose} aria-label="Close" style={{
+            position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
+            width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
+            color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          }}>✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🗄️</div>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>Archive</div>
+              <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{sessions.length} archived session{sessions.length !== 1 ? 's' : ''}</div>
+            </div>
+          </div>
+          {org?.register_retention_months == null && (
+            <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: '8px 12px', fontSize: 11.5, color: '#1E40AF', fontWeight: 600, marginBottom: 12 }}>
+              Automatic archiving is off. Turn it on in Settings → Registers → Data Retention to move old registers here automatically.
+            </div>
+          )}
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search archived sessions..."
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#111', fontSize: 12.5, outline: 'none' }} />
+        </div>
+
+        {/* List */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 16px 24px' : '16px 22px 24px', WebkitOverflowScrolling: 'touch' }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>Loading archive…</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
+              {sessions.length === 0 ? 'Nothing archived yet.' : 'Nothing matches your search.'}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {groups.map(g => (
+                <div key={g.label}>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{g.label}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    {g.items.map(s => {
+                      const delInfo = deletionInfo(s)
+                      return (
+                        <div key={s.id} onClick={() => onSelect(s)} style={{
+                          display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', width: '100%', boxSizing: 'border-box',
+                          background: '#fff', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
+                          cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
+                        }}>
+                          <span style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🗄️</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: '#0B1220', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                            <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, marginTop: 1 }}>
+                              {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}
+                            </div>
+                            {delInfo && (
+                              <div style={{ fontSize: 10.5, color: '#B91C1C', fontWeight: 700, marginTop: 3 }}>⚠ {delInfo}</div>
+                            )}
+                          </div>
+                          <button onClick={(e) => { e.stopPropagation(); onRestore(s) }} style={{
+                            flexShrink: 0, fontSize: 10.5, fontWeight: 800, color: primary, background: `${primary}12`,
+                            border: `1px solid ${primary}30`, borderRadius: 99, padding: '6px 11px', cursor: 'pointer', whiteSpace: 'nowrap',
+                          }}>↩ Restore</button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
 function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
   const [form, setForm] = useState({ first_name: '', last_name: '', date_of_birth: '', group_name: bubbles[0]?.label || '', allergies: '', medical_notes: '', emergency_contact_name: '', emergency_contact_phone: '' })
   const [saving, setSaving] = useState(false)

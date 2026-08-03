@@ -451,6 +451,63 @@ export default async function handler(req, res) {
         await adminClient.from('sessions').update({ volunteer_cover_reminder_sent_at: new Date().toISOString() }).eq('id', session.id)
       }
 
+      // ── DATA RETENTION — archives closed registers past an org's
+      // retention window, then permanently deletes archived registers past
+      // a further grace period. Both settings are opt-in (null = never
+      // runs), so this is a no-op for every org unless they've explicitly
+      // set it in Settings > Registers. Deletion goes through
+      // delete_session_for_retention, which preserves safeguarding records
+      // (nulls the link rather than deleting the concern) and writes a
+      // minimal audit row before the actual attendance data is removed. ──
+      const { data: retentionOrgs, error: retErr } = await adminClient
+        .from('organisations')
+        .select('id, register_retention_months, register_deletion_grace_months')
+        .or('register_retention_months.not.is.null,register_deletion_grace_months.not.is.null')
+
+      if (retErr) console.error('send-form-email(cron_reminders): failed to query organisations for retention', retErr)
+
+      let archivedCount = 0
+      let deletedCount = 0
+
+      for (const orgRow of (retentionOrgs || [])) {
+        if (orgRow.register_retention_months != null) {
+          const cutoff = new Date(now)
+          cutoff.setUTCMonth(cutoff.getUTCMonth() - orgRow.register_retention_months)
+          const cutoffStr = cutoff.toISOString().slice(0, 10)
+
+          const { data: toArchive } = await adminClient
+            .from('sessions')
+            .select('id')
+            .eq('org_id', orgRow.id)
+            .not('closed_at', 'is', null)
+            .is('archived_at', null)
+            .lte('session_date', cutoffStr)
+
+          if (toArchive && toArchive.length > 0) {
+            await adminClient.from('sessions').update({ archived_at: new Date().toISOString() }).in('id', toArchive.map(s => s.id))
+            archivedCount += toArchive.length
+          }
+        }
+
+        if (orgRow.register_deletion_grace_months != null) {
+          const deleteCutoff = new Date(now)
+          deleteCutoff.setUTCMonth(deleteCutoff.getUTCMonth() - orgRow.register_deletion_grace_months)
+
+          const { data: toDelete } = await adminClient
+            .from('sessions')
+            .select('id')
+            .eq('org_id', orgRow.id)
+            .not('archived_at', 'is', null)
+            .lte('archived_at', deleteCutoff.toISOString())
+
+          for (const s of (toDelete || [])) {
+            const { error: delErr } = await adminClient.rpc('delete_session_for_retention', { p_session_id: s.id })
+            if (delErr) console.error('send-form-email(cron_reminders): failed to delete session for retention', s.id, delErr)
+            else deletedCount += 1
+          }
+        }
+      }
+
       return res.status(200).json({
         success: true,
         sessions_starting_soon: due.length,
@@ -463,6 +520,8 @@ export default async function handler(req, res) {
         consent_pushes: ceSent,
         volunteer_cover_candidates: withinNext24h.length,
         volunteer_cover_pushes: vcSent,
+        registers_archived: archivedCount,
+        registers_deleted: deletedCount,
       })
     }
 

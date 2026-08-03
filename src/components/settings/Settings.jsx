@@ -1742,6 +1742,23 @@ function GroupsSection({ org, refreshOrg }) {
     setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000)
   }
 
+  // null = "Never" for both -- the safe, opt-in default. Nothing archives
+  // or deletes for an org until they explicitly pick a value here.
+  const [retentionMonths, setRetentionMonths] = useState(org?.register_retention_months ?? '')
+  const [deletionGraceMonths, setDeletionGraceMonths] = useState(org?.register_deletion_grace_months ?? '')
+  const [retentionSaving, setRetentionSaving] = useState(false)
+  const [retentionSaved, setRetentionSaved] = useState(false)
+
+  const handleSaveRetention = async () => {
+    setRetentionSaving(true)
+    await supabase.from('organisations').update({
+      register_retention_months: retentionMonths === '' ? null : Number(retentionMonths),
+      register_deletion_grace_months: deletionGraceMonths === '' ? null : Number(deletionGraceMonths),
+    }).eq('id', org.id)
+    if (refreshOrg) await refreshOrg()
+    setRetentionSaving(false); setRetentionSaved(true); setTimeout(() => setRetentionSaved(false), 2000)
+  }
+
   return (
     <div>
       <div style={{ background: 'linear-gradient(135deg, #0A0F1E, #1a2744)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -1772,6 +1789,42 @@ function GroupsSection({ org, refreshOrg }) {
 
         <button onClick={handleSaveRegisterOptions} disabled={saving} style={{ marginTop: 4, padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? '#9CA3AF' : '#1B9AAA', color: '#fff', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
           {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save Register Options'}
+        </button>
+      </SettingCard>
+
+      <SettingCard title="Data Retention" description="Control how long closed registers stay in your main Past Registers list before moving to Archive, and whether they're eventually deleted for good.">
+        <Field label="Archive registers after" hint="Closed registers older than this move from Past Registers into the Archive tab. They're still fully viewable there — this just keeps your main list to recent sessions.">
+          <select style={{ ...inp, maxWidth: 280 }} value={retentionMonths} onChange={e => setRetentionMonths(e.target.value)}>
+            <option value="">Never (keep in Past Registers indefinitely)</option>
+            <option value="3">3 months</option>
+            <option value="6">6 months</option>
+            <option value="12">1 year</option>
+            <option value="24">2 years</option>
+            <option value="36">3 years</option>
+            <option value="60">5 years</option>
+            <option value="84">7 years</option>
+          </select>
+        </Field>
+
+        <Field label="Permanently delete archived registers after" hint="Once a register has been in Archive for this long, it's permanently deleted — attendance records and all. A minimal record (session title, date, and that it existed) is kept for audit purposes; the attendance detail itself cannot be recovered.">
+          <select style={{ ...inp, maxWidth: 280 }} value={deletionGraceMonths} onChange={e => setDeletionGraceMonths(e.target.value)}>
+            <option value="">Never (keep archived registers forever)</option>
+            <option value="1">1 month after archiving</option>
+            <option value="3">3 months after archiving</option>
+            <option value="6">6 months after archiving</option>
+            <option value="12">1 year after archiving</option>
+            <option value="24">2 years after archiving</option>
+          </select>
+        </Field>
+
+        {deletionGraceMonths !== '' && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 12, color: '#B91C1C', fontWeight: 600 }}>
+            ⚠ With this set, registers will be permanently and automatically deleted once they've reached the end of both periods — this cannot be undone. Any linked safeguarding concerns are preserved regardless.
+          </div>
+        )}
+
+        <button onClick={handleSaveRetention} disabled={retentionSaving} style={{ marginTop: 4, padding: '10px 20px', borderRadius: 10, border: 'none', background: retentionSaving ? '#9CA3AF' : '#1B9AAA', color: '#fff', fontSize: 13, fontWeight: 700, cursor: retentionSaving ? 'default' : 'pointer' }}>
+          {retentionSaving ? 'Saving...' : retentionSaved ? '✓ Saved' : 'Save Data Retention'}
         </button>
       </SettingCard>
 
