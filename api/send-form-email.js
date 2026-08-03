@@ -28,6 +28,14 @@ const EVENT_TEMPLATES = {
 // Which event types are actually wired up to resolve real recipients today.
 // Anything else is documented (has copy above) but intentionally rejected
 // rather than silently resolving to nobody or the wrong audience.
+// SESSION_CANCELLED, REGISTER_INCOMPLETE, FORM_SUBMISSION_RECEIVED,
+// MEDICAL_INFO_UPDATED, RESOURCE_BOOKING_UPDATE, REFLECTION_DUE, and
+// INVITATION_ACCEPTED are handled by DB triggers (see the
+// notification_coverage_triggers migration) that write directly to the
+// notifications table — that's what makes them fire for every code path,
+// including anonymous public-form submitters who have no session to call
+// this endpoint with. Deliberately not duplicated here to avoid double
+// notification rows if a client-side call is ever added for the same event.
 const IMPLEMENTED_EVENTS = new Set(['TEST_NOTIFICATION', 'SAFEGUARDING_ACTION_REQUIRED', 'NEW_MESSAGE', 'STAFF_ADDED_TO_SESSION'])
 
 export default async function handler(req, res) {

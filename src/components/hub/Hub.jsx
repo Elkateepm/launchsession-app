@@ -1911,10 +1911,43 @@ function DateTimeInline({ primary }) {
   )
 }
 
-function NotificationBell({ primary, secondary, concernsCount, reflectionsCount, onGoConcerns, onGoReflections }) {
+const NOTIF_ICONS = {
+  safeguarding: '🛡️', sessions: '📅', registers: '📋', volunteers: '🤝', forms: '📝',
+  consents: '✅', medical: '⚕️', resources: '🧰', reflections: '💭', messaging: '💬',
+  security: '🔒', reports: '📊',
+}
+
+function timeAgo(iso) {
+  const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000))
+  if (s < 60) return 'just now'
+  const m = Math.floor(s / 60); if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`
+  const d = Math.floor(h / 24); if (d < 7) return `${d}d ago`
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
+// Real, unified notification centre backed by the `notifications` table —
+// every category the app writes to (safeguarding, sessions, registers,
+// forms, medical, resources, reflections, messaging, ...) shows up here,
+// rather than two hand-picked counts that only covered safeguarding and
+// reflections.
+function NotificationBell({ userId, orgId, primary, onNavigate }) {
   const [open, setOpen] = React.useState(false)
+  const [items, setItems] = React.useState([])
   const ref = React.useRef(null)
-  const total = concernsCount + reflectionsCount
+
+  const load = React.useCallback(async () => {
+    if (!userId) return
+    const { data } = await supabase.from('notifications').select('*').eq('user_id', userId)
+      .order('created_at', { ascending: false }).limit(30)
+    setItems(data || [])
+  }, [userId])
+
+  React.useEffect(() => {
+    load()
+    const id = setInterval(load, 60000) // polling, not realtime — safe on iOS WebKit
+    return () => clearInterval(id)
+  }, [load])
 
   React.useEffect(() => {
     if (!open) return
@@ -1922,6 +1955,32 @@ function NotificationBell({ primary, secondary, concernsCount, reflectionsCount,
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
+
+  const unread = items.filter(n => !n.read_at)
+  const total = unread.length
+
+  const openItem = async (n) => {
+    if (!n.read_at) {
+      setItems(prev => prev.map(x => x.id === n.id ? { ...x, read_at: new Date().toISOString() } : x))
+      supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', n.id).then(() => {})
+    }
+    setOpen(false)
+    if (n.target_url) {
+      try {
+        const params = new URLSearchParams(n.target_url.split('?')[1] || '')
+        const tab = params.get('tab')
+        if (tab) onNavigate(tab)
+      } catch {}
+    }
+  }
+
+  const markAllRead = () => {
+    const ids = unread.map(n => n.id)
+    if (ids.length === 0) return
+    const now = new Date().toISOString()
+    setItems(prev => prev.map(x => x.read_at ? x : { ...x, read_at: now }))
+    supabase.from('notifications').update({ read_at: now }).in('id', ids).then(() => {})
+  }
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
@@ -1941,37 +2000,35 @@ function NotificationBell({ primary, secondary, concernsCount, reflectionsCount,
       </button>
 
       {open && (
-        <div style={{ position: 'absolute', top: '110%', right: 0, width: 300, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 12px 40px rgba(0,0,0,0.15)', zIndex: 200, overflow: 'hidden' }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #F3F4F6', fontSize: 13, fontWeight: 800, color: '#111' }}>Notifications</div>
-          {total === 0 ? (
-            <div style={{ padding: '28px 16px', textAlign: 'center', color: '#9CA3AF', fontSize: 12 }}>
-              <div style={{ fontSize: 24, marginBottom: 6 }}>✅</div>
-              You're all caught up.
-            </div>
-          ) : (
-            <div style={{ padding: 6 }}>
-              {concernsCount > 0 && (
-                <button onClick={() => { onGoConcerns(); setOpen(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 9 }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#FEF3C7'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>🛡️</div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{concernsCount} open safeguarding concern{concernsCount > 1 ? 's' : ''}</div>
-                    <div style={{ fontSize: 11, color: '#B45309' }}>Needs review</div>
-                  </div>
-                </button>
-              )}
-              {reflectionsCount > 0 && (
-                <button onClick={() => { onGoReflections(); setOpen(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 9 }}
-                  onMouseEnter={e => e.currentTarget.style.background = primary + '10'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>📝</div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{reflectionsCount} session reflection{reflectionsCount > 1 ? 's' : ''} due</div>
-                    <div style={{ fontSize: 11, color: primary }}>Complete when ready</div>
-                  </div>
-                </button>
-              )}
-            </div>
-          )}
+        <div style={{ position: 'absolute', top: '110%', right: 0, width: 320, maxHeight: 420, display: 'flex', flexDirection: 'column', background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 12px 40px rgba(0,0,0,0.15)', zIndex: 200, overflow: 'hidden' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#111' }}>Notifications</span>
+            {total > 0 && <button onClick={markAllRead} style={{ border: 'none', background: 'none', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Mark all read</button>}
+          </div>
+          <div style={{ overflowY: 'auto', flex: 1 }}>
+            {items.length === 0 ? (
+              <div style={{ padding: '28px 16px', textAlign: 'center', color: '#9CA3AF', fontSize: 12 }}>
+                <div style={{ fontSize: 24, marginBottom: 6 }}>✅</div>
+                You're all caught up.
+              </div>
+            ) : (
+              <div style={{ padding: 6 }}>
+                {items.map(n => (
+                  <button key={n.id} onClick={() => openItem(n)} style={{ width: '100%', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 10px', border: 'none', background: n.read_at ? 'none' : (primary + '08'), cursor: 'pointer', textAlign: 'left', borderRadius: 9 }}
+                    onMouseEnter={e => e.currentTarget.style.background = n.priority === 'critical' ? '#FEE2E2' : primary + '10'}
+                    onMouseLeave={e => e.currentTarget.style.background = n.read_at ? 'none' : (primary + '08')}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: n.priority === 'critical' ? '#FEE2E2' : primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{NOTIF_ICONS[n.category] || '🔔'}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: n.read_at ? 600 : 800, color: '#111' }}>{n.title}</div>
+                      <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 1 }}>{n.body}</div>
+                      <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 3 }}>{timeAgo(n.created_at)}</div>
+                    </div>
+                    {!n.read_at && <span style={{ width: 7, height: 7, borderRadius: '50%', background: primary, flexShrink: 0, marginTop: 5 }} />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -2482,12 +2539,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               </button>
             )}
             <NotificationBell
+              userId={session?.user?.id}
+              orgId={orgId}
               primary={primary}
-              secondary={secondary}
-              concernsCount={concerns.length}
-              reflectionsCount={completedWithoutReflection.length}
-              onGoConcerns={() => go('safeguarding')}
-              onGoReflections={() => setShowReflectionsModal(true)}
+              onNavigate={go}
             />
             {!isMobile && <DateTimeInline primary={primary} />}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '5px 10px 5px 5px', borderRadius: 12, border: `1.5px solid ${primary}22`, background: '#fff', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` }}
