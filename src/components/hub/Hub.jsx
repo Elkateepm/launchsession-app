@@ -44,16 +44,38 @@ function formatCountdown(totalSeconds) {
   return `${m}:${String(sec).padStart(2, '0')}`
 }
 
-// Attendance ring — draws in on mount, fires a one-off confetti burst
-// the moment everyone expected is signed in.
-function AttendanceRing({ signedIn, total, primary, secondary }) {
+// Below this signed-in rate — once everyone's actually been accounted
+// for (nobody left as "expected") — the ring reads red as a genuine
+// attendance issue rather than just "in progress". Chosen so a handful
+// of absences doesn't trip it, but a majority-absent session does.
+const ATTENDANCE_LOW_THRESHOLD = 0.5
+
+// Attendance ring — draws in on mount and fires a one-off confetti burst
+// the moment everyone expected is signed in, for a still-open session.
+// Colour reflects what staff actually need to know, not just "how full is
+// the ring": amber while people are still unaccounted for, green once
+// everyone's resolved with healthy attendance, red only once resolution
+// is complete AND attendance itself is the problem (e.g. mostly absent) —
+// so a 0/39 (everyone marked absent) reads unmistakably differently from
+// a 39/39 (everyone attended), even though both are "fully resolved".
+// `closed` freezes the ring at its final value with no draw-in animation
+// and disables the confetti trigger, for historical/closed cards.
+function AttendanceRing({ signedIn, total, expected, absent, closed, primary, secondary, onClick }) {
   const fraction = total > 0 ? Math.max(0, Math.min(1, signedIn / total)) : 0
   const offset = RING_C * (1 - fraction)
+  const allAccountedFor = (expected ?? 0) === 0
+  const lowAttendance = total > 0 && (signedIn / total) < ATTENDANCE_LOW_THRESHOLD
+  const ringColour = total === 0 ? 'rgba(255,255,255,0.3)'
+    : !allAccountedFor ? '#FBBF24'
+    : lowAttendance ? '#F87171'
+    : '#4ADE80'
+
   const isFull = total > 0 && signedIn === total
   const firedRef = useRef(false)
   const [celebrate, setCelebrate] = useState(false)
 
   useEffect(() => {
+    if (closed) return // never celebrate on an already-closed/historical card
     if (isFull && !firedRef.current) {
       firedRef.current = true
       setCelebrate(true)
@@ -61,21 +83,25 @@ function AttendanceRing({ signedIn, total, primary, secondary }) {
       return () => clearTimeout(t)
     }
     if (!isFull) firedRef.current = false
-  }, [isFull])
+  }, [isFull, closed])
 
   const confettiColours = ['#4ADE80', primary, secondary, '#FBBF24']
 
   return (
-    <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+    <div onClick={onClick} style={{ position: 'relative', width: 60, height: 60, flexShrink: 0, cursor: onClick ? 'pointer' : 'default' }}>
       <svg width="60" height="60" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
         <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
-        <motion.circle
-          cx="27" cy="27" r={RING_R} fill="none" stroke="#4ADE80" strokeWidth="5" strokeLinecap="round"
-          strokeDasharray={RING_C}
-          initial={{ strokeDashoffset: RING_C }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.1, ease: [0.16, 0.85, 0.3, 1] }}
-        />
+        {closed ? (
+          <circle cx="27" cy="27" r={RING_R} fill="none" stroke={ringColour} strokeWidth="5" strokeLinecap="round" strokeDasharray={RING_C} strokeDashoffset={offset} />
+        ) : (
+          <motion.circle
+            cx="27" cy="27" r={RING_R} fill="none" stroke={ringColour} strokeWidth="5" strokeLinecap="round"
+            strokeDasharray={RING_C}
+            initial={{ strokeDashoffset: RING_C }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1.1, ease: [0.16, 0.85, 0.3, 1] }}
+          />
+        )}
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#fff' }}>
         {signedIn}/{total}
@@ -102,27 +128,32 @@ function AttendanceRing({ signedIn, total, primary, secondary }) {
 }
 
 // Time ring — counts down to session end while live, to session start
-// while upcoming, and settles into a solid tick once closed. The fill
-// reflects real elapsed progress through a fixed, meaningful window
-// (session duration while live; time-since-creation-to-start while
-// upcoming) passed in via `totalSeconds`, and fills up (empty → full) as
-// that window elapses, matching the attendance ring's fill language.
-// If no reference window is available, the ring stays empty rather than
-// defaulting to misleadingly full.
-function TimeRing({ status, target, totalSeconds }) {
-  const [remaining, setRemaining] = useState(() => (target ? Math.max(0, Math.floor((target.getTime() - Date.now()) / 1000)) : 0))
+// while upcoming, and settles into a solid tick once the register is
+// actually closed (closed_at set — NOT merely "scheduled end time has
+// passed", which is a separate "overrun" state handled below since the
+// register may still be open and need action). The fill reflects real
+// elapsed progress through a fixed, meaningful window (session duration
+// while live; time-since-creation-to-start while upcoming), filling
+// empty -> full as that window elapses, matching the attendance ring's
+// fill language. `kind` distinguishes counting to a start time
+// ('start', upcoming) from counting to an end time ('end', live/overrun)
+// since they need different colour rules. If no reference window is
+// available, the ring stays empty rather than defaulting to misleadingly
+// full.
+function TimeRing({ kind, target, totalSeconds, isClosed, onClick }) {
+  const [remaining, setRemaining] = useState(() => (target ? Math.floor((target.getTime() - Date.now()) / 1000) : 0))
 
   useEffect(() => {
-    if (!target || status === 'ended') return
-    const tick = () => setRemaining(Math.max(0, Math.floor((target.getTime() - Date.now()) / 1000)))
+    if (!target || isClosed) return
+    const tick = () => setRemaining(Math.floor((target.getTime() - Date.now()) / 1000))
     tick()
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
-  }, [target, status])
+  }, [target, isClosed])
 
-  if (status === 'ended') {
+  if (isClosed) {
     return (
-      <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+      <div onClick={onClick} style={{ position: 'relative', width: 60, height: 60, flexShrink: 0, cursor: onClick ? 'pointer' : 'default' }}>
         <svg width="60" height="60" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
           <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
           <circle cx="27" cy="27" r={RING_R} fill="none" stroke="#94A3B8" strokeWidth="5" strokeLinecap="round" strokeDasharray={RING_C} strokeDashoffset={0} />
@@ -143,18 +174,43 @@ function TimeRing({ status, target, totalSeconds }) {
     )
   }
 
-  // Fraction represents *elapsed* progress toward the target, so the ring
-  // fills up as start/end approaches — same visual language as the
-  // attendance ring (empty → full), rather than draining from full. If we
-  // don't have a real reference window, default to an empty ring instead of
-  // a misleading full one.
   const total = totalSeconds && totalSeconds > 0 ? totalSeconds : null
-  const fraction = total ? Math.max(0, Math.min(1, (total - remaining) / total)) : 0
-  const offset = RING_C * (1 - fraction)
-  const colour = status === 'live' ? '#2EC5CE' : '#FBBF24'
+  const displayRemaining = Math.max(0, remaining)
+  const fraction = total ? Math.max(0, Math.min(1, (total - displayRemaining) / total)) : 0
+
+  // Counting to a start time (upcoming) — unchanged calm amber, caps at
+  // zero rather than going negative (a session doesn't "overrun" its own start).
+  if (kind === 'start') {
+    const offset = RING_C * (1 - fraction)
+    return (
+      <div onClick={onClick} style={{ position: 'relative', width: 60, height: 60, flexShrink: 0, cursor: onClick ? 'pointer' : 'default' }}>
+        <svg width="60" height="60" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
+          <motion.circle
+            cx="27" cy="27" r={RING_R} fill="none" stroke="#FBBF24" strokeWidth="5" strokeLinecap="round"
+            strokeDasharray={RING_C}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1, ease: 'linear' }}
+          />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#fff' }}>
+          {formatCountdown(displayRemaining)}
+        </div>
+      </div>
+    )
+  }
+
+  // Counting to an end time (live) — calm blue with plenty of time left,
+  // amber in the final 15 minutes, red only once genuinely overrun (past
+  // zero) — and once overrun, keeps ticking upward as "+Xm" so staff can
+  // see how overdue it is, rather than getting stuck at 0:00.
+  const isOverrun = remaining <= 0
+  const offset = isOverrun ? 0 : RING_C * (1 - fraction)
+  const colour = isOverrun ? '#F87171' : remaining <= 900 ? '#FBBF24' : '#2EC5CE'
+  const label = isOverrun ? `+${formatCountdown(Math.abs(remaining))}` : formatCountdown(displayRemaining)
 
   return (
-    <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+    <div onClick={onClick} style={{ position: 'relative', width: 60, height: 60, flexShrink: 0, cursor: onClick ? 'pointer' : 'default' }}>
       <svg width="60" height="60" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
         <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
         <motion.circle
@@ -164,10 +220,108 @@ function TimeRing({ status, target, totalSeconds }) {
           transition={{ duration: 1, ease: 'linear' }}
         />
       </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#fff' }}>
-        {formatCountdown(remaining)}
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isOverrun ? 10 : 11, fontWeight: 900, color: '#fff' }}>
+        {label}
       </div>
     </div>
+  )
+}
+
+// A young person counts as "late" if they signed in more than this long
+// after the scheduled start — long enough that a couple of minutes'
+// grace at drop-off doesn't flag everyone as late.
+const LATE_ARRIVAL_GRACE_MINUTES = 10
+
+function AttendanceBreakdownModal({ session, attendance, onClose }) {
+  const records = attendance.filter(a => a.session_id === session.id)
+  const signedIn = records.filter(r => r.status === 'signed_in' || r.status === 'signed_out').length
+  const absent = records.filter(r => r.status === 'absent').length
+  const expected = records.filter(r => r.status === 'expected').length
+  const startDT = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
+  const late = startDT ? records.filter(r => {
+    if (r.status !== 'signed_in' && r.status !== 'signed_out') return false
+    if (!r.signed_in_at) return false
+    return (new Date(r.signed_in_at).getTime() - startDT.getTime()) > LATE_ARRIVAL_GRACE_MINUTES * 60000
+  }).length : 0
+
+  const rows = [
+    { label: 'Signed in', value: signedIn, color: '#16A34A' },
+    { label: 'Absent', value: absent, color: '#DC2626' },
+    { label: 'Expected', value: expected, color: '#D97706' },
+    { label: 'Late arrivals', value: late, color: '#7C3AED' },
+  ]
+
+  return createPortal(
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 10400, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 18, padding: 20, width: 300, maxWidth: 'calc(100vw - 40px)', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ fontSize: 15, fontWeight: 900, color: '#111827' }}>Attendance breakdown</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#9CA3AF', cursor: 'pointer', lineHeight: 1 }}>×</button>
+        </div>
+        <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.title}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {rows.map(r => (
+            <div key={r.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#F8FAFC', borderRadius: 10 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: '#374151' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: r.color, flexShrink: 0 }} />
+                {r.label}
+              </span>
+              <span style={{ fontSize: 14, fontWeight: 900, color: '#111827' }}>{r.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+function TimeBreakdownModal({ session, onClose }) {
+  const startDT = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
+  const endDT = session.end_time ? new Date(`${session.end_date || session.session_date}T${session.end_time}`) : null
+
+  const fmtDur = (ms) => {
+    const totalMin = Math.max(0, Math.floor(ms / 60000))
+    const h = Math.floor(totalMin / 60)
+    const m = totalMin % 60
+    return h > 0 ? `${h}h ${m}m` : `${m}m`
+  }
+  const fmtTime = (d) => d ? d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' }) : '—'
+
+  const durationLabel = session.closed_at
+    ? 'Total duration'
+    : (startDT && new Date() > startDT ? 'Elapsed so far' : 'Time until start')
+  const durationValue = session.closed_at && startDT
+    ? fmtDur(new Date(session.closed_at).getTime() - startDT.getTime())
+    : startDT
+    ? (new Date() > startDT ? fmtDur(Date.now() - startDT.getTime()) : fmtDur(startDT.getTime() - Date.now()))
+    : '—'
+
+  const rows = [
+    { label: 'Start time', value: fmtTime(startDT) },
+    { label: 'Scheduled end', value: fmtTime(endDT) },
+    { label: durationLabel, value: durationValue },
+  ]
+
+  return createPortal(
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 10400, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 18, padding: 20, width: 300, maxWidth: 'calc(100vw - 40px)', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ fontSize: 15, fontWeight: 900, color: '#111827' }}>Session timing</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#9CA3AF', cursor: 'pointer', lineHeight: 1 }}>×</button>
+        </div>
+        <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.title}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {rows.map(r => (
+            <div key={r.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#F8FAFC', borderRadius: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#374151' }}>{r.label}</span>
+              <span style={{ fontSize: 14, fontWeight: 900, color: '#111827' }}>{r.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>,
+    document.body
   )
 }
 
@@ -2396,6 +2550,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   };
 
   const [closingSession, setClosingSession] = useState(null)
+  const [attendanceBreakdownSession, setAttendanceBreakdownSession] = useState(null)
+  const [timeBreakdownSession, setTimeBreakdownSession] = useState(null)
   const handleCloseSessionFromCard = async (sess) => {
     const now = new Date().toISOString()
     await supabase.from('sessions').update({ closed_at: now, closed_by: session?.user?.id, register_status: 'closed' }).eq('id', sess.id)
@@ -2752,15 +2908,23 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             const statusLabel = hasEnded ? 'Closed' : isLiveNow ? 'Live now' : 'Upcoming'
             const statusColour = hasEnded ? '#94A3B8' : isLiveNow ? '#DC2626' : '#FBBF24'
             const cardStatus = hasEnded ? 'ended' : isLiveNow ? 'live' : 'upcoming'
-            const countdownTarget = cardStatus === 'live' ? endDT : cardStatus === 'upcoming' ? startDT : null
+            // isClosed (closed_at actually set) is distinct from hasEnded (which
+            // also covers "scheduled end time passed but register still open").
+            // The time ring needs that distinction: a genuinely closed session
+            // gets the static checkmark, while a merely overrun-but-open one
+            // keeps counting (now past zero, in red) since it still needs
+            // action rather than being "done".
+            const isClosed = !!s.closed_at
+            const countdownKind = cardStatus === 'upcoming' ? 'start' : 'end'
+            const countdownTarget = isClosed ? null : (countdownKind === 'start' ? startDT : endDT)
             // Fixed reference window each ring fraction is measured against, so it
             // reflects real elapsed progress rather than resetting to "full" on
-            // every mount: session length while live, time from creation to start
-            // while upcoming.
+            // every mount: session length while live/overrun, time from creation
+            // to start while upcoming.
             const createdDT = s.created_at ? new Date(s.created_at) : null
-            const timeRingTotalSeconds = cardStatus === 'live' && startDT && endDT
+            const timeRingTotalSeconds = countdownKind === 'end' && startDT && endDT
               ? Math.max(1, Math.floor((endDT.getTime() - startDT.getTime()) / 1000))
-              : cardStatus === 'upcoming' && startDT && createdDT
+              : countdownKind === 'start' && startDT && createdDT
               ? Math.max(1, Math.floor((startDT.getTime() - createdDT.getTime()) / 1000))
               : null
             const ctaLabel = cardStatus === 'live' ? 'Open register' : cardStatus === 'upcoming' ? 'View session' : 'View summary'
@@ -2868,13 +3032,20 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexShrink: 0 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                          <AttendanceRing signedIn={attendedCount} total={attendeeTotal} primary={primary} secondary={secondary} />
+                          <AttendanceRing
+                            signedIn={attendedCount} total={attendeeTotal} expected={stats.expected} absent={stats.absent}
+                            closed={isClosed} primary={primary} secondary={secondary}
+                            onClick={(e) => { e.stopPropagation(); setAttendanceBreakdownSession(s) }}
+                          />
                           <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>Attendees</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                          <TimeRing status={cardStatus} target={countdownTarget} totalSeconds={timeRingTotalSeconds} />
+                          <TimeRing
+                            kind={countdownKind} target={countdownTarget} totalSeconds={timeRingTotalSeconds} isClosed={isClosed}
+                            onClick={(e) => { e.stopPropagation(); setTimeBreakdownSession(s) }}
+                          />
                           <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
-                            {cardStatus === 'live' ? 'Ends in' : cardStatus === 'upcoming' ? 'Begins in' : 'Closed'}
+                            {cardStatus === 'live' ? 'Ends in' : cardStatus === 'upcoming' ? 'Begins in' : isClosed ? 'Closed' : 'Overrun'}
                           </span>
                         </div>
                       </div>
@@ -2988,16 +3159,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   const stats = getLiveSessionStats(s)
                   const attended = stats.signedIn + stats.signedOut
                   const total = stats.signedIn + stats.absent + stats.signedOut + stats.expected
+                  const isClosed = !!s.closed_at
                   return (
                     <button key={s.id} onClick={() => toggleEndedExpanded(s.id)} style={{
                       flex: '1 1 100%', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', cursor: 'pointer',
                       background: 'linear-gradient(160deg, #0C1226 0%, #141D3B 60%, #0F1729 100%)',
-                      border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '10px 14px', boxSizing: 'border-box',
+                      border: isClosed ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(248,113,113,0.35)', borderRadius: 14, padding: '10px 14px', boxSizing: 'border-box',
                     }}>
-                      <span style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(148,163,184,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>🔒</span>
+                      <span style={{ width: 30, height: 30, borderRadius: 9, background: isClosed ? 'rgba(148,163,184,0.16)' : 'rgba(248,113,113,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>{isClosed ? '🔒' : '⚠️'}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-                        <div style={{ fontSize: 10.5, color: '#CBD5E1' }}>Closed · {attended}/{total} attended</div>
+                        <div style={{ fontSize: 10.5, color: isClosed ? '#CBD5E1' : '#FCA5A5' }}>{isClosed ? 'Closed' : 'Overrun — still open'} · {attended}/{total} attended</div>
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.55)', flexShrink: 0, whiteSpace: 'nowrap' }}>▾ Expand</span>
                     </button>
@@ -3429,6 +3601,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           onCreateWalkIn={handleInfoCreateWalkIn}
         />
       )}
+
+      {attendanceBreakdownSession && (
+        <AttendanceBreakdownModal session={attendanceBreakdownSession} attendance={attendance} onClose={() => setAttendanceBreakdownSession(null)} />
+      )}
+
+      {timeBreakdownSession && (
+        <TimeBreakdownModal session={timeBreakdownSession} onClose={() => setTimeBreakdownSession(null)} />
+      )}
+
 
       {/* Historical register modal — reuses the same dark launcher-card modal style as today's
           live sessions, for any past session opened from outside today's list (e.g. Recent Registers).
