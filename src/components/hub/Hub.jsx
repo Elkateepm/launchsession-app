@@ -2991,14 +2991,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   return (
                     <button key={s.id} onClick={() => toggleEndedExpanded(s.id)} style={{
                       flex: '1 1 100%', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', cursor: 'pointer',
-                      background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 14, padding: '10px 14px', boxSizing: 'border-box',
+                      background: 'linear-gradient(160deg, #0C1226 0%, #141D3B 60%, #0F1729 100%)',
+                      border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '10px 14px', boxSizing: 'border-box',
                     }}>
-                      <span style={{ width: 30, height: 30, borderRadius: 9, background: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>🔒</span>
+                      <span style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(148,163,184,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>🔒</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 800, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-                        <div style={{ fontSize: 10.5, color: '#94A3B8' }}>Closed · {attended}/{total} attended</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                        <div style={{ fontSize: 10.5, color: '#CBD5E1' }}>Closed · {attended}/{total} attended</div>
                       </div>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: '#94A3B8', flexShrink: 0, whiteSpace: 'nowrap' }}>▾ Expand</span>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.55)', flexShrink: 0, whiteSpace: 'nowrap' }}>▾ Expand</span>
                     </button>
                   )
                 }
@@ -3439,9 +3440,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         if (!pastSession) return null
         // The live hero section has its own inline modal for today's still-open sessions —
         // defer to that one only when this session is part of today's list AND hasn't
-        // ended yet. Ended sessions (closed_at set) always come through here, whether
-        // they're from today (e.g. Recent Registers) or an earlier day.
-        const handledByHeroInlineModal = !pastSession.closed_at && todaySessions.some(s => s.id === openLiveSessionId)
+        // ended yet. "Ended" here has to match the same definition the hero cards use for
+        // their own hasEnded/CTA label (closed_at set OR scheduled end time already passed),
+        // not just closed_at alone — otherwise a session whose time has passed but hasn't
+        // been manually closed yet falls into a gap where neither modal renders and the
+        // "View summary" click does nothing.
+        const pastSessionEndDT = pastSession.end_time ? new Date(`${pastSession.session_date}T${pastSession.end_time}`) : null
+        const pastSessionHasEnded = !!pastSession.closed_at || (!!pastSessionEndDT && pastSessionEndDT < new Date())
+        const handledByHeroInlineModal = !pastSessionHasEnded && todaySessions.some(s => s.id === openLiveSessionId)
         if (handledByHeroInlineModal) return null
         return (
           <HistoricalAttendanceModal
