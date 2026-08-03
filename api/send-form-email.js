@@ -13,6 +13,7 @@ const EVENT_TEMPLATES = {
   SESSION_STARTING_SOON:        { title: 'Session starting soon', body: "A session you're assigned to starts in 30 minutes.", category: 'sessions', priority: 'high', url: '/?tab=registers' },
   SESSION_CANCELLED:            { title: 'Session cancelled', body: 'A session you were assigned to has been cancelled.', category: 'sessions', priority: 'high', url: '/?tab=sessions' },
   REGISTER_INCOMPLETE:          { title: 'Register needs attention', body: 'A session has ended with attendance still unresolved.', category: 'registers', priority: 'high', url: '/?tab=registers' },
+  REGISTER_LEFT_OPEN:          { title: 'Register still open', body: "A session ended a while ago but its register hasn't been closed yet.", category: 'registers', priority: 'high', url: '/?tab=registers' },
   VOLUNTEER_COVER_REQUIRED:     { title: 'Volunteer cover needed', body: 'A session needs more volunteer cover.', category: 'volunteers', priority: 'normal', url: '/?tab=volunteers' },
   FORM_SUBMISSION_RECEIVED:     { title: 'New form submission', body: 'A new form response has come in.', category: 'forms', priority: 'normal', url: '/?tab=forms' },
   CONSENT_EXPIRING:             { title: 'Consent expiring', body: 'A consent record is expiring soon.', category: 'consents', priority: 'normal', url: '/?tab=children' },
@@ -36,11 +37,62 @@ const EVENT_TEMPLATES = {
 // including anonymous public-form submitters who have no session to call
 // this endpoint with. Deliberately not duplicated here to avoid double
 // notification rows if a client-side call is ever added for the same event.
-// SESSION_STARTING_SOON is neither of the above — it's time-based rather
-// than event-based, so it's handled by the separate `cron_reminders`
-// branch further down, polled by an external cron (see
-// `starting_soon_notified_at` on `sessions` for the dedup mechanism).
+// SESSION_STARTING_SOON and REGISTER_LEFT_OPEN are neither of the above —
+// they're time-based rather than event-based, so they're handled by the
+// separate `cron_reminders` branch further down, polled by an external
+// cron (see `starting_soon_notified_at` / `register_open_reminder_sent_at`
+// on `sessions` for the dedup mechanism — note this deliberately never
+// auto-closes a register itself, only alerts the people who can).
 const IMPLEMENTED_EVENTS = new Set(['TEST_NOTIFICATION', 'SAFEGUARDING_ACTION_REQUIRED', 'NEW_MESSAGE', 'STAFF_ADDED_TO_SESSION'])
+
+// Shared delivery path for the cron_reminders sweeps below — resolves
+// per-user notification prefs, writes the in-app notification row
+// regardless of push eligibility, then sends + logs the actual push.
+// (The user-triggered `push` type branch further down has its own copy of
+// this logic — deliberately not merged, so a change to one code path can't
+// silently affect the other.)
+async function deliverSweepPush(adminClient, { org_id, event_type, category, title, body, url, priority, recipientIds }) {
+  const ids = [...new Set(recipientIds)].filter(Boolean)
+  if (ids.length === 0) return 0
+
+  const { data: prefsRows } = await adminClient.from('notification_preferences').select('*').in('user_id', ids)
+  const prefsByUser = {}
+  ;(prefsRows || []).forEach(p => { prefsByUser[p.user_id] = p })
+  const eligibleIds = ids.filter(id => {
+    const p = prefsByUser[id]
+    if (!p) return true
+    if (p.push_enabled === false) return false
+    if (category && p[category] === false) return false
+    return true
+  })
+
+  await adminClient.from('notifications').insert(ids.map(id => ({
+    org_id, user_id: id, category, event_type, title, body, target_url: url, priority,
+  })))
+
+  if (eligibleIds.length === 0) return 0
+
+  const { data: subs } = await adminClient.from('push_subscriptions').select('*').in('user_id', eligibleIds).eq('is_active', true)
+  const payload = JSON.stringify({ title, body, url, event_type, category, priority, tag: `${event_type.toLowerCase()}-${url}` })
+  let sent = 0
+  const logRows = []
+  await Promise.allSettled((subs || []).map(async (sub) => {
+    try {
+      await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload)
+      sent += 1
+      logRows.push({ org_id, user_id: sub.user_id, subscription_id: sub.id, event_type, status: 'sent' })
+      await adminClient.from('push_subscriptions').update({ last_used_at: new Date().toISOString() }).eq('id', sub.id)
+    } catch (err) {
+      const code = err?.statusCode
+      logRows.push({ org_id, user_id: sub.user_id, subscription_id: sub.id, event_type, status: 'failed', error_code: code ? String(code) : 'unknown' })
+      if (code === 404 || code === 410) {
+        await adminClient.from('push_subscriptions').update({ is_active: false, revoked_at: new Date().toISOString() }).eq('id', sub.id)
+      }
+    }
+  }))
+  if (logRows.length) await adminClient.from('push_delivery_logs').insert(logRows)
+  return sent
+}
 
 export default async function handler(req, res) {
   try {
@@ -100,54 +152,23 @@ export default async function handler(req, res) {
         return diff >= 25 && diff <= 35
       })
 
-      const template = EVENT_TEMPLATES.SESSION_STARTING_SOON
-      let totalSent = 0
+      const startingSoonTemplate = EVENT_TEMPLATES.SESSION_STARTING_SOON
+      let startingSoonSent = 0
 
       for (const session of due) {
         const { data: staffRows } = await adminClient.from('session_staff').select('user_id').eq('session_id', session.id).not('user_id', 'is', null)
-        const recipientIds = [...new Set([session.lead_staff_id, ...(staffRows || []).map(r => r.user_id)].filter(Boolean))]
+        const recipientIds = [session.lead_staff_id, ...(staffRows || []).map(r => r.user_id)]
 
-        if (recipientIds.length > 0) {
-          const notifBody = `"${session.title}" starts in 30 minutes.`
-          const notifUrl = `/?tab=registers&session=${session.id}`
-
-          const { data: prefsRows } = await adminClient.from('notification_preferences').select('*').in('user_id', recipientIds)
-          const prefsByUser = {}
-          ;(prefsRows || []).forEach(p => { prefsByUser[p.user_id] = p })
-          const eligibleIds = recipientIds.filter(id => {
-            const p = prefsByUser[id]
-            if (!p) return true
-            if (p.push_enabled === false) return false
-            if (p.sessions === false) return false
-            return true
-          })
-
-          await adminClient.from('notifications').insert(recipientIds.map(id => ({
-            org_id: session.org_id, user_id: id, category: template.category, event_type: 'SESSION_STARTING_SOON',
-            title: template.title, body: notifBody, target_url: notifUrl, priority: template.priority,
-          })))
-
-          if (eligibleIds.length > 0) {
-            const { data: subs } = await adminClient.from('push_subscriptions').select('*').in('user_id', eligibleIds).eq('is_active', true)
-            const payload = JSON.stringify({ title: template.title, body: notifBody, url: notifUrl, event_type: 'SESSION_STARTING_SOON', category: template.category, priority: template.priority, tag: `session-${session.id}` })
-            const logRows = []
-            await Promise.allSettled((subs || []).map(async (sub) => {
-              try {
-                await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload)
-                totalSent += 1
-                logRows.push({ org_id: session.org_id, user_id: sub.user_id, subscription_id: sub.id, event_type: 'SESSION_STARTING_SOON', status: 'sent' })
-                await adminClient.from('push_subscriptions').update({ last_used_at: new Date().toISOString() }).eq('id', sub.id)
-              } catch (err) {
-                const code = err?.statusCode
-                logRows.push({ org_id: session.org_id, user_id: sub.user_id, subscription_id: sub.id, event_type: 'SESSION_STARTING_SOON', status: 'failed', error_code: code ? String(code) : 'unknown' })
-                if (code === 404 || code === 410) {
-                  await adminClient.from('push_subscriptions').update({ is_active: false, revoked_at: new Date().toISOString() }).eq('id', sub.id)
-                }
-              }
-            }))
-            if (logRows.length) await adminClient.from('push_delivery_logs').insert(logRows)
-          }
-        }
+        startingSoonSent += await deliverSweepPush(adminClient, {
+          org_id: session.org_id,
+          event_type: 'SESSION_STARTING_SOON',
+          category: startingSoonTemplate.category,
+          title: startingSoonTemplate.title,
+          body: `"${session.title}" starts in 30 minutes.`,
+          url: `/?tab=registers&session=${session.id}`,
+          priority: startingSoonTemplate.priority,
+          recipientIds,
+        })
 
         // Mark as notified regardless of recipient count/push success, so a
         // session with no assigned staff (or a transient send failure)
@@ -155,7 +176,71 @@ export default async function handler(req, res) {
         await adminClient.from('sessions').update({ starting_soon_notified_at: new Date().toISOString() }).eq('id', session.id)
       }
 
-      return res.status(200).json({ success: true, sessions_processed: due.length, pushes_sent: totalSent })
+      // ── REGISTER_LEFT_OPEN — deliberately never auto-closes a register;
+      // only alerts the people who can. Looks at today + yesterday (not
+      // just today) so a session ending late at night still gets caught
+      // once the 15-min grace period rolls past midnight before the next
+      // tick, without needing real timezone-aware date math. ──
+      const y = new Date(now)
+      y.setUTCDate(y.getUTCDate() - 1)
+      const yParts = Object.fromEntries(
+        new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit',
+        }).formatToParts(y).map(p => [p.type, p.value])
+      )
+      const yesterdayStr = `${yParts.year}-${yParts.month}-${yParts.day}`
+
+      const { data: openCandidates, error: openErr } = await adminClient
+        .from('sessions')
+        .select('id, org_id, title, session_date, end_time, lead_staff_id')
+        .in('session_date', [todayStr, yesterdayStr])
+        .is('cancelled_at', null)
+        .is('closed_at', null)
+        .is('register_open_reminder_sent_at', null)
+
+      if (openErr) {
+        console.error('send-form-email(cron_reminders): failed to query open registers', openErr)
+        return res.status(500).json({ error: 'Failed to query sessions' })
+      }
+
+      const overdue = (openCandidates || []).filter(s => {
+        const [h, m] = String(s.end_time || '').split(':').map(Number)
+        if (Number.isNaN(h) || Number.isNaN(m)) return false
+        const endMinutes = h * 60 + m
+        const diff = s.session_date === todayStr ? (nowMinutes - endMinutes) : (nowMinutes + 1440 - endMinutes)
+        return diff >= 15 // at least 15 min past scheduled end
+      })
+
+      const openTemplate = EVENT_TEMPLATES.REGISTER_LEFT_OPEN
+      let openSent = 0
+
+      for (const session of overdue) {
+        const { data: staffRows } = await adminClient.from('session_staff').select('user_id').eq('session_id', session.id).not('user_id', 'is', null)
+        const recipientIds = [session.lead_staff_id, ...(staffRows || []).map(r => r.user_id)]
+
+        openSent += await deliverSweepPush(adminClient, {
+          org_id: session.org_id,
+          event_type: 'REGISTER_LEFT_OPEN',
+          category: openTemplate.category,
+          title: openTemplate.title,
+          body: `"${session.title}" ended at ${session.end_time} but its register is still open.`,
+          url: `/?tab=registers&session=${session.id}`,
+          priority: openTemplate.priority,
+          recipientIds,
+        })
+
+        // Only marks the reminder as sent — never touches closed_at. Closing
+        // stays a deliberate human action; this sweep only ever alerts.
+        await adminClient.from('sessions').update({ register_open_reminder_sent_at: new Date().toISOString() }).eq('id', session.id)
+      }
+
+      return res.status(200).json({
+        success: true,
+        sessions_starting_soon: due.length,
+        starting_soon_pushes: startingSoonSent,
+        registers_left_open: overdue.length,
+        left_open_pushes: openSent,
+      })
     }
 
     const authHeader = req.headers.authorization
