@@ -36,11 +36,127 @@ const EVENT_TEMPLATES = {
 // including anonymous public-form submitters who have no session to call
 // this endpoint with. Deliberately not duplicated here to avoid double
 // notification rows if a client-side call is ever added for the same event.
+// SESSION_STARTING_SOON is neither of the above — it's time-based rather
+// than event-based, so it's handled by the separate `cron_reminders`
+// branch further down, polled by an external cron (see
+// `starting_soon_notified_at` on `sessions` for the dedup mechanism).
 const IMPLEMENTED_EVENTS = new Set(['TEST_NOTIFICATION', 'SAFEGUARDING_ACTION_REQUIRED', 'NEW_MESSAGE', 'STAFF_ADDED_TO_SESSION'])
 
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+    // ── SESSION_STARTING_SOON sweep — called by an external cron (e.g.
+    // cron-job.org) every ~10 min, not by a logged-in user, so it's gated
+    // by a shared secret instead of a Supabase session token. Lives here
+    // too, same 12-function Hobby cap reason as everything else below. ──
+    if (req.body?.type === 'cron_reminders') {
+      const providedSecret = req.headers['x-cron-secret']
+      const { CRON_SECRET, REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = process.env
+      if (!CRON_SECRET || providedSecret !== CRON_SECRET) return res.status(401).json({ error: 'Unauthorized' })
+      if (!REACT_APP_SUPABASE_URL || !REACT_APP_SUPABASE_SERVICE_KEY) {
+        console.error('send-form-email(cron_reminders): missing Supabase env vars')
+        return res.status(500).json({ error: 'Server misconfiguration: missing Supabase credentials' })
+      }
+      if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+        console.error('send-form-email(cron_reminders): missing VAPID keys')
+        return res.status(500).json({ error: 'Push notifications are not configured on the server yet' })
+      }
+
+      const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
+      webpush.setVapidDetails(VAPID_SUBJECT || 'mailto:support@launchsession.co.uk', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+
+      // All orgs are UK-based today, so "starting soon" is computed against
+      // UK wall-clock time rather than per-org/per-user timezones.
+      const now = new Date()
+      const ukParts = Object.fromEntries(
+        new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false,
+        }).formatToParts(now).map(p => [p.type, p.value])
+      )
+      const todayStr = `${ukParts.year}-${ukParts.month}-${ukParts.day}`
+      const nowMinutes = parseInt(ukParts.hour, 10) * 60 + parseInt(ukParts.minute, 10)
+
+      const { data: candidates, error: candErr } = await adminClient
+        .from('sessions')
+        .select('id, org_id, title, start_time, lead_staff_id')
+        .eq('session_date', todayStr)
+        .is('cancelled_at', null)
+        .is('closed_at', null)
+        .is('starting_soon_notified_at', null)
+
+      if (candErr) {
+        console.error('send-form-email(cron_reminders): failed to query sessions', candErr)
+        return res.status(500).json({ error: 'Failed to query sessions' })
+      }
+
+      // Window sized to the ~10-min cron cadence — every session starting
+      // today passes through exactly one 25–35-min-out tick, with slack
+      // for cron jitter, so it's caught once and only once.
+      const due = (candidates || []).filter(s => {
+        const [h, m] = String(s.start_time || '').split(':').map(Number)
+        if (Number.isNaN(h) || Number.isNaN(m)) return false
+        const diff = (h * 60 + m) - nowMinutes
+        return diff >= 25 && diff <= 35
+      })
+
+      const template = EVENT_TEMPLATES.SESSION_STARTING_SOON
+      let totalSent = 0
+
+      for (const session of due) {
+        const { data: staffRows } = await adminClient.from('session_staff').select('user_id').eq('session_id', session.id).not('user_id', 'is', null)
+        const recipientIds = [...new Set([session.lead_staff_id, ...(staffRows || []).map(r => r.user_id)].filter(Boolean))]
+
+        if (recipientIds.length > 0) {
+          const notifBody = `"${session.title}" starts in 30 minutes.`
+          const notifUrl = `/?tab=registers&session=${session.id}`
+
+          const { data: prefsRows } = await adminClient.from('notification_preferences').select('*').in('user_id', recipientIds)
+          const prefsByUser = {}
+          ;(prefsRows || []).forEach(p => { prefsByUser[p.user_id] = p })
+          const eligibleIds = recipientIds.filter(id => {
+            const p = prefsByUser[id]
+            if (!p) return true
+            if (p.push_enabled === false) return false
+            if (p.sessions === false) return false
+            return true
+          })
+
+          await adminClient.from('notifications').insert(recipientIds.map(id => ({
+            org_id: session.org_id, user_id: id, category: template.category, event_type: 'SESSION_STARTING_SOON',
+            title: template.title, body: notifBody, target_url: notifUrl, priority: template.priority,
+          })))
+
+          if (eligibleIds.length > 0) {
+            const { data: subs } = await adminClient.from('push_subscriptions').select('*').in('user_id', eligibleIds).eq('is_active', true)
+            const payload = JSON.stringify({ title: template.title, body: notifBody, url: notifUrl, event_type: 'SESSION_STARTING_SOON', category: template.category, priority: template.priority, tag: `session-${session.id}` })
+            const logRows = []
+            await Promise.allSettled((subs || []).map(async (sub) => {
+              try {
+                await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload)
+                totalSent += 1
+                logRows.push({ org_id: session.org_id, user_id: sub.user_id, subscription_id: sub.id, event_type: 'SESSION_STARTING_SOON', status: 'sent' })
+                await adminClient.from('push_subscriptions').update({ last_used_at: new Date().toISOString() }).eq('id', sub.id)
+              } catch (err) {
+                const code = err?.statusCode
+                logRows.push({ org_id: session.org_id, user_id: sub.user_id, subscription_id: sub.id, event_type: 'SESSION_STARTING_SOON', status: 'failed', error_code: code ? String(code) : 'unknown' })
+                if (code === 404 || code === 410) {
+                  await adminClient.from('push_subscriptions').update({ is_active: false, revoked_at: new Date().toISOString() }).eq('id', sub.id)
+                }
+              }
+            }))
+            if (logRows.length) await adminClient.from('push_delivery_logs').insert(logRows)
+          }
+        }
+
+        // Mark as notified regardless of recipient count/push success, so a
+        // session with no assigned staff (or a transient send failure)
+        // doesn't get re-queried on every subsequent tick.
+        await adminClient.from('sessions').update({ starting_soon_notified_at: new Date().toISOString() }).eq('id', session.id)
+      }
+
+      return res.status(200).json({ success: true, sessions_processed: due.length, pushes_sent: totalSent })
+    }
 
     const authHeader = req.headers.authorization
     if (!authHeader) return res.status(401).json({ error: 'Unauthorized' })
