@@ -23,6 +23,8 @@ const EVENT_TEMPLATES = {
   REFLECTION_DUE:                { title: 'Reflection due', body: 'A session is ready for its reflection to be written up.', category: 'reflections', priority: 'low', url: '/?tab=registers' },
   INVITATION_ACCEPTED:          { title: 'Invitation accepted', body: 'Someone has accepted your invitation.', category: 'volunteers', priority: 'low', url: '/?tab=volunteers' },
   STAFF_ADDED_TO_SESSION:       { title: 'Added to a session', body: "You've been added to a session.", category: 'sessions', priority: 'normal', url: '/?tab=sessions' },
+  SESSION_CREATED:              { title: 'New session created', body: 'A new session has been created.', category: 'sessions', priority: 'normal', url: '/?tab=registers' },
+  SESSION_EDITED:                { title: 'Session updated', body: 'A session you\u2019re assigned to has been updated.', category: 'sessions', priority: 'normal', url: '/?tab=registers' },
   SECURITY_ALERT:                { title: 'Security alert', body: 'A security-related event needs your attention.', category: 'security', priority: 'critical', url: '/?tab=settings' },
 }
 
@@ -37,12 +39,21 @@ const EVENT_TEMPLATES = {
 // including anonymous public-form submitters who have no session to call
 // this endpoint with. Deliberately not duplicated here to avoid double
 // notification rows if a client-side call is ever added for the same event.
-// SESSION_STARTING_SOON and REGISTER_LEFT_OPEN are neither of the above —
-// they're time-based rather than event-based, so they're handled by the
-// separate `cron_reminders` branch further down, polled by an external
-// cron (see `starting_soon_notified_at` / `register_open_reminder_sent_at`
-// on `sessions` for the dedup mechanism — note this deliberately never
-// auto-closes a register itself, only alerts the people who can).
+// SESSION_STARTING_SOON and REGISTER_LEFT_OPEN are time-based rather than
+// event-based, so they're handled by the `cron_reminders` branch further
+// down, polled by an external cron (see `starting_soon_notified_at` /
+// `register_open_reminder_sent_at` on `sessions` for the dedup mechanism —
+// note this deliberately never auto-closes a register itself, only alerts
+// the people who can).
+// SESSION_CREATED and SESSION_EDITED are handled by a DB trigger too
+// (notify_session_created_or_edited migration) but — unlike the
+// bell-only trigger group above — that trigger also fires an actual push
+// via pg_net, hitting the `db_event_push` branch below with a
+// per-call shared secret (DB_EVENT_SECRET, distinct from CRON_SECRET
+// since this fires inside a user's own transaction rather than an
+// external poll). This covers every place a session gets created/edited
+// (wizard, session form, trip/event editor, future ones) from one place
+// instead of instrumenting each call site separately.
 const IMPLEMENTED_EVENTS = new Set(['TEST_NOTIFICATION', 'SAFEGUARDING_ACTION_REQUIRED', 'NEW_MESSAGE', 'STAFF_ADDED_TO_SESSION'])
 
 // Shared delivery path for the cron_reminders sweeps below — resolves
@@ -97,6 +108,54 @@ async function deliverSweepPush(adminClient, { org_id, event_type, category, tit
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+    // ── SESSION_CREATED / SESSION_EDITED — called by the
+    // notify_session_created_or_edited Postgres trigger via pg_net right
+    // after an insert/update commits, not by a logged-in user, so it's
+    // gated by its own shared secret (kept separate from CRON_SECRET since
+    // this fires inside a user's transaction, not an external poll). ──
+    if (req.body?.type === 'db_event_push') {
+      const providedSecret = req.headers['x-db-event-secret']
+      const { DB_EVENT_SECRET, REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = process.env
+      if (!DB_EVENT_SECRET || providedSecret !== DB_EVENT_SECRET) return res.status(401).json({ error: 'Unauthorized' })
+      if (!REACT_APP_SUPABASE_URL || !REACT_APP_SUPABASE_SERVICE_KEY) {
+        console.error('send-form-email(db_event_push): missing Supabase env vars')
+        return res.status(500).json({ error: 'Server misconfiguration: missing Supabase credentials' })
+      }
+      if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+        console.error('send-form-email(db_event_push): missing VAPID keys')
+        return res.status(500).json({ error: 'Push notifications are not configured on the server yet' })
+      }
+
+      const { event_type, session_id, actor_user_id } = req.body || {}
+      if (!event_type || !EVENT_TEMPLATES[event_type]) return res.status(400).json({ error: 'Unknown or missing event_type' })
+      if (!session_id) return res.status(400).json({ error: 'Missing session_id' })
+
+      const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
+      webpush.setVapidDetails(VAPID_SUBJECT || 'mailto:support@launchsession.co.uk', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+
+      const { data: sessionRow, error: sessionErr } = await adminClient.from('sessions').select('id, org_id, title, lead_staff_id').eq('id', session_id).maybeSingle()
+      if (sessionErr || !sessionRow) return res.status(404).json({ error: 'Session not found' })
+
+      const { data: staffRows } = await adminClient.from('session_staff').select('user_id').eq('session_id', session_id).not('user_id', 'is', null)
+      // Never notify whoever just made the change about their own action.
+      const recipientIds = [sessionRow.lead_staff_id, ...(staffRows || []).map(r => r.user_id)].filter(id => id && id !== actor_user_id)
+
+      const template = EVENT_TEMPLATES[event_type]
+      const verb = event_type === 'SESSION_CREATED' ? 'created' : 'updated'
+      const sent = await deliverSweepPush(adminClient, {
+        org_id: sessionRow.org_id,
+        event_type,
+        category: template.category,
+        title: template.title,
+        body: `"${sessionRow.title}" has been ${verb}.`,
+        url: `/?tab=registers&session=${sessionRow.id}`,
+        priority: template.priority,
+        recipientIds,
+      })
+
+      return res.status(200).json({ success: true, recipients: recipientIds.length, pushes_sent: sent })
+    }
 
     // ── SESSION_STARTING_SOON sweep — called by an external cron (e.g.
     // cron-job.org) every ~10 min, not by a logged-in user, so it's gated
