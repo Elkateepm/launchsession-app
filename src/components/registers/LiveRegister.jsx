@@ -56,6 +56,10 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
   const { groups: orgGroups } = useOrgSettings(org?.id)
   const configuredGroupLabels = useMemo(() => new Map((orgGroups || []).map(g => [(g.label || '').trim().toLowerCase(), g.label])), [orgGroups])
   const groupLabel = (name) => configuredGroupLabels.get((name || '').trim().toLowerCase()) || 'Ungrouped'
+  // Same rule everywhere a register can be closed from: only staff/admin/owner.
+  // Volunteers can still sign children in/out here — closing itself is the
+  // one action that stays staff-only.
+  const canCloseRegister = ['admin', 'owner', 'staff'].includes(userRole)
   const [children, setChildren] = useState([])
   const [attendance, setAttendance] = useState([])
   const [staffRows, setStaffRows] = useState([])
@@ -352,7 +356,11 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
       <div style={{ background: '#fff', borderTop: '1px solid #E5E7EB', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 13, fontWeight: 700, color: '#374151' }}>{signedInCount} currently on site</span>
         {registerState !== 'closed' && (
-          <button onClick={() => setShowClosure(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Close register</button>
+          canCloseRegister ? (
+            <button onClick={() => setShowClosure(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Close register</button>
+          ) : (
+            <span title="Only a staff member can close this register" style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF' }}>🔒 Staff only to close</span>
+          )
         )}
       </div>
 
@@ -373,7 +381,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
         <NotesPanel notes={notes} onClose={() => setShowNotes(false)} onAdd={handleAddNote} onRaiseSafeguarding={handleRaiseSafeguardingConcern} children={children} />
       )}
       {showClosure && (
-        <ClosureFlow session={session} grouped={grouped} onClose={() => setShowClosure(false)} org={org} authUserId={authUserId} onClosed={() => { setShowClosure(false); onClose && onClose() }} onMarkAllAbsent={async () => {
+        <ClosureFlow session={session} grouped={grouped} onClose={() => setShowClosure(false)} org={org} authUserId={authUserId} canCloseRegister={canCloseRegister} onClosed={() => { setShowClosure(false); onClose && onClose() }} onMarkAllAbsent={async () => {
           await Promise.all(grouped.expected.map(r => upsertAttendance(r.child.id, { status: 'absent', absence_reason: 'No reason provided' })))
           load()
         }} />
@@ -611,7 +619,7 @@ function NotesPanel({ notes, onClose, onAdd, onRaiseSafeguarding, children }) {
   )
 }
 
-function ClosureFlow({ session, grouped, onClose, org, authUserId, onClosed, onMarkAllAbsent }) {
+function ClosureFlow({ session, grouped, onClose, org, authUserId, canCloseRegister, onClosed, onMarkAllAbsent }) {
   const stillSignedIn = grouped.signed_in.length
   const unaccounted = grouped.expected.length
 
@@ -645,7 +653,11 @@ function ClosureFlow({ session, grouped, onClose, org, authUserId, onClosed, onM
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Leave Open</button>
-          <button onClick={handleClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Close and Lock Register</button>
+          {canCloseRegister ? (
+            <button onClick={handleClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Close and Lock Register</button>
+          ) : (
+            <span title="Only a staff member can close this register" style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px dashed #E5E7EB', background: '#F9FAFB', fontSize: 13, fontWeight: 700, color: '#9CA3AF', textAlign: 'center' }}>🔒 Staff only to close</span>
+          )}
         </div>
       </div>
     </div>

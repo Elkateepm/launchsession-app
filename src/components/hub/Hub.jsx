@@ -648,9 +648,15 @@ function ModalEdgeFade({ colour = '#0B1023' }) {
   )
 }
 
-function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, org, authUserId, reflections, onNavigate, getLiveSessionStats }) {
+function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, org, authUserId, userRole, reflections, onNavigate, getLiveSessionStats }) {
   const isMobile = useIsMobile()
   const [activeSession, setActiveSession] = useState(sessions[0])
+  // Only staff/admin/owner can close a register — volunteers can sign
+  // children in and out, but the register must stay open until a staff
+  // member actually closes it. This keeps closure (and the safeguarding
+  // sign-off it represents) a deliberate staff action, not something a
+  // volunteer can do unsupervised.
+  const canCloseRegister = ['admin', 'owner', 'staff'].includes(userRole)
   const [localAttendance, setLocalAttendance] = useState(attendance)
   const [bubbleFilter, setBubbleFilter] = useState('all')
   const [linkedRA, setLinkedRA] = useState(undefined) // undefined = loading, null = none, object = found
@@ -1166,11 +1172,14 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
               {isSessionEnded
                 ? (closureIssues.length > 0 ? `This session has ended — ${closureIssues[0].toLowerCase().replace(/\.$/, '')}.` : 'This session has ended and everything is resolved.')
                 : 'This session ends soon. Begin closing checks?'}
+              {!canCloseRegister && <span style={{ display: 'block', marginTop: 4, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Only a staff member can close this register — it'll stay open until one does.</span>}
             </div>
-            <button onClick={() => setShowClosure(true)}
-              style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #F97316, #FB923C)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
-              Review and close session
-            </button>
+            {canCloseRegister && (
+              <button onClick={() => setShowClosure(true)}
+                style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #F97316, #FB923C)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
+                Review and close session
+              </button>
+            )}
           </div>
         )}
 
@@ -1208,14 +1217,15 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       </div>
 
       {/* Stat row — single gradient strip, subtle dividers, legible colour-coded numbers */}
-      <div style={{ margin: '0 22px 4px', background: `linear-gradient(90deg, #16A34A15, #7C3AED15, #2563EB15)`, borderRadius: 14, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', boxShadow: '0 1px 0 rgba(255,255,255,0.08) inset, 0 10px 24px -12px rgba(0,0,0,0.4)', overflow: 'hidden', backdropFilter: 'blur(6px)' }}>
+      <div style={{ margin: '0 22px 4px', background: `linear-gradient(90deg, #16A34A15, #7C3AED15, #2563EB15, #DC262615)`, borderRadius: 14, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', boxShadow: '0 1px 0 rgba(255,255,255,0.08) inset, 0 10px 24px -12px rgba(0,0,0,0.4)', overflow: 'hidden', backdropFilter: 'blur(6px)' }}>
         {[
           { key: 'signed_in',  label: 'Signed In',  value: stats.signedIn,  color: '#4ADE80', icon: '↪' },
           { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#C084FC', icon: '↩' },
           { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#60A5FA', icon: '👥' },
+          { key: 'absent',     label: 'Absent',      value: stats.absent,    color: '#F87171', icon: '✕' },
         ].map((s, i) => (
           <button key={s.key} onClick={() => { setRegTab(s.key); setRegExpanded(true) }}
-            style={{ background: regTab === s.key && regExpanded ? 'rgba(255,255,255,0.12)' : 'transparent', border: 'none', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.12)' : 'none', boxShadow: regTab === s.key && regExpanded ? `inset 0 -2px 0 ${s.color}` : 'none', padding: isMobile ? '10px 4px' : '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 8 }}
+            style={{ background: regTab === s.key && regExpanded ? 'rgba(255,255,255,0.12)' : 'transparent', border: 'none', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.12)' : 'none', boxShadow: regTab === s.key && regExpanded ? `inset 0 -2px 0 ${s.color}` : 'none', padding: isMobile ? '10px 4px' : '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 8 }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background = regTab === s.key && regExpanded ? 'rgba(255,255,255,0.12)' : 'transparent'}>
             <span style={{ fontSize: 12, color: s.color }}>{s.icon}</span>
@@ -1383,7 +1393,11 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
               <button onClick={() => setShowNotes(true)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>📝 Notes ({sessionNotes.length})</button>
               {!activeSession?.closed_at && (
-                <button onClick={() => setShowClosure(true)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>Close register</button>
+                canCloseRegister ? (
+                  <button onClick={() => setShowClosure(true)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>Close register</button>
+                ) : (
+                  <span title="Only a staff member can close this register" style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}>🔒 Staff only to close</span>
+                )
               )}
             </div>
           </div>
@@ -2947,6 +2961,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 orgId={org?.id}
                 org={org}
                 authUserId={session?.user?.id}
+                userRole={userProfile?.role}
                 reflections={reflections}
                 onOpenRegister={openRegisterForSession}
                 onNavigate={go}
@@ -3173,7 +3188,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       background: 'linear-gradient(160deg, #0C1226 0%, #141D3B 60%, #0F1729 100%)',
                       border: isClosed ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(248,113,113,0.35)', borderRadius: 14, padding: '10px 14px', boxSizing: 'border-box',
                     }}>
-                      <span style={{ width: 30, height: 30, borderRadius: 9, background: isClosed ? 'rgba(148,163,184,0.16)' : 'rgba(248,113,113,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>{isClosed ? '🔒' : '⚠️'}</span>
+                      <span style={{ width: 30, height: 30, borderRadius: 9, background: isClosed ? 'rgba(148,163,184,0.16)' : 'rgba(248,113,113,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>{isClosed ? '🔒' : '🔺'}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                         <div style={{ fontSize: 10.5, color: isClosed ? '#CBD5E1' : '#FCA5A5' }}>{isClosed ? 'Closed' : 'Overrun — still open'} · {attended}/{total} attended</div>
@@ -3462,7 +3477,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                               📋 Open register
                             </button>
                           )}
-                          {hasEnded && (
+                          {hasEnded && userProfile && ['admin', 'owner', 'staff'].includes(userProfile.role) && (
                             <button onClick={e => { e.stopPropagation(); setClosingSession(s) }}
                               style={{ flex: 1, background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
                               🔒 Close session
