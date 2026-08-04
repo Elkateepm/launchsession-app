@@ -2905,8 +2905,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
           const renderCard = (s) => {
             const { startDT, endDT, hasEnded, isLiveNow } = getSessionMeta(s)
-            const statusLabel = hasEnded ? 'Closed' : isLiveNow ? 'Live now' : 'Upcoming'
-            const statusColour = hasEnded ? '#94A3B8' : isLiveNow ? '#DC2626' : '#FBBF24'
+            const isClosed = !!s.closed_at
+            // A session that has overrun its scheduled end time but hasn't been
+            // manually closed yet is NOT "Closed" — it should keep reading as
+            // still-open/overrun so staff know the register is still live and
+            // editable until they close it themselves.
+            const statusLabel = isClosed ? 'Closed' : hasEnded ? 'Overrun' : isLiveNow ? 'Live now' : 'Upcoming'
+            const statusColour = isClosed ? '#94A3B8' : hasEnded ? '#F87171' : isLiveNow ? '#DC2626' : '#FBBF24'
             const cardStatus = hasEnded ? 'ended' : isLiveNow ? 'live' : 'upcoming'
             // isClosed (closed_at actually set) is distinct from hasEnded (which
             // also covers "scheduled end time passed but register still open").
@@ -2914,7 +2919,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             // gets the static checkmark, while a merely overrun-but-open one
             // keeps counting (now past zero, in red) since it still needs
             // action rather than being "done".
-            const isClosed = !!s.closed_at
             const countdownKind = cardStatus === 'upcoming' ? 'start' : 'end'
             const countdownTarget = isClosed ? null : (countdownKind === 'start' ? startDT : endDT)
             // Fixed reference window each ring fraction is measured against, so it
@@ -2927,7 +2931,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               : countdownKind === 'start' && startDT && createdDT
               ? Math.max(1, Math.floor((startDT.getTime() - createdDT.getTime()) / 1000))
               : null
-            const ctaLabel = cardStatus === 'live' ? 'Open register' : cardStatus === 'upcoming' ? 'View session' : 'View summary'
+            // A merely-overrun (not yet closed) session should still invite staff
+            // to open the register and keep signing children in/out, not just
+            // "view a summary" as if it were done.
+            const ctaLabel = cardStatus === 'live' || (hasEnded && !isClosed) ? 'Open register' : cardStatus === 'upcoming' ? 'View session' : 'View summary'
 
             const panel = (
               <LiveSessionPanel
@@ -2994,19 +3001,19 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       <div style={{ minWidth: 0 }}>
                         <div style={{
                           display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 99, padding: '3px 9px 3px 7px', marginBottom: 10,
-                          background: cardStatus === 'live' ? 'rgba(220,38,38,0.14)' : cardStatus === 'upcoming' ? 'rgba(251,191,36,0.14)' : 'rgba(148,163,184,0.14)',
-                          border: `1px solid ${cardStatus === 'live' ? 'rgba(220,38,38,0.35)' : cardStatus === 'upcoming' ? 'rgba(251,191,36,0.35)' : 'rgba(148,163,184,0.3)'}`,
+                          background: cardStatus === 'live' ? 'rgba(220,38,38,0.14)' : cardStatus === 'upcoming' ? 'rgba(251,191,36,0.14)' : (hasEnded && !isClosed) ? 'rgba(248,113,113,0.14)' : 'rgba(148,163,184,0.14)',
+                          border: `1px solid ${cardStatus === 'live' ? 'rgba(220,38,38,0.35)' : cardStatus === 'upcoming' ? 'rgba(251,191,36,0.35)' : (hasEnded && !isClosed) ? 'rgba(248,113,113,0.35)' : 'rgba(148,163,184,0.3)'}`,
                         }}>
                           <div style={{ position: 'relative', width: 7, height: 7 }}>
-                            {cardStatus === 'live' && (
+                            {(cardStatus === 'live' || (hasEnded && !isClosed)) && (
                               <>
                                 <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#F87171', animation: 'lsPing1 1.8s ease-out infinite' }} />
                                 <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#F87171', animation: 'lsPing2 1.8s ease-out infinite 0.9s' }} />
                               </>
                             )}
-                            <span style={{ position: 'relative', zIndex: 2, width: 7, height: 7, borderRadius: '50%', display: 'block', background: statusColour, animation: cardStatus === 'live' ? 'pulse-live 1.5s infinite' : 'none' }} />
+                            <span style={{ position: 'relative', zIndex: 2, width: 7, height: 7, borderRadius: '50%', display: 'block', background: statusColour, animation: (cardStatus === 'live' || (hasEnded && !isClosed)) ? 'pulse-live 1.5s infinite' : 'none' }} />
                           </div>
-                          <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.7, textTransform: 'uppercase', color: cardStatus === 'live' ? '#FCA5A5' : cardStatus === 'upcoming' ? '#FDE68A' : '#CBD5E1' }}>{statusLabel}</span>
+                          <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.7, textTransform: 'uppercase', color: cardStatus === 'live' ? '#FCA5A5' : cardStatus === 'upcoming' ? '#FDE68A' : (hasEnded && !isClosed) ? '#FCA5A5' : '#CBD5E1' }}>{statusLabel}</span>
                         </div>
                         {cardStatus === 'ended' && (
                           <button onClick={() => toggleEndedExpanded(s.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 8, marginBottom: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.55)', cursor: 'pointer' }}>
@@ -3099,7 +3106,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   </div>
                 </motion.div>
 
-                {openLiveSessionId === s.id && !hasEnded && createPortal(
+                {openLiveSessionId === s.id && !isClosed && createPortal(
                   <div style={{
                     position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column',
                     background: isMobile ? '#0B1023' : 'rgba(8,11,23,0.7)',
