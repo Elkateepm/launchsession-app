@@ -846,26 +846,124 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   )
 }
 
-const SESSION_STATUS_META = {
-  planning:  { label: 'Planning',  bg: '#FEF3C7', color: '#B45309' },
-  confirmed: { label: 'Confirmed', bg: '#EDE9FE', color: '#6D28D9' },
-  live:      { label: 'Live',      bg: '#DCFCE7', color: '#16A34A', pulse: true },
-  completed: { label: 'Completed', bg: '#E0E7FF', color: '#3730A3' },
-  cancelled: { label: 'Cancelled', bg: '#FEE2E2', color: '#B91C1C' },
+// ── Dual rings, matching the Hub's live session cards ────────────
+// Same geometry, colour semantics and fill language as Hub.jsx's rings so
+// a session reads identically wherever it appears. Kept as local copies
+// rather than shared imports because Hub's versions carry live-session
+// concerns (confetti, per-second ticking against a live register) that
+// don't apply to a planning list — see the colour rules below, which are
+// the part that actually has to stay in sync.
+const PLANNER_RING_R = 22
+const PLANNER_RING_C = 2 * Math.PI * PLANNER_RING_R
+const PLANNER_ATTENDANCE_LOW_THRESHOLD = 0.5
+
+function PlannerAttendanceRing({ signedIn, total, expected, isClosed }) {
+  const fraction = total > 0 ? Math.max(0, Math.min(1, signedIn / total)) : 0
+  const offset = PLANNER_RING_C * (1 - fraction)
+  const allAccountedFor = (expected ?? 0) === 0
+  const lowAttendance = total > 0 && (signedIn / total) < PLANNER_ATTENDANCE_LOW_THRESHOLD
+  const colour = total === 0 ? 'rgba(255,255,255,0.3)'
+    : !allAccountedFor ? '#FBBF24'
+    : lowAttendance ? '#F87171'
+    : '#4ADE80'
+
+  return (
+    <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
+      <svg width="56" height="56" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
+        {isClosed ? (
+          <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke={colour} strokeWidth="5" strokeLinecap="round" strokeDasharray={PLANNER_RING_C} strokeDashoffset={offset} />
+        ) : (
+          <motion.circle
+            cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke={colour} strokeWidth="5" strokeLinecap="round"
+            strokeDasharray={PLANNER_RING_C}
+            initial={{ strokeDashoffset: PLANNER_RING_C }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1, ease: [0.16, 0.85, 0.3, 1] }}
+          />
+        )}
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#fff' }}>
+        {signedIn}/{total}
+      </div>
+    </div>
+  )
 }
 
-function deriveSessionStatus(s, isPast, isToday) {
-  if (s.status === 'cancelled' || s.cancelled_at) return 'cancelled'
-  if (isPast) return 'completed'
-  if (isToday) {
-    const now = new Date()
-    const startDT = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
-    const endDT = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
-    if ((!startDT || startDT <= now) && (!endDT || endDT > now)) return 'live'
+function PlannerTimeRing({ kind, target, totalSeconds, isClosed }) {
+  const [remaining, setRemaining] = useState(() => (target ? Math.floor((target.getTime() - Date.now()) / 1000) : 0))
+
+  useEffect(() => {
+    if (!target || isClosed) return
+    const tick = () => setRemaining(Math.floor((target.getTime() - Date.now()) / 1000))
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [target, isClosed])
+
+  const fmt = (secs) => {
+    const s = Math.max(0, Math.round(secs))
+    const h = Math.floor(s / 3600)
+    const m = Math.floor((s % 3600) / 60)
+    if (h > 0) return `${h}h${String(m).padStart(2, '0')}m`
+    return `${m}:${String(s % 60).padStart(2, '0')}`
   }
-  return s.status === 'ready' ? 'confirmed' : 'planning'
+
+  if (isClosed) {
+    return (
+      <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
+        <svg width="56" height="56" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
+          <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke="#94A3B8" strokeWidth="5" strokeLinecap="round" strokeDasharray={PLANNER_RING_C} strokeDashoffset={0} />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 900, color: '#4ADE80' }}>✓</div>
+      </div>
+    )
+  }
+
+  if (!target) {
+    return (
+      <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
+        <svg width="56" height="56" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: 'rgba(255,255,255,0.4)' }}>–</div>
+      </div>
+    )
+  }
+
+  const displayRemaining = Math.max(0, remaining)
+  const total = totalSeconds && totalSeconds > 0 ? totalSeconds : null
+  const fraction = total ? Math.max(0, Math.min(1, (total - displayRemaining) / total)) : 0
+  const isOverrun = kind === 'end' && remaining <= 0
+  const offset = isOverrun ? 0 : PLANNER_RING_C * (1 - fraction)
+  const colour = kind === 'start' ? '#FBBF24'
+    : isOverrun ? '#F87171'
+    : remaining <= 900 ? '#FBBF24'
+    : '#2EC5CE'
+  const label = isOverrun ? `+${fmt(Math.abs(remaining))}` : fmt(displayRemaining)
+
+  return (
+    <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
+      <svg width="56" height="56" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
+        <motion.circle
+          cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke={colour} strokeWidth="5" strokeLinecap="round"
+          strokeDasharray={PLANNER_RING_C}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1, ease: 'linear' }}
+        />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isOverrun ? 10 : 11, fontWeight: 900, color: '#fff' }}>
+        {label}
+      </div>
+    </div>
+  )
 }
 
+// Session card — deliberately the same dark launcher-card treatment as the
+// Hub's live session cards, so a session looks like itself everywhere in
+// the app rather than switching visual language between Home and Sessions.
 function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onView, onSaveTemplate, volCounts, hasReflection, attendanceCounts, index = 0 }) {
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
   const isMultiDay = session.end_date && session.end_date !== session.session_date
@@ -873,21 +971,43 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onVie
   const needed = session.volunteer_limit || 0
   const covered = needed === 0 || volCount >= needed
   const isPast = session.session_date < format(new Date(), 'yyyy-MM-dd')
-  const isToday = session.session_date === format(new Date(), 'yyyy-MM-dd') && !isPast
-  const ac = attendanceCounts?.[session.id] || { total: 0, signedIn: 0 }
+  const ac = attendanceCounts?.[session.id] || { total: 0, signedIn: 0, absent: 0, expected: 0 }
+
+  // Same distinction the Hub card makes: isClosed (register actually
+  // closed by a person) vs merely overrun (end time passed, still open).
+  const startDT = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
+  const endDT = session.end_time ? new Date(`${session.end_date || session.session_date}T${session.end_time}`) : null
+  const isClosed = !!session.closed_at
+  const now = new Date()
+  const isLiveNow = !isClosed && startDT && endDT && now >= startDT && now <= endDT
+  const isOverrun = !isClosed && endDT && now > endDT
+  const cardStatus = isClosed ? 'closed' : isOverrun ? 'overrun' : isLiveNow ? 'live' : 'upcoming'
+  const countdownKind = cardStatus === 'upcoming' ? 'start' : 'end'
+  const countdownTarget = isClosed ? null : (countdownKind === 'start' ? startDT : endDT)
+  const createdDT = session.created_at ? new Date(session.created_at) : null
+  const timeRingTotalSeconds = countdownKind === 'end' && startDT && endDT
+    ? Math.max(1, Math.floor((endDT.getTime() - startDT.getTime()) / 1000))
+    : countdownKind === 'start' && startDT && createdDT
+    ? Math.max(1, Math.floor((startDT.getTime() - createdDT.getTime()) / 1000))
+    : null
+
+  const statusMeta = {
+    live: { label: 'Live now', dot: '#DC2626', text: '#FCA5A5' },
+    upcoming: { label: 'Upcoming', dot: '#FBBF24', text: '#FDE68A' },
+    overrun: { label: 'Overrun', dot: '#F87171', text: '#FCA5A5' },
+    closed: { label: 'Closed', dot: '#94A3B8', text: '#CBD5E1' },
+  }[cardStatus]
 
   const dateLabel = isMultiDay
     ? `${format(parseISO(session.session_date), 'd MMM')} – ${format(parseISO(session.end_date), 'd MMM')}`
     : format(parseISO(session.session_date), 'EEE d MMM')
 
-  const statusChip = SESSION_STATUS_META[deriveSessionStatus(session, isPast, isToday)]
-
   const quickActions = [
-    { key: 'edit', icon: '✏️', onClick: () => onEdit(session), color: '#6D5DF6', enabled: true },
-    { key: 'vol', icon: '❤️', onClick: () => onVolunteers(session), color: '#F16063', enabled: true },
-    { key: 'reflect', icon: '⭐', onClick: () => onReflect(session), color: '#FFB648', enabled: isPast },
-    { key: 'template', icon: '🗂️', onClick: () => onSaveTemplate(session), color: '#0EA5E9', enabled: !!onSaveTemplate },
-    { key: 'delete', icon: '🗑', onClick: () => onDelete(session.id), color: '#F16063', enabled: true },
+    { key: 'edit', icon: '✏️', onClick: () => onEdit(session), color: '#A5B4FC', enabled: true, title: 'Edit' },
+    { key: 'vol', icon: '❤️', onClick: () => onVolunteers(session), color: '#FCA5A5', enabled: true, title: 'Volunteers' },
+    { key: 'reflect', icon: '⭐', onClick: () => onReflect(session), color: '#FCD34D', enabled: isPast, title: isPast ? 'Reflection' : 'Available once the session has ended' },
+    { key: 'template', icon: '🗂️', onClick: () => onSaveTemplate(session), color: '#7DD3FC', enabled: !!onSaveTemplate, title: 'Save as template' },
+    { key: 'delete', icon: '🗑', onClick: () => onDelete(session.id), color: '#FCA5A5', enabled: true, title: 'Delete' },
   ]
 
   return (
@@ -897,106 +1017,108 @@ function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onVie
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.35, delay: index * 0.02 }}
-      whileHover={{ y: -4, scale: 1.005 }}
+      whileHover={{ y: -3 }}
       onClick={() => onView && onView(session)}
       style={{
         position: 'relative',
-        background: 'rgba(255,255,255,0.7)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderRadius: 24,
-        border: '1px solid rgba(255,255,255,0.6)',
-        boxShadow: '0 8px 32px -12px rgba(30,41,59,0.12), inset 0 1px 0 rgba(255,255,255,0.8)',
+        background: 'linear-gradient(160deg, #0C1226 0%, #141D3B 60%, #0F1729 100%)',
+        borderRadius: 20,
+        border: cardStatus === 'overrun' ? '1px solid rgba(248,113,113,0.35)' : '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 12px 32px -16px rgba(8,12,28,0.7)',
         marginBottom: 14,
         overflow: 'hidden',
         cursor: onView ? 'pointer' : 'default',
+        padding: '16px 18px',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '18px 20px' }}>
-        {/* Icon — gentle bob */}
-        <motion.div
-          animate={{ y: [0, -4, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: index * 0.15 }}
-          style={{ width: 50, height: 50, borderRadius: 16, background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, boxShadow: `0 6px 16px -6px ${type.color}80`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}
-        >
-          {type.icon}
-        </motion.div>
+      {/* Brand accent bar */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${type.color}, ${type.color}44)` }} />
 
-        {/* Centre content */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 6, letterSpacing: -0.2 }}>{session.title}</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, fontSize: 12.5, fontWeight: 600, color: '#64748B', marginBottom: 8 }}>
-            <span>📅 {dateLabel}</span>
-            <span>🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}</span>
-            {session.location && <span>📍 {session.location.split(',')[0]}</span>}
-          </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {(session.bubbles || []).map(b => {
-              const bd = DEFAULT_BUBBLE_DEFS.find(d => d.label === b)
-              return <span key={b} style={{ background: (bd?.color || '#888') + '18', color: bd?.color || '#888', borderRadius: 99, padding: '3px 10px', fontSize: 10.5, fontWeight: 800 }}>{b}</span>
-            })}
-            {needed > 0 && (
-              <span style={{ background: covered ? '#F0FDF4' : '#FFFBEB', color: covered ? '#16A34A' : '#92400E', borderRadius: 99, padding: '3px 10px', fontSize: 10.5, fontWeight: 800 }}>
-                {covered ? `✓ ${volCount}/${needed} vol` : `⚠ ${volCount}/${needed} vol`}
-              </span>
+          {/* Status */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusMeta.dot, display: 'block', animation: cardStatus === 'live' ? 'pulse-live 1.5s infinite' : 'none' }} />
+            <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.7, textTransform: 'uppercase', color: statusMeta.text }}>{statusMeta.label}</span>
+            {hasReflection && isPast && (
+              <span style={{ fontSize: 9.5, fontWeight: 800, color: '#86EFAC', background: 'rgba(34,197,94,0.16)', borderRadius: 99, padding: '2px 8px' }}>⭐ Reflected</span>
+            )}
+            {isPast && !hasReflection && (
+              <span style={{ fontSize: 9.5, fontWeight: 800, color: '#FDE68A', background: 'rgba(245,158,11,0.16)', borderRadius: 99, padding: '2px 8px' }}>⭐ Reflection due</span>
             )}
           </div>
 
-          {/* Attendance: live progress while running, retrospective summary once completed */}
-          {ac.total > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700, color: '#94A3B8', marginBottom: 4 }}>
-                <span>
-                  {isPast
-                    ? `${ac.signedIn} attended · ${ac.total - ac.signedIn} absent or unmarked`
-                    : `${ac.signedIn} / ${ac.total} children signed in`}
-                </span>
-              </div>
-              <div style={{ height: 6, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${ac.total > 0 ? (ac.signedIn / ac.total) * 100 : 0}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut' }}
-                  style={{ height: '100%', borderRadius: 99, background: isPast ? '#94A3B8' : `linear-gradient(90deg, ${type.color}, #30C48D)` }}
-                />
-              </div>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1.25, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {type.icon} {session.title}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 10px' }}>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>📅 {dateLabel}</span>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>⏰ {session.start_time || '—'}{session.end_time ? ` – ${session.end_time}` : ''}</span>
+            {session.location && (
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>📍 {session.location.split(',')[0]}</span>
+            )}
+          </div>
+
+          {(session.bubbles || []).length > 0 && (
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 8 }}>
+              {(session.bubbles || []).map(b => {
+                const bd = DEFAULT_BUBBLE_DEFS.find(d => d.label === b)
+                const c = bd?.color || '#94A3B8'
+                return <span key={b} style={{ background: c + '26', color: c, borderRadius: 99, padding: '3px 9px', fontSize: 10, fontWeight: 800 }}>{b}</span>
+              })}
             </div>
           )}
         </div>
 
-        {/* Right: status + actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, flexShrink: 0 }}>
-          <motion.span
-            animate={statusChip.pulse ? { opacity: [1, 0.6, 1] } : {}}
-            transition={{ duration: 1.8, repeat: Infinity }}
-            style={{ fontSize: 11, fontWeight: 800, color: statusChip.color, background: statusChip.bg, borderRadius: 99, padding: '4px 12px', whiteSpace: 'nowrap' }}
-          >
-            {statusChip.label}
-          </motion.span>
-          {isPast && (
-            <motion.span
-              animate={hasReflection ? {} : { boxShadow: ['0 0 0px #FFB64800', '0 0 12px #FFB64880', '0 0 0px #FFB64800'] }}
-              transition={{ duration: 2.4, repeat: Infinity }}
-              style={{ fontSize: 10.5, fontWeight: 800, color: hasReflection ? '#16A34A' : '#B45309', background: hasReflection ? '#F0FDF4' : '#FFF7ED', borderRadius: 99, padding: '3px 10px', whiteSpace: 'nowrap' }}
-            >
-              {hasReflection ? '⭐ Reflected' : '⭐ Reflection due'}
-            </motion.span>
-          )}
-          <div style={{ display: 'flex', gap: 6 }}>
-            {quickActions.map(a => (
-              <motion.button
-                key={a.key}
-                onClick={e => { e.stopPropagation(); if (a.enabled) a.onClick() }}
-                whileHover={a.enabled ? { y: -2, rotate: 6, background: a.color + '22' } : {}}
-                whileTap={a.enabled ? { scale: 0.92 } : {}}
-                disabled={!a.enabled}
-                style={{ width: 34, height: 34, borderRadius: 11, border: 'none', background: a.enabled ? a.color + '12' : '#F1F5F9', cursor: a.enabled ? 'pointer' : 'not-allowed', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: a.enabled ? 1 : 0.35 }}
-                title={a.key === 'reflect' && !a.enabled ? 'Available once the session has ended' : a.key === 'template' ? 'Save as template' : a.key === 'vol' ? 'Volunteers' : a.key === 'edit' ? 'Edit' : a.key === 'delete' ? 'Delete' : a.key}
-              >
-                {a.icon}
-              </motion.button>
-            ))}
+        {/* Rings */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flexShrink: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <PlannerAttendanceRing signedIn={ac.signedIn} total={ac.total} expected={ac.expected} isClosed={isClosed} />
+            <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>Attendees</span>
           </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <PlannerTimeRing kind={countdownKind} target={countdownTarget} totalSeconds={timeRingTotalSeconds} isClosed={isClosed} />
+            <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+              {cardStatus === 'live' ? 'Ends in' : cardStatus === 'upcoming' ? 'Begins in' : cardStatus === 'overrun' ? 'Overrun' : 'Closed'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stat row + actions */}
+      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px 14px', marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{ac.signedIn}</span>
+          <span style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{isPast || isClosed ? 'Attended' : 'Signed in'}</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{cardStatus === 'upcoming' ? ac.expected : ac.absent}</span>
+          <span style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{cardStatus === 'upcoming' ? 'Expected' : 'Absent'}</span>
+        </div>
+        {needed > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={{ fontSize: 14, fontWeight: 900, color: covered ? '#86EFAC' : '#FDE68A' }}>{volCount}/{needed}</span>
+            <span style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Volunteers</span>
+          </div>
+        )}
+
+        <div style={{ flex: 1 }} />
+
+        <div style={{ display: 'flex', gap: 5 }}>
+          {quickActions.map(a => (
+            <motion.button
+              key={a.key}
+              onClick={e => { e.stopPropagation(); if (a.enabled) a.onClick() }}
+              whileHover={a.enabled ? { y: -2, background: 'rgba(255,255,255,0.14)' } : {}}
+              whileTap={a.enabled ? { scale: 0.92 } : {}}
+              disabled={!a.enabled}
+              title={a.title}
+              style={{ width: 32, height: 32, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', cursor: a.enabled ? 'pointer' : 'not-allowed', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: a.enabled ? 1 : 0.3 }}
+            >
+              {a.icon}
+            </motion.button>
+          ))}
         </div>
       </div>
     </motion.div>
@@ -1572,9 +1694,11 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       const { data: att } = await supabase.from('attendance').select('session_id, status').in('session_id', sessionIds)
       const acMap = {}
       ;(att || []).forEach(a => {
-        if (!acMap[a.session_id]) acMap[a.session_id] = { total: 0, signedIn: 0 }
+        if (!acMap[a.session_id]) acMap[a.session_id] = { total: 0, signedIn: 0, absent: 0, expected: 0 }
         acMap[a.session_id].total += 1
         if (a.status === 'signed_in' || a.status === 'signed_out') acMap[a.session_id].signedIn += 1
+        else if (a.status === 'absent') acMap[a.session_id].absent += 1
+        else acMap[a.session_id].expected += 1
       })
       setAttendanceCounts(acMap)
     } else {
@@ -1782,10 +1906,12 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         session={session}
         bubbleDefs={bubbleDefs}
         initialTemplate={initialTemplate}
-        onCancel={() => { setView('list'); setInitialTemplate(null) }}
+        editSession={editing?.id ? editing : null}
+        onCancel={() => { setView('list'); setInitialTemplate(null); setEditing(null) }}
         onNavigate={onNavigate}
         onPublished={async () => {
           setInitialTemplate(null)
+          setEditing(null)
           await loadData()
           await loadTemplates()
           if (onSessionSaved) onSessionSaved()
@@ -2086,7 +2212,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
               <div>
                 <AnimatePresence>
                   {displayed.map((s, i) => (
-                    <SessionCard key={s.id} session={s} index={i} onEdit={s => { setEditing(s); setView('form') }} onDelete={handleDelete} onVolunteers={setSelectedSession} onReflect={setReflectingSession} onView={setViewingSession} onSaveTemplate={handleSaveSessionAsTemplate} volCounts={volCounts} hasReflection={!!reflections[s.id]} attendanceCounts={attendanceCounts} />
+                    <SessionCard key={s.id} session={s} index={i} onEdit={s => { setEditing(s); setView('wizard') }} onDelete={handleDelete} onVolunteers={setSelectedSession} onReflect={setReflectingSession} onView={setViewingSession} onSaveTemplate={handleSaveSessionAsTemplate} volCounts={volCounts} hasReflection={!!reflections[s.id]} attendanceCounts={attendanceCounts} />
                   ))}
                 </AnimatePresence>
               </div>
@@ -2125,7 +2251,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                               )}
                               <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
                                 <button onClick={e => { e.stopPropagation(); setSelectedSession(s) }} style={{ flex: 1, border: 'none', background: type.color + '20', borderRadius: 7, padding: '4px 0', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: type.color }}>❤️ Vols</button>
-                                <button onClick={e => { e.stopPropagation(); setEditing(s); setView('form') }} style={{ border: 'none', background: 'var(--surface2, #F9FAFB)', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>✏️</button>
+                                <button onClick={e => { e.stopPropagation(); setEditing(s); setView('wizard') }} style={{ border: 'none', background: 'var(--surface2, #F9FAFB)', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>✏️</button>
                                 <button onClick={e => { e.stopPropagation(); handleDelete(s.id) }} style={{ border: 'none', background: '#FFF0F0', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>🗑</button>
                               </div>
                             </div>
@@ -2172,7 +2298,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
           <SessionDetailDrawer
             session={viewingSession}
             onClose={() => setViewingSession(null)}
-            onEdit={s => { setEditing(s); setView('form') }}
+            onEdit={s => { setEditing(s); setView('wizard') }}
             onVolunteers={setSelectedSession}
             volCount={volCounts[viewingSession.id] || 0}
             attendanceCounts={attendanceCounts}

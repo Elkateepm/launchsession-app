@@ -714,16 +714,62 @@ function templateToFormPatch(t) {
   return patch
 }
 
-export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPublished, onNavigate, initialType, initialTemplate }) {
+// Maps a saved session row back into wizard form state, for edit mode.
+// Only covers columns that live on the sessions table itself — the
+// relational parts (supporting staff, participants, volunteer slots,
+// forms, outcomes) are loaded separately in the component so they can be
+// merged in once fetched.
+const sessionToForm = (s) => ({
+  session_type: s.session_type || 'activity',
+  title: s.title || '',
+  session_date: s.session_date || '',
+  end_date: s.end_date || s.session_date || '',
+  start_time: s.start_time || '',
+  end_time: s.end_time || '',
+  location: s.location || '',
+  venue_id: s.venue_id || null,
+  description: s.description || '',
+  max_capacity: s.max_capacity != null ? String(s.max_capacity) : '',
+  age_range: s.age_range || '',
+  internal_notes: s.internal_notes || '',
+  meeting_point: s.meeting_point || '',
+  colour: s.colour || '#1B9AAA',
+  bubbles: s.bubbles || [],
+  participant_mode: (s.bubbles && s.bubbles.length) ? 'group' : s.allow_walk_ins ? 'walk_ins' : 'individual',
+  allow_walk_ins: !!s.allow_walk_ins,
+  lead_staff_id: s.lead_staff_id || '',
+  min_staff: s.min_staff != null ? String(s.min_staff) : '',
+  staff_ratio: s.staff_ratio || '',
+  risk_assessment_required: !!s.risk_assessment_required,
+  consent_required: !!s.consent_required,
+  medical_check_required: !!s.medical_check_required,
+  collection_permissions_required: !!s.collection_permissions_required,
+  sign_out_required: !!s.sign_out_required,
+  safeguarding_lead_required: !!s.safeguarding_lead_required,
+  transport_required: !!s.transport_required,
+  equipment_required: !!s.equipment_required,
+  packed_lunch: !!s.packed_lunch,
+  medication_support_required: !!s.medication_support_required,
+  venue_confirmation_required: !!s.venue_confirmation_required,
+  emergency_contact_sheet_required: !!s.emergency_contact_sheet_required,
+  reflection_required: !!s.reflection_required,
+})
+
+export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPublished, onNavigate, initialType, initialTemplate, editSession }) {
   const isMobile = useIsMobile()
   const { isTablet, isDesktop } = useBreakpoint()
   // Sidebar only earns its keep once there's real width to spare (iPad landscape / desktop).
   // On phones and iPad portrait it would crush the main column, so those get a focused single-column flow.
   const showSidebar = isDesktop
   const compact = isMobile || isTablet
+  const isEditing = !!editSession?.id
   const draftKey = `ls_session_draft_${org?.id}`
   const [step, setStep] = useState(1)
   const [form, setForm] = useState(() => {
+    // Edit mode deliberately ignores both the saved draft and any template:
+    // those exist to speed up creating a *new* session, and restoring
+    // either here would silently overwrite the real session being edited.
+    if (editSession?.id) return { ...emptyForm(), ...sessionToForm(editSession) }
     if (initialTemplate) return { ...emptyForm(), ...templateToFormPatch(initialTemplate) }
     try {
       const saved = localStorage.getItem(draftKey)
@@ -771,9 +817,13 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [staff])
 
-  // Autosave draft to localStorage (debounced)
+  // Autosave draft to localStorage (debounced). Skipped entirely in edit
+  // mode — the draft slot belongs to new-session creation, and writing an
+  // existing session into it would clobber any half-finished new session
+  // and then reappear as a "draft" the next time someone creates one.
   const saveTimer = useRef(null)
   useEffect(() => {
+    if (isEditing) return
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
       try {
@@ -783,7 +833,35 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     }, 800)
     return () => clearTimeout(saveTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form])
+  }, [form, isEditing])
+
+  // In edit mode the relational parts of a session live in their own
+  // tables, so pull them in and merge into the form once loaded —
+  // otherwise the People/Requirements steps would render as empty and a
+  // save would look like the user had deliberately cleared them.
+  useEffect(() => {
+    if (!editSession?.id) return
+    let cancelled = false
+    ;(async () => {
+      const [staffRes, attRes, volRes, formRes, outcomeRes] = await Promise.all([
+        supabase.from('session_staff').select('user_id, role, volunteer_id').eq('session_id', editSession.id),
+        supabase.from('attendance').select('child_id').eq('session_id', editSession.id),
+        supabase.from('session_volunteer_slots').select('role, spaces_required').eq('session_id', editSession.id),
+        supabase.from('session_forms').select('form_id').eq('session_id', editSession.id),
+        supabase.from('session_outcomes').select('area').eq('session_id', editSession.id),
+      ])
+      if (cancelled) return
+      setForm(f => ({
+        ...f,
+        supporting_staff_ids: (staffRes.data || []).filter(r => r.user_id && !r.volunteer_id && r.role !== 'volunteer' && r.user_id !== editSession.lead_staff_id).map(r => r.user_id),
+        child_ids: (attRes.data || []).map(r => r.child_id).filter(Boolean),
+        volunteer_slots: (volRes.data || []).map(r => ({ role: r.role, spaces_required: String(r.spaces_required ?? 1) })),
+        form_ids: (formRes.data || []).map(r => r.form_id).filter(Boolean),
+        outcome_areas: (outcomeRes.data || []).map(r => r.area).filter(Boolean),
+      }))
+    })()
+    return () => { cancelled = true }
+  }, [editSession?.id, editSession?.lead_staff_id])
 
   const expectedCount = useMemo(() => {
     if (form.participant_mode === 'group') {
@@ -813,6 +891,113 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   const publish = async (status) => {
     setSaving(true)
     setError('')
+
+    if (isEditing) {
+      const sessionPatch = {
+        title: form.title,
+        session_date: form.session_date,
+        end_date: form.end_date || form.session_date,
+        start_time: form.start_time,
+        end_time: form.end_time,
+        location: form.location,
+        session_type: form.session_type,
+        description: form.description || null,
+        max_capacity: form.max_capacity ? parseInt(form.max_capacity, 10) : null,
+        bubbles: form.participant_mode === 'group' && form.bubbles.length ? form.bubbles : null,
+        allow_walk_ins: form.participant_mode === 'walk_ins' ? form.allow_walk_ins : false,
+        packed_lunch: form.packed_lunch,
+        meeting_point: form.meeting_point || null,
+        consent_required: form.consent_required,
+        age_range: form.age_range || null,
+        internal_notes: form.internal_notes || null,
+        colour: form.colour || null,
+        lead_staff_id: form.lead_staff_id || null,
+        min_staff: form.min_staff ? parseInt(form.min_staff, 10) : null,
+        staff_ratio: form.staff_ratio || null,
+        risk_assessment_required: form.risk_assessment_required,
+        medical_check_required: form.medical_check_required,
+        collection_permissions_required: form.collection_permissions_required,
+        sign_out_required: form.sign_out_required,
+        safeguarding_lead_required: form.safeguarding_lead_required,
+        transport_required: form.transport_required,
+        equipment_required: form.equipment_required,
+        medication_support_required: form.medication_support_required,
+        venue_confirmation_required: form.venue_confirmation_required,
+        emergency_contact_sheet_required: form.emergency_contact_sheet_required,
+        reflection_required: form.reflection_required,
+        venue_id: form.venue_id || null,
+      }
+      // Only move status when the person explicitly chose a new one from
+      // the footer — otherwise editing a live/completed session would
+      // silently reset it back to scheduled.
+      if (status) sessionPatch.status = status
+
+      const { error: upErr } = await supabase.from('sessions').update(sessionPatch).eq('id', editSession.id)
+      if (upErr) { setError(upErr.message); setSaving(false); return }
+
+      const sid = editSession.id
+      const orgId = org?.id
+
+      // Participants: add newly-selected children, and remove only those
+      // still sitting at "expected". Anyone already signed in, signed out
+      // or marked absent is left alone — their attendance is a real
+      // record of what happened and must not be destroyed by an edit.
+      const desiredChildIds = form.participant_mode === 'group'
+        ? children.filter(c => form.bubbles.includes(c.group_name)).map(c => c.id)
+        : form.participant_mode === 'individual' ? form.child_ids : []
+      const { data: existingAtt } = await supabase.from('attendance').select('id, child_id, status').eq('session_id', sid)
+      const existingIds = (existingAtt || []).map(r => r.child_id)
+      const toAdd = desiredChildIds.filter(id => !existingIds.includes(id))
+      const removableIds = (existingAtt || [])
+        .filter(r => !desiredChildIds.includes(r.child_id) && (r.status === 'expected' || !r.status))
+        .map(r => r.id)
+      if (toAdd.length) {
+        await supabase.from('attendance').insert(toAdd.map(cid => ({ org_id: orgId, session_id: sid, child_id: cid, status: 'expected' })))
+      }
+      if (removableIds.length) {
+        await supabase.from('attendance').delete().in('id', removableIds)
+      }
+
+      // Supporting staff: session_staff rows carry real sign-in/sign-out
+      // records, so this only removes rows for staff who were dropped AND
+      // have no attendance history. Anyone who actually turned up keeps
+      // their row. Volunteer rows (volunteer_id set, or role 'volunteer')
+      // are managed by the Volunteers tool and never touched here.
+      const { data: existingStaff } = await supabase.from('session_staff').select('id, user_id, role, volunteer_id, attended, signed_in_at').eq('session_id', sid)
+      const staffRows = (existingStaff || []).filter(r => r.user_id && !r.volunteer_id && r.role !== 'volunteer')
+      const keptStaffIds = staffRows.map(r => r.user_id)
+      const staffToAdd = form.supporting_staff_ids.filter(uid => !keptStaffIds.includes(uid) && uid !== form.lead_staff_id)
+      const staffToRemove = staffRows
+        .filter(r => !form.supporting_staff_ids.includes(r.user_id) && r.user_id !== form.lead_staff_id && !r.signed_in_at && r.attended !== true)
+        .map(r => r.id)
+      if (staffToAdd.length) {
+        await supabase.from('session_staff').insert(staffToAdd.map(uid => ({ org_id: orgId, session_id: sid, user_id: uid, role: 'staff' })))
+      }
+      if (staffToRemove.length) {
+        await supabase.from('session_staff').delete().in('id', staffToRemove)
+      }
+
+      await supabase.from('session_volunteer_slots').delete().eq('session_id', sid)
+      if (form.volunteer_slots.length) {
+        await supabase.from('session_volunteer_slots').insert(form.volunteer_slots.map(v => ({ org_id: orgId, session_id: sid, role: v.role, spaces_required: parseInt(v.spaces_required, 10) || 1 })))
+      }
+
+      await supabase.from('session_forms').delete().eq('session_id', sid)
+      if (form.form_ids.length) {
+        await supabase.from('session_forms').insert(form.form_ids.map(fid => ({ org_id: orgId, session_id: sid, form_id: fid })))
+      }
+
+      await supabase.from('session_outcomes').delete().eq('session_id', sid)
+      if (form.outcome_areas.length) {
+        await supabase.from('session_outcomes').insert(form.outcome_areas.map(a => ({ org_id: orgId, session_id: sid, area: a })))
+      }
+
+      setSaving(false)
+      setDone({ session: { ...editSession, ...sessionPatch }, publishedAs: 'edited' })
+      if (onPublished) onPublished({ ...editSession, ...sessionPatch })
+      return
+    }
+
     const { data, error: err } = await supabase.rpc('create_session_with_dependencies', {
       p_title: form.title,
       p_session_date: form.session_date,
@@ -867,7 +1052,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
 
   // ─── Confirmation screen ───
   if (done) {
-    const label = done.publishedAs === 'draft' ? 'saved as a draft' : done.publishedAs === 'scheduled' ? 'scheduled' : 'published'
+    const label = done.publishedAs === 'edited' ? 'updated' : done.publishedAs === 'draft' ? 'saved as a draft' : done.publishedAs === 'scheduled' ? 'scheduled' : 'published'
     const actions = [
       { key: 'view', label: 'View Session', onClick: onCancel, primary: true },
       { key: 'register', label: 'Open Register', onClick: () => onNavigate && onNavigate('registers') },
@@ -1013,22 +1198,24 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
           </motion.button>
         ) : (
           <div style={{ display: 'flex', flexDirection: compact ? 'column' : 'row', gap: 10, width: compact ? '100%' : 'auto' }}>
-            <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('draft')} disabled={saving} style={{ padding: compact ? '13px 18px' : '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', order: compact ? 3 : 0 }}>Save as Draft</motion.button>
-            <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('scheduled')} disabled={saving} style={{ padding: compact ? '13px 18px' : '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', order: compact ? 2 : 0 }}>Schedule Session</motion.button>
+            {!isEditing && <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('draft')} disabled={saving} style={{ padding: compact ? '13px 18px' : '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', order: compact ? 3 : 0 }}>Save as Draft</motion.button>}
+            {!isEditing && <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('scheduled')} disabled={saving} style={{ padding: compact ? '13px 18px' : '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', order: compact ? 2 : 0 }}>Schedule Session</motion.button>}
             <motion.button
               whileHover={{ y: -1, boxShadow: `0 8px 20px ${typeColor}45` }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => publish('ready')}
+              // Editing passes no status, so a live or completed session
+              // keeps the status it already has rather than being reset.
+              onClick={() => publish(isEditing ? null : 'ready')}
               disabled={saving}
               style={{ padding: compact ? '13px 22px' : '11px 22px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${typeColor})`, color: '#fff', fontWeight: 800, cursor: 'pointer', minWidth: 140, textAlign: 'center', order: compact ? 1 : 0 }}>
               <AnimatePresence mode="wait" initial={false}>
                 {saving ? (
                   <motion.span key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }} style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', display: 'inline-block' }} />
-                    Publishing...
+                    {isEditing ? 'Saving...' : 'Publishing...'}
                   </motion.span>
                 ) : (
-                  <motion.span key="publish" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'block' }}>Publish Session</motion.span>
+                  <motion.span key="publish" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'block' }}>{isEditing ? 'Save Changes' : 'Publish Session'}</motion.span>
                 )}
               </AnimatePresence>
             </motion.button>
