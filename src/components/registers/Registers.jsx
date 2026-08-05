@@ -1228,29 +1228,30 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 ⚙️
               </button>
             )}
-            <div style={{ display: 'flex', gap: isMobile ? 4 : 6, alignItems: 'center', width: isMobile ? '100%' : undefined, justifyContent: isMobile ? 'space-between' : undefined, flexShrink: isMobile ? undefined : 0 }}>
-              {[
-                { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
-                { key: 'archive', label: 'Archive', icon: '🗄️', onClick: () => setShowArchive(true) },
-                { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
-                { key: 'groups', label: 'Manage Groups', icon: '/icons/manage-groups-icon.png', onClick: () => setShowGroupsSetup(true) },
-                { key: 'print', label: 'Print Register', icon: '/icons/print-register-icon.png', onClick: () => handlePrint() },
-                { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
-              ].map(a => {
-                const ac = actionColors[a.key]
-                return (
-                  <button key={a.key} onClick={a.onClick} aria-label={a.label}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, flex: isMobile ? '1 1 0' : '0 0 auto', minWidth: 0, width: isMobile ? undefined : 82, height: isMobile ? 68 : 80, boxSizing: 'border-box', padding: '3px 1px', borderRadius: 12, border: darkMode ? `1px solid ${ac}3A` : '1.5px solid #E2E8F0', background: darkMode ? `linear-gradient(160deg, ${ac}30, ${ac}12)` : '#fff', color: darkMode ? t.text : '#374151', fontSize: isMobile ? 8.5 : 10, fontWeight: 800, cursor: 'pointer', boxShadow: darkMode ? `0 4px 14px -8px ${ac}80` : '0 1px 4px -1px rgba(0,0,0,0.06)', textAlign: 'center', lineHeight: 1.15 }}>
-                    {a.icon.startsWith('/') ? (
-                      <img src={a.icon} alt="" style={{ width: isMobile ? 48 : 52, height: isMobile ? 48 : 52, objectFit: 'contain', flexShrink: 0, marginBottom: -4 }} />
-                    ) : (
-                      <span style={{ fontSize: isMobile ? 34 : 38, lineHeight: 1, marginBottom: -2 }}>{a.icon}</span>
-                    )}
-                    <span style={{ maxWidth: isMobile ? 62 : 74 }}>{a.label}</span>
-                  </button>
-                )
-              })}
-            </div>
+            {isMobile && (
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+                {[
+                  { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
+                  { key: 'archive', label: 'Archive', icon: '🗄️', onClick: () => setShowArchive(true) },
+                  { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
+                  { key: 'groups', label: 'Manage Groups', icon: '/icons/manage-groups-icon.png', onClick: () => setShowGroupsSetup(true) },
+                  { key: 'print', label: 'Print Register', icon: '/icons/print-register-icon.png', onClick: () => handlePrint() },
+                  { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
+                ].map(a => {
+                  const ac = actionColors[a.key]
+                  return (
+                    <button key={a.key} onClick={a.onClick} aria-label={a.label}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '1 1 0', minWidth: 0, height: 48, boxSizing: 'border-box', padding: '3px 1px', borderRadius: 12, border: darkMode ? `1px solid ${ac}3A` : '1.5px solid #E2E8F0', background: darkMode ? `linear-gradient(160deg, ${ac}30, ${ac}12)` : '#fff', cursor: 'pointer', boxShadow: darkMode ? `0 4px 14px -8px ${ac}80` : '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
+                      {a.icon.startsWith('/') ? (
+                        <img src={a.icon} alt="" style={{ width: 30, height: 30, objectFit: 'contain', flexShrink: 0 }} />
+                      ) : (
+                        <span style={{ fontSize: 22, lineHeight: 1 }}>{a.icon}</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* Stats strip + search + select */}
