@@ -383,6 +383,11 @@ body.menu-open{overflow:hidden}
 .hero-badge{position:absolute;background:rgba(11,15,39,0.95);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);display:flex;align-items:center;gap:8px;z-index:2}
 .hero-badge-1{bottom:-16px;left:-20px;animation:float 5s 1s ease-in-out infinite}
 .hero-badge-2{top:20px;right:-24px;animation:float 5s 2s ease-in-out infinite}
+.hc-live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ADE80;margin-right:6px;vertical-align:middle;animation:blink 1.6s ease-in-out infinite}
+.hc-row-enter{animation:hc-row-in 0.6s ease}
+@keyframes hc-row-in{0%{background:rgba(74,222,128,0.18);transform:translateX(-4px)}100%{background:rgba(255,255,255,0.03);transform:translateX(0)}}
+.hc-stat-n-bump{animation:hc-stat-bump 0.4s ease}
+@keyframes hc-stat-bump{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
 .hb-icon{font-size:18px}
 .hb-text{font-size:12px;font-weight:700;color:#fff}
 .hb-sub{font-size:10px;color:var(--text3)}
@@ -792,7 +797,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
       <p class="hero-sub">Registers, sessions, volunteers, safeguarding and parent comms — all connected, all in real time. Choose the plan that fits your organisation.</p>
       <div class="hero-ctas">
         <button class="btn-hero-cta" onclick="window.location.href='/signup'">Start your free 14-day trial →</button>
-        <button class="btn-hero-ghost" onclick="window.location.href='/packages.html'">See packages</button>
+        <button class="btn-hero-ghost" onclick="document.getElementById('how')?.scrollIntoView({behavior:'smooth'})">See how it works</button>
       </div>
       <div class="hero-trust">
         <div class="trust-item"><div class="trust-dot"></div>Free 14-day trial</div>
@@ -805,21 +810,21 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
         <div class="hb-icon">✅</div>
         <div><div class="hb-text">48 signed in</div><div class="hb-sub">Today's session</div></div>
       </div>
-      <div class="hero-card">
+      <div class="hero-card" id="live-register-card">
         <div class="hc-header">
           <div class="hc-avatar">SC</div>
-          <div><div class="hc-title">Scouts Club Watford</div><div class="hc-sub">Friday session · Live</div></div>
+          <div><div class="hc-title">Scouts Club Watford</div><div class="hc-sub"><span class="hc-live-dot"></span>Friday session · Live</div></div>
         </div>
         <div class="hc-stat-row">
-          <div class="hc-stat"><div class="hc-stat-n" style="color:#4ADE80">48</div><div class="hc-stat-l">Signed In</div></div>
-          <div class="hc-stat"><div class="hc-stat-n" style="color:#F59E0B">6</div><div class="hc-stat-l">Absent</div></div>
+          <div class="hc-stat"><div class="hc-stat-n" id="lr-in" style="color:#4ADE80">45</div><div class="hc-stat-l">Signed In</div></div>
+          <div class="hc-stat"><div class="hc-stat-n" id="lr-absent" style="color:#F59E0B">6</div><div class="hc-stat-l">Absent</div></div>
           <div class="hc-stat"><div class="hc-stat-n" style="color:#60A5FA">8</div><div class="hc-stat-l">Volunteers</div></div>
         </div>
-        <div class="hc-list">
-          <div class="hc-row"><div class="hc-dot" style="background:#4ADE80"></div><div class="hc-name">Aisha Mohammed</div><div class="hc-badge" style="background:rgba(34,197,94,0.12);color:#4ADE80">In · 09:12</div></div>
-          <div class="hc-row"><div class="hc-dot" style="background:#4ADE80"></div><div class="hc-name">Marcus Johnson</div><div class="hc-badge" style="background:rgba(34,197,94,0.12);color:#4ADE80">In · 09:14</div></div>
-          <div class="hc-row"><div class="hc-dot" style="background:#F59E0B"></div><div class="hc-name">Layla Hassan</div><div class="hc-badge" style="background:rgba(245,158,11,0.12);color:#F59E0B">Absent</div></div>
-          <div class="hc-row"><div class="hc-dot" style="background:#60A5FA"></div><div class="hc-name">Noah Thompson</div><div class="hc-badge" style="background:rgba(96,165,250,0.12);color:#60A5FA">⚠ Allergy</div></div>
+        <div class="hc-list" id="lr-list">
+          <div class="hc-row" data-name="Aisha Mohammed"><div class="hc-dot" style="background:#4ADE80"></div><div class="hc-name">Aisha Mohammed</div><div class="hc-badge" style="background:rgba(34,197,94,0.12);color:#4ADE80">In · 09:12</div></div>
+          <div class="hc-row" data-name="Marcus Johnson"><div class="hc-dot" style="background:#4ADE80"></div><div class="hc-name">Marcus Johnson</div><div class="hc-badge" style="background:rgba(34,197,94,0.12);color:#4ADE80">In · 09:14</div></div>
+          <div class="hc-row" data-name="Layla Hassan"><div class="hc-dot" style="background:#F59E0B"></div><div class="hc-name">Layla Hassan</div><div class="hc-badge" style="background:rgba(245,158,11,0.12);color:#F59E0B">Absent</div></div>
+          <div class="hc-row" data-name="Noah Thompson"><div class="hc-dot" style="background:#60A5FA"></div><div class="hc-name">Noah Thompson</div><div class="hc-badge" style="background:rgba(96,165,250,0.12);color:#60A5FA">⚠ Allergy</div></div>
         </div>
       </div>
       <div class="hero-badge hero-badge-1">
@@ -2235,6 +2240,55 @@ document.getElementById('fdSheet').addEventListener('keydown', e => {
 });
 </script>
 
+<script>
+// Purely cosmetic live-register simulation for the hero mockup — no backend, just a demo loop.
+(function(){
+  var card = document.getElementById('live-register-card');
+  if(!card) return;
+  var list = document.getElementById('lr-list');
+  var inCountEl = document.getElementById('lr-in');
+  var absentCountEl = document.getElementById('lr-absent');
+  var inCount = parseInt(inCountEl.textContent,10);
+  var absentCount = parseInt(absentCountEl.textContent,10);
+
+  var incoming = ['Priya Patel','Jack Wilson','Sofia Rossi','Omar Farouk','Ella Brooks','Tyler Reid','Zainab Ali','Freddie Marsh'];
+  var idx = 0;
+
+  function timeNow(){
+    var d = new Date();
+    var h = d.getHours()%12 || 12;
+    var m = d.getMinutes().toString().padStart(2,'0');
+    return (h<10?'0'+h:h)+':'+m;
+  }
+
+  function bump(el){
+    el.classList.remove('hc-stat-n-bump');
+    void el.offsetWidth; // restart animation
+    el.classList.add('hc-stat-n-bump');
+  }
+
+  function signInNext(){
+    if(idx >= incoming.length){ idx = 0; return; } // simple loop cap, keeps card tidy
+    var name = incoming[idx++];
+
+    var row = document.createElement('div');
+    row.className = 'hc-row hc-row-enter';
+    row.innerHTML = '<div class="hc-dot" style="background:#4ADE80"></div>' +
+      '<div class="hc-name">'+name+'</div>' +
+      '<div class="hc-badge" style="background:rgba(34,197,94,0.12);color:#4ADE80">In · '+timeNow()+'</div>';
+
+    list.insertBefore(row, list.firstChild);
+    while(list.children.length > 4){ list.removeChild(list.lastChild); }
+
+    inCount++;
+    inCountEl.textContent = inCount;
+    bump(inCountEl);
+  }
+
+  // Gentle pace so it reads as "live" without being distracting
+  setInterval(signInNext, 3200);
+})();
+</script>
 </body>
 </html>
 
