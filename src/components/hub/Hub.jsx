@@ -3050,6 +3050,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                             )}
                           </div>
                         )}
+                        {hasEnded && !isClosed && (
+                          <div style={{ marginTop: 6, fontSize: 11, fontWeight: 700, color: '#FCA5A5', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            ⏰ This session has ended — close the register when you're ready
+                          </div>
+                        )}
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexShrink: 0 }}>
@@ -3112,6 +3117,16 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                             background: 'transparent', border: '1px dashed rgba(255,255,255,0.24)', borderRadius: 99, padding: '5px 10px', cursor: 'pointer',
                           }}>
                           + Add volunteers
+                        </button>
+                      )}
+                      {hasEnded && !isClosed && userProfile && ['admin', 'owner', 'staff'].includes(userProfile.role) && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setClosingSession(s) }}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 900, color: '#fff',
+                            background: 'rgba(248,113,113,0.22)', border: '1px solid rgba(248,113,113,0.5)', borderRadius: 99, padding: '6px 12px', cursor: 'pointer',
+                          }}>
+                          🔒 Close register
                         </button>
                       )}
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 900, color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '6px 12px 6px 13px' }}>
