@@ -97,7 +97,7 @@ export default function MobileBottomNav({
             <LaunchActionButton open={menuOpen} onClick={() => setMenuOpen(v => !v)} reducedMotion={reducedMotion} />
           </div>
 
-          <MobileNavItem icon={PeopleIcon} label="Team" active={tab === 'team'} onClick={() => onNavigate('team')} />
+          <MobileNavItem icon={PeopleIcon} label="Volunteers" active={tab === 'team'} onClick={() => onNavigate('team')} />
           <MobileNavItem icon={MenuIcon} label="More" active={false} onClick={onOpenMore} />
         </div>
       </div>
