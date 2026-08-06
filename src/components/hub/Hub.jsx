@@ -3699,15 +3699,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         const pastSession = sessions.find(s => s.id === openLiveSessionId)
         if (!pastSession) return null
         // The live hero section has its own inline modal for today's still-open sessions —
-        // defer to that one only when this session is part of today's list AND hasn't
-        // ended yet. "Ended" here has to match the same definition the hero cards use for
-        // their own hasEnded/CTA label (closed_at set OR scheduled end time already passed),
-        // not just closed_at alone — otherwise a session whose time has passed but hasn't
-        // been manually closed yet falls into a gap where neither modal renders and the
-        // "View summary" click does nothing.
-        const pastSessionEndDT = pastSession.end_time ? new Date(`${pastSession.session_date}T${pastSession.end_time}`) : null
-        const pastSessionHasEnded = !!pastSession.closed_at || (!!pastSessionEndDT && pastSessionEndDT < new Date())
-        const handledByHeroInlineModal = !pastSessionHasEnded && todaySessions.some(s => s.id === openLiveSessionId)
+        // defer to that one whenever the session is part of today's list and hasn't been
+        // manually closed yet (closed_at unset), so an overrun-but-open register stays fully
+        // editable via the live panel instead of falling through to this read-only summary.
+        // Only genuinely closed sessions, or past sessions outside today's list, land here.
+        const handledByHeroInlineModal = !pastSession.closed_at && todaySessions.some(s => s.id === openLiveSessionId)
         if (handledByHeroInlineModal) return null
         return (
           <HistoricalAttendanceModal
