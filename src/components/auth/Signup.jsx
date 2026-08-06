@@ -18,15 +18,47 @@ const ORG_TYPES = [
   { key: 'other',              label: 'Something Else',     icon: '✨', tip: "Whatever you run, LaunchSession adapts — enable only the modules your team actually needs." },
 ]
 
-const WHAT_YOU_GET = [
-  { icon: '📅', label: 'Sessions & Planning' },
-  { icon: '📋', label: 'Live Registers' },
-  { icon: '🛡️', label: 'Safeguarding' },
-  { icon: '❤️', label: 'Volunteers' },
-  { icon: '💬', label: 'Messaging' },
-  { icon: '📊', label: 'Reports & Impact' },
-  { icon: '🤝', label: 'Mentoring' },
-  { icon: '✈️', label: 'Events & Trips' },
+const WHAT_YOU_GET_GROUPS = [
+  {
+    title: 'Run your sessions',
+    color: '#60A5FA',
+    items: [
+      { icon: '📅', label: 'Sessions & Planning' },
+      { icon: '📋', label: 'Live Registers' },
+      { icon: '🗓️', label: 'Calendar' },
+      { icon: '📝', label: 'Forms' },
+    ],
+  },
+  {
+    title: 'Keep everyone safe',
+    color: '#F87171',
+    items: [
+      { icon: '🛡️', label: 'Safeguarding' },
+      { icon: '⚠️', label: 'Risk Assessments' },
+      { icon: '🔔', label: 'Alerts & Reminders' },
+      { icon: '🗄️', label: 'Data Retention' },
+    ],
+  },
+  {
+    title: 'Your people',
+    color: '#4ADE80',
+    items: [
+      { icon: '🧒', label: 'Children & Groups' },
+      { icon: '❤️', label: 'Volunteers' },
+      { icon: '🤝', label: 'Mentoring' },
+      { icon: '💬', label: 'Messaging' },
+    ],
+  },
+  {
+    title: 'Grow & report',
+    color: '#FBBF24',
+    items: [
+      { icon: '📊', label: 'Reports & Impact' },
+      { icon: '💰', label: 'Fundraising' },
+      { icon: '🎨', label: 'Branding' },
+      { icon: '✈️', label: 'Events & Trips' },
+    ],
+  },
 ]
 
 const STEP_KEYS = ['org', 'type', 'you', 'review']
@@ -269,14 +301,28 @@ export default function Signup() {
                   <div style={stepEmoji}>🚀</div>
                   <h2 style={cardTitle}>Here's what {organisationName} gets</h2>
                   <p style={cardSub}>Full access to everything below, free for 14 days.</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 8, marginBottom: 18 }}>
-                    {WHAT_YOU_GET.map(m => (
-                      <div key={m.label} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '10px 8px', textAlign: 'center' }}>
-                        <div style={{ fontSize: 17, marginBottom: 3 }}>{m.icon}</div>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3 }}>{m.label}</div>
+
+                  {WHAT_YOU_GET_GROUPS.map(g => (
+                    <div key={g.title} style={{ marginBottom: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: g.color, flexShrink: 0 }} />
+                        <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>{g.title}</span>
                       </div>
-                    ))}
-                  </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                        {g.items.map(m => (
+                          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 10px', minWidth: 0 }}>
+                            <span style={{ fontSize: 15, flexShrink: 0 }}>{m.icon}</span>
+                            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.82)', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', textAlign: 'center', margin: '2px 0 18px' }}>...and everything else, unlocked from day one — nothing to upgrade into.</p>
+
+                  <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '0 0 18px' }} />
+
                   <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '14px 16px', marginBottom: 6 }}>
                     <Row k="Organisation" v={organisationName} />
                     <Row k="Type" v={ORG_TYPES.find(t => t.key === orgType)?.label || '—'} />
