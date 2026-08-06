@@ -2564,6 +2564,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   };
 
   const [closingSession, setClosingSession] = useState(null)
+  const [todaySessionsView, setTodaySessionsView] = useState('active')
   const [attendanceBreakdownSession, setAttendanceBreakdownSession] = useState(null)
   const [timeBreakdownSession, setTimeBreakdownSession] = useState(null)
   const handleCloseSessionFromCard = async (sess) => {
@@ -2915,7 +2916,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           const todayList = todaySessions.slice(0, 20)
           const liveGroup = todayList.filter(s => getSessionMeta(s).isLiveNow)
           const currentGroup = todayList.filter(s => { const m = getSessionMeta(s); return !m.isLiveNow && !m.hasEnded })
-          const endedGroup = todayList.filter(s => getSessionMeta(s).hasEnded)
+          // Truly closed (closed_at set) sessions get their own "Closed today" tab,
+          // separate from overrun-but-still-open ones, which stay in the active flow
+          // since they still need attention (see the Close register prompt above).
+          const overrunGroup = todayList.filter(s => { const m = getSessionMeta(s); return m.hasEnded && !s.closed_at })
+          const closedGroup = todayList.filter(s => !!s.closed_at)
 
           const renderCard = (s) => {
             const { startDT, endDT, hasEnded, isLiveNow } = getSessionMeta(s)
@@ -3185,12 +3190,42 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             )
           }
 
-          const allToday = [...liveGroup, ...currentGroup, ...endedGroup]
-          const cardBasis = allToday.length === 1 ? '100%' : allToday.length === 2 ? 'calc(50% - 8px)' : '340px'
+          const activeList = [...liveGroup, ...currentGroup, ...overrunGroup]
+          const displayList = todaySessionsView === 'closed' ? closedGroup : activeList
+          const cardBasis = displayList.length === 1 ? '100%' : displayList.length === 2 ? 'calc(50% - 8px)' : '340px'
 
           return (
-            <div className="ls-hub-today-sessions" style={{ display: 'flex', flexWrap: 'wrap', gap: 16, padding: '0 0 8px' }}>
-              {allToday.map(s => {
+            <div>
+              {closedGroup.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  {[
+                    { key: 'active', label: 'Active', count: activeList.length },
+                    { key: 'closed', label: 'Closed today', count: closedGroup.length },
+                  ].map(tab => (
+                    <button key={tab.key} onClick={() => setTodaySessionsView(tab.key)} style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                      border: `1px solid ${todaySessionsView === tab.key ? primary : 'rgba(148,163,184,0.35)'}`,
+                      borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800,
+                      background: todaySessionsView === tab.key ? primary : 'transparent',
+                      color: todaySessionsView === tab.key ? '#fff' : 'var(--text2, #64748B)',
+                    }}>
+                      {tab.key === 'closed' ? '🔒 ' : ''}{tab.label}
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        minWidth: 18, height: 18, borderRadius: 99, padding: '0 5px', fontSize: 10.5, fontWeight: 900,
+                        background: todaySessionsView === tab.key ? 'rgba(255,255,255,0.25)' : 'rgba(148,163,184,0.18)',
+                        color: todaySessionsView === tab.key ? '#fff' : 'var(--text2, #64748B)',
+                      }}>{tab.count}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="ls-hub-today-sessions" style={{ display: 'flex', flexWrap: 'wrap', gap: 16, padding: '0 0 8px' }}>
+              {displayList.length === 0 && todaySessionsView === 'closed' ? (
+                <div style={{ boxSizing: 'border-box', width: '100%', background: '#F8FAFC', border: '1.5px dashed #E5E7EB', borderRadius: 20, padding: '28px 24px', textAlign: 'center', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
+                  No registers closed yet today
+                </div>
+              ) : displayList.map(s => {
                 const meta = getSessionMeta(s)
                 if (meta.hasEnded && !expandedEndedIds.has(s.id)) {
                   const stats = getLiveSessionStats(s)
@@ -3213,11 +3248,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   )
                 }
                 return (
-                  <div key={s.id} className="ls-hub-today-session-item" style={{ flex: `1 1 ${cardBasis}`, minWidth: allToday.length >= 3 ? 300 : 280, boxSizing: 'border-box' }}>
+                  <div key={s.id} className="ls-hub-today-session-item" style={{ flex: `1 1 ${cardBasis}`, minWidth: displayList.length >= 3 ? 300 : 280, boxSizing: 'border-box' }}>
                     {renderCard(s)}
                   </div>
                 )
               })}
+              </div>
             </div>
           )
         })()
