@@ -3508,7 +3508,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               </div>
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {endedSessions.map(s => {
+                {endedSessions.slice(0, 3).map(s => {
                   const stats = getLiveSessionStats(s)
                   const attendedTotal = stats.signedIn + stats.absent + stats.signedOut + stats.expected
                   const attended = stats.signedIn + stats.signedOut
