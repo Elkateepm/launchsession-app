@@ -95,11 +95,15 @@ export default function Login({ org }) {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      setError(
-        error.message === 'Invalid login credentials'
-          ? 'Incorrect email or password. Please try again.'
-          : error.message
-      )
+      let message
+      if (error.message === 'Invalid login credentials') {
+        message = 'Incorrect email or password. Please try again.'
+      } else if (error.message === 'Email not confirmed') {
+        message = "Your email address hasn't been confirmed yet. Check your inbox (and spam folder) for a confirmation link. If you're not sure how you were invited, contact your organisation admin or support@launchsession.co.uk."
+      } else {
+        message = error.message
+      }
+      setError(message)
       setLoading(false)
       return
     }
