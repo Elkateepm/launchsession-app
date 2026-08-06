@@ -1232,7 +1232,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               <div style={{ display: 'flex', gap: 4, alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
                 {[
                   { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
-                  { key: 'archive', label: 'Archive', icon: '🗄️', onClick: () => setShowArchive(true) },
                   { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
                   { key: 'groups', label: 'Manage Groups', icon: '/icons/manage-groups-icon.png', onClick: () => setShowGroupsSetup(true) },
                   { key: 'print', label: 'Print Register', icon: '/icons/print-register-icon.png', onClick: () => handlePrint() },
@@ -1416,7 +1415,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => setShowTemplates(v => !v) },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => handlePrint() },
               { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => setShowPastRegisters(true) },
-              { icon: '🗄️', label: 'Archive', sub: 'Older closed registers', action: () => setShowArchive(true) },
             ].map(t => (
               <button key={t.label} onClick={t.action}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 6, transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease' }}
@@ -1530,7 +1528,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => { setShowTemplates(true); setShowMobileTools(false) } },
               { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => { handlePrint(); setShowMobileTools(false) } },
               { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => { setShowPastRegisters(true); setShowMobileTools(false) } },
-              { icon: '🗄️', label: 'Archive', sub: 'Older closed registers', action: () => { setShowArchive(true); setShowMobileTools(false) } },
             ].map(t => (
               <button key={t.label} onClick={t.action}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
