@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import PageHeader from '../shared/PageHeader'
 
 const PRIMARY = '#DC2626' // safeguarding stays red-branded regardless of org colour — deliberate, signals seriousness
 
@@ -185,13 +184,28 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate
 
 // ── CASES TAB ─────────────────────────────────────────
 function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
-  const filtered = filter === 'all' ? cases : cases.filter(c => c.status === filter)
+  const [search, setSearch] = useState('')
+  const byFilter = filter === 'all' ? cases
+    : filter === 'follow_up' ? cases.filter(c => c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed')
+    : cases.filter(c => c.status === filter)
+  const q = search.trim().toLowerCase()
+  const filtered = q ? byFilter.filter(c => (c.child_name || '').toLowerCase().includes(q) || (c.concern_type || '').toLowerCase().includes(q)) : byFilter
+
+  const counts = {
+    all: cases.length,
+    open: cases.filter(c => c.status === 'open').length,
+    follow_up: cases.filter(c => c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed').length,
+    resolved: cases.filter(c => c.status === 'resolved').length,
+    closed: cases.filter(c => c.status === 'closed').length,
+  }
 
   return (
     <div>
+      <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search by child or concern type..."
+        style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 13, outline: 'none', marginBottom: 12 }} />
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        {[['all', 'All Cases'], ['open', 'Open'], ['in_progress', 'In Progress'], ['resolved', 'Resolved'], ['closed', 'Closed']].map(([key, label]) => (
-          <button key={key} onClick={() => setFilter(key)} style={{ padding: '7px 16px', borderRadius: 999, border: filter === key ? '1px solid #2563EB' : '1px solid var(--border)', background: filter === key ? 'rgba(37,99,235,0.1)' : 'transparent', color: filter === key ? '#3B82F6' : 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{label}</button>
+        {[['all', 'All'], ['open', 'Open'], ['follow_up', 'Follow-up'], ['resolved', 'Resolved'], ['closed', 'Closed']].map(([key, label]) => (
+          <button key={key} onClick={() => setFilter(key)} style={{ padding: '7px 14px', borderRadius: 999, border: filter === key ? '1px solid #2563EB' : '1px solid var(--border)', background: filter === key ? 'rgba(37,99,235,0.1)' : 'transparent', color: filter === key ? '#3B82F6' : 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{label} ({counts[key]})</button>
         ))}
       </div>
 
@@ -204,30 +218,29 @@ function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
           <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>No safeguarding concerns are currently open.</div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(c => {
             const sc = STATUS_COLORS[c.status] || STATUS_COLORS.open
             const pc = PRIORITY_COLORS[c.priority] || null
             return (
               <button key={c.id} onClick={() => onSelect(c)}
-                style={{ ...card, display: 'flex', flexDirection: 'column', gap: 10, padding: 18, cursor: 'pointer', textAlign: 'left', transition: 'transform 0.15s, box-shadow 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 28px -12px rgba(0,0,0,0.18)' }}
+                style={{ ...card, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer', textAlign: 'left', transition: 'transform 0.15s, box-shadow 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 8px 20px -12px rgba(0,0,0,0.18)' }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: sc.color, background: sc.bg, padding: '2px 8px', borderRadius: 999 }}>{sc.label}</span>
-                    {pc && <span style={{ fontSize: 11, fontWeight: 700, color: pc.color, background: pc.bg, padding: '2px 8px', borderRadius: 999 }}>{pc.label}</span>}
+                <span style={{ width: 34, height: 34, borderRadius: 10, background: sc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>👧</span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {c.child_name} <span style={{ fontWeight: 600, color: 'var(--text3)' }}>· {c.concern_type || 'Concern'}</span>
                   </div>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: sc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>🚨</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: sc.color, background: sc.bg, padding: '2px 7px', borderRadius: 999 }}>{sc.label}</span>
+                    {pc && <span style={{ fontSize: 10.5, fontWeight: 700, color: pc.color, background: pc.bg, padding: '2px 7px', borderRadius: 999 }}>{pc.label}</span>}
+                    {c.follow_up_required && <span style={{ fontSize: 10.5, fontWeight: 700, color: '#F59E0B' }}>· Follow-up</span>}
+                    <span style={{ fontSize: 10.5, color: 'var(--text3)' }}>· {new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                  </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)', marginBottom: 2 }}>{c.concern_type || 'Concern'} — {c.child_name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text3)' }}>Reported by {c.submitter_name} · {new Date(c.created_at).toLocaleDateString('en-GB')}</div>
-                </div>
-                {c.follow_up_required && (
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B', background: 'rgba(245,158,11,0.1)', padding: '3px 9px', borderRadius: 999, alignSelf: 'flex-start' }}>Follow-up needed</span>
-                )}
+                <span style={{ fontSize: 11.5, fontWeight: 800, color: PRIMARY, flexShrink: 0, whiteSpace: 'nowrap' }}>View →</span>
               </button>
             )
           })}
@@ -630,6 +643,104 @@ function EmergencyGuidanceModal({ onClose }) {
   )
 }
 
+// ── STATUS PILLS ─────────────────────────────────────────
+function StatusPills({ stats }) {
+  const pills = [
+    { icon: '🔴', value: stats.open, label: 'Open', color: '#EF4444' },
+    { icon: '🟠', value: stats.followUp, label: 'Follow-ups', color: '#F59E0B' },
+    { icon: '✅', value: stats.resolvedThisMonth, label: 'Resolved', color: '#22C55E' },
+  ]
+  return (
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      {pills.map(p => (
+        <span key={p.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 800, color: p.color, background: `${p.color}12`, border: `1px solid ${p.color}28`, borderRadius: 999, padding: '6px 12px' }}>
+          {p.icon} {p.value} {p.label}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+// ── NEEDS ATTENTION CARD ─────────────────────────────────────────
+function NeedsAttentionCard({ followUps, onSelect }) {
+  if (followUps.length === 0) {
+    return (
+      <div style={{ ...card, padding: 16, display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(34,197,94,0.06)', borderColor: 'rgba(34,197,94,0.2)' }}>
+        <span style={{ fontSize: 22 }}>✅</span>
+        <div>
+          <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>Nothing requires your attention today</div>
+          <div style={{ fontSize: 12, color: 'var(--text3)' }}>All safeguarding actions are up to date.</div>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {followUps.slice(0, 3).map(c => (
+        <button key={c.id} onClick={() => onSelect(c)}
+          style={{ ...card, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer', textAlign: 'left', background: 'rgba(245,158,11,0.06)', borderColor: 'rgba(245,158,11,0.25)' }}>
+          <span style={{ fontSize: 20, flexShrink: 0 }}>⚠️</span>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>Follow-up due</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.child_name}</div>
+          </div>
+          <span style={{ fontSize: 11.5, fontWeight: 800, color: '#D97706', flexShrink: 0 }}>View →</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── OVERVIEW TAB ─────────────────────────────────────────
+function OverviewTab({ cases, followUps, quickActions, onSelect, isMobile }) {
+  const recent = cases.slice(0, 5)
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Needs Attention</div>
+        <NeedsAttentionCard followUps={followUps} onSelect={onSelect} />
+      </div>
+
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Quick Actions</div>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 10 }}>
+          {quickActions.map(qa => (
+            <button key={qa.label} onClick={qa.onClick}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 14, border: 'none', background: `linear-gradient(135deg, ${qa.color}, ${qa.color}CC)`, color: '#fff', cursor: 'pointer', textAlign: 'left', boxShadow: `0 6px 16px -10px ${qa.color}80` }}>
+              <span style={{ width: 28, height: 28, borderRadius: 9, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>{qa.icon}</span>
+              <span style={{ fontSize: 12.5, fontWeight: 800, lineHeight: 1.2 }}>{qa.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Recent Activity</div>
+        {recent.length === 0 ? (
+          <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>Nothing logged yet.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {recent.map(c => {
+              const sc = STATUS_COLORS[c.status] || STATUS_COLORS.open
+              return (
+                <button key={c.id} onClick={() => onSelect(c)}
+                  style={{ ...card, display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', cursor: 'pointer', textAlign: 'left' }}>
+                  <span style={{ fontSize: 15 }}>👧</span>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.child_name} · {c.concern_type || 'Concern'}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)' }}>{timeAgo(c.created_at)}</div>
+                  </div>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: sc.color, background: sc.bg, padding: '2px 8px', borderRadius: 999, flexShrink: 0 }}>{sc.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── MAIN DASHBOARD ─────────────────────────────────────────
 export default function SafeguardingDashboard({ org, session, onReportConcern, onNavigate, initialOpenConcernId }) {
   const isMobile = useIsMobile()
@@ -637,7 +748,7 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [selected, setSelected] = useState(null)
-  const [tab, setTab] = useState('cases')
+  const [tab, setTab] = useState('overview')
   const [showEmergency, setShowEmergency] = useState(false)
 
   const userId = session?.user?.id
@@ -663,8 +774,10 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
     followUp: cases.filter(c => c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed').length,
     resolvedThisMonth: cases.filter(c => c.resolved_at && new Date(c.resolved_at).getMonth() === new Date().getMonth() && new Date(c.resolved_at).getFullYear() === new Date().getFullYear()).length,
   }
+  const followUps = cases.filter(c => c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed')
 
   const TABS = [
+    ['overview', '🏠 Overview'],
     ['cases', '📋 Cases'],
     ['children', '🧒 Children'],
     ['medical', '❤️ Medical'],
@@ -673,46 +786,36 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
   ]
 
   const QUICK_ACTIONS = [
-    { icon: '🚨', label: 'Report Concern', color: '#DC2626', onClick: () => onReportConcern && onReportConcern() },
-    { icon: '🩹', label: 'Medical Incident', color: '#2563EB', onClick: () => setTab('medical') },
+    { icon: '🛡️', label: 'Report Concern', color: '#DC2626', onClick: () => onReportConcern && onReportConcern() },
+    { icon: '❤️', label: 'Medical Incident', color: '#2563EB', onClick: () => setTab('medical') },
     { icon: '📞', label: 'Parent Contact', color: '#7C3AED', onClick: () => setTab('cases') },
     { icon: '📎', label: 'Upload Document', color: '#059669', onClick: () => setTab('documents') },
-    { icon: '🔍', label: 'Child Lookup', color: '#D97706', onClick: () => setTab('children') },
   ]
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <PageHeader
-        icon="🛡️"
-        title="Safeguarding"
-        subtitle="Manage concerns, incidents and child wellbeing."
-        primary={PRIMARY}
-        orgName={org?.name}
-        gradient={`linear-gradient(135deg, ${PRIMARY}0C 0%, ${PRIMARY}04 60%, transparent 100%)`}
-        stats={[
-          { label: 'Open Cases', value: stats.open, icon: '🔴', color: '#EF4444' },
-          { label: 'Follow-ups Due', value: stats.followUp, icon: '🟠', color: '#F59E0B' },
-          { label: 'Resolved This Month', value: stats.resolvedThisMonth, icon: '🟢', color: '#22C55E' },
-        ]}
-        actions={[
-          { label: 'Report Concern', icon: '🛡️', variant: 'primary', onClick: () => onReportConcern && onReportConcern() },
-          { label: 'Emergency Guidance', icon: '🚨', variant: 'ghost', onClick: () => setShowEmergency(true) },
-        ]}
-      />
+      {/* Compact header — stays under ~100px, no oversized hero card */}
+      <div style={{ background: 'var(--surface, #fff)', borderBottom: `2px solid ${PRIMARY}18`, padding: isMobile ? '14px 16px' : '16px 24px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${PRIMARY}, ${PRIMARY}66, transparent)` }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🛡️</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)', lineHeight: 1.2 }}>Safeguarding</div>
+              <div style={{ fontSize: 11.5, color: 'var(--text3, #6B7280)', fontWeight: 600 }}>Protect children and manage concerns · {org?.name}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button onClick={() => onReportConcern && onReportConcern()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}CC)`, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>🛡️ Report Concern</button>
+            <button onClick={() => setShowEmergency(true)} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', color: 'var(--text, #111)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>🚨 Emergency</button>
+          </div>
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <StatusPills stats={stats} />
+        </div>
+      </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${QUICK_ACTIONS.length}, 1fr)`, gap: 10, marginBottom: 24 }}>
-          {QUICK_ACTIONS.map(qa => (
-            <button key={qa.label} onClick={qa.onClick}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12, padding: '18px 16px', borderRadius: 16, border: 'none', background: `linear-gradient(135deg, ${qa.color}, ${qa.color}CC)`, color: '#fff', cursor: 'pointer', textAlign: 'left', boxShadow: `0 10px 24px -12px ${qa.color}80`, transition: 'transform 0.15s, box-shadow 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 16px 32px -12px ${qa.color}90` }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 10px 24px -12px ${qa.color}80` }}>
-              <span style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{qa.icon}</span>
-              <span style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2 }}>{qa.label}</span>
-            </button>
-          ))}
-        </div>
-
         <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
           {TABS.map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
@@ -724,6 +827,7 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile || tab !== 'cases' ? '1fr' : '1fr 280px', gap: 20, alignItems: 'flex-start' }}>
           <div>
+            {tab === 'overview' && <OverviewTab cases={cases} followUps={followUps} quickActions={QUICK_ACTIONS} onSelect={setSelected} isMobile={isMobile} />}
             {tab === 'cases' && <CasesTab cases={cases} loading={loading} filter={filter} setFilter={setFilter} onSelect={setSelected} isMobile={isMobile} />}
             {tab === 'children' && <ChildrenTab org={{ ...org, _sessionUserId: userId }} cases={cases} isMobile={isMobile} />}
             {tab === 'medical' && <MedicalTab org={org} isMobile={isMobile} />}
