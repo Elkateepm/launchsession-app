@@ -6,6 +6,7 @@ import OnboardingLayout, { useReducedMotion } from './onboarding/OnboardingLayou
 import ProgressHeader from './onboarding/ProgressHeader'
 import SelectionCard from './onboarding/SelectionCard'
 import AnimatedInput from './onboarding/AnimatedInput'
+import { Icon } from './onboarding/icons'
 
 const DRAFT_KEY = 'ls_signup_draft_v2'
 
@@ -37,20 +38,20 @@ const ORG_TYPE_TIP = "Whatever you run, LaunchSession adapts — enable only the
 
 const WHAT_YOU_GET_GROUPS = [
   { title: 'Run your sessions', color: '#60A5FA', items: [
-    { icon: '📅', label: 'Sessions & Planning' }, { icon: '📋', label: 'Live Registers' },
-    { icon: '🗓️', label: 'Calendar' }, { icon: '📝', label: 'Forms' },
+    { icon: 'calendar', label: 'Sessions & Planning' }, { icon: 'clipboard', label: 'Live Registers' },
+    { icon: 'calendar', label: 'Calendar' }, { icon: 'document', label: 'Forms' },
   ]},
   { title: 'Keep everyone safe', color: '#F87171', items: [
-    { icon: '🛡️', label: 'Safeguarding' }, { icon: '⚠️', label: 'Risk Assessments' },
-    { icon: '🔔', label: 'Alerts & Reminders' }, { icon: '🗄️', label: 'Data Retention' },
+    { icon: 'shield', label: 'Safeguarding' }, { icon: 'alertTriangle', label: 'Risk Assessments' },
+    { icon: 'bell', label: 'Alerts & Reminders' }, { icon: 'archive', label: 'Data Retention' },
   ]},
   { title: 'Your people', color: '#4ADE80', items: [
-    { icon: '🧒', label: 'Children & Groups' }, { icon: '❤️', label: 'Volunteers' },
-    { icon: '🤝', label: 'Mentoring' }, { icon: '💬', label: 'Messaging' },
+    { icon: 'child', label: 'Children & Groups' }, { icon: 'heart', label: 'Volunteers' },
+    { icon: 'handshake', label: 'Mentoring' }, { icon: 'chat', label: 'Messaging' },
   ]},
   { title: 'Grow & report', color: '#FBBF24', items: [
-    { icon: '📊', label: 'Reports & Impact' }, { icon: '💰', label: 'Fundraising' },
-    { icon: '🎨', label: 'Branding' }, { icon: '✈️', label: 'Events & Trips' },
+    { icon: 'chartBar', label: 'Reports & Impact' }, { icon: 'coin', label: 'Fundraising' },
+    { icon: 'palette', label: 'Branding' }, { icon: 'plane', label: 'Events & Trips' },
   ]},
 ]
 
@@ -405,18 +406,24 @@ export default function Signup() {
                 <h2 style={cardTitle}>Here's what {organisationName} gets</h2>
                 <p style={cardSub}>Full access to everything below, free for 14 days.</p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)', gap: '4px 20px' }}>
-                  {WHAT_YOU_GET_GROUPS.map(g => (
-                    <div key={g.title} style={{ marginBottom: 14 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: g.color, flexShrink: 0 }} />
-                        <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>{g.title}</span>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)', gap: 14 }}>
+                  {WHAT_YOU_GET_GROUPS.map((g, gi) => (
+                    <div key={g.title} style={{
+                      background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 14,
+                      opacity: reducedMotion ? 1 : 0,
+                      animation: reducedMotion ? 'none' : `ls-stagger-up 420ms ${120 + gi * 70}ms cubic-bezier(0.16,1,0.3,1) forwards`,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: g.color, flexShrink: 0, boxShadow: `0 0 8px ${g.color}88` }} />
+                        <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.7, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>{g.title}</span>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                         {g.items.map(m => (
-                          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 10px', minWidth: 0 }}>
-                            <span style={{ fontSize: 15, flexShrink: 0 }}>{m.icon}</span>
-                            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.82)', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.label}</span>
+                          <div key={m.label} className="ls-feature-item" style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 11, padding: '9px 10px', minWidth: 0 }}>
+                            <span style={{ width: 26, height: 26, borderRadius: 8, background: `${g.color}22`, color: g.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <Icon name={m.icon} width={14} height={14} strokeWidth={2} />
+                            </span>
+                            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.85)', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.label}</span>
                           </div>
                         ))}
                       </div>
@@ -429,6 +436,10 @@ export default function Signup() {
                 <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '0 0 18px' }} />
 
                 <div style={{ maxWidth: 460 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#A78BFA', flexShrink: 0, boxShadow: '0 0 8px #A78BFA88' }} />
+                    <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.7, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>Your details</span>
+                  </div>
                   <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '14px 16px', marginBottom: 6 }}>
                     <Row k="Organisation" v={organisationName} />
                     <Row k="Type" v={ORG_TYPES.find(t => t.key === orgType)?.label || orgTypeOther || '—'} />

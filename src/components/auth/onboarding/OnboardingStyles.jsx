@@ -124,6 +124,9 @@ export default function OnboardingStyles() {
       .ls-input-error { animation: ls-nudge 0.32s ease; }
       .ls-input-label { transition: color 0.2s ease; }
 
+      .ls-feature-item { transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease; }
+      .ls-feature-item:hover { background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.14) !important; transform: translateY(-1px); }
+
       @media (prefers-reduced-motion: reduce) {
         .ls-orbit-ring-1, .ls-orbit-ring-2, .ls-glow-drift, .ls-star, .ls-logo-pulse, .ls-primary-btn { animation: none !important; }
         .ls-primary-btn:hover:not(:disabled) { transform: none; }
