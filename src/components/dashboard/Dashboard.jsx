@@ -29,6 +29,7 @@ import ImpactOutcomes from '../impact/ImpactOutcomes'
 import Fundraising from '../fundraising/Fundraising'
 import FundraisingGate from '../fundraising/FundraisingGate'
 import HR from '../hr/HR'
+import Payments from '../payments/Payments'
 import ResourceCentre from '../resources/ResourceCentre'
 import MobileBottomNav from './mobilenav/MobileBottomNav'
 import QRShareSheet from '../shared/QRShareSheet'
@@ -60,6 +61,7 @@ const ALL_MODULES = [
   { key: 'impact_outcomes', label: 'Impact & Outcomes',icon: '🌱', group: 'growth' },
   { key: 'fundraising',     label: 'Fundraising',      icon: '💷', group: 'growth' },
   { key: 'hr',              label: 'HR',               icon: '🧑‍💼', group: 'operations' },
+  { key: 'payments',        label: 'Payments',         icon: '💳', group: 'operations' },
   { key: 'resource_booking',label: 'Resource Booking', icon: '🗓️', group: 'operations' },
   { key: 'events_trips',    label: 'Events & Trips',   icon: '✈️', group: 'operations' },
   { key: 'parent_portal',   label: 'Parents',          icon: '👨‍👧', group: 'delivery' },
@@ -71,7 +73,7 @@ const MODULE_TO_PACK = {
   registers: 'Delivery', volunteers: 'Delivery', messaging: 'Delivery', gallery: 'Delivery',
   safeguarding: 'Safeguarding', forms: 'Safeguarding', case_management: 'Safeguarding', risk_assessments: 'Safeguarding',
   reports: 'Growth', impact_outcomes: 'Growth', fundraising: 'Growth',
-  hr: 'Operations', resource_booking: 'Operations',
+  hr: 'Operations', resource_booking: 'Operations', payments: 'Operations',
 }
 const PACK_COLORS = { Delivery: '#3B82F6', Safeguarding: '#EF4444', Growth: '#22C55E', Operations: '#A855F7' }
 
@@ -673,6 +675,7 @@ export default function Dashboard({ session, org }) {
           <NavSection collapsed={sidebarCollapsed} title="Operations" packColor="#A855F7">
             {[
               { key: 'hr', label: 'HR', icon: '🧑‍💼' },
+              { key: 'payments', label: 'Payments', icon: '💳' },
               { key: 'resource_booking', label: 'Resource Booking', icon: '🗓️' },
               { key: 'events_trips', label: 'Events & Trips', icon: '✈️' },
             ].filter(m => m.key !== 'hr' || isAdmin).map(m => (
@@ -825,6 +828,7 @@ export default function Dashboard({ session, org }) {
 
           {/* ── OPERATIONS PACK ── */}
           {tab === 'hr'               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : hasModule('hr')               ? <HR org={org} session={session} />                                  : <LockedModule moduleKey="hr"               label="HR"               icon="🧑‍💼" onNavigate={handleSetTab} />)}
+          {tab === 'payments'         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} />)}
           {tab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} />)}
 
           {/* ── LEGACY / COMING SOON ── */}
@@ -832,7 +836,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','resource_booking','mentoring','parent_portal'].includes(tab) && (
+          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal'].includes(tab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>

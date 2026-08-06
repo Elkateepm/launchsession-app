@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import PastSessionRegister from './PastSessionRegister'
+import RegisterPaymentBadge from '../payments/RegisterPaymentBadge'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -77,6 +78,24 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
   const [showNotes, setShowNotes] = useState(false)
   const [toast, setToast] = useState('')
   const [selectedChild, setSelectedChild] = useState(null)
+  const [paymentBalances, setPaymentBalances] = useState({}) // childId -> { outstanding, hasAny }
+
+  const loadPaymentBalances = useCallback(async () => {
+    if (!org?.id) return
+    const { data, error } = await supabase.from('payment_charge_balances')
+      .select('child_id, remaining, computed_status').eq('org_id', org.id)
+    if (error) return // table/view may not exist for orgs that haven't touched Payments yet -- fail silently, badge just won't show
+    const map = {}
+    for (const row of data || []) {
+      const entry = map[row.child_id] || { outstanding: 0, hasAny: false }
+      entry.hasAny = true
+      if (row.computed_status !== 'waived') entry.outstanding += Number(row.remaining) || 0
+      map[row.child_id] = entry
+    }
+    setPaymentBalances(map)
+  }, [org?.id])
+
+  useEffect(() => { loadPaymentBalances() }, [loadPaymentBalances])
 
   const load = useCallback(async () => {
     if (!session?.id) return
@@ -314,6 +333,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {activeList.map(({ child, att }) => (
               <RegisterRow key={child.id} child={child} att={att} onOpen={() => setSelectedChild(child)} groupLabel={groupLabel}
+                org={org} authUserId={authUserId} paymentBalance={paymentBalances[child.id]} onPaymentChanged={loadPaymentBalances}
                 onSignIn={() => handleSignIn(child)} onSignOut={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} />
             ))}
           </div>
@@ -402,7 +422,7 @@ function MiniStat({ label, value, color }) {
   )
 }
 
-function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, groupLabel }) {
+function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, groupLabel, org, authUserId, paymentBalance, onPaymentChanged }) {
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const status = att?.status
   return (
@@ -411,9 +431,10 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, gr
         {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
       <div onClick={onOpen} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: '#111827', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           {child.first_name} {child.last_name}
-          {child.is_walk_in && child.profile_incomplete && <span style={{ marginLeft: 6, fontSize: 9.5, fontWeight: 800, color: '#D97706', background: '#FFFBEB', borderRadius: 6, padding: '1px 6px' }}>WALK-IN · PROFILE INCOMPLETE</span>}
+          {child.is_walk_in && child.profile_incomplete && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#D97706', background: '#FFFBEB', borderRadius: 6, padding: '1px 6px' }}>WALK-IN · PROFILE INCOMPLETE</span>}
+          <RegisterPaymentBadge org={org} session={{ user: { id: authUserId } }} childId={child.id} balance={paymentBalance} onChanged={onPaymentChanged} />
         </div>
         <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>
           {groupLabel(child.group_name)}

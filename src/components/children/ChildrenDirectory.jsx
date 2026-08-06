@@ -5,6 +5,7 @@ import { useOrgSettings } from '../../hooks/useOrgSettings'
 import PageHeader from '../shared/PageHeader'
 import QRShareSheet from '../shared/QRShareSheet'
 import { Avatar, glass, inputStyle, btnGhost, btnPrimary } from '../volunteers/vh_shared'
+import ChildPaymentsCard from '../payments/ChildPaymentsCard'
 
 const CONSENT_TYPES = [
   { key: 'photo', label: 'Photo consent' },
@@ -252,6 +253,7 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
             <ChildProfile
               child={selected}
               org={org}
+              session={session}
               primary={primary}
               authUserId={authUserId}
               groupLabel={groupLabel(selected.group_name)}
@@ -294,7 +296,7 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
   )
 }
 
-function ChildProfile({ child, org, primary, authUserId, groupLabel, consentRec, latestAtt, notes, attendanceForChild, onBack, onNavigate, onConsentChanged, isMobile }) {
+function ChildProfile({ child, org, session, primary, authUserId, groupLabel, consentRec, latestAtt, notes, attendanceForChild, onBack, onNavigate, onConsentChanged, isMobile }) {
   const [savingConsent, setSavingConsent] = useState(null)
   const [editingContact, setEditingContact] = useState(false)
   const [savingContact, setSavingContact] = useState(false)
@@ -475,6 +477,9 @@ function ChildProfile({ child, org, primary, authUserId, groupLabel, consentRec,
           <Row label="Absences" value={absenceCount} />
           {latestAtt && <Row label="Last activity" value={new Date(latestAtt.created_at).toLocaleDateString('en-GB')} />}
         </div>
+
+        {/* Payments */}
+        <ChildPaymentsCard org={org} session={session} child={child} />
       </div>
 
       {child.parent_phone && (
