@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { LS, IconGlyph } from './fundraisingShared'
 
-export default function FundraisingGate({ org, session, children }) {
+export default function ChildrenGate({ org, session, children }) {
   const [status, setStatus] = useState('checking') // checking | locked | open
   // Tracks whether the org has actually configured a password, independent of
   // `status` -- 'open' can mean "unlocked with a real password" or "no
@@ -12,12 +11,12 @@ export default function FundraisingGate({ org, session, children }) {
   const [error, setError] = useState('')
   const [verifying, setVerifying] = useState(false)
 
-  const sessionKey = `fr_unlocked_${org?.id || 'none'}_${session?.user?.id || 'anon'}`
+  const sessionKey = `ch_unlocked_${org?.id || 'none'}_${session?.user?.id || 'anon'}`
 
   useEffect(() => {
     let cancelled = false
     const check = async () => {
-      const { data, error } = await supabase.rpc('fundraising_password_status')
+      const { data, error } = await supabase.rpc('children_password_status')
       if (cancelled) return
       if (error) {
         // Fail open rather than accidentally locking everyone out if the RPC isn't reachable
@@ -41,7 +40,7 @@ export default function FundraisingGate({ org, session, children }) {
     e.preventDefault()
     setVerifying(true)
     setError('')
-    const { data, error } = await supabase.rpc('verify_fundraising_password', { input_password: pw })
+    const { data, error } = await supabase.rpc('verify_children_password', { input_password: pw })
     setVerifying(false)
     if (error || !data) {
       setError('Incorrect password. Please try again.')
@@ -60,8 +59,8 @@ export default function FundraisingGate({ org, session, children }) {
 
   if (status === 'checking') {
     return (
-      <div style={{ padding: 60, textAlign: 'center', color: LS.muted, fontSize: 14 }}>
-        Loading Fundraising Hub...
+      <div style={{ padding: 60, textAlign: 'center', color: 'var(--text3)', fontSize: 14 }}>
+        Loading Children...
       </div>
     )
   }
@@ -72,16 +71,16 @@ export default function FundraisingGate({ org, session, children }) {
         {hasPassword && (
           <button
             onClick={handleLock}
-            title="Lock Fundraising Hub"
+            title="Lock Children"
             style={{
               position: 'fixed', bottom: 24, right: 24, zIndex: 50,
-              display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px',
-              borderRadius: 99, border: 'none', background: LS.gradient,
+              display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
+              borderRadius: 99, border: 'none', background: 'linear-gradient(90deg,#2563EB,#1D4ED8)',
               color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
-              boxShadow: `0 8px 24px ${LS.purple}40`,
+              boxShadow: '0 8px 24px rgba(37,99,235,0.35)',
             }}
           >
-            <IconGlyph name="target" color="#fff" size={13} /> Lock Fundraising
+            🔒 Lock Children
           </button>
         )}
         {children}
@@ -94,16 +93,13 @@ export default function FundraisingGate({ org, session, children }) {
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
         <div style={{ maxWidth: 380, width: '100%', textAlign: 'center' }}>
           <div style={{
-            width: 64, height: 64, borderRadius: 18, background: LS.gradient,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px',
-            boxShadow: `0 10px 28px ${LS.purple}35`,
-          }}>
-            <IconGlyph name="coin" color="#fff" size={28} />
-          </div>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: LS.text, margin: '0 0 6px' }}>
-            Fundraising Hub is locked
+            width: 64, height: 64, borderRadius: 16, background: 'linear-gradient(135deg, #1e3a8a, #1d4ed8)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, margin: '0 auto 20px',
+          }}>🔒</div>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 6px' }}>
+            Children is locked
           </h2>
-          <p style={{ fontSize: 13.5, color: LS.muted, margin: '0 0 24px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13.5, color: 'var(--text3)', margin: '0 0 24px', lineHeight: 1.5 }}>
             This area requires an access password set by your organisation's admin. Enter it below to continue.
           </p>
           <form onSubmit={handleUnlock}>
@@ -114,9 +110,9 @@ export default function FundraisingGate({ org, session, children }) {
               placeholder="Access password"
               autoFocus
               style={{
-                width: '100%', padding: '11px 14px', borderRadius: 10, border: `1.5px solid ${LS.lavenderBorder}`,
-                fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#fff',
-                color: LS.text, marginBottom: 12, textAlign: 'center',
+                width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--border)',
+                fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)',
+                color: 'var(--text)', marginBottom: 12, textAlign: 'center',
               }}
             />
             {error && (
@@ -127,12 +123,11 @@ export default function FundraisingGate({ org, session, children }) {
               disabled={verifying || !pw}
               style={{
                 padding: '11px 28px', borderRadius: 10, border: 'none',
-                background: verifying || !pw ? '#C4C1D6' : LS.gradient, color: '#fff',
+                background: verifying || !pw ? '#9ca3af' : '#2563EB', color: '#fff',
                 fontSize: 14, fontWeight: 700, cursor: verifying || !pw ? 'default' : 'pointer', width: '100%',
-                boxShadow: verifying || !pw ? 'none' : `0 6px 16px ${LS.purple}35`,
               }}
             >
-              {verifying ? 'Checking...' : 'Unlock Fundraising Hub'}
+              {verifying ? 'Checking...' : 'Unlock Children'}
             </button>
           </form>
         </div>

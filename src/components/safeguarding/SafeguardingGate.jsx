@@ -4,6 +4,10 @@ import CauseForConcernForm from './CauseForConcernForm'
 
 export default function SafeguardingGate({ org, session, children }) {
   const [status, setStatus] = useState('checking') // checking | locked | open
+  // Tracks whether the org has actually configured a password, independent of
+  // `status` -- 'open' can mean "unlocked with a real password" or "no
+  // password required at all", and only the former should offer a Lock button.
+  const [hasPassword, setHasPassword] = useState(false)
   const [pw, setPw] = useState('')
   const [error, setError] = useState('')
   const [verifying, setVerifying] = useState(false)
@@ -14,18 +18,20 @@ export default function SafeguardingGate({ org, session, children }) {
   useEffect(() => {
     let cancelled = false
     const check = async () => {
-      if (sessionStorage.getItem(sessionKey) === '1') {
-        if (!cancelled) setStatus('open')
-        return
-      }
       const { data, error } = await supabase.rpc('safeguarding_password_status')
       if (cancelled) return
       if (error) {
         // Fail open rather than accidentally locking everyone out if the RPC isn't reachable
+        setHasPassword(false)
         setStatus('open')
         return
       }
-      setStatus(data ? 'locked' : 'open')
+      setHasPassword(!!data)
+      if (!data) {
+        setStatus('open')
+        return
+      }
+      setStatus(sessionStorage.getItem(sessionKey) === '1' ? 'open' : 'locked')
     }
     check()
     return () => { cancelled = true }
@@ -64,19 +70,21 @@ export default function SafeguardingGate({ org, session, children }) {
   if (status === 'open') {
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-        <button
-          onClick={handleLock}
-          title="Lock Safeguarding"
-          style={{
-            position: 'fixed', bottom: 24, right: 24, zIndex: 50,
-            display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
-            borderRadius: 99, border: 'none', background: 'linear-gradient(90deg,#DC2626,#B91C1C)',
-            color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
-            boxShadow: '0 8px 24px rgba(220,38,38,0.35)',
-          }}
-        >
-          🔒 Lock Safeguarding
-        </button>
+        {hasPassword && (
+          <button
+            onClick={handleLock}
+            title="Lock Safeguarding"
+            style={{
+              position: 'fixed', bottom: 24, right: 24, zIndex: 50,
+              display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
+              borderRadius: 99, border: 'none', background: 'linear-gradient(90deg,#DC2626,#B91C1C)',
+              color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(220,38,38,0.35)',
+            }}
+          >
+            🔒 Lock Safeguarding
+          </button>
+        )}
         {children}
       </div>
     )

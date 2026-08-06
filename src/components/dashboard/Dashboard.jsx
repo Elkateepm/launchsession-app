@@ -22,6 +22,7 @@ import Messaging from '../messaging/Messaging'
 import Forms from '../forms/Forms'
 import CaseManagement from '../casemgmt/CaseManagement'
 import ChildrenDirectory from '../children/ChildrenDirectory'
+import ChildrenGate from '../children/ChildrenGate'
 import MedicalAlerts from '../medical/MedicalAlerts'
 import RiskAssessments from '../riskassessments/RiskAssessments'
 import ImpactOutcomes from '../impact/ImpactOutcomes'
@@ -798,7 +799,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
           {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
           {tab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
-          {tab === 'children'    && <ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} />}
+          {tab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} /></ChildrenGate>}
           {tab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'team'       && (isAdmin ? <TeamTab org={org} session={session} /> : <RestrictedModule label="Team & Staff" icon="👥" onNavigate={handleSetTab} />)}
           {tab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} />)}

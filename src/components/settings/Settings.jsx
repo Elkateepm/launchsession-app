@@ -1303,6 +1303,7 @@ function SecuritySection() {
           <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Active</span>
         </div>
       </SettingCard>
+      <ModulePasswordCard moduleKey="children" label="Children" icon="🧒" accentColor="#2563EB" />
       <ModulePasswordCard moduleKey="safeguarding" label="Safeguarding" icon="🛡" accentColor="#DC2626" />
       <ModulePasswordCard moduleKey="fundraising" label="Fundraising Hub" icon="💷" accentColor="#6647F0" />
     </div>
