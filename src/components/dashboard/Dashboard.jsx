@@ -440,6 +440,7 @@ export default function Dashboard({ session, org }) {
   const [openConcernId, setOpenConcernId] = useState(null)
   const [initialThreadId, setInitialThreadId] = useState(null)
   const [autoOpenWizard, setAutoOpenWizard] = useState(false)
+  const [editSessionId, setEditSessionId] = useState(null)
   const [autoOpenAddChild, setAutoOpenAddChild] = useState(false)
   const [autoOpenInviteVolunteer, setAutoOpenInviteVolunteer] = useState(false)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
@@ -476,6 +477,7 @@ export default function Dashboard({ session, org }) {
     setOpenConcernId(t === 'safeguarding' && payload?.openConcernId ? payload.openConcernId : null)
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
+    setEditSessionId(t === 'planner' && payload?.editSessionId ? payload.editSessionId : null)
     setAutoOpenAddChild(t === 'registers' && !!payload?.autoOpenAdd)
     setAutoOpenInviteVolunteer(t === 'volunteers' && !!payload?.autoOpenInvite)
     setTab(t)
@@ -793,7 +795,7 @@ export default function Dashboard({ session, org }) {
           })()}
           {/* ── BASE MODULES — always free ── */}
           {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
-          {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} onNavigate={handleSetTab} />}
+          {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
           {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
           {tab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'children'    && <ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} />}

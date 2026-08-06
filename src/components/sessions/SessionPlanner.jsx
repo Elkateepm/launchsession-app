@@ -1640,7 +1640,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
   )
 }
 
-export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, autoOpenWizard, onNavigate }) {
+export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, autoOpenWizard, initialEditSessionId, onNavigate }) {
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const { groups: orgGroups } = useOrgSettings(orgId)
@@ -1898,6 +1898,16 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoOpenWizard])
 
+  // Jump straight into editing a specific session when arriving via an Edit action
+  // elsewhere in the app (e.g. Home's session cards) — waits for sessions to load
+  // so the full record (not just the id) is available to pre-fill the wizard.
+  useEffect(() => {
+    if (!initialEditSessionId || loading) return
+    const match = sessions.find(s => s.id === initialEditSessionId)
+    if (match) { setEditing(match); setView('wizard') }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialEditSessionId, loading, sessions])
+
   // ── WIZARD VIEW (new session creation) ──
   if (view === 'wizard') {
     return (
@@ -2008,84 +2018,49 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'radial-gradient(circle at 15% 0%, #6D5DF60C, transparent 40%), radial-gradient(circle at 85% 15%, #30C48D0C, transparent 40%), #F6F8FC' }}>
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 28 }}>
 
-        {/* HERO */}
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-          style={{
-            position: 'relative', overflow: 'hidden', borderRadius: 28, padding: isMobile ? '24px 20px' : '32px 36px',
-            background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.7)', boxShadow: '0 20px 60px -20px rgba(30,41,59,0.15), inset 0 1px 0 rgba(255,255,255,0.9)',
-            marginBottom: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: isMobile ? 'wrap' : 'nowrap', gap: 16,
-          }}
-        >
-          <div style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, #6D5DF635, transparent 70%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: -70, left: '20%', width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, #30C48D28, transparent 70%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', top: -40, left: -30, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, #FFB64825, transparent 70%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <motion.img src="/assets/rockets/rocket-icon.png" alt="" animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} style={{ height: 32, width: 'auto', display: 'block' }} />
-              <span style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>Sessions</span>
+        {/* HEADER — compact, no oversized glass hero */}
+        <div style={{
+          borderRadius: 20, padding: isMobile ? '14px 16px' : '16px 22px', marginBottom: 16,
+          background: '#fff', border: '1px solid #EEF1F6', boxShadow: '0 6px 20px -16px rgba(15,23,42,0.15)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            <img src="/assets/rockets/rocket-icon.png" alt="" style={{ width: 26, height: 26, flexShrink: 0 }} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A', letterSpacing: -0.3, lineHeight: 1.2 }}>Sessions</div>
+              <div style={{ fontSize: 11.5, color: '#64748B', fontWeight: 600 }}>{format(new Date(), 'EEE d MMM')} · {org?.name} · {childrenExpectedCount} children expected</div>
             </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#64748B', marginBottom: 4 }}>{format(new Date(), 'EEEE d MMMM yyyy')} · {org?.name}</div>
-            <div style={{ fontSize: 14, color: '#475569' }}>Manage sessions, trips and activities. <strong>{childrenExpectedCount}</strong> children expected across upcoming sessions.</div>
           </div>
-          <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <motion.button
-              onClick={() => setView('templates')}
-              whileHover={{ y: -3, boxShadow: '0 16px 40px -10px rgba(14,165,233,0.4)' }}
-              whileTap={{ scale: 0.97 }}
-              style={{ padding: '14px 22px', borderRadius: 16, border: '1.5px solid #E2E8F0', background: '#fff', color: '#0F172A', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}
-            >
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button onClick={() => setView('templates')}
+              style={{ padding: '9px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#0F172A', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               🗂️ Templates {templates.length > 0 ? `(${templates.length})` : ''}
-            </motion.button>
-            <motion.button
-              onClick={() => openNew()}
-              whileHover={{ y: -3, boxShadow: '0 16px 40px -10px rgba(109,93,246,0.5)' }}
-              whileTap={{ scale: 0.97 }}
-              style={{ padding: '14px 26px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 10px 30px -8px rgba(109,93,246,0.4)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}
-            >
-              <motion.span whileHover={{ rotate: 20 }}>➕</motion.span> New Session
-            </motion.button>
+            </button>
+            <button onClick={() => openNew()}
+              style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              ➕ New Session
+            </button>
           </div>
-        </motion.div>
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: 20, alignItems: 'start' }}>
           <div style={{ minWidth: 0 }}>
-            {/* STATS */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
-              {statCards.map((s, i) => (
-                <motion.div
-                  key={s.key}
-                  onClick={s.onClick}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: i * 0.06 }}
-                  whileHover={{ scale: 1.03, y: -3 }}
-                  whileTap={{ scale: 0.98 }}
-                  style={{
-                    background: '#fff', borderRadius: 18, border: tab === s.key || (s.key === 'reflections' && tab === 'reflections_due') ? `2px solid ${s.color}` : '1px solid #EEF1F6',
-                    boxShadow: '0 6px 20px -14px rgba(15,23,42,0.15)', padding: '16px 16px', cursor: 'pointer', display: 'flex', flexDirection: 'column', minHeight: 128,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <motion.div
-                      animate={s.pulse ? { scale: [1, 1.15, 1] } : s.glow ? { textShadow: ['0 0 0px #FFB64800', '0 0 14px #FFB64890', '0 0 0px #FFB64800'] } : {}}
-                      transition={{ duration: s.pulse ? 1.6 : 2.2, repeat: Infinity }}
-                      style={{ width: 34, height: 34, borderRadius: 10, background: `${s.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}
-                    >
-                      {s.icon}
-                    </motion.div>
-                    {s.key === 'live' && s.value > 0 && <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16A34A', boxShadow: '0 0 0 3px #16A34A22' }} />}
-                  </div>
-                  <div style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5, lineHeight: 1 }}><CountUp value={s.value} /></div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginTop: 4 }}>{s.label}</div>
-                  <div style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 1 }}>{s.sub}</div>
-                  <div style={{ flex: 1 }} />
-                  {s.link && <div style={{ fontSize: 11, fontWeight: 800, color: s.color, marginTop: 8 }}>{s.link}</div>}
-                </motion.div>
-              ))}
+            {/* STATS — compact pills instead of tall cards */}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+              {statCards.map(s => {
+                const active = tab === s.key || (s.key === 'reflections' && tab === 'reflections_due')
+                return (
+                  <button key={s.key} onClick={s.onClick}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 800,
+                      color: active ? '#fff' : s.color, background: active ? s.color : `${s.color}12`,
+                      border: `1px solid ${active ? s.color : s.color + '28'}`, borderRadius: 999, padding: '7px 13px', cursor: 'pointer',
+                    }}>
+                    <span>{s.icon}</span> <CountUp value={s.value} /> {s.label}
+                    {s.key === 'live' && s.value > 0 && <span style={{ width: 6, height: 6, borderRadius: '50%', background: active ? '#fff' : '#16A34A' }} />}
+                  </button>
+                )
+              })}
             </div>
 
             {/* SEARCH + FILTERS */}

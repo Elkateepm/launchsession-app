@@ -3063,6 +3063,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexShrink: 0 }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onNavigate && onNavigate('planner', { editSessionId: s.id }) }}
+                          aria-label="Edit session"
+                          title="Edit session"
+                          style={{ width: 28, height: 28, borderRadius: 9, border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.75)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          ✏️
+                        </button>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                           <AttendanceRing
                             signedIn={attendedCount} total={attendeeTotal} expected={stats.expected} absent={stats.absent}
