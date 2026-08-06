@@ -1309,19 +1309,65 @@ function SecuritySection() {
   )
 }
 
-const CATEGORY_TOGGLES = [
-  { key: 'safeguarding', icon: '🛡', label: 'Safeguarding alerts', locked: true },
-  { key: 'sessions',     icon: '📅', label: 'Session reminders' },
-  { key: 'registers',    icon: '📋', label: 'Register alerts' },
-  { key: 'messaging',    icon: '💬', label: 'Messages' },
-  { key: 'volunteers',   icon: '❤️', label: 'Volunteer cover' },
-  { key: 'forms',        icon: '📝', label: 'Forms' },
-  { key: 'consents',     icon: '✅', label: 'Consents' },
-  { key: 'medical',      icon: '💊', label: 'Medical updates' },
-  { key: 'resources',    icon: '📦', label: 'Resource bookings' },
-  { key: 'reflections',  icon: '⭐', label: 'Reflections' },
-  { key: 'reports',      icon: '📊', label: 'Reports' },
-  { key: 'security',     icon: '🔒', label: 'Security alerts', locked: true },
+// Mirrors the EVENT_TEMPLATES categories/priorities in api/send-form-email.js
+// exactly -- this is the actual, complete list of notification types the
+// system sends today. Kept here rather than generated, since the two files
+// can't share code (one's a Vercel API route, one's the React app), but
+// they must be kept in sync by hand whenever a new event type is added.
+// TEST_NOTIFICATION is deliberately omitted -- it's a manual "send test"
+// action, not something a person opts in/out of.
+const NOTIFICATION_GROUPS = [
+  {
+    key: 'safeguarding', icon: '🛡', label: 'Safeguarding & Security', locked: true,
+    description: "Critical alerts. Only admins can change how these are routed — they can't be turned off by ordinary staff.",
+    events: [
+      { key: 'SAFEGUARDING_ACTION_REQUIRED', label: 'Safeguarding action required' },
+      { key: 'SECURITY_ALERT', label: 'Security alerts (e.g. role changes)' },
+    ],
+  },
+  {
+    key: 'sessions', icon: '📅', label: 'Sessions & Registers',
+    description: 'Session timing, cancellations, staffing changes, and registers that need closing.',
+    events: [
+      { key: 'SESSION_STARTING_SOON', label: 'Session starting in 30 minutes' },
+      { key: 'SESSION_CANCELLED', label: 'Session cancelled' },
+      { key: 'STAFF_ADDED_TO_SESSION', label: "You've been added to a session" },
+      { key: 'SESSION_CREATED', label: 'New session created' },
+      { key: 'SESSION_EDITED', label: 'A session you\u2019re on has been updated' },
+      { key: 'REGISTER_INCOMPLETE', label: 'Register closed with attendance unresolved', category: 'registers' },
+      { key: 'REGISTER_LEFT_OPEN', label: "Register still open, session ended", category: 'registers' },
+    ],
+  },
+  {
+    key: 'volunteers', icon: '❤️', label: 'Volunteers & Forms',
+    description: 'Cover requests, invitation responses, and form submissions.',
+    events: [
+      { key: 'VOLUNTEER_COVER_REQUIRED', label: 'Volunteer cover needed' },
+      { key: 'INVITATION_ACCEPTED', label: 'Invitation accepted' },
+      { key: 'FORM_SUBMISSION_RECEIVED', label: 'New form submission', category: 'forms' },
+    ],
+  },
+  {
+    key: 'consents', icon: '✅', label: "Children's Records",
+    description: 'Consent expiry and medical information changes.',
+    events: [
+      { key: 'CONSENT_EXPIRING', label: 'Consent record expiring soon' },
+      { key: 'MEDICAL_INFO_UPDATED', label: "Medical information updated", category: 'medical' },
+    ],
+  },
+  {
+    key: 'resources', icon: '📦', label: 'Resources & Reflections',
+    description: 'Risk assessments, bookings, and session reflections.',
+    events: [
+      { key: 'RISK_ASSESSMENT_DUE', label: 'Risk assessment due for review' },
+      { key: 'RESOURCE_BOOKING_UPDATE', label: 'Resource booking approved or changed' },
+      { key: 'REFLECTION_DUE', label: 'Session ready for reflection', category: 'reflections' },
+    ],
+  },
+  {
+    key: 'messaging', icon: '💬', label: 'Messages', description: 'New messages sent to you.',
+    events: [{ key: 'NEW_MESSAGE', label: 'New message' }],
+  },
 ]
 
 function NotificationsSection({ org, session: authSession }) {
@@ -1334,6 +1380,7 @@ function NotificationsSection({ org, session: authSession }) {
   const [busy, setBusy] = useState(false)
   const [testState, setTestState] = useState(null) // null | 'sending' | 'sent' | 'error'
   const [error, setError] = useState('')
+  const [expandedGroups, setExpandedGroups] = useState({})
 
   const load = async () => {
     if (!userId) return
@@ -1341,7 +1388,7 @@ function NotificationsSection({ org, session: authSession }) {
     setIsSubscribedHere(!!sub)
     setDevices(await listMySubscriptions(userId))
     const { data } = await supabase.from('notification_preferences').select('*').eq('user_id', userId).maybeSingle()
-    setPrefs(data || { push_enabled: true, email_enabled: true, ...Object.fromEntries(CATEGORY_TOGGLES.map(c => [c.key, true])) })
+    setPrefs(data || { push_enabled: true, email_enabled: true, event_overrides: {}, quiet_hours_enabled: false, quiet_hours_start: null, quiet_hours_end: null, timezone: 'Europe/London', ...Object.fromEntries(NOTIFICATION_GROUPS.map(g => [g.key, true])) })
     setPermission(getNotificationPermission())
   }
 
@@ -1395,6 +1442,21 @@ function NotificationsSection({ org, session: authSession }) {
     savePrefs({ ...prefs, [key]: !prefs[key] })
   }
 
+  // A per-type override is only meaningful once it diverges from the
+  // category default -- so "on" means "follow the category toggle above"
+  // until someone explicitly flips this one specific alert.
+  const isEventEnabled = (group, eventKey) => {
+    const override = prefs?.event_overrides?.[eventKey]
+    if (override !== undefined) return override
+    return group.locked ? true : !!prefs?.[group.key]
+  }
+  const toggleEventOverride = (group, eventKey) => {
+    if (!prefs || group.locked) return
+    const current = isEventEnabled(group, eventKey)
+    savePrefs({ ...prefs, event_overrides: { ...(prefs.event_overrides || {}), [eventKey]: !current } })
+  }
+  const updateQuietHours = (patch) => { if (prefs) savePrefs({ ...prefs, ...patch }) }
+
   return (
     <>
       <SettingCard title="Push Notifications" description="Get alerted the moment something needs your attention — even when LaunchSession isn't open.">
@@ -1441,12 +1503,69 @@ function NotificationsSection({ org, session: authSession }) {
         </SettingCard>
       )}
 
-      <SettingCard title="Categories" description="Choose what you want to be notified about. Safeguarding and security alerts are always on.">
-        {prefs && CATEGORY_TOGGLES.map(c => (
-          <div key={c.key} style={{ opacity: c.locked ? 0.6 : 1 }}>
-            <Toggle value={c.locked ? true : !!prefs[c.key]} onChange={() => toggleCategory(c.key, c.locked)} label={`${c.icon} ${c.label}${c.locked ? ' (required)' : ''}`} />
+      <SettingCard title="Notification Types" description="Choose what you want to be notified about. Expand a group to fine-tune individual alerts within it.">
+        {prefs && NOTIFICATION_GROUPS.map(g => {
+          const isExpanded = !!expandedGroups[g.key]
+          const groupOn = g.locked ? true : !!prefs[g.key]
+          return (
+            <div key={g.key} style={{ borderBottom: '1px solid #f3f4f6' }}>
+              <div style={{ opacity: g.locked ? 0.75 : 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0 4px' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 600 }}>{g.icon} {g.label}{g.locked ? ' (required)' : ''}</span>
+                    <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{g.description}</div>
+                  </div>
+                  <div onClick={() => toggleCategory(g.key, g.locked)} style={{ width: 40, height: 22, borderRadius: 11, background: groupOn ? '#1B9AAA' : '#D1D5DB', position: 'relative', cursor: g.locked ? 'default' : 'pointer', flexShrink: 0, marginLeft: 12 }}>
+                    <div style={{ position: 'absolute', top: 2, left: groupOn ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                  </div>
+                </div>
+                <button onClick={() => setExpandedGroups(prev => ({ ...prev, [g.key]: !prev[g.key] }))} style={{ background: 'none', border: 'none', padding: '0 0 10px', color: '#1B9AAA', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
+                  {isExpanded ? '▾ Hide individual alerts' : `▸ Customise ${g.events.length} individual alert${g.events.length > 1 ? 's' : ''}`}
+                </button>
+              </div>
+
+              {isExpanded && (
+                <div style={{ paddingLeft: 14, marginBottom: 8 }}>
+                  {g.events.map(ev => {
+                    const on = isEventEnabled(g, ev.key)
+                    return (
+                      <div key={ev.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', opacity: g.locked ? 0.75 : 1 }}>
+                        <span style={{ fontSize: 12.5, color: 'var(--text3)' }}>{ev.label}</span>
+                        <div onClick={() => toggleEventOverride(g, ev.key)} style={{ width: 32, height: 18, borderRadius: 9, background: on ? '#1B9AAA' : '#D1D5DB', position: 'relative', cursor: g.locked ? 'default' : 'pointer', flexShrink: 0, marginLeft: 12 }}>
+                          <div style={{ position: 'absolute', top: 2, left: on ? 16 : 2, width: 14, height: 14, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </SettingCard>
+
+      <SettingCard title="Quiet Hours" description="Pause push notifications during set hours. Critical safeguarding and security alerts still come through regardless.">
+        <Toggle value={!!prefs?.quiet_hours_enabled} onChange={() => updateQuietHours({ quiet_hours_enabled: !prefs?.quiet_hours_enabled })} label="🌙 Enable quiet hours" />
+        {prefs?.quiet_hours_enabled && (
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', padding: '14px 0 4px' }}>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>From</div>
+              <input type="time" value={prefs?.quiet_hours_start?.slice(0, 5) || '21:00'} onChange={e => updateQuietHours({ quiet_hours_start: e.target.value })} style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface)', color: 'var(--text)' }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>To</div>
+              <input type="time" value={prefs?.quiet_hours_end?.slice(0, 5) || '07:00'} onChange={e => updateQuietHours({ quiet_hours_end: e.target.value })} style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface)', color: 'var(--text)' }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Time zone</div>
+              <select value={prefs?.timezone || 'Europe/London'} onChange={e => updateQuietHours({ timezone: e.target.value })} style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface)', color: 'var(--text)', width: '100%' }}>
+                <option value="Europe/London">UK (Europe/London)</option>
+                <option value="Europe/Dublin">Ireland (Europe/Dublin)</option>
+                <option value="Europe/Paris">Central Europe (Europe/Paris)</option>
+              </select>
+            </div>
           </div>
-        ))}
+        )}
       </SettingCard>
 
       <SettingCard title="Email Notifications" description="Also receive important updates by email.">

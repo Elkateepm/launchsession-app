@@ -70,6 +70,13 @@ const IMPLEMENTED_EVENTS = new Set(['TEST_NOTIFICATION', 'SAFEGUARDING_ACTION_RE
 // (The user-triggered `push` type branch further down has its own copy of
 // this logic — deliberately not merged, so a change to one code path can't
 // silently affect the other.)
+// Safeguarding/security-critical event types that must always reach their
+// recipients, matching the locked (non-togglable) groups in the
+// Notifications settings screen. Enforced here, not just in the UI --
+// someone editing notification_preferences directly (bypassing the app)
+// still can't silence these.
+const CRITICAL_EVENT_TYPES = new Set(['SAFEGUARDING_ACTION_REQUIRED', 'SECURITY_ALERT'])
+
 async function deliverSweepPush(adminClient, { org_id, event_type, category, title, body, url, priority, recipientIds }) {
   const ids = [...new Set(recipientIds)].filter(Boolean)
   if (ids.length === 0) return 0
@@ -78,9 +85,15 @@ async function deliverSweepPush(adminClient, { org_id, event_type, category, tit
   const prefsByUser = {}
   ;(prefsRows || []).forEach(p => { prefsByUser[p.user_id] = p })
   const eligibleIds = ids.filter(id => {
+    if (CRITICAL_EVENT_TYPES.has(event_type)) return true // never silenceable, regardless of stored prefs
     const p = prefsByUser[id]
     if (!p) return true
     if (p.push_enabled === false) return false
+    // A per-type override takes precedence over the broad category toggle
+    // either direction — lets someone turn off one specific alert while
+    // keeping the rest of its category on, or vice versa.
+    const override = p.event_overrides?.[event_type]
+    if (override !== undefined) return !!override
     if (category && p[category] === false) return false
     return true
   })
@@ -602,9 +615,12 @@ export default async function handler(req, res) {
       ;(prefsRows || []).forEach(p => { prefsByUser[p.user_id] = p })
 
       const eligibleIds = recipientIds.filter(id => {
+        if (CRITICAL_EVENT_TYPES.has(event_type)) return true // never silenceable, regardless of stored prefs
         const p = prefsByUser[id]
         if (!p) return true // no row yet = defaults = enabled
         if (p.push_enabled === false) return false
+        const override = p.event_overrides?.[event_type]
+        if (override !== undefined) return !!override
         if (template.category && p[template.category] === false) return false
         return true
       })
