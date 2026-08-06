@@ -3216,27 +3216,41 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           return (
             <div>
               {closedGroup.length > 0 && (
-                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <div style={{
+                  display: 'inline-flex', gap: 3, marginBottom: 14, padding: 4,
+                  background: 'rgba(148,163,184,0.10)', border: '1px solid rgba(148,163,184,0.16)',
+                  borderRadius: 13, boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 2px 8px -4px rgba(15,23,42,0.15)',
+                }}>
                   {[
                     { key: 'active', label: 'Active', count: activeList.length },
                     { key: 'closed', label: 'Closed today', count: closedGroup.length },
-                  ].map(tab => (
-                    <button key={tab.key} onClick={() => setTodaySessionsView(tab.key)} style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-                      border: `1px solid ${todaySessionsView === tab.key ? primary : 'rgba(148,163,184,0.35)'}`,
-                      borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800,
-                      background: todaySessionsView === tab.key ? primary : 'transparent',
-                      color: todaySessionsView === tab.key ? '#fff' : 'var(--text2, #64748B)',
-                    }}>
-                      {tab.key === 'closed' ? '🔒 ' : ''}{tab.label}
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        minWidth: 18, height: 18, borderRadius: 99, padding: '0 5px', fontSize: 10.5, fontWeight: 900,
-                        background: todaySessionsView === tab.key ? 'rgba(255,255,255,0.25)' : 'rgba(148,163,184,0.18)',
-                        color: todaySessionsView === tab.key ? '#fff' : 'var(--text2, #64748B)',
-                      }}>{tab.count}</span>
-                    </button>
-                  ))}
+                  ].map(tab => {
+                    const isSel = todaySessionsView === tab.key
+                    return (
+                      <button key={tab.key} onClick={() => setTodaySessionsView(tab.key)}
+                        onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = 'rgba(148,163,184,0.14)' }}
+                        onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent' }}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 7, cursor: 'pointer',
+                          border: 'none', borderRadius: 10, padding: '7px 14px', fontSize: 12.5, fontWeight: 800,
+                          background: isSel ? `linear-gradient(135deg, ${primary}, ${secondary || primary})` : 'transparent',
+                          color: isSel ? '#fff' : 'var(--text2, #64748B)',
+                          boxShadow: isSel ? `0 1px 0 rgba(255,255,255,0.25) inset, 0 6px 16px -6px ${primary}80` : 'none',
+                          transition: 'background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease',
+                          letterSpacing: 0.1,
+                        }}>
+                        {tab.key === 'closed' ? '🔒 ' : ''}{tab.label}
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          minWidth: 19, height: 19, borderRadius: 99, padding: '0 5px', fontSize: 10.5, fontWeight: 900,
+                          background: isSel ? 'rgba(255,255,255,0.28)' : 'rgba(148,163,184,0.18)',
+                          color: isSel ? '#fff' : 'var(--text2, #64748B)',
+                          boxShadow: isSel ? '0 1px 0 rgba(255,255,255,0.3) inset' : 'none',
+                          transition: 'background 0.18s ease',
+                        }}>{tab.count}</span>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
               <div className="ls-hub-today-sessions" style={{ display: 'flex', flexWrap: 'wrap', gap: 16, padding: '0 0 8px' }}>
