@@ -69,7 +69,7 @@ export default function OnboardingLayout({ children, wide = true, panelStyle, on
           <span style={{ fontSize: 17, fontWeight: 900, color: '#fff', letterSpacing: -0.4 }}>LaunchSession</span>
         </div>
 
-        <div style={{ ...glassPanel, ...panelStyle, ...enterStyle(STAGGER.panel, 'ls-panel-enter') }}>
+        <div style={{ ...glassPanel(isMobile), ...panelStyle, ...enterStyle(STAGGER.panel, 'ls-panel-enter') }}>
           {children}
         </div>
 
@@ -106,15 +106,15 @@ const page = {
   animation: 'ls-fade-in 600ms ease',
 }
 
-const glassPanel = {
+const glassPanel = (isMobile) => ({
   background: 'rgba(255,255,255,0.045)',
   border: '1px solid rgba(255,255,255,0.11)',
-  borderRadius: 28,
-  padding: '36px 40px',
+  borderRadius: isMobile ? 20 : 28,
+  padding: isMobile ? '22px 18px' : '36px 40px',
   boxShadow: '0 8px 24px rgba(0,0,0,0.35), 0 40px 100px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
   backdropFilter: 'blur(24px)',
   WebkitBackdropFilter: 'blur(24px)',
   boxSizing: 'border-box',
-}
+})
 
 const footLink = { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: 12.5, fontFamily: 'inherit', textDecoration: 'none' }

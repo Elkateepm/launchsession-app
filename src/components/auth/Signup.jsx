@@ -417,7 +417,7 @@ export default function Signup() {
                         <span style={{ width: 6, height: 6, borderRadius: '50%', background: g.color, flexShrink: 0, boxShadow: `0 0 8px ${g.color}88` }} />
                         <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.7, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>{g.title}</span>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8 }}>
                         {g.items.map(m => (
                           <div key={m.label} className="ls-feature-item" style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 11, padding: '9px 10px', minWidth: 0 }}>
                             <span style={{ width: 26, height: 26, borderRadius: 8, background: `${g.color}22`, color: g.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
