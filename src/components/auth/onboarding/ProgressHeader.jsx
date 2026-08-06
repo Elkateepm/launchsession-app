@@ -1,6 +1,20 @@
 import React from 'react'
+import { useReducedMotion } from './OnboardingLayout'
+import { DURATION } from './animations'
 
 export default function ProgressHeader({ stepNumber, totalSteps, title, onBack, showBack, onSaveExit }) {
+  const reducedMotion = useReducedMotion()
+  const [saveState, setSaveState] = React.useState('idle') // idle | saving | saved
+
+  const handleSaveExit = () => {
+    if (!onSaveExit || saveState !== 'idle') return
+    setSaveState('saving')
+    setTimeout(() => {
+      setSaveState('saved')
+      setTimeout(onSaveExit, reducedMotion ? 50 : 900)
+    }, reducedMotion ? 50 : 350)
+  }
+
   return (
     <div style={{ marginBottom: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
@@ -8,15 +22,26 @@ export default function ProgressHeader({ stepNumber, totalSteps, title, onBack, 
           {showBack && (
             <button type="button" onClick={onBack} aria-label="Go back" style={backBtn}>←</button>
           )}
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, overflow: 'hidden' }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
               Step {stepNumber} of {totalSteps}
             </div>
-            {title && <div style={{ fontSize: 13.5, fontWeight: 700, color: 'rgba(255,255,255,0.75)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>}
+            {/* Keying on stepNumber remounts this node on every step change,
+                retriggering the fade+slide-up keyframe -- a lightweight way
+                to animate a label swap without a full transition library. */}
+            <div key={stepNumber} style={{
+              fontSize: 13.5, fontWeight: 700, color: 'rgba(255,255,255,0.75)', marginTop: 2,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              animation: reducedMotion ? 'ls-fade-in 150ms ease' : 'ls-label-in 320ms cubic-bezier(0.16,1,0.3,1)',
+            }}>
+              {title}
+            </div>
           </div>
         </div>
         {onSaveExit && (
-          <button type="button" onClick={onSaveExit} style={saveExitBtn}>Save &amp; exit</button>
+          <button type="button" onClick={handleSaveExit} className="ls-footlink" style={{ ...saveExitBtn, opacity: saveState === 'saving' ? 0.6 : 1 }}>
+            {saveState === 'saved' ? '✓ Saved' : saveState === 'saving' ? 'Saving…' : 'Save & exit'}
+          </button>
         )}
       </div>
 
@@ -25,7 +50,7 @@ export default function ProgressHeader({ stepNumber, totalSteps, title, onBack, 
           <div key={i} style={{
             flex: 1, height: 4, borderRadius: 99,
             background: i < stepNumber ? 'linear-gradient(90deg,#3B82F6,#8B5CF6)' : 'rgba(255,255,255,0.1)',
-            transition: 'background 0.3s',
+            transition: `background ${reducedMotion ? 50 : DURATION.progress}ms cubic-bezier(0.16,1,0.3,1)`,
           }} />
         ))}
       </div>
@@ -36,6 +61,7 @@ export default function ProgressHeader({ stepNumber, totalSteps, title, onBack, 
 const backBtn = {
   width: 34, height: 34, borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)',
   color: '#fff', fontSize: 15, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  transition: 'transform 0.15s ease, background 0.15s ease',
 }
 
 const saveExitBtn = {

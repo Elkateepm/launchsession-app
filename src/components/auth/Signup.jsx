@@ -5,6 +5,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import OnboardingLayout, { useReducedMotion } from './onboarding/OnboardingLayout'
 import ProgressHeader from './onboarding/ProgressHeader'
 import SelectionCard from './onboarding/SelectionCard'
+import AnimatedInput from './onboarding/AnimatedInput'
 
 const DRAFT_KEY = 'ls_signup_draft_v2'
 
@@ -35,50 +36,40 @@ const ORG_TYPES = [
 const ORG_TYPE_TIP = "Whatever you run, LaunchSession adapts — enable only the modules your team actually needs. This never locks you in; change it anytime in Settings."
 
 const WHAT_YOU_GET_GROUPS = [
-  {
-    title: 'Run your sessions',
-    color: '#60A5FA',
-    items: [
-      { icon: '📅', label: 'Sessions & Planning' },
-      { icon: '📋', label: 'Live Registers' },
-      { icon: '🗓️', label: 'Calendar' },
-      { icon: '📝', label: 'Forms' },
-    ],
-  },
-  {
-    title: 'Keep everyone safe',
-    color: '#F87171',
-    items: [
-      { icon: '🛡️', label: 'Safeguarding' },
-      { icon: '⚠️', label: 'Risk Assessments' },
-      { icon: '🔔', label: 'Alerts & Reminders' },
-      { icon: '🗄️', label: 'Data Retention' },
-    ],
-  },
-  {
-    title: 'Your people',
-    color: '#4ADE80',
-    items: [
-      { icon: '🧒', label: 'Children & Groups' },
-      { icon: '❤️', label: 'Volunteers' },
-      { icon: '🤝', label: 'Mentoring' },
-      { icon: '💬', label: 'Messaging' },
-    ],
-  },
-  {
-    title: 'Grow & report',
-    color: '#FBBF24',
-    items: [
-      { icon: '📊', label: 'Reports & Impact' },
-      { icon: '💰', label: 'Fundraising' },
-      { icon: '🎨', label: 'Branding' },
-      { icon: '✈️', label: 'Events & Trips' },
-    ],
-  },
+  { title: 'Run your sessions', color: '#60A5FA', items: [
+    { icon: '📅', label: 'Sessions & Planning' }, { icon: '📋', label: 'Live Registers' },
+    { icon: '🗓️', label: 'Calendar' }, { icon: '📝', label: 'Forms' },
+  ]},
+  { title: 'Keep everyone safe', color: '#F87171', items: [
+    { icon: '🛡️', label: 'Safeguarding' }, { icon: '⚠️', label: 'Risk Assessments' },
+    { icon: '🔔', label: 'Alerts & Reminders' }, { icon: '🗄️', label: 'Data Retention' },
+  ]},
+  { title: 'Your people', color: '#4ADE80', items: [
+    { icon: '🧒', label: 'Children & Groups' }, { icon: '❤️', label: 'Volunteers' },
+    { icon: '🤝', label: 'Mentoring' }, { icon: '💬', label: 'Messaging' },
+  ]},
+  { title: 'Grow & report', color: '#FBBF24', items: [
+    { icon: '📊', label: 'Reports & Impact' }, { icon: '💰', label: 'Fundraising' },
+    { icon: '🎨', label: 'Branding' }, { icon: '✈️', label: 'Events & Trips' },
+  ]},
 ]
 
 const STEP_KEYS = ['org', 'type', 'you', 'review']
 const STEP_TITLES = { org: 'Organisation name', type: 'Organisation type', you: 'Your details', review: 'Review & confirm' }
+
+// Step content enter/exit -- separate transitions per direction so the
+// exit is quick (180-220ms) and the entrance settles in a touch slower
+// (280-350ms), per spec. Reduced motion drops the slide entirely.
+const stepVariants = {
+  initial: { opacity: 0, x: 14 },
+  animate: { opacity: 1, x: 0, transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] } },
+  exit: { opacity: 0, x: -10, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
+}
+const stepVariantsReduced = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.12 } },
+  exit: { opacity: 0, transition: { duration: 0.1 } },
+}
 
 export default function Signup() {
   const isMobile = useIsMobile()
@@ -92,15 +83,17 @@ export default function Signup() {
   const [loading, setLoading]                    = useState(false)
   const [submitStep, setSubmitStep]              = useState(null)
   const [done, setDone]                          = useState(false)
+  const [launching, setLaunching]                = useState(false)
   const [emailFailed, setEmailFailed]            = useState(false)
   const [error, setError]                        = useState('')
   const [agreedToTerms, setAgreedToTerms]        = useState(false)
   const [legalModal, setLegalModal]              = useState(null) // null | 'terms' | 'privacy'
   const [restored, setRestored]                  = useState(false)
+  const [navLocked, setNavLocked]                = useState(false)
+  const [touchedOrg, setTouchedOrg]              = useState(false)
+  const [touchedName, setTouchedName]            = useState(false)
+  const [touchedEmail, setTouchedEmail]          = useState(false)
 
-  // Restore progress from a previous visit (e.g. accidental refresh or tab
-  // close) -- draft is local-only, since there's no authenticated user yet
-  // at this stage for a Supabase-backed save.
   useEffect(() => {
     try {
       const saved = localStorage.getItem(DRAFT_KEY)
@@ -123,9 +116,7 @@ export default function Signup() {
     if (!restored || done) return
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
-      try {
-        localStorage.setItem(DRAFT_KEY, JSON.stringify({ stepIndex, organisationName, orgType, orgTypeOther, fullName, email }))
-      } catch (e) {}
+      try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ stepIndex, organisationName, orgType, orgTypeOther, fullName, email })) } catch (e) {}
     }, 400)
     return () => clearTimeout(saveTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -146,8 +137,17 @@ export default function Signup() {
     review: 'Agree to the Terms of Service and Privacy Policy to continue.',
   }[currentKey]
 
-  const goNext = () => { if (canContinue && stepIndex < STEP_KEYS.length - 1) setStepIndex(i => i + 1) }
-  const goBack = () => { if (stepIndex > 0) setStepIndex(i => i - 1) }
+  // Locks nav briefly around a step change so rapid double-clicks can't
+  // fire the exit/enter animation twice mid-flight.
+  const withNavLock = (fn) => () => {
+    if (navLocked) return
+    setNavLocked(true)
+    fn()
+    setTimeout(() => setNavLocked(false), reducedMotion ? 60 : 380)
+  }
+
+  const goNext = withNavLock(() => { if (canContinue && stepIndex < STEP_KEYS.length - 1) setStepIndex(i => i + 1) })
+  const goBack = withNavLock(() => { if (stepIndex > 0) setStepIndex(i => i - 1) })
   const saveAndExit = () => { window.location.href = '/landing.html' }
 
   const handleSubmit = async () => {
@@ -222,10 +222,7 @@ export default function Signup() {
           role: 'admin',
         }
       })
-      if (emailError) {
-        console.warn('Email send failed:', emailError.message)
-        sendFailed = true
-      }
+      if (emailError) { console.warn('Email send failed:', emailError.message); sendFailed = true }
     } else {
       sendFailed = true
     }
@@ -235,7 +232,16 @@ export default function Signup() {
     setLoading(false)
     setSubmitStep(null)
     setEmailFailed(sendFailed)
-    setDone(true)
+
+    // Brief "launch" beat -- rocket accent + glow brighten -- before the
+    // success screen replaces the panel. Kept well under 900ms and never
+    // gates access; it plays while state is already fully settled.
+    if (reducedMotion) {
+      setDone(true)
+    } else {
+      setLaunching(true)
+      setTimeout(() => { setLaunching(false); setDone(true) }, 700)
+    }
   }
 
   // ── SUCCESS SCREEN ──
@@ -269,14 +275,14 @@ export default function Signup() {
   const isTypeStep = currentKey === 'type'
   const isReviewStep = currentKey === 'review'
   const stepWide = isTypeStep || isReviewStep
-  const transition = reducedMotion ? { duration: 0 } : { duration: 0.22 }
-  const motionProps = reducedMotion
-    ? { initial: false, animate: { opacity: 1, x: 0 } }
-    : { initial: { opacity: 0, x: 16 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -16 } }
 
-  // ── WIZARD ──
   return (
-    <OnboardingLayout wide onBackHome={saveAndExit}>
+    <OnboardingLayout wide onBackHome={saveAndExit} panelStyle={launching ? { transition: 'opacity 0.5s ease', opacity: 0.3 } : undefined}>
+      {/* Rocket-accent launch beat on final completion */}
+      {launching && !reducedMotion && (
+        <div aria-hidden="true" style={{ position: 'fixed', left: '50%', bottom: '30%', fontSize: 28, animation: 'ls-rocket-up 700ms ease-out forwards', pointerEvents: 'none', zIndex: 300 }}>🚀</div>
+      )}
+
       <ProgressHeader
         stepNumber={stepNumber}
         totalSteps={STEP_KEYS.length}
@@ -287,28 +293,37 @@ export default function Signup() {
       />
 
       {error && (
-        <div role="alert" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#FCA5A5', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600, lineHeight: 1.5 }}>
+        <div role="alert" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#FCA5A5', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600, lineHeight: 1.5, animation: reducedMotion ? 'ls-fade-in 150ms ease' : 'ls-label-in 260ms cubic-bezier(0.16,1,0.3,1)' }}>
           ⚠️ {error}
         </div>
       )}
 
       <div style={{ maxWidth: stepWide ? 'none' : 460, margin: stepWide ? 0 : '0 auto' }}>
         <AnimatePresence mode="wait">
-          <motion.div key={currentKey} {...motionProps} transition={transition} style={{ display: 'flex', flexDirection: 'column' }}>
+          <motion.div
+            key={currentKey}
+            variants={reducedMotion ? stepVariantsReduced : stepVariants}
+            initial="initial" animate="animate" exit="exit"
+            style={{ display: 'flex', flexDirection: 'column' }}
+          >
 
             {currentKey === 'org' && (
               <div>
                 <p style={cardSub}>What's your organisation called? This becomes your dedicated, private workspace name.</p>
-                <input
+                <AnimatedInput
                   autoFocus
-                  disabled={loading}
-                  placeholder="e.g. Acme Youth Club"
-                  value={organisationName}
-                  onChange={e => setOrganisationName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && canContinue && goNext()}
-                  style={inp}
+                  valid={organisationName.trim().length > 1}
+                  error={touchedOrg && organisationName.trim().length === 1 ? 'That name looks a little short — add a bit more.' : ''}
+                  inputProps={{
+                    disabled: loading,
+                    placeholder: 'e.g. Acme Youth Club',
+                    value: organisationName,
+                    onChange: e => setOrganisationName(e.target.value),
+                    onBlur: () => setTouchedOrg(true),
+                    onKeyDown: e => e.key === 'Enter' && canContinue && goNext(),
+                  }}
                 />
-                <Teach>🔒 Every organisation gets its own secure, fully separate workspace — your data is never shared with anyone else on LaunchSession.</Teach>
+                <Teach security>Every organisation gets its own secure, fully separate workspace — your data is never shared with anyone else on LaunchSession.</Teach>
               </div>
             )}
 
@@ -331,14 +346,16 @@ export default function Signup() {
 
                 {orgType === 'other' && (
                   <div style={{ marginTop: 14 }}>
-                    <label style={label}>Tell us what type of organisation you run</label>
-                    <input
+                    <AnimatedInput
+                      label="Tell us what type of organisation you run"
                       autoFocus
-                      disabled={loading}
-                      placeholder="e.g. Scout group, arts collective, food bank..."
-                      value={orgTypeOther}
-                      onChange={e => setOrgTypeOther(e.target.value)}
-                      style={inp}
+                      valid={orgTypeOther.trim().length > 1}
+                      inputProps={{
+                        disabled: loading,
+                        placeholder: 'e.g. Scout group, arts collective, food bank...',
+                        value: orgTypeOther,
+                        onChange: e => setOrgTypeOther(e.target.value),
+                      }}
                     />
                   </div>
                 )}
@@ -351,14 +368,34 @@ export default function Signup() {
               <div>
                 <p style={cardSub}>Now, a bit about you — you'll be the first admin. Invite your whole team once you're in.</p>
                 <div style={{ marginBottom: 14 }}>
-                  <label style={label}>Your full name</label>
-                  <input autoFocus disabled={loading} placeholder="e.g. Jane Smith" value={fullName} onChange={e => setFullName(e.target.value)} style={inp} />
+                  <AnimatedInput
+                    label="Your full name"
+                    autoFocus
+                    valid={fullName.trim().length > 1}
+                    error={touchedName && fullName.trim().length === 1 ? 'Add your full name.' : ''}
+                    inputProps={{
+                      disabled: loading,
+                      placeholder: 'e.g. Jane Smith',
+                      value: fullName,
+                      onChange: e => setFullName(e.target.value),
+                      onBlur: () => setTouchedName(true),
+                    }}
+                  />
                 </div>
-                <div>
-                  <label style={label}>Work email</label>
-                  <input type="email" disabled={loading} placeholder="jane@organisation.org" value={email} onChange={e => setEmail(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && canContinue && goNext()} style={inp} />
-                </div>
+                <AnimatedInput
+                  label="Work email"
+                  valid={/\S+@\S+\.\S+/.test(email.trim())}
+                  error={touchedEmail && email.trim().length > 2 && !/\S+@\S+\.\S+/.test(email.trim()) ? 'That doesn\'t look like a valid email yet.' : ''}
+                  inputProps={{
+                    type: 'email',
+                    disabled: loading,
+                    placeholder: 'jane@organisation.org',
+                    value: email,
+                    onChange: e => setEmail(e.target.value),
+                    onBlur: () => setTouchedEmail(true),
+                    onKeyDown: e => e.key === 'Enter' && canContinue && goNext(),
+                  }}
+                />
                 <Teach>⚡ Your login link arrives within seconds — no waiting on manual approval, no card required.</Teach>
               </div>
             )}
@@ -417,7 +454,7 @@ export default function Signup() {
                   {loading && submitStep && (
                     <div role="status" style={{ margin: '16px 0 0', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: '14px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 18, height: 18, border: '2px solid #3B82F6', borderTop: '2px solid transparent', borderRadius: '50%', animation: reducedMotion ? 'none' : 'spin 0.8s linear infinite', flexShrink: 0 }} />
+                        <div style={{ width: 18, height: 18, border: '2px solid #3B82F6', borderTop: '2px solid transparent', borderRadius: '50%', animation: reducedMotion ? 'none' : 'ls-spin 0.8s linear infinite', flexShrink: 0 }} />
                         <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{submitStep}</span>
                       </div>
                     </div>
@@ -431,28 +468,24 @@ export default function Signup() {
 
       {legalModal && <LegalModal doc={legalModal} onClose={() => setLegalModal(null)} onAgree={() => { setAgreedToTerms(true); setLegalModal(null) }} />}
 
-      {/* Nav buttons — sticky to the viewport bottom on mobile so they're
-          never hidden below the fold; inline within the panel on desktop. */}
       <div style={isMobile ? mobileStickyNav : { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, maxWidth: stepWide ? 460 : 'none' }}>
         <div style={{ display: 'flex', gap: 10 }}>
           {stepIndex > 0 && (
-            <button type="button" onClick={goBack} disabled={loading} style={ghostBtn}>← Back</button>
+            <button type="button" onClick={goBack} disabled={loading || navLocked} style={ghostBtn}>← Back</button>
           )}
           {currentKey === 'review' ? (
-            <button type="button" onClick={handleSubmit} disabled={loading || !canContinue} style={{ ...primaryBtn, flex: 1, opacity: loading || !canContinue ? 0.6 : 1 }}>
-              {loading ? 'Setting up...' : 'Create My Workspace →'}
+            <button type="button" onClick={handleSubmit} disabled={loading || !canContinue} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, opacity: loading || !canContinue ? 0.6 : 1 }}>
+              {loading ? 'Saving…' : <>Create My Workspace <span className="ls-btn-arrow">→</span></>}
             </button>
           ) : (
-            <button type="button" onClick={goNext} disabled={!canContinue} style={{ ...primaryBtn, flex: 1, opacity: canContinue ? 1 : 0.4, cursor: canContinue ? 'pointer' : 'default' }}>
-              Continue →
+            <button type="button" onClick={goNext} disabled={!canContinue || navLocked} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, opacity: canContinue ? 1 : 0.4, cursor: canContinue ? 'pointer' : 'default' }}>
+              Continue <span className="ls-btn-arrow">→</span>
             </button>
           )}
         </div>
         {!canContinue && <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{disabledReason}</div>}
       </div>
       {isMobile && <div style={{ height: 84 }} />}
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </OnboardingLayout>
   )
 }
@@ -480,7 +513,7 @@ function LegalModal({ doc, onClose, onAgree }) {
         <iframe title={title} src={src} style={{ flex: 1, width: '100%', border: 'none', background: '#06091A' }} />
         <div style={{ display: 'flex', gap: 10, padding: '14px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
           <button type="button" onClick={onClose} style={{ ...ghostBtn, flex: 1, padding: '12px' }}>Close</button>
-          <button type="button" onClick={onAgree} style={{ ...primaryBtn, flex: 1, padding: '12px' }}>I agree →</button>
+          <button type="button" onClick={onAgree} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, padding: '12px' }}>I agree →</button>
         </div>
       </div>
     </div>
@@ -496,9 +529,19 @@ function Row({ k, v, last }) {
   )
 }
 
-function Teach({ children }) {
+function Teach({ children, security }) {
+  const reducedMotion = useReducedMotion()
   return (
-    <div style={{ marginTop: 18, background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: 12, padding: '12px 14px', fontSize: 12.5, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
+    <div style={{
+      marginTop: 18, borderRadius: 12, padding: '12px 14px', fontSize: 12.5, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6,
+      background: 'rgba(139,92,246,0.08)',
+      border: '1px solid rgba(139,92,246,0.25)',
+      backgroundImage: (security && !reducedMotion) ? 'linear-gradient(100deg, transparent 30%, rgba(139,92,246,0.25) 50%, transparent 70%)' : 'none',
+      backgroundSize: '250% 100%',
+      backgroundRepeat: 'no-repeat',
+      animation: reducedMotion ? 'ls-fade-in 200ms ease' : (security ? 'ls-fade-in 300ms ease, ls-border-sweep 1.1s 250ms ease-out 1' : 'ls-fade-in 300ms ease'),
+    }}>
+      {security && <span aria-hidden="true" style={{ display: 'inline-block', marginRight: 2, animation: reducedMotion ? 'none' : 'ls-lock-pulse 500ms 350ms ease' }}>🔒</span>}
       {children}
     </div>
   )
@@ -506,8 +549,6 @@ function Teach({ children }) {
 
 const cardTitle = { fontSize: 22, margin: '0 0 8px', fontWeight: 900, color: '#fff', lineHeight: 1.3 }
 const cardSub   = { color: 'rgba(255,255,255,0.55)', margin: '0 0 20px', fontSize: 14, lineHeight: 1.6, maxWidth: 460 }
-const label     = { display: 'block', marginBottom: 7, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.5 }
-const inp       = { width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 12, border: '1.5px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 16, outline: 'none', fontFamily: 'inherit' }
-const primaryBtn = { padding: '15px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', color: '#fff', fontWeight: 900, fontSize: 15, cursor: 'pointer', boxShadow: '0 12px 40px rgba(59,130,246,0.35)', fontFamily: 'inherit' }
+const primaryBtn = { padding: '15px', borderRadius: 14, border: 'none', color: '#fff', fontWeight: 900, fontSize: 15, cursor: 'pointer', boxShadow: '0 12px 40px rgba(59,130,246,0.35)', fontFamily: 'inherit' }
 const ghostBtn  = { padding: '15px 18px', borderRadius: 14, border: '1.5px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }
 const mobileStickyNav = { position: 'fixed', left: 0, right: 0, bottom: 0, padding: '12px 16px calc(12px + env(safe-area-inset-bottom))', background: 'rgba(7,11,22,0.92)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.1)', zIndex: 50 }
