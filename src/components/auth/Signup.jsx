@@ -1,7 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import OnboardingLayout, { useReducedMotion } from './onboarding/OnboardingLayout'
+import ProgressHeader from './onboarding/ProgressHeader'
+import SelectionCard from './onboarding/SelectionCard'
+
+const DRAFT_KEY = 'ls_signup_draft_v2'
 
 const SUBMIT_STEPS = [
   { id: 'insert',  label: 'Creating your workspace...' },
@@ -9,14 +14,25 @@ const SUBMIT_STEPS = [
   { id: 'email',   label: 'Sending your login link...' },
 ]
 
+// Expanded organisation-type list. Values stay as free text on the backend
+// (trial_requests.org_type has no check constraint), so adding options here
+// needs no migration -- see handleSubmit for how "Other" gets resolved.
 const ORG_TYPES = [
-  { key: 'charity',            label: 'Charity',           icon: '❤️', tip: "Perfect fit — track outcomes, prove impact to funders, and keep safeguarding airtight, all in one place." },
-  { key: 'sports club',        label: 'Sports Club',        icon: '⚽', tip: "Great match — manage training sessions, track attendance, and coordinate volunteer coaches without spreadsheets." },
-  { key: 'community centre',   label: 'Community Centre',   icon: '🏢', tip: "LaunchSession keeps every programme, session and volunteer shift in one connected place." },
-  { key: 'after-school',       label: 'After-School',       icon: '🎒', tip: "Built for exactly this — fast daily registers, parent messaging, and safeguarding, all connected." },
-  { key: 'youth club',         label: 'Youth Club',         icon: '🏃', tip: "This is what LaunchSession was built for — sessions, safeguarding and volunteers, all in sync." },
-  { key: 'other',              label: 'Something Else',     icon: '✨', tip: "Whatever you run, LaunchSession adapts — enable only the modules your team actually needs." },
+  { key: 'charity',           label: 'Charity',                    icon: 'heart',     description: 'Registered charities and non-profits' },
+  { key: 'sports_club',       label: 'Sports Club',                icon: 'ball',      description: 'Clubs, academies and sports coaching' },
+  { key: 'community_centre',  label: 'Community Centre',           icon: 'building',  description: 'Multi-purpose community spaces' },
+  { key: 'after_school',      label: 'After-School Club',          icon: 'backpack',  description: 'Wraparound and after-school care' },
+  { key: 'youth_club',        label: 'Youth Club',                 icon: 'users',     description: 'Open-access youth provision' },
+  { key: 'faith_community',   label: 'Faith or Community Group',   icon: 'handshake', description: 'Faith groups and grassroots organisations' },
+  { key: 'holiday_club',      label: 'Holiday Club',               icon: 'sun',       description: 'School holiday activity camps' },
+  { key: 'mentoring',         label: 'Mentoring Programme',        icon: 'compass',   description: '1:1 and group mentoring schemes' },
+  { key: 'education',         label: 'Education Provider',         icon: 'cap',       description: 'Schools, tutors and training providers' },
+  { key: 'local_authority',   label: 'Local Authority',            icon: 'columns',   description: 'Councils and public-sector youth services' },
+  { key: 'social_enterprise', label: 'Social Enterprise',          icon: 'leaf',      description: 'Mission-driven, trading for impact' },
+  { key: 'other',             label: 'Other',                      icon: 'sparkle',   description: 'Tell us what you run' },
 ]
+
+const ORG_TYPE_TIP = "Whatever you run, LaunchSession adapts — enable only the modules your team actually needs. This never locks you in; change it anytime in Settings."
 
 const WHAT_YOU_GET_GROUPS = [
   {
@@ -62,12 +78,15 @@ const WHAT_YOU_GET_GROUPS = [
 ]
 
 const STEP_KEYS = ['org', 'type', 'you', 'review']
+const STEP_TITLES = { org: 'Organisation name', type: 'Organisation type', you: 'Your details', review: 'Review & confirm' }
 
 export default function Signup() {
   const isMobile = useIsMobile()
+  const reducedMotion = useReducedMotion()
   const [stepIndex, setStepIndex]                = useState(0)
   const [organisationName, setOrganisationName]  = useState('')
   const [orgType, setOrgType]                    = useState('')
+  const [orgTypeOther, setOrgTypeOther]          = useState('')
   const [fullName, setFullName]                  = useState('')
   const [email, setEmail]                        = useState('')
   const [loading, setLoading]                    = useState(false)
@@ -77,6 +96,40 @@ export default function Signup() {
   const [error, setError]                        = useState('')
   const [agreedToTerms, setAgreedToTerms]        = useState(false)
   const [legalModal, setLegalModal]              = useState(null) // null | 'terms' | 'privacy'
+  const [restored, setRestored]                  = useState(false)
+
+  // Restore progress from a previous visit (e.g. accidental refresh or tab
+  // close) -- draft is local-only, since there's no authenticated user yet
+  // at this stage for a Supabase-backed save.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY)
+      if (saved) {
+        const d = JSON.parse(saved)
+        if (d.organisationName) setOrganisationName(d.organisationName)
+        if (d.orgType) setOrgType(d.orgType)
+        if (d.orgTypeOther) setOrgTypeOther(d.orgTypeOther)
+        if (d.fullName) setFullName(d.fullName)
+        if (d.email) setEmail(d.email)
+        if (typeof d.stepIndex === 'number') setStepIndex(Math.min(Math.max(d.stepIndex, 0), STEP_KEYS.length - 1))
+      }
+    } catch (e) {}
+    setRestored(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const saveTimer = useRef(null)
+  useEffect(() => {
+    if (!restored || done) return
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ stepIndex, organisationName, orgType, orgTypeOther, fullName, email }))
+      } catch (e) {}
+    }, 400)
+    return () => clearTimeout(saveTimer.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restored, done, stepIndex, organisationName, orgType, orgTypeOther, fullName, email])
 
   const currentKey = STEP_KEYS[stepIndex]
   const canContinue = {
@@ -86,8 +139,16 @@ export default function Signup() {
     review: agreedToTerms,
   }[currentKey]
 
+  const disabledReason = {
+    org: 'Enter your organisation\'s name to continue.',
+    type: 'Select an organisation type to continue.',
+    you: 'Add your name and a valid email to continue.',
+    review: 'Agree to the Terms of Service and Privacy Policy to continue.',
+  }[currentKey]
+
   const goNext = () => { if (canContinue && stepIndex < STEP_KEYS.length - 1) setStepIndex(i => i + 1) }
   const goBack = () => { if (stepIndex > 0) setStepIndex(i => i - 1) }
+  const saveAndExit = () => { window.location.href = '/landing.html' }
 
   const handleSubmit = async () => {
     if (!agreedToTerms) {
@@ -97,6 +158,8 @@ export default function Signup() {
     setLoading(true)
     setError('')
 
+    const resolvedOrgType = (orgType === 'other' && orgTypeOther.trim()) ? orgTypeOther.trim() : orgType
+
     setSubmitStep(SUBMIT_STEPS[0].label)
     const { data: trial, error: insertError } = await supabase
       .from('trial_requests')
@@ -104,7 +167,7 @@ export default function Signup() {
         organisation_name: organisationName.trim(),
         full_name: fullName.trim(),
         email: email.trim().toLowerCase(),
-        org_type: orgType,
+        org_type: resolvedOrgType,
         status: 'new',
         terms_agreed: agreedToTerms,
         terms_agreed_at: agreedToTerms ? new Date().toISOString() : null,
@@ -167,6 +230,8 @@ export default function Signup() {
       sendFailed = true
     }
 
+    try { localStorage.removeItem(DRAFT_KEY) } catch (e) {}
+
     setLoading(false)
     setSubmitStep(null)
     setEmailFailed(sendFailed)
@@ -175,133 +240,135 @@ export default function Signup() {
 
   // ── SUCCESS SCREEN ──
   if (done) return (
-    <div style={page}>
-      <Glow />
-      <div style={wrap}>
-        <Logo />
-        <div style={card}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 72, marginBottom: 16, lineHeight: 1 }}>{emailFailed ? '⚠️' : '🎉'}</div>
-            <h2 style={{ ...cardTitle, marginBottom: 12 }}>{emailFailed ? 'Workspace created — one thing to check' : "You're all set!"}</h2>
-            {emailFailed ? (
-              <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 20 }}>
-                Your <strong style={{ color: 'rgba(255,255,255,0.85)' }}>{organisationName}</strong> workspace is ready, but we couldn't confirm the login link email actually sent to <strong style={{ color: '#60A5FA' }}>{email}</strong>. If it doesn't arrive shortly, contact <a href="mailto:support@launchsession.co.uk" style={{ color: '#60A5FA' }}>support@launchsession.co.uk</a> and we'll get you a fresh link right away.
-              </p>
-            ) : (
-              <>
-                <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>We've sent a login link to</p>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#60A5FA', marginBottom: 20, wordBreak: 'break-all' }}>{email}</div>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
-                  Click the link to set your password and access your <strong style={{ color: 'rgba(255,255,255,0.75)' }}>{organisationName}</strong> workspace — with full access to everything for your first 14 days. Check your spam folder if it doesn't arrive within a couple of minutes.
-                </p>
-              </>
-            )}
-            <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '14px 18px', fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
-              💡 Once you've set your password, you can sign in anytime at{' '}
-              <a href="https://app.launchsession.co.uk" target="_blank" rel="noreferrer" style={{ color: '#60A5FA', fontWeight: 700 }}>app.launchsession.co.uk</a>
-            </div>
-          </div>
+    <OnboardingLayout wide={false}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 60, marginBottom: 16, lineHeight: 1 }}>{emailFailed ? '⚠️' : '🎉'}</div>
+        <h2 style={{ ...cardTitle, textAlign: 'center', marginBottom: 12 }}>{emailFailed ? 'Workspace created — one thing to check' : "You're all set!"}</h2>
+        {emailFailed ? (
+          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 20 }}>
+            Your <strong style={{ color: 'rgba(255,255,255,0.85)' }}>{organisationName}</strong> workspace is ready, but we couldn't confirm the login link email actually sent to <strong style={{ color: '#60A5FA' }}>{email}</strong>. If it doesn't arrive shortly, contact <a href="mailto:support@launchsession.co.uk" style={{ color: '#60A5FA' }}>support@launchsession.co.uk</a> and we'll get you a fresh link right away.
+          </p>
+        ) : (
+          <>
+            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>We've sent a login link to</p>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#60A5FA', marginBottom: 20, wordBreak: 'break-all' }}>{email}</div>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
+              Click the link to set your password and access your <strong style={{ color: 'rgba(255,255,255,0.75)' }}>{organisationName}</strong> workspace — with full access to everything for your first 14 days. Check your spam folder if it doesn't arrive within a couple of minutes.
+            </p>
+          </>
+        )}
+        <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '14px 18px', fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, textAlign: 'left' }}>
+          💡 Once you've set your password, you can sign in anytime at{' '}
+          <a href="https://app.launchsession.co.uk" target="_blank" rel="noreferrer" style={{ color: '#60A5FA', fontWeight: 700 }}>app.launchsession.co.uk</a>
         </div>
-        <button onClick={() => window.location.href = '/landing.html'} style={backBtn}>← Back to LaunchSession</button>
       </div>
-    </div>
+    </OnboardingLayout>
   )
+
+  const stepNumber = stepIndex + 1
+  const isTypeStep = currentKey === 'type'
+  const isReviewStep = currentKey === 'review'
+  const stepWide = isTypeStep || isReviewStep
+  const transition = reducedMotion ? { duration: 0 } : { duration: 0.22 }
+  const motionProps = reducedMotion
+    ? { initial: false, animate: { opacity: 1, x: 0 } }
+    : { initial: { opacity: 0, x: 16 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -16 } }
 
   // ── WIZARD ──
   return (
-    <div style={page}>
-      <Glow />
-      <div style={{ position: 'absolute', width: 900, height: 900, border: '1px solid rgba(255,255,255,0.04)', borderRadius: '50%', top: '8%', left: '50%', transform: 'translateX(-50%)', pointerEvents: 'none' }} />
+    <OnboardingLayout wide onBackHome={saveAndExit}>
+      <ProgressHeader
+        stepNumber={stepNumber}
+        totalSteps={STEP_KEYS.length}
+        title={STEP_TITLES[currentKey]}
+        showBack={stepIndex > 0}
+        onBack={goBack}
+        onSaveExit={saveAndExit}
+      />
 
-      <div style={wrap}>
-        <Logo />
-
-        {/* Progress */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
-          {STEP_KEYS.map((k, i) => (
-            <div key={k} style={{ flex: 1, height: 4, borderRadius: 99, background: i <= stepIndex ? 'linear-gradient(90deg,#3B82F6,#8B5CF6)' : 'rgba(255,255,255,0.1)', transition: 'background 0.3s' }} />
-          ))}
+      {error && (
+        <div role="alert" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#FCA5A5', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600, lineHeight: 1.5 }}>
+          ⚠️ {error}
         </div>
+      )}
 
-        <div style={{ ...card, minHeight: isMobile ? 'auto' : 420, display: 'flex', flexDirection: 'column' }}>
-          {error && (
-            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#FCA5A5', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600, lineHeight: 1.5 }}>
-              ⚠️ {error}
-            </div>
-          )}
+      <div style={{ maxWidth: stepWide ? 'none' : 460, margin: stepWide ? 0 : '0 auto' }}>
+        <AnimatePresence mode="wait">
+          <motion.div key={currentKey} {...motionProps} transition={transition} style={{ display: 'flex', flexDirection: 'column' }}>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentKey}
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{ duration: 0.22 }}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
-            >
-              {currentKey === 'org' && (
-                <div>
-                  <div style={stepEmoji}>🏢</div>
-                  <h2 style={cardTitle}>What's your organisation called?</h2>
-                  <p style={cardSub}>This becomes your dedicated, private workspace name.</p>
-                  <input
-                    autoFocus
-                    disabled={loading}
-                    placeholder="e.g. Acme Youth Club"
-                    value={organisationName}
-                    onChange={e => setOrganisationName(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && canContinue.org !== false && goNext()}
-                    style={inp}
-                  />
-                  <Teach>🔒 Every organisation gets its own secure, fully separate workspace — your data is never shared with anyone else on LaunchSession.</Teach>
+            {currentKey === 'org' && (
+              <div>
+                <p style={cardSub}>What's your organisation called? This becomes your dedicated, private workspace name.</p>
+                <input
+                  autoFocus
+                  disabled={loading}
+                  placeholder="e.g. Acme Youth Club"
+                  value={organisationName}
+                  onChange={e => setOrganisationName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && canContinue && goNext()}
+                  style={inp}
+                />
+                <Teach>🔒 Every organisation gets its own secure, fully separate workspace — your data is never shared with anyone else on LaunchSession.</Teach>
+              </div>
+            )}
+
+            {currentKey === 'type' && (
+              <div>
+                <h2 style={cardTitle}>What type of organisation is {organisationName || 'it'}?</h2>
+                <p style={cardSub}>This helps us personalise your workspace. You can change it later.</p>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 12, marginBottom: 4 }}>
+                  {ORG_TYPES.map(t => (
+                    <SelectionCard
+                      key={t.key}
+                      icon={t.icon}
+                      title={t.label}
+                      description={t.description}
+                      selected={orgType === t.key}
+                      onClick={() => setOrgType(t.key)}
+                    />
+                  ))}
                 </div>
-              )}
 
-              {currentKey === 'type' && (
-                <div>
-                  <div style={stepEmoji}>🧭</div>
-                  <h2 style={cardTitle}>What kind of organisation is {organisationName || 'it'}?</h2>
-                  <p style={cardSub}>This helps us tailor a few things — nothing is locked in.</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    {ORG_TYPES.map(t => (
-                      <button key={t.key} type="button" onClick={() => setOrgType(t.key)} style={{
-                        padding: '14px 10px', borderRadius: 14, cursor: 'pointer', textAlign: 'center',
-                        border: orgType === t.key ? '2px solid #60A5FA' : '1.5px solid rgba(255,255,255,0.12)',
-                        background: orgType === t.key ? 'rgba(59,130,246,0.14)' : 'rgba(255,255,255,0.04)',
-                      }}>
-                        <div style={{ fontSize: 22, marginBottom: 6 }}>{t.icon}</div>
-                        <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>{t.label}</div>
-                      </button>
-                    ))}
+                {orgType === 'other' && (
+                  <div style={{ marginTop: 14 }}>
+                    <label style={label}>Tell us what type of organisation you run</label>
+                    <input
+                      autoFocus
+                      disabled={loading}
+                      placeholder="e.g. Scout group, arts collective, food bank..."
+                      value={orgTypeOther}
+                      onChange={e => setOrgTypeOther(e.target.value)}
+                      style={inp}
+                    />
                   </div>
-                  {orgType && <Teach>{ORG_TYPES.find(t => t.key === orgType)?.icon} {ORG_TYPES.find(t => t.key === orgType)?.tip}</Teach>}
+                )}
+
+                {orgType && <Teach>{ORG_TYPE_TIP}</Teach>}
+              </div>
+            )}
+
+            {currentKey === 'you' && (
+              <div>
+                <p style={cardSub}>Now, a bit about you — you'll be the first admin. Invite your whole team once you're in.</p>
+                <div style={{ marginBottom: 14 }}>
+                  <label style={label}>Your full name</label>
+                  <input autoFocus disabled={loading} placeholder="e.g. Jane Smith" value={fullName} onChange={e => setFullName(e.target.value)} style={inp} />
                 </div>
-              )}
-
-              {currentKey === 'you' && (
                 <div>
-                  <div style={stepEmoji}>👤</div>
-                  <h2 style={cardTitle}>Now, a bit about you</h2>
-                  <p style={cardSub}>You'll be the first admin — invite your whole team once you're in.</p>
-                  <div style={{ marginBottom: 14 }}>
-                    <label style={label}>Your full name</label>
-                    <input autoFocus disabled={loading} placeholder="e.g. Jane Smith" value={fullName} onChange={e => setFullName(e.target.value)} style={inp} />
-                  </div>
-                  <div>
-                    <label style={label}>Work email</label>
-                    <input type="email" disabled={loading} placeholder="jane@organisation.org" value={email} onChange={e => setEmail(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && canContinue.you && goNext()} style={inp} />
-                  </div>
-                  <Teach>⚡ Your login link arrives within seconds — no waiting on manual approval, no card required.</Teach>
+                  <label style={label}>Work email</label>
+                  <input type="email" disabled={loading} placeholder="jane@organisation.org" value={email} onChange={e => setEmail(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && canContinue && goNext()} style={inp} />
                 </div>
-              )}
+                <Teach>⚡ Your login link arrives within seconds — no waiting on manual approval, no card required.</Teach>
+              </div>
+            )}
 
-              {currentKey === 'review' && (
-                <div>
-                  <div style={stepEmoji}>🚀</div>
-                  <h2 style={cardTitle}>Here's what {organisationName} gets</h2>
-                  <p style={cardSub}>Full access to everything below, free for 14 days.</p>
+            {currentKey === 'review' && (
+              <div>
+                <h2 style={cardTitle}>Here's what {organisationName} gets</h2>
+                <p style={cardSub}>Full access to everything below, free for 14 days.</p>
 
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)', gap: '4px 20px' }}>
                   {WHAT_YOU_GET_GROUPS.map(g => (
                     <div key={g.title} style={{ marginBottom: 14 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
@@ -318,14 +385,16 @@ export default function Signup() {
                       </div>
                     </div>
                   ))}
+                </div>
 
-                  <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', textAlign: 'center', margin: '2px 0 18px' }}>...and everything else, unlocked from day one — nothing to upgrade into.</p>
+                <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', textAlign: 'center', margin: '2px 0 18px' }}>...and everything else, unlocked from day one — nothing to upgrade into.</p>
 
-                  <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '0 0 18px' }} />
+                <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '0 0 18px' }} />
 
+                <div style={{ maxWidth: 460 }}>
                   <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '14px 16px', marginBottom: 6 }}>
                     <Row k="Organisation" v={organisationName} />
-                    <Row k="Type" v={ORG_TYPES.find(t => t.key === orgType)?.label || '—'} />
+                    <Row k="Type" v={ORG_TYPES.find(t => t.key === orgType)?.label || orgTypeOther || '—'} />
                     <Row k="Admin" v={fullName} />
                     <Row k="Email" v={email} last />
                   </div>
@@ -346,46 +415,45 @@ export default function Signup() {
                   </label>
 
                   {loading && submitStep && (
-                    <div style={{ margin: '16px 0 0', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: '14px 16px' }}>
+                    <div role="status" style={{ margin: '16px 0 0', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: '14px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 18, height: 18, border: '2px solid #3B82F6', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
+                        <div style={{ width: 18, height: 18, border: '2px solid #3B82F6', borderTop: '2px solid transparent', borderRadius: '50%', animation: reducedMotion ? 'none' : 'spin 0.8s linear infinite', flexShrink: 0 }} />
                         <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{submitStep}</span>
                       </div>
                     </div>
                   )}
                 </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-
-          {legalModal && <LegalModal doc={legalModal} onClose={() => setLegalModal(null)} onAgree={() => { setAgreedToTerms(true); setLegalModal(null) }} />}
-
-          {/* Nav buttons */}
-          <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-            {stepIndex > 0 && (
-              <button type="button" onClick={goBack} disabled={loading} style={ghostBtn}>← Back</button>
+              </div>
             )}
-            {currentKey === 'review' ? (
-              <button type="button" onClick={handleSubmit} disabled={loading} style={{ ...primaryBtn, flex: 1, opacity: loading ? 0.7 : 1 }}>
-                {loading ? 'Setting up...' : 'Create My Workspace →'}
-              </button>
-            ) : (
-              <button type="button" onClick={goNext} disabled={!canContinue} style={{ ...primaryBtn, flex: 1, opacity: canContinue ? 1 : 0.4, cursor: canContinue ? 'pointer' : 'default' }}>
-                Continue →
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 20, flexWrap: 'wrap' }}>
-          <button onClick={() => window.location.href = '/landing.html'} style={backBtn}>← Back to LaunchSession</button>
-          <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
-          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>🔒 Secure & never shared</span>
-        </div>
-
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </motion.div>
+        </AnimatePresence>
       </div>
-    </div>
+
+      {legalModal && <LegalModal doc={legalModal} onClose={() => setLegalModal(null)} onAgree={() => { setAgreedToTerms(true); setLegalModal(null) }} />}
+
+      {/* Nav buttons — sticky to the viewport bottom on mobile so they're
+          never hidden below the fold; inline within the panel on desktop. */}
+      <div style={isMobile ? mobileStickyNav : { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, maxWidth: stepWide ? 460 : 'none' }}>
+        <div style={{ display: 'flex', gap: 10 }}>
+          {stepIndex > 0 && (
+            <button type="button" onClick={goBack} disabled={loading} style={ghostBtn}>← Back</button>
+          )}
+          {currentKey === 'review' ? (
+            <button type="button" onClick={handleSubmit} disabled={loading || !canContinue} style={{ ...primaryBtn, flex: 1, opacity: loading || !canContinue ? 0.6 : 1 }}>
+              {loading ? 'Setting up...' : 'Create My Workspace →'}
+            </button>
+          ) : (
+            <button type="button" onClick={goNext} disabled={!canContinue} style={{ ...primaryBtn, flex: 1, opacity: canContinue ? 1 : 0.4, cursor: canContinue ? 'pointer' : 'default' }}>
+              Continue →
+            </button>
+          )}
+        </div>
+        {!canContinue && <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{disabledReason}</div>}
+      </div>
+      {isMobile && <div style={{ height: 84 }} />}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </OnboardingLayout>
   )
 }
 
@@ -436,33 +504,10 @@ function Teach({ children }) {
   )
 }
 
-function Logo() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 24 }}>
-      <img src="/logo.png" alt="LaunchSession" style={{ height: 36, width: 'auto', objectFit: 'contain' }}
-        onError={e => { e.target.style.display = 'none' }} />
-      <span style={{ fontSize: 18, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>LaunchSession</span>
-    </div>
-  )
-}
-
-function Glow() {
-  return (
-    <>
-      <div style={{ position: 'absolute', top: -180, left: -140, width: 520, height: 520, background: 'radial-gradient(circle, rgba(168,85,247,0.22), transparent 65%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: -220, right: -160, width: 620, height: 620, background: 'radial-gradient(circle, rgba(37,99,235,0.28), transparent 65%)', pointerEvents: 'none' }} />
-    </>
-  )
-}
-
-const page      = { minHeight: '100vh', background: 'radial-gradient(circle at top left, #1a0b3b 0%, #07111f 42%, #020711 100%)', color: '#fff', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '32px 16px', position: 'relative', overflowX: 'hidden', overflowY: 'auto', fontFamily: "'Plus Jakarta Sans', sans-serif" }
-const wrap      = { width: '100%', maxWidth: 460, position: 'relative', zIndex: 2, textAlign: 'center' }
-const card      = { textAlign: 'left', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 24, padding: '28px 24px', boxShadow: '0 40px 100px rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)' }
-const cardTitle = { textAlign: 'left', fontSize: 20, margin: '0 0 6px', fontWeight: 900, color: '#fff', lineHeight: 1.3 }
-const cardSub   = { textAlign: 'left', color: 'rgba(255,255,255,0.55)', margin: '0 0 20px', fontSize: 13.5, lineHeight: 1.6 }
+const cardTitle = { fontSize: 22, margin: '0 0 8px', fontWeight: 900, color: '#fff', lineHeight: 1.3 }
+const cardSub   = { color: 'rgba(255,255,255,0.55)', margin: '0 0 20px', fontSize: 14, lineHeight: 1.6, maxWidth: 460 }
 const label     = { display: 'block', marginBottom: 7, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.5 }
 const inp       = { width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 12, border: '1.5px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 16, outline: 'none', fontFamily: 'inherit' }
-const backBtn   = { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }
-const stepEmoji = { width: 52, height: 52, borderRadius: 16, background: 'rgba(59,130,246,0.14)', border: '1px solid rgba(59,130,246,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, marginBottom: 16 }
 const primaryBtn = { padding: '15px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', color: '#fff', fontWeight: 900, fontSize: 15, cursor: 'pointer', boxShadow: '0 12px 40px rgba(59,130,246,0.35)', fontFamily: 'inherit' }
 const ghostBtn  = { padding: '15px 18px', borderRadius: 14, border: '1.5px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }
+const mobileStickyNav = { position: 'fixed', left: 0, right: 0, bottom: 0, padding: '12px 16px calc(12px + env(safe-area-inset-bottom))', background: 'rgba(7,11,22,0.92)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.1)', zIndex: 50 }
