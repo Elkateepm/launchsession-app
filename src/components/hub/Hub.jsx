@@ -2861,13 +2861,25 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
 
             {/* Quick actions row */}
-            <div style={{ display: 'flex', gap: 8, marginTop: 10, overflowX: 'auto', paddingBottom: 2, WebkitMaskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 24px), transparent 100%)', maskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 24px), transparent 100%)' }}>
-              <HeaderQuickAction icon="＋" label="Session" onClick={() => go('planner', { autoOpenWizard: true })} primary={primary} filled />
-              {hasModule('registers') && <HeaderQuickAction icon="📋" label="Register" onClick={() => go('registers')} primary={primary} />}
-              <HeaderQuickAction icon="💬" label="Messages" onClick={() => go('messaging')} primary={primary} />
-              {hasModule('volunteers') && <HeaderQuickAction icon="👥" label="Volunteers" onClick={() => go('volunteers')} primary={primary} />}
-              <HeaderQuickAction icon="🧒" label="Invite Child" onClick={() => setShowInviteChild(true)} primary={primary} gradientTo={secondary} filled />
-              {hasModule('volunteers') && <HeaderQuickAction icon="🤝" label="Invite Volunteer" onClick={() => go('volunteers', { autoOpenInvite: true })} primary={secondary} gradientTo={primary} filled />}
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button onClick={() => setShowInviteChild(true)} style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '11px 10px', borderRadius: 14, border: 'none', cursor: 'pointer',
+                background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff',
+                fontSize: 13, fontWeight: 800, boxShadow: `0 6px 16px -8px ${primary}80`,
+              }}>
+                <span>🧒</span>Invite Child
+              </button>
+              {hasModule('volunteers') && (
+                <button onClick={() => go('volunteers', { autoOpenInvite: true })} style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '11px 10px', borderRadius: 14, border: 'none', cursor: 'pointer',
+                  background: `linear-gradient(135deg, ${secondary}, ${primary})`, color: '#fff',
+                  fontSize: 13, fontWeight: 800, boxShadow: `0 6px 16px -8px ${secondary}80`,
+                }}>
+                  <span>🤝</span>Invite Volunteer
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -3860,20 +3872,6 @@ function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLa
         </div>
         <span style={{ width: compact ? 26 : 34, height: compact ? 26 : 34, borderRadius: '50%', background: '#fff', color: tones.arrowBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: compact ? 12 : 15, fontWeight: 900, flexShrink: 0, boxShadow: '0 2px 8px rgba(15,23,42,0.1)' }}>→</span>
       </div>
-    </button>
-  );
-}
-
-function HeaderQuickAction({ icon, label, onClick, primary, filled, gradientTo }) {
-  return (
-    <button onClick={onClick} style={{
-      flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
-      padding: '9px 14px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
-      ...(filled
-        ? { border: 'none', background: `linear-gradient(135deg, ${primary}, ${gradientTo || primary + 'CC'})`, color: '#fff', boxShadow: `0 4px 14px -6px ${primary}70` }
-        : { border: `1.5px solid ${primary}25`, background: '#fff', color: 'var(--text, #111)' })
-    }}>
-      <span>{icon}</span>{label}
     </button>
   );
 }
