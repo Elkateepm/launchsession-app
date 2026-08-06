@@ -531,6 +531,77 @@ function ColorField({ label, hint, value, onChange, contrastAgainst, contrastLab
 }
 
 // A logo/icon upload slot with zoom + reposition sliders once an image is set.
+// Finds the actual visual content within an uploaded logo/icon (trimming
+// transparent or solid-background padding) and returns a {zoom, x, y}
+// transform — in the same units as the manual sliders below — that
+// centres and fills the frame with just that content. Handles both
+// true-transparency PNGs and opaque exports (JPEG, or PNG flattened onto
+// a solid background) by sampling the four corners to guess the
+// background colour when there's no alpha to go on. Always fails soft to
+// the untouched {zoom:100,x:0,y:0} default — this can only improve on
+// today's behaviour, never make an upload look worse or block it.
+function computeAutoFitTransform(imageUrl) {
+  return new Promise((resolve) => {
+    const fallback = { zoom: 100, x: 0, y: 0 }
+    const img = new Image()
+    img.onload = () => {
+      try {
+        // Analysing at full resolution isn't necessary to find a bounding
+        // box and would be slow for large uploads, so downscale first.
+        const maxDim = 300
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
+        const w = Math.max(1, Math.round(img.width * scale))
+        const h = Math.max(1, Math.round(img.height * scale))
+        const canvas = document.createElement('canvas')
+        canvas.width = w; canvas.height = h
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, w, h)
+        const { data } = ctx.getImageData(0, 0, w, h)
+
+        const px = (x, y) => { const i = (y * w + x) * 4; return [data[i], data[i + 1], data[i + 2], data[i + 3]] }
+        const corners = [px(0, 0), px(w - 1, 0), px(0, h - 1), px(w - 1, h - 1)]
+        const hasAlpha = corners.some(c => c[3] < 250)
+        const bg = corners[0]
+        const colourDist = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2])
+        const ALPHA_THRESHOLD = 12
+        const COLOUR_THRESHOLD = 24
+
+        let minX = w, minY = h, maxX = -1, maxY = -1
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const p = px(x, y)
+            const isContent = hasAlpha ? p[3] > ALPHA_THRESHOLD : colourDist(p, bg) > COLOUR_THRESHOLD
+            if (isContent) {
+              if (x < minX) minX = x
+              if (x > maxX) maxX = x
+              if (y < minY) minY = y
+              if (y > maxY) maxY = y
+            }
+          }
+        }
+
+        if (maxX < minX || maxY < minY) { resolve(fallback); return } // nothing detected — e.g. a blank image
+
+        const PADDING_FRACTION = 0.08 // small breathing room so content doesn't touch the frame edge
+        const contentFraction = Math.max((maxX - minX + 1) / w, (maxY - minY + 1) / h) * (1 + PADDING_FRACTION * 2)
+        const zoom = Math.max(100, Math.min(200, Math.round(100 / Math.max(contentFraction, 0.01))))
+
+        const centreX = (minX + maxX + 1) / 2 / w
+        const centreY = (minY + maxY + 1) / 2 / h
+        const maxOffset = Math.max(0, (zoom - 100) / 2)
+        const x = Math.max(-maxOffset, Math.min(maxOffset, (0.5 - centreX) * 100))
+        const y = Math.max(-maxOffset, Math.min(maxOffset, (0.5 - centreY) * 100))
+
+        resolve({ zoom, x, y })
+      } catch (e) {
+        resolve(fallback) // e.g. a tainted canvas — never block the upload over this
+      }
+    }
+    img.onerror = () => resolve(fallback)
+    img.src = imageUrl
+  })
+}
+
 function LogoUploadBox({ label, hint, previewSrc, fallback, transform, onFileChange, onTransformChange, onRemove, boxSize = 84 }) {
   const t = transform || { zoom: 100, x: 0, y: 0 }
   // Scaling around the centre reveals up to (zoom-100)/2 % of extra image on
@@ -681,6 +752,19 @@ function BrandingSection({ org, refreshOrg }) {
     const file = e.target.files?.[0]
     if (!file) return
     setFile(file); setPreview(URL.createObjectURL(file)); setRemoved(false)
+  }
+
+  // Logo/icon uploads also compute a smart default crop, so a fresh upload
+  // is well-fit immediately rather than starting at zoom 100/centred (which
+  // looks tiny and off-balance whenever the source file has the usual
+  // amount of padding around the actual mark — most real logo exports do).
+  // The existing manual zoom/pan sliders are untouched as a fallback/override.
+  const handleLogoFileChange = (setPreview, setFile, setRemoved, setTransform) => async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    setFile(file); setPreview(url); setRemoved(false)
+    setTransform(await computeAutoFitTransform(url))
   }
 
   async function uploadIfNeeded(file, existingUrl, removed, pathSuffix) {
@@ -846,11 +930,11 @@ function BrandingSection({ org, refreshOrg }) {
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 14 }}>
               <LogoUploadBox label="Logo" hint="PNG or SVG, recommended 512×512px, transparent background works best."
                 previewSrc={logoPreview} fallback={FALLBACK_LOGO_URL} transform={logoTransform}
-                onFileChange={handleFileChange(setLogoPreview, setLogoFile, setLogoRemoved)} onTransformChange={setLogoTransform}
+                onFileChange={handleLogoFileChange(setLogoPreview, setLogoFile, setLogoRemoved, setLogoTransform)} onTransformChange={setLogoTransform}
                 onRemove={() => { setLogoPreview(''); setLogoFile(null); setLogoRemoved(true) }} boxSize={84} />
               <LogoUploadBox label="Compact icon" hint="Square, ideally 512×512px. It only ever displays at 36–56px in the app (sidebar, browser tab), so this just keeps it sharp on retina screens."
                 previewSrc={iconPreview} fallback={logoPreview || FALLBACK_LOGO_URL} transform={iconTransform}
-                onFileChange={handleFileChange(setIconPreview, setIconFile, setIconRemoved)} onTransformChange={setIconTransform}
+                onFileChange={handleLogoFileChange(setIconPreview, setIconFile, setIconRemoved, setIconTransform)} onTransformChange={setIconTransform}
                 onRemove={() => { setIconPreview(''); setIconFile(null); setIconRemoved(true) }} boxSize={64} />
             </div>
             {logoSuggestions.length > 0 && (
