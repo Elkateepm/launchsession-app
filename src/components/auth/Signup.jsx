@@ -435,7 +435,7 @@ export default function Signup() {
 
                 <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '0 0 18px' }} />
 
-                <div style={{ maxWidth: 460 }}>
+                <div style={{ maxWidth: 460, margin: '0 auto' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#A78BFA', flexShrink: 0, boxShadow: '0 0 8px #A78BFA88' }} />
                     <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.7, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>Your details</span>
@@ -479,7 +479,7 @@ export default function Signup() {
 
       {legalModal && <LegalModal doc={legalModal} onClose={() => setLegalModal(null)} onAgree={() => { setAgreedToTerms(true); setLegalModal(null) }} />}
 
-      <div style={isMobile ? mobileStickyNav : { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, maxWidth: stepWide ? 460 : 'none' }}>
+      <div style={isMobile ? mobileStickyNav : { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, maxWidth: stepWide ? 460 : 'none', margin: !isMobile && stepWide ? '24px auto 0' : '24px 0 0' }}>
         <div style={{ display: 'flex', gap: 10 }}>
           {stepIndex > 0 && (
             <button type="button" onClick={goBack} disabled={loading || navLocked} style={ghostBtn}>← Back</button>
