@@ -2333,6 +2333,29 @@ const NOTIF_ICONS = {
   security: '🔒', reports: '📊',
 }
 
+// Colour identity per category so the list scans at a glance — safeguarding
+// and security read as urgent/red, everything else gets a calm, distinct hue.
+const NOTIF_COLORS = {
+  safeguarding: '#DC2626', security: '#DC2626', medical: '#DC2626',
+  registers: '#2563EB', sessions: '#7C3AED', volunteers: '#0D9488',
+  forms: '#D97706', consents: '#16A34A', resources: '#0891B2',
+  reflections: '#9333EA', messaging: '#2563EB', reports: '#4B5563',
+}
+function notifColor(n, fallback) {
+  if (n.priority === 'critical') return '#DC2626'
+  return NOTIF_COLORS[n.category] || fallback
+}
+function notifDayLabel(iso) {
+  const d = new Date(iso)
+  const now = new Date()
+  const startOfDay = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate())
+  const diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000)
+  if (diffDays <= 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return d.toLocaleDateString('en-GB', { weekday: 'long' })
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
 function timeAgo(iso) {
   const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000))
   if (s < 60) return 'just now'
@@ -2350,7 +2373,9 @@ function timeAgo(iso) {
 function NotificationBell({ userId, orgId, primary, onNavigate }) {
   const [open, setOpen] = React.useState(false)
   const [items, setItems] = React.useState([])
+  const [filter, setFilter] = React.useState('all') // 'all' | 'unread'
   const ref = React.useRef(null)
+  const isMobile = useIsMobile()
 
   const load = React.useCallback(async () => {
     if (!userId) return
@@ -2369,11 +2394,25 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
     if (!open) return
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    const onEsc = (e) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', onEsc)
+    return () => { document.removeEventListener('mousedown', handler); document.removeEventListener('keydown', onEsc) }
   }, [open])
 
   const unread = items.filter(n => !n.read_at)
   const total = unread.length
+  const visibleItems = filter === 'unread' ? unread : items
+
+  const groupedItems = React.useMemo(() => {
+    const groups = []
+    let lastLabel = null
+    visibleItems.forEach(n => {
+      const label = notifDayLabel(n.created_at)
+      if (label !== lastLabel) { groups.push({ label, items: [] }); lastLabel = label }
+      groups[groups.length - 1].items.push(n)
+    })
+    return groups
+  }, [visibleItems])
 
   const openItem = async (n) => {
     if (!n.read_at) {
@@ -2398,6 +2437,8 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
     supabase.from('notifications').update({ read_at: now }).in('id', ids).then(() => {})
   }
 
+  const panelWidth = isMobile ? 'min(392px, calc(100vw - 20px))' : 372
+
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button
@@ -2415,38 +2456,89 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
         )}
       </button>
 
-      {open && (
-        <div style={{ position: 'absolute', top: '110%', right: 0, width: 320, maxHeight: 420, display: 'flex', flexDirection: 'column', background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 12px 40px rgba(0,0,0,0.15)', zIndex: 200, overflow: 'hidden' }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#111' }}>Notifications</span>
-            {total > 0 && <button onClick={markAllRead} style={{ border: 'none', background: 'none', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Mark all read</button>}
-          </div>
-          <div style={{ overflowY: 'auto', flex: 1 }}>
-            {items.length === 0 ? (
-              <div style={{ padding: '28px 16px', textAlign: 'center', color: '#9CA3AF', fontSize: 12 }}>
-                <div style={{ fontSize: 24, marginBottom: 6 }}>✅</div>
-                You're all caught up.
-              </div>
-            ) : (
-              <div style={{ padding: 6 }}>
-                {items.map(n => (
-                  <button key={n.id} onClick={() => openItem(n)} style={{ width: '100%', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 10px', border: 'none', background: n.read_at ? 'none' : (primary + '08'), cursor: 'pointer', textAlign: 'left', borderRadius: 9 }}
-                    onMouseEnter={e => e.currentTarget.style.background = n.priority === 'critical' ? '#FEE2E2' : primary + '10'}
-                    onMouseLeave={e => e.currentTarget.style.background = n.read_at ? 'none' : (primary + '08')}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: n.priority === 'critical' ? '#FEE2E2' : primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{NOTIF_ICONS[n.category] || '🔔'}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: n.read_at ? 600 : 800, color: '#111' }}>{n.title}</div>
-                      <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 1 }}>{n.body}</div>
-                      <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 3 }}>{timeAgo(n.created_at)}</div>
-                    </div>
-                    {!n.read_at && <span style={{ width: 7, height: 7, borderRadius: '50%', background: primary, flexShrink: 0, marginTop: 5 }} />}
-                  </button>
-                ))}
-              </div>
+      <AnimatePresence>
+        {open && (
+          <>
+            {isMobile && (
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+                onClick={() => setOpen(false)}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(15,20,35,0.35)', zIndex: 199 }}
+              />
             )}
-          </div>
-        </div>
-      )}
+            <motion.div
+              initial={{ opacity: 0, y: -8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.98 }}
+              transition={{ duration: 0.16, ease: [0.4, 0, 0.2, 1] }}
+              style={{ position: 'absolute', top: '120%', right: 0, width: panelWidth, maxHeight: 480, display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: 20, boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 20px 50px -12px rgba(15,23,42,0.28), 0 0 0 1px rgba(15,23,42,0.06)', zIndex: 200, overflow: 'hidden' }}>
+
+              {/* Header */}
+              <div style={{ padding: '16px 18px 12px', borderBottom: '1px solid #F1F5F9', flexShrink: 0, background: 'linear-gradient(180deg, #FAFBFF 0%, #fff 100%)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 15, fontWeight: 900, color: '#0F172A', letterSpacing: -0.2 }}>Notifications</span>
+                    {total > 0 && (
+                      <span style={{ fontSize: 10.5, fontWeight: 800, color: primary, background: primary + '14', borderRadius: 99, padding: '2px 8px' }}>{total} new</span>
+                    )}
+                  </div>
+                  <button onClick={() => setOpen(false)} style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#F1F5F9', color: '#64748B', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-label="Close">✕</button>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 4, background: '#F1F5F9', borderRadius: 10, padding: 3 }}>
+                    {[{ key: 'all', label: 'All' }, { key: 'unread', label: `Unread${total ? ` (${total})` : ''}` }].map(f => (
+                      <button key={f.key} onClick={() => setFilter(f.key)}
+                        style={{ padding: '5px 11px', borderRadius: 7, border: 'none', background: filter === f.key ? '#fff' : 'transparent', color: filter === f.key ? '#0F172A' : '#64748B', fontSize: 11, fontWeight: 700, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none', transition: 'all 0.15s' }}>
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                  {total > 0 && <button onClick={markAllRead} style={{ border: 'none', background: 'none', color: primary, fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: '4px 2px', whiteSpace: 'nowrap' }}>Mark all read</button>}
+                </div>
+              </div>
+
+              {/* List */}
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                {visibleItems.length === 0 ? (
+                  <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                    <div style={{ width: 52, height: 52, borderRadius: 16, background: primary + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, margin: '0 auto 12px' }}>{filter === 'unread' ? '🎉' : '🔔'}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>{filter === 'unread' ? "You're all caught up" : 'No notifications yet'}</div>
+                    <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 3 }}>{filter === 'unread' ? 'New updates will show up here.' : "We'll let you know when something needs attention."}</div>
+                  </div>
+                ) : (
+                  <div style={{ padding: '4px 8px 10px' }}>
+                    {groupedItems.map(group => (
+                      <div key={group.label}>
+                        <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, padding: '12px 8px 6px' }}>{group.label}</div>
+                        {group.items.map(n => {
+                          const color = notifColor(n, primary)
+                          const isCritical = n.priority === 'critical'
+                          return (
+                            <button key={n.id} onClick={() => openItem(n)}
+                              style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'flex-start', gap: 11, padding: '11px 10px 11px 14px', marginBottom: 2, border: 'none', background: n.read_at ? 'transparent' : color + '0A', cursor: 'pointer', textAlign: 'left', borderRadius: 12, transition: 'background 0.12s' }}
+                              onMouseEnter={e => e.currentTarget.style.background = isCritical ? '#FEE2E2' : color + '14'}
+                              onMouseLeave={e => e.currentTarget.style.background = n.read_at ? 'transparent' : color + '0A'}>
+                              {!n.read_at && <span style={{ position: 'absolute', left: 3, top: 12, bottom: 12, width: 3, borderRadius: 2, background: color }} />}
+                              <div style={{ width: 34, height: 34, borderRadius: 10, background: color + '18', border: `1px solid ${color}2A`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{NOTIF_ICONS[n.category] || '🔔'}</div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+                                  <div style={{ fontSize: 12.5, fontWeight: n.read_at ? 600 : 800, color: '#0F172A', lineHeight: 1.3 }}>{n.title}</div>
+                                  <div style={{ fontSize: 10, color: '#A1A9B8', fontWeight: 600, flexShrink: 0 }}>{timeAgo(n.created_at)}</div>
+                                </div>
+                                <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{n.body}</div>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
