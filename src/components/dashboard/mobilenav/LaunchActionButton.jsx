@@ -37,20 +37,19 @@ export default function LaunchActionButton({ open, onClick, reducedMotion }) {
           position: 'relative',
           width: '100%', height: '100%',
           borderRadius: '50%',
-          border: 'none',
-          background: 'transparent',
-          boxShadow: '0 6px 20px -4px rgba(124,58,237,0.55)',
+          border: '1px solid rgba(196,181,253,0.55)',
+          background: 'radial-gradient(circle at 35% 30%, #A78BFA 0%, #7C3AED 45%, #4C1D95 100%)',
+          boxShadow: '0 6px 20px -4px rgba(124,58,237,0.55), inset 0 1px 2px rgba(255,255,255,0.35), inset 0 -6px 10px rgba(0,0,0,0.25)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', touchAction: 'manipulation', overflow: 'hidden', padding: 0,
         }}
       >
-        <img
-          src="/assets/launch-icon@2x.png"
-          srcSet="/assets/launch-icon.png 1x, /assets/launch-icon@2x.png 2x, /assets/launch-icon@3x.png 3x"
-          alt=""
-          draggable={false}
-          style={{ width: '108%', height: '108%', objectFit: 'cover', pointerEvents: 'none', userSelect: 'none' }}
-        />
+        <svg width="42%" height="42%" viewBox="0 0 24 24" fill="none" style={{ pointerEvents: 'none' }}>
+          <path
+            d="M12 2 L14.2 9.8 L22 12 L14.2 14.2 L12 22 L9.8 14.2 L2 12 L9.8 9.8 Z"
+            fill="#fff"
+          />
+        </svg>
       </motion.button>
       </div>
       <span style={{ fontSize: 10, fontWeight: 800, color: open ? '#A78BFA' : 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>Launch</span>
