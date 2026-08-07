@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { PB, CHARGE_TYPES, inputStyle } from './paymentsShared'
@@ -78,13 +79,13 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
     onClose()
   }
 
-  return (
+  return createPortal(
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10400, backdropFilter: 'blur(2px)' }} />
       <div onClick={e => e.stopPropagation()} style={{
         position: 'fixed', zIndex: 10401, background: '#fff',
         ...(isMobile
-          ? { left: 0, right: 0, bottom: 0, maxHeight: '92vh', borderRadius: '20px 20px 0 0', paddingBottom: 'env(safe-area-inset-bottom)' }
+          ? { left: 0, right: 0, bottom: 0, maxHeight: '92vh', borderRadius: '20px 20px 0 0' }
           : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(560px, 92vw)', maxHeight: '88vh', borderRadius: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }),
         display: 'flex', flexDirection: 'column',
       }}>
@@ -144,8 +145,8 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
                       else toggleChild(c.id)
                     }} style={{
                       width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left',
-                      padding: '8px 12px', border: 'none', borderBottom: '1px solid #F8FAFC', cursor: 'pointer',
-                      background: selected ? '#EFF6FF' : '#fff', fontSize: 12.5, color: '#0F172A', fontWeight: selected ? 700 : 500,
+                      padding: '11px 12px', border: 'none', borderBottom: '1px solid #F8FAFC', cursor: 'pointer',
+                      background: selected ? '#EFF6FF' : '#fff', fontSize: 13, color: '#0F172A', fontWeight: selected ? 700 : 500,
                     }}>
                       {c.first_name} {c.last_name}
                       {selected && <span style={{ color: PB.blue }}>✓</span>}
@@ -175,7 +176,7 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
           {error && <div style={{ fontSize: 12.5, color: PB.red, fontWeight: 600, marginBottom: 6 }}>{error}</div>}
         </div>
 
-        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', flexShrink: 0 }}>
+        <div style={{ padding: '16px 16px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid #F1F5F9', flexShrink: 0 }}>
           <button onClick={handleCreate} disabled={saving} style={{
             width: '100%', padding: '13px', borderRadius: 12, border: 'none', cursor: saving ? 'default' : 'pointer',
             background: saving ? '#93C5FD' : PB.gradient, color: '#fff', fontSize: 14, fontWeight: 800,
@@ -184,7 +185,8 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
           </button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }
 

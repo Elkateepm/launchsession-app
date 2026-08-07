@@ -12,10 +12,10 @@ import {
 } from './paymentsShared'
 
 const TABS = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'charges', label: 'Charges' },
-  { key: 'transactions', label: 'Transactions' },
-  { key: 'reconciliation', label: 'Reconciliation' },
+  { key: 'overview', label: 'Overview', shortLabel: 'Overview' },
+  { key: 'charges', label: 'Charges', shortLabel: 'Charges' },
+  { key: 'transactions', label: 'Transactions', shortLabel: 'Txns' },
+  { key: 'reconciliation', label: 'Reconciliation', shortLabel: 'Reconcile' },
 ]
 
 export default function Payments({ org, session, isAdmin }) {
@@ -80,17 +80,22 @@ export default function Payments({ org, session, isAdmin }) {
         ]}
       />
 
-      <div style={{ padding: '0 24px', borderBottom: '1px solid #E5E7EB', background: '#fff', flexShrink: 0, overflowX: 'auto' }}>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} style={{
-              padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap',
-              color: tab === t.key ? primary : '#64748B',
-              borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent',
-            }}>{t.label}</button>
-          ))}
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+        <div style={{ padding: isMobile ? '0 14px' : '0 24px', borderBottom: '1px solid #E5E7EB', background: '#fff', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <div style={{ display: 'flex', gap: 2 }}>
+            {TABS.map(t => (
+              <button key={t.key} onClick={() => setTab(t.key)} style={{
+                padding: isMobile ? '12px 12px' : '12px 14px', background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: isMobile ? 13 : 13.5, fontWeight: 700, whiteSpace: 'nowrap',
+                color: tab === t.key ? primary : '#64748B',
+                borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent',
+              }}>{isMobile ? (t.shortLabel || t.label) : t.label}</button>
+            ))}
+          </div>
         </div>
+        {isMobile && (
+          <div style={{ position: 'absolute', top: 0, right: 0, bottom: 1, width: 28, background: 'linear-gradient(90deg, rgba(255,255,255,0), #fff)', pointerEvents: 'none' }} />
+        )}
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 14 : 24 }}>
@@ -144,11 +149,27 @@ export default function Payments({ org, session, isAdmin }) {
         )
       )}
 
-      {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: '#0F172A', color: '#fff', padding: '10px 20px', borderRadius: 99, fontSize: 13, fontWeight: 700, zIndex: 10500, boxShadow: '0 12px 32px rgba(0,0,0,0.3)' }}>
+      {toast && createPortal(
+        <div style={{ position: 'fixed', bottom: isMobile ? 'calc(92px + env(safe-area-inset-bottom, 0px))' : 24, left: '50%', transform: 'translateX(-50%)', background: '#0F172A', color: '#fff', padding: '10px 20px', borderRadius: 99, fontSize: 13, fontWeight: 700, zIndex: 10500, boxShadow: '0 12px 32px rgba(0,0,0,0.3)', whiteSpace: 'nowrap' }}>
           ✓ {toast}
-        </div>
+        </div>,
+        document.body
       )}
+    </div>
+  )
+}
+
+function FilterPills({ options, value, onChange }) {
+  return (
+    <div style={{ display: 'flex', gap: 6, overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 2, marginBottom: 2 }}>
+      {options.map(o => (
+        <button key={o.value} onClick={() => onChange(o.value)} style={{
+          padding: '7px 13px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+          border: value === o.value ? '1.5px solid transparent' : '1.5px solid #E2E8F0',
+          background: value === o.value ? PB.blue : '#fff',
+          color: value === o.value ? '#fff' : '#475569',
+        }}>{o.label}</button>
+      ))}
     </div>
   )
 }
@@ -263,18 +284,23 @@ function OverviewTab({ charges, summary, childMap, isMobile, onRecordPayment, on
           <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>Outstanding payments</div>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by child or charge…" style={{ ...inputStyle, flex: '1 1 200px' }} />
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ ...inputStyle, width: 'auto' }}>
-            <option value="all">Status: All</option>
-            <option value="unpaid">Unpaid</option>
-            <option value="part_paid">Part paid</option>
-            <option value="overdue">Overdue</option>
-          </select>
-          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ ...inputStyle, width: 'auto' }}>
-            <option value="all">Charge type: All</option>
-            {CHARGE_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
-          </select>
+        <div style={{ marginBottom: 14 }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by child or charge…" style={{ ...inputStyle, marginBottom: 10 }} />
+          <FilterPills
+            value={statusFilter} onChange={setStatusFilter}
+            options={[
+              { value: 'all', label: 'All statuses' },
+              { value: 'unpaid', label: 'Unpaid' },
+              { value: 'part_paid', label: 'Part paid' },
+              { value: 'overdue', label: 'Overdue' },
+            ]}
+          />
+          <div style={{ marginTop: 8 }}>
+            <FilterPills
+              value={typeFilter} onChange={setTypeFilter}
+              options={[{ value: 'all', label: 'All types' }, ...CHARGE_TYPES.map(t => ({ value: t.key, label: t.label }))]}
+            />
+          </div>
         </div>
 
         {outstanding.length === 0 ? (
@@ -397,12 +423,12 @@ function ChargesTab({ charges, childMap, isMobile, isAdmin, session, onRecordPay
 
   return (
     <div style={card({ padding: 18 })}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>All charges <span style={{ color: '#94A3B8', fontWeight: 600 }}>({filtered.length})</span></div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ ...inputStyle, width: 'auto' }}>
-          <option value="all">All statuses</option>
-          {['unpaid', 'part_paid', 'paid', 'overdue', 'waived', 'refunded'].map(s => <option key={s} value={s}>{labelFor(s)}</option>)}
-        </select>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>All charges <span style={{ color: '#94A3B8', fontWeight: 600 }}>({filtered.length})</span></div>
+        <FilterPills
+          value={statusFilter} onChange={setStatusFilter}
+          options={[{ value: 'all', label: 'All statuses' }, ...['unpaid', 'part_paid', 'paid', 'overdue', 'waived', 'refunded'].map(s => ({ value: s, label: labelFor(s) }))]}
+        />
       </div>
 
       {isMobile ? (
@@ -480,7 +506,7 @@ function WaiveModal({ charge, session, onClose, onWaived }) {
     if (!error) onWaived()
   }
 
-  return (
+  return createPortal(
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10400 }} />
       <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401, background: '#fff', borderRadius: 18, width: 'min(400px, 90vw)', padding: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
@@ -492,7 +518,8 @@ function WaiveModal({ charge, session, onClose, onWaived }) {
           <button onClick={handleWaive} disabled={saving} style={{ ...btnPrimary(PB.purple), flex: 1, justifyContent: 'center' }}>{saving ? 'Waiving…' : 'Waive charge'}</button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }
 
@@ -516,12 +543,12 @@ function TransactionsTab({ transactions, charges, childMap, staffMap, isMobile, 
 
   return (
     <div style={card({ padding: 18 })}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>Transactions <span style={{ color: '#94A3B8', fontWeight: 600 }}>({filtered.length})</span></div>
-        <select value={methodFilter} onChange={e => setMethodFilter(e.target.value)} style={{ ...inputStyle, width: 'auto' }}>
-          <option value="all">Method: All</option>
-          {PAYMENT_METHODS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
-        </select>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Transactions <span style={{ color: '#94A3B8', fontWeight: 600 }}>({filtered.length})</span></div>
+        <FilterPills
+          value={methodFilter} onChange={setMethodFilter}
+          options={[{ value: 'all', label: 'All methods' }, ...PAYMENT_METHODS.map(m => ({ value: m.key, label: `${m.icon} ${m.label}` }))]}
+        />
       </div>
 
       {isMobile ? (
@@ -614,7 +641,7 @@ function RefundModal({ transaction, charge, session, onClose, onRefunded }) {
     onRefunded()
   }
 
-  return (
+  return createPortal(
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10400 }} />
       <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401, background: '#fff', borderRadius: 18, width: 'min(380px, 90vw)', padding: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
@@ -631,7 +658,8 @@ function RefundModal({ transaction, charge, session, onClose, onRefunded }) {
           <button onClick={handleRefund} disabled={saving} style={{ ...btnPrimary(PB.red), flex: 1, justifyContent: 'center' }}>{saving ? 'Refunding…' : 'Refund'}</button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }
 
