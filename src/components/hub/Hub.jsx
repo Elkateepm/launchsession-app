@@ -3075,13 +3075,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexShrink: 0 }}>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); onNavigate && onNavigate('planner', { editSessionId: s.id }) }}
-                          aria-label="Edit session"
-                          title="Edit session"
-                          style={{ width: 28, height: 28, borderRadius: 9, border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.75)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          ✏️
-                        </button>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                           <AttendanceRing
                             signedIn={attendedCount} total={attendeeTotal} expected={stats.expected} absent={stats.absent}
@@ -3174,7 +3167,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       borderRadius: isMobile ? 0 : 26,
                       flex: isMobile ? 1 : undefined,
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '14px 14px 0', background: '#0B1023' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, padding: '14px 14px 0', background: '#0B1023' }}>
+                        {!isClosed && (
+                          <button onClick={() => go && go('planner', { editSessionId: s.id })} aria-label="Edit session" title="Edit session" style={{
+                            width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
+                            background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 15,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                          }}>✏️</button>
+                        )}
                         <button onClick={() => setOpenLiveSessionId(null)} aria-label="Close" style={{
                           width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
                           background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 18, fontWeight: 700,
