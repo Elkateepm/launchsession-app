@@ -197,7 +197,7 @@ export default function TeamTab({ org, session }) {
           { label: 'Pending', value: pendingInvites, icon: '✉️', color: '#F59E0B' },
         ]}
       />
-      <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 14 : 24 }}>
       <div style={{ maxWidth: 1120, margin: '0 auto' }}>
 
         {/* Invite card */}
@@ -277,28 +277,32 @@ export default function TeamTab({ org, session }) {
             </div>
           ) : pendingMembers.map((member, index) => (
             <div key={member.id}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: isMobile ? 'wrap' : 'nowrap', padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: index < pendingMembers.length - 1 ? '1px solid #f3f4f6' : 'none', transition: 'background 0.15s' }}
+              style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 10 : 12, padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: index < pendingMembers.length - 1 ? '1px solid #f3f4f6' : 'none', transition: 'background 0.15s' }}
               onMouseEnter={e => e.currentTarget.style.background = '#FAFBFC'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: roleColors[member.role] || primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
-                {(member.full_name || member.email || '?')[0].toUpperCase()}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: roleColors[member.role] || primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                  {(member.full_name || member.email || '?')[0].toUpperCase()}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.full_name || member.email}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.email}</div>
+                </div>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{member.full_name || member.email}</div>
-                <div style={{ fontSize: 12, color: 'var(--text3)' }}>{member.email}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end', marginLeft: isMobile ? 52 : 0, flexShrink: 0 }}>
+                <RoleToggle member={member} roleColors={roleColors} primary={primary} onChange={updateMemberRole} updating={updatingRoleId === member.id} />
+                <span style={{ padding: '3px 10px', borderRadius: 99, background: '#FEF3C7', color: '#B45309', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+                  pending
+                </span>
+                <button onClick={() => resendInvite(member)} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                  Resend
+                </button>
+                <button onClick={() => cancelInvite(member)} disabled={cancellingId === member.id}
+                  title="Cancel invite"
+                  style={{ border: '1px solid #FCA5A5', background: 'var(--surface)', color: '#DC2626', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: cancellingId === member.id ? 'default' : 'pointer', opacity: cancellingId === member.id ? 0.6 : 1 }}>
+                  {cancellingId === member.id ? 'Cancelling…' : 'Cancel'}
+                </button>
               </div>
-              <RoleToggle member={member} roleColors={roleColors} primary={primary} onChange={updateMemberRole} updating={updatingRoleId === member.id} />
-              <span style={{ padding: '3px 10px', borderRadius: 99, background: '#FEF3C7', color: '#B45309', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
-                pending
-              </span>
-              <button onClick={() => resendInvite(member)} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
-                Resend
-              </button>
-              <button onClick={() => cancelInvite(member)} disabled={cancellingId === member.id}
-                title="Cancel invite"
-                style={{ border: '1px solid #FCA5A5', background: 'var(--surface)', color: '#DC2626', borderRadius: 10, padding: '8px 10px', fontSize: 12, fontWeight: 800, cursor: cancellingId === member.id ? 'default' : 'pointer', opacity: cancellingId === member.id ? 0.6 : 1 }}>
-                {cancellingId === member.id ? 'Cancelling…' : 'Cancel'}
-              </button>
             </div>
           ))}
         </div>
@@ -322,31 +326,38 @@ export default function TeamTab({ org, session }) {
             </div>
           ) : activeMembers.map((m, i) => (
             <div key={m.id}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: i < activeMembers.length - 1 ? '1px solid #f3f4f6' : 'none', transition: 'background 0.15s' }}
+              style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 10 : 12, padding: isMobile ? '12px 14px' : '14px 20px', borderBottom: i < activeMembers.length - 1 ? '1px solid #f3f4f6' : 'none', transition: 'background 0.15s' }}
               onMouseEnter={e => e.currentTarget.style.background = '#FAFBFC'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: roleColors[m.role] || primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
-                {(m.full_name || m.email || '?')[0].toUpperCase()}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: roleColors[m.role] || primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                  {(m.full_name || m.email || '?')[0].toUpperCase()}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.full_name || m.email}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.email}</div>
+                </div>
+                {isMobile && m.email !== session?.user?.email && (
+                  <button onClick={() => handleRemove(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e5e7eb', fontSize: 18, padding: '0 4px', flexShrink: 0 }}>
+                    ×
+                  </button>
+                )}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{m.full_name || m.email}</div>
-                <div style={{ fontSize: 12, color: 'var(--text3)' }}>{m.email}</div>
-              </div>
-              <div style={{ flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: isMobile ? 'space-between' : 'flex-end', marginLeft: isMobile ? 52 : 0, flexShrink: 0 }}>
                 <RoleToggle member={m} roleColors={roleColors} primary={primary} onChange={updateMemberRole}
                   disabled={m.email === session?.user?.email} updating={updatingRoleId === m.id} />
+                <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text3)' }}>Joined {m.created_at ? new Date(m.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '—'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)' }}>Last seen {m.last_sign_in_at ? new Date(m.last_sign_in_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : 'Never'}</div>
+                </div>
+                {!isMobile && m.email !== session?.user?.email && (
+                  <button onClick={() => handleRemove(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e5e7eb', fontSize: 18, padding: '0 4px', transition: 'color 0.2s' }}
+                    onMouseOver={e => e.target.style.color = '#C00'}
+                    onMouseOut={e => e.target.style.color = '#e5e7eb'}>
+                    ×
+                  </button>
+                )}
               </div>
-              <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                <div style={{ fontSize: 11, color: 'var(--text3)' }}>Joined {m.created_at ? new Date(m.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '—'}</div>
-                <div style={{ fontSize: 11, color: 'var(--text3)' }}>Last seen {m.last_sign_in_at ? new Date(m.last_sign_in_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : 'Never'}</div>
-              </div>
-              {m.email !== session?.user?.email && (
-                <button onClick={() => handleRemove(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e5e7eb', fontSize: 18, padding: '0 4px', transition: 'color 0.2s' }}
-                  onMouseOver={e => e.target.style.color = '#C00'}
-                  onMouseOut={e => e.target.style.color = '#e5e7eb'}>
-                  ×
-                </button>
-              )}
             </div>
           ))}
         </div>
