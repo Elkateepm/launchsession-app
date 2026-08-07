@@ -1073,7 +1073,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                   style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
                   + Walk-in
                 </button>
-                <button onClick={handleStartKiosk} title="Open full-screen self sign-in, locked with a PIN"
+                <button onClick={handleStartKiosk} title="Self sign-in kiosk (PIN to exit)"
                   style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
                   ⛶ Kiosk
                 </button>
@@ -1155,7 +1155,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
               style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
               + Walk-in
             </button>
-            <button onClick={handleStartKiosk} title="Open full-screen self sign-in, locked with a PIN"
+            <button onClick={handleStartKiosk} title="Self sign-in kiosk (PIN to exit)"
               style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
               ⛶ Kiosk
             </button>
