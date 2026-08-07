@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import QuickActionItem from './QuickActionItem'
-import { CalendarPlusIcon, UserPlusIcon, QrCodeIcon, FileTextIcon, ShieldAlertIcon, HeartHandshakeIcon } from './icons'
+import { CalendarPlusIcon, QrCodeIcon, FileTextIcon, ShieldAlertIcon, HeartHandshakeIcon, CreditCardIcon } from './icons'
 
 // The panel that opens directly above the dock when Launch is tapped. Dims the
 // page behind it, keeps the dock itself visible, and closes on outside tap.
@@ -64,7 +64,7 @@ export default function LaunchActionMenu({ open, onClose, actions, reducedMotion
 // exported so the orchestrator can attach real onSelect handlers per action.
 export const DEFAULT_ACTION_ICONS = {
   newSession: CalendarPlusIcon,
-  addChild: UserPlusIcon,
+  payments: CreditCardIcon,
   scanQR: QrCodeIcon,
   createForm: FileTextIcon,
   reportIncident: ShieldAlertIcon,

@@ -935,7 +935,7 @@ export default function Dashboard({ session, org }) {
             isAdmin={isAdmin}
             onOpenMore={() => setShowMobileMore(true)}
             onNewSession={() => handleSetTab('planner', { autoOpenWizard: true })}
-            onAddChild={() => handleSetTab('registers', { autoOpenAdd: true })}
+            onPayments={() => handleSetTab('payments')}
             onCreateForm={() => handleSetTab('forms')}
             onReportIncident={() => setShowReportIncident(true)}
             onAddVolunteer={() => handleSetTab('volunteers')}

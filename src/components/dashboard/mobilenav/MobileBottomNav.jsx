@@ -31,7 +31,7 @@ export default function MobileBottomNav({
   isAdmin,
   onOpenMore,           // opens the existing "More" sheet
   onNewSession,
-  onAddChild,
+  onPayments,
   onCreateForm,
   onReportIncident,
   onAddVolunteer,
@@ -55,7 +55,7 @@ export default function MobileBottomNav({
 
   const actions = [
     { key: 'newSession', label: 'New Session', icon: DEFAULT_ACTION_ICONS.newSession, color: '#7C3AED', onSelect: onNewSession },
-    { key: 'addChild', label: 'Add Child', icon: DEFAULT_ACTION_ICONS.addChild, color: '#0891B2', onSelect: onAddChild },
+    { key: 'payments', label: 'Payments', icon: DEFAULT_ACTION_ICONS.payments, color: '#16A34A', onSelect: onPayments },
     { key: 'scanQR', label: 'Sign-Up QR', icon: DEFAULT_ACTION_ICONS.scanQR, color: '#2563EB', onSelect: handleScanQR },
     { key: 'createForm', label: 'Create Form', icon: DEFAULT_ACTION_ICONS.createForm, color: '#D97706', onSelect: onCreateForm },
     { key: 'reportIncident', label: 'Report Incident', icon: DEFAULT_ACTION_ICONS.reportIncident, color: '#DC2626', onSelect: onReportIncident },

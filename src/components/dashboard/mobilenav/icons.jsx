@@ -110,3 +110,13 @@ export function HeartHandshakeIcon(props) {
     </svg>
   )
 }
+
+export function CreditCardIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3" y="5.5" width="18" height="13" rx="2" />
+      <path d="M3 9.5h18" />
+      <path d="M6.5 14.5h4" />
+    </svg>
+  )
+}
