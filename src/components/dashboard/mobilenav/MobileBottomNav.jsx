@@ -81,7 +81,7 @@ export default function MobileBottomNav({
       >
         <div
           style={{
-            height: 60,
+            height: 76,
             display: 'grid',
             gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) 68px minmax(0,1fr) minmax(0,1fr)',
             alignItems: 'center',
