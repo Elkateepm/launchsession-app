@@ -27,30 +27,30 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
 
       {/* Background decorations */}
       <div style={{ position: 'absolute', inset: 0, background: grad, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: primary + '0C', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: -40, left: -20, width: 140, height: 140, borderRadius: '50%', background: primary + '06', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: -70, right: -70, width: 180, height: 180, borderRadius: '50%', background: primary + '08', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: -50, left: -30, width: 110, height: 110, borderRadius: '50%', background: primary + '05', pointerEvents: 'none' }} />
 
       {/* Decorative illustration, top-right — sits behind the title/actions row */}
       {illustration && (
-        <img src={illustration} alt="" style={{ position: 'absolute', top: isMobile ? -16 : -24, right: isMobile ? -16 : 8, width: isMobile ? 92 : 132, height: isMobile ? 92 : 132, objectFit: 'contain', pointerEvents: 'none', zIndex: 0 }} />
+        <img src={illustration} alt="" style={{ position: 'absolute', top: isMobile ? -10 : -16, right: isMobile ? -10 : 4, width: isMobile ? 68 : 96, height: isMobile ? 68 : 96, objectFit: 'contain', pointerEvents: 'none', zIndex: 0, opacity: 0.9 }} />
       )}
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '20px 24px 0' }}>
+      <div style={{ position: 'relative', zIndex: 1, padding: isMobile ? '14px 16px 0' : '16px 22px 0' }}>
         {/* Top row */}
-        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-start', justifyContent: 'space-between', gap: isMobile ? 12 : 16, marginBottom: stats.length ? 16 : 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', gap: isMobile ? 10 : 14, marginBottom: stats.length ? 12 : 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
             {/* Icon */}
             {iconImg ? (
-              <img src={iconImg} alt="" className="ls-page-header-icon" style={{ width: 96, height: 96, borderRadius: 24, objectFit: 'cover', flexShrink: 0, boxShadow: `0 10px 22px -8px ${primary}55` }} />
+              <img src={iconImg} alt="" className="ls-page-header-icon" style={{ width: isMobile ? 44 : 52, height: isMobile ? 44 : 52, borderRadius: 14, objectFit: 'cover', flexShrink: 0, boxShadow: `0 6px 14px -6px ${primary}55` }} />
             ) : (
-              <div className="ls-page-header-icon" style={{ width: 48, height: 48, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, ${primary}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 10px 22px -8px ${primary}55` }}>
+              <div className="ls-page-header-icon" style={{ width: isMobile ? 38 : 42, height: isMobile ? 38 : 42, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${primary}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 6px 14px -6px ${primary}55` }}>
                 {icon}
               </div>
             )}
             {/* Title block */}
             <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
-                <h1 className="ls-header-title" style={{ fontSize: 'clamp(18px, 3vw, 24px)', color: 'var(--text, #111)', margin: 0, lineHeight: 1.1 }}>{title}</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
+                <h1 className="ls-header-title" style={{ fontSize: 'clamp(15px, 2.4vw, 19px)', color: 'var(--text, #111)', margin: 0, lineHeight: 1.15 }}>{title}</h1>
                 {badge && (
                   <span className="ls-header-badge" style={{ fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 99, background: (badge.color || primary) + '18', color: badge.color || primary, textTransform: 'uppercase', letterSpacing: 0.6, border: `1px solid ${(badge.color || primary)}30`, whiteSpace: 'nowrap' }}>
                     {badge.text}
@@ -58,10 +58,10 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                 )}
               </div>
               {subtitle && (
-                <p className="ls-header-sub" style={{ fontSize: 13, color: 'var(--text3, #6B7280)', margin: 0, fontWeight: 500, lineHeight: 1.4 }}>{subtitle}</p>
+                <p className="ls-header-sub" style={{ fontSize: 12.5, color: 'var(--text3, #6B7280)', margin: 0, fontWeight: 500, lineHeight: 1.35 }}>{subtitle}</p>
               )}
               {orgName && (
-                <div style={{ fontSize: 10, fontWeight: 800, color: primary, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 4, opacity: 0.8 }}>{orgName}</div>
+                <div style={{ fontSize: 9.5, fontWeight: 800, color: primary, textTransform: 'uppercase', letterSpacing: 0.7, marginTop: 3, opacity: 0.8 }}>{orgName}</div>
               )}
             </div>
           </div>
@@ -71,13 +71,13 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
             <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', justifyContent: isMobile ? 'stretch' : 'flex-end', width: isMobile ? '100%' : 'auto' }}>
               {actions.map((a, i) => (
                 <button key={i} onClick={a.onClick} style={{
-                  padding: '9px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                  padding: '8px 14px', borderRadius: 9, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, whiteSpace: 'nowrap',
                   fontFamily: 'var(--font-display, sans-serif)',
                   ...(isMobile ? { flex: '1 1 0', minWidth: 0 } : {}),
                   ...(a.variant === 'ghost'
                     ? { border: `1.5px solid var(--border, #e5e7eb)`, background: 'var(--surface, #fff)', color: 'var(--text, #111)', boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -2px rgba(15,23,42,0.08)' }
-                    : { border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -1px 0 rgba(0,0,0,0.12) inset, 0 8px 20px -8px ${primary}55` }
+                    : { border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -1px 0 rgba(0,0,0,0.12) inset, 0 6px 16px -8px ${primary}55` }
                   )
                 }}>
                   {a.icon && <span>{a.icon}</span>}
@@ -93,7 +93,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
           <div style={{
             display: 'grid',
             gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : `repeat(${stats.length}, minmax(0, 1fr))`,
-            gap: isMobile ? 8 : 10, marginTop: 2, marginBottom: 18,
+            gap: isMobile ? 7 : 9, marginTop: 2, marginBottom: 14,
           }}>
             {stats.map((s, i) => {
               const c = s.color || primary
@@ -101,21 +101,21 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
               return (
                 <div key={i} className="ls-stat-card" style={{
                   gridColumn: isLastOdd ? 'span 2' : undefined,
-                  display: 'flex', alignItems: 'center', gap: isMobile ? 9 : 11,
-                  background: `${c}0F`, border: `1px solid ${c}28`, borderRadius: 14,
-                  padding: isMobile ? '10px 12px' : '11px 14px', minWidth: 0,
+                  display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 9,
+                  background: `${c}0C`, border: `1px solid ${c}22`, borderRadius: 12,
+                  padding: isMobile ? '8px 10px' : '9px 12px', minWidth: 0,
                   boxShadow: `0 1px 0 rgba(255,255,255,0.5) inset`,
                 }}>
                   {s.icon && (
                     <span style={{
-                      width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, borderRadius: 10, flexShrink: 0,
+                      width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, flexShrink: 0,
                       background: `linear-gradient(135deg, ${c}, ${c}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: isMobile ? 14 : 16, boxShadow: `0 4px 10px -3px ${c}70, inset 0 1px 0 rgba(255,255,255,0.35)`,
+                      fontSize: isMobile ? 12 : 13.5, boxShadow: `0 3px 8px -3px ${c}70, inset 0 1px 0 rgba(255,255,255,0.35)`,
                     }}>{s.icon}</span>
                   )}
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 900, color: c, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
-                    <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text3, #6B7280)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
+                    <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 900, color: c, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
+                    <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text3, #6B7280)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
                   </div>
                 </div>
               )
