@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import PageHeader from '../shared/PageHeader'
@@ -157,31 +158,59 @@ export default function Payments({ org, session, isAdmin }) {
 function PickChildThenPay({ children, onClose, onPick, isMobile }) {
   const [q, setQ] = useState('')
   const filtered = children.filter(c => `${c.first_name} ${c.last_name}`.toLowerCase().includes(q.trim().toLowerCase()))
-  return (
+
+  return createPortal(
     <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10400 }} />
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400, backdropFilter: 'blur(2px)' }} />
       <div onClick={e => e.stopPropagation()} style={{
-        position: 'fixed', zIndex: 10401, background: '#fff', borderRadius: isMobile ? '20px 20px 0 0' : 20,
-        ...(isMobile ? { left: 0, right: 0, bottom: 0, maxHeight: '80vh' } : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 420, maxHeight: '70vh' }),
-        display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
+        position: 'fixed', zIndex: 10401, background: '#fff', borderRadius: isMobile ? '22px 22px 0 0' : 20,
+        ...(isMobile ? { left: 0, right: 0, bottom: 0, maxHeight: '75vh' } : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 420, maxHeight: '70vh' }),
+        display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.35)', overflow: 'hidden',
       }}>
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>Who's paying?</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+        {isMobile && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px' }}>
+            <div style={{ width: 36, height: 4, borderRadius: 99, background: '#E2E8F0' }} />
+          </div>
+        )}
+        <div style={{ padding: isMobile ? '4px 20px 14px' : '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Who's paying?</div>
+            <div style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600, marginTop: 2 }}>Select a child to record their payment</div>
+          </div>
+          <button onClick={onClose} style={{ background: '#F1F5F9', border: 'none', width: 30, height: 30, borderRadius: '50%', fontSize: 15, color: '#64748B', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
-        <div style={{ padding: 16 }}>
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search children…" style={inputStyle} autoFocus />
+        <div style={{ padding: '14px 20px 10px' }}>
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8', pointerEvents: 'none' }}>🔍</span>
+            <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search children…" autoFocus
+              style={{ ...inputStyle, padding: '11px 14px 11px 36px', borderRadius: 12, fontSize: 14.5 }} />
+          </div>
         </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px' }}>
-          {filtered.slice(0, 100).map(c => (
+        <div style={{ flex: 1, overflowY: 'auto', padding: '4px 16px', paddingBottom: `calc(${isMobile ? '96px' : '16px'} + env(safe-area-inset-bottom, 0px))` }}>
+          {filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '36px 20px', color: '#94A3B8' }}>
+              <div style={{ fontSize: 26, marginBottom: 8 }}>🔍</div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>No children match "{q}"</div>
+            </div>
+          ) : filtered.slice(0, 100).map(c => (
             <button key={c.id} onClick={() => onPick(c.id)} style={{
-              width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 10, border: '1px solid #F1F5F9',
-              background: '#fff', marginBottom: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#0F172A',
-            }}>{c.first_name} {c.last_name}</button>
+              width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 12, border: '1px solid transparent',
+              background: '#fff', marginBottom: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
+              transition: 'background 0.15s, border-color 0.15s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0' }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'transparent' }}>
+              <ChildAvatar child={c} size={36} />
+              <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {c.first_name} {c.last_name}
+              </span>
+              <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0 }}>›</span>
+            </button>
           ))}
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }
 
