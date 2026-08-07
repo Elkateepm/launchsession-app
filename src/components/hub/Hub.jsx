@@ -683,6 +683,56 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const [staffProfiles, setStaffProfiles] = useState({})
   const [sessionNotes, setSessionNotes] = useState([])
 
+  // ── Kiosk mode: full-screen self sign-in, PIN-locked to exit ──
+  // PIN is device-local (localStorage), scoped per org, so it survives across
+  // sessions on the same tablet/phone without needing a DB migration.
+  const kioskPinKey = `ls_kiosk_pin_${orgId}`
+  const [kioskMode, setKioskMode] = useState(false)
+  const [kioskPinPrompt, setKioskPinPrompt] = useState(null) // 'setup' | 'unlock' | null
+  const kioskContainerRef = React.useRef(null)
+
+  const getStoredKioskPin = () => { try { return localStorage.getItem(kioskPinKey) } catch { return null } }
+
+  const requestFullscreenIfSupported = () => {
+    const el = kioskContainerRef.current
+    const req = el?.requestFullscreen || el?.webkitRequestFullscreen
+    if (req) { try { req.call(el).catch?.(() => {}) } catch {} }
+  }
+  const exitFullscreenIfActive = () => {
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {})
+    else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen()
+  }
+
+  const handleStartKiosk = () => {
+    setRegExpanded(true)
+    if (!getStoredKioskPin()) { setKioskPinPrompt('setup'); return }
+    setKioskMode(true)
+    requestFullscreenIfSupported()
+  }
+  const handlePinSetupComplete = (pin) => {
+    try { localStorage.setItem(kioskPinKey, pin) } catch {}
+    setKioskPinPrompt(null)
+    setKioskMode(true)
+    requestFullscreenIfSupported()
+  }
+  const handlePinUnlockAttempt = (pin) => {
+    if (pin === getStoredKioskPin()) {
+      setKioskPinPrompt(null)
+      setKioskMode(false)
+      exitFullscreenIfActive()
+      return true
+    }
+    return false
+  }
+
+  // Warn before an accidental tab close / reload while kiosk is active and unlocked
+  React.useEffect(() => {
+    if (!kioskMode) return
+    const beforeUnload = (e) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', beforeUnload)
+    return () => window.removeEventListener('beforeunload', beforeUnload)
+  }, [kioskMode])
+
   const loadRegisterExtras = React.useCallback(async () => {
     if (!activeSession?.id) return
     const [{ data: ssData }, { data: noteData }] = await Promise.all([
@@ -1058,7 +1108,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   }
 
   return (
-    <div style={{ background: `linear-gradient(160deg, ${primary}4D 0%, ${secondary}33 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
+    <div ref={kioskContainerRef} style={{ background: `linear-gradient(160deg, ${primary}4D 0%, ${secondary}33 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
 
       {/* Ambient brand glow */}
       <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 200, borderRadius: '50%', background: `radial-gradient(circle, ${primary}22, transparent 70%)`, pointerEvents: 'none' }} />
@@ -1086,6 +1136,12 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                 onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
                 onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
                 + Walk-in
+              </button>
+              <button onClick={handleStartKiosk} title="Open full-screen self sign-in, locked with a PIN"
+                style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s' }}
+                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                ⛶ Kiosk
               </button>
             </div>
           </>
@@ -1192,6 +1248,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             <button onClick={() => setShowWalkIn(true)}
               style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
               + Walk-in
+            </button>
+            <button onClick={handleStartKiosk} title="Open full-screen self sign-in, locked with a PIN"
+              style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
+              ⛶ Kiosk
             </button>
           </div>
         )}
@@ -1487,6 +1547,194 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       {viewingRA && linkedRA && (
         <HubRAPreviewModal assessmentId={linkedRA.id} onClose={() => setViewingRA(false)} onNavigate={onNavigate} />
       )}
+
+      {kioskMode && (
+        <KioskModeOverlay
+          session={activeSession} org={org} primary={primary} secondary={secondary}
+          regTab={regTab} setRegTab={setRegTab} regSearch={regSearch} setRegSearch={setRegSearch}
+          regGrouped={regGrouped} regSearchFiltered={regSearchFiltered}
+          configuredGroupLabels={configuredGroupLabels} getBubbleColor={getBubbleColor}
+          bubbleGroups={bubbleGroups} bubbleFilter={bubbleFilter} setBubbleFilter={setBubbleFilter}
+          onSignIn={handleRegSignIn} onSignOut={(child) => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)}
+          onAbsent={setAbsentChild}
+          onRequestExit={() => setKioskPinPrompt('unlock')}
+        />
+      )}
+      {kioskPinPrompt && (
+        <KioskPinModal
+          mode={kioskPinPrompt}
+          onSetupComplete={handlePinSetupComplete}
+          onUnlockAttempt={handlePinUnlockAttempt}
+          onCancel={() => setKioskPinPrompt(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+function KioskModeOverlay({ session, org, primary, secondary, regTab, setRegTab, regSearch, setRegSearch, regGrouped, regSearchFiltered, configuredGroupLabels, getBubbleColor, bubbleGroups, bubbleFilter, setBubbleFilter, onSignIn, onSignOut, onAbsent, onRequestExit }) {
+  const list = regSearchFiltered(regGrouped[regTab] || [])
+  const tabs = [
+    { key: 'expected', label: 'Sign in', count: regGrouped.expected.length },
+    { key: 'signed_in', label: 'On site', count: regGrouped.signed_in.length },
+    { key: 'signed_out', label: 'Signed out', count: regGrouped.signed_out.length },
+    { key: 'absent', label: 'Absent', count: regGrouped.absent.length },
+  ]
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 10500, background: `linear-gradient(160deg, ${primary}33 0%, ${secondary}22 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, display: 'flex', flexDirection: 'column', WebkitUserSelect: 'none', userSelect: 'none' }}>
+      {/* Discreet staff-only exit — small, corner-placed, not obviously a button to a child */}
+      <button onClick={onRequestExit} title="Staff exit (PIN required)"
+        style={{ position: 'absolute', top: 14, right: 14, width: 38, height: 38, borderRadius: 12, border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)', fontSize: 15, cursor: 'pointer', zIndex: 2 }}>
+        🔒
+      </button>
+
+      <div style={{ textAlign: 'center', padding: '28px 24px 16px' }}>
+        {org?.logo_url && <img src={org.logo_url} alt="" style={{ width: 56, height: 56, borderRadius: 15, objectFit: 'contain', background: 'rgba(255,255,255,0.96)', padding: 2, marginBottom: 10 }} />}
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>{session?.title}</h2>
+        <p style={{ margin: '6px 0 0', fontSize: 14, color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>Tap your name to sign in or out</p>
+
+        {bubbleGroups.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {bubbleGroups.map(g => {
+              const gColor = getBubbleColor(g)
+              const isActive = bubbleFilter === g
+              return (
+                <button key={g} onClick={() => setBubbleFilter(isActive ? 'all' : g)}
+                  style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: '#fff', background: isActive ? gColor : gColor + '30', border: `1px solid ${gColor}90`, borderRadius: 99, padding: '7px 16px', cursor: 'pointer' }}>
+                  {g}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderTop: '1px solid rgba(255,255,255,0.08)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setRegTab(t.key)}
+            style={{ flex: 1, padding: '14px 6px', border: 'none', borderBottom: regTab === t.key ? `3px solid ${primary}` : '3px solid transparent', background: 'none', color: regTab === t.key ? '#fff' : 'rgba(255,255,255,0.45)', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+            {t.label} · {t.count}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ padding: '16px 20px 8px' }}>
+        <input value={regSearch} onChange={e => setRegSearch(e.target.value)} placeholder="🔍 Search your name..."
+          style={{ width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 14, border: '1.5px solid rgba(255,255,255,0.16)', background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: 16, outline: 'none' }} />
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 32px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {list.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>No one here{regSearch ? ' matching your search' : ''}.</div>
+        ) : list.map(({ child, att }) => {
+          const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
+          const gColor = getBubbleColor(child.group_name)
+          return (
+            <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 14 }}>
+              <div style={{ width: 46, height: 46, borderRadius: 13, background: gColor + '30', border: `1.5px solid ${gColor}60`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15.5, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{child.first_name} {child.last_name}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>{configuredGroupLabels.get((child.group_name || '').trim().toLowerCase()) || 'Ungrouped'}</div>
+              </div>
+              {att?.status === 'signed_in' ? (
+                <button onClick={() => onSignOut(child)} style={{ padding: '13px 18px', borderRadius: 12, border: 'none', background: '#2563EB', color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Sign out</button>
+              ) : att?.status === 'signed_out' || att?.status === 'absent' ? (
+                <span style={{ fontSize: 11.5, fontWeight: 800, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>{att.status === 'absent' ? 'Absent' : 'Signed out'}</span>
+              ) : (
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  <button onClick={() => onSignIn(child)} style={{ padding: '13px 18px', borderRadius: 12, border: 'none', background: '#16A34A', color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer' }}>Sign in</button>
+                  <button onClick={() => onAbsent(child)} style={{ padding: '13px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 13.5, fontWeight: 800, cursor: 'pointer' }}>Absent</button>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function KioskPinModal({ mode, onSetupComplete, onUnlockAttempt, onCancel }) {
+  const [stage, setStage] = useState('enter') // setup: 'enter' -> 'confirm'
+  const [pin, setPin] = useState('')
+  const [firstPin, setFirstPin] = useState('')
+  const [error, setError] = useState('')
+
+  const isSetup = mode === 'setup'
+  const title = isSetup ? (stage === 'enter' ? 'Set a 4-digit exit PIN' : 'Confirm your PIN') : 'Enter staff PIN to exit'
+  const subtitle = isSetup
+    ? (stage === 'enter' ? "You'll need this PIN to leave kiosk mode." : 'Enter it again to confirm.')
+    : 'Only staff should know this PIN.'
+
+  const handleDigit = (d) => {
+    if (pin.length >= 4) return
+    const next = pin + d
+    setPin(next)
+    setError('')
+    if (next.length === 4) {
+      setTimeout(() => submit(next), 120)
+    }
+  }
+  const handleBackspace = () => setPin(p => p.slice(0, -1))
+
+  const submit = (value) => {
+    if (isSetup) {
+      if (stage === 'enter') {
+        setFirstPin(value)
+        setPin('')
+        setStage('confirm')
+        return
+      }
+      if (value === firstPin) {
+        onSetupComplete(value)
+      } else {
+        setError("PINs didn't match — start again")
+        setPin(''); setFirstPin(''); setStage('enter')
+      }
+      return
+    }
+    const ok = onUnlockAttempt(value)
+    if (!ok) { setError('Incorrect PIN'); setPin('') }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 10600, background: 'rgba(6,10,20,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+      <div style={{ width: 320, maxWidth: 'calc(100vw - 32px)', textAlign: 'center' }}>
+        <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', marginBottom: 4 }}>{title}</div>
+        <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.5)', marginBottom: 20 }}>{subtitle}</div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 18 }}>
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} style={{ width: 16, height: 16, borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.35)', background: i < pin.length ? '#fff' : 'transparent' }} />
+          ))}
+        </div>
+
+        {error && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#F87171', marginBottom: 12 }}>{error}</div>}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
+          {['1','2','3','4','5','6','7','8','9'].map(d => (
+            <button key={d} onClick={() => handleDigit(d)}
+              style={{ padding: '16px 0', borderRadius: 14, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 19, fontWeight: 800, cursor: 'pointer' }}>
+              {d}
+            </button>
+          ))}
+          <div />
+          <button onClick={() => handleDigit('0')}
+            style={{ padding: '16px 0', borderRadius: 14, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 19, fontWeight: 800, cursor: 'pointer' }}>
+            0
+          </button>
+          <button onClick={handleBackspace}
+            style={{ padding: '16px 0', borderRadius: 14, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}>
+            ⌫
+          </button>
+        </div>
+
+        <button onClick={onCancel} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 8 }}>
+          Cancel
+        </button>
+      </div>
     </div>
   )
 }
