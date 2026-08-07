@@ -28,11 +28,12 @@ export default function OrgLookup() {
     const query = orgName.trim().toLowerCase()
     const normalizedQuery = query.replace(/-/g, ' ')
 
-    // Exact match only (hyphens treated as spaces)
+    // Exact match only (hyphens treated as spaces). Uses the public-safe
+    // view (name/slug/logo/colours only) instead of the base table --
+    // status filtering (active/trial) is already baked into the view.
     const { data: orgs } = await supabase
-      .from('organisations')
+      .from('organisations_public')
       .select('*')
-      .eq('status', 'active')
 
     setLoading(false)
 

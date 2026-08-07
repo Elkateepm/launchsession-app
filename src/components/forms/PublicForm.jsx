@@ -93,7 +93,8 @@ export default function PublicForm() {
     if (!ORG_SLUG || !FORM_ID) { setStatus('notfound'); return }
     let cancelled = false
     ;(async () => {
-      const { data: orgRow } = await supabase.from('organisations').select('id, name, slug, logo_url, primary_color, secondary_color').eq('slug', ORG_SLUG).maybeSingle()
+      // Public-safe view -- public form, no auth context.
+      const { data: orgRow } = await supabase.from('organisations_public').select('id, name, slug, logo_url, primary_color, secondary_color').eq('slug', ORG_SLUG).maybeSingle()
       if (cancelled) return
       if (!orgRow) { setStatus('notfound'); return }
       setOrg(orgRow)

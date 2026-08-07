@@ -32,7 +32,8 @@ export default function PublicChildRegistration() {
 
   useEffect(() => {
     if (!ORG_SLUG) { setOrg(null); return }
-    supabase.from('organisations').select('id, name, slug, logo_url, primary_color, secondary_color')
+    // Public-safe view -- no auth context here (parent registration form).
+    supabase.from('organisations_public').select('id, name, slug, logo_url, primary_color, secondary_color')
       .eq('slug', ORG_SLUG).maybeSingle().then(({ data }) => setOrg(data || null))
   }, [])
 

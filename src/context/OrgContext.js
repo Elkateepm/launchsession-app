@@ -19,11 +19,12 @@ export function OrgProvider({ children }) {
     let pollInterval = null
 
     const verifyOrgStillActive = async (slug) => {
+      // organisations_safe already filters to active/trial, so a non-matching
+      // row here means the org is gone/inactive either way.
       const { data, error } = await supabase
-        .from('organisations')
+        .from('organisations_safe')
         .select('id, status')
         .eq('slug', slug)
-        .in('status', ['active', 'trial'])
         .single()
 
       if (error || !data) {
@@ -88,11 +89,13 @@ export function OrgProvider({ children }) {
 
       localStorage.setItem('launchsession_org_slug', slug)
 
+      // organisations_safe -- everything the app needs (branding, modules,
+      // settings) minus the module password hashes, and works both pre- and
+      // post-login since this runs before auth is established as often as after.
       const { data, error } = await supabase
-        .from('organisations')
+        .from('organisations_safe')
         .select('*')
         .eq('slug', slug)
-        .in('status', ['active', 'trial'])
         .single()
 
       if (error || !data) {
@@ -128,7 +131,7 @@ export function OrgProvider({ children }) {
   const refreshOrg = async () => {
     const slug = localStorage.getItem('launchsession_org_slug')
     if (!slug) return
-    const { data } = await supabase.from('organisations').select('*').eq('slug', slug).single()
+    const { data } = await supabase.from('organisations_safe').select('*').eq('slug', slug).single()
     if (data) {
       setOrg(data)
       document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')

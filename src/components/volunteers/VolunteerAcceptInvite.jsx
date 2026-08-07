@@ -34,8 +34,11 @@ export default function VolunteerAcceptInvite() {
 
       setUser(session.user)
 
+      // Public-safe view -- this runs right after a brand-new volunteer's
+      // magic-link sign-in, before they have a user_profiles row, so the
+      // normal "own org" policy (which depends on one existing) can't apply yet.
       const { data: orgData, error: orgErr } = await supabase
-        .from('organisations')
+        .from('organisations_public')
         .select('name, slug, primary_color, logo_url')
         .eq('id', meta.org_id)
         .single()
