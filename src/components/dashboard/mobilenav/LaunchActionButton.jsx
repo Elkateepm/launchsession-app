@@ -1,6 +1,5 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { SparkleIcon } from './icons'
 
 // The centre "Launch" button. Sits inside the dock (not floating far above it),
 // with a soft glow and an occasional shimmer/breathing pulse. Rotates gently
@@ -38,18 +37,20 @@ export default function LaunchActionButton({ open, onClick, reducedMotion }) {
           position: 'relative',
           width: '100%', height: '100%',
           borderRadius: '50%',
-          border: '3px solid rgba(10,15,30,0.92)',
-          background: 'linear-gradient(135deg, #A78BFA 0%, #7C3AED 55%, #5B21B6 100%)',
-          boxShadow: '0 6px 20px -4px rgba(124,58,237,0.55), inset 0 6px 10px rgba(255,255,255,0.22), inset 0 -8px 12px rgba(0,0,0,0.3)',
+          border: 'none',
+          background: 'transparent',
+          boxShadow: '0 6px 20px -4px rgba(124,58,237,0.55)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', touchAction: 'manipulation', overflow: 'hidden',
+          cursor: 'pointer', touchAction: 'manipulation', overflow: 'hidden', padding: 0,
         }}
       >
-        {/* Glossy highlight */}
-        <div style={{ position: 'absolute', top: '12%', left: '18%', width: '42%', height: '26%', borderRadius: '50%', background: 'rgba(255,255,255,0.32)', filter: 'blur(3px)', pointerEvents: 'none' }} />
-        <span style={{ position: 'relative', zIndex: 1, color: '#fff', display: 'flex' }}>
-          <SparkleIcon width={22} height={22} />
-        </span>
+        <img
+          src="/assets/launch-icon@2x.png"
+          srcSet="/assets/launch-icon.png 1x, /assets/launch-icon@2x.png 2x"
+          alt=""
+          draggable={false}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', userSelect: 'none' }}
+        />
       </motion.button>
       </div>
       <span style={{ fontSize: 10, fontWeight: 800, color: open ? '#A78BFA' : 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>Launch</span>
