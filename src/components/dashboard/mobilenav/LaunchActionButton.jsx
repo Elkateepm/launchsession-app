@@ -46,10 +46,10 @@ export default function LaunchActionButton({ open, onClick, reducedMotion }) {
       >
         <img
           src="/assets/launch-icon@2x.png"
-          srcSet="/assets/launch-icon.png 1x, /assets/launch-icon@2x.png 2x"
+          srcSet="/assets/launch-icon.png 1x, /assets/launch-icon@2x.png 2x, /assets/launch-icon@3x.png 3x"
           alt=""
           draggable={false}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', userSelect: 'none' }}
+          style={{ width: '108%', height: '108%', objectFit: 'cover', pointerEvents: 'none', userSelect: 'none' }}
         />
       </motion.button>
       </div>
