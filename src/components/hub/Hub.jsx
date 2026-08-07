@@ -2437,7 +2437,13 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
     supabase.from('notifications').update({ read_at: now }).in('id', ids).then(() => {})
   }
 
-  const panelWidth = isMobile ? 'min(392px, calc(100vw - 20px))' : 372
+  // On mobile the bell sits near the right edge of the header, so a wide
+  // panel anchored to it (position: absolute, right: 0) overflows off the
+  // left of the screen. Break out to fixed positioning, centred in the
+  // viewport with even margins, instead of anchoring to the button.
+  const panelStyle = isMobile
+    ? { position: 'fixed', top: 78, left: 10, right: 10, width: 'auto', maxWidth: 460, margin: '0 auto', maxHeight: 'calc(100vh - 110px)' }
+    : { position: 'absolute', top: '120%', right: 0, width: 372, maxHeight: 480 }
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
@@ -2471,7 +2477,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.98 }}
               transition={{ duration: 0.16, ease: [0.4, 0, 0.2, 1] }}
-              style={{ position: 'absolute', top: '120%', right: 0, width: panelWidth, maxHeight: 480, display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: 20, boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 20px 50px -12px rgba(15,23,42,0.28), 0 0 0 1px rgba(15,23,42,0.06)', zIndex: 200, overflow: 'hidden' }}>
+              style={{ ...panelStyle, display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: 20, boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 20px 50px -12px rgba(15,23,42,0.28), 0 0 0 1px rgba(15,23,42,0.06)', zIndex: 200, overflow: 'hidden' }}>
 
               {/* Header */}
               <div style={{ padding: '16px 18px 12px', borderBottom: '1px solid #F1F5F9', flexShrink: 0, background: 'linear-gradient(180deg, #FAFBFF 0%, #fff 100%)' }}>
