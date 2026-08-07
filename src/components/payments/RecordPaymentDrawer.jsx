@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { PB, PAYMENT_METHODS, fmtMoney, inputStyle } from './paymentsShared'
@@ -65,7 +66,7 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
 
   const remaining = charge ? Number(charge.remaining) : 0
 
-  return (
+  return createPortal(
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10400, backdropFilter: 'blur(2px)' }} />
       <div
@@ -73,7 +74,7 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
         style={{
           position: 'fixed', zIndex: 10401, background: '#fff', display: 'flex', flexDirection: 'column',
           ...(isMobile
-            ? { left: 0, right: 0, bottom: 0, maxHeight: '92vh', borderRadius: '20px 20px 0 0', paddingBottom: 'env(safe-area-inset-bottom)' }
+            ? { left: 0, right: 0, bottom: 0, maxHeight: '92vh', borderRadius: '20px 20px 0 0' }
             : { top: 0, right: 0, bottom: 0, width: 420, boxShadow: '-24px 0 60px rgba(0,0,0,0.2)' }),
         }}
       >
@@ -170,7 +171,7 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
         </div>
 
         {!done && charge && (
-          <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', flexShrink: 0 }}>
+          <div style={{ padding: '16px 16px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid #F1F5F9', flexShrink: 0 }}>
             <button onClick={handleSubmit} disabled={saving} style={{
               width: '100%', padding: '13px', borderRadius: 12, border: 'none', cursor: saving ? 'default' : 'pointer',
               background: saving ? '#93C5FD' : PB.gradient, color: '#fff', fontSize: 14, fontWeight: 800,
@@ -180,7 +181,8 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
           </div>
         )}
       </div>
-    </>
+    </>,
+    document.body
   )
 }
 
