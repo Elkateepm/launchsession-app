@@ -1,20 +1,39 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react'
 import { supabase } from './lib/supabase'
 import { OrgProvider, useOrg } from './context/OrgContext'
-import Login from './components/auth/Login'
-import CreatePassword from './components/auth/CreatePassword'
-import ResetPassword from './components/auth/ResetPassword'
-import Signup from './components/auth/Signup'
-import OrgLookup from './components/auth/OrgLookup'
-import Dashboard from './components/dashboard/Dashboard'
-import Onboarding from './components/onboarding/Onboarding'
-import VolunteerPortal from './components/volunteers/VolunteerPortal'
-import VolunteerAcceptInvite from './components/volunteers/VolunteerAcceptInvite'
-import PublicForm from './components/forms/PublicForm'
-import PublicChildRegistration from './components/children/PublicChildRegistration'
-import PublicVolunteerRegistration from './components/volunteers/PublicVolunteerRegistration'
 import SplashScreen from './components/common/SplashScreen'
 import { useBreakpoint } from './hooks/useIsMobile'
+
+// Route-level code splitting: each of these becomes its own JS chunk, only
+// downloaded when that route is actually visited, instead of all being
+// bundled into the single main.js the whole app used to ship upfront.
+// Dashboard pulls in Hub (~4000 lines) plus every feature module, so this
+// alone keeps the login/signup screens from having to download all of that
+// before they can even render.
+const Login = lazy(() => import('./components/auth/Login'))
+const CreatePassword = lazy(() => import('./components/auth/CreatePassword'))
+const ResetPassword = lazy(() => import('./components/auth/ResetPassword'))
+const Signup = lazy(() => import('./components/auth/Signup'))
+const OrgLookup = lazy(() => import('./components/auth/OrgLookup'))
+const Dashboard = lazy(() => import('./components/dashboard/Dashboard'))
+const Onboarding = lazy(() => import('./components/onboarding/Onboarding'))
+const VolunteerPortal = lazy(() => import('./components/volunteers/VolunteerPortal'))
+const VolunteerAcceptInvite = lazy(() => import('./components/volunteers/VolunteerAcceptInvite'))
+const PublicForm = lazy(() => import('./components/forms/PublicForm'))
+const PublicChildRegistration = lazy(() => import('./components/children/PublicChildRegistration'))
+const PublicVolunteerRegistration = lazy(() => import('./components/volunteers/PublicVolunteerRegistration'))
+
+// Minimal fallback shown while a lazy chunk downloads. Kept intentionally
+// tiny/inline (no imports) since it needs to render before other chunks
+// have loaded.
+function RouteLoading() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0A0A1A' }}>
+      <div style={{ width: 40, height: 40, border: '3px solid #1B9AAA', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'ls-route-spin 0.8s linear infinite' }} />
+      <style>{`@keyframes ls-route-spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
+}
 
 const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000 // 2 hours
 const MOBILE_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -232,7 +251,7 @@ function AutoResolveOrg({ session }) {
     return () => { cancelled = true }
   }, [session.user.id])
 
-  if (error) return <OrgLookup />
+  if (error) return <Suspense fallback={<RouteLoading />}><OrgLookup /></Suspense>
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0A0A1A', flexDirection: 'column', gap: 16 }}>
@@ -282,9 +301,9 @@ function AppContent() {
   }
 
   // Special routes that bypass the org/session splash entirely.
-  if (pathname === '/create-password') return <CreatePassword />
-  if (pathname === '/reset-password') return <ResetPassword />
-  if (window.location.pathname === '/signup') return <Signup />
+  if (pathname === '/create-password') return <Suspense fallback={<RouteLoading />}><CreatePassword /></Suspense>
+  if (pathname === '/reset-password') return <Suspense fallback={<RouteLoading />}><ResetPassword /></Suspense>
+  if (window.location.pathname === '/signup') return <Suspense fallback={<RouteLoading />}><Signup /></Suspense>
 
   const baseLoading = orgLoading || loading
   const willShowAuthedApp = !baseLoading && !noOrg && !orgError && session
@@ -315,7 +334,7 @@ function AppContent() {
 
   return (
     <>
-      {body}
+      <Suspense fallback={null}>{body}</Suspense>
       {!splashGone && <SplashScreen ready={appReady} onExited={() => setSplashGone(true)} />}
     </>
   )
@@ -323,13 +342,13 @@ function AppContent() {
 
 export default function App() {
   const pathname = window.location.pathname
-  if (pathname === '/volunteer/accept-invite') return <VolunteerAcceptInvite />
-  if (pathname.startsWith('/volunteer')) return <VolunteerPortal />
-  if (pathname.startsWith('/forms/')) return <PublicForm />
-  if (pathname.startsWith('/register-child/')) return <PublicChildRegistration />
-  if (pathname.startsWith('/register-volunteer/')) return <PublicVolunteerRegistration />
-  if (pathname === '/signup') return <Signup />
-  if (pathname === '/create-password') return <CreatePassword />
+  if (pathname === '/volunteer/accept-invite') return <Suspense fallback={<RouteLoading />}><VolunteerAcceptInvite /></Suspense>
+  if (pathname.startsWith('/volunteer')) return <Suspense fallback={<RouteLoading />}><VolunteerPortal /></Suspense>
+  if (pathname.startsWith('/forms/')) return <Suspense fallback={<RouteLoading />}><PublicForm /></Suspense>
+  if (pathname.startsWith('/register-child/')) return <Suspense fallback={<RouteLoading />}><PublicChildRegistration /></Suspense>
+  if (pathname.startsWith('/register-volunteer/')) return <Suspense fallback={<RouteLoading />}><PublicVolunteerRegistration /></Suspense>
+  if (pathname === '/signup') return <Suspense fallback={<RouteLoading />}><Signup /></Suspense>
+  if (pathname === '/create-password') return <Suspense fallback={<RouteLoading />}><CreatePassword /></Suspense>
   return (
     <OrgProvider>
       <AppContent />
