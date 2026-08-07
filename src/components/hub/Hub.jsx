@@ -648,7 +648,7 @@ function ModalEdgeFade({ colour = '#0B1023' }) {
   )
 }
 
-function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, org, authUserId, userRole, reflections, onNavigate, getLiveSessionStats }) {
+function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, org, authUserId, userRole, reflections, onNavigate, getLiveSessionStats, onViewDetails, onClosed }) {
   const isMobile = useIsMobile()
   const [activeSession, setActiveSession] = useState(sessions[0])
   // Only staff/admin/owner can close a register — volunteers can sign
@@ -658,20 +658,15 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   // volunteer can do unsupervised.
   const canCloseRegister = ['admin', 'owner', 'staff'].includes(userRole)
   const [localAttendance, setLocalAttendance] = useState(attendance)
+  // Kept for KioskModeOverlay (its own filter chips) even though they're
+  // decorative in this panel's own header — removing them from this modal
+  // per the simplification below, but not touching Kiosk mode's usage.
   const [bubbleFilter, setBubbleFilter] = useState('all')
-  const [linkedRA, setLinkedRA] = useState(undefined) // undefined = loading, null = none, object = found
-  const [showRAPicker, setShowRAPicker] = useState(false)
-  const [viewingRA, setViewingRA] = useState(false)
-  const [raOptions, setRaOptions] = useState([])
-  const [raPickerSearch, setRaPickerSearch] = useState('')
-  const [raPickerBusy, setRaPickerBusy] = useState(false)
-  const [photoUploading, setPhotoUploading] = useState(false)
-  const [photoToast, setPhotoToast] = useState('')
-  const photoInputRef = React.useRef(null)
+  const [showOverflowMenu, setShowOverflowMenu] = useState(false)
+  const [showDetailsForClosed, setShowDetailsForClosed] = useState(false)
 
   // ── Full register state (built in, matching the card's own dark aesthetic) ──
   const [regTab, setRegTab] = useState('expected')
-  const [regExpanded, setRegExpanded] = useState(false)
   const [regSearch, setRegSearch] = useState('')
   const [signOutChild, setSignOutChild] = useState(null)
   const [absentChild, setAbsentChild] = useState(null)
@@ -704,7 +699,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   }
 
   const handleStartKiosk = () => {
-    setRegExpanded(true)
     if (!getStoredKioskPin()) { setKioskPinPrompt('setup'); return }
     setKioskMode(true)
     requestFullscreenIfSupported()
@@ -756,60 +750,12 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
   React.useEffect(() => { if (sessions.length) setActiveSession(sessions[0]) }, [sessions])
 
-  // Closed sessions are historical records — open straight into the full register
-  // instead of behind an extra click, and default to the tab that's actually useful.
+  // Closed sessions are historical records — default to the tab that's actually useful.
   React.useEffect(() => {
     if (activeSession?.closed_at) {
       setRegTab(prev => prev === 'expected' ? 'signed_out' : prev)
-      setRegExpanded(true)
     }
   }, [activeSession?.id, activeSession?.closed_at])
-
-  const loadLinkedRA = React.useCallback(() => {
-    if (!activeSession?.id) { setLinkedRA(null); return }
-    supabase.from('risk_assessment_sessions').select('risk_assessments(id, name, risk_rating, status)').eq('session_id', activeSession.id).limit(1)
-      .then(({ data, error }) => {
-        if (error) { setLinkedRA(null); return }
-        setLinkedRA(data && data.length > 0 ? data[0].risk_assessments : null)
-      })
-      .catch(() => setLinkedRA(null))
-  }, [activeSession?.id])
-
-  React.useEffect(() => { setLinkedRA(undefined); loadLinkedRA() }, [loadLinkedRA])
-  useRealtimeTable('risk_assessment_sessions', loadLinkedRA, { filter: activeSession?.id ? `session_id=eq.${activeSession.id}` : undefined, enabled: !!activeSession?.id, pollInterval: 5000 })
-  useRealtimeTable('risk_assessments', loadLinkedRA, { filter: linkedRA?.id ? `id=eq.${linkedRA.id}` : undefined, enabled: !!linkedRA?.id, pollInterval: 5000 })
-
-  const openRAPicker = async () => {
-    setShowRAPicker(true)
-    setRaPickerSearch('')
-    const { data } = await supabase.from('risk_assessments').select('id, name, activity_type, risk_rating, status')
-      .eq('org_id', orgId).eq('archived', false).eq('is_template', false).order('name').limit(50)
-    setRaOptions(data || [])
-  }
-
-  const attachExistingRA = async (a) => {
-    setRaPickerBusy(true)
-    await supabase.from('risk_assessment_sessions').insert({ assessment_id: a.id, session_id: activeSession.id, org_id: orgId })
-    await supabase.from('risk_assessment_audit').insert({ assessment_id: a.id, org_id: orgId, action: 'attached', detail: `Attached to session "${activeSession.title}"`, actor_id: authUserId })
-    setRaPickerBusy(false)
-    setShowRAPicker(false)
-    loadLinkedRA()
-  }
-
-  const createAndAttachRA = async () => {
-    setRaPickerBusy(true)
-    const { data: ra, error } = await supabase.from('risk_assessments').insert({
-      org_id: orgId, name: activeSession.title?.trim() || 'Untitled Session', status: 'draft',
-      location: activeSession.location || null, venue_id: activeSession.venue_id || null,
-      created_by: authUserId,
-    }).select().single()
-    if (error) { setRaPickerBusy(false); return }
-    await supabase.from('risk_assessment_sessions').insert({ assessment_id: ra.id, session_id: activeSession.id, org_id: orgId })
-    await supabase.from('risk_assessment_audit').insert({ assessment_id: ra.id, org_id: orgId, action: 'created', detail: `Created for session "${activeSession.title}"`, actor_id: authUserId })
-    setRaPickerBusy(false)
-    setShowRAPicker(false)
-    loadLinkedRA()
-  }
 
   const sessionAttendance = localAttendance.filter(a => a.session_id === activeSession?.id)
 
@@ -859,8 +805,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       .map(ch => configuredGroupLabels.get((ch.group_name || '').trim().toLowerCase()))
       .filter(Boolean)
   )]
-
-  const pct = stats.percent || 0
 
   // ── Register logic ──────────────────────────────────────────
   const attendanceByChild = useMemo(() => {
@@ -1011,23 +955,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     return () => clearInterval(interval)
   }, [])
 
-  const sessionTimeInfo = React.useMemo(() => {
-    if (!activeSession?.start_time || !activeSession?.end_time || !activeSession?.session_date) {
-      return { pct: 0, minutesLeft: null, hasEnded: false }
-    }
-    const start = new Date(`${activeSession.session_date}T${activeSession.start_time}`)
-    const end = new Date(`${activeSession.session_date}T${activeSession.end_time}`)
-    const total = end - start
-    if (total <= 0) return { pct: 0, minutesLeft: null, hasEnded: false }
-    const elapsed = nowTick - start
-    const pct = Math.round((elapsed / total) * 100)
-    const msLeft = end - nowTick
-    const hasEnded = msLeft <= 0
-    const minutesLeft = hasEnded ? 0 : Math.max(0, Math.round(msLeft / 60000))
-    return { pct, minutesLeft, hasEnded }
-  }, [activeSession, nowTick])
-  const sessionTimePct = sessionTimeInfo.pct
-
   const isSessionEnded = React.useMemo(() => {
     if (!activeSession?.session_date) return false
     // Only use end_date when the session genuinely crosses midnight (end_time earlier than start_time).
@@ -1064,7 +991,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     const now = new Date().toISOString()
     await supabase.from('sessions').update({ opened_at: now, opened_by: authUserId, register_opened_at: activeSession.register_opened_at || now }).eq('id', activeSession.id)
     setActiveSession(prev => ({ ...prev, opened_at: now, register_opened_at: prev.register_opened_at || now }))
-    setRegExpanded(true)
     setRegToast('✓ Session started — register is live')
     setTimeout(() => setRegToast(''), 3000)
   }
@@ -1082,39 +1008,55 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     return issues
   }, [regGrouped, sessionStaff, hasReflection])
 
-  const handleAddPhotoFiles = async (fileList) => {
-    const files = Array.from(fileList || [])
-    if (!files.length || !activeSession?.id) return
-    setPhotoUploading(true)
-    let succeeded = 0
-    for (const file of files) {
-      const ext = file.name.split('.').pop()
-      const path = `${orgId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
-      if (!upErr) {
-        const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(path)
-        const { error: insErr } = await supabase.from('gallery_photos').insert({
-          org_id: orgId, url: urlData.publicUrl, path,
-          category: 'Sessions', session_id: activeSession.id,
-          media_type: file.type.startsWith('video') ? 'video' : 'image',
-          consent_status: 'pending_review',
-        })
-        if (!insErr) succeeded++
-      }
+  // ── ••• overflow menu actions ──────────────────────────────────
+  const [duplicating, setDuplicating] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+
+  const handleDuplicateSession = async () => {
+    if (!activeSession || duplicating) return
+    setDuplicating(true)
+    const copyFields = {
+      org_id: orgId, title: `${activeSession.title} (Copy)`, session_date: activeSession.session_date,
+      end_date: activeSession.end_date || null, start_time: activeSession.start_time, end_time: activeSession.end_time,
+      location: activeSession.location, session_type: activeSession.session_type, description: activeSession.description,
+      max_capacity: activeSession.max_capacity, bubbles: activeSession.bubbles, allow_walk_ins: activeSession.allow_walk_ins,
+      packed_lunch: activeSession.packed_lunch, meeting_point: activeSession.meeting_point,
+      consent_required: activeSession.consent_required, age_range: activeSession.age_range,
+      internal_notes: activeSession.internal_notes, colour: activeSession.colour, lead_staff_id: activeSession.lead_staff_id,
+      min_staff: activeSession.min_staff, staff_ratio: activeSession.staff_ratio, venue_id: activeSession.venue_id,
+      created_by: authUserId, created_at: new Date().toISOString(),
     }
-    setPhotoUploading(false)
-    setPhotoToast(succeeded > 0 ? `✓ ${succeeded} photo${succeeded === 1 ? '' : 's'} added to ${activeSession.title}` : 'Upload failed — please try again')
-    setTimeout(() => setPhotoToast(''), 3000)
+    const { data: newSession, error } = await supabase.from('sessions').insert(copyFields).select().single()
+    if (error || !newSession) { setDuplicating(false); showRegToast('Could not duplicate session'); return }
+    // Carry over the same expected roster so the copy doesn't start empty.
+    const rows = targetedChildren.map(c => ({ org_id: orgId, session_id: newSession.id, child_id: c.id, status: 'expected' }))
+    if (rows.length) await supabase.from('attendance').insert(rows)
+    setDuplicating(false)
+    setShowOverflowMenu(false)
+    showRegToast(`✓ Duplicated as "${copyFields.title}"`)
+  }
+
+  const handleCancelSession = async () => {
+    if (!activeSession || cancelling) return
+    if (!window.confirm(`Cancel "${activeSession.title}"? This can't be undone.`)) return
+    setCancelling(true)
+    await supabase.from('attendance').delete().eq('session_id', activeSession.id)
+    const { error } = await supabase.from('sessions').delete().eq('id', activeSession.id)
+    setCancelling(false)
+    if (error) { showRegToast('Could not cancel session'); return }
+    setShowOverflowMenu(false)
+    if (onClosed) onClosed()
   }
 
   return (
-    <div ref={kioskContainerRef} style={{ background: `linear-gradient(160deg, ${primary}4D 0%, ${secondary}33 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
+    <div ref={kioskContainerRef} style={{ position: 'relative' }}>
+    <div style={{ background: `linear-gradient(160deg, ${primary}4D 0%, ${secondary}33 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: sessionPhase === 'ending' ? '22px 22px 0 0' : 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
 
       {/* Ambient brand glow */}
       <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 200, borderRadius: '50%', background: `radial-gradient(circle, ${primary}22, transparent 70%)`, pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: -50, left: -30, width: 220, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}18, transparent 70%)`, pointerEvents: 'none' }} />
 
-      {/* Header */}
+      {/* ═══ HEADER — same shape in every state: logo, actions, title, time/location, status chip ═══ */}
       <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
         <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={org?.name || ''} style={{
           position: 'absolute', top: 20, left: 22, zIndex: 1,
@@ -1122,38 +1064,61 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           background: 'rgba(255,255,255,0.96)', padding: 2, border: '1.5px solid rgba(255,255,255,0.25)',
           boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset, 0 6px 16px -6px rgba(0,0,0,0.4)',
         }} />
+
         {!isMobile && (
-          <>
-            <div style={{ position: 'absolute', top: 20, right: 22, display: 'flex', gap: 8, zIndex: 1 }}>
-              <button onClick={() => photoInputRef.current?.click()} disabled={photoUploading}
-                style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: photoUploading ? 'default' : 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s' }}
-                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
-                {photoUploading ? 'Uploading…' : '📷 Add Photo'}
+          <div style={{ position: 'absolute', top: 20, right: 22, display: 'flex', gap: 8, zIndex: 3 }}>
+            {sessionPhase !== 'closed' && (
+              <>
+                <button onClick={() => setShowWalkIn(true)}
+                  style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
+                  + Walk-in
+                </button>
+                <button onClick={handleStartKiosk} title="Open full-screen self sign-in, locked with a PIN"
+                  style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
+                  ⛶ Kiosk
+                </button>
+              </>
+            )}
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setShowOverflowMenu(v => !v)} aria-label="More actions" title="More actions"
+                style={{ width: 40, height: 40, borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 16, fontWeight: 900, cursor: 'pointer', backdropFilter: 'blur(6px)' }}>
+                •••
               </button>
-              <button onClick={() => setShowWalkIn(true)}
-                style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s' }}
-                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
-                + Walk-in
-              </button>
-              <button onClick={handleStartKiosk} title="Open full-screen self sign-in, locked with a PIN"
-                style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)', transition: 'transform 0.12s' }}
-                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
-                ⛶ Kiosk
-              </button>
+              {showOverflowMenu && (
+                <SessionOverflowMenu
+                  isClosed={sessionPhase === 'closed'} isUpcoming={sessionPhase === 'upcoming'}
+                  duplicating={duplicating} cancelling={cancelling}
+                  onClose={() => setShowOverflowMenu(false)}
+                  onEdit={() => { setShowOverflowMenu(false); onNavigate && onNavigate('planner', { editSessionId: activeSession.id }) }}
+                  onViewDetails={() => { setShowOverflowMenu(false); onViewDetails && onViewDetails(activeSession) }}
+                  onDuplicate={handleDuplicateSession}
+                  onCancel={handleCancelSession}
+                />
+              )}
             </div>
-          </>
+          </div>
         )}
-        <input ref={photoInputRef} type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={e => { handleAddPhotoFiles(e.target.files); e.target.value = '' }} />
-        {photoToast && (
-          <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 2, background: 'rgba(15,23,42,0.92)', color: '#fff', padding: '7px 16px', borderRadius: 99, fontSize: 12, fontWeight: 700, border: '1px solid rgba(255,255,255,0.15)', whiteSpace: 'nowrap' }}>
-            {photoToast}
+        {isMobile && (
+          <div style={{ position: 'absolute', top: 20, right: 22, zIndex: 3 }}>
+            <button onClick={() => setShowOverflowMenu(v => !v)} aria-label="More actions"
+              style={{ width: 38, height: 38, borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 15, fontWeight: 900, cursor: 'pointer', backdropFilter: 'blur(6px)' }}>
+              •••
+            </button>
+            {showOverflowMenu && (
+              <SessionOverflowMenu
+                isClosed={sessionPhase === 'closed'} isUpcoming={sessionPhase === 'upcoming'}
+                duplicating={duplicating} cancelling={cancelling}
+                onClose={() => setShowOverflowMenu(false)}
+                onEdit={() => { setShowOverflowMenu(false); onNavigate && onNavigate('planner', { editSessionId: activeSession.id }) }}
+                onViewDetails={() => { setShowOverflowMenu(false); onViewDetails && onViewDetails(activeSession) }}
+                onDuplicate={handleDuplicateSession}
+                onCancel={handleCancelSession}
+              />
+            )}
           </div>
         )}
 
-        <div style={{ textAlign: 'center', marginBottom: 14, padding: isMobile ? '0 68px' : '0 130px' }}>
+        <div style={{ textAlign: 'center', marginBottom: sessionPhase !== 'closed' && isMobile ? 14 : 0, padding: isMobile ? '0 56px' : '0 130px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 7 }}>
             {sessionPhase === 'closed' ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#CBD5E1', letterSpacing: 0.8 }}>
@@ -1182,69 +1147,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             {activeSession?.start_time || ''}{activeSession?.end_time ? ` – ${activeSession.end_time}` : ''}
             {activeSession?.location ? ` · ${activeSession.location}` : ''}
           </p>
-          {linkedRA === undefined ? null : linkedRA ? (
-            <button onClick={() => setViewingRA(true)}
-              style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 99, padding: '5px 12px 5px 10px', cursor: 'pointer' }}>
-              <span style={{ fontSize: 12 }}>🛡️</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{linkedRA.name}</span>
-              <span style={{
-                fontSize: 9.5, fontWeight: 900, letterSpacing: 0.4, textTransform: 'uppercase', borderRadius: 99, padding: '2px 8px',
-                background: RA_RATING_COLORS[linkedRA.risk_rating]?.bg || 'rgba(148,163,184,0.16)',
-                color: RA_RATING_COLORS[linkedRA.risk_rating]?.color || '#CBD5E1',
-              }}>{linkedRA.risk_rating || '—'}</span>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>View →</span>
-            </button>
-          ) : (
-            <button onClick={openRAPicker}
-              style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.18)', borderRadius: 99, padding: '5px 12px', cursor: 'pointer' }}>
-              <span style={{ fontSize: 12 }}>🛡️</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>No risk assessment attached</span>
-              <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.75)' }}>+ Attach</span>
-            </button>
-          )}
         </div>
 
-        {/* ── Lifecycle prompts ── */}
-        {sessionPhase === 'upcoming' && !activeSession?.closed_at && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '0 0 14px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 14, padding: '12px 16px', flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
-              {minsToStart !== null && minsToStart > 0
-                ? `${activeSession.title} starts in ${minsToStart >= 60 ? `${Math.floor(minsToStart / 60)}h ${minsToStart % 60}m` : `${minsToStart} min`}.${registerOpen ? ' Register is open for arrivals.' : ''}`
-                : `${activeSession.title} is due to start now.`}
-            </div>
-            {(minsToStart === null || minsToStart <= 30) ? (
-              <button onClick={handleStartSession}
-                style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #16A34A, #22C55E)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 14px rgba(34,197,94,0.35)' }}>
-                ▶ Start session
-              </button>
-            ) : (
-              <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>Can start from 30 min before</span>
-            )}
-          </div>
-        )}
-        {sessionPhase === 'ending' && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '0 0 14px', background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 14, padding: '12px 16px', flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
-              {isSessionEnded
-                ? (closureIssues.length > 0 ? `This session has ended — ${closureIssues[0].toLowerCase().replace(/\.$/, '')}.` : 'This session has ended and everything is resolved.')
-                : 'This session ends soon. Begin closing checks?'}
-              {!canCloseRegister && <span style={{ display: 'block', marginTop: 4, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Only a staff member can close this register — it'll stay open until one does.</span>}
-            </div>
-            {canCloseRegister && (
-              <button onClick={() => setShowClosure(true)}
-                style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #F97316, #FB923C)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
-                Review and close session
-              </button>
-            )}
-          </div>
-        )}
-
-        {isMobile && (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-            <button onClick={() => photoInputRef.current?.click()} disabled={photoUploading}
-              style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: photoUploading ? 'default' : 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
-              {photoUploading ? 'Uploading…' : '📷 Add Photo'}
-            </button>
+        {isMobile && sessionPhase !== 'closed' && (
+          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
             <button onClick={() => setShowWalkIn(true)}
               style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
               + Walk-in
@@ -1256,318 +1162,483 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           </div>
         )}
 
-        {/* Live group breakdown — clickable bubble filter pills */}
-        {bubbleGroups.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {bubbleGroups.map(g => {
-              const gColor = getBubbleColor(g)
-              const isActive = bubbleFilter === g
-              return (
-                <button key={g} onClick={() => setBubbleFilter(isActive ? 'all' : g)}
-                  style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: '#fff', background: isActive ? gColor : gColor + '30', border: `1px solid ${gColor}90`, borderRadius: 99, padding: '4px 11px', cursor: 'pointer', transition: 'all 0.15s' }}>
-                  {g}
-                </button>
-              )
-            })}
-            {bubbleFilter !== 'all' && (
-              <button onClick={() => setBubbleFilter('all')} style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 6px' }}>Clear ✕</button>
-            )}
+        {sessionPhase === 'ending' && !canCloseRegister && (
+          <div style={{ marginTop: 14, fontSize: 11.5, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
+            Only a staff member can close this register — it'll stay open until one does.
           </div>
         )}
       </div>
 
-      {/* Stat row — single gradient strip, subtle dividers, legible colour-coded numbers */}
-      <div style={{ margin: '0 22px 4px', background: `linear-gradient(90deg, #16A34A15, #7C3AED15, #2563EB15, #DC262615)`, borderRadius: 14, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', boxShadow: '0 1px 0 rgba(255,255,255,0.08) inset, 0 10px 24px -12px rgba(0,0,0,0.4)', overflow: 'hidden', backdropFilter: 'blur(6px)' }}>
+      {/* ═══ BODY — content changes entirely based on state ═══ */}
+      {sessionPhase === 'closed' ? (
+        <ClosedSessionSummary
+          session={activeSession} stats={stats} sessionStaff={sessionStaff}
+          hasReflection={hasReflection} activeReflection={activeReflection}
+          expanded={showDetailsForClosed} onToggleExpanded={() => setShowDetailsForClosed(v => !v)}
+          onNavigate={onNavigate}
+        >
+          <RegisterAndStaffContent
+            regTab={regTab} setRegTab={setRegTab} regSearch={regSearch} setRegSearch={setRegSearch}
+            regGrouped={regGrouped} regSearchFiltered={regSearchFiltered} stats={stats}
+            configuredGroupLabels={configuredGroupLabels} getBubbleColor={getBubbleColor}
+            activeSession={activeSession} isMobile={isMobile}
+            onSignIn={handleRegSignIn} onSignOut={(child) => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)}
+            onAbsent={setAbsentChild}
+            sessionStaff={sessionStaff} staffProfiles={staffProfiles} onStaffSignIn={handleStaffSignIn} onStaffSignOut={handleStaffSignOut}
+            sessionNotes={sessionNotes} onOpenNotes={() => setShowNotes(true)}
+            canCloseRegister={canCloseRegister} onOpenClosure={() => setShowClosure(true)}
+            showStatBar={false}
+          />
+        </ClosedSessionSummary>
+      ) : (
+        <div style={{ padding: '14px 22px 20px' }}>
+          {ratioBreached && (
+            <div style={{ marginBottom: 14, background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 12, padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#FCA5A5' }}>
+              ⚠ Staff-to-child ratio is currently 1:{currentRatio.toFixed(1)}. Required ratio: 1:{requiredRatio}.
+            </div>
+          )}
+
+          {sessionPhase === 'upcoming' ? (
+            <UpcomingSessionBody
+              session={activeSession} minsToStart={minsToStart} registerOpen={registerOpen}
+              stats={stats} targetedChildren={targetedChildren}
+              onStartSession={handleStartSession}
+              onOpenRegisterEarly={async () => {
+                const now = new Date().toISOString()
+                await supabase.from('sessions').update({ register_opened_at: now }).eq('id', activeSession.id)
+                setActiveSession(prev => ({ ...prev, register_opened_at: now }))
+              }}
+              onAddYoungPeople={() => onNavigate && onNavigate('planner', { editSessionId: activeSession.id })}
+            >
+              {registerOpen && (
+                <RegisterAndStaffContent
+                  regTab={regTab} setRegTab={setRegTab} regSearch={regSearch} setRegSearch={setRegSearch}
+                  regGrouped={regGrouped} regSearchFiltered={regSearchFiltered} stats={stats}
+                  configuredGroupLabels={configuredGroupLabels} getBubbleColor={getBubbleColor}
+                  activeSession={activeSession} isMobile={isMobile}
+                  onSignIn={handleRegSignIn} onSignOut={(child) => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)}
+                  onAbsent={setAbsentChild}
+                  sessionStaff={sessionStaff} staffProfiles={staffProfiles} onStaffSignIn={handleStaffSignIn} onStaffSignOut={handleStaffSignOut}
+                  sessionNotes={sessionNotes} onOpenNotes={() => setShowNotes(true)}
+                  canCloseRegister={canCloseRegister} onOpenClosure={() => setShowClosure(true)}
+                  showStatBar={false} hideHeading
+                />
+              )}
+            </UpcomingSessionBody>
+          ) : (
+            <RegisterAndStaffContent
+              regTab={regTab} setRegTab={setRegTab} regSearch={regSearch} setRegSearch={setRegSearch}
+              regGrouped={regGrouped} regSearchFiltered={regSearchFiltered} stats={stats}
+              configuredGroupLabels={configuredGroupLabels} getBubbleColor={getBubbleColor}
+              activeSession={activeSession} isMobile={isMobile}
+              onSignIn={handleRegSignIn} onSignOut={(child) => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)}
+              onAbsent={setAbsentChild}
+              sessionStaff={sessionStaff} staffProfiles={staffProfiles} onStaffSignIn={handleStaffSignIn} onStaffSignOut={handleStaffSignOut}
+              sessionNotes={sessionNotes} onOpenNotes={() => setShowNotes(true)}
+              canCloseRegister={canCloseRegister} onOpenClosure={() => setShowClosure(true)}
+              showStatBar processedCount={processedCount} totalCount={regRows.length}
+            />
+          )}
+
+          {regToast && (
+            <div style={{ marginTop: 10, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, padding: '8px 14px', fontSize: 11.5, fontWeight: 700, color: '#fff', textAlign: 'center' }}>
+              {regToast}
+            </div>
+          )}
+
+          {isSessionEnded && !hasReflection && (
+            <button onClick={() => onNavigate('planner', { reflectSessionId: activeSession?.id })}
+              style={{ marginTop: 14, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.12)', cursor: 'pointer', textAlign: 'left' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 18 }}>⭐</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#FCD34D' }}>Complete Reflection</div>
+                  <div style={{ fontSize: 11, color: 'rgba(252,211,77,0.75)', marginTop: 1 }}>This session has ended — capture what went well while it's fresh</div>
+                </div>
+              </div>
+              <span style={{ color: '#FCD34D', fontSize: 16 }}>→</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
+    </div>
+
+    {/* Sticky footer — only for the ending state, stays visible while the register scrolls */}
+    {sessionPhase === 'ending' && (
+      <div style={{
+        position: 'sticky', bottom: 0, zIndex: 2,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+        padding: '14px 22px', borderRadius: '0 0 22px 22px',
+        background: 'linear-gradient(180deg, rgba(154,52,18,0.92), rgba(124,45,18,0.97))',
+        borderTop: '1px solid rgba(249,115,22,0.4)',
+        boxShadow: '0 -12px 24px -12px rgba(0,0,0,0.4)',
+        backdropFilter: 'blur(8px)',
+      }}>
+        <div style={{ fontSize: 12.5, color: '#fff', fontWeight: 700 }}>
+          {isSessionEnded
+            ? (closureIssues.length > 0 ? `Session ended — ${closureIssues[0].toLowerCase().replace(/\.$/, '')}.` : 'Session ended and everything is resolved.')
+            : 'Session ending soon.'}
+        </div>
+        {canCloseRegister ? (
+          <button onClick={() => setShowClosure(true)}
+            style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: '#fff', color: '#9A3412', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Review & close session
+          </button>
+        ) : (
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>Only a staff member can close this register</span>
+        )}
+      </div>
+    )}
+
+    {signOutChild && (
+      <HubSignOutSheet child={signOutChild} onClose={() => setSignOutChild(null)} onConfirm={handleConfirmSignOut} identityCheckRequired={!!org?.identity_check_required} />
+    )}
+    {absentChild && (
+      <HubAbsentSheet child={absentChild} onClose={() => setAbsentChild(null)} onMark={handleMarkAbsent} />
+    )}
+    {showWalkIn && (
+      <HubWalkInModal allChildren={childList} onClose={() => setShowWalkIn(false)} onSelectExisting={handleSelectExistingWalkIn} onCreate={handleCreateWalkIn} />
+    )}
+    {showNotes && (
+      <HubNotesPanel notes={sessionNotes} childList={targetedChildren} onClose={() => setShowNotes(false)} onAdd={handleAddRegNote} onRaiseSafeguarding={handleRaiseSafeguardingConcern} />
+    )}
+    {showClosure && (
+      <HubClosureFlow grouped={regGrouped} issues={closureIssues} onClose={() => setShowClosure(false)} onMarkAllAbsent={handleMarkAllRemainingAbsent} onCloseRegister={handleCloseRegister} primary={primary} secondary={secondary} />
+    )}
+
+    {kioskMode && (
+      <KioskModeOverlay
+        session={activeSession} org={org} primary={primary} secondary={secondary}
+        regTab={regTab} setRegTab={setRegTab} regSearch={regSearch} setRegSearch={setRegSearch}
+        regGrouped={regGrouped} regSearchFiltered={regSearchFiltered}
+        configuredGroupLabels={configuredGroupLabels} getBubbleColor={getBubbleColor}
+        bubbleGroups={bubbleGroups} bubbleFilter={bubbleFilter} setBubbleFilter={setBubbleFilter}
+        onSignIn={handleRegSignIn} onSignOut={(child) => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)}
+        onAbsent={setAbsentChild}
+        onRequestExit={() => setKioskPinPrompt('unlock')}
+      />
+    )}
+    {kioskPinPrompt && (
+      <KioskPinModal
+        mode={kioskPinPrompt}
+        onSetupComplete={handlePinSetupComplete}
+        onUnlockAttempt={handlePinUnlockAttempt}
+        onCancel={() => setKioskPinPrompt(null)}
+      />
+    )}
+    </div>
+  )
+}
+
+// ── ••• overflow menu: Edit / View details / Duplicate / Cancel ──────────
+function SessionOverflowMenu({ isClosed, isUpcoming, duplicating, cancelling, onClose, onEdit, onViewDetails, onDuplicate, onCancel }) {
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 4 }} />
+      <div style={{
+        position: 'absolute', top: '110%', right: 0, zIndex: 5, minWidth: 200,
+        background: '#16203D', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 14,
+        boxShadow: '0 20px 50px rgba(0,0,0,0.4)', padding: 6, overflow: 'hidden',
+      }}>
         {[
-          { key: 'signed_in',  label: 'Signed In',  value: stats.signedIn,  color: '#4ADE80', icon: '↪' },
-          { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#C084FC', icon: '↩' },
-          { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#60A5FA', icon: '👥' },
-          { key: 'absent',     label: 'Absent',      value: stats.absent,    color: '#F87171', icon: '✕' },
-        ].map((s, i) => (
-          <button key={s.key} onClick={() => { setRegTab(s.key); setRegExpanded(true) }}
-            style={{ background: regTab === s.key && regExpanded ? 'rgba(255,255,255,0.12)' : 'transparent', border: 'none', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.12)' : 'none', boxShadow: regTab === s.key && regExpanded ? `inset 0 -2px 0 ${s.color}` : 'none', padding: isMobile ? '10px 4px' : '12px 8px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.15s', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 8 }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-            onMouseLeave={e => e.currentTarget.style.background = regTab === s.key && regExpanded ? 'rgba(255,255,255,0.12)' : 'transparent'}>
-            <span style={{ fontSize: 12, color: s.color }}>{s.icon}</span>
-            <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: s.color, letterSpacing: -0.3, fontFamily: 'var(--font-display, sans-serif)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>{s.value}</span>
-            <span style={{ fontSize: isMobile ? 9 : 10, color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.label}</span>
+          { label: '✏️ Edit session', onClick: onEdit },
+          { label: 'ℹ️ View session details', onClick: onViewDetails },
+          { label: `⧉ ${duplicating ? 'Duplicating…' : 'Duplicate session'}`, onClick: onDuplicate, disabled: duplicating },
+          ...(isUpcoming && !isClosed ? [{ label: `🗑 ${cancelling ? 'Cancelling…' : 'Cancel session'}`, onClick: onCancel, disabled: cancelling, danger: true }] : []),
+        ].map((item, i) => (
+          <button key={i} onClick={item.onClick} disabled={item.disabled}
+            style={{
+              display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 9,
+              border: 'none', background: 'transparent', color: item.danger ? '#FCA5A5' : '#fff',
+              fontSize: 12.5, fontWeight: 700, cursor: item.disabled ? 'default' : 'pointer', opacity: item.disabled ? 0.5 : 1,
+            }}
+            onMouseEnter={e => !item.disabled && (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+            {item.label}
           </button>
         ))}
       </div>
+    </>
+  )
+}
 
-      {/* Progress + absent note */}
-      <div style={{ padding: '16px 22px 20px', position: 'relative' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
-          <span>Register progress</span>
-          <span style={{ color: pct === 100 ? '#4ADE80' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>{pct}%</span>
-        </div>
-        <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#4ADE80' : `linear-gradient(90deg, ${primary}, ${secondary})`, borderRadius: 99, transition: 'width 0.5s ease', boxShadow: pct > 0 ? `0 0 10px ${pct === 100 ? '#4ADE80' : primary}70` : 'none' }} />
-        </div>
+// ── UPCOMING state: compact countdown + register-opening info + attendance line ──
+function UpcomingSessionBody({ session, minsToStart, registerOpen, stats, targetedChildren, onStartSession, onOpenRegisterEarly, onAddYoungPeople, children }) {
+  const countdownLabel = minsToStart === null ? null
+    : minsToStart <= 0 ? 'Starting now'
+    : minsToStart >= 60 ? `${Math.floor(minsToStart / 60)}h ${minsToStart % 60}m` : `${minsToStart}m`
 
-        {activeSession?.start_time && activeSession?.end_time && (
-          <div style={{ marginTop: 14 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
-              <span>Session progress</span>
-              <span style={{ color: sessionTimeInfo.hasEnded ? '#F87171' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>
-                {sessionTimeInfo.hasEnded
-                  ? 'Ended'
-                  : sessionTimePct <= 0
-                  ? 'Not started'
-                  : sessionTimeInfo.minutesLeft != null
-                  ? `${sessionTimePct}% · ${sessionTimeInfo.minutesLeft >= 60 ? `${Math.floor(sessionTimeInfo.minutesLeft / 60)}h ${sessionTimeInfo.minutesLeft % 60}m left` : `${sessionTimeInfo.minutesLeft}m left`}`
-                  : `${sessionTimePct}%`}
-              </span>
+  return (
+    <div>
+      {/* Compact countdown / start panel */}
+      <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>
+              {countdownLabel ? `Starts in ${countdownLabel}` : `${session?.title} is due to start now`}
             </div>
-            <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, sessionTimePct))}%`, background: sessionTimeInfo.hasEnded ? '#F87171' : `linear-gradient(90deg, #F59E0B, #F97316)`, borderRadius: 99, transition: 'width 0.5s ease', boxShadow: sessionTimePct > 0 ? `0 0 10px ${sessionTimeInfo.hasEnded ? '#F87171' : '#F59E0B'}70` : 'none' }} />
+            <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', marginTop: 2, fontWeight: 600 }}>
+              {registerOpen ? 'Register is open for arrivals.' : 'Register opens 30 min before the session.'}
             </div>
           </div>
-        )}
-
-        {stats.absent > 0 && (
-          <div style={{ marginTop: 10, fontSize: 11, color: '#FB923C', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
-            ⚠ {stats.absent} marked absent
-          </div>
-        )}
-
-        {ratioBreached && (
-          <div style={{ marginTop: 12, background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 12, padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#FCA5A5' }}>
-            ⚠ Staff-to-child ratio is currently 1:{currentRatio.toFixed(1)}. Required ratio: 1:{requiredRatio}.
-          </div>
-        )}
-
-        <div style={{ marginTop: 12, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
-          Register progress: {processedCount} of {regRows.length} processed
+          {(minsToStart === null || minsToStart <= 30) && (
+            <button onClick={onStartSession}
+              style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #16A34A, #22C55E)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 14px rgba(34,197,94,0.35)', whiteSpace: 'nowrap' }}>
+              ▶ Start session
+            </button>
+          )}
         </div>
-
-        <button onClick={() => (registerOpen || activeSession?.closed_at) ? setRegExpanded(x => !x) : null} disabled={!registerOpen && !activeSession?.closed_at}
-          style={{ marginTop: 12, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: (registerOpen || activeSession?.closed_at) ? 'pointer' : 'default', opacity: (registerOpen || activeSession?.closed_at) ? 1 : 0.55 }}>
-          <span>📋 Register{activeSession?.closed_at ? ' (read-only)' : ''}</span>
-          <span style={{ color: 'rgba(255,255,255,0.5)' }}>
-            {!registerOpen && !activeSession?.closed_at
-              ? `🔒 Opens ${minsToStart !== null && minsToStart > 30 ? `${minsToStart - 30} min before arrivals` : 'soon'}`
-              : regExpanded ? '▲ Hide' : (activeSession?.closed_at ? '🔒 View ▼' : '▼ Open')}
-          </span>
-        </button>
-        {!registerOpen && !activeSession?.closed_at && minsToStart !== null && minsToStart > 30 && (
-          <button onClick={async () => {
-            const now = new Date().toISOString()
-            await supabase.from('sessions').update({ register_opened_at: now }).eq('id', activeSession.id)
-            setActiveSession(prev => ({ ...prev, register_opened_at: now }))
-            setRegExpanded(true)
-          }}
-            style={{ marginTop: 8, width: '100%', padding: '9px 14px', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.22)', background: 'transparent', color: 'rgba(255,255,255,0.65)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
+        {!registerOpen && minsToStart !== null && minsToStart > 30 && (
+          <button onClick={onOpenRegisterEarly}
+            style={{ marginTop: 10, width: '100%', padding: '9px 14px', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.22)', background: 'transparent', color: 'rgba(255,255,255,0.65)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
             Open register early (trips / off-site meeting points)
           </button>
         )}
+      </div>
 
-        <AnimatePresence initial={false}>
-          {regExpanded && (
-            <motion.div
-              key="register-panel"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ height: { duration: 0.32, ease: [0.4, 0, 0.2, 1] }, opacity: { duration: 0.22 } }}
-              style={{ overflow: 'hidden' }}
-            >
-          <div style={{ marginTop: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                {{ expected: 'Expected', signed_in: 'Signed in', absent: 'Absent', signed_out: 'Signed out' }[regTab]}
-              </span>
-              <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>{(regGrouped[regTab] || []).length}</span>
-            </div>
-            <input value={regSearch} onChange={e => setRegSearch(e.target.value)} placeholder="🔍 Search young people..."
-              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12.5, marginBottom: 10, outline: 'none' }} />
+      {/* Compact attendance line — no 4-box grid while nothing's really happened yet */}
+      <div style={{ textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 700, marginBottom: 14 }}>
+        {stats.expected} expected · {stats.signedIn} signed in
+      </div>
 
-            <div style={{ maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {regSearchFiltered(regGrouped[regTab] || []).length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 20, color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Nobody in this list{regSearch ? ' matching your search' : ''}.</div>
-              ) : regSearchFiltered(regGrouped[regTab] || []).map(({ child, att }) => {
-                const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
-                const gColor = getBubbleColor(child.group_name)
-                return (
-                  <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 10 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: gColor + '30', border: `1.5px solid ${gColor}60`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
-                      {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {child.first_name} {child.last_name}
-                        {child.is_walk_in && child.profile_incomplete && <span style={{ marginLeft: 6, fontSize: 8.5, fontWeight: 800, color: '#FCD34D', background: 'rgba(251,191,36,0.15)', borderRadius: 6, padding: '1px 5px' }}>WALK-IN</span>}
-                      </div>
-                      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>
-                        {configuredGroupLabels.get((child.group_name || '').trim().toLowerCase()) || 'Ungrouped'}
-                        {att?.status === 'signed_in' && ` · in at ${hubFmtTime(att.signed_in_at)}`}
-                        {att?.status === 'signed_out' && ` · out at ${hubFmtTime(att.signed_out_at)}`}
-                        {att?.status === 'absent' && ` · ${att.absence_reason || 'Absent'}`}
-                      </div>
-                      {(child.allergies || child.medical_notes || child.has_epipen || child.has_asthma) && (
-                        <span style={{ fontSize: 8.5, fontWeight: 800, color: '#FCA5A5', background: 'rgba(239,68,68,0.15)', borderRadius: 6, padding: '1px 5px', marginTop: 2, display: 'inline-block' }}>⚕ Medical</span>
-                      )}
-                    </div>
-                    {activeSession?.closed_at ? (
-                      att?.status && <span style={{ fontSize: 10.5, fontWeight: 800, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>{{ signed_in: 'Signed in', signed_out: 'Signed out', absent: 'Absent' }[att.status] || ''}</span>
-                    ) : att?.status === 'signed_in' ? (
-                      <button onClick={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#2563EB', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Sign out</button>
-                    ) : att?.status === 'signed_out' || att?.status === 'absent' ? null : (
-                      <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
-                        <button onClick={() => handleRegSignIn(child)} style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#16A34A', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Sign in</button>
-                        <button onClick={() => setAbsentChild(child)} style={{ padding: '8px 10px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Absent</button>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Staff panel */}
-            {sessionStaff.length > 0 && (
-              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Session team</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {sessionStaff.map(s => (
-                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5, gap: 8 }}>
-                      <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{staffProfiles[s.user_id] || 'Team member'} <span style={{ color: 'rgba(255,255,255,0.35)' }}>· {s.role}</span></span>
-                      {s.signed_in_at && !s.signed_out_at ? (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                          <span style={{ color: '#4ADE80', fontWeight: 700, whiteSpace: 'nowrap' }}>In {hubFmtTime(s.signed_in_at)}</span>
-                          <button onClick={() => handleStaffSignOut(s)} style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>Sign out</button>
-                        </span>
-                      ) : s.signed_out_at ? (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                          <span style={{ color: '#C4B5FD', fontWeight: 700, whiteSpace: 'nowrap' }}>Out {hubFmtTime(s.signed_out_at)}</span>
-                          <button onClick={() => handleStaffSignIn(s)} style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>Sign in</button>
-                        </span>
-                      ) : (
-                        <button onClick={() => handleStaffSignIn(s)} style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Sign in</button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+      {/* Register section */}
+      {registerOpen ? (
+        children
+      ) : (
+        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 18, textAlign: 'center' }}>
+          <div style={{ fontSize: 12.5, fontWeight: 800, color: 'rgba(255,255,255,0.85)', marginBottom: 6 }}>Register</div>
+          {targetedChildren.length === 0 ? (
+            <>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 14, lineHeight: 1.5 }}>
+                No young people have been added to this session yet.
               </div>
-            )}
-
-            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-              <button onClick={() => setShowNotes(true)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>📝 Notes ({sessionNotes.length})</button>
-              {!activeSession?.closed_at && (
-                canCloseRegister ? (
-                  <button onClick={() => setShowClosure(true)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>Close register</button>
-                ) : (
-                  <span title="Only a staff member can close this register" style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}>🔒 Staff only to close</span>
-                )
-              )}
+              <button onClick={onAddYoungPeople}
+                style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #2563EB, #3B82F6)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
+                + Add young people
+              </button>
+            </>
+          ) : (
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+              {targetedChildren.length} young {targetedChildren.length === 1 ? 'person' : 'people'} expected.<br />
+              Register opens 30 minutes before the session.
             </div>
-          </div>
-            </motion.div>
           )}
-        </AnimatePresence>
+        </div>
+      )}
+    </div>
+  )
+}
 
-        {regToast && (
-          <div style={{ marginTop: 10, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, padding: '8px 14px', fontSize: 11.5, fontWeight: 700, color: '#fff', textAlign: 'center' }}>
-            {regToast}
+// ── Shared attendance stat bar + register list + staff panel + notes/close row ──
+// Used for the LIVE/ENDING states directly, for CLOSED (read-only, revealed by
+// "View session summary"), and for UPCOMING once the register has opened early.
+function RegisterAndStaffContent({
+  regTab, setRegTab, regSearch, setRegSearch, regGrouped, regSearchFiltered, stats,
+  configuredGroupLabels, getBubbleColor, activeSession, isMobile,
+  onSignIn, onSignOut, onAbsent,
+  sessionStaff, staffProfiles, onStaffSignIn, onStaffSignOut,
+  sessionNotes, onOpenNotes, canCloseRegister, onOpenClosure,
+  showStatBar = true, processedCount, totalCount, hideHeading,
+}) {
+  return (
+    <div>
+      {showStatBar && (
+        <>
+          <div style={{ background: `linear-gradient(90deg, #16A34A15, #7C3AED15, #2563EB15, #DC262615)`, borderRadius: 14, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', boxShadow: '0 1px 0 rgba(255,255,255,0.08) inset, 0 10px 24px -12px rgba(0,0,0,0.4)', overflow: 'hidden', backdropFilter: 'blur(6px)', marginBottom: totalCount != null ? 4 : 14 }}>
+            {[
+              { key: 'signed_in',  label: 'Signed In',  value: stats.signedIn,  color: '#4ADE80', icon: '↪' },
+              { key: 'signed_out', label: 'Signed Out', value: stats.signedOut, color: '#C084FC', icon: '↩' },
+              { key: 'expected',   label: 'Expected',   value: stats.expected,  color: '#60A5FA', icon: '👥' },
+              { key: 'absent',     label: 'Absent',      value: stats.absent,    color: '#F87171', icon: '✕' },
+            ].map((s, i) => (
+              <button key={s.key} onClick={() => setRegTab(s.key)}
+                style={{ background: regTab === s.key ? 'rgba(255,255,255,0.12)' : 'transparent', border: 'none', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.12)' : 'none', boxShadow: regTab === s.key ? `inset 0 -2px 0 ${s.color}` : 'none', padding: isMobile ? '10px 4px' : '12px 8px', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 8 }}>
+                <span style={{ fontSize: 12, color: s.color }}>{s.icon}</span>
+                <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: s.color, letterSpacing: -0.3, fontFamily: 'var(--font-display, sans-serif)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>{s.value}</span>
+                <span style={{ fontSize: isMobile ? 9 : 10, color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.label}</span>
+              </button>
+            ))}
+          </div>
+          {totalCount != null && (
+            <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: 14 }}>
+              {processedCount} of {totalCount} processed
+            </div>
+          )}
+        </>
+      )}
+
+      <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 14 }}>
+        {!hideHeading && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {{ expected: 'Expected', signed_in: 'Signed in', absent: 'Absent', signed_out: 'Signed out' }[regTab]}
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>{(regGrouped[regTab] || []).length}</span>
+          </div>
+        )}
+        <input value={regSearch} onChange={e => setRegSearch(e.target.value)} placeholder="🔍 Search young people..."
+          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12.5, marginBottom: 10, outline: 'none' }} />
+
+        <div style={{ maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {regSearchFiltered(regGrouped[regTab] || []).length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 20, color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Nobody in this list{regSearch ? ' matching your search' : ''}.</div>
+          ) : regSearchFiltered(regGrouped[regTab] || []).map(({ child, att }) => {
+            const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
+            const gColor = getBubbleColor(child.group_name)
+            return (
+              <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: gColor + '30', border: `1.5px solid ${gColor}60`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                  {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {child.first_name} {child.last_name}
+                    {child.is_walk_in && child.profile_incomplete && <span style={{ marginLeft: 6, fontSize: 8.5, fontWeight: 800, color: '#FCD34D', background: 'rgba(251,191,36,0.15)', borderRadius: 6, padding: '1px 5px' }}>WALK-IN</span>}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>
+                    {configuredGroupLabels.get((child.group_name || '').trim().toLowerCase()) || 'Ungrouped'}
+                    {att?.status === 'signed_in' && ` · in at ${hubFmtTime(att.signed_in_at)}`}
+                    {att?.status === 'signed_out' && ` · out at ${hubFmtTime(att.signed_out_at)}`}
+                    {att?.status === 'absent' && ` · ${att.absence_reason || 'Absent'}`}
+                  </div>
+                  {(child.allergies || child.medical_notes || child.has_epipen || child.has_asthma) && (
+                    <span style={{ fontSize: 8.5, fontWeight: 800, color: '#FCA5A5', background: 'rgba(239,68,68,0.15)', borderRadius: 6, padding: '1px 5px', marginTop: 2, display: 'inline-block' }}>⚕ Medical</span>
+                  )}
+                </div>
+                {activeSession?.closed_at ? (
+                  att?.status && <span style={{ fontSize: 10.5, fontWeight: 800, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>{{ signed_in: 'Signed in', signed_out: 'Signed out', absent: 'Absent' }[att.status] || ''}</span>
+                ) : att?.status === 'signed_in' ? (
+                  <button onClick={() => onSignOut(child)} style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#2563EB', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>Sign out</button>
+                ) : att?.status === 'signed_out' || att?.status === 'absent' ? null : (
+                  <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                    <button onClick={() => onSignIn(child)} style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#16A34A', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Sign in</button>
+                    <button onClick={() => onAbsent(child)} style={{ padding: '8px 10px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Absent</button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {sessionStaff.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Session team</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {sessionStaff.map(s => (
+                <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5, gap: 8 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{staffProfiles[s.user_id] || 'Team member'} <span style={{ color: 'rgba(255,255,255,0.35)' }}>· {s.role}</span></span>
+                  {s.signed_in_at && !s.signed_out_at ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      <span style={{ color: '#4ADE80', fontWeight: 700, whiteSpace: 'nowrap' }}>In {hubFmtTime(s.signed_in_at)}</span>
+                      <button onClick={() => onStaffSignOut(s)} style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>Sign out</button>
+                    </span>
+                  ) : s.signed_out_at ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      <span style={{ color: '#C4B5FD', fontWeight: 700, whiteSpace: 'nowrap' }}>Out {hubFmtTime(s.signed_out_at)}</span>
+                      <button onClick={() => onStaffSignIn(s)} style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>Sign in</button>
+                    </span>
+                  ) : (
+                    <button onClick={() => onStaffSignIn(s)} style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Sign in</button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
-        {isSessionEnded && !hasReflection && (
-          <button onClick={() => onNavigate('planner', { reflectSessionId: activeSession?.id })}
-            style={{ marginTop: 14, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.12)', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(245,158,11,0.2)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(245,158,11,0.12)'}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 18 }}>⭐</span>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#FCD34D' }}>Complete Reflection</div>
-                <div style={{ fontSize: 11, color: 'rgba(252,211,77,0.75)', marginTop: 1 }}>This session has ended — capture what went well while it's fresh</div>
-              </div>
-            </div>
-            <span style={{ color: '#FCD34D', fontSize: 16 }}>→</span>
+        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+          <button onClick={onOpenNotes} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>📝 Notes ({sessionNotes.length})</button>
+          {!activeSession?.closed_at && (
+            canCloseRegister ? (
+              <button onClick={onOpenClosure} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #2563EB, #7C3AED)', color: '#fff', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>Close register</button>
+            ) : (
+              <span title="Only a staff member can close this register" style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}>🔒 Staff only to close</span>
+            )
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── CLOSED state: compact summary, register/detail revealed on demand ──
+function ClosedSessionSummary({ session, stats, sessionStaff, hasReflection, activeReflection, expanded, onToggleExpanded, onNavigate, children }) {
+  const attended = stats.signedIn + stats.signedOut
+  const volunteerCount = sessionStaff.filter(s => s.role === 'volunteer').length
+
+  const durationLabel = (() => {
+    if (session?.opened_at && session?.closed_at) {
+      const mins = Math.round((new Date(session.closed_at) - new Date(session.opened_at)) / 60000)
+      if (mins <= 0) return null
+      return mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60 ? `${mins % 60}m` : ''}`.trim() : `${mins}m`
+    }
+    if (session?.start_time && session?.end_time) {
+      const [sh, sm] = session.start_time.split(':').map(Number)
+      const [eh, em] = session.end_time.split(':').map(Number)
+      const mins = (eh * 60 + em) - (sh * 60 + sm)
+      if (mins <= 0) return null
+      return mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60 ? `${mins % 60}m` : ''}`.trim() : `${mins}m`
+    }
+    return null
+  })()
+
+  return (
+    <div style={{ padding: '18px 22px 20px' }}>
+      <div style={{ textAlign: 'center', marginBottom: 16 }}>
+        <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>Session complete</div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 16 }}>
+        {[
+          { label: 'Attended', value: attended, color: '#4ADE80' },
+          { label: 'Absent', value: stats.absent, color: '#F87171' },
+          { label: 'Volunteers', value: volunteerCount, color: '#C4B5FD' },
+          ...(durationLabel ? [{ label: 'Duration', value: durationLabel, color: '#60A5FA' }] : []),
+        ].map(item => (
+          <div key={item.label} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '12px 14px', textAlign: 'center' }}>
+            <div style={{ fontSize: 19, fontWeight: 900, color: item.color, fontFamily: 'var(--font-display, sans-serif)' }}>{item.value}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, marginTop: 2 }}>{item.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: expanded ? 16 : 0 }}>
+        <button onClick={onToggleExpanded}
+          style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+          {expanded ? '▲ Hide session summary' : '▼ View session summary'}
+        </button>
+        {!hasReflection ? (
+          <button onClick={() => onNavigate('planner', { reflectSessionId: session?.id })}
+            style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #F59E0B, #F97316)', color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+            ⭐ Add reflection
+          </button>
+        ) : (
+          <button onClick={() => onNavigate('planner', { reflectSessionId: session?.id })}
+            style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            📝 View reflection
           </button>
         )}
-
-        {isSessionEnded && activeReflection && (
-          <div style={{ marginTop: 14, padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 15 }}>📝</span>
-                <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>Session Reflection</span>
-                {activeReflection.overall_rating ? (
-                  <span style={{ fontSize: 11, color: '#FCD34D', letterSpacing: 1 }}>{'★'.repeat(activeReflection.overall_rating)}{'☆'.repeat(Math.max(0, 5 - activeReflection.overall_rating))}</span>
-                ) : null}
-              </div>
-              <button onClick={() => onNavigate('planner', { reflectSessionId: activeSession?.id })}
-                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                Edit →
-              </button>
-            </div>
-            {activeReflection.what_went_well && (
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, marginBottom: activeReflection.what_could_improve ? 6 : 0 }}>
-                <span style={{ color: '#4ADE80', fontWeight: 700 }}>Went well: </span>{activeReflection.what_went_well}
-              </div>
-            )}
-            {activeReflection.what_could_improve && (
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
-                <span style={{ color: '#FB923C', fontWeight: 700 }}>Could improve: </span>{activeReflection.what_could_improve}
-              </div>
-            )}
-            {!activeReflection.what_went_well && !activeReflection.what_could_improve && activeReflection.reflection && (
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>{activeReflection.reflection}</div>
-            )}
-            {activeReflection.safeguarding_flag && (
-              <div style={{ marginTop: 8, fontSize: 11, color: '#FCA5A5', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>🛡️ Safeguarding note flagged</div>
-            )}
-          </div>
-        )}
       </div>
-      <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
 
-      {signOutChild && (
-        <HubSignOutSheet child={signOutChild} onClose={() => setSignOutChild(null)} onConfirm={handleConfirmSignOut} identityCheckRequired={!!org?.identity_check_required} />
-      )}
-      {absentChild && (
-        <HubAbsentSheet child={absentChild} onClose={() => setAbsentChild(null)} onMark={handleMarkAbsent} />
-      )}
-      {showWalkIn && (
-        <HubWalkInModal allChildren={childList} onClose={() => setShowWalkIn(false)} onSelectExisting={handleSelectExistingWalkIn} onCreate={handleCreateWalkIn} />
-      )}
-      {showNotes && (
-        <HubNotesPanel notes={sessionNotes} childList={targetedChildren} onClose={() => setShowNotes(false)} onAdd={handleAddRegNote} onRaiseSafeguarding={handleRaiseSafeguardingConcern} />
-      )}
-      {showClosure && (
-        <HubClosureFlow grouped={regGrouped} issues={closureIssues} onClose={() => setShowClosure(false)} onMarkAllAbsent={handleMarkAllRemainingAbsent} onCloseRegister={handleCloseRegister} primary={primary} secondary={secondary} />
-      )}
-      {showRAPicker && (
-        <HubRAPicker
-          options={raOptions} search={raPickerSearch} onSearchChange={setRaPickerSearch} busy={raPickerBusy}
-          onAttach={attachExistingRA} onCreate={createAndAttachRA} onClose={() => setShowRAPicker(false)}
-        />
-      )}
-      {viewingRA && linkedRA && (
-        <HubRAPreviewModal assessmentId={linkedRA.id} onClose={() => setViewingRA(false)} onNavigate={onNavigate} />
+      {activeReflection && (
+        <div style={{ marginTop: 12, padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)' }}>
+          {activeReflection.overall_rating ? (
+            <span style={{ fontSize: 11, color: '#FCD34D', letterSpacing: 1 }}>{'★'.repeat(activeReflection.overall_rating)}{'☆'.repeat(Math.max(0, 5 - activeReflection.overall_rating))}</span>
+          ) : null}
+          {activeReflection.what_went_well && (
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, marginTop: 6 }}>
+              <span style={{ color: '#4ADE80', fontWeight: 700 }}>Went well: </span>{activeReflection.what_went_well}
+            </div>
+          )}
+          {activeReflection.safeguarding_flag && (
+            <div style={{ marginTop: 8, fontSize: 11, color: '#FCA5A5', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>🛡️ Safeguarding note flagged</div>
+          )}
+        </div>
       )}
 
-      {kioskMode && (
-        <KioskModeOverlay
-          session={activeSession} org={org} primary={primary} secondary={secondary}
-          regTab={regTab} setRegTab={setRegTab} regSearch={regSearch} setRegSearch={setRegSearch}
-          regGrouped={regGrouped} regSearchFiltered={regSearchFiltered}
-          configuredGroupLabels={configuredGroupLabels} getBubbleColor={getBubbleColor}
-          bubbleGroups={bubbleGroups} bubbleFilter={bubbleFilter} setBubbleFilter={setBubbleFilter}
-          onSignIn={handleRegSignIn} onSignOut={(child) => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)}
-          onAbsent={setAbsentChild}
-          onRequestExit={() => setKioskPinPrompt('unlock')}
-        />
-      )}
-      {kioskPinPrompt && (
-        <KioskPinModal
-          mode={kioskPinPrompt}
-          onSetupComplete={handlePinSetupComplete}
-          onUnlockAttempt={handlePinUnlockAttempt}
-          onCancel={() => setKioskPinPrompt(null)}
-        />
-      )}
+      {expanded && children}
     </div>
   )
 }
@@ -1736,6 +1807,144 @@ function KioskPinModal({ mode, onSetupComplete, onUnlockAttempt, onCancel }) {
         </button>
       </div>
     </div>
+  )
+}
+
+// Add Photo + Risk Assessment quick actions, shown directly on the dashboard's
+// Live Session card (outside the register modal) so staff can do these without
+// opening the full register. Self-contained: loads/manages its own RA link and
+// handles its own photo upload, scoped to the given session.
+function SessionQuickActions({ session, org, orgId, authUserId, onNavigate }) {
+  const [linkedRA, setLinkedRA] = useState(undefined) // undefined = loading, null = none, object = found
+  const [showRAPicker, setShowRAPicker] = useState(false)
+  const [viewingRA, setViewingRA] = useState(false)
+  const [raOptions, setRaOptions] = useState([])
+  const [raPickerSearch, setRaPickerSearch] = useState('')
+  const [raPickerBusy, setRaPickerBusy] = useState(false)
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const [photoToast, setPhotoToast] = useState('')
+  const photoInputRef = React.useRef(null)
+
+  const loadLinkedRA = React.useCallback(() => {
+    if (!session?.id) { setLinkedRA(null); return }
+    supabase.from('risk_assessment_sessions').select('risk_assessments(id, name, risk_rating, status)').eq('session_id', session.id).limit(1)
+      .then(({ data, error }) => {
+        if (error) { setLinkedRA(null); return }
+        setLinkedRA(data && data.length > 0 ? data[0].risk_assessments : null)
+      })
+      .catch(() => setLinkedRA(null))
+  }, [session?.id])
+
+  React.useEffect(() => { setLinkedRA(undefined); loadLinkedRA() }, [loadLinkedRA])
+  useRealtimeTable('risk_assessment_sessions', loadLinkedRA, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id, pollInterval: 5000 })
+
+  const openRAPicker = async (e) => {
+    e.stopPropagation()
+    setShowRAPicker(true)
+    setRaPickerSearch('')
+    const { data } = await supabase.from('risk_assessments').select('id, name, activity_type, risk_rating, status')
+      .eq('org_id', orgId).eq('archived', false).eq('is_template', false).order('name').limit(50)
+    setRaOptions(data || [])
+  }
+
+  const attachExistingRA = async (a) => {
+    setRaPickerBusy(true)
+    await supabase.from('risk_assessment_sessions').insert({ assessment_id: a.id, session_id: session.id, org_id: orgId })
+    await supabase.from('risk_assessment_audit').insert({ assessment_id: a.id, org_id: orgId, action: 'attached', detail: `Attached to session "${session.title}"`, actor_id: authUserId })
+    setRaPickerBusy(false)
+    setShowRAPicker(false)
+    loadLinkedRA()
+  }
+
+  const createAndAttachRA = async () => {
+    setRaPickerBusy(true)
+    const { data: ra, error } = await supabase.from('risk_assessments').insert({
+      org_id: orgId, name: session.title?.trim() || 'Untitled Session', status: 'draft',
+      location: session.location || null, venue_id: session.venue_id || null,
+      created_by: authUserId,
+    }).select().single()
+    if (error) { setRaPickerBusy(false); return }
+    await supabase.from('risk_assessment_sessions').insert({ assessment_id: ra.id, session_id: session.id, org_id: orgId })
+    await supabase.from('risk_assessment_audit').insert({ assessment_id: ra.id, org_id: orgId, action: 'created', detail: `Created for session "${session.title}"`, actor_id: authUserId })
+    setRaPickerBusy(false)
+    setShowRAPicker(false)
+    loadLinkedRA()
+  }
+
+  const handleAddPhotoFiles = async (fileList) => {
+    const files = Array.from(fileList || [])
+    if (!files.length || !session?.id) return
+    setPhotoUploading(true)
+    let succeeded = 0
+    for (const file of files) {
+      const ext = file.name.split('.').pop()
+      const path = `${orgId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
+      if (!upErr) {
+        const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(path)
+        const { error: insErr } = await supabase.from('gallery_photos').insert({
+          org_id: orgId, url: urlData.publicUrl, path,
+          category: 'Sessions', session_id: session.id,
+          media_type: file.type.startsWith('video') ? 'video' : 'image',
+          consent_status: 'pending_review',
+        })
+        if (!insErr) succeeded++
+      }
+    }
+    setPhotoUploading(false)
+    setPhotoToast(succeeded > 0 ? `✓ ${succeeded} photo${succeeded === 1 ? '' : 's'} added` : 'Upload failed — please try again')
+    setTimeout(() => setPhotoToast(''), 3000)
+  }
+
+  return (
+    <>
+      <input ref={photoInputRef} type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={e => { handleAddPhotoFiles(e.target.files); e.target.value = '' }} />
+
+      <button
+        onClick={(e) => { e.stopPropagation(); photoInputRef.current?.click() }}
+        disabled={photoUploading}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: 'rgba(255,255,255,0.7)',
+          background: 'transparent', border: '1px dashed rgba(255,255,255,0.24)', borderRadius: 99, padding: '5px 10px',
+          cursor: photoUploading ? 'default' : 'pointer', whiteSpace: 'nowrap',
+        }}>
+        📷 {photoUploading ? 'Uploading…' : 'Add Photo'}
+      </button>
+
+      {linkedRA === undefined ? null : linkedRA ? (
+        <button
+          onClick={(e) => { e.stopPropagation(); setViewingRA(true) }}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: '#86EFAC',
+            background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 99, padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap',
+          }}>
+          🛡 Risk Assessment Attached
+        </button>
+      ) : (
+        <button
+          onClick={openRAPicker}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: '#FCD34D',
+            background: 'rgba(251,191,36,0.1)', border: '1px dashed rgba(251,191,36,0.4)', borderRadius: 99, padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap',
+          }}>
+          🛡 Attach Risk Assessment
+        </button>
+      )}
+
+      {photoToast && (
+        <span style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.65)' }}>{photoToast}</span>
+      )}
+
+      {showRAPicker && (
+        <HubRAPicker
+          options={raOptions} search={raPickerSearch} onSearchChange={setRaPickerSearch} busy={raPickerBusy}
+          onAttach={attachExistingRA} onCreate={createAndAttachRA} onClose={() => setShowRAPicker(false)}
+        />
+      )}
+      {viewingRA && linkedRA && (
+        <HubRAPreviewModal assessmentId={linkedRA.id} onClose={() => setViewingRA(false)} onNavigate={onNavigate} />
+      )}
+    </>
   )
 }
 
@@ -3329,6 +3538,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 onOpenRegister={openRegisterForSession}
                 onNavigate={go}
                 getLiveSessionStats={getLiveSessionStats}
+                onViewDetails={(sess) => setInfoModalSession(sess)}
+                onClosed={() => setOpenLiveSessionId(null)}
               />
             )
 
@@ -3441,6 +3652,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       </div>
                     </div>
 
+                    {cardStatus !== 'upcoming' && !isClosed && (
+                      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                        <SessionQuickActions session={s} org={org} orgId={org?.id} authUserId={session?.user?.id} onNavigate={go} />
+                      </div>
+                    )}
+
                     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px 10px', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{attendedCount}</span>
@@ -3514,13 +3731,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       flex: isMobile ? 1 : undefined,
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, padding: '14px 14px 0', background: '#0B1023' }}>
-                        {!isClosed && (
-                          <button onClick={() => go && go('planner', { editSessionId: s.id })} aria-label="Edit session" title="Edit session" style={{
-                            width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
-                            background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 15,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                          }}>✏️</button>
-                        )}
                         <button onClick={() => setOpenLiveSessionId(null)} aria-label="Close" style={{
                           width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
                           background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 18, fontWeight: 700,
