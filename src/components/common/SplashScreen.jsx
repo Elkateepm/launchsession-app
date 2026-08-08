@@ -329,38 +329,11 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
               transition: 'transform 550ms cubic-bezier(0.22, 1, 0.36, 1)',
             }}
           >
-            <svg width="168" height="168" viewBox="0 0 200 200">
-              <defs>
-                <linearGradient id="splash-lGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#B8A6FF" />
-                  <stop offset="100%" stopColor="#6D5AE0" />
-                </linearGradient>
-                <linearGradient id="splash-sGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#8B7CF6" />
-                  <stop offset="100%" stopColor="#5B6EF5" />
-                </linearGradient>
-                <linearGradient id="splash-rocketGrad" x1="0" y1="1" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#7C6EF6" />
-                  <stop offset="100%" stopColor="#38BDF8" />
-                </linearGradient>
-                <linearGradient id="splash-swooshGrad" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#5B6EF5" stopOpacity="0" />
-                  <stop offset="50%" stopColor="#8B7CF6" stopOpacity="0.9" />
-                  <stop offset="100%" stopColor="#5B6EF5" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path d="M 32 150 C 56 174, 134 174, 158 146" fill="none" stroke="url(#splash-swooshGrad)" strokeWidth="7" strokeLinecap="round" />
-              <text x="30" y="150" fontFamily="Arial, Helvetica, sans-serif" fontWeight="900" fontSize="130" fill="url(#splash-lGrad)">L</text>
-              <text x="90" y="150" fontFamily="Arial, Helvetica, sans-serif" fontWeight="900" fontSize="130" fill="url(#splash-sGrad)">S</text>
-              <g transform="translate(146,72) rotate(35)">
-                <path d="M 0 -30 C 11 -21 15 -5 14 12 C 14 19 9 23 0 25 C -9 23 -14 19 -14 12 C -15 -5 -11 -21 0 -30 Z" fill="url(#splash-rocketGrad)" />
-                <circle cx="0" cy="-3" r="5" fill="#1a1730" opacity="0.6" />
-                <circle cx="0" cy="-3" r="5" fill="none" stroke="#fff" strokeOpacity="0.4" strokeWidth="1" />
-              </g>
-              <g transform="translate(158,46)">
-                <path d="M0,-10 C1.2,-2.2 2.2,-1.2 10,0 C2.2,1.2 1.2,2.2 0,10 C-1.2,2.2 -2.2,1.2 -10,0 C-2.2,-1.2 -1.2,-2.2 0,-10 Z" fill="#fff" />
-              </g>
-            </svg>
+            <img
+              src="/assets/badge-logo-centered.png"
+              alt="LaunchSession"
+              style={{ width: 168, height: 168, objectFit: 'contain', filter: 'drop-shadow(0 10px 26px rgba(139,92,246,0.4))' }}
+            />
           </div>
         </div>
 
