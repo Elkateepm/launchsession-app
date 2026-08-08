@@ -55,10 +55,6 @@ const KEYFRAMES = `
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-5px) rotate(-1.5deg); }
 }
-@keyframes ls-orbit-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 `
 
 function useStars(count, seedOffset = 0) {
@@ -311,31 +307,13 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
             }}
           />
 
-          {/* Slowly rotating orbit ring, premium sci-fi accent behind the badge */}
-          <svg
-            width="190" height="190" viewBox="0 0 190 190"
-            style={{
-              position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-              animation: reducedMotion ? 'none' : 'ls-orbit-spin 26s linear infinite',
-              pointerEvents: 'none',
-            }}
-          >
-            <ellipse cx="95" cy="95" rx="88" ry="34" fill="none" stroke="url(#orbitGrad)" strokeWidth="1" strokeDasharray="2 7" opacity="0.4" />
-            <defs>
-              <linearGradient id="orbitGrad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#3B82F6" />
-                <stop offset="100%" stopColor="#9B59B6" />
-              </linearGradient>
-            </defs>
-          </svg>
-
           {/* Official LaunchSession badge mark — subtle float, no gloss added on top */}
           <img
             src="/email-assets/badge-logo.png"
             alt="LaunchSession"
             style={{
               position: 'relative',
-              width: 148,
+              width: 220,
               height: 'auto',
               animation: reducedMotion ? 'none' : 'ls-badge-bob 4.5s ease-in-out infinite',
               filter: 'drop-shadow(0 10px 26px rgba(139,92,246,0.4))',
@@ -349,19 +327,6 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
           <div style={{ marginTop: 6, fontSize: 10.5, fontWeight: 600, letterSpacing: 2.2, color: 'rgba(199,191,255,0.6)', textTransform: 'uppercase' }}>
             Empowering Youth. Every Session.
           </div>
-        </div>
-
-        {/* Tagline */}
-        <div
-          style={{
-            marginTop: 24,
-            fontSize: 13,
-            fontWeight: 500,
-            color: 'rgba(255,255,255,0.38)',
-            letterSpacing: 0.2,
-          }}
-        >
-          Powering every session, person and outcome.
         </div>
 
         {/* Progress bar */}
