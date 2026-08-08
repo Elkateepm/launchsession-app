@@ -38,6 +38,19 @@ import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
 
+// Decides whether to show the mobile bottom-tab dock (true) or the desktop-style
+// side nav (false). A plain width check misclassifies phones rotated to landscape:
+// a compact phone (e.g. iPhone SE, 375×667) is still under the 768px breakpoint
+// once rotated (667×375), so it would keep the bottom dock even though there's
+// now very little vertical room for it and plenty of horizontal room for a rail.
+// So: any short, wide (landscape) viewport gets the side nav regardless of width.
+function computeIsMobileBottomNav() {
+  const w = window.innerWidth, h = window.innerHeight
+  const isLandscape = w > h
+  if (isLandscape && h < 500) return false
+  return w < 768
+}
+
 // Base modules always free — regardless of pack
 const BASE_MODULE_KEYS = ['home', 'calendar', 'planner', 'events_trips', 'team', 'settings', 'templates', 'risk_assessments']
 
@@ -450,7 +463,7 @@ export default function Dashboard({ session, org }) {
   const [showQRSheet, setShowQRSheet] = React.useState(false);
   const [showReportIncident, setShowReportIncident] = React.useState(false);
   const [navBadges, setNavBadges] = React.useState({ registers: 0, mentoring: 0 })
-  const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(window.innerWidth < 768);
+  const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(computeIsMobileBottomNav());
   const { isTablet } = useBreakpoint()
   const [tabletNavOpen, setTabletNavOpen] = React.useState(false)
 
@@ -489,9 +502,13 @@ export default function Dashboard({ session, org }) {
   }
 
   React.useEffect(() => {
-    const handleResize = () => setIsMobileBottomNav(window.innerWidth < 768);
+    const handleResize = () => setIsMobileBottomNav(computeIsMobileBottomNav());
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
   }, []);
 
   // Radial dial: press-and-slide-to-select gesture. Started from the FAB's onPointerDown;
