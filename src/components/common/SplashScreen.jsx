@@ -51,25 +51,13 @@ const KEYFRAMES = `
   0% { transform: scale(1); }
   100% { transform: scale(1.02); }
 }
-@keyframes ls-rocket-bob {
+@keyframes ls-badge-bob {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-5px) rotate(-1.5deg); }
-}
-@keyframes ls-flame {
-  0%, 100% { transform: scaleY(1) scaleX(1); opacity: 0.85; }
-  50% { transform: scaleY(1.22) scaleX(0.9); opacity: 1; }
-}
-@keyframes ls-flame-inner {
-  0%, 100% { transform: scaleY(1); opacity: 0.9; }
-  50% { transform: scaleY(1.3); opacity: 1; }
 }
 @keyframes ls-orbit-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-@keyframes ls-trail-rise {
-  0% { transform: translateY(0) scale(1); opacity: 0.5; }
-  100% { transform: translateY(14px) scale(0.4); opacity: 0; }
 }
 `
 
@@ -306,33 +294,33 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
             alignItems: 'center',
           }}
         >
-          {/* Soft pulse behind rocket */}
+          {/* Soft pulse glow behind the badge */}
           <div
             style={{
               position: 'absolute',
-              top: '38%',
+              top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
               width: 220,
               height: 220,
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(99,102,241,0.32) 0%, transparent 70%)',
-              filter: 'blur(6px)',
+              background: 'radial-gradient(circle, rgba(139,92,246,0.35) 0%, transparent 70%)',
+              filter: 'blur(8px)',
               animation: reducedMotion ? 'none' : 'ls-pulse 3.2s ease-in-out infinite',
               pointerEvents: 'none',
             }}
           />
 
-          {/* Slowly rotating orbit ring, premium sci-fi accent */}
+          {/* Slowly rotating orbit ring, premium sci-fi accent behind the badge */}
           <svg
-            width="150" height="150" viewBox="0 0 150 150"
+            width="190" height="190" viewBox="0 0 190 190"
             style={{
-              position: 'absolute', top: '38%', left: '50%', transform: 'translate(-50%, -50%)',
-              animation: reducedMotion ? 'none' : 'ls-orbit-spin 22s linear infinite',
+              position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+              animation: reducedMotion ? 'none' : 'ls-orbit-spin 26s linear infinite',
               pointerEvents: 'none',
             }}
           >
-            <ellipse cx="75" cy="75" rx="70" ry="26" fill="none" stroke="url(#orbitGrad)" strokeWidth="1" strokeDasharray="2 6" opacity="0.5" />
+            <ellipse cx="95" cy="95" rx="88" ry="34" fill="none" stroke="url(#orbitGrad)" strokeWidth="1" strokeDasharray="2 7" opacity="0.4" />
             <defs>
               <linearGradient id="orbitGrad" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#3B82F6" />
@@ -341,61 +329,21 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
             </defs>
           </svg>
 
-          {/* Animated vector rocket — flat, no gloss/bevel, real motion */}
-          <div style={{ position: 'relative', width: 92, animation: reducedMotion ? 'none' : 'ls-rocket-bob 4.2s ease-in-out infinite', transformOrigin: 'center bottom' }}>
-            <svg width="92" height="128" viewBox="0 0 92 128" fill="none">
-              <defs>
-                <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#FFFFFF" />
-                  <stop offset="100%" stopColor="#E8E6F7" />
-                </linearGradient>
-                <linearGradient id="windowGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#60A5FA" />
-                  <stop offset="100%" stopColor="#9B59B6" />
-                </linearGradient>
-                <linearGradient id="finGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#818CF8" />
-                  <stop offset="100%" stopColor="#8B5CF6" />
-                </linearGradient>
-                <linearGradient id="flameGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#60A5FA" />
-                  <stop offset="60%" stopColor="#8B5CF6" />
-                  <stop offset="100%" stopColor="rgba(155,89,182,0)" />
-                </linearGradient>
-              </defs>
-
-              {/* Fins */}
-              <path d="M 30 78 L 12 106 L 30 100 Z" fill="url(#finGrad)" />
-              <path d="M 62 78 L 80 106 L 62 100 Z" fill="url(#finGrad)" />
-
-              {/* Body */}
-              <path
-                d="M 46 4 C 62 20 68 46 66 78 C 66 86 60 92 46 94 C 32 92 26 86 26 78 C 24 46 30 20 46 4 Z"
-                fill="url(#bodyGrad)" stroke="#8B5CF6" strokeOpacity="0.35" strokeWidth="1.5"
-              />
-
-              {/* Window */}
-              <circle cx="46" cy="42" r="11" fill="url(#windowGrad)" />
-              <circle cx="46" cy="42" r="11" fill="none" stroke="#fff" strokeOpacity="0.55" strokeWidth="1.5" />
-
-              {/* Flame — animated */}
-              <g style={{ transformOrigin: '46px 94px', animation: reducedMotion ? 'none' : 'ls-flame 0.85s ease-in-out infinite' }}>
-                <path d="M 46 94 C 54 102 56 114 46 124 C 36 114 38 102 46 94 Z" fill="url(#flameGrad)" opacity="0.85" />
-              </g>
-              <g style={{ transformOrigin: '46px 94px', animation: reducedMotion ? 'none' : 'ls-flame-inner 0.85s ease-in-out infinite 0.1s' }}>
-                <path d="M 46 94 C 50 100 51 108 46 116 C 41 108 42 100 46 94 Z" fill="#C4B5FD" opacity="0.9" />
-              </g>
-
-              {/* Rising thrust particles */}
-              {!reducedMotion && [0, 1, 2].map(i => (
-                <circle key={i} cx={40 + i * 6} cy={112} r="2" fill="#A78BFA"
-                  style={{ animation: `ls-trail-rise 1.4s ease-in ${i * 0.35}s infinite` }} />
-              ))}
-            </svg>
-          </div>
+          {/* Official LaunchSession badge mark — subtle float, no gloss added on top */}
+          <img
+            src="/email-assets/badge-logo.png"
+            alt="LaunchSession"
+            style={{
+              position: 'relative',
+              width: 148,
+              height: 'auto',
+              animation: reducedMotion ? 'none' : 'ls-badge-bob 4.5s ease-in-out infinite',
+              filter: 'drop-shadow(0 10px 26px rgba(139,92,246,0.4))',
+            }}
+          />
 
           {/* Wordmark — flat typography, no emboss/bevel */}
-          <div style={{ marginTop: 14, fontSize: 34, fontWeight: 700, letterSpacing: -0.5, color: '#fff', lineHeight: 1 }}>
+          <div style={{ marginTop: 10, fontSize: 34, fontWeight: 700, letterSpacing: -0.5, color: '#fff', lineHeight: 1 }}>
             Launch<span style={{ fontWeight: 300, color: 'rgba(255,255,255,0.72)' }}>Session</span>
           </div>
           <div style={{ marginTop: 6, fontSize: 10.5, fontWeight: 600, letterSpacing: 2.2, color: 'rgba(199,191,255,0.6)', textTransform: 'uppercase' }}>
