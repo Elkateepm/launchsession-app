@@ -231,7 +231,7 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
         }}
       />
 
-      {/* Crescent moon, top-left, partially off-screen */}
+      {/* Moon/planet, top-left, partially off-screen — solid sphere with a defined edge, not a soft glow */}
       <div
         style={{
           position: 'absolute',
@@ -240,8 +240,8 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
           width: 260,
           height: 260,
           borderRadius: '50%',
-          background: 'radial-gradient(circle at 65% 35%, #6D28D9 0%, #2E1065 55%, transparent 75%)',
-          opacity: 0.55,
+          background: 'radial-gradient(circle at 68% 30%, #A78BFA 0%, #7C4FE0 30%, #4C2E8F 65%, #1E1240 100%)',
+          boxShadow: '0 0 60px rgba(124,79,224,0.25)',
           pointerEvents: 'none',
         }}
       />
