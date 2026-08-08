@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
+import { useRealtimeTable } from '../../lib/useRealtimeTable'
 import PastSessionRegister from './PastSessionRegister'
 import RegisterPaymentBadge from '../payments/RegisterPaymentBadge'
 
@@ -129,6 +130,17 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
   }, [session, org?.id])
 
   useEffect(() => { load() }, [load])
+
+  // Live updates -- this page previously only ever fetched once on mount, so
+  // a child added to the register (or signed in/out) from another device or
+  // tab just sat stale here until a manual reload. Same pattern as the Home
+  // dashboard's Live Session card.
+  useRealtimeTable('children', load, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id })
+  useRealtimeTable('attendance', load, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id })
+  useRealtimeTable('session_staff', load, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id })
+  useRealtimeTable('session_notes', load, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id })
+  useRealtimeTable('attendance_audit_log', load, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id, pollInterval: 5000 })
+  useRealtimeTable('cause_for_concern', load, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id, pollInterval: 5000 })
 
   const attendanceByChild = useMemo(() => {
     const map = {}
