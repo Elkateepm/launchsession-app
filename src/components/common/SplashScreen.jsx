@@ -51,6 +51,10 @@ const KEYFRAMES = `
   0% { transform: scale(1); }
   100% { transform: scale(1.02); }
 }
+@keyframes ls-badge-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(-1.5deg); }
+}
 `
 
 function useStars(count, seedOffset = 0) {
@@ -227,6 +231,21 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
         }}
       />
 
+      {/* Moon/planet, top-left, partially off-screen — solid sphere with a defined edge, not a soft glow */}
+      <div
+        style={{
+          position: 'absolute',
+          top: -70,
+          left: -90,
+          width: 260,
+          height: 260,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle at 68% 30%, #A78BFA 0%, #7C4FE0 30%, #4C2E8F 65%, #1E1240 100%)',
+          boxShadow: '0 0 60px rgba(124,79,224,0.25)',
+          pointerEvents: 'none',
+        }}
+      />
+
       {/* Stars */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {stars.map((s, i) => (
@@ -273,33 +292,31 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          transform: phase === 'complete' || exiting ? 'scale(1.02)' : 'scale(1)',
-          transition: 'transform 500ms cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
-        {/* Logo block */}
-        <div
-          style={{
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            animation: reducedMotion ? 'none' : 'ls-float 4.5s ease-in-out infinite',
-          }}
-        >
-          {/* Soft pulse behind rocket */}
+        {/* LS mark — faint ring accent behind it, no ring text */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Soft pulse glow */}
           <div
             style={{
               position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 340,
-              height: 160,
+              width: 260,
+              height: 260,
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(99,102,241,0.35) 0%, transparent 70%)',
-              filter: 'blur(6px)',
+              background: 'radial-gradient(circle, rgba(139,92,246,0.38) 0%, transparent 70%)',
+              filter: 'blur(10px)',
               animation: reducedMotion ? 'none' : 'ls-pulse 3.2s ease-in-out infinite',
+              pointerEvents: 'none',
+            }}
+          />
+          {/* Faint circle guide, no text on it */}
+          <div
+            style={{
+              position: 'absolute',
+              width: 210,
+              height: 210,
+              borderRadius: '50%',
+              border: '1px solid rgba(139,124,246,0.22)',
               pointerEvents: 'none',
             }}
           />
@@ -307,43 +324,91 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
           <div
             style={{
               position: 'relative',
-              width: 300,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 4,
+              animation: reducedMotion || phase !== 'loading' ? 'none' : 'ls-badge-bob 4.5s ease-in-out infinite',
+              transform: phase === 'complete' || exiting ? 'scale(1.18)' : 'scale(1)',
+              transition: 'transform 550ms cubic-bezier(0.22, 1, 0.36, 1)',
             }}
           >
             <img
-              src="/assets/logo-lockup.png"
-              alt="LaunchSession — Empowering Youth. Every Session."
-              style={{
-                width: '100%',
-                height: 'auto',
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 8px 24px rgba(99,102,241,0.45))',
-              }}
+              src="/assets/badge-logo-centered.png"
+              alt="LaunchSession"
+              style={{ width: 168, height: 168, objectFit: 'contain', filter: 'drop-shadow(0 10px 26px rgba(139,92,246,0.4))' }}
             />
           </div>
         </div>
 
-        {/* Tagline */}
-        <div
-          style={{
-            marginTop: 24,
-            fontSize: 13,
-            fontWeight: 500,
-            color: 'rgba(255,255,255,0.38)',
-            letterSpacing: 0.2,
-          }}
-        >
-          Powering every session, person and outcome.
+        {/* Wordmark — Session in brand gradient, bold */}
+        <div style={{ marginTop: 14, fontSize: 32, fontWeight: 800, letterSpacing: -0.5, color: '#fff', lineHeight: 1 }}>
+          Launch<span style={{ background: 'linear-gradient(90deg, #8B7CF6, #5B6EF5)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Session</span>
         </div>
+        <div style={{ marginTop: 8, fontSize: 11, fontWeight: 600, letterSpacing: 2, color: 'rgba(203,213,225,0.55)', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.7 }}>
+          Empowering Youth.<br />Every Session.
+        </div>
+
+        {/* Launch scene — rocket, beam, clouds, horizon */}
+        <svg width="300" height="195" viewBox="0 0 400 260" style={{ marginTop: 22, overflow: 'visible' }}>
+          <defs>
+            <radialGradient id="splash-baseGlow" cx="50%" cy="100%" r="65%">
+              <stop offset="0%" stopColor="#C084FC" stopOpacity="0.85" />
+              <stop offset="45%" stopColor="#7C3AED" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#7C3AED" stopOpacity="0" />
+            </radialGradient>
+            <linearGradient id="splash-beamGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#fff" stopOpacity="0.95" />
+              <stop offset="55%" stopColor="#C084FC" stopOpacity="0.55" />
+              <stop offset="100%" stopColor="#C084FC" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="splash-horizonGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3B2E63" />
+              <stop offset="100%" stopColor="#160F2E" />
+            </linearGradient>
+            <radialGradient id="splash-cloudGrad" cx="50%" cy="35%" r="70%">
+              <stop offset="0%" stopColor="#4C3B82" />
+              <stop offset="100%" stopColor="#241A44" />
+            </radialGradient>
+            <linearGradient id="splash-rocketBody" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stopColor="#DCD6FF" />
+              <stop offset="100%" stopColor="#fff" />
+            </linearGradient>
+          </defs>
+
+          <ellipse cx="200" cy="222" rx="150" ry="70" fill="url(#splash-baseGlow)" />
+          <path d="M 193 60 L 207 60 L 224 220 L 176 220 Z" fill="url(#splash-beamGrad)" />
+
+          <ellipse cx="90" cy="215" rx="70" ry="34" fill="url(#splash-cloudGrad)" />
+          <ellipse cx="140" cy="228" rx="55" ry="30" fill="url(#splash-cloudGrad)" />
+          <ellipse cx="50" cy="232" rx="48" ry="26" fill="url(#splash-cloudGrad)" />
+          <ellipse cx="310" cy="215" rx="70" ry="34" fill="url(#splash-cloudGrad)" />
+          <ellipse cx="260" cy="228" rx="55" ry="30" fill="url(#splash-cloudGrad)" />
+          <ellipse cx="350" cy="232" rx="48" ry="26" fill="url(#splash-cloudGrad)" />
+
+          <ellipse cx="200" cy="290" rx="230" ry="70" fill="url(#splash-horizonGrad)" />
+
+          <circle cx="60" cy="90" r="1.4" fill="#fff" opacity="0.7" />
+          <circle cx="330" cy="70" r="1.6" fill="#fff" opacity="0.6" />
+          <circle cx="350" cy="150" r="1.2" fill="#fff" opacity="0.5" />
+          <circle cx="40" cy="160" r="1.2" fill="#fff" opacity="0.5" />
+
+          <g
+            transform="translate(200,70)"
+            style={{
+              transformOrigin: '200px 70px',
+              animation: reducedMotion || phase !== 'loading' ? 'none' : 'ls-badge-bob 3.6s ease-in-out infinite',
+            }}
+          >
+            <path d="M 0 -38 C 14 -24 18 -4 16 16 C 16 24 9 30 0 32 C -9 30 -16 24 -16 16 C -18 -4 -14 -24 0 -38 Z"
+              fill="url(#splash-rocketBody)" stroke="#8B7CF6" strokeWidth="1.5" strokeOpacity="0.5" />
+            <circle cx="0" cy="-6" r="6.5" fill="#2A2350" />
+            <circle cx="0" cy="-6" r="6.5" fill="none" stroke="#fff" strokeWidth="1" strokeOpacity="0.5" />
+            <path d="M -16 10 L -30 26 L -14 22 Z" fill="#7C6EF6" />
+            <path d="M 16 10 L 30 26 L 14 22 Z" fill="#7C6EF6" />
+          </g>
+        </svg>
 
         {/* Progress bar */}
         <div
           style={{
-            marginTop: 40,
+            marginTop: 26,
             width: 220,
             height: 3,
             borderRadius: 99,
@@ -357,9 +422,7 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
               width: `${progress}%`,
               height: '100%',
               borderRadius: 99,
-              background: 'linear-gradient(90deg, #3B82F6, #9B59B6, #3B82F6)',
-              backgroundSize: '200% 100%',
-              animation: reducedMotion ? 'none' : 'ls-shimmer 1.8s linear infinite',
+              background: 'linear-gradient(90deg, #3B82F6, #9B59B6)',
               transition: 'width 300ms ease-out',
             }}
           />
