@@ -7,28 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import RASessionCard from '../riskassessments/RASessionCard'
 import SessionWizard from './SessionWizard'
 
-function CountUp({ value, duration = 0.6 }) {
-  const [display, setDisplay] = React.useState(value)
-  const prevRef = React.useRef(value)
-  React.useEffect(() => {
-    const start = prevRef.current
-    const end = value
-    if (start === end) return
-    const startTime = performance.now()
-    let raf
-    const tick = (now) => {
-      const t = Math.min(1, (now - startTime) / (duration * 1000))
-      const eased = 1 - Math.pow(1 - t, 3)
-      setDisplay(Math.round(start + (end - start) * eased))
-      if (t < 1) raf = requestAnimationFrame(tick)
-      else prevRef.current = end
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [value, duration])
-  return <>{display}</>
-}
-
 const SESSION_TYPES = [
   { key: 'activity',  label: 'Activity',  icon: '🏃', color: '#1B9AAA' },
   { key: 'workshop',  label: 'Workshop',  icon: '🛠',  color: '#417505' },
@@ -853,414 +831,6 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
 // concerns (confetti, per-second ticking against a live register) that
 // don't apply to a planning list — see the colour rules below, which are
 // the part that actually has to stay in sync.
-const PLANNER_RING_R = 22
-const PLANNER_RING_C = 2 * Math.PI * PLANNER_RING_R
-const PLANNER_ATTENDANCE_LOW_THRESHOLD = 0.5
-
-function PlannerAttendanceRing({ signedIn, total, expected, isClosed }) {
-  const fraction = total > 0 ? Math.max(0, Math.min(1, signedIn / total)) : 0
-  const offset = PLANNER_RING_C * (1 - fraction)
-  const allAccountedFor = (expected ?? 0) === 0
-  const lowAttendance = total > 0 && (signedIn / total) < PLANNER_ATTENDANCE_LOW_THRESHOLD
-  const colour = total === 0 ? 'rgba(255,255,255,0.3)'
-    : !allAccountedFor ? '#FBBF24'
-    : lowAttendance ? '#F87171'
-    : '#4ADE80'
-
-  return (
-    <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
-      <svg width="56" height="56" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
-        {isClosed ? (
-          <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke={colour} strokeWidth="5" strokeLinecap="round" strokeDasharray={PLANNER_RING_C} strokeDashoffset={offset} />
-        ) : (
-          <motion.circle
-            cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke={colour} strokeWidth="5" strokeLinecap="round"
-            strokeDasharray={PLANNER_RING_C}
-            initial={{ strokeDashoffset: PLANNER_RING_C }}
-            animate={{ strokeDashoffset: offset }}
-            transition={{ duration: 1, ease: [0.16, 0.85, 0.3, 1] }}
-          />
-        )}
-      </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#fff' }}>
-        {signedIn}/{total}
-      </div>
-    </div>
-  )
-}
-
-function PlannerTimeRing({ kind, target, totalSeconds, isClosed }) {
-  const [remaining, setRemaining] = useState(() => (target ? Math.floor((target.getTime() - Date.now()) / 1000) : 0))
-
-  useEffect(() => {
-    if (!target || isClosed) return
-    const tick = () => setRemaining(Math.floor((target.getTime() - Date.now()) / 1000))
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [target, isClosed])
-
-  const fmt = (secs) => {
-    const s = Math.max(0, Math.round(secs))
-    const h = Math.floor(s / 3600)
-    const m = Math.floor((s % 3600) / 60)
-    if (h > 0) return `${h}h${String(m).padStart(2, '0')}m`
-    return `${m}:${String(s % 60).padStart(2, '0')}`
-  }
-
-  if (isClosed) {
-    return (
-      <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
-        <svg width="56" height="56" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
-          <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke="#94A3B8" strokeWidth="5" strokeLinecap="round" strokeDasharray={PLANNER_RING_C} strokeDashoffset={0} />
-        </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 900, color: '#4ADE80' }}>✓</div>
-      </div>
-    )
-  }
-
-  if (!target) {
-    return (
-      <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
-        <svg width="56" height="56" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
-        </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: 'rgba(255,255,255,0.4)' }}>–</div>
-      </div>
-    )
-  }
-
-  const displayRemaining = Math.max(0, remaining)
-  const total = totalSeconds && totalSeconds > 0 ? totalSeconds : null
-  const fraction = total ? Math.max(0, Math.min(1, (total - displayRemaining) / total)) : 0
-  const isOverrun = kind === 'end' && remaining <= 0
-  const offset = isOverrun ? 0 : PLANNER_RING_C * (1 - fraction)
-  const colour = kind === 'start' ? '#FBBF24'
-    : isOverrun ? '#F87171'
-    : remaining <= 900 ? '#FBBF24'
-    : '#2EC5CE'
-  const label = isOverrun ? `+${fmt(Math.abs(remaining))}` : fmt(displayRemaining)
-
-  return (
-    <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
-      <svg width="56" height="56" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
-        <motion.circle
-          cx="27" cy="27" r={PLANNER_RING_R} fill="none" stroke={colour} strokeWidth="5" strokeLinecap="round"
-          strokeDasharray={PLANNER_RING_C}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1, ease: 'linear' }}
-        />
-      </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isOverrun ? 10 : 11, fontWeight: 900, color: '#fff' }}>
-        {label}
-      </div>
-    </div>
-  )
-}
-
-// Session card — deliberately the same dark launcher-card treatment as the
-// Hub's live session cards, so a session looks like itself everywhere in
-// the app rather than switching visual language between Home and Sessions.
-function SessionCard({ session, onEdit, onDelete, onVolunteers, onReflect, onView, onSaveTemplate, volCounts, hasReflection, attendanceCounts, index = 0 }) {
-  const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
-  const isMultiDay = session.end_date && session.end_date !== session.session_date
-  const volCount = volCounts?.[session.id] || 0
-  const needed = session.volunteer_limit || 0
-  const covered = needed === 0 || volCount >= needed
-  const isPast = session.session_date < format(new Date(), 'yyyy-MM-dd')
-  const ac = attendanceCounts?.[session.id] || { total: 0, signedIn: 0, absent: 0, expected: 0 }
-
-  // Same distinction the Hub card makes: isClosed (register actually
-  // closed by a person) vs merely overrun (end time passed, still open).
-  const startDT = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
-  const endDT = session.end_time ? new Date(`${session.end_date || session.session_date}T${session.end_time}`) : null
-  const isClosed = !!session.closed_at
-  const now = new Date()
-  const isLiveNow = !isClosed && startDT && endDT && now >= startDT && now <= endDT
-  const isOverrun = !isClosed && endDT && now > endDT
-  const cardStatus = isClosed ? 'closed' : isOverrun ? 'overrun' : isLiveNow ? 'live' : 'upcoming'
-  const countdownKind = cardStatus === 'upcoming' ? 'start' : 'end'
-  const countdownTarget = isClosed ? null : (countdownKind === 'start' ? startDT : endDT)
-  const createdDT = session.created_at ? new Date(session.created_at) : null
-  const timeRingTotalSeconds = countdownKind === 'end' && startDT && endDT
-    ? Math.max(1, Math.floor((endDT.getTime() - startDT.getTime()) / 1000))
-    : countdownKind === 'start' && startDT && createdDT
-    ? Math.max(1, Math.floor((startDT.getTime() - createdDT.getTime()) / 1000))
-    : null
-
-  const statusMeta = {
-    live: { label: 'Live now', dot: '#DC2626', text: '#FCA5A5' },
-    upcoming: { label: 'Upcoming', dot: '#FBBF24', text: '#FDE68A' },
-    overrun: { label: 'Overrun', dot: '#F87171', text: '#FCA5A5' },
-    closed: { label: 'Closed', dot: '#94A3B8', text: '#CBD5E1' },
-  }[cardStatus]
-
-  const dateLabel = isMultiDay
-    ? `${format(parseISO(session.session_date), 'd MMM')} – ${format(parseISO(session.end_date), 'd MMM')}`
-    : format(parseISO(session.session_date), 'EEE d MMM')
-
-  const quickActions = [
-    { key: 'edit', icon: '✏️', onClick: () => onEdit(session), color: '#A5B4FC', enabled: true, title: 'Edit' },
-    { key: 'vol', icon: '❤️', onClick: () => onVolunteers(session), color: '#FCA5A5', enabled: true, title: 'Volunteers' },
-    { key: 'reflect', icon: '⭐', onClick: () => onReflect(session), color: '#FCD34D', enabled: isPast, title: isPast ? 'Reflection' : 'Available once the session has ended' },
-    { key: 'template', icon: '🗂️', onClick: () => onSaveTemplate(session), color: '#7DD3FC', enabled: !!onSaveTemplate, title: 'Save as template' },
-    { key: 'delete', icon: '🗑', onClick: () => onDelete(session.id), color: '#FCA5A5', enabled: true, title: 'Delete' },
-  ]
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.35, delay: index * 0.02 }}
-      whileHover={{ y: -3 }}
-      onClick={() => onView && onView(session)}
-      style={{
-        position: 'relative',
-        background: 'linear-gradient(160deg, #0C1226 0%, #141D3B 60%, #0F1729 100%)',
-        borderRadius: 20,
-        border: cardStatus === 'overrun' ? '1px solid rgba(248,113,113,0.35)' : '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 12px 32px -16px rgba(8,12,28,0.7)',
-        marginBottom: 14,
-        overflow: 'hidden',
-        cursor: onView ? 'pointer' : 'default',
-        padding: '16px 18px',
-      }}
-    >
-      {/* Brand accent bar */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${type.color}, ${type.color}44)` }} />
-
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {/* Status */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusMeta.dot, display: 'block', animation: cardStatus === 'live' ? 'pulse-live 1.5s infinite' : 'none' }} />
-            <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.7, textTransform: 'uppercase', color: statusMeta.text }}>{statusMeta.label}</span>
-            {hasReflection && isPast && (
-              <span style={{ fontSize: 9.5, fontWeight: 800, color: '#86EFAC', background: 'rgba(34,197,94,0.16)', borderRadius: 99, padding: '2px 8px' }}>⭐ Reflected</span>
-            )}
-            {isPast && !hasReflection && (
-              <span style={{ fontSize: 9.5, fontWeight: 800, color: '#FDE68A', background: 'rgba(245,158,11,0.16)', borderRadius: 99, padding: '2px 8px' }}>⭐ Reflection due</span>
-            )}
-          </div>
-
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1.25, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {type.icon} {session.title}
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 10px' }}>
-            <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>📅 {dateLabel}</span>
-            <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>⏰ {session.start_time || '—'}{session.end_time ? ` – ${session.end_time}` : ''}</span>
-            {session.location && (
-              <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>📍 {session.location.split(',')[0]}</span>
-            )}
-          </div>
-
-          {(session.bubbles || []).length > 0 && (
-            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 8 }}>
-              {(session.bubbles || []).map(b => {
-                const bd = DEFAULT_BUBBLE_DEFS.find(d => d.label === b)
-                const c = bd?.color || '#94A3B8'
-                return <span key={b} style={{ background: c + '26', color: c, borderRadius: 99, padding: '3px 9px', fontSize: 10, fontWeight: 800 }}>{b}</span>
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Rings */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flexShrink: 0 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-            <PlannerAttendanceRing signedIn={ac.signedIn} total={ac.total} expected={ac.expected} isClosed={isClosed} />
-            <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>Attendees</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-            <PlannerTimeRing kind={countdownKind} target={countdownTarget} totalSeconds={timeRingTotalSeconds} isClosed={isClosed} />
-            <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
-              {cardStatus === 'live' ? 'Ends in' : cardStatus === 'upcoming' ? 'Begins in' : cardStatus === 'overrun' ? 'Overrun' : 'Closed'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Stat row + actions */}
-      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px 14px', marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{ac.signedIn}</span>
-          <span style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{isPast || isClosed ? 'Attended' : 'Signed in'}</span>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{cardStatus === 'upcoming' ? ac.expected : ac.absent}</span>
-          <span style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{cardStatus === 'upcoming' ? 'Expected' : 'Absent'}</span>
-        </div>
-        {needed > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <span style={{ fontSize: 14, fontWeight: 900, color: covered ? '#86EFAC' : '#FDE68A' }}>{volCount}/{needed}</span>
-            <span style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Volunteers</span>
-          </div>
-        )}
-
-        <div style={{ flex: 1 }} />
-
-        <div style={{ display: 'flex', gap: 5 }}>
-          {quickActions.map(a => (
-            <motion.button
-              key={a.key}
-              onClick={e => { e.stopPropagation(); if (a.enabled) a.onClick() }}
-              whileHover={a.enabled ? { y: -2, background: 'rgba(255,255,255,0.14)' } : {}}
-              whileTap={a.enabled ? { scale: 0.92 } : {}}
-              disabled={!a.enabled}
-              title={a.title}
-              style={{ width: 32, height: 32, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', cursor: a.enabled ? 'pointer' : 'not-allowed', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: a.enabled ? 1 : 0.3 }}
-            >
-              {a.icon}
-            </motion.button>
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
-// ─── PAST SESSIONS INSIGHTS ───────────────────────────────────
-function PastSessionsInsights({ pastSessions, org }) {
-  const primary = org?.primary_color || '#1B9AAA'
-  const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState(null)
-
-  const sessionIds = React.useMemo(() => pastSessions.map(s => s.id), [pastSessions])
-  const sessionIdsKey = sessionIds.join(',')
-
-  useEffect(() => {
-    let cancelled = false
-    if (sessionIds.length === 0) { setStats(null); setLoading(false); return }
-    setLoading(true)
-    supabase.from('attendance').select('session_id, child_id, status, absence_reason, children(id, first_name, last_name, photo_url, group_name)').in('session_id', sessionIds)
-      .then(({ data }) => {
-        if (cancelled) return
-        const rows = data || []
-        let totalExpected = 0, totalAttended = 0, totalNoShow = 0
-        const absenceCounts = {} // child_id -> { count, child, reasons: {} }
-        const perSession = {} // session_id -> { total, attended }
-        rows.forEach(r => {
-          totalExpected++
-          if (!perSession[r.session_id]) perSession[r.session_id] = { total: 0, attended: 0 }
-          perSession[r.session_id].total++
-          if (r.status === 'signed_in' || r.status === 'signed_out') {
-            totalAttended++
-            perSession[r.session_id].attended++
-          } else {
-            totalNoShow++
-            if (r.child_id) {
-              if (!absenceCounts[r.child_id]) absenceCounts[r.child_id] = { count: 0, child: r.children, reasons: {} }
-              absenceCounts[r.child_id].count++
-              const reason = r.absence_reason?.trim()
-              if (reason) absenceCounts[r.child_id].reasons[reason] = (absenceCounts[r.child_id].reasons[reason] || 0) + 1
-            }
-          }
-        })
-        const topAbsentees = Object.values(absenceCounts).filter(a => a.child).sort((a, b) => b.count - a.count).slice(0, 6)
-        // Session with the lowest attendance rate (worth a look)
-        let lowestRateSession = null
-        Object.entries(perSession).forEach(([sid, v]) => {
-          if (v.total === 0) return
-          const rate = v.attended / v.total
-          if (!lowestRateSession || rate < lowestRateSession.rate) {
-            lowestRateSession = { sid, rate, ...v, session: pastSessions.find(s => s.id === sid) }
-          }
-        })
-        setStats({
-          totalSessions: pastSessions.length,
-          totalExpected, totalAttended, totalNoShow,
-          attendanceRate: totalExpected > 0 ? Math.round((totalAttended / totalExpected) * 100) : null,
-          topAbsentees,
-          lowestRateSession: lowestRateSession && lowestRateSession.total >= 3 ? lowestRateSession : null,
-        })
-        setLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [sessionIdsKey, pastSessions]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (pastSessions.length === 0) return null
-
-  const card = { background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(16px)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 8px 32px -12px rgba(30,41,59,0.1)', padding: 18 }
-
-  return (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-        📊 Session Insights
-      </div>
-
-      {loading ? (
-        <div style={{ ...card, textAlign: 'center', color: '#94A3B8', fontSize: 13, padding: 24 }}>Analysing past sessions…</div>
-      ) : (
-        <>
-          {/* KPI row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 12 }}>
-            {[
-              { label: 'Completed Sessions', value: stats.totalSessions, icon: '🗄️', color: '#64748B' },
-              { label: 'Attendance Rate', value: stats.attendanceRate != null ? `${stats.attendanceRate}%` : '—', icon: '✅', color: stats.attendanceRate == null ? '#94A3B8' : stats.attendanceRate >= 80 ? '#16A34A' : stats.attendanceRate >= 60 ? '#D97706' : '#DC2626' },
-              { label: 'Total No-Shows', value: stats.totalNoShow, icon: '⚠️', color: '#DC2626' },
-              { label: 'Young People Seen', value: stats.totalAttended, icon: '🙋', color: primary },
-            ].map(k => (
-              <div key={k.label} style={{ ...card, padding: '14px 16px' }}>
-                <div style={{ fontSize: 20, marginBottom: 6 }}>{k.icon}</div>
-                <div style={{ fontSize: 21, fontWeight: 900, color: k.color, lineHeight: 1 }}>{k.value}</div>
-                <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: stats.lowestRateSession ? '1.3fr 1fr' : '1fr', gap: 12 }}>
-            {/* Frequent absentees */}
-            <div style={card}>
-              <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Frequent Absentees</div>
-              {stats.topAbsentees.length === 0 ? (
-                <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No repeat no-shows — great attendance!</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {stats.topAbsentees.map(a => {
-                    const topReason = Object.entries(a.reasons).sort((x, y) => y[1] - x[1])[0]
-                    return (
-                      <div key={a.child.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#64748B', flexShrink: 0, overflow: 'hidden' }}>
-                          {a.child.photo_url ? <img src={a.child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${a.child.first_name?.[0] || ''}${a.child.last_name?.[0] || ''}`}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.child.first_name} {a.child.last_name}</div>
-                          <div style={{ fontSize: 10.5, color: '#94A3B8' }}>{a.child.group_name || 'Ungrouped'}{topReason ? ` · "${topReason[0]}"` : ''}</div>
-                        </div>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: '#DC2626', background: '#FEF2F2', borderRadius: 99, padding: '3px 9px', flexShrink: 0 }}>{a.count} missed</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Lowest-attendance session flag */}
-            {stats.lowestRateSession && (
-              <div style={card}>
-                <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Worth a Look</div>
-                <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 6 }}>Lowest attendance of recent sessions</div>
-                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{stats.lowestRateSession.session?.title || 'Untitled'}</div>
-                <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>{stats.lowestRateSession.session?.session_date ? format(parseISO(stats.lowestRateSession.session.session_date), 'd MMM yyyy') : ''}</div>
-                <div style={{ marginTop: 10, fontSize: 20, fontWeight: 900, color: stats.lowestRateSession.rate < 0.5 ? '#DC2626' : '#D97706' }}>
-                  {Math.round(stats.lowestRateSession.rate * 100)}%
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', marginLeft: 6 }}>{stats.lowestRateSession.attended}/{stats.lowestRateSession.total} attended</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
 
 function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount, attendanceCounts, hasReflection }) {
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
@@ -1360,67 +930,6 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
 
 
 // ─── SESSIONS TIPS ("learning to use LaunchSession") ──────────
-const SESSION_TIPS = [
-  { icon: '🔄', title: 'Duplicate a session', text: 'Running the same activity every week? Edit a past session and re-save it with a new date instead of starting from scratch.' },
-  { icon: '🧩', title: 'Rotation slots', text: 'Planning a multi-activity day? Add rotation slots in the session form so each bubble/group gets its own timetable of activities.' },
-  { icon: '❤️', title: 'Volunteer cover', text: 'Set a volunteer limit on a session and the "Currently Live" and "Upcoming" cards will flag it the moment cover is short.' },
-  { icon: '⭐', title: "Don't skip reflections", text: 'A quick reflection after each session builds up real evidence for Impact & Outcomes and funding reports later.' },
-  { icon: '📅', title: 'Week view', text: 'Switch to the week grid (top right, next to the list icon) to spot gaps in your schedule at a glance.' },
-  { icon: '🚌', title: 'Trips vs sessions', text: 'Use the Type filter to separate regular sessions from one-off trips — handy once your calendar starts filling up.' },
-  { icon: '🛡️', title: 'Attach a risk assessment', text: 'Higher-risk activities? Attach or create a risk assessment right from the session form, in the Details step.' },
-]
-
-function TipCard() {
-  const STORAGE_KEY = 'ls_sessions_tips_dismissed'
-  const [dismissed, setDismissed] = useState(() => { try { return localStorage.getItem(STORAGE_KEY) === 'true' } catch (e) { return false } })
-  const [i, setI] = useState(0)
-  const tip = SESSION_TIPS[i]
-
-  const dismiss = () => {
-    setDismissed(true)
-    try { localStorage.setItem(STORAGE_KEY, 'true') } catch (e) { /* best effort */ }
-  }
-
-  if (dismissed) return (
-    <button onClick={() => setDismissed(false)} style={{ width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: 14, border: '1.5px dashed rgba(109,93,246,0.35)', background: 'rgba(109,93,246,0.06)', color: '#6D5DF6', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-      💡 Show tips again
-    </button>
-  )
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-      style={{ position: 'relative', overflow: 'hidden', borderRadius: 20, padding: 18, background: 'linear-gradient(150deg, #6D5DF6, #5B8DEF)', color: '#fff', boxShadow: '0 16px 40px -20px rgba(109,93,246,0.6)' }}>
-      <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', pointerEvents: 'none' }} />
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <motion.img src="/assets/rockets/rocket-icon.png" alt="" animate={{ rotate: [0, -8, 8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} style={{ height: 20, width: 'auto' }} />
-          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)' }}>Learning LaunchSession</span>
-        </div>
-        <button onClick={dismiss} title="Dismiss tips" style={{ background: 'rgba(255,255,255,0.16)', border: 'none', color: '#fff', width: 22, height: 22, borderRadius: '50%', fontSize: 12, cursor: 'pointer', flexShrink: 0 }}>×</button>
-      </div>
-      <AnimatePresence mode="wait">
-        <motion.div key={i} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.25 }} style={{ position: 'relative', minHeight: 76 }}>
-          <div style={{ fontSize: 22, marginBottom: 6 }}>{tip.icon}</div>
-          <div style={{ fontSize: 13.5, fontWeight: 800, marginBottom: 4 }}>{tip.title}</div>
-          <div style={{ fontSize: 12, lineHeight: 1.55, color: 'rgba(255,255,255,0.88)' }}>{tip.text}</div>
-        </motion.div>
-      </AnimatePresence>
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
-        <div style={{ display: 'flex', gap: 5 }}>
-          {SESSION_TIPS.map((_, idx) => (
-            <button key={idx} onClick={() => setI(idx)} style={{ width: idx === i ? 16 : 6, height: 6, borderRadius: 99, border: 'none', background: idx === i ? '#fff' : 'rgba(255,255,255,0.35)', cursor: 'pointer', transition: 'width 0.2s' }} />
-          ))}
-        </div>
-        <button onClick={() => setI(n => (n + 1) % SESSION_TIPS.length)} style={{ background: 'rgba(255,255,255,0.16)', border: 'none', color: '#fff', fontSize: 11.5, fontWeight: 800, padding: '5px 12px', borderRadius: 99, cursor: 'pointer' }}>
-          Next tip →
-        </button>
-      </div>
-    </motion.div>
-  )
-}
-
-// ─── TEMPLATES ────────────────────────────────────────────────
-
 const TEMPLATE_ICONS = ['📋', '⚽', '🏀', '🎨', '🏊', '🚌', '🎭', '🏆', '🎉', '📚', '🛠️', '🏕️', '🎊', '🤝', '🏃', '✨']
 
 function TemplateCard({ t, primary, onUse, onEdit, onDelete }) {
@@ -1640,6 +1149,273 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
   )
 }
 
+// ─────────────────────────────────────────────────────────────
+// REDESIGNED SESSIONS PAGE PIECES
+// ─────────────────────────────────────────────────────────────
+
+// Works out everything a past session still owes, from data we already hold.
+// Deliberately only uses fields that genuinely exist on the row — anything the
+// backend doesn't track (e.g. outcome capture) is simply not reported.
+function getReviewIssues(s, { hasReflection, counts }) {
+  const issues = []
+  if (!hasReflection) issues.push('Reflection outstanding')
+  if ((counts?.expected || 0) > 0) issues.push('Attendance not finalised')
+  if (!s.closed_at) issues.push('Session not closed')
+  return issues
+}
+
+function fmtDayLabel(dateStr) {
+  if (!dateStr) return ''
+  const d = parseISO(dateStr)
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const diff = Math.round((new Date(dateStr + 'T00:00:00') - today) / 86400000)
+  if (diff === 0) return 'Today'
+  if (diff === 1) return 'Tomorrow'
+  if (diff === -1) return 'Yesterday'
+  return format(d, 'EEE d MMM')
+}
+
+// Buckets a list of sessions into natural date groups for the given direction.
+function groupSessions(list, direction) {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const buckets = new Map()
+  const order = direction === 'future'
+    ? ['Today', 'Tomorrow', 'This week', 'Later']
+    : ['Today', 'Yesterday', 'Earlier this week', 'Earlier']
+
+  list.forEach(s => {
+    if (!s.session_date) { pushTo(buckets, direction === 'future' ? 'Later' : 'Earlier', s); return }
+    const diff = Math.round((new Date(s.session_date + 'T00:00:00') - today) / 86400000)
+    let key
+    if (direction === 'future') {
+      key = diff <= 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff <= 7 ? 'This week' : 'Later'
+    } else {
+      key = diff === 0 ? 'Today' : diff === -1 ? 'Yesterday' : diff >= -7 ? 'Earlier this week' : 'Earlier'
+    }
+    pushTo(buckets, key, s)
+  })
+  return order.filter(k => buckets.get(k)?.length).map(k => ({ label: k, items: buckets.get(k) }))
+}
+function pushTo(map, key, item) {
+  if (!map.has(key)) map.set(key, [])
+  map.get(key).push(item)
+}
+
+// Small pill used across the new cards for readiness / issues.
+function StatusPill({ ok, children, tone }) {
+  const c = tone === 'amber'
+    ? { bg: '#FEF3C7', fg: '#92400E', bd: '#FDE68A' }
+    : tone === 'red'
+      ? { bg: '#FEE2E2', fg: '#B91C1C', bd: '#FECACA' }
+      : ok
+        ? { bg: '#DCFCE7', fg: '#15803D', bd: '#BBF7D0' }
+        : { bg: '#F1F5F9', fg: '#64748B', bd: '#E2E8F0' }
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700,
+      background: c.bg, color: c.fg, border: `1px solid ${c.bd}`, borderRadius: 99, padding: '3px 9px', whiteSpace: 'nowrap',
+    }}>{children}</span>
+  )
+}
+
+function MetaStat({ value, label }) {
+  return (
+    <span style={{ fontSize: 12, color: '#475569', fontWeight: 600, whiteSpace: 'nowrap' }}>
+      <strong style={{ color: '#0F172A', fontWeight: 800 }}>{value}</strong> {label}
+    </span>
+  )
+}
+
+// Row-level ••• menu. Destructive actions are withheld for live sessions so we
+// can't leave attendance pointing at a session that's mid-flight.
+function CardMenu({ status, onView, onEdit, onDuplicate, onDelete, onSaveTemplate, onClose }) {
+  const items = [
+    { label: 'View', onClick: onView },
+    ...(status !== 'completed' ? [{ label: 'Edit', onClick: onEdit }] : []),
+    { label: 'Duplicate', onClick: onDuplicate },
+    { label: 'Save as template', onClick: onSaveTemplate },
+    ...(status !== 'live' ? [{ label: 'Delete', onClick: onDelete, danger: true }] : []),
+  ]
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+      <div style={{
+        position: 'absolute', top: '100%', right: 0, zIndex: 41, minWidth: 172, marginTop: 4,
+        background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 16px 40px -12px rgba(15,23,42,0.25)', padding: 5,
+      }}>
+        {items.map((it, i) => (
+          <button key={i} onClick={(e) => { e.stopPropagation(); onClose(); it.onClick && it.onClick() }}
+            style={{
+              display: 'block', width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: 'none',
+              background: 'transparent', color: it.danger ? '#DC2626' : '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+            {it.label}
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+function SessionRowCard({ s, status, counts, volCount, hasReflection, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister }) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
+  const expected = counts?.total || 0
+  const signedIn = counts?.signedIn || 0
+  const absent = counts?.absent || 0
+  const pending = counts?.expected || 0
+  const needsVols = s.volunteer_limit && volCount < s.volunteer_limit
+
+  const accent = status === 'live' ? '#16A34A' : status === 'review' ? '#F59E0B' : status === 'completed' ? '#94A3B8' : '#6D5DF6'
+  const attendancePct = expected > 0 ? Math.round((signedIn / expected) * 100) : 0
+  const reviewIssues = status === 'review' ? getReviewIssues(s, { hasReflection, counts }) : []
+
+  return (
+    <div
+      onClick={onView}
+      style={{
+        position: 'relative', background: '#fff', border: `1px solid ${status === 'live' ? '#BBF7D0' : '#EEF1F6'}`,
+        borderLeft: `3px solid ${accent}`, borderRadius: 16, padding: isMobile ? 14 : '16px 18px', marginBottom: 10, cursor: 'pointer',
+        boxShadow: status === 'live' ? '0 8px 26px -14px rgba(22,163,74,0.45)' : '0 4px 16px -12px rgba(15,23,42,0.18)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 11, background: type.color + '18', border: `1.5px solid ${type.color}30`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0,
+        }}>{type.icon}</div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+            {status === 'live' && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 900, letterSpacing: 0.6, color: '#15803D', background: '#DCFCE7', border: '1px solid #BBF7D0', borderRadius: 99, padding: '2px 8px' }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#16A34A', animation: 'sp-live-pulse 1.6s ease-in-out infinite' }} />
+                LIVE
+              </span>
+            )}
+            {status === 'completed' && <StatusPill ok>✓ Completed</StatusPill>}
+            <span style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{s.title}</span>
+          </div>
+
+          <div style={{ fontSize: 12, color: '#64748B', fontWeight: 600, marginBottom: 8 }}>
+            {fmtDayLabel(s.session_date)}
+            {s.start_time ? ` · ${s.start_time}${s.end_time ? `–${s.end_time}` : ''}` : ''}
+            {s.location ? ` · ${s.location}` : ''}
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: reviewIssues.length || status !== 'completed' ? 8 : 0 }}>
+            {status === 'live' ? (
+              <>
+                <MetaStat value={signedIn} label="signed in" />
+                <MetaStat value={pending} label="to arrive" />
+                <MetaStat value={absent} label="absent" />
+              </>
+            ) : status === 'completed' || status === 'review' ? (
+              <>
+                <MetaStat value={expected} label="expected" />
+                <MetaStat value={signedIn} label="attended" />
+                <MetaStat value={absent} label="absent" />
+                {expected > 0 && <MetaStat value={`${attendancePct}%`} label="attendance" />}
+              </>
+            ) : (
+              <>
+                <MetaStat value={expected} label="expected" />
+                <MetaStat value={volCount} label="volunteers" />
+              </>
+            )}
+          </div>
+
+          {status === 'live' && expected > 0 && (
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ height: 6, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
+                <div style={{ width: `${attendancePct}%`, height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#16A34A,#4ADE80)' }} />
+              </div>
+              <div style={{ fontSize: 10.5, color: '#64748B', fontWeight: 700, marginTop: 4 }}>{signedIn} / {expected} signed in</div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {reviewIssues.map((iss, i) => <StatusPill key={i} tone="amber">⚠ {iss}</StatusPill>)}
+            {status === 'upcoming' && needsVols && <StatusPill tone="amber">⚠ {s.volunteer_limit - volCount} volunteer{s.volunteer_limit - volCount === 1 ? '' : 's'} needed</StatusPill>}
+            {status === 'upcoming' && s.risk_assessment_required && <StatusPill tone="amber">⚠ Risk assessment required</StatusPill>}
+            {status === 'completed' && (hasReflection ? <StatusPill ok>✓ Reflection complete</StatusPill> : <StatusPill tone="amber">⚠ Reflection due</StatusPill>)}
+          </div>
+        </div>
+
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <button onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }} aria-label="Session actions"
+            style={{ border: 'none', background: 'transparent', color: '#94A3B8', fontSize: 16, fontWeight: 900, cursor: 'pointer', padding: '2px 6px', borderRadius: 8 }}>
+            •••
+          </button>
+          {menuOpen && (
+            <CardMenu
+              status={status}
+              onClose={() => setMenuOpen(false)}
+              onView={onView} onEdit={onEdit} onDuplicate={onDuplicate}
+              onDelete={onDelete} onSaveTemplate={onSaveTemplate}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Primary action row */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+        {status === 'live' && (
+          <button onClick={onOpenRegister}
+            style={{ flex: isMobile ? '1 1 100%' : '0 0 auto', padding: '10px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#16A34A,#22C55E)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
+            Open Live Register
+          </button>
+        )}
+        {status === 'upcoming' && (
+          <button onClick={onView}
+            style={{ flex: isMobile ? '1 1 100%' : '0 0 auto', padding: '10px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#6D5DF6,#5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
+            Open session
+          </button>
+        )}
+        {(status === 'completed' || status === 'review') && (
+          <button onClick={hasReflection ? onView : onReflect}
+            style={{ flex: isMobile ? '1 1 100%' : '0 0 auto', padding: '10px 18px', borderRadius: 10, border: hasReflection ? '1.5px solid #E2E8F0' : 'none', background: hasReflection ? '#fff' : 'linear-gradient(135deg,#F59E0B,#F97316)', color: hasReflection ? '#334155' : '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
+            {hasReflection ? 'View session' : status === 'review' ? 'Review session' : 'Complete reflection'}
+          </button>
+        )}
+        {needsVols && status !== 'completed' && (
+          <button onClick={onVolunteers}
+            style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+            ❤️ Volunteers
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Compact summary strip — sits BELOW the sessions, not above them.
+function InsightsStrip({ completed, attendancePct, noShows, reached }) {
+  const items = [
+    { v: completed, l: 'Sessions' },
+    { v: `${attendancePct}%`, l: 'Attendance' },
+    { v: noShows, l: 'No-shows' },
+    { v: reached, l: 'Young people reached' },
+  ]
+  return (
+    <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '14px 18px', marginTop: 20 }}>
+      <div style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: 0.8, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 10 }}>
+        Session summary · last 7 days
+      </div>
+      <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap' }}>
+        {items.map(i => (
+          <div key={i.l}>
+            <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', lineHeight: 1.1 }}>{i.v}</div>
+            <div style={{ fontSize: 11, color: '#64748B', fontWeight: 600, marginTop: 2 }}>{i.l}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, autoOpenWizard, initialEditSessionId, onNavigate }) {
   const orgId = org?.id
   const primary = org?.primary_color || '#1B9AAA'
@@ -1655,10 +1431,21 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const [reflectingSession, setReflectingSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('list') // 'list' | 'week' | 'form' | 'wizard'
-  const [tab, setTab] = useState('upcoming') // 'upcoming' | 'live' | 'past7' | 'reflections_due'
+  const [tab, setTab] = useState('upcoming') // 'upcoming' | 'live' | 'completed' | 'needs_review'
+  const [locationFilter, setLocationFilter] = useState('all')
+  const [showFilters, setShowFilters] = useState(false)
+  const [showNewMenu, setShowNewMenu] = useState(false)
+  const [showDuplicatePicker, setShowDuplicatePicker] = useState(false)
+  const [frequentAbsentees, setFrequentAbsentees] = useState([])
+  const [tipDismissed, setTipDismissed] = useState(() => {
+    try { return localStorage.getItem('ls_sessions_tip_dismissed') === '1' } catch { return false }
+  })
+  const dismissTip = () => {
+    setTipDismissed(true)
+    try { localStorage.setItem('ls_sessions_tip_dismissed', '1') } catch {}
+  }
   const [typeFilter, setTypeFilter] = useState('all') // 'all' | 'sessions' | 'trips'
   const [onlyNeedsVolunteers, setOnlyNeedsVolunteers] = useState(false)
-  const [showReflectionHistory, setShowReflectionHistory] = useState(false)
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -1709,6 +1496,31 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
   useEffect(() => { loadData() }, [orgId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Frequent absentees — reuses the attendance rows we're already entitled to
+  // read for this org, rolled up client-side rather than as an extra query per child.
+  useEffect(() => {
+    if (!orgId) return
+    let cancelled = false
+    ;(async () => {
+      const cutoff = format(addDays(new Date(), -60), 'yyyy-MM-dd')
+      const { data: recentSess } = await supabase.from('sessions').select('id').eq('org_id', orgId).gte('session_date', cutoff)
+      const ids = (recentSess || []).map(r => r.id)
+      if (!ids.length) { if (!cancelled) setFrequentAbsentees([]); return }
+      const { data: att } = await supabase.from('attendance').select('child_id, status').in('session_id', ids).eq('status', 'absent')
+      const tally = {}
+      ;(att || []).forEach(a => { tally[a.child_id] = (tally[a.child_id] || 0) + 1 })
+      const flagged = Object.entries(tally).filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1])
+      if (!flagged.length) { if (!cancelled) setFrequentAbsentees([]); return }
+      const { data: kids } = await supabase.from('children').select('id, first_name, last_name').eq('org_id', orgId).in('id', flagged.slice(0, 20).map(([id]) => id))
+      const nameMap = {}
+      ;(kids || []).forEach(k => { nameMap[k.id] = `${k.first_name} ${k.last_name}` })
+      if (!cancelled) {
+        setFrequentAbsentees(flagged.filter(([id]) => nameMap[id]).map(([id, n]) => ({ id, name: nameMap[id], missed: n })))
+      }
+    })()
+    return () => { cancelled = true }
+  }, [orgId])
+
   const autoReflectOpenedRef = React.useRef(false)
   useEffect(() => {
     if (!initialReflectSessionId || sessions.length === 0) return
@@ -1737,7 +1549,6 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const pastSessionsAll = React.useMemo(() => sessions.filter(isSessionPast), [sessions]) // eslint-disable-line react-hooks/exhaustive-deps
   const liveSessions = React.useMemo(() => sessions.filter(isSessionLive), [sessions]) // eslint-disable-line react-hooks/exhaustive-deps
   const strictlyUpcomingSessions = React.useMemo(() => sessions.filter(s => !isSessionPast(s) && !isSessionLive(s)), [sessions]) // eslint-disable-line react-hooks/exhaustive-deps
-  const notYetEndedSessions = React.useMemo(() => sessions.filter(s => !isSessionPast(s)), [sessions]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sevenDaysAgoStr = format(addDays(new Date(), -7), 'yyyy-MM-dd')
   const past7DaysSessions = React.useMemo(() =>
@@ -1745,25 +1556,20 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       .sort((a, b) => `${b.session_date}${b.start_time || ''}`.localeCompare(`${a.session_date}${a.start_time || ''}`))
   , [sessions, sevenDaysAgoStr]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const reflectionsDueSessions = React.useMemo(() =>
-    sessions.filter(s => isSessionPast(s) && !reflections[s.id])
-      .sort((a, b) => `${b.session_date}${b.start_time || ''}`.localeCompare(`${a.session_date}${a.start_time || ''}`))
-  , [sessions, reflections]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const reflectionsDueCount = reflectionsDueSessions.length
-  const needsVolunteersCount = sessions.filter(s => s.volunteer_limit && (volCounts[s.id] || 0) < s.volunteer_limit).length
-  const childrenExpectedCount = React.useMemo(() => notYetEndedSessions.reduce((sum, s) => sum + (attendanceCounts[s.id]?.total || 0), 0), [notYetEndedSessions, attendanceCounts])
 
-  const reflectedSessions = React.useMemo(() => {
-    return sessions
-      .filter(s => reflections[s.id])
-      .sort((a, b) => (b.session_date || '').localeCompare(a.session_date || ''))
-  }, [sessions, reflections])
+  // Land the user on the most useful tab: live if something's running, else
+  // upcoming, else fall back to completed so the page isn't empty on arrival.
+  const defaultTabSetRef = React.useRef(false)
+  useEffect(() => {
+    if (loading || defaultTabSetRef.current) return
+    defaultTabSetRef.current = true
+    if (liveSessions.length > 0) setTab('live')
+    else if (strictlyUpcomingSessions.length > 0) setTab('upcoming')
+    else if (pastSessionsAll.length > 0) setTab('completed')
+  }, [loading, liveSessions.length, strictlyUpcomingSessions.length, pastSessionsAll.length])
 
-  const sessionsNeedingVolunteers = React.useMemo(() =>
-    sessions.filter(s => s.volunteer_limit && (volCounts[s.id] || 0) < s.volunteer_limit && !isSessionPast(s))
-      .sort((a, b) => `${a.session_date}${a.start_time || ''}`.localeCompare(`${b.session_date}${b.start_time || ''}`))
-  , [sessions, volCounts]) // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const loadTemplates = async () => {
     if (!orgId) return
@@ -1885,6 +1691,19 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     if (onSessionSaved) onSessionSaved()
   }
 
+  const handleDuplicateSession = (s) => {
+    // Seed the wizard with everything except identity/date/state fields, so the
+    // user lands on a pre-filled new session rather than editing the original.
+    const { id, created_at, opened_at, opened_by, closed_at, closed_by, register_opened_at,
+      reopened_at, reopened_by, reopen_reason, cancelled_at, cancelled_by, cancellation_reason,
+      starting_soon_notified_at, register_open_reminder_sent_at, volunteer_cover_reminder_sent_at,
+      archived_at, status: _status, register_status: _rs, ...rest } = s
+    const nextDate = format(addDays(new Date(), 1), 'yyyy-MM-dd')
+    setInitialTemplate(null)
+    setEditing({ ...rest, title: s.title, session_date: nextDate, end_date: s.end_date ? nextDate : nextDate })
+    setView('wizard')
+  }
+
   const openNew = (date) => {
     setInitialTemplate(null)
     setEditing({ ...EMPTY_FORM, session_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), end_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), session_type: typeFilter === 'trips' ? 'trip' : 'activity' })
@@ -1908,6 +1727,80 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialEditSessionId, loading, sessions])
 
+  // ── Derived lists for the redesigned tabs ──
+  // "Needs review" is broader than reflections: any past session with an
+  // outstanding action (reflection, unfinalised attendance, never closed).
+  const needsReviewSessions = React.useMemo(() =>
+    pastSessionsAll
+      .filter(s => getReviewIssues(s, { hasReflection: !!reflections[s.id], counts: attendanceCounts[s.id] }).length > 0)
+      .sort((a, b) => `${b.session_date}${b.start_time || ''}`.localeCompare(`${a.session_date}${a.start_time || ''}`))
+  , [pastSessionsAll, reflections, attendanceCounts])
+
+  const completedSessions = React.useMemo(() =>
+    pastSessionsAll.slice().sort((a, b) => `${b.session_date}${b.start_time || ''}`.localeCompare(`${a.session_date}${a.start_time || ''}`))
+  , [pastSessionsAll])
+
+  const tabBaseList = {
+    upcoming: strictlyUpcomingSessions,
+    live: liveSessions,
+    completed: completedSessions,
+    needs_review: needsReviewSessions,
+  }[tab] || []
+
+  const activeFilterChips = []
+  if (typeFilter !== 'all') activeFilterChips.push({ key: 'type', label: typeFilter === 'trips' ? 'Trips only' : 'Sessions only', clear: () => setTypeFilter('all') })
+  if (onlyNeedsVolunteers) activeFilterChips.push({ key: 'vols', label: 'Needs volunteers', clear: () => setOnlyNeedsVolunteers(false) })
+  if (locationFilter !== 'all') activeFilterChips.push({ key: 'loc', label: locationFilter, clear: () => setLocationFilter('all') })
+  if (search.trim()) activeFilterChips.push({ key: 'q', label: `“${search.trim()}”`, clear: () => setSearch('') })
+
+  const displayed = tabBaseList.filter(s => {
+    if (typeFilter === 'trips' && s.session_type !== 'trip') return false
+    if (typeFilter === 'sessions' && s.session_type === 'trip') return false
+    if (onlyNeedsVolunteers && !(s.volunteer_limit && (volCounts[s.id] || 0) < s.volunteer_limit)) return false
+    if (locationFilter !== 'all' && (s.location || '') !== locationFilter) return false
+    if (search.trim()) {
+      const q = search.trim().toLowerCase()
+      const type = SESSION_TYPES.find(t => t.key === s.session_type)
+      const hay = `${s.title} ${s.location || ''} ${type?.label || ''} ${s.description || ''}`.toLowerCase()
+      if (!hay.includes(q)) return false
+    }
+    return true
+  })
+
+  const grouped = React.useMemo(
+    () => groupSessions(displayed, tab === 'completed' || tab === 'needs_review' ? 'past' : 'future'),
+    [displayed, tab]
+  )
+
+  const locationOptions = React.useMemo(
+    () => [...new Set(sessions.map(s => s.location).filter(Boolean))].sort(),
+    [sessions]
+  )
+
+  const TABS = [
+    { key: 'upcoming', label: 'Upcoming', count: strictlyUpcomingSessions.length },
+    { key: 'live', label: 'Live', count: liveSessions.length, live: true },
+    { key: 'completed', label: 'Completed', count: completedSessions.length },
+    { key: 'needs_review', label: 'Needs Review', count: needsReviewSessions.length },
+  ]
+
+  // ── Last-7-days summary, from data already loaded ──
+  const summary7 = React.useMemo(() => {
+    let attended = 0, noShows = 0, expectedTotal = 0
+    past7DaysSessions.forEach(s => {
+      const c = attendanceCounts[s.id]
+      if (!c) return
+      attended += c.signedIn
+      noShows += c.absent
+      expectedTotal += c.total
+    })
+    return {
+      completed: past7DaysSessions.length,
+      attendancePct: expectedTotal > 0 ? Math.round((attended / expectedTotal) * 100) : 0,
+      noShows,
+      reached: attended,
+    }
+  }, [past7DaysSessions, attendanceCounts])
   // ── WIZARD VIEW (new session creation) ──
   if (view === 'wizard') {
     return (
@@ -1977,295 +1870,368 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   }
 
 
-  const tabBaseList = {
-    upcoming: strictlyUpcomingSessions,
-    live: liveSessions,
-    past7: past7DaysSessions,
-    reflections_due: reflectionsDueSessions,
-  }[tab] || []
-
-  const displayed = tabBaseList.filter(s => {
-    if (typeFilter === 'trips' && s.session_type !== 'trip') return false
-    if (typeFilter === 'sessions' && s.session_type === 'trip') return false
-    if (onlyNeedsVolunteers && !(s.volunteer_limit && (volCounts[s.id] || 0) < s.volunteer_limit)) return false
-    if (search.trim() && !(`${s.title} ${s.location || ''}`.toLowerCase().includes(search.trim().toLowerCase()))) return false
-    return true
-  })
-
-  const TABS = [
-    { key: 'upcoming', label: 'Upcoming', count: strictlyUpcomingSessions.length },
-    { key: 'live', label: 'Currently Live', count: liveSessions.length, live: true },
-    { key: 'past7', label: 'Past 7 Days', count: past7DaysSessions.length },
-    { key: 'reflections_due', label: 'Reflections Due', count: reflectionsDueCount },
-  ]
-
-  const statCards = [
-    { key: 'upcoming', label: 'Upcoming', sub: 'Sessions', value: strictlyUpcomingSessions.length, icon: '📅', color: '#6D5DF6', link: null, onClick: () => setTab('upcoming') },
-    { key: 'live', label: 'Currently Live', sub: 'Sessions', value: liveSessions.length, icon: '🔴', color: '#16A34A', link: 'View live →', pulse: liveSessions.length > 0, onClick: () => setTab('live') },
-    { key: 'past7', label: 'Past 7 Days', sub: 'Sessions', value: past7DaysSessions.length, icon: '🕐', color: '#5B8DEF', link: 'View all →', onClick: () => setTab('past7') },
-    { key: 'reflections', label: 'Reflections Due', sub: 'Sessions', value: reflectionsDueCount, icon: '⭐', color: '#FFB648', link: reflectionsDueCount > 0 ? 'Review now →' : null, glow: reflectionsDueCount > 0, onClick: () => setTab('reflections_due') },
-  ]
 
   const EMPTY_COPY = {
-    upcoming: { icon: null, title: 'Ready for your next mission?', text: 'Create your first session to start supporting young people.', showCta: true },
-    live: { icon: '🟢', title: 'Nothing live right now', text: 'Sessions that are currently running will appear here automatically.', showCta: false },
-    past7: { icon: '🗄️', title: 'No sessions in the last 7 days', text: 'Completed sessions move here automatically once they end.', showCta: false },
-    reflections_due: { icon: '⭐', title: "You're all caught up!", text: 'Every past session already has a reflection recorded.', showCta: false },
+    upcoming: { icon: null, title: 'No upcoming sessions', text: 'Your schedule is clear.', showCta: true },
+    live: {
+      icon: '🟢', title: 'Nothing live right now',
+      text: strictlyUpcomingSessions[0]
+        ? `Your next session: ${strictlyUpcomingSessions[0].title} · ${fmtDayLabel(strictlyUpcomingSessions[0].session_date)}${strictlyUpcomingSessions[0].start_time ? ` at ${strictlyUpcomingSessions[0].start_time}` : ''}`
+        : 'Sessions that are currently running will appear here automatically.',
+      showCta: false,
+    },
+    completed: { icon: '🗄️', title: 'No completed sessions yet', text: 'Completed sessions will appear here after they are closed.', showCta: false },
+    needs_review: { icon: '✓', title: "You're all caught up", text: 'No sessions currently need attention.', showCta: false },
   }[tab]
 
   // ── LIST / WEEK VIEW ──
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'radial-gradient(circle at 15% 0%, #6D5DF60C, transparent 40%), radial-gradient(circle at 85% 15%, #30C48D0C, transparent 40%), #F6F8FC' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F6F8FC' }}>
+      <style>{`@keyframes sp-live-pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 28 }}>
 
-        {/* HEADER — compact, no oversized glass hero */}
-        <div style={{
-          borderRadius: 20, padding: isMobile ? '14px 16px' : '16px 22px', marginBottom: 16,
-          background: '#fff', border: '1px solid #EEF1F6', boxShadow: '0 6px 20px -16px rgba(15,23,42,0.15)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-            <img src="/assets/rockets/rocket-icon.png" alt="" style={{ width: 26, height: 26, flexShrink: 0 }} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A', letterSpacing: -0.3, lineHeight: 1.2 }}>Sessions</div>
-              <div style={{ fontSize: 11.5, color: '#64748B', fontWeight: 600 }}>{format(new Date(), 'EEE d MMM')} · {org?.name} · {childrenExpectedCount} children expected</div>
-            </div>
+        {/* ═══ HEADER ═══ */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 27, fontWeight: 900, color: '#0F172A', letterSpacing: -0.6 }}>Sessions</h1>
+            {!isMobile && (
+              <p style={{ margin: '4px 0 0', fontSize: 13.5, color: '#64748B', fontWeight: 500 }}>
+                Plan, run and review your organisation's sessions.
+              </p>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <button onClick={() => setView('templates')}
-              style={{ padding: '9px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#0F172A', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              🗂️ Templates {templates.length > 0 ? `(${templates.length})` : ''}
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setShowNewMenu(v => !v)}
+              style={{ padding: isMobile ? '10px 14px' : '11px 18px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 8px 22px -10px rgba(109,93,246,0.7)' }}>
+              {isMobile ? '＋' : '＋ New Session'}
             </button>
-            <button onClick={() => openNew()}
-              style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              ➕ New Session
-            </button>
+            {showNewMenu && (
+              <>
+                <div onClick={() => setShowNewMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 41, width: 260, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, boxShadow: '0 20px 50px -16px rgba(15,23,42,0.3)', padding: 6 }}>
+                  {[
+                    { t: 'Blank session', d: 'Start a session from scratch', a: () => openNew() },
+                    { t: 'From template', d: 'Create from a saved session template', a: () => setView('templates') },
+                    { t: 'Duplicate previous', d: 'Reuse a previous session', a: () => setShowDuplicatePicker(true) },
+                  ].map(o => (
+                    <button key={o.t} onClick={() => { setShowNewMenu(false); o.a() }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{o.t}</div>
+                      <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 1 }}>{o.d}</div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: 20, alignItems: 'start' }}>
-          <div style={{ minWidth: 0 }}>
-            {/* STATS — compact pills instead of tall cards */}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-              {statCards.map(s => {
-                const active = tab === s.key || (s.key === 'reflections' && tab === 'reflections_due')
+        {/* ═══ TABS ═══ */}
+        <div style={{ display: 'flex', gap: 4, marginBottom: 14, borderBottom: '1px solid #E2E8F0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          {TABS.map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              style={{ padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #6D5DF6' : '2.5px solid transparent', background: 'none', color: tab === t.key ? '#6D5DF6' : '#64748B', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+              {t.live && t.count > 0 && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16A34A', animation: 'sp-live-pulse 1.6s ease-in-out infinite' }} />}
+              {t.label}
+              <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? '#6D5DF6' : '#94A3B8', background: tab === t.key ? '#6D5DF618' : '#F1F5F9', borderRadius: 99, padding: '1px 7px' }}>{t.count}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* ═══ SEARCH + FILTERS ═══ */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 220px', minWidth: 0 }}>
+            <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94A3B8' }}>🔍</span>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search sessions..."
+              style={{ width: '100%', padding: '10px 14px 10px 34px', borderRadius: 12, border: '1px solid #E2E8F0', background: '#fff', fontSize: 13.5, color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+          <button onClick={() => setShowFilters(true)}
+            style={{ padding: '10px 14px', borderRadius: 11, border: `1.5px solid ${activeFilterChips.length ? '#6D5DF6' : '#E2E8F0'}`, background: activeFilterChips.length ? '#6D5DF610' : '#fff', color: activeFilterChips.length ? '#6D5DF6' : '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Filters{activeFilterChips.length ? ` (${activeFilterChips.length})` : ''}
+          </button>
+          <div style={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: 11, overflow: 'hidden' }}>
+            {[{ key: 'list', icon: '☰' }, { key: 'week', icon: '📅' }].map(v => (
+              <button key={v.key} onClick={() => setView(v.key)} style={{ padding: '9px 13px', border: 'none', background: view === v.key ? '#6D5DF6' : '#fff', color: view === v.key ? '#fff' : '#64748B', fontSize: 13, cursor: 'pointer' }}>{v.icon}</button>
+            ))}
+          </div>
+        </div>
+
+        {activeFilterChips.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+            {activeFilterChips.map(c => (
+              <button key={c.key} onClick={c.clear}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700, color: '#475569', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 99, padding: '5px 10px', cursor: 'pointer' }}>
+                {c.label} <span style={{ color: '#94A3B8' }}>×</span>
+              </button>
+            ))}
+            <button onClick={() => { setTypeFilter('all'); setOnlyNeedsVolunteers(false); setLocationFilter('all'); setSearch('') }}
+              style={{ fontSize: 11.5, fontWeight: 700, color: '#6D5DF6', background: 'none', border: 'none', cursor: 'pointer', padding: '5px 4px' }}>
+              Clear all
+            </button>
+          </div>
+        )}
+
+        {/* ═══ SESSIONS ═══ */}
+        {loading ? (
+          <div>
+            {[...Array(3)].map((_, i) => (
+              <div key={i} style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 18, marginBottom: 10 }}>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 11, background: '#F1F5F9' }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ height: 13, width: '38%', background: '#F1F5F9', borderRadius: 6, marginBottom: 8 }} />
+                    <div style={{ height: 11, width: '60%', background: '#F5F7FA', borderRadius: 6 }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : displayed.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '52px 20px', background: '#fff', borderRadius: 20, border: '1px solid #EEF1F6' }}>
+            <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
+              {EMPTY_COPY.icon
+                ? <span style={{ fontSize: 40 }}>{EMPTY_COPY.icon}</span>
+                : <img src="/assets/rockets/rocket-hero.png" alt="" style={{ height: 84, width: 'auto' }} />}
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>{EMPTY_COPY.title}</div>
+            <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: EMPTY_COPY.showCta ? 20 : 0, maxWidth: 420, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>{EMPTY_COPY.text}</div>
+            {EMPTY_COPY.showCta && (
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button onClick={() => openNew()}
+                  style={{ padding: '11px 22px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer' }}>
+                  + Create a Session
+                </button>
+                {templates.length > 0 && (
+                  <button onClick={() => setView('templates')}
+                    style={{ padding: '11px 20px', borderRadius: 12, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
+                    Use a template
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        ) : view === 'list' ? (
+          <div>
+            {grouped.map(g => (
+              <div key={g.label} style={{ marginBottom: 6 }}>
+                <div style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: 0.8, color: '#94A3B8', textTransform: 'uppercase', margin: '10px 2px 8px' }}>
+                  {g.label} <span style={{ color: '#CBD5E1' }}>· {g.items.length}</span>
+                </div>
+                {g.items.map(s => (
+                  <SessionRowCard
+                    key={s.id}
+                    s={s}
+                    status={tab === 'needs_review' ? 'review' : tab === 'completed' ? 'completed' : tab === 'live' ? 'live' : 'upcoming'}
+                    counts={attendanceCounts[s.id]}
+                    volCount={volCounts[s.id] || 0}
+                    hasReflection={!!reflections[s.id]}
+                    isMobile={isMobile}
+                    onView={() => setViewingSession(s)}
+                    onEdit={() => { setEditing(s); setView('wizard') }}
+                    onDelete={() => handleDelete(s.id)}
+                    onDuplicate={() => handleDuplicateSession(s)}
+                    onSaveTemplate={() => handleSaveSessionAsTemplate(s)}
+                    onVolunteers={() => setSelectedSession(s)}
+                    onReflect={() => setReflectingSession(s)}
+                    onOpenRegister={() => onNavigate && onNavigate('registers')}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* WEEK VIEW — unchanged behaviour */
+          <div style={{ overflowX: 'auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(7, minmax(${isTablet ? 100 : 140}px, 1fr))`, gap: isTablet ? 6 : 10, minWidth: isTablet ? 736 : 980 }}>
+              {weekDays.map(day => {
+                const dateStr = format(day, 'yyyy-MM-dd')
+                const daySessions = displayed.filter(s => s.session_date === dateStr)
+                const isToday = isSameDay(day, new Date())
                 return (
-                  <button key={s.key} onClick={s.onClick}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 800,
-                      color: active ? '#fff' : s.color, background: active ? s.color : `${s.color}12`,
-                      border: `1px solid ${active ? s.color : s.color + '28'}`, borderRadius: 999, padding: '7px 13px', cursor: 'pointer',
-                    }}>
-                    <span>{s.icon}</span> <CountUp value={s.value} /> {s.label}
-                    {s.key === 'live' && s.value > 0 && <span style={{ width: 6, height: 6, borderRadius: '50%', background: active ? '#fff' : '#16A34A' }} />}
+                  <div key={dateStr}>
+                    <div style={{ textAlign: 'center', padding: '10px 0 12px', borderBottom: `3px solid ${isToday ? primary : '#E5E7EB'}`, marginBottom: 10 }}>
+                      <div style={{ fontSize: 13, fontWeight: isToday ? 900 : 700, color: isToday ? primary : '#111' }}>{format(day, 'EEE d')}</div>
+                      <div style={{ fontSize: 10, color: '#6B7280', fontWeight: 600, marginTop: 2 }}>{daySessions.length} session{daySessions.length !== 1 ? 's' : ''}</div>
+                    </div>
+                    {daySessions.length === 0 ? (
+                      <button onClick={() => openNew(dateStr)} style={{ width: '100%', border: '1.5px dashed #E5E7EB', borderRadius: 12, background: 'none', padding: '24px 0', cursor: 'pointer', color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>+ Add</button>
+                    ) : daySessions.map(s => {
+                      const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
+                      const vc = volCounts[s.id] || 0
+                      const needed = s.volunteer_limit || 0
+                      const covered = needed === 0 || vc >= needed
+                      return (
+                        <div key={s.id} onClick={() => setViewingSession(s)} style={{ background: type.color + '12', border: `1.5px solid ${type.color}30`, borderRadius: 12, padding: 10, marginBottom: 8, cursor: 'pointer' }}>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 4 }}>{s.title}</div>
+                          <div style={{ fontSize: 11, color: '#475569', fontWeight: 600, lineHeight: 1.6 }}>
+                            🕐 {s.start_time || '—'}{s.end_time ? `–${s.end_time}` : ''}<br />
+                            {s.location ? `📍 ${s.location.split(',')[0]}` : ''}
+                          </div>
+                          {needed > 0 && (
+                            <div style={{ fontSize: 10, fontWeight: 800, color: covered ? '#16A34A' : '#92400E', marginTop: 6 }}>
+                              {covered ? `✓ ${vc}/${needed} vols` : `⚠ ${vc}/${needed} vols`}
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+                            <button onClick={e => { e.stopPropagation(); setSelectedSession(s) }} style={{ flex: 1, border: 'none', background: type.color + '20', borderRadius: 7, padding: '4px 0', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: type.color }}>❤️ Vols</button>
+                            <button onClick={e => { e.stopPropagation(); setEditing(s); setView('wizard') }} style={{ border: 'none', background: '#F9FAFB', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>✏️</button>
+                            <button onClick={e => { e.stopPropagation(); handleDelete(s.id) }} style={{ border: 'none', background: '#FFF0F0', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>🗑</button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ ATTENDANCE ATTENTION (compact) ═══ */}
+        {!loading && frequentAbsentees.length > 0 && (
+          <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', marginTop: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>Attendance attention</div>
+                <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 3 }}>
+                  {frequentAbsentees.length} young {frequentAbsentees.length === 1 ? 'person has' : 'people have'} missed 3+ recent sessions.
+                </div>
+                <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 5 }}>
+                  {frequentAbsentees.slice(0, 3).map(a => a.name).join(' · ')}
+                </div>
+              </div>
+              <button onClick={() => onNavigate && onNavigate('children')}
+                style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                Review attendance
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ INSIGHTS STRIP (after the sessions) ═══ */}
+        {!loading && past7DaysSessions.length > 0 && (
+          <InsightsStrip
+            completed={summary7.completed}
+            attendancePct={summary7.attendancePct}
+            noShows={summary7.noShows}
+            reached={summary7.reached}
+          />
+        )}
+
+        {/* ═══ DISMISSIBLE TIP ═══ */}
+        {!loading && !tipDismissed && completedSessions.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 14, padding: '12px 16px', marginTop: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: '#4C1D95', fontWeight: 600 }}>
+              💡 Running the same activity again? Duplicate a previous session instead of creating one from scratch.
+            </div>
+            <button onClick={() => setShowDuplicatePicker(true)}
+              style={{ padding: '8px 14px', borderRadius: 9, border: 'none', background: '#6D5DF6', color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              Duplicate session
+            </button>
+            <button onClick={dismissTip} aria-label="Dismiss tip"
+              style={{ border: 'none', background: 'transparent', color: '#7C6BB0', fontSize: 16, cursor: 'pointer', padding: '0 4px' }}>×</button>
+          </div>
+        )}
+      </div>
+
+      {/* ═══ FILTERS DRAWER / BOTTOM SHEET ═══ */}
+      {showFilters && (
+        <>
+          <div onClick={() => setShowFilters(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.4)', zIndex: 10400 }} />
+          <div style={{
+            position: 'fixed', zIndex: 10401, background: '#fff', display: 'flex', flexDirection: 'column',
+            ...(isMobile
+              ? { left: 0, right: 0, bottom: 0, borderRadius: '20px 20px 0 0', maxHeight: '80vh', paddingBottom: 'env(safe-area-inset-bottom)' }
+              : { top: 0, right: 0, bottom: 0, width: 340, boxShadow: '-24px 0 60px rgba(0,0,0,0.2)' }),
+          }}>
+            <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>Filters</div>
+              <button onClick={() => setShowFilters(false)} style={{ border: 'none', background: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }}>Session type</label>
+                <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, background: '#fff', color: '#0F172A', boxSizing: 'border-box' }}>
+                  <option value="all">All types</option>
+                  <option value="sessions">Sessions only</option>
+                  <option value="trips">Trips only</option>
+                </select>
+              </div>
+              {locationOptions.length > 0 && (
+                <div style={{ marginBottom: 18 }}>
+                  <label style={{ fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }}>Location</label>
+                  <select value={locationFilter} onChange={e => setLocationFilter(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, background: '#fff', color: '#0F172A', boxSizing: 'border-box' }}>
+                    <option value="all">All locations</option>
+                    {locationOptions.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+              )}
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={onlyNeedsVolunteers} onChange={e => setOnlyNeedsVolunteers(e.target.checked)} style={{ width: 16, height: 16, cursor: 'pointer' }} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>Only sessions needing volunteers</span>
+                </label>
+              </div>
+            </div>
+            <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8 }}>
+              <button onClick={() => { setTypeFilter('all'); setOnlyNeedsVolunteers(false); setLocationFilter('all') }}
+                style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                Clear filters
+              </button>
+              <button onClick={() => setShowFilters(false)}
+                style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#6D5DF6,#5B8DEF)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
+                Show results
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ═══ DUPLICATE PICKER ═══ */}
+      {showDuplicatePicker && (
+        <>
+          <div onClick={() => setShowDuplicatePicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10400 }} />
+          <div style={{
+            position: 'fixed', zIndex: 10401, background: '#fff', display: 'flex', flexDirection: 'column',
+            ...(isMobile
+              ? { left: 0, right: 0, bottom: 0, borderRadius: '20px 20px 0 0', maxHeight: '80vh', paddingBottom: 'env(safe-area-inset-bottom)' }
+              : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(460px,92vw)', maxHeight: '76vh', borderRadius: 18, boxShadow: '0 30px 70px rgba(0,0,0,0.3)' }),
+          }}>
+            <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>Duplicate a previous session</div>
+              <button onClick={() => setShowDuplicatePicker(false)} style={{ border: 'none', background: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
+              {completedSessions.length === 0 ? (
+                <div style={{ padding: 30, textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>No previous sessions to duplicate yet.</div>
+              ) : completedSessions.slice(0, 40).map(s => {
+                const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
+                return (
+                  <button key={s.id} onClick={() => { setShowDuplicatePicker(false); handleDuplicateSession(s) }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left', padding: '11px 12px', borderRadius: 11, border: '1px solid #F1F5F9', background: '#fff', marginBottom: 7, cursor: 'pointer' }}>
+                    <span style={{ fontSize: 18 }}>{type.icon}</span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{s.title}</span>
+                      <span style={{ display: 'block', fontSize: 11.5, color: '#94A3B8' }}>
+                        {s.session_date ? format(parseISO(s.session_date), 'd MMM yyyy') : ''}{s.location ? ` · ${s.location}` : ''}
+                      </span>
+                    </span>
+                    <span style={{ color: '#CBD5E1' }}>›</span>
                   </button>
                 )
               })}
             </div>
-
-            {/* SEARCH + FILTERS */}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14, alignItems: 'center' }}>
-              <div style={{ position: 'relative', flex: '1 1 200px' }}>
-                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8' }}>🔍</span>
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search sessions..."
-                  style={{ width: '100%', padding: '10px 14px 10px 36px', borderRadius: 12, border: '1px solid #E2E8F0', background: '#fff', fontSize: 13.5, color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
-                />
-                <AnimatePresence>
-                  {search && (
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.7 }}
-                      onClick={() => setSearch('')}
-                      style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', border: 'none', background: '#F1F5F9', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 11, color: '#64748B' }}
-                    >×</motion.button>
-                  )}
-                </AnimatePresence>
-              </div>
-              <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', fontSize: 12.5, color: '#374151', fontWeight: 600, outline: 'none' }}>
-                <option value="all">Type: All</option>
-                <option value="sessions">Sessions only</option>
-                <option value="trips">🚌 Trips only</option>
-              </select>
-              <button onClick={() => setOnlyNeedsVolunteers(v => !v)}
-                style={{ padding: '9px 14px', borderRadius: 10, border: `1.5px solid ${onlyNeedsVolunteers ? '#F16063' : '#E2E8F0'}`, background: onlyNeedsVolunteers ? '#FEF2F2' : '#fff', color: onlyNeedsVolunteers ? '#DC2626' : '#374151', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                ❤️ Needs volunteers {needsVolunteersCount > 0 ? `(${needsVolunteersCount})` : ''}
-              </button>
-              <div style={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: 10, overflow: 'hidden' }}>
-                {[{ key: 'list', icon: '☰' }, { key: 'week', icon: '📅' }].map(v => (
-                  <button key={v.key} onClick={() => setView(v.key)} style={{ padding: '8px 12px', border: 'none', background: view === v.key ? '#6D5DF6' : '#fff', color: view === v.key ? '#fff' : '#64748B', fontSize: 13, cursor: 'pointer' }}>{v.icon}</button>
-                ))}
-              </div>
-            </div>
-
-            {/* TABS */}
-            <div style={{ display: 'flex', gap: 4, marginBottom: 18, borderBottom: '1px solid #E2E8F0', overflowX: 'auto' }}>
-              {TABS.map(t => (
-                <button key={t.key} onClick={() => setTab(t.key)}
-                  style={{ padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #6D5DF6' : '2.5px solid transparent', background: 'none', color: tab === t.key ? '#6D5DF6' : '#64748B', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {t.live && t.count > 0 && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16A34A' }} />}
-                  {t.label} <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? '#6D5DF6' : '#94A3B8', background: tab === t.key ? '#6D5DF618' : '#F1F5F9', borderRadius: 99, padding: '1px 7px' }}>{t.count}</span>
-                </button>
-              ))}
-              {tab === 'reflections_due' && (
-                <button onClick={() => setShowReflectionHistory(v => !v)} style={{ marginLeft: 'auto', padding: '10px 4px', border: 'none', background: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  {showReflectionHistory ? '← Back to reflections due' : `📖 View reflection history (${reflectedSessions.length}) →`}
-                </button>
-              )}
-            </div>
-
-            {tab === 'past7' && !loading && <PastSessionsInsights pastSessions={pastSessionsAll} org={org} />}
-
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: 60, color: 'var(--text3, #94a3b8)', fontWeight: 700 }}>Loading sessions...</div>
-            ) : tab === 'reflections_due' && showReflectionHistory ? (
-              reflectedSessions.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '48px 20px', background: 'var(--surface, #fff)', borderRadius: 16, border: '1.5px dashed var(--border, #E5E7EB)' }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>⭐</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 6 }}>No reflections yet</div>
-                  <div style={{ fontSize: 13, color: 'var(--text3, #6B7280)' }}>Completed reflections on past sessions will show up here.</div>
-                </div>
-              ) : (
-                <div>
-                  {reflectedSessions.map(s => {
-                    const r = reflections[s.id]
-                    const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
-                    return (
-                      <button key={s.id} onClick={() => setReflectingSession(s)}
-                        style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--surface, #fff)', borderRadius: 14, border: '1.5px solid var(--border, #E5E7EB)', padding: '14px 16px', marginBottom: 10, cursor: 'pointer' }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                          <div style={{ width: 40, height: 40, borderRadius: 11, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, border: `1.5px solid ${type.color}30` }}>
-                            {type.icon}
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text, #111)' }}>{s.title}</div>
-                              <span style={{ fontSize: 11, color: 'var(--text3, #6B7280)', fontWeight: 600 }}>{format(parseISO(s.session_date), 'd MMM yyyy')}</span>
-                              {r.overall_rating > 0 && (
-                                <span style={{ fontSize: 11, fontWeight: 800, color: '#D97706' }}>{'⭐'.repeat(r.overall_rating)}</span>
-                              )}
-                              {r.safeguarding_flag && (
-                                <span style={{ fontSize: 10, fontWeight: 800, color: '#DC2626', background: '#FEE2E2', borderRadius: 99, padding: '2px 8px', border: '1px solid #FECACA' }}>🛡️ Flagged</span>
-                              )}
-                              {r.would_repeat === false && (
-                                <span style={{ fontSize: 10, fontWeight: 800, color: '#92400E', background: '#FEF3C7', borderRadius: 99, padding: '2px 8px', border: '1px solid #FDE68A' }}>Needs changes</span>
-                              )}
-                            </div>
-                            {r.what_went_well && (
-                              <div style={{ fontSize: 12.5, color: 'var(--text2, #374151)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                                <span style={{ fontWeight: 700 }}>Went well:</span> {r.what_went_well}
-                              </div>
-                            )}
-                          </div>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: primary, flexShrink: 0, whiteSpace: 'nowrap' }}>View →</span>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-              )
-            ) : displayed.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '56px 20px', background: '#fff', borderRadius: 24, border: '1px solid #EEF1F6', position: 'relative', overflow: 'hidden' }}>
-                {tab === 'upcoming' && [...Array(8)].map((_, i) => (
-                  <motion.span key={i} animate={{ opacity: [0.2, 1, 0.2] }} transition={{ duration: 2 + (i % 3), repeat: Infinity, delay: i * 0.3 }}
-                    style={{ position: 'absolute', top: `${10 + (i * 11) % 70}%`, left: `${5 + (i * 17) % 90}%`, fontSize: 10 }}>✨</motion.span>
-                ))}
-                <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} style={{ marginBottom: 14, position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'center' }}>
-                  {EMPTY_COPY.icon ? <span style={{ fontSize: 44 }}>{EMPTY_COPY.icon}</span> : <img src="/assets/rockets/rocket-hero.png" alt="" style={{ height: 96, width: 'auto' }} />}
-                </motion.div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6, position: 'relative', zIndex: 1 }}>{EMPTY_COPY.title}</div>
-                <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 22, position: 'relative', zIndex: 1 }}>{EMPTY_COPY.text}</div>
-                {EMPTY_COPY.showCta && (
-                  <motion.button onClick={() => openNew()} whileHover={{ y: -2, boxShadow: '0 12px 32px -8px rgba(109,93,246,0.5)' }} whileTap={{ scale: 0.96 }}
-                    style={{ padding: '12px 26px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', position: 'relative', zIndex: 1 }}>
-                    + New Session
-                  </motion.button>
-                )}
-              </div>
-            ) : view === 'list' ? (
-              <div>
-                <AnimatePresence>
-                  {displayed.map((s, i) => (
-                    <SessionCard key={s.id} session={s} index={i} onEdit={s => { setEditing(s); setView('wizard') }} onDelete={handleDelete} onVolunteers={setSelectedSession} onReflect={setReflectingSession} onView={setViewingSession} onSaveTemplate={handleSaveSessionAsTemplate} volCounts={volCounts} hasReflection={!!reflections[s.id]} attendanceCounts={attendanceCounts} />
-                  ))}
-                </AnimatePresence>
-              </div>
-            ) : (
-              /* WEEK VIEW */
-              <div style={{ overflowX: 'auto' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: `repeat(7, minmax(${isTablet ? 100 : 140}px, 1fr))`, gap: isTablet ? 6 : 10, minWidth: isTablet ? 736 : 980 }}>
-                  {weekDays.map(day => {
-                    const dateStr = format(day, 'yyyy-MM-dd')
-                    const daySessions = displayed.filter(s => s.session_date === dateStr)
-                    const isToday = isSameDay(day, new Date())
-                    return (
-                      <div key={dateStr}>
-                        <div style={{ textAlign: 'center', padding: '10px 0 12px', borderBottom: `3px solid ${isToday ? primary : '#E5E7EB'}`, marginBottom: 10 }}>
-                          <div style={{ fontSize: 13, fontWeight: isToday ? 900 : 700, color: isToday ? primary : 'var(--text, #111)' }}>{format(day, 'EEE d')}</div>
-                          <div style={{ fontSize: 10, color: 'var(--text3, #6B7280)', fontWeight: 600, marginTop: 2 }}>{daySessions.length} session{daySessions.length !== 1 ? 's' : ''}</div>
-                        </div>
-                        {daySessions.length === 0 ? (
-                          <button onClick={() => openNew(dateStr)} style={{ width: '100%', border: '1.5px dashed var(--border, #E5E7EB)', borderRadius: 12, background: 'none', padding: '24px 0', cursor: 'pointer', color: 'var(--text3, #94a3b8)', fontSize: 12, fontWeight: 700 }}>+ Add</button>
-                        ) : daySessions.map(s => {
-                          const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
-                          const vc = volCounts[s.id] || 0
-                          const needed = s.volunteer_limit || 0
-                          const covered = needed === 0 || vc >= needed
-                          return (
-                            <div key={s.id} onClick={() => setViewingSession(s)} style={{ background: type.color + '12', border: `1.5px solid ${type.color}30`, borderRadius: 12, padding: 10, marginBottom: 8, cursor: 'pointer' }}>
-                              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 4 }}>{s.icon}{s.title}</div>
-                              <div style={{ fontSize: 11, color: 'var(--text3, #475569)', fontWeight: 600, lineHeight: 1.6 }}>
-                                🕐 {s.start_time || '—'}{s.end_time ? `–${s.end_time}` : ''}<br />
-                                {s.location ? `📍 ${s.location.split(',')[0]}` : ''}
-                              </div>
-                              {needed > 0 && (
-                                <div style={{ fontSize: 10, fontWeight: 800, color: covered ? '#16A34A' : '#92400E', marginTop: 6 }}>
-                                  {covered ? `✓ ${vc}/${needed} vols` : `⚠ ${vc}/${needed} vols`}
-                                </div>
-                              )}
-                              <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
-                                <button onClick={e => { e.stopPropagation(); setSelectedSession(s) }} style={{ flex: 1, border: 'none', background: type.color + '20', borderRadius: 7, padding: '4px 0', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: type.color }}>❤️ Vols</button>
-                                <button onClick={e => { e.stopPropagation(); setEditing(s); setView('wizard') }} style={{ border: 'none', background: 'var(--surface2, #F9FAFB)', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>✏️</button>
-                                <button onClick={e => { e.stopPropagation(); handleDelete(s.id) }} style={{ border: 'none', background: '#FFF0F0', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>🗑</button>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
           </div>
-
-          {/* SIDEBAR */}
-          {!isMobile && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 0 }}>
-              <TipCard />
-
-              {sessionsNeedingVolunteers.length > 0 && (
-                <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 18 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>❤️ Needs volunteers</div>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: '#DC2626', background: '#FEF2F2', borderRadius: 99, padding: '2px 8px' }}>{sessionsNeedingVolunteers.length}</span>
-                  </div>
-                  {sessionsNeedingVolunteers.slice(0, 4).map(s => (
-                    <button key={s.id} onClick={() => setSelectedSession(s)} style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '8px 2px', border: 'none', borderTop: '1px solid #F1F5F9', background: 'none', cursor: 'pointer' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-                        <div style={{ fontSize: 10.5, color: '#94A3B8' }}>{format(parseISO(s.session_date), 'd MMM')} · {(volCounts[s.id] || 0)}/{s.volunteer_limit} covered</div>
-                      </div>
-                      <span style={{ color: '#CBD5E1' }}>›</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+        </>
+      )}
 
       {selectedSession && <VolunteerPanel session={selectedSession} org={org} onClose={() => { setSelectedSession(null); loadData() }} />}
       <AnimatePresence>
