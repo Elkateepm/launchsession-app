@@ -301,7 +301,7 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
 
             {/* Official LaunchSession badge mark — pops larger right before the app opens */}
             <img
-              src="/email-assets/badge-logo.png"
+              src="/assets/badge-logo-centered.png"
               alt="LaunchSession"
               style={{
                 position: 'relative',
