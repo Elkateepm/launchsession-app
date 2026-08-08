@@ -648,7 +648,7 @@ function ModalEdgeFade({ colour = '#0B1023' }) {
   )
 }
 
-function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, org, authUserId, userRole, reflections, onNavigate, getLiveSessionStats, onViewDetails, onClosed }) {
+function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, org, authUserId, userRole, reflections, onNavigate, getLiveSessionStats, onViewDetails, onClosed, autoStartKiosk, onAutoKioskHandled }) {
   const isMobile = useIsMobile()
   const [activeSession, setActiveSession] = useState(sessions[0])
   // Only staff/admin/owner can close a register — volunteers can sign
@@ -703,6 +703,18 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     setKioskMode(true)
     requestFullscreenIfSupported()
   }
+
+  // Kiosk is launched from the dashboard card (outside this modal), which opens
+  // the modal and flags a kiosk request. Kiosk state/PIN/fullscreen all live in
+  // here, so honour that request once on mount and clear it.
+  const autoKioskDone = React.useRef(false)
+  React.useEffect(() => {
+    if (!autoStartKiosk || autoKioskDone.current) return
+    autoKioskDone.current = true
+    handleStartKiosk()
+    if (onAutoKioskHandled) onAutoKioskHandled()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStartKiosk])
   const handlePinSetupComplete = (pin) => {
     try { localStorage.setItem(kioskPinKey, pin) } catch {}
     setKioskPinPrompt(null)
@@ -1068,16 +1080,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         {!isMobile && (
           <div style={{ position: 'absolute', top: 20, right: 22, display: 'flex', gap: 8, zIndex: 3 }}>
             {sessionPhase !== 'closed' && (
-              <>
-                <button onClick={() => setShowWalkIn(true)}
-                  style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
-                  + Walk-in
-                </button>
-                <button onClick={handleStartKiosk} title="Self sign-in kiosk (PIN to exit)"
-                  style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
-                  ⛶ Kiosk
-                </button>
-              </>
+              <button onClick={() => setShowWalkIn(true)}
+                style={{ padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
+                + Walk-in
+              </button>
             )}
             <div style={{ position: 'relative' }}>
               <button onClick={() => setShowOverflowMenu(v => !v)} aria-label="More actions" title="More actions"
@@ -1154,10 +1160,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             <button onClick={() => setShowWalkIn(true)}
               style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
               + Walk-in
-            </button>
-            <button onClick={handleStartKiosk} title="Self sign-in kiosk (PIN to exit)"
-              style={{ flex: 1, padding: '11px 10px', borderRadius: 13, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(6px)' }}>
-              ⛶ Kiosk
             </button>
           </div>
         )}
@@ -2838,6 +2840,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
   const [openLiveSessionId, setOpenLiveSessionId] = useState(null);
+  const [kioskRequestSessionId, setKioskRequestSessionId] = useState(null);
   const [infoModalSession, setInfoModalSession] = useState(null);
 
   const handleInfoAddExisting = async (sessionId, child) => {
@@ -3540,6 +3543,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 getLiveSessionStats={getLiveSessionStats}
                 onViewDetails={(sess) => setInfoModalSession(sess)}
                 onClosed={() => setOpenLiveSessionId(null)}
+                autoStartKiosk={kioskRequestSessionId === s.id}
+                onAutoKioskHandled={() => setKioskRequestSessionId(null)}
               />
             )
 
@@ -3655,6 +3660,16 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                     {cardStatus !== 'upcoming' && !isClosed && (
                       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
                         <SessionQuickActions session={s} org={org} orgId={org?.id} authUserId={session?.user?.id} onNavigate={go} />
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setKioskRequestSessionId(s.id); setOpenLiveSessionId(s.id) }}
+                          title="Self sign-in kiosk (PIN to exit)"
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: 'rgba(255,255,255,0.7)',
+                            background: 'transparent', border: '1px dashed rgba(255,255,255,0.24)', borderRadius: 99, padding: '5px 10px',
+                            cursor: 'pointer', whiteSpace: 'nowrap',
+                          }}>
+                          ⛶ Kiosk
+                        </button>
                       </div>
                     )}
 
