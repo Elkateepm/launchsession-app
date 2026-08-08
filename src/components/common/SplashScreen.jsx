@@ -270,110 +270,118 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
       </div>
 
       {/* Center content */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          transform: phase === 'complete' || exiting ? 'scale(1.02)' : 'scale(1)',
-          transition: 'transform 500ms cubic-bezier(0.22, 1, 0.36, 1)',
-        }}
-      >
-        {/* Logo block */}
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%' }}>
+        {/* Badge mark — pinned to true screen center regardless of text below it */}
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              animation: reducedMotion || phase !== 'loading' ? 'none' : 'ls-badge-bob 4.5s ease-in-out infinite',
+            }}
+          >
+            {/* Soft pulse glow behind the badge */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 240,
+                height: 240,
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%)',
+                filter: 'blur(8px)',
+                animation: reducedMotion ? 'none' : 'ls-pulse 3.2s ease-in-out infinite',
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Official LaunchSession badge mark — pops larger right before the app opens */}
+            <img
+              src="/email-assets/badge-logo.png"
+              alt="LaunchSession"
+              style={{
+                position: 'relative',
+                width: 220,
+                height: 'auto',
+                transform: phase === 'complete' || exiting ? 'scale(1.24)' : 'scale(1)',
+                transition: 'transform 550ms cubic-bezier(0.22, 1, 0.36, 1)',
+                filter: 'drop-shadow(0 10px 26px rgba(139,92,246,0.4))',
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Text stack — anchored a fixed distance below the badge's true center */}
         <div
           style={{
-            position: 'relative',
+            position: 'absolute',
+            top: 'calc(50% + 135px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            width: 'max-content',
           }}
         >
-          {/* Soft pulse glow behind the badge */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 220,
-              height: 220,
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(139,92,246,0.35) 0%, transparent 70%)',
-              filter: 'blur(8px)',
-              animation: reducedMotion ? 'none' : 'ls-pulse 3.2s ease-in-out infinite',
-              pointerEvents: 'none',
-            }}
-          />
-
-          {/* Official LaunchSession badge mark — subtle float, no gloss added on top */}
-          <img
-            src="/email-assets/badge-logo.png"
-            alt="LaunchSession"
-            style={{
-              position: 'relative',
-              width: 220,
-              height: 'auto',
-              animation: reducedMotion ? 'none' : 'ls-badge-bob 4.5s ease-in-out infinite',
-              filter: 'drop-shadow(0 10px 26px rgba(139,92,246,0.4))',
-            }}
-          />
-
           {/* Wordmark — flat typography, no emboss/bevel */}
-          <div style={{ marginTop: 10, fontSize: 34, fontWeight: 700, letterSpacing: -0.5, color: '#fff', lineHeight: 1 }}>
+          <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: -0.5, color: '#fff', lineHeight: 1 }}>
             Launch<span style={{ fontWeight: 300, color: 'rgba(255,255,255,0.72)' }}>Session</span>
           </div>
           <div style={{ marginTop: 6, fontSize: 10.5, fontWeight: 600, letterSpacing: 2.2, color: 'rgba(199,191,255,0.6)', textTransform: 'uppercase' }}>
             Empowering Youth. Every Session.
           </div>
-        </div>
 
-        {/* Progress bar */}
-        <div
-          style={{
-            marginTop: 40,
-            width: 220,
-            height: 3,
-            borderRadius: 99,
-            background: 'rgba(255,255,255,0.08)',
-            overflow: 'hidden',
-            position: 'relative',
-          }}
-        >
+          {/* Progress bar */}
           <div
             style={{
-              width: `${progress}%`,
-              height: '100%',
+              marginTop: 40,
+              width: 220,
+              height: 3,
               borderRadius: 99,
-              background: 'linear-gradient(90deg, #3B82F6, #9B59B6)',
-              transition: 'width 300ms ease-out',
-            }}
-          />
-        </div>
-
-        {/* Rotating status message */}
-        <div
-          style={{
-            marginTop: 16,
-            height: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <span
-            key={msgIndex}
-            style={{
-              fontSize: 12,
-              fontWeight: 500,
-              color: 'rgba(255,255,255,0.4)',
-              letterSpacing: 0.2,
-              animation: reducedMotion ? 'none' : 'ls-fade-msg 2s ease',
+              background: 'rgba(255,255,255,0.08)',
+              overflow: 'hidden',
+              position: 'relative',
             }}
           >
-            {phase === 'loading' ? MESSAGES[msgIndex] : 'Ready.'}
-          </span>
+            <div
+              style={{
+                width: `${progress}%`,
+                height: '100%',
+                borderRadius: 99,
+                background: 'linear-gradient(90deg, #3B82F6, #9B59B6)',
+                transition: 'width 300ms ease-out',
+              }}
+            />
+          </div>
+
+          {/* Rotating status message */}
+          <div
+            style={{
+              marginTop: 16,
+              height: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span
+              key={msgIndex}
+              style={{
+                fontSize: 12,
+                fontWeight: 500,
+                color: 'rgba(255,255,255,0.4)',
+                letterSpacing: 0.2,
+                animation: reducedMotion ? 'none' : 'ls-fade-msg 2s ease',
+              }}
+            >
+              {phase === 'loading' ? MESSAGES[msgIndex] : 'Ready.'}
+            </span>
+          </div>
         </div>
       </div>
     </div>
