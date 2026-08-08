@@ -231,6 +231,21 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
         }}
       />
 
+      {/* Crescent moon, top-left, partially off-screen */}
+      <div
+        style={{
+          position: 'absolute',
+          top: -70,
+          left: -90,
+          width: 260,
+          height: 260,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle at 65% 35%, #6D28D9 0%, #2E1065 55%, transparent 75%)',
+          opacity: 0.55,
+          pointerEvents: 'none',
+        }}
+      />
+
       {/* Stars */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {stars.map((s, i) => (
@@ -270,118 +285,198 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
       </div>
 
       {/* Center content */}
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%' }}>
-        {/* Badge mark — pinned to true screen center regardless of text below it */}
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        {/* LS mark — faint ring accent behind it, no ring text */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Soft pulse glow */}
+          <div
+            style={{
+              position: 'absolute',
+              width: 260,
+              height: 260,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(139,92,246,0.38) 0%, transparent 70%)',
+              filter: 'blur(10px)',
+              animation: reducedMotion ? 'none' : 'ls-pulse 3.2s ease-in-out infinite',
+              pointerEvents: 'none',
+            }}
+          />
+          {/* Faint circle guide, no text on it */}
+          <div
+            style={{
+              position: 'absolute',
+              width: 210,
+              height: 210,
+              borderRadius: '50%',
+              border: '1px solid rgba(139,124,246,0.22)',
+              pointerEvents: 'none',
+            }}
+          />
+
           <div
             style={{
               position: 'relative',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
               animation: reducedMotion || phase !== 'loading' ? 'none' : 'ls-badge-bob 4.5s ease-in-out infinite',
+              transform: phase === 'complete' || exiting ? 'scale(1.18)' : 'scale(1)',
+              transition: 'transform 550ms cubic-bezier(0.22, 1, 0.36, 1)',
             }}
           >
-            {/* Soft pulse glow behind the badge */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 240,
-                height: 240,
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%)',
-                filter: 'blur(8px)',
-                animation: reducedMotion ? 'none' : 'ls-pulse 3.2s ease-in-out infinite',
-                pointerEvents: 'none',
-              }}
-            />
-
-            {/* Official LaunchSession badge mark — pops larger right before the app opens */}
-            <img
-              src="/assets/badge-logo-centered.png"
-              alt="LaunchSession"
-              style={{
-                position: 'relative',
-                width: 220,
-                height: 'auto',
-                transform: phase === 'complete' || exiting ? 'scale(1.24)' : 'scale(1)',
-                transition: 'transform 550ms cubic-bezier(0.22, 1, 0.36, 1)',
-                filter: 'drop-shadow(0 10px 26px rgba(139,92,246,0.4))',
-              }}
-            />
+            <svg width="168" height="168" viewBox="0 0 200 200">
+              <defs>
+                <linearGradient id="splash-lGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#B8A6FF" />
+                  <stop offset="100%" stopColor="#6D5AE0" />
+                </linearGradient>
+                <linearGradient id="splash-sGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#8B7CF6" />
+                  <stop offset="100%" stopColor="#5B6EF5" />
+                </linearGradient>
+                <linearGradient id="splash-rocketGrad" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#7C6EF6" />
+                  <stop offset="100%" stopColor="#38BDF8" />
+                </linearGradient>
+                <linearGradient id="splash-swooshGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#5B6EF5" stopOpacity="0" />
+                  <stop offset="50%" stopColor="#8B7CF6" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#5B6EF5" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path d="M 32 150 C 56 174, 134 174, 158 146" fill="none" stroke="url(#splash-swooshGrad)" strokeWidth="7" strokeLinecap="round" />
+              <text x="30" y="150" fontFamily="Arial, Helvetica, sans-serif" fontWeight="900" fontSize="130" fill="url(#splash-lGrad)">L</text>
+              <text x="90" y="150" fontFamily="Arial, Helvetica, sans-serif" fontWeight="900" fontSize="130" fill="url(#splash-sGrad)">S</text>
+              <g transform="translate(146,72) rotate(35)">
+                <path d="M 0 -30 C 11 -21 15 -5 14 12 C 14 19 9 23 0 25 C -9 23 -14 19 -14 12 C -15 -5 -11 -21 0 -30 Z" fill="url(#splash-rocketGrad)" />
+                <circle cx="0" cy="-3" r="5" fill="#1a1730" opacity="0.6" />
+                <circle cx="0" cy="-3" r="5" fill="none" stroke="#fff" strokeOpacity="0.4" strokeWidth="1" />
+              </g>
+              <g transform="translate(158,46)">
+                <path d="M0,-10 C1.2,-2.2 2.2,-1.2 10,0 C2.2,1.2 1.2,2.2 0,10 C-1.2,2.2 -2.2,1.2 -10,0 C-2.2,-1.2 -1.2,-2.2 0,-10 Z" fill="#fff" />
+              </g>
+            </svg>
           </div>
         </div>
 
-        {/* Text stack — anchored a fixed distance below the badge's true center */}
+        {/* Wordmark — Session in brand gradient, bold */}
+        <div style={{ marginTop: 14, fontSize: 32, fontWeight: 800, letterSpacing: -0.5, color: '#fff', lineHeight: 1 }}>
+          Launch<span style={{ background: 'linear-gradient(90deg, #8B7CF6, #5B6EF5)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Session</span>
+        </div>
+        <div style={{ marginTop: 8, fontSize: 11, fontWeight: 600, letterSpacing: 2, color: 'rgba(203,213,225,0.55)', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.7 }}>
+          Empowering Youth.<br />Every Session.
+        </div>
+
+        {/* Launch scene — rocket, beam, clouds, horizon */}
+        <svg width="300" height="195" viewBox="0 0 400 260" style={{ marginTop: 22, overflow: 'visible' }}>
+          <defs>
+            <radialGradient id="splash-baseGlow" cx="50%" cy="100%" r="65%">
+              <stop offset="0%" stopColor="#C084FC" stopOpacity="0.85" />
+              <stop offset="45%" stopColor="#7C3AED" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#7C3AED" stopOpacity="0" />
+            </radialGradient>
+            <linearGradient id="splash-beamGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#fff" stopOpacity="0.95" />
+              <stop offset="55%" stopColor="#C084FC" stopOpacity="0.55" />
+              <stop offset="100%" stopColor="#C084FC" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="splash-horizonGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3B2E63" />
+              <stop offset="100%" stopColor="#160F2E" />
+            </linearGradient>
+            <radialGradient id="splash-cloudGrad" cx="50%" cy="35%" r="70%">
+              <stop offset="0%" stopColor="#4C3B82" />
+              <stop offset="100%" stopColor="#241A44" />
+            </radialGradient>
+            <linearGradient id="splash-rocketBody" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stopColor="#DCD6FF" />
+              <stop offset="100%" stopColor="#fff" />
+            </linearGradient>
+          </defs>
+
+          <ellipse cx="200" cy="222" rx="150" ry="70" fill="url(#splash-baseGlow)" />
+          <path d="M 193 60 L 207 60 L 224 220 L 176 220 Z" fill="url(#splash-beamGrad)" />
+
+          <ellipse cx="90" cy="215" rx="70" ry="34" fill="url(#splash-cloudGrad)" />
+          <ellipse cx="140" cy="228" rx="55" ry="30" fill="url(#splash-cloudGrad)" />
+          <ellipse cx="50" cy="232" rx="48" ry="26" fill="url(#splash-cloudGrad)" />
+          <ellipse cx="310" cy="215" rx="70" ry="34" fill="url(#splash-cloudGrad)" />
+          <ellipse cx="260" cy="228" rx="55" ry="30" fill="url(#splash-cloudGrad)" />
+          <ellipse cx="350" cy="232" rx="48" ry="26" fill="url(#splash-cloudGrad)" />
+
+          <ellipse cx="200" cy="290" rx="230" ry="70" fill="url(#splash-horizonGrad)" />
+
+          <circle cx="60" cy="90" r="1.4" fill="#fff" opacity="0.7" />
+          <circle cx="330" cy="70" r="1.6" fill="#fff" opacity="0.6" />
+          <circle cx="350" cy="150" r="1.2" fill="#fff" opacity="0.5" />
+          <circle cx="40" cy="160" r="1.2" fill="#fff" opacity="0.5" />
+
+          <g
+            transform="translate(200,70)"
+            style={{
+              transformOrigin: '200px 70px',
+              animation: reducedMotion || phase !== 'loading' ? 'none' : 'ls-badge-bob 3.6s ease-in-out infinite',
+            }}
+          >
+            <path d="M 0 -38 C 14 -24 18 -4 16 16 C 16 24 9 30 0 32 C -9 30 -16 24 -16 16 C -18 -4 -14 -24 0 -38 Z"
+              fill="url(#splash-rocketBody)" stroke="#8B7CF6" strokeWidth="1.5" strokeOpacity="0.5" />
+            <circle cx="0" cy="-6" r="6.5" fill="#2A2350" />
+            <circle cx="0" cy="-6" r="6.5" fill="none" stroke="#fff" strokeWidth="1" strokeOpacity="0.5" />
+            <path d="M -16 10 L -30 26 L -14 22 Z" fill="#7C6EF6" />
+            <path d="M 16 10 L 30 26 L 14 22 Z" fill="#7C6EF6" />
+          </g>
+        </svg>
+
+        {/* Progress bar */}
         <div
           style={{
-            position: 'absolute',
-            top: 'calc(50% + 135px)',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: 'max-content',
+            marginTop: 26,
+            width: 220,
+            height: 3,
+            borderRadius: 99,
+            background: 'rgba(255,255,255,0.08)',
+            overflow: 'hidden',
+            position: 'relative',
           }}
         >
-          {/* Wordmark — flat typography, no emboss/bevel */}
-          <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: -0.5, color: '#fff', lineHeight: 1 }}>
-            Launch<span style={{ fontWeight: 300, color: 'rgba(255,255,255,0.72)' }}>Session</span>
-          </div>
-          <div style={{ marginTop: 6, fontSize: 10.5, fontWeight: 600, letterSpacing: 2.2, color: 'rgba(199,191,255,0.6)', textTransform: 'uppercase' }}>
-            Empowering Youth. Every Session.
-          </div>
-
-          {/* Progress bar */}
           <div
             style={{
-              marginTop: 40,
-              width: 220,
-              height: 3,
+              width: `${progress}%`,
+              height: '100%',
               borderRadius: 99,
-              background: 'rgba(255,255,255,0.08)',
-              overflow: 'hidden',
-              position: 'relative',
+              background: 'linear-gradient(90deg, #3B82F6, #9B59B6)',
+              transition: 'width 300ms ease-out',
             }}
-          >
-            <div
-              style={{
-                width: `${progress}%`,
-                height: '100%',
-                borderRadius: 99,
-                background: 'linear-gradient(90deg, #3B82F6, #9B59B6)',
-                transition: 'width 300ms ease-out',
-              }}
-            />
-          </div>
+          />
+        </div>
 
-          {/* Rotating status message */}
-          <div
+        {/* Rotating status message */}
+        <div
+          style={{
+            marginTop: 16,
+            height: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <span
+            key={msgIndex}
             style={{
-              marginTop: 16,
-              height: 16,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              fontSize: 12,
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.4)',
+              letterSpacing: 0.2,
+              animation: reducedMotion ? 'none' : 'ls-fade-msg 2s ease',
             }}
           >
-            <span
-              key={msgIndex}
-              style={{
-                fontSize: 12,
-                fontWeight: 500,
-                color: 'rgba(255,255,255,0.4)',
-                letterSpacing: 0.2,
-                animation: reducedMotion ? 'none' : 'ls-fade-msg 2s ease',
-              }}
-            >
-              {phase === 'loading' ? MESSAGES[msgIndex] : 'Ready.'}
-            </span>
-          </div>
+            {phase === 'loading' ? MESSAGES[msgIndex] : 'Ready.'}
+          </span>
         </div>
       </div>
     </div>
