@@ -6,6 +6,7 @@ import ProfilePage from '../profile/ProfilePage'
 import TeamTab from '../team/TeamTab'
 import Mentoring from '../mentoring/Mentoring'
 import SessionPlanner from '../sessions/SessionPlanner'
+import ProjectOverview from '../projects/ProjectOverview'
 import Hub from '../hub/Hub'
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
@@ -457,6 +458,7 @@ export default function Dashboard({ session, org }) {
   const [initialThreadId, setInitialThreadId] = useState(null)
   const [autoOpenWizard, setAutoOpenWizard] = useState(false)
   const [editSessionId, setEditSessionId] = useState(null)
+  const [openProjectId, setOpenProjectId] = useState(null)
   const [autoOpenAddChild, setAutoOpenAddChild] = useState(false)
   const [autoOpenInviteVolunteer, setAutoOpenInviteVolunteer] = useState(false)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
@@ -494,6 +496,7 @@ export default function Dashboard({ session, org }) {
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
     setEditSessionId(t === 'planner' && payload?.editSessionId ? payload.editSessionId : null)
+    setOpenProjectId(t === 'projects' && payload?.projectId ? payload.projectId : null)
     setAutoOpenAddChild(t === 'registers' && !!payload?.autoOpenAdd)
     setAutoOpenInviteVolunteer(t === 'volunteers' && !!payload?.autoOpenInvite)
     setTab(t)
@@ -817,6 +820,7 @@ export default function Dashboard({ session, org }) {
           {/* ── BASE MODULES — always free ── */}
           {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
           {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
+          {tab === 'projects'   && <ProjectOverview org={org} session={session} projectId={openProjectId} onNavigate={handleSetTab} onBack={() => handleSetTab('planner')} />}
           {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
           {tab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} /></ChildrenGate>}
@@ -853,7 +857,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal'].includes(tab) && (
+          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects'].includes(tab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
