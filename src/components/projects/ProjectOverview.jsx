@@ -239,7 +239,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
   const pct = metrics.totalDays > 0 ? Math.round((metrics.completedDays / metrics.totalDays) * 100) : 0
 
   return (
-    <div style={{ padding: isMobile ? 16 : 28, maxWidth: isMobile ? '100%' : 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ padding: isMobile ? 16 : 28, width: '100%', maxWidth: '100%', margin: 0, boxSizing: 'border-box' }}>
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <button onClick={onBack} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12 }}>← Projects</button>
@@ -265,35 +265,74 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', marginBottom: 18 }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
-            <StatusChip status={projectStatus} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 99, padding: '2px 9px' }}>{typeLabel}</span>
+      <div style={{
+        position: 'relative', overflow: 'hidden',
+        background: 'linear-gradient(135deg, #4C1D95 0%, #5B21B6 38%, #4338CA 72%, #3B82F6 100%)',
+        borderRadius: isMobile ? 18 : 22,
+        padding: isMobile ? '20px 18px' : '26px 30px',
+        marginBottom: 18,
+        boxShadow: '0 1px 0 rgba(255,255,255,0.14) inset, 0 18px 40px -24px rgba(76,29,149,0.7)',
+      }}>
+        {/* Soft light blooms so the block doesn't read as a flat slab */}
+        <div style={{ position: 'absolute', top: -70, right: -40, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -90, left: '30%', width: 300, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.28), transparent 70%)', pointerEvents: 'none' }} />
+
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+              <StatusChip status={projectStatus} onDark />
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#E9D5FF', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 99, padding: '3px 10px' }}>{typeLabel}</span>
+            </div>
+            <h1 style={{ margin: 0, fontSize: isMobile ? 24 : 34, fontWeight: 900, color: '#fff', letterSpacing: -0.9, lineHeight: 1.1 }}>{project.name}</h1>
+            <p style={{ margin: '7px 0 0', fontSize: isMobile ? 13 : 14, color: 'rgba(237,233,254,0.85)', fontWeight: 500 }}>
+              {fmtRange(project.start_date, project.end_date)}
+              {project.description ? ` \u00B7 ${project.description}` : ''}
+            </p>
+
+            {/* Progress lives in the hero -- it's the single most useful number */}
+            <div style={{ marginTop: 16, maxWidth: 460 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(237,233,254,0.75)', letterSpacing: 0.5 }}>PROGRESS</span>
+                <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>{metrics.completedDays} of {metrics.totalDays} days</span>
+              </div>
+              <div style={{ height: 8, background: 'rgba(255,255,255,0.18)', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ width: `${pct}%`, height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#A78BFA,#60A5FA)', boxShadow: '0 0 12px rgba(167,139,250,0.7)', transition: 'width 500ms ease' }} />
+              </div>
+            </div>
           </div>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 28, fontWeight: 900, color: '#0F172A', letterSpacing: -0.6 }}>{project.name}</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: '#64748B', fontWeight: 500 }}>
-            {fmtRange(project.start_date, project.end_date)}
-            {project.description ? ` · ${project.description}` : ''}
-          </p>
+
+          {todayDay && (
+            <button onClick={() => onNavigate && onNavigate('registers', { sessionId: todayDay.id })}
+              style={{
+                padding: '12px 22px', borderRadius: 12, border: 'none', background: '#fff', color: '#5B21B6',
+                fontSize: 13.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
+                boxShadow: '0 8px 20px -8px rgba(0,0,0,0.4)',
+              }}>
+              Open today's session
+            </button>
+          )}
         </div>
-        {todayDay && (
-          <button onClick={() => onNavigate && onNavigate('registers', { sessionId: todayDay.id })} style={btnPrimary}>
-            Open today's session
-          </button>
-        )}
       </div>
 
       {/* ── Tabs ── */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 18, borderBottom: '1px solid #E2E8F0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{
-            padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer',
-            fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
-            color: tab === t.key ? '#6D5DF6' : '#64748B',
-            borderBottom: tab === t.key ? '2.5px solid #6D5DF6' : '2.5px solid transparent',
-          }}>{t.label}</button>
-        ))}
+      <div style={{
+        display: 'inline-flex', gap: 3, marginBottom: 18, padding: 4, borderRadius: 13,
+        background: '#F1F5F9', border: '1px solid #E2E8F0', overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch', maxWidth: '100%',
+      }}>
+        {TABS.map(t => {
+          const on = tab === t.key
+          return (
+            <button key={t.key} onClick={() => setTab(t.key)} style={{
+              padding: '8px 16px', border: 'none', borderRadius: 10, cursor: 'pointer',
+              fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap',
+              background: on ? 'linear-gradient(135deg,#6D5DF6,#5B8DEF)' : 'transparent',
+              color: on ? '#fff' : '#64748B',
+              boxShadow: on ? '0 1px 0 rgba(255,255,255,0.25) inset, 0 6px 16px -8px rgba(109,93,246,0.8)' : 'none',
+              transition: 'background 0.16s ease, color 0.16s ease',
+            }}>{t.label}</button>
+          )
+        })}
       </div>
 
       {tab === 'overview' && (
@@ -302,26 +341,16 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
           gap: 16, alignItems: 'start',
         }}>
           <div style={{ minWidth: 0 }}>
-          {/* Progress */}
-          <div style={card({ padding: 18, marginBottom: 14 })}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 }}>Project progress</span>
-              <span style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{metrics.completedDays} of {metrics.totalDays} days completed</span>
-            </div>
-            <div style={{ height: 8, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
-              <div style={{ width: `${pct}%`, height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#6D5DF6,#5B8DEF)', transition: 'width 400ms ease' }} />
-            </div>
-          </div>
-
-          {/* Metrics -- only ones backed by real data */}
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginBottom: 14 }}>
-            <Metric value={metrics.totalDays} label="Project days" />
-            <Metric value={metrics.participants} label="Young people" />
-            <Metric value={metrics.teamSize} label="Team members" />
-            {metrics.attendanceRate !== null && <Metric value={`${metrics.attendanceRate}%`} label="Attendance" />}
-            {metrics.hours > 0 && <Metric value={`${metrics.hours}h`} label="Delivery" />}
-            {metrics.trips > 0 && <Metric value={metrics.trips} label="Trips" />}
-            {metrics.reached > 0 && <Metric value={metrics.reached} label="Reached" />}
+          {/* Metrics -- only ones backed by real data. Colour carries meaning:
+              purple = scale, blue = people, green = performance, amber = time. */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 14 }}>
+            <Metric value={metrics.totalDays} label="Project days" icon="\u{1F4C5}" tone="purple" />
+            <Metric value={metrics.participants} label="Young people" icon="\u{1F9D2}" tone="blue" />
+            <Metric value={metrics.teamSize} label="Team members" icon="\u{1F465}" tone="indigo" />
+            {metrics.attendanceRate !== null && <Metric value={`${metrics.attendanceRate}%`} label="Attendance" icon="\u2705" tone="green" />}
+            {metrics.hours > 0 && <Metric value={`${metrics.hours}h`} label="Delivery" icon="\u23F1" tone="amber" />}
+            {metrics.trips > 0 && <Metric value={metrics.trips} label="Trips" icon="\u{1F686}" tone="pink" />}
+            {metrics.reached > 0 && <Metric value={metrics.reached} label="Reached" icon="\u2B50" tone="teal" />}
           </div>
 
           {/* Today */}
@@ -662,11 +691,25 @@ function TeamTab({ team, staffProfiles, onAdd, onRemove, onToggleLead }) {
 }
 
 // ── small shared bits ──
-function Metric({ value, label }) {
+function Metric({ value, label, icon, tone = 'purple' }) {
+  const TONES = {
+    purple: { bg: '#F5F3FF', bd: '#DDD6FE', fg: '#6D28D9' },
+    blue:   { bg: '#EFF6FF', bd: '#BFDBFE', fg: '#1D4ED8' },
+    indigo: { bg: '#EEF2FF', bd: '#C7D2FE', fg: '#4338CA' },
+    green:  { bg: '#F0FDF4', bd: '#BBF7D0', fg: '#15803D' },
+    amber:  { bg: '#FFFBEB', bd: '#FDE68A', fg: '#B45309' },
+    pink:   { bg: '#FDF2F8', bd: '#FBCFE8', fg: '#BE185D' },
+    teal:   { bg: '#F0FDFA', bd: '#99F6E4', fg: '#0F766E' },
+  }
+  const t = TONES[tone] || TONES.purple
   return (
-    <div style={card({ padding: 14 })}>
-      <div style={{ fontSize: 21, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>{value}</div>
-      <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginTop: 2 }}>{label}</div>
+    <div style={{
+      background: t.bg, border: `1px solid ${t.bd}`, borderRadius: 14, padding: '14px 16px',
+      boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset',
+    }}>
+      {icon && <div style={{ fontSize: 15, marginBottom: 6 }}>{icon}</div>}
+      <div style={{ fontSize: 23, fontWeight: 900, color: t.fg, letterSpacing: -0.5, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B', marginTop: 4 }}>{label}</div>
     </div>
   )
 }
@@ -681,16 +724,26 @@ function DayCounts({ counts }) {
   )
 }
 
-function StatusChip({ status }) {
+function StatusChip({ status, onDark }) {
   const map = {
-    draft: { t: 'Draft', c: '#64748B', b: '#F1F5F9' },
-    upcoming: { t: 'Upcoming', c: '#1D4ED8', b: '#EFF6FF' },
-    active: { t: 'Active', c: '#15803D', b: '#DCFCE7' },
-    completed: { t: 'Completed', c: '#64748B', b: '#F1F5F9' },
-    cancelled: { t: 'Cancelled', c: '#B91C1C', b: '#FEE2E2' },
-    archived: { t: 'Archived', c: '#64748B', b: '#F1F5F9' },
+    draft: { t: 'Draft', c: '#64748B', b: '#F1F5F9', dot: '#94A3B8' },
+    upcoming: { t: 'Upcoming', c: '#1D4ED8', b: '#EFF6FF', dot: '#3B82F6' },
+    active: { t: 'Active', c: '#15803D', b: '#DCFCE7', dot: '#22C55E' },
+    completed: { t: 'Completed', c: '#64748B', b: '#F1F5F9', dot: '#94A3B8' },
+    cancelled: { t: 'Cancelled', c: '#B91C1C', b: '#FEE2E2', dot: '#EF4444' },
+    archived: { t: 'Archived', c: '#64748B', b: '#F1F5F9', dot: '#94A3B8' },
   }
   const m = map[status] || map.draft
+  // On the gradient hero the light pastel backgrounds vanish, so use a
+  // translucent chip with a colour-coded dot instead.
+  if (onDark) {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 99, padding: '3px 11px' }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: m.dot, boxShadow: `0 0 6px ${m.dot}` }} />
+        {m.t}
+      </span>
+    )
+  }
   return <span style={{ fontSize: 11, fontWeight: 800, color: m.c, background: m.b, borderRadius: 99, padding: '3px 10px' }}>{m.t}</span>
 }
 

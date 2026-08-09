@@ -99,7 +99,7 @@ export default function ProjectsList({ org, session, onNavigate }) {
   }
 
   return (
-    <div style={{ padding: isMobile ? 16 : 28, maxWidth: 1100, margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? 16 : 28, width: '100%', maxWidth: '100%', margin: 0, boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', marginBottom: 18 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 28, fontWeight: 900, color: '#0F172A', letterSpacing: -0.6 }}>Projects</h1>
@@ -150,7 +150,9 @@ export default function ProjectsList({ org, session, onNavigate }) {
           )}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={isMobile
+          ? { display: 'flex', flexDirection: 'column', gap: 10 }
+          : { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 12 }}>
           {filtered.map(p => {
             const typeLabel = PROJECT_TYPES.find(t => t.key === p.project_type)?.label || 'Project'
             const days = dayCounts[p.id] || 0
