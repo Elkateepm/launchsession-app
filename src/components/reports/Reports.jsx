@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import PageHeader from '../shared/PageHeader'
 import { supabase } from '../../lib/supabase'
+import ProjectsReportTab from './ProjectsReportTab'
 
 const TABS = [
   { key: 'executive',  label: 'Executive',   icon: '🎯' },
@@ -9,6 +10,7 @@ const TABS = [
   { key: 'delivery',   label: 'Delivery',     icon: '📅' },
   { key: 'mentoring',  label: 'Mentoring',    icon: '🤝' },
   { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
+  { key: 'projects',   label: 'Projects',     icon: '🚀' },
 ]
 
 function KPICard({ icon, label, value, sub, color, trend }) {
@@ -479,6 +481,7 @@ export default function Reports({ org }) {
             {tab === 'delivery'     && <DeliveryTab data={data} />}
             {tab === 'mentoring'    && <MentoringTab data={data} />}
             {tab === 'safeguarding' && <SafeguardingTab data={data} />}
+            {tab === 'projects'     && <ProjectsReportTab org={org} />}
           </>
         ) : null}
       </div>
