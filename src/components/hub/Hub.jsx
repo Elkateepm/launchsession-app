@@ -2800,6 +2800,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const orgName = org?.name || "LaunchSession";
 
   const [sessions, setSessions] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [concerns, setConcerns] = useState([]);
   const [children, setChildren] = useState([]);
@@ -2892,6 +2893,24 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     else if (typeof setTab === "function") setTab(tab);
   }
 
+  // Active project for the Hub card: a non-archived project whose date range
+  // covers today, paired with its day count and today's session. All derived
+  // from sessions/projects already in state -- no extra round trips.
+  const activeProject = React.useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    const proj = (projects || []).find(p => p.start_date <= today && p.end_date >= today)
+    if (!proj) return null
+    const days = (sessions || []).filter(s => s.project_id === proj.id)
+    if (days.length === 0) return null
+    const sorted = [...days].sort((a, b) => `${a.session_date}`.localeCompare(`${b.session_date}`))
+    const completed = sorted.filter(d => d.closed_at || d.session_date < today).length
+    const todaysDay = sorted.find(d => d.session_date === today)
+    const dayNumber = todaysDay
+      ? sorted.findIndex(d => d.id === todaysDay.id) + 1
+      : Math.min(completed + 1, sorted.length)
+    return { project: proj, total: sorted.length, completed, dayNumber, todaysDay }
+  }, [projects, sessions])
+
   const loadHub = React.useCallback(async () => {
     if (!orgId) return;
     const [
@@ -2903,6 +2922,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       { data: volunteerData },
       { data: checkoutData },
       { data: medicalReviewData },
+      { data: projectData },
     ] = await Promise.all([
       supabase.from("sessions").select("*").eq("org_id", orgId).order("session_date", { ascending: true }).order("start_time", { ascending: true }),
       supabase.from("attendance").select("*").eq("org_id", orgId),
@@ -2912,8 +2932,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       supabase.from("volunteers").select("id").eq("org_id", orgId),
       supabase.from("resource_checkouts").select("id").eq("org_id", orgId).in("status", ["checked_out", "overdue"]),
       supabase.from("medical_alert_reviews").select("*").eq("org_id", orgId),
+      supabase.from("projects").select("id, name, start_date, end_date, status").eq("org_id", orgId).not("status", "in", '("archived","cancelled","completed")'),
     ]);
     setSessions(sessionData || []);
+    setProjects(projectData || []);
     setAttendance(attendanceData || []);
     setConcerns(concernData || []);
     setChildren(childData || []);
@@ -3875,6 +3897,39 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
       <section className="ls-hub-outer-grid" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) 320px', gap: 18, padding: pad }}>
         <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* ACTIVE PROJECT — only shown while a project is genuinely running */}
+          {activeProject && (
+            <div style={{
+              background: 'linear-gradient(135deg, #F5F3FF, #EEF2FF)',
+              border: '1px solid #DDD6FE', borderRadius: 18, padding: 18,
+              boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 16px -12px rgba(15,23,42,0.18)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.6, color: '#5B21B6', marginBottom: 5 }}>ACTIVE PROJECT</div>
+                  <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>{activeProject.project.name}</div>
+                  <div style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600, marginTop: 3 }}>
+                    Day {activeProject.dayNumber} of {activeProject.total}
+                    {activeProject.todaysDay ? ` · Today: ${activeProject.todaysDay.title}` : ' · No session today'}
+                  </div>
+                </div>
+                <button onClick={() => onNavigate && onNavigate('projects', { projectId: activeProject.project.id })}
+                  style={{
+                    padding: '9px 16px', borderRadius: 10, border: 'none', color: '#fff', fontSize: 12.5, fontWeight: 800,
+                    background: 'linear-gradient(135deg,#6D5DF6,#5B8DEF)', cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}>
+                  Open project
+                </button>
+              </div>
+              <div style={{ height: 6, background: 'rgba(109,93,246,0.15)', borderRadius: 99, overflow: 'hidden', marginTop: 12 }}>
+                <div style={{
+                  width: `${activeProject.total ? Math.round((activeProject.completed / activeProject.total) * 100) : 0}%`,
+                  height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#6D5DF6,#5B8DEF)', transition: 'width 400ms ease',
+                }} />
+              </div>
+            </div>
+          )}
+
           {/* TODAY AT A GLANCE */}
           <Panel title="📍 Right now">
             {/* CSS Grid instead of flex+fixed-px basis: grid columns are a hard
