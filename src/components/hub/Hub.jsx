@@ -2897,7 +2897,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   // covers today, paired with its day count and today's session. All derived
   // from sessions/projects already in state -- no extra round trips.
   const activeProject = React.useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10)
+    // Local date, not UTC -- see SessionPlanner note.
+    const today = toLocalDateStr(new Date())
     const proj = (projects || []).find(p => p.start_date <= today && p.end_date >= today)
     if (!proj) return null
     const days = (sessions || []).filter(s => s.project_id === proj.id)

@@ -1535,6 +1535,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const [tab, setTab] = useState('upcoming') // 'upcoming' | 'live' | 'completed' | 'needs_review'
   const [locationFilter, setLocationFilter] = useState('all')
   const [showFilters, setShowFilters] = useState(false)
+  const [sourceFilter, setSourceFilter] = useState('all') // all | standalone | project
   const [showNewMenu, setShowNewMenu] = useState(false)
   const [showProjectWizard, setShowProjectWizard] = useState(false)
   const [showDuplicatePicker, setShowDuplicatePicker] = useState(false)
@@ -1905,7 +1906,28 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   if (locationFilter !== 'all') activeFilterChips.push({ key: 'loc', label: locationFilter, clear: () => setLocationFilter('all') })
   if (search.trim()) activeFilterChips.push({ key: 'q', label: `“${search.trim()}”`, clear: () => setSearch('') })
 
+  // A project counts as running when today falls inside its range and it has
+  // days. Purely derived from state we already hold.
+  const runningProject = React.useMemo(() => {
+    // Local date, not toISOString() -- that returns UTC, so between midnight
+    // and 1am BST it reports yesterday and the strip vanishes on day one.
+    const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })()
+    const list = Object.values(projects || {})
+    const proj = list.find(p => p.start_date <= today && p.end_date >= today
+      && !['archived', 'cancelled', 'completed'].includes(p.status))
+    if (!proj) return null
+    const days = sessions.filter(x => x.project_id === proj.id)
+    if (days.length === 0) return null
+    const sorted = [...days].sort((a, b) => `${a.session_date}`.localeCompare(`${b.session_date}`))
+    const done = sorted.filter(d => d.closed_at || d.session_date < today).length
+    const todays = sorted.find(d => d.session_date === today)
+    const dayNo = todays ? sorted.findIndex(d => d.id === todays.id) + 1 : Math.min(done + 1, sorted.length)
+    return { proj, total: sorted.length, done, dayNo, todays }
+  }, [projects, sessions])
+
   const displayed = tabBaseList.filter(s => {
+    if (sourceFilter === 'standalone' && s.project_id) return false
+    if (sourceFilter === 'project' && !s.project_id) return false
     if (typeFilter === 'trips' && s.session_type !== 'trip') return false
     if (typeFilter === 'sessions' && s.session_type === 'trip') return false
     if (onlyNeedsVolunteers && !(s.volunteer_limit && (volCounts[s.id] || 0) < s.volunteer_limit)) return false
@@ -2081,6 +2103,30 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
           </div>
         </div>
 
+        {/* ═══ ACTIVE PROJECT STRIP — bridges Sessions to Projects ═══ */}
+        {runningProject && (
+          <button
+            onClick={() => onNavigate && onNavigate('projects', { projectId: runningProject.proj.id })}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left',
+              padding: '12px 16px', marginBottom: 14, borderRadius: 14, cursor: 'pointer',
+              background: 'linear-gradient(135deg, #F5F3FF, #EEF2FF)',
+              border: '1px solid #DDD6FE', boxSizing: 'border-box',
+            }}>
+            <span style={{ fontSize: 18, flexShrink: 0 }}>🚀</span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>
+                {runningProject.proj.name}
+              </span>
+              <span style={{ display: 'block', fontSize: 11.5, color: '#64748B', fontWeight: 600, marginTop: 2 }}>
+                Day {runningProject.dayNo} of {runningProject.total}
+                {runningProject.todays ? ` · Today: ${runningProject.todays.title}` : ' · No session today'}
+              </span>
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#6D5DF6', whiteSpace: 'nowrap' }}>Open project →</span>
+          </button>
+        )}
+
         {/* ═══ TABS ═══ */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 14, borderBottom: '1px solid #E2E8F0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {TABS.map(t => (
@@ -2108,6 +2154,26 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             style={{ padding: '10px 14px', borderRadius: 11, border: `1.5px solid ${activeFilterChips.length ? '#6D5DF6' : '#E2E8F0'}`, background: activeFilterChips.length ? '#6D5DF610' : '#fff', color: activeFilterChips.length ? '#6D5DF6' : '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Filters{activeFilterChips.length ? ` (${activeFilterChips.length})` : ''}
           </button>
+          {Object.keys(projects).length > 0 && (
+            <div style={{ display: 'flex', gap: 3, padding: 3, background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 11 }}>
+              {[
+                { key: 'all', label: 'All' },
+                { key: 'standalone', label: 'Standalone' },
+                { key: 'project', label: 'Project' },
+              ].map(o => {
+                const on = sourceFilter === o.key
+                return (
+                  <button key={o.key} onClick={() => setSourceFilter(o.key)} style={{
+                    padding: '7px 12px', borderRadius: 9, border: 'none', cursor: 'pointer',
+                    fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap',
+                    background: on ? '#fff' : 'transparent',
+                    color: on ? '#6D5DF6' : '#64748B',
+                    boxShadow: on ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
+                  }}>{o.label}</button>
+                )
+              })}
+            </div>
+          )}
           <div style={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: 11, overflow: 'hidden' }}>
             {[{ key: 'list', icon: '☰' }, { key: 'week', icon: '📅' }].map(v => (
               <button key={v.key} onClick={() => setView(v.key)} style={{ padding: '9px 13px', border: 'none', background: view === v.key ? '#6D5DF6' : '#fff', color: view === v.key ? '#fff' : '#64748B', fontSize: 13, cursor: 'pointer' }}>{v.icon}</button>
