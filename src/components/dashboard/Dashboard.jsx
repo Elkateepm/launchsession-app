@@ -7,6 +7,7 @@ import TeamTab from '../team/TeamTab'
 import Mentoring from '../mentoring/Mentoring'
 import SessionPlanner from '../sessions/SessionPlanner'
 import ProjectOverview from '../projects/ProjectOverview'
+import ProjectsList from '../projects/ProjectsList'
 import Hub from '../hub/Hub'
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
@@ -652,6 +653,7 @@ export default function Dashboard({ session, org }) {
           <NavSection collapsed={sidebarCollapsed} title="Delivery" packColor="#3B82F6">
             <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => handleSetTab('calendar')} primary={primary} collapsed={sidebarCollapsed} />
             <NavItem icon="🗓️" label="Sessions" active={tab === 'planner'} onClick={() => handleSetTab('planner')} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="🚀" label="Projects" active={tab === 'projects_list' || tab === 'projects'} onClick={() => handleSetTab('projects_list')} primary={primary} collapsed={sidebarCollapsed} />
             <NavItem icon="🧒" label="Children" active={tab === 'children'} onClick={() => handleSetTab('children')} primary={primary} collapsed={sidebarCollapsed} />
             {/* Paid delivery modules — show all, locked ones navigate to locked screen */}
             {[
@@ -820,7 +822,8 @@ export default function Dashboard({ session, org }) {
           {/* ── BASE MODULES — always free ── */}
           {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
           {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
-          {tab === 'projects'   && <ProjectOverview org={org} session={session} projectId={openProjectId} onNavigate={handleSetTab} onBack={() => handleSetTab('planner')} />}
+          {tab === 'projects'   && <ProjectOverview org={org} session={session} projectId={openProjectId} onNavigate={handleSetTab} onBack={() => handleSetTab('projects_list')} />}
+          {tab === 'projects_list' && <ProjectsList org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
           {tab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} /></ChildrenGate>}
@@ -857,7 +860,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects'].includes(tab) && (
+          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list'].includes(tab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
@@ -910,6 +913,7 @@ export default function Dashboard({ session, org }) {
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
                 {[
                   { key: 'mentoring', label: 'Mentoring', icon: '🤝', badge: navBadges.mentoring },
+                  { key: 'projects_list', label: 'Projects', icon: '🚀' },
                   { key: 'calendar', label: 'Calendar', icon: '📅' },
                   { key: 'team', label: 'Team & Staff', icon: '👥' },
                   { key: 'volunteers', label: 'Volunteers', icon: '❤️' },

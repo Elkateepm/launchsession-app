@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { PROJECT_TYPES } from './ProjectWizard'
-import { TripReadiness, ProjectReflectionModal } from './ProjectExtras'
+import { TripReadiness, ProjectReflectionModal, AddParticipantsModal, AddTeamModal, EditProjectModal } from './ProjectExtras'
 
 const todayISO = () => {
   const d = new Date()
@@ -54,6 +54,11 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
   const [projectReflection, setProjectReflection] = useState(null)
   const [showReflection, setShowReflection] = useState(false)
   const [staffCounts, setStaffCounts] = useState({}) // session_id -> assigned staff count
+  const [showAddPeople, setShowAddPeople] = useState(false)
+  const [showAddTeam, setShowAddTeam] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
+  const [archiving, setArchiving] = useState(false)
 
   const load = useCallback(async () => {
     if (!org?.id || !projectId) return
@@ -169,6 +174,38 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
     return items.slice(0, 8)
   }, [days, reflections, raLinked, countsFor])
 
+  const withdrawParticipant = useCallback(async (participantId, nextStatus) => {
+    await supabase.from('project_participants').update({ status: nextStatus }).eq('id', participantId)
+    load()
+  }, [load])
+
+  const removeTeamMember = useCallback(async (rowId) => {
+    await supabase.from('project_staff').delete().eq('id', rowId)
+    load()
+  }, [load])
+
+  const toggleLead = useCallback(async (rowId, nextLead) => {
+    await supabase.from('project_staff').update({ is_lead: nextLead }).eq('id', rowId)
+    load()
+  }, [load])
+
+  const archiveProject = useCallback(async () => {
+    if (!window.confirm(`Archive "${project.name}"? It'll be hidden from the active list but nothing is deleted.`)) return
+    setArchiving(true)
+    await supabase.from('projects').update({ status: 'archived' }).eq('id', project.id)
+    setArchiving(false)
+    setShowMenu(false)
+    load()
+  }, [project, load])
+
+  const restoreProject = useCallback(async () => {
+    setArchiving(true)
+    await supabase.from('projects').update({ status: 'upcoming' }).eq('id', project.id)
+    setArchiving(false)
+    setShowMenu(false)
+    load()
+  }, [project, load])
+
   const projectStatus = useMemo(() => {
     if (!project) return 'draft'
     if (project.status === 'archived' || project.status === 'cancelled') return project.status
@@ -203,7 +240,28 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
   return (
     <div style={{ padding: isMobile ? 16 : 28, maxWidth: 1100, margin: '0 auto' }}>
       {/* ── Header ── */}
-      <button onClick={onBack} style={{ ...btnGhost, marginBottom: 14, padding: '6px 12px', fontSize: 12 }}>← Sessions</button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <button onClick={onBack} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12 }}>← Projects</button>
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setShowMenu(m => !m)} style={{ ...btnGhost, padding: '6px 12px', fontSize: 14, lineHeight: 1 }}>⋯</button>
+          {showMenu && (
+            <>
+              <div onClick={() => setShowMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 10380 }} />
+              <div style={{
+                position: 'absolute', top: '110%', right: 0, zIndex: 10390, background: '#fff', borderRadius: 12,
+                boxShadow: '0 12px 32px rgba(15,23,42,0.18)', border: '1px solid #E2E8F0', minWidth: 180, overflow: 'hidden',
+              }}>
+                <button onClick={() => { setShowMenu(false); setShowEdit(true) }} style={menuItemStyle}>Edit project</button>
+                {(project.status === 'archived') ? (
+                  <button onClick={restoreProject} disabled={archiving} style={menuItemStyle}>Restore project</button>
+                ) : (
+                  <button onClick={archiveProject} disabled={archiving} style={{ ...menuItemStyle, color: '#B91C1C' }}>Archive project</button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', marginBottom: 18 }}>
         <div style={{ minWidth: 0 }}>
@@ -366,11 +424,14 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
       )}
 
       {tab === 'people' && (
-        <PeopleTab participants={participants} days={days} attendance={attendance} isMobile={isMobile} />
+        <PeopleTab participants={participants} days={days} attendance={attendance} isMobile={isMobile}
+          onAdd={() => setShowAddPeople(true)} onWithdraw={p => withdrawParticipant(p.id, 'withdrawn')}
+          onReactivate={p => withdrawParticipant(p.id, 'active')} />
       )}
 
       {tab === 'team' && (
-        <TeamTab team={team} staffProfiles={staffProfiles} />
+        <TeamTab team={team} staffProfiles={staffProfiles} onAdd={() => setShowAddTeam(true)}
+          onRemove={t => removeTeamMember(t.id)} onToggleLead={t => toggleLead(t.id, !t.is_lead)} />
       )}
 
       {showReflection && (
@@ -380,6 +441,24 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
           onClose={() => setShowReflection(false)}
           onSaved={load}
         />
+      )}
+
+      {showAddPeople && (
+        <AddParticipantsModal
+          org={org} projectId={projectId} existingChildIds={participants.map(p => p.child_id)}
+          onClose={() => setShowAddPeople(false)} onAdded={load}
+        />
+      )}
+
+      {showAddTeam && (
+        <AddTeamModal
+          org={org} projectId={projectId} existingUserIds={team.map(t => t.user_id).filter(Boolean)}
+          onClose={() => setShowAddTeam(false)} onAdded={load}
+        />
+      )}
+
+      {showEdit && (
+        <EditProjectModal project={project} onClose={() => setShowEdit(false)} onSaved={load} />
       )}
     </div>
   )
@@ -458,77 +537,109 @@ function ScheduleTab({ days, countsFor, reflections, raLinked, isMobile, onNavig
   )
 }
 
-function PeopleTab({ participants, days, attendance, isMobile }) {
-  const totalDays = days.length
-  if (participants.length === 0) {
-    return (
-      <div style={card({ padding: 40, textAlign: 'center' })}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No young people added yet</div>
-        <div style={{ fontSize: 13, color: '#64748B' }}>Add participants so LaunchSession can prepare your daily registers.</div>
-      </div>
-    )
-  }
+function AddBar({ label, onAdd }) {
   return (
-    <div style={card({ padding: 16 })}>
-      <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>
-        {participants.length} young {participants.length === 1 ? 'person' : 'people'}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {participants.map(p => {
-          const ch = p.children
-          const rows = attendance.filter(a => a.child_id === p.child_id)
-          const attended = rows.filter(a => a.status === 'signed_in' || a.status === 'signed_out').length
-          const absent = rows.filter(a => a.status === 'absent').length
-          const pct = totalDays > 0 ? Math.round((attended / totalDays) * 100) : 0
-          return (
-            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, border: '1px solid #F1F5F9', flexWrap: 'wrap' }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#EDE9FE', color: '#5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
-                {`${ch?.first_name?.[0] || ''}${ch?.last_name?.[0] || ''}`.toUpperCase()}
-              </div>
-              <div style={{ flex: 1, minWidth: 120 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{ch ? `${ch.first_name} ${ch.last_name}` : 'Unknown'}</div>
-                <div style={{ fontSize: 11, color: '#94A3B8' }}>
-                  {attended} / {totalDays} days{absent > 0 ? ` · ${absent} absent` : ''}
-                </div>
-              </div>
-              {p.status !== 'active' && (
-                <span style={{ fontSize: 10, fontWeight: 800, color: '#64748B', background: '#F1F5F9', borderRadius: 99, padding: '2px 8px' }}>{p.status.replace('_', ' ')}</span>
-              )}
-              <span style={{ fontSize: 12, fontWeight: 800, color: pct >= 75 ? '#15803D' : pct >= 50 ? '#B45309' : '#B91C1C' }}>{pct}%</span>
-            </div>
-          )
-        })}
-      </div>
+    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+      <button onClick={onAdd} style={{
+        padding: '8px 14px', borderRadius: 10, border: 'none', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer',
+        background: 'linear-gradient(135deg,#6D5DF6,#5B8DEF)',
+      }}>{label}</button>
     </div>
   )
 }
 
-function TeamTab({ team, staffProfiles }) {
-  if (team.length === 0) {
+function PeopleTab({ participants, days, attendance, isMobile, onAdd, onWithdraw, onReactivate }) {
+  const totalDays = days.length
+  if (participants.length === 0) {
     return (
-      <div style={card({ padding: 40, textAlign: 'center' })}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No project team yet</div>
-        <div style={{ fontSize: 13, color: '#64748B' }}>Add a default team and every project day will inherit it.</div>
-      </div>
+      <>
+        <AddBar label="+ Add young person" onAdd={onAdd} />
+        <div style={card({ padding: 40, textAlign: 'center' })}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No young people added yet</div>
+          <div style={{ fontSize: 13, color: '#64748B' }}>Add participants so LaunchSession can prepare your daily registers.</div>
+        </div>
+      </>
     )
   }
   return (
-    <div style={card({ padding: 16 })}>
-      <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>{team.length} team {team.length === 1 ? 'member' : 'members'}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {team.map(t => (
-          <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 10px', borderRadius: 11, border: '1px solid #F1F5F9' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
-              {t.user_id ? (staffProfiles[t.user_id] || 'Team member') : 'Volunteer'}
-            </span>
-            <span style={{ display: 'flex', gap: 6 }}>
-              {t.is_lead && <span style={{ fontSize: 10, fontWeight: 800, color: '#5B21B6', background: '#F5F3FF', borderRadius: 99, padding: '2px 8px' }}>Lead</span>}
-              <span style={{ fontSize: 11, color: '#64748B', fontWeight: 600 }}>{t.role}</span>
-            </span>
-          </div>
-        ))}
+    <>
+      <AddBar label="+ Add young person" onAdd={onAdd} />
+      <div style={card({ padding: 16 })}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>
+          {participants.filter(p => p.status === 'active').length} active young {participants.length === 1 ? 'person' : 'people'}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {participants.map(p => {
+            const ch = p.children
+            const rows = attendance.filter(a => a.child_id === p.child_id)
+            const attended = rows.filter(a => a.status === 'signed_in' || a.status === 'signed_out').length
+            const absent = rows.filter(a => a.status === 'absent').length
+            const pct = totalDays > 0 ? Math.round((attended / totalDays) * 100) : 0
+            const withdrawn = p.status !== 'active'
+            return (
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, border: '1px solid #F1F5F9', flexWrap: 'wrap', opacity: withdrawn ? 0.6 : 1 }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#EDE9FE', color: '#5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
+                  {`${ch?.first_name?.[0] || ''}${ch?.last_name?.[0] || ''}`.toUpperCase()}
+                </div>
+                <div style={{ flex: 1, minWidth: 120 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{ch ? `${ch.first_name} ${ch.last_name}` : 'Unknown'}</div>
+                  <div style={{ fontSize: 11, color: '#94A3B8' }}>
+                    {attended} / {totalDays} days{absent > 0 ? ` · ${absent} absent` : ''}
+                  </div>
+                </div>
+                {withdrawn && (
+                  <span style={{ fontSize: 10, fontWeight: 800, color: '#64748B', background: '#F1F5F9', borderRadius: 99, padding: '2px 8px' }}>{p.status.replace('_', ' ')}</span>
+                )}
+                {!withdrawn && <span style={{ fontSize: 12, fontWeight: 800, color: pct >= 75 ? '#15803D' : pct >= 50 ? '#B45309' : '#B91C1C' }}>{pct}%</span>}
+                <button onClick={() => withdrawn ? onReactivate(p) : onWithdraw(p)} style={{
+                  background: 'none', border: '1px solid #E2E8F0', borderRadius: 8, padding: '4px 9px', fontSize: 11, fontWeight: 700,
+                  color: withdrawn ? '#15803D' : '#B91C1C', cursor: 'pointer',
+                }}>{withdrawn ? 'Reactivate' : 'Withdraw'}</button>
+              </div>
+            )
+          })}
+        </div>
       </div>
-    </div>
+    </>
+  )
+}
+
+function TeamTab({ team, staffProfiles, onAdd, onRemove, onToggleLead }) {
+  if (team.length === 0) {
+    return (
+      <>
+        <AddBar label="+ Add team member" onAdd={onAdd} />
+        <div style={card({ padding: 40, textAlign: 'center' })}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No project team yet</div>
+          <div style={{ fontSize: 13, color: '#64748B' }}>Add a default team and every project day will inherit it.</div>
+        </div>
+      </>
+    )
+  }
+  return (
+    <>
+      <AddBar label="+ Add team member" onAdd={onAdd} />
+      <div style={card({ padding: 16 })}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>{team.length} team {team.length === 1 ? 'member' : 'members'}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {team.map(t => (
+            <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '9px 10px', borderRadius: 11, border: '1px solid #F1F5F9', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
+                {t.user_id ? (staffProfiles[t.user_id] || 'Team member') : 'Volunteer'}
+              </span>
+              <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <button onClick={() => onToggleLead(t)} style={{
+                  fontSize: 10, fontWeight: 800, borderRadius: 99, padding: '2px 8px', cursor: 'pointer', border: 'none',
+                  color: t.is_lead ? '#5B21B6' : '#94A3B8', background: t.is_lead ? '#F5F3FF' : '#F1F5F9',
+                }}>{t.is_lead ? 'Lead' : 'Make lead'}</button>
+                <span style={{ fontSize: 11, color: '#64748B', fontWeight: 600 }}>{t.role}</span>
+                <button onClick={() => onRemove(t)} style={{ background: 'none', border: '1px solid #E2E8F0', borderRadius: 8, padding: '4px 9px', fontSize: 11, fontWeight: 700, color: '#B91C1C', cursor: 'pointer' }}>Remove</button>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -573,4 +684,8 @@ const btnPrimary = {
 const btnGhost = {
   padding: '9px 16px', borderRadius: 11, border: '1.5px solid #E2E8F0',
   background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+}
+const menuItemStyle = {
+  display: 'block', width: '100%', textAlign: 'left', padding: '11px 14px', border: 'none', background: '#fff',
+  fontSize: 13, fontWeight: 700, color: '#334155', cursor: 'pointer',
 }

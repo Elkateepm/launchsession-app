@@ -227,6 +227,269 @@ export function ProjectReflectionModal({ org, session, project, summary, existin
   )
 }
 
+// ── ADD YOUNG PEOPLE ──────────────────────────────────────────────────────
+// Searches the org's active children, excludes anyone already on the roster,
+// multi-select then a single insert into project_participants.
+export function AddParticipantsModal({ org, projectId, existingChildIds, onClose, onAdded }) {
+  const [loading, setLoading] = useState(true)
+  const [children, setChildren] = useState([])
+  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState(new Set())
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!org?.id) return
+    supabase.from('children').select('id, first_name, last_name, group_name, photo_url')
+      .eq('org_id', org.id).eq('active', true).order('first_name')
+      .then(({ data }) => { setChildren(data || []); setLoading(false) })
+  }, [org?.id])
+
+  const existing = useMemo(() => new Set(existingChildIds || []), [existingChildIds])
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return children.filter(c => !existing.has(c.id) && (!q || `${c.first_name} ${c.last_name}`.toLowerCase().includes(q)))
+  }, [children, existing, search])
+
+  const toggle = (id) => setSelected(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
+
+  const save = async () => {
+    if (selected.size === 0) return
+    setError(''); setSaving(true)
+    const rows = Array.from(selected).map(child_id => ({ org_id: org.id, project_id: projectId, child_id, status: 'active' }))
+    const { error: err } = await supabase.from('project_participants').insert(rows)
+    setSaving(false)
+    if (err) { setError(err.message || 'Could not add participants.'); return }
+    onAdded && onAdded()
+    onClose()
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400 }} />
+      <div onClick={e => e.stopPropagation()} style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401,
+        background: '#fff', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '82vh',
+        display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
+      }}>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Add young people</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+        </div>
+        <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name…" autoFocus
+            style={{ ...fi, marginBottom: 10 }} />
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 12px' }}>
+          {loading ? (
+            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>Loading…</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>
+              {children.length === 0 ? 'No children found for this org.' : 'Everyone matching is already on this project.'}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {filtered.map(c => {
+                const on = selected.has(c.id)
+                return (
+                  <button key={c.id} onClick={() => toggle(c.id)} style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, width: '100%', textAlign: 'left', cursor: 'pointer',
+                    border: on ? `2px solid ${PURPLE}` : '1px solid #F1F5F9', background: on ? '#F5F3FF' : '#fff',
+                  }}>
+                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#EDE9FE', color: '#5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
+                      {c.photo_url ? <img src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`.toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>
+                      {c.group_name && <div style={{ fontSize: 11, color: '#94A3B8' }}>{c.group_name}</div>}
+                    </div>
+                    <span style={{ fontSize: 15, color: on ? PURPLE : '#CBD5E1' }}>{on ? '✓' : '+'}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+          {error && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginTop: 10 }}>{error}</div>}
+        </div>
+        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <div style={{ flex: 1 }} />
+          <button onClick={save} disabled={saving || selected.size === 0} style={{
+            padding: '11px 22px', borderRadius: 11, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800,
+            background: (saving || selected.size === 0) ? '#CBD5E1' : PURPLE, cursor: (saving || selected.size === 0) ? 'default' : 'pointer',
+          }}>{saving ? 'Adding…' : `Add ${selected.size || ''}`.trim()}</button>
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ── ADD TEAM MEMBER ──────────────────────────────────────────────────────
+// Searches org staff/volunteers (user_profiles), excludes anyone already on
+// the project team, adds one at a time so a role can be picked per person.
+export function AddTeamModal({ org, projectId, existingUserIds, onClose, onAdded }) {
+  const [loading, setLoading] = useState(true)
+  const [people, setPeople] = useState([])
+  const [search, setSearch] = useState('')
+  const [adding, setAdding] = useState(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!org?.id) return
+    supabase.from('user_profiles').select('id, full_name, role, photo_url')
+      .eq('org_id', org.id).in('role', ['admin', 'owner', 'staff', 'volunteer']).eq('status', 'active').order('full_name')
+      .then(({ data }) => { setPeople(data || []); setLoading(false) })
+  }, [org?.id])
+
+  const existing = useMemo(() => new Set(existingUserIds || []), [existingUserIds])
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return people.filter(p => !existing.has(p.id) && (!q || (p.full_name || '').toLowerCase().includes(q)))
+  }, [people, existing, search])
+
+  const roleLabel = (role) => role === 'volunteer' ? 'Volunteer' : role === 'admin' ? 'Admin' : role === 'owner' ? 'Owner' : 'Staff'
+
+  const add = async (p) => {
+    setError(''); setAdding(p.id)
+    const { error: err } = await supabase.from('project_staff').insert({
+      org_id: org.id, project_id: projectId, user_id: p.id, role: roleLabel(p.role), is_lead: false,
+    })
+    setAdding(null)
+    if (err) { setError(err.message || 'Could not add team member.'); return }
+    onAdded && onAdded()
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400 }} />
+      <div onClick={e => e.stopPropagation()} style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401,
+        background: '#fff', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '82vh',
+        display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
+      }}>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Add team member</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+        </div>
+        <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name…" autoFocus
+            style={{ ...fi, marginBottom: 10 }} />
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 12px' }}>
+          {loading ? (
+            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>Loading…</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>
+              {people.length === 0 ? 'No active staff or volunteers found.' : 'Everyone matching is already on this project.'}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {filtered.map(p => (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, border: '1px solid #F1F5F9' }}>
+                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#EDE9FE', color: '#5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
+                    {p.photo_url ? <img src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.full_name || '?')[0]?.toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{p.full_name || 'Unnamed'}</div>
+                    <div style={{ fontSize: 11, color: '#94A3B8' }}>{roleLabel(p.role)}</div>
+                  </div>
+                  <button onClick={() => add(p)} disabled={adding === p.id} style={{
+                    padding: '6px 12px', borderRadius: 9, border: 'none', fontSize: 12, fontWeight: 800, color: '#fff',
+                    background: adding === p.id ? '#CBD5E1' : PURPLE, cursor: adding === p.id ? 'default' : 'pointer',
+                  }}>{adding === p.id ? '…' : 'Add'}</button>
+                </div>
+              ))}
+            </div>
+          )}
+          {error && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginTop: 10 }}>{error}</div>}
+        </div>
+        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', flexShrink: 0 }}>
+          <button onClick={onClose} style={{ width: '100%', padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Done</button>
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ── EDIT PROJECT ─────────────────────────────────────────────────────────
+export function EditProjectModal({ project, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    name: project.name || '',
+    description: project.description || '',
+    start_date: project.start_date || '',
+    end_date: project.end_date || '',
+    capacity: project.capacity || '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const save = async () => {
+    if (!form.name.trim() || !form.start_date || !form.end_date || form.end_date < form.start_date) {
+      setError('Check the project name and dates.'); return
+    }
+    setError(''); setSaving(true)
+    const { error: err } = await supabase.from('projects').update({
+      name: form.name.trim(),
+      description: form.description.trim() || null,
+      start_date: form.start_date,
+      end_date: form.end_date,
+      capacity: form.capacity ? parseInt(form.capacity, 10) : null,
+    }).eq('id', project.id)
+    setSaving(false)
+    if (err) { setError(err.message || 'Could not save changes.'); return }
+    onSaved && onSaved()
+    onClose()
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400 }} />
+      <div onClick={e => e.stopPropagation()} style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401,
+        background: '#fff', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '88vh',
+        display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
+      }}>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Edit project</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+          <Field label="Project name">
+            <input value={form.name} onChange={e => set('name', e.target.value)} style={fi} />
+          </Field>
+          <Field label="Description (optional)">
+            <textarea value={form.description} onChange={e => set('description', e.target.value)} style={{ ...fi, minHeight: 60, resize: 'vertical', fontFamily: 'inherit' }} />
+          </Field>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Field label="Start date"><input type="date" value={form.start_date} onChange={e => set('start_date', e.target.value)} style={fi} /></Field>
+            <Field label="End date"><input type="date" value={form.end_date} onChange={e => set('end_date', e.target.value)} style={fi} /></Field>
+          </div>
+          <Field label="Capacity (optional)">
+            <input type="number" min="0" value={form.capacity} onChange={e => set('capacity', e.target.value)} style={fi} />
+          </Field>
+          <div style={{ fontSize: 11.5, color: '#94A3B8', lineHeight: 1.5 }}>
+            Changing the date range doesn't add or remove project days — build those from the Schedule tab.
+          </div>
+          {error && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginTop: 10 }}>{error}</div>}
+        </div>
+        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <div style={{ flex: 1 }} />
+          <button onClick={save} disabled={saving} style={{
+            padding: '11px 22px', borderRadius: 11, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800,
+            background: saving ? '#CBD5E1' : `linear-gradient(135deg, ${PURPLE}, #5B8DEF)`, cursor: saving ? 'default' : 'pointer',
+          }}>{saving ? 'Saving…' : 'Save changes'}</button>
+        </div>
+      </div>
+    </>
+  )
+}
+
 function SumStat({ n, l }) {
   return <span style={{ fontSize: 12.5, color: '#64748B' }}><strong style={{ color: '#0F172A', fontWeight: 900, fontSize: 14 }}>{n}</strong> {l}</span>
 }
