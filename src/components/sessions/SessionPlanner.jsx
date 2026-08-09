@@ -1601,18 +1601,29 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     if (target) { setReflectingSession(target); autoReflectOpenedRef.current = true }
   }, [initialReflectSessionId, sessions])
 
+  // Only trust end_date when the session genuinely crosses midnight (end_time
+  // earlier than start_time). Some rows carry a stray end_date on same-day
+  // sessions, which previously pushed the computed end into the future and left
+  // them stuck as "live" indefinitely. Same guard Hub.jsx already applies.
+  const sessionEndsAt = (s) => {
+    if (!s.session_date) return null
+    const endTimeStr = s.end_time || '23:59'
+    const crossesMidnight = !!s.end_time && !!s.start_time && s.end_time < s.start_time
+    const endDateStr = crossesMidnight ? (s.end_date || s.session_date) : s.session_date
+    return new Date(`${endDateStr}T${endTimeStr}`)
+  }
+
   const isSessionPast = (s) => {
     if (!s.session_date) return false
-    const endDateStr = s.end_date || s.session_date
-    const endTimeStr = s.end_time || '23:59'
-    const endDateTime = new Date(`${endDateStr}T${endTimeStr}`)
-    return endDateTime < new Date()
+    if (s.closed_at) return true // explicitly closed is past, whatever the clock says
+    const endDateTime = sessionEndsAt(s)
+    return endDateTime ? endDateTime < new Date() : false
   }
 
   // A session counts as "live" once its start time has passed but before isSessionPast
   // becomes true — distinct from "upcoming" (not started) and "past 7 days" (already ended).
   const isSessionLive = (s) => {
-    if (!s.session_date || isSessionPast(s)) return false
+    if (!s.session_date || s.closed_at || isSessionPast(s)) return false
     const startTimeStr = s.start_time || '00:00'
     const startDateTime = new Date(`${s.session_date}T${startTimeStr}`)
     return startDateTime <= new Date()
