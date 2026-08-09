@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { PROJECT_TYPES } from './ProjectWizard'
+import { TripReadiness, ProjectReflectionModal } from './ProjectExtras'
 
 const todayISO = () => {
   const d = new Date()
@@ -50,6 +51,9 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
   const [reflections, setReflections] = useState({})
   const [raLinked, setRaLinked] = useState({})
   const [staffProfiles, setStaffProfiles] = useState({})
+  const [projectReflection, setProjectReflection] = useState(null)
+  const [showReflection, setShowReflection] = useState(false)
+  const [staffCounts, setStaffCounts] = useState({}) // session_id -> assigned staff count
 
   const load = useCallback(async () => {
     if (!org?.id || !projectId) return
@@ -69,7 +73,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
     setDays(sessions)
     const ids = sessions.map(s => s.id)
 
-    const [{ data: parts }, { data: pstaff }, { data: att }, { data: refl }, { data: ras }, { data: profiles }] = await Promise.all([
+    const [{ data: parts }, { data: pstaff }, { data: att }, { data: refl }, { data: ras }, { data: profiles }, { data: projRefl }, { data: sStaff }] = await Promise.all([
       supabase.from('project_participants')
         .select('*, children(id, first_name, last_name, photo_url, group_name)')
         .eq('org_id', org.id).eq('project_id', projectId),
@@ -78,6 +82,8 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
       ids.length ? supabase.from('session_reflections').select('session_id').in('session_id', ids) : Promise.resolve({ data: [] }),
       ids.length ? supabase.from('risk_assessment_sessions').select('session_id').in('session_id', ids) : Promise.resolve({ data: [] }),
       supabase.from('user_profiles').select('id, full_name').eq('org_id', org.id),
+      supabase.from('project_reflections').select('*').eq('org_id', org.id).eq('project_id', projectId).maybeSingle(),
+      ids.length ? supabase.from('session_staff').select('session_id').in('session_id', ids) : Promise.resolve({ data: [] }),
     ])
 
     setParticipants(parts || [])
@@ -86,6 +92,8 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
     const rMap = {}; (refl || []).forEach(r => { rMap[r.session_id] = true }); setReflections(rMap)
     const raMap = {}; (ras || []).forEach(r => { raMap[r.session_id] = true }); setRaLinked(raMap)
     const pMap = {}; (profiles || []).forEach(p => { pMap[p.id] = p.full_name }); setStaffProfiles(pMap)
+    setProjectReflection(projRefl || null)
+    const scMap = {}; (sStaff || []).forEach(r => { scMap[r.session_id] = (scMap[r.session_id] || 0) + 1 }); setStaffCounts(scMap)
     setLoading(false)
   }, [org?.id, projectId])
 
@@ -282,6 +290,45 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
             </div>
           )}
 
+          {/* Trip readiness for the next trip day -- only rendered for trips,
+              and every check maps to a real column so nothing is invented. */}
+          {(() => {
+            const tripDay = (todayDay && todayDay.session_type === 'trip') ? todayDay
+              : (nextDay && nextDay.session_type === 'trip') ? nextDay : null
+            if (!tripDay) return null
+            return (
+              <div style={{ marginBottom: 14 }}>
+                <TripReadiness
+                  org={org} day={tripDay} counts={countsFor(tripDay.id)}
+                  hasRiskAssessment={!!raLinked[tripDay.id]} staffCount={staffCounts[tripDay.id] || 0}
+                  onNavigate={onNavigate}
+                />
+              </div>
+            )
+          })()}
+
+          {/* End-of-project reflection, offered once every day is done */}
+          {metrics.totalDays > 0 && metrics.completedDays === metrics.totalDays && (
+            <div style={card({ padding: 18, marginBottom: 14 })}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <div>
+                  <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+                    {projectReflection ? 'Project reflection complete' : 'This project has finished'}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 3 }}>
+                    {projectReflection
+                      ? 'You can update it any time.'
+                      : 'Capture what worked while it\u2019s fresh \u2014 the numbers are filled in for you.'}
+                  </div>
+                </div>
+                <button onClick={() => setShowReflection(true)}
+                  style={projectReflection ? btnGhost : { ...btnPrimary, background: 'linear-gradient(135deg,#F59E0B,#F97316)' }}>
+                  {projectReflection ? 'View reflection' : 'Add project reflection'}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Needs attention */}
           <div style={card({ padding: 18, marginBottom: 14 })}>
             <div style={{ fontSize: 11, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Needs attention</div>
@@ -324,6 +371,15 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
 
       {tab === 'team' && (
         <TeamTab team={team} staffProfiles={staffProfiles} />
+      )}
+
+      {showReflection && (
+        <ProjectReflectionModal
+          org={org} session={session} project={project}
+          summary={metrics} existing={projectReflection}
+          onClose={() => setShowReflection(false)}
+          onSaved={load}
+        />
       )}
     </div>
   )
