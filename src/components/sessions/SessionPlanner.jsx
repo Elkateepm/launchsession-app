@@ -1156,12 +1156,55 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
 // Works out everything a past session still owes, from data we already hold.
 // Deliberately only uses fields that genuinely exist on the row — anything the
 // backend doesn't track (e.g. outcome capture) is simply not reported.
-function getReviewIssues(s, { hasReflection, counts }) {
+// Needs Review is the operational inbox for this page: anything from a finished
+// session that hasn't been properly dealt with. Each issue carries a severity so
+// the list can lead with what actually matters (safeguarding first, admin last)
+// rather than whatever happens to be alphabetically convenient.
+// Only signals backed by real columns are used -- nothing speculative.
+const REVIEW_SEVERITY = { safeguarding: 0, compliance: 1, attendance: 2, admin: 3 }
+
+function getReviewIssues(s, { hasReflection, counts, openConcerns = 0, hasRiskAssessment = true }) {
   const issues = []
-  if (!hasReflection) issues.push('Reflection outstanding')
-  if ((counts?.expected || 0) > 0) issues.push('Attendance not finalised')
-  if (!s.closed_at) issues.push('Session not closed')
-  return issues
+
+  // Safeguarding first -- an unresolved concern raised in a session is the single
+  // most important thing a youth worker could still owe on it.
+  if (openConcerns > 0) {
+    issues.push({
+      kind: 'safeguarding',
+      label: openConcerns === 1 ? 'Safeguarding follow-up open' : `${openConcerns} safeguarding follow-ups open`,
+    })
+  }
+
+  // Compliance: a session that ran without a risk assessment attached.
+  if (!hasRiskAssessment) {
+    issues.push({ kind: 'compliance', label: 'No risk assessment attached' })
+  }
+
+  // Attendance never finalised -- rows still sitting as 'expected' after the fact.
+  if ((counts?.expected || 0) > 0) {
+    issues.push({
+      kind: 'attendance',
+      label: `Attendance not finalised (${counts.expected} unmarked)`,
+    })
+  }
+
+  if (!s.closed_at) issues.push({ kind: 'admin', label: 'Session not closed' })
+  if (!hasReflection) issues.push({ kind: 'admin', label: 'Reflection outstanding' })
+
+  return issues.sort((a, b) => REVIEW_SEVERITY[a.kind] - REVIEW_SEVERITY[b.kind])
+}
+
+// Worst-severity issue on a session, used to sort the Needs Review list.
+function reviewPriority(issues) {
+  if (!issues.length) return 99
+  return Math.min(...issues.map(i => REVIEW_SEVERITY[i.kind]))
+}
+
+const REVIEW_TONES = {
+  safeguarding: { color: '#B91C1C', bg: '#FEE2E2', icon: '\u{1F6E1}' },
+  compliance:   { color: '#B45309', bg: '#FEF3C7', icon: '\u26A0' },
+  attendance:   { color: '#B45309', bg: '#FEF3C7', icon: '\u26A0' },
+  admin:        { color: '#64748B', bg: '#F1F5F9', icon: '\u26A0' },
 }
 
 function fmtDayLabel(dateStr) {
@@ -1259,7 +1302,7 @@ function CardMenu({ status, onView, onEdit, onDuplicate, onDelete, onSaveTemplat
   )
 }
 
-function SessionRowCard({ s, status, counts, volCount, hasReflection, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister }) {
+function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
   const expected = counts?.total || 0
@@ -1270,7 +1313,7 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, isMobile, 
 
   const accent = status === 'live' ? '#16A34A' : status === 'review' ? '#F59E0B' : status === 'completed' ? '#94A3B8' : '#6D5DF6'
   const attendancePct = expected > 0 ? Math.round((signedIn / expected) * 100) : 0
-  const reviewIssues = status === 'review' ? getReviewIssues(s, { hasReflection, counts }) : []
+  const reviewIssues = status === 'review' ? (issues || []) : []
 
   return (
     <div
@@ -1337,7 +1380,17 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, isMobile, 
           )}
 
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {reviewIssues.map((iss, i) => <StatusPill key={i} tone="amber">⚠ {iss}</StatusPill>)}
+            {reviewIssues.map((iss, i) => {
+              const tone = REVIEW_TONES[iss.kind] || REVIEW_TONES.admin
+              return (
+                <span key={i} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800,
+                  borderRadius: 99, padding: '4px 10px', color: tone.color, background: tone.bg, whiteSpace: 'nowrap',
+                }}>
+                  {tone.icon} {iss.label}
+                </span>
+              )
+            })}
             {status === 'upcoming' && needsVols && <StatusPill tone="amber">⚠ {s.volunteer_limit - volCount} volunteer{s.volunteer_limit - volCount === 1 ? '' : 's'} needed</StatusPill>}
             {status === 'upcoming' && s.risk_assessment_required && <StatusPill tone="amber">⚠ Risk assessment required</StatusPill>}
             {status === 'completed' && (hasReflection ? <StatusPill ok>✓ Reflection complete</StatusPill> : <StatusPill tone="amber">⚠ Reflection due</StatusPill>)}
@@ -1428,6 +1481,8 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const [volCounts, setVolCounts] = useState({})
   const [attendanceCounts, setAttendanceCounts] = useState({})
   const [reflections, setReflections] = useState({}) // session_id -> reflection row
+  const [openConcerns, setOpenConcerns] = useState({}) // session_id -> count of unresolved concerns
+  const [raSessions, setRaSessions] = useState({}) // session_id -> true when a risk assessment is attached
   const [reflectingSession, setReflectingSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('list') // 'list' | 'week' | 'form' | 'wizard'
@@ -1462,10 +1517,12 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
   const loadData = async () => {
     if (!orgId) return
-    const [{ data: sess }, { data: staff }, { data: refl }] = await Promise.all([
+    const [{ data: sess }, { data: staff }, { data: refl }, { data: concerns }, { data: raLinks }] = await Promise.all([
       supabase.from('sessions').select('*').eq('org_id', orgId).order('session_date').order('start_time'),
       supabase.from('session_staff').select('session_id').eq('org_id', orgId),
       supabase.from('session_reflections').select('*').eq('org_id', orgId),
+      supabase.from('cause_for_concern').select('session_id, status, resolved_at').eq('org_id', orgId),
+      supabase.from('risk_assessment_sessions').select('session_id').eq('org_id', orgId),
     ])
     setSessions(sess || [])
     const counts = {}
@@ -1474,6 +1531,21 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     const reflMap = {}
     ;(refl || []).forEach(r => { reflMap[r.session_id] = r })
     setReflections(reflMap)
+
+    // A concern counts as still open if it hasn't been resolved. Tables owned by
+    // other modules may or may not use `status`, so treat resolved_at as the
+    // source of truth and fall back to status only when it's explicitly closed.
+    const concernMap = {}
+    ;(concerns || []).forEach(c => {
+      if (!c.session_id) return
+      const closed = !!c.resolved_at || ['resolved', 'closed'].includes((c.status || '').toLowerCase())
+      if (!closed) concernMap[c.session_id] = (concernMap[c.session_id] || 0) + 1
+    })
+    setOpenConcerns(concernMap)
+
+    const raMap = {}
+    ;(raLinks || []).forEach(r => { if (r.session_id) raMap[r.session_id] = true })
+    setRaSessions(raMap)
 
     // Attendance counts per session (for progress bars + Children Expected stat)
     const sessionIds = (sess || []).map(s => s.id)
@@ -1728,13 +1800,29 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   }, [initialEditSessionId, loading, sessions])
 
   // ── Derived lists for the redesigned tabs ──
-  // "Needs review" is broader than reflections: any past session with an
-  // outstanding action (reflection, unfinalised attendance, never closed).
+  // "Needs review" is the operational inbox: any past session with an outstanding
+  // action -- safeguarding follow-up, missing risk assessment, unfinalised
+  // attendance, never closed, or reflection outstanding. Sorted by worst
+  // severity first so anything safeguarding-related surfaces at the top
+  // regardless of how recent it is, then by date within the same severity.
+  const reviewIssuesFor = React.useCallback((s) => getReviewIssues(s, {
+    hasReflection: !!reflections[s.id],
+    counts: attendanceCounts[s.id],
+    openConcerns: openConcerns[s.id] || 0,
+    hasRiskAssessment: !!raSessions[s.id],
+  }), [reflections, attendanceCounts, openConcerns, raSessions])
+
   const needsReviewSessions = React.useMemo(() =>
     pastSessionsAll
-      .filter(s => getReviewIssues(s, { hasReflection: !!reflections[s.id], counts: attendanceCounts[s.id] }).length > 0)
-      .sort((a, b) => `${b.session_date}${b.start_time || ''}`.localeCompare(`${a.session_date}${a.start_time || ''}`))
-  , [pastSessionsAll, reflections, attendanceCounts])
+      .map(s => ({ s, issues: reviewIssuesFor(s) }))
+      .filter(x => x.issues.length > 0)
+      .sort((a, b) => {
+        const pa = reviewPriority(a.issues), pb = reviewPriority(b.issues)
+        if (pa !== pb) return pa - pb
+        return `${b.s.session_date}${b.s.start_time || ''}`.localeCompare(`${a.s.session_date}${a.s.start_time || ''}`)
+      })
+      .map(x => x.s)
+  , [pastSessionsAll, reviewIssuesFor])
 
   const completedSessions = React.useMemo(() =>
     pastSessionsAll.slice().sort((a, b) => `${b.session_date}${b.start_time || ''}`.localeCompare(`${a.session_date}${a.start_time || ''}`))
@@ -2031,6 +2119,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                     counts={attendanceCounts[s.id]}
                     volCount={volCounts[s.id] || 0}
                     hasReflection={!!reflections[s.id]}
+                    issues={tab === 'needs_review' ? reviewIssuesFor(s) : undefined}
                     isMobile={isMobile}
                     onView={() => setViewingSession(s)}
                     onEdit={() => { setEditing(s); setView('wizard') }}
