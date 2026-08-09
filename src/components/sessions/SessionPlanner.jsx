@@ -25,6 +25,17 @@ const DEFAULT_BUBBLE_DEFS = [
 
 const ACTIVITIES = ['Football','Basketball','Tennis','Athletics','Arts & Crafts','Swimming','Dance','Boxing','Cricket','Dodgeball','Free Play','Workshop']
 
+// end_date is only meaningful for genuinely multi-day trips. Anything else is
+// forced back to session_date so a stale or out-of-order value can't be saved.
+function normaliseEndDate(form) {
+  const start = form.session_date
+  if (!start) return null
+  if (form.session_type !== 'trip') return start
+  const end = form.end_date
+  if (!end || end < start) return start
+  return end
+}
+
 const EMPTY_FORM = {
   title: '', session_date: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
   end_date: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
@@ -97,7 +108,18 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
   const [step, setStep] = useState(0)
   const [raLinked, setRaLinked] = useState(null) // null = unknown/loading, true/false once RASessionCard reports in
   const [pendingRaId, setPendingRaId] = useState(null)
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  const set = (k, v) => setForm(f => {
+    const next = { ...f, [k]: v }
+    // The 'To' date field is only rendered for trips. For every other session
+    // type there's no visible way to correct end_date, so moving the start date
+    // must carry it along -- otherwise it silently keeps whatever it was seeded
+    // with. That's what left same-day sessions holding a next-day end_date and
+    // stuck showing as Live indefinitely.
+    if (k === 'session_date' && next.session_type !== 'trip') next.end_date = v
+    // Switching away from 'trip' collapses any multi-day range back to a single day.
+    if (k === 'session_type' && v !== 'trip') next.end_date = next.session_date
+    return next
+  })
   const toggleBubble = (label) => set('bubbles', form.bubbles.includes(label) ? form.bubbles.filter(x => x !== label) : [...form.bubbles, label])
   const type = SESSION_TYPES.find(t => t.key === form.session_type) || SESSION_TYPES[0]
   const isTrip = form.session_type === 'trip'
@@ -1007,7 +1029,18 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
     reflection_required: true,
     ...initial,
   })
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  const set = (k, v) => setForm(f => {
+    const next = { ...f, [k]: v }
+    // The 'To' date field is only rendered for trips. For every other session
+    // type there's no visible way to correct end_date, so moving the start date
+    // must carry it along -- otherwise it silently keeps whatever it was seeded
+    // with. That's what left same-day sessions holding a next-day end_date and
+    // stuck showing as Live indefinitely.
+    if (k === 'session_date' && next.session_type !== 'trip') next.end_date = v
+    // Switching away from 'trip' collapses any multi-day range back to a single day.
+    if (k === 'session_type' && v !== 'trip') next.end_date = next.session_date
+    return next
+  })
   const toggleBubble = (label) => set('bubbles', form.bubbles.includes(label) ? form.bubbles.filter(x => x !== label) : [...form.bubbles, label])
   const canSave = form.name.trim().length > 0
   const isEditing = !!initial?.id
@@ -1723,7 +1756,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     setSaving(true)
     const data = {
       org_id: orgId, title: form.title,
-      session_date: form.session_date, end_date: form.end_date || form.session_date,
+      session_date: form.session_date, end_date: normaliseEndDate(form),
       start_time: form.start_time, end_time: form.end_time,
       location: form.location, session_type: form.session_type,
       description: form.description,
