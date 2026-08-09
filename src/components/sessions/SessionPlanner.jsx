@@ -2,6 +2,7 @@ import { useOrgSettings } from '../../hooks/useOrgSettings'
 import React, { useState, useEffect } from 'react'
 import { format, addDays, parseISO, startOfWeek, isSameDay } from 'date-fns'
 import { supabase } from '../../lib/supabase'
+import ProjectWizard from '../projects/ProjectWizard'
 import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence } from 'framer-motion'
 import RASessionCard from '../riskassessments/RASessionCard'
@@ -1335,7 +1336,7 @@ function CardMenu({ status, onView, onEdit, onDuplicate, onDelete, onSaveTemplat
   )
 }
 
-function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister }) {
+function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, project, onOpenProject, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
   const expected = counts?.total || 0
@@ -1373,6 +1374,18 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, is
             )}
             {status === 'completed' && <StatusPill ok>✓ Completed</StatusPill>}
             <span style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{s.title}</span>
+            {project && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onOpenProject && onOpenProject(project) }}
+                title={`Part of ${project.name}`}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800,
+                  color: '#5B21B6', background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 99,
+                  padding: '2px 9px', cursor: 'pointer', whiteSpace: 'nowrap',
+                }}>
+                {project.name}{s.project_day_number ? ` · Day ${s.project_day_number}` : ''}
+              </button>
+            )}
           </div>
 
           <div style={{ fontSize: 12, color: '#64748B', fontWeight: 600, marginBottom: 8 }}>
@@ -1523,6 +1536,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const [locationFilter, setLocationFilter] = useState('all')
   const [showFilters, setShowFilters] = useState(false)
   const [showNewMenu, setShowNewMenu] = useState(false)
+  const [showProjectWizard, setShowProjectWizard] = useState(false)
   const [showDuplicatePicker, setShowDuplicatePicker] = useState(false)
   const [frequentAbsentees, setFrequentAbsentees] = useState([])
   const [tipDismissed, setTipDismissed] = useState(() => {
@@ -1544,18 +1558,20 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const [editingTemplate, setEditingTemplate] = useState(null) // template row being created/edited, or {} for new
   const [templateSaving, setTemplateSaving] = useState(false)
   const [initialTemplate, setInitialTemplate] = useState(null) // template to seed the wizard with
+  const [projects, setProjects] = useState({}) // id -> project, for the badge on project-day cards
 
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
   const loadData = async () => {
     if (!orgId) return
-    const [{ data: sess }, { data: staff }, { data: refl }, { data: concerns }, { data: raLinks }] = await Promise.all([
+    const [{ data: sess }, { data: staff }, { data: refl }, { data: concerns }, { data: raLinks }, { data: projs }] = await Promise.all([
       supabase.from('sessions').select('*').eq('org_id', orgId).order('session_date').order('start_time'),
       supabase.from('session_staff').select('session_id').eq('org_id', orgId),
       supabase.from('session_reflections').select('*').eq('org_id', orgId),
       supabase.from('cause_for_concern').select('session_id, status, resolved_at').eq('org_id', orgId),
       supabase.from('risk_assessment_sessions').select('session_id').eq('org_id', orgId),
+      supabase.from('projects').select('id, name, status').eq('org_id', orgId),
     ])
     setSessions(sess || [])
     const counts = {}
@@ -1579,6 +1595,10 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     const raMap = {}
     ;(raLinks || []).forEach(r => { if (r.session_id) raMap[r.session_id] = true })
     setRaSessions(raMap)
+
+    const projMap = {}
+    ;(projs || []).forEach(pr => { projMap[pr.id] = pr })
+    setProjects(projMap)
 
     // Attendance counts per session (for progress bars + Children Expected stat)
     const sessionIds = (sess || []).map(s => s.id)
@@ -2045,9 +2065,10 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                     { t: 'Blank session', d: 'Start a session from scratch', a: () => openNew() },
                     { t: 'From template', d: 'Create from a saved session template', a: () => setView('templates') },
                     { t: 'Duplicate previous', d: 'Reuse a previous session', a: () => setShowDuplicatePicker(true) },
+                    { t: 'New Project', d: 'A multi-day programme containing several sessions', a: () => setShowProjectWizard(true), divider: true },
                   ].map(o => (
                     <button key={o.t} onClick={() => { setShowNewMenu(false); o.a() }}
-                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer' }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', borderTop: o.divider ? '1px solid #F1F5F9' : 'none', marginTop: o.divider ? 4 : 0, paddingTop: o.divider ? 12 : 10 }}
                       onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{o.t}</div>
@@ -2164,6 +2185,8 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                     volCount={volCounts[s.id] || 0}
                     hasReflection={!!reflections[s.id]}
                     issues={tab === 'needs_review' ? reviewIssuesFor(s) : undefined}
+                    project={s.project_id ? projects[s.project_id] : null}
+                    onOpenProject={(pr) => onNavigate && onNavigate('projects', { projectId: pr.id })}
                     isMobile={isMobile}
                     onView={() => setViewingSession(s)}
                     onEdit={() => { setEditing(s); setView('wizard') }}
@@ -2329,6 +2352,20 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       )}
 
       {/* ═══ DUPLICATE PICKER ═══ */}
+      {showProjectWizard && (
+        <ProjectWizard
+          org={org} session={session}
+          onClose={() => setShowProjectWizard(false)}
+          onCreated={(project, dayCount) => {
+            setShowProjectWizard(false)
+            loadData()
+            // No toast system on this page -- the newly generated days appearing
+            // in the list is the confirmation.
+            if (onNavigate) onNavigate('planner')
+          }}
+        />
+      )}
+
       {showDuplicatePicker && (
         <>
           <div onClick={() => setShowDuplicatePicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10400 }} />
