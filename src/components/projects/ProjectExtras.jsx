@@ -512,3 +512,98 @@ function Choice({ label, value, onChange, options }) {
     </div>
   )
 }
+
+
+// ── DUPLICATE PROJECT ───────────────────────────────────────────────────
+// Copies structure and defaults into a new date range. Historical records
+// (attendance, reflections, generated days) are never copied -- the RPC
+// creates a clean draft, and days are generated fresh afterwards.
+export function DuplicateProjectModal({ project, onClose, onDuplicated }) {
+  const [name, setName] = useState(`${project.name} (Copy)`)
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [copyTeam, setCopyTeam] = useState(true)
+  const [copyParticipants, setCopyParticipants] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const valid = name.trim() && startDate && endDate && endDate >= startDate
+
+  const run = async () => {
+    setError(''); setSaving(true)
+    const { data, error: err } = await supabase.rpc('duplicate_project', {
+      p_source_id: project.id,
+      p_new_name: name.trim(),
+      p_start_date: startDate,
+      p_end_date: endDate,
+      p_copy_team: copyTeam,
+      p_copy_participants: copyParticipants,
+    })
+    setSaving(false)
+    if (err) { setError(err.message || 'Could not duplicate the project.'); return }
+    onDuplicated && onDuplicated(data)
+    onClose()
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400 }} />
+      <div onClick={e => e.stopPropagation()} style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401,
+        background: '#fff', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '88vh',
+        display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
+      }}>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Duplicate project</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+          <Field label="New project name">
+            <input value={name} onChange={e => setName(e.target.value)} style={fi} autoFocus />
+          </Field>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+            <div>
+              <label style={lbl}>New start date</label>
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={fi} />
+            </div>
+            <div>
+              <label style={lbl}>New end date</label>
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={fi} />
+            </div>
+          </div>
+
+          <label style={lbl}>What to copy</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 12px', borderRadius: 10, background: '#F8FAFC', fontSize: 13, fontWeight: 600, color: '#334155' }}>
+              <span style={{ color: '#16A34A' }}>✓</span> Project structure, defaults and settings
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#334155' }}>
+              <input type="checkbox" checked={copyTeam} onChange={e => setCopyTeam(e.target.checked)} /> Project team
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#334155' }}>
+              <input type="checkbox" checked={copyParticipants} onChange={e => setCopyParticipants(e.target.checked)} /> Young people
+            </label>
+          </div>
+
+          <div style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.5, background: '#F8FAFC', borderRadius: 10, padding: '10px 12px' }}>
+            Attendance, reflections and completed days are never copied. The new project starts as a draft
+            so you can build its schedule from the new dates.
+          </div>
+
+          {error && <div style={{ marginTop: 12, fontSize: 12.5, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
+        </div>
+
+        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8 }}>
+          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <div style={{ flex: 1 }} />
+          <button onClick={run} disabled={!valid || saving} style={{
+            padding: '11px 22px', borderRadius: 11, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800,
+            background: (!valid || saving) ? '#CBD5E1' : `linear-gradient(135deg, ${PURPLE}, #5B8DEF)`,
+            cursor: (!valid || saving) ? 'default' : 'pointer',
+          }}>{saving ? 'Duplicating…' : 'Duplicate project'}</button>
+        </div>
+      </div>
+    </>
+  )
+}

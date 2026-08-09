@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { PROJECT_TYPES } from './ProjectWizard'
-import { TripReadiness, ProjectReflectionModal, AddParticipantsModal, AddTeamModal, EditProjectModal } from './ProjectExtras'
+import { TripReadiness, ProjectReflectionModal, AddParticipantsModal, AddTeamModal, EditProjectModal, DuplicateProjectModal } from './ProjectExtras'
 
 const todayISO = () => {
   const d = new Date()
@@ -57,6 +57,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
   const [showAddPeople, setShowAddPeople] = useState(false)
   const [showAddTeam, setShowAddTeam] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
+  const [showDuplicate, setShowDuplicate] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [archiving, setArchiving] = useState(false)
 
@@ -252,6 +253,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
                 boxShadow: '0 12px 32px rgba(15,23,42,0.18)', border: '1px solid #E2E8F0', minWidth: 180, overflow: 'hidden',
               }}>
                 <button onClick={() => { setShowMenu(false); setShowEdit(true) }} style={menuItemStyle}>Edit project</button>
+                <button onClick={() => { setShowMenu(false); setShowDuplicate(true) }} style={menuItemStyle}>Duplicate project</button>
                 {(project.status === 'archived') ? (
                   <button onClick={restoreProject} disabled={archiving} style={menuItemStyle}>Restore project</button>
                 ) : (
@@ -454,6 +456,14 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
         <AddTeamModal
           org={org} projectId={projectId} existingUserIds={team.map(t => t.user_id).filter(Boolean)}
           onClose={() => setShowAddTeam(false)} onAdded={load}
+        />
+      )}
+
+      {showDuplicate && (
+        <DuplicateProjectModal
+          project={project}
+          onClose={() => setShowDuplicate(false)}
+          onDuplicated={(newId) => onNavigate && onNavigate('projects', { projectId: newId })}
         />
       )}
 
