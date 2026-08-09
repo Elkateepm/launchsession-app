@@ -239,7 +239,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
   const pct = metrics.totalDays > 0 ? Math.round((metrics.completedDays / metrics.totalDays) * 100) : 0
 
   return (
-    <div style={{ padding: isMobile ? 16 : 28, maxWidth: 1100, margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? 16 : 28, maxWidth: isMobile ? '100%' : 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <button onClick={onBack} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12 }}>← Projects</button>
@@ -297,7 +297,11 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
       </div>
 
       {tab === 'overview' && (
-        <>
+        <div style={isMobile ? undefined : {
+          display: 'grid', gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1fr)',
+          gap: 16, alignItems: 'start',
+        }}>
+          <div style={{ minWidth: 0 }}>
           {/* Progress */}
           <div style={card({ padding: 18, marginBottom: 14 })}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
@@ -310,7 +314,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
           </div>
 
           {/* Metrics -- only ones backed by real data */}
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 12, marginBottom: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginBottom: 14 }}>
             <Metric value={metrics.totalDays} label="Project days" />
             <Metric value={metrics.participants} label="Young people" />
             <Metric value={metrics.teamSize} label="Team members" />
@@ -389,6 +393,9 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
             </div>
           )}
 
+          </div>
+
+          <div style={{ minWidth: 0 }}>
           {/* Needs attention */}
           <div style={card({ padding: 18, marginBottom: 14 })}>
             <div style={{ fontSize: 11, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Needs attention</div>
@@ -417,7 +424,8 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
               </div>
             )}
           </div>
-        </>
+          </div>
+        </div>
       )}
 
       {tab === 'schedule' && (

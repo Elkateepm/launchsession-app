@@ -37,7 +37,16 @@ function fmtNice(iso) {
 
 // Every date between start and end whose weekday is selected, minus exclusions,
 // plus any manually added custom dates. Pure function so it's easy to reason about.
-export function computeProjectDates({ startDate, endDate, weekdays, excluded, custom }) {
+// Accepts the form object directly, which uses snake_case (start_date/end_date)
+// to match the DB columns. The camelCase aliases are kept so existing callers
+// and tests keep working -- passing the wrong casing previously yielded a
+// silent empty array, which is what made the wizard always report "0 days".
+export function computeProjectDates(input) {
+  const startDate = input.start_date ?? input.startDate
+  const endDate = input.end_date ?? input.endDate
+  const weekdays = input.weekdays || []
+  const excluded = input.excluded || []
+  const custom = input.custom || []
   if (!startDate || !endDate || endDate < startDate) return []
   const out = []
   const cur = new Date(`${startDate}T12:00:00`)
@@ -153,7 +162,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
         position: 'fixed', zIndex: 10401, background: '#fff', display: 'flex', flexDirection: 'column',
         ...(isMobile
           ? { inset: 0 }
-          : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(620px, 94vw)', maxHeight: '88vh', borderRadius: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }),
+          : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(760px, 92vw)', maxHeight: '88vh', borderRadius: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }),
       }}>
         {/* Header */}
         <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
