@@ -232,11 +232,26 @@ function TimeRing({ kind, target, totalSeconds, isClosed, onClick }) {
 // grace at drop-off doesn't flag everyone as late.
 const LATE_ARRIVAL_GRACE_MINUTES = 10
 
+// One definition of "expected", used by every count in this file.
+//
+// Session creation writes rows with status 'expected', but a row can also
+// legitimately end up with no status at all -- an attendance correction back to
+// "unmarked" sets it to null, and rows created by other paths don't always set
+// it. The register lists anything that isn't signed in / signed out / absent as
+// Expected, so the counts have to use the same rule or the tab disagrees with
+// the list under it.
+function isExpectedStatus(status) {
+  return !status || status === 'expected'
+}
+
 function AttendanceBreakdownModal({ session, attendance, onClose }) {
   const records = attendance.filter(a => a.session_id === session.id)
   const signedIn = records.filter(r => r.status === 'signed_in' || r.status === 'signed_out').length
   const absent = records.filter(r => r.status === 'absent').length
-  const expected = records.filter(r => r.status === 'expected').length
+  // A row with no status is still someone who hasn't been marked yet, so it
+  // belongs in Expected. The register lists it that way; counting only the
+  // literal 'expected' made the tally disagree with the list beneath it.
+  const expected = records.filter(r => isExpectedStatus(r.status)).length
   const startDT = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
   const late = startDT ? records.filter(r => {
     if (r.status !== 'signed_in' && r.status !== 'signed_out') return false
@@ -780,7 +795,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     const si = sessionAttendance.filter(a => a.status === 'signed_in').length
     const so = sessionAttendance.filter(a => a.status === 'signed_out').length
     const absent = sessionAttendance.filter(a => a.status === 'absent').length
-    const expected = sessionAttendance.filter(a => a.status === 'expected').length
+    const expected = sessionAttendance.filter(a => isExpectedStatus(a.status)).length
     const total = sessionAttendance.length
     return { signedIn: si, absent, signedOut: so, expected, percent: total > 0 ? Math.round((si / total) * 100) : 0 }
   }, [activeSession, sessionAttendance])

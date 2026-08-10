@@ -148,7 +148,9 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
   const countsFor = useCallback((sessionId) => {
     const rows = attendance.filter(a => a.session_id === sessionId)
     return {
-      expected: rows.filter(r => r.status === 'expected').length,
+      // Unmarked rows (null status) count as expected -- same rule the
+      // registers use when bucketing.
+      expected: rows.filter(r => !r.status || r.status === 'expected').length,
       signedIn: rows.filter(r => r.status === 'signed_in').length,
       signedOut: rows.filter(r => r.status === 'signed_out').length,
       absent: rows.filter(r => r.status === 'absent').length,
