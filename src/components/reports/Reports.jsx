@@ -211,12 +211,12 @@ function OverviewView({ loading, metrics, insights, isMobile, savedReports, onGo
   const rate = metrics.attendance_rate
   const attTone = rate === null ? 'slate' : rate >= 75 ? 'green' : rate >= 50 ? 'amber' : 'red'
   const stats = [
-    { v: metrics.young_people, l: 'Young people', tone: 'indigo', icon: '\u{1F9D2}' },
-    { v: metrics.sessions, l: 'Sessions', tone: 'indigo', icon: '\u{1F4C5}' },
-    { v: rate !== null ? `${rate}%` : '\u2014', l: 'Attendance', tone: attTone, icon: '\u2705' },
-    { v: `${metrics.delivery_hours}h`, l: 'Delivery', tone: 'blue', icon: '\u23F1' },
-    { v: metrics.outcomes, l: 'Outcomes', tone: metrics.outcomes > 0 ? 'green' : 'slate', icon: '\u2B50' },
-    { v: metrics.open_concerns, l: 'Open concerns', tone: metrics.open_concerns > 0 ? 'red' : 'green', icon: '\u{1F6E1}' },
+    { v: metrics.young_people, l: 'Young people', tone: 'indigo', icon: '🧒' },
+    { v: metrics.sessions, l: 'Sessions', tone: 'indigo', icon: '📅' },
+    { v: rate !== null ? `${rate}%` : '—', l: 'Attendance', tone: attTone, icon: '✅' },
+    { v: `${metrics.delivery_hours}h`, l: 'Delivery', tone: 'blue', icon: '⏱' },
+    { v: metrics.outcomes, l: 'Outcomes', tone: metrics.outcomes > 0 ? 'green' : 'slate', icon: '⭐' },
+    { v: metrics.open_concerns, l: 'Open concerns', tone: metrics.open_concerns > 0 ? 'red' : 'green', icon: '🛡' },
   ]
 
   return (

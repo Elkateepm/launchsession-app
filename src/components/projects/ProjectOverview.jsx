@@ -286,7 +286,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
             <h1 style={{ margin: 0, fontSize: isMobile ? 24 : 34, fontWeight: 900, color: '#fff', letterSpacing: -0.9, lineHeight: 1.1 }}>{project.name}</h1>
             <p style={{ margin: '7px 0 0', fontSize: isMobile ? 13 : 14, color: 'rgba(237,233,254,0.85)', fontWeight: 500 }}>
               {fmtRange(project.start_date, project.end_date)}
-              {project.description ? ` \u00B7 ${project.description}` : ''}
+              {project.description ? ` · ${project.description}` : ''}
             </p>
 
             {/* Progress lives in the hero -- it's the single most useful number */}
@@ -344,13 +344,13 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
           {/* Metrics -- only ones backed by real data. Colour carries meaning:
               purple = scale, blue = people, green = performance, amber = time. */}
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 14 }}>
-            <Metric value={metrics.totalDays} label="Project days" icon="\u{1F4C5}" tone="purple" />
-            <Metric value={metrics.participants} label="Young people" icon="\u{1F9D2}" tone="blue" />
-            <Metric value={metrics.teamSize} label="Team members" icon="\u{1F465}" tone="indigo" />
-            {metrics.attendanceRate !== null && <Metric value={`${metrics.attendanceRate}%`} label="Attendance" icon="\u2705" tone="green" />}
-            {metrics.hours > 0 && <Metric value={`${metrics.hours}h`} label="Delivery" icon="\u23F1" tone="amber" />}
-            {metrics.trips > 0 && <Metric value={metrics.trips} label="Trips" icon="\u{1F686}" tone="pink" />}
-            {metrics.reached > 0 && <Metric value={metrics.reached} label="Reached" icon="\u2B50" tone="teal" />}
+            <Metric value={metrics.totalDays} label="Project days" icon="📅" tone="purple" />
+            <Metric value={metrics.participants} label="Young people" icon="🧒" tone="blue" />
+            <Metric value={metrics.teamSize} label="Team members" icon="👥" tone="indigo" />
+            {metrics.attendanceRate !== null && <Metric value={`${metrics.attendanceRate}%`} label="Attendance" icon="✅" tone="green" />}
+            {metrics.hours > 0 && <Metric value={`${metrics.hours}h`} label="Delivery" icon="⏱" tone="amber" />}
+            {metrics.trips > 0 && <Metric value={metrics.trips} label="Trips" icon="🚆" tone="pink" />}
+            {metrics.reached > 0 && <Metric value={metrics.reached} label="Reached" icon="⭐" tone="teal" />}
           </div>
 
           {/* Today */}
@@ -411,7 +411,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
                   <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 3 }}>
                     {projectReflection
                       ? 'You can update it any time.'
-                      : 'Capture what worked while it\u2019s fresh \u2014 the numbers are filled in for you.'}
+                      : 'Capture what worked while it\u2019s fresh — the numbers are filled in for you.'}
                   </div>
                 </div>
                 <button onClick={() => setShowReflection(true)}
