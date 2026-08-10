@@ -49,6 +49,41 @@ export function useOnlineStatus() {
 }
 
 // ─── TODAY SESSION ───────────────────────────────────────────
+// Which of today's sessions should the register open on?
+//
+// This used to be sessions[0] after ordering by start_time -- the earliest
+// session of the day, regardless of its state. An org running a morning and an
+// afternoon session would therefore keep seeing the closed morning register
+// while the afternoon one was live. Two sessions sharing a start_time also made
+// the choice arbitrary, since Postgres has no defined order for a tie.
+//
+// Preference: whatever is live now, then what's coming up, then something that
+// has ended but is still open (it needs closing), then closed. Ties inside a
+// band fall back to start_time.
+export function pickActiveSession(sessions) {
+  if (!sessions || sessions.length === 0) return null
+  const now = new Date()
+  const rank = (s) => {
+    if (s.closed_at) return 3
+    const start = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
+    let end = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
+    // An end earlier than the start means the session crosses midnight.
+    if (start && end && !isNaN(start) && !isNaN(end) && end < start) {
+      end = new Date(end.getTime() + 24 * 60 * 60 * 1000)
+    }
+    const hasStarted = !start || isNaN(start) || start <= now
+    const hasEnded = !!end && !isNaN(end) && end < now
+    if (hasStarted && !hasEnded) return 0   // live now
+    if (!hasStarted) return 1               // still to come
+    return 2                                // ended but never closed
+  }
+  return [...sessions].sort((a, b) => {
+    const ra = rank(a), rb = rank(b)
+    if (ra !== rb) return ra - rb
+    return (a.start_time || '').localeCompare(b.start_time || '')
+  })[0]
+}
+
 export function useTodaySession(orgId) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -85,7 +120,7 @@ export function useTodaySession(orgId) {
       .catch(() => { setLoading(false) })
   }, [orgId])
 
-  return { sessions, session: sessions[0] || null, loading, fromCache }
+  return { sessions, session: pickActiveSession(sessions), loading, fromCache }
 }
 
 // ─── ATTENDANCE ──────────────────────────────────────────────
