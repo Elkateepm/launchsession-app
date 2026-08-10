@@ -977,6 +977,16 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   useEffect(() => {
     try { localStorage.setItem('registerDarkMode', darkMode ? '1' : '0') } catch {}
   }, [darkMode])
+  // The header's Live/Upcoming/Ended badge is derived from the clock, so with
+  // no ticker it only re-evaluated when something unrelated re-rendered. A
+  // session could start, or end, and the header would keep claiming otherwise
+  // until the page was touched. Ticking every 30s also drives the elapsed
+  // timer on a live session.
+  const [, setClockTick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setClockTick(n => n + 1), 30000)
+    return () => clearInterval(id)
+  }, [])
   const [showPastRegisters, setShowPastRegisters] = useState(false)
   const [pastSessions, setPastSessions] = useState([])
   const [pastSessionsLoading, setPastSessionsLoading] = useState(false)
@@ -1135,16 +1145,46 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   // time window, otherwise a manually-closed session still shows as "Live" here
   // just because a session object exists.
   const registerSessionStatus = (() => {
-    if (!session) return { label: 'No Session', bg: '#F3F4F6', color: '#9CA3AF' }
-    if (session.closed_at) return { label: '● Closed', bg: '#F1F5F9', color: '#64748B' }
+    if (!session) return { key: 'none', label: 'No Session', bg: '#F3F4F6', color: '#9CA3AF' }
+    if (session.closed_at) return { key: 'closed', label: '● Closed', bg: '#F1F5F9', color: '#64748B' }
     const now = new Date()
     const startDT = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
     const endDT = session.end_time ? new Date(`${session.session_date}T${session.end_time}`) : null
     const hasEnded = !!endDT && endDT < now
     const isLiveNow = !hasEnded && (!startDT || startDT <= now)
-    if (hasEnded) return { label: '● Ended', bg: '#F1F5F9', color: '#64748B' }
-    if (isLiveNow) return { label: '● Live', bg: '#DCFCE7', color: '#15803D' }
-    return { label: '● Upcoming', bg: '#FEF9C3', color: '#92400E' }
+    if (hasEnded) return { key: 'ended', label: '● Ended', bg: '#F1F5F9', color: '#64748B' }
+    if (isLiveNow) return { key: 'live', label: '● Live', bg: '#DCFCE7', color: '#15803D' }
+    return { key: 'upcoming', label: '● Upcoming', bg: '#FEF9C3', color: '#92400E' }
+  })()
+
+  const isLiveSession = registerSessionStatus.key === 'live'
+
+  // Elapsed / remaining for a live session. Guarded because start_time and
+  // end_time are both optional, and a session that crosses midnight has an
+  // end earlier in the day than its start -- treating that naively would show
+  // a negative duration.
+  const liveProgress = (() => {
+    if (!isLiveSession || !session?.start_time) return null
+    const now = new Date()
+    const start = new Date(`${session.session_date}T${session.start_time}`)
+    if (isNaN(start)) return null
+    let end = session.end_time ? new Date(`${session.session_date}T${session.end_time}`) : null
+    if (end && !isNaN(end) && end < start) end = new Date(end.getTime() + 24 * 60 * 60 * 1000)
+    if (end && isNaN(end)) end = null
+
+    const fmt = (ms) => {
+      const mins = Math.max(0, Math.floor(ms / 60000))
+      const h = Math.floor(mins / 60)
+      return h > 0 ? `${h}h ${mins % 60}m` : `${mins}m`
+    }
+    const elapsedMs = Math.max(0, now - start)
+    const remainingMs = end ? end - now : null
+    const totalMs = end ? end - start : null
+    return {
+      elapsedLabel: `${fmt(elapsedMs)} in`,
+      remainingLabel: remainingMs !== null && remainingMs > 0 ? fmt(remainingMs) : null,
+      pct: totalMs && totalMs > 0 ? Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100)) : null,
+    }
   })()
 
   // Theme tokens — light values match the original design exactly; dark values
@@ -1185,23 +1225,70 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* HEADER */}
-        <div style={{ background: t.headerBg, borderBottom: `1px solid ${t.headerBorder}`, padding: isMobile ? '12px 16px 8px' : '18px 20px 12px', flexShrink: 0, position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}44, transparent)` }} />
+        <div style={{
+          background: isLiveSession
+            ? (darkMode
+                ? 'linear-gradient(165deg, #0F2A1E 0%, #12152A 62%)'
+                : 'linear-gradient(165deg, #ECFDF5 0%, #F6FEFA 40%, #fff 75%)')
+            : t.headerBg,
+          borderBottom: `1px solid ${isLiveSession ? (darkMode ? 'rgba(34,197,94,0.22)' : '#C9F2DD') : t.headerBorder}`,
+          padding: isMobile ? '12px 16px 8px' : '18px 20px 12px', flexShrink: 0, position: 'relative',
+          transition: 'background 0.4s ease',
+        }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: isLiveSession ? 'linear-gradient(90deg, #16A34A, #4ADE80 45%, transparent)' : `linear-gradient(90deg, ${primary}, ${primary}44, transparent)` }} />
+          {isLiveSession && (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '35%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)', animation: 'reg-live-sweep 2.6s ease-in-out infinite' }} />
+            </div>
+          )}
+          <style>{`
+            @keyframes reg-live-sweep { 0% { transform: translateX(-120%); } 100% { transform: translateX(400%); } }
+            @keyframes reg-live-ping { 0% { transform: scale(1); opacity: 0.75; } 70%, 100% { transform: scale(2.6); opacity: 0; } }
+            @keyframes reg-live-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+            @media (prefers-reduced-motion: reduce) {
+              [data-reg-live-anim] { animation: none !important; }
+            }
+          `}</style>
 
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: isMobile ? 8 : 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 9 : 12, minWidth: 0 }}>
-              <div style={{ width: isMobile ? 32 : 42, height: isMobile ? 32 : 42, borderRadius: isMobile ? 10 : 13, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 15 : 19, flexShrink: 0, boxShadow: `0 4px 14px -5px ${primary}90` }}>
+              <div style={{ width: isMobile ? 32 : 42, height: isMobile ? 32 : 42, borderRadius: isMobile ? 10 : 13, background: isLiveSession ? 'linear-gradient(135deg, #16A34A, #22C55E)' : `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 15 : 19, flexShrink: 0, boxShadow: isLiveSession ? '0 4px 16px -4px rgba(22,163,74,0.65)' : `0 4px 14px -5px ${primary}90`, position: 'relative' }}>
                 <img src="/icons/registers-icon.png" alt="" style={{ width: isMobile ? 22 : 28, height: isMobile ? 22 : 28, objectFit: 'contain' }} />
+                {isLiveSession && (
+                  <span data-reg-live-anim style={{ position: 'absolute', inset: -2, borderRadius: 'inherit', border: '2px solid #22C55E', animation: 'reg-live-ping 2.4s ease-out infinite', pointerEvents: 'none' }} />
+                )}
               </div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 3 : 5, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: t.text, fontFamily: 'var(--font-display)', letterSpacing: -0.3 }}>
                     {session?.title || 'Register'}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', borderRadius: 99, padding: '3px 9px 3px 7px', background: darkMode ? 'rgba(255,255,255,0.08)' : registerSessionStatus.bg, color: darkMode ? t.textSub : registerSessionStatus.color }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: registerSessionStatus.color, flexShrink: 0 }} />
-                    {registerSessionStatus.label.replace('● ', '')}
-                  </span>
+                  {isLiveSession ? (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 7,
+                      fontSize: isMobile ? 10.5 : 11.5, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase',
+                      borderRadius: 99, padding: isMobile ? '4px 11px 4px 9px' : '5px 13px 5px 10px',
+                      background: 'linear-gradient(135deg, #16A34A, #22C55E)', color: '#fff',
+                      boxShadow: '0 4px 14px -3px rgba(22,163,74,0.6)',
+                    }}>
+                      <span style={{ position: 'relative', display: 'inline-flex', width: 7, height: 7, flexShrink: 0 }}>
+                        <span data-reg-live-anim style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#fff', animation: 'reg-live-ping 2s ease-out infinite' }} />
+                        <span data-reg-live-anim style={{ position: 'relative', width: 7, height: 7, borderRadius: '50%', background: '#fff', animation: 'reg-live-dot 2s ease-in-out infinite' }} />
+                      </span>
+                      Live now
+                    </span>
+                  ) : (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', borderRadius: 99, padding: '3px 9px 3px 7px', background: darkMode ? 'rgba(255,255,255,0.08)' : registerSessionStatus.bg, color: darkMode ? t.textSub : registerSessionStatus.color }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: registerSessionStatus.color, flexShrink: 0 }} />
+                      {registerSessionStatus.label.replace('● ', '')}
+                    </span>
+                  )}
+                  {isLiveSession && liveProgress && (
+                    <span style={{ fontSize: isMobile ? 10.5 : 11.5, fontWeight: 700, color: darkMode ? '#4ADE80' : '#15803D', fontVariantNumeric: 'tabular-nums' }}>
+                      {liveProgress.elapsedLabel}
+                      {liveProgress.remainingLabel ? ` · ${liveProgress.remainingLabel} left` : ''}
+                    </span>
+                  )}
                 </div>
                 {session && (
                   <div style={{ display: 'flex', gap: isMobile ? 4 : 6, flexWrap: 'wrap' }}>
@@ -1218,6 +1305,13 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                         📍 {session.location.split(',')[0]}
                       </span>
                     )}
+                  </div>
+                )}
+                {isLiveSession && liveProgress && liveProgress.pct !== null && (
+                  <div style={{ marginTop: 9, maxWidth: 320 }}>
+                    <div style={{ height: 4, borderRadius: 99, background: darkMode ? 'rgba(255,255,255,0.1)' : '#D6F5E3', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${liveProgress.pct}%`, borderRadius: 99, background: 'linear-gradient(90deg,#16A34A,#4ADE80)', transition: 'width 0.6s ease' }} />
+                    </div>
                   </div>
                 )}
               </div>
@@ -1258,7 +1352,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: isMobile ? 8 : 10, marginBottom: isMobile ? 10 : 14 }}>
               {(session ? [
                 { icon: '📋', value: counts.total, label: 'On Register', color: primary },
-                { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A' },
+                { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A', live: isLiveSession },
                 { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
               ] : [
                 { icon: '📋', value: counts.total, label: 'On Register', color: primary },
@@ -1271,10 +1365,13 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   style={{
                     display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, minWidth: 0,
                     padding: isMobile ? '10px 10px' : '13px 14px', borderRadius: 16,
-                    background: darkMode ? `linear-gradient(160deg, ${s.color}22, ${s.color}0C)` : `linear-gradient(160deg, ${s.color}12, #fff)`,
-                    border: `1.5px solid ${darkMode ? s.color + '30' : s.color + '22'}`,
-                    boxShadow: darkMode ? 'none' : '0 1px 3px rgba(15,23,42,0.04)',
+                    background: darkMode ? `linear-gradient(160deg, ${s.color}22, ${s.color}0C)` : `linear-gradient(160deg, ${s.color}${s.live ? '1E' : '12'}, #fff)`,
+                    border: `${s.live ? 2 : 1.5}px solid ${s.live ? s.color + (darkMode ? '66' : '55') : (darkMode ? s.color + '30' : s.color + '22')}`,
+                    boxShadow: s.live
+                      ? `0 6px 20px -8px ${s.color}70`
+                      : (darkMode ? 'none' : '0 1px 3px rgba(15,23,42,0.04)'),
                     cursor: s.onClick ? 'pointer' : 'default', font: 'inherit', textAlign: 'left',
+                    position: 'relative',
                   }}>
                   <span style={{
                     width: isMobile ? 32 : 38, height: isMobile ? 32 : 38, borderRadius: 11, flexShrink: 0,
@@ -1283,7 +1380,10 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   }}>{s.icon}</span>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: 900, color: t.text, lineHeight: 1.1 }}>{s.value}</div>
-                    <div style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 700, color: t.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
+                    <div style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 700, color: s.live ? (darkMode ? '#4ADE80' : '#15803D') : t.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {s.live && <span data-reg-live-anim style={{ width: 5, height: 5, borderRadius: '50%', background: '#16A34A', flexShrink: 0, animation: 'reg-live-dot 2s ease-in-out infinite' }} />}
+                      {s.live ? 'On Site Now' : s.label}
+                    </div>
                   </div>
                   {s.onClick && (
                     <span style={{ marginLeft: 'auto', fontSize: 12, color: s.color, opacity: 0.6, flexShrink: 0 }}>→</span>
