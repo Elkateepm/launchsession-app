@@ -17,6 +17,20 @@ const card = (extra = {}) => ({
   background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14,
   boxShadow: '0 1px 2px rgba(15,23,42,0.04)', ...extra,
 })
+const TONES = {
+  indigo: { bg: '#EEF2FF', bd: '#C7D2FE', fg: '#4338CA' },
+  blue:   { bg: '#EFF6FF', bd: '#BFDBFE', fg: '#1D4ED8' },
+  green:  { bg: '#F0FDF4', bd: '#BBF7D0', fg: '#15803D' },
+  amber:  { bg: '#FFFBEB', bd: '#FDE68A', fg: '#B45309' },
+  red:    { bg: '#FEF2F2', bd: '#FECACA', fg: '#B91C1C' },
+  slate:  { bg: '#F8FAFC', bd: '#E2E8F0', fg: '#334155' },
+}
+
+const CATEGORY_TONE = {
+  Delivery: 'indigo', Attendance: 'green', 'Young People': 'blue',
+  Impact: 'amber', Team: 'blue', Safeguarding: 'red', Funding: 'green',
+}
+
 const ctl = {
   padding: '8px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff',
   fontSize: 12.5, fontWeight: 600, color: '#334155', outline: 'none', cursor: 'pointer',
@@ -77,17 +91,28 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
 
   return (
     <div style={{ padding: isMobile ? 16 : 28, width: '100%', boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', marginBottom: 16 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 27, fontWeight: 900, color: '#0F172A', letterSpacing: -0.6 }}>Reports</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: '#64748B', fontWeight: 500 }}>
-            Understand your delivery and turn your data into useful reports.
-          </p>
+      <div style={{
+        position: 'relative', overflow: 'hidden',
+        background: 'linear-gradient(135deg, #312E81 0%, #4338CA 42%, #2563EB 100%)',
+        borderRadius: isMobile ? 16 : 20,
+        padding: isMobile ? '20px 18px' : '24px 28px',
+        marginBottom: 18,
+        boxShadow: '0 1px 0 rgba(255,255,255,0.14) inset, 0 16px 36px -24px rgba(49,46,129,0.8)',
+      }}>
+        <div style={{ position: 'absolute', top: -80, right: -50, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.14), transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ margin: 0, fontSize: isMobile ? 23 : 30, fontWeight: 900, color: '#fff', letterSpacing: -0.8 }}>Reports</h1>
+            <p style={{ margin: '6px 0 0', fontSize: isMobile ? 13 : 14, color: 'rgba(224,231,255,0.85)', fontWeight: 500 }}>
+              Understand your delivery and turn your data into useful reports.
+            </p>
+          </div>
+          <button onClick={() => setBuilderType('delivery')} style={{
+            padding: '12px 20px', borderRadius: 11, border: 'none', color: '#3730A3', background: '#fff',
+            fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
+            boxShadow: '0 8px 20px -8px rgba(0,0,0,0.4)',
+          }}>{isMobile ? '+ Create' : '+ Create Report'}</button>
         </div>
-        <button onClick={() => setBuilderType('delivery')} style={{
-          padding: '11px 18px', borderRadius: 11, border: 'none', color: '#fff',
-          background: 'linear-gradient(135deg,#4F46E5,#3B82F6)', fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
-        }}>{isMobile ? '+ Create' : '+ Create Report'}</button>
       </div>
 
       <div style={{ display: 'inline-flex', gap: 3, padding: 3, borderRadius: 12, background: '#F1F5F9', border: '1px solid #E2E8F0', marginBottom: 14, maxWidth: '100%', overflowX: 'auto' }}>
@@ -180,25 +205,37 @@ function OverviewView({ loading, metrics, insights, isMobile, savedReports, onGo
   }
 
   const hasData = metrics.sessions > 0 || metrics.young_people > 0
+  // Colour carries meaning rather than decorating: reach/delivery are neutral
+  // indigo, attendance is graded on performance, concerns go red only when
+  // there actually are any.
+  const rate = metrics.attendance_rate
+  const attTone = rate === null ? 'slate' : rate >= 75 ? 'green' : rate >= 50 ? 'amber' : 'red'
   const stats = [
-    { v: metrics.young_people, l: 'Young people' },
-    { v: metrics.sessions, l: 'Sessions' },
-    { v: metrics.attendance_rate !== null ? `${metrics.attendance_rate}%` : '—', l: 'Attendance' },
-    { v: `${metrics.delivery_hours}h`, l: 'Delivery' },
-    { v: metrics.outcomes, l: 'Outcomes' },
-    { v: metrics.open_concerns, l: 'Open concerns', alert: metrics.open_concerns > 0 },
+    { v: metrics.young_people, l: 'Young people', tone: 'indigo', icon: '\u{1F9D2}' },
+    { v: metrics.sessions, l: 'Sessions', tone: 'indigo', icon: '\u{1F4C5}' },
+    { v: rate !== null ? `${rate}%` : '\u2014', l: 'Attendance', tone: attTone, icon: '\u2705' },
+    { v: `${metrics.delivery_hours}h`, l: 'Delivery', tone: 'blue', icon: '\u23F1' },
+    { v: metrics.outcomes, l: 'Outcomes', tone: metrics.outcomes > 0 ? 'green' : 'slate', icon: '\u2B50' },
+    { v: metrics.open_concerns, l: 'Open concerns', tone: metrics.open_concerns > 0 ? 'red' : 'green', icon: '\u{1F6E1}' },
   ]
 
   return (
     <>
       <SectionLabel>At a glance</SectionLabel>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 22 }}>
-        {stats.map(s => (
-          <div key={s.l} style={card({ padding: 16 })}>
-            <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: -0.6, color: s.alert ? '#B91C1C' : '#0F172A' }}>{s.v}</div>
-            <div style={{ fontSize: 11.5, fontWeight: 600, color: '#64748B', marginTop: 3 }}>{s.l}</div>
-          </div>
-        ))}
+        {stats.map(s => {
+          const t = TONES[s.tone] || TONES.slate
+          return (
+            <div key={s.l} style={{
+              background: t.bg, border: `1px solid ${t.bd}`, borderRadius: 14, padding: 16,
+              boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset',
+            }}>
+              <div style={{ fontSize: 14, marginBottom: 7, opacity: 0.9 }}>{s.icon}</div>
+              <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: -0.6, color: t.fg, lineHeight: 1 }}>{s.v}</div>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: '#64748B', marginTop: 5 }}>{s.l}</div>
+            </div>
+          )
+        })}
       </div>
 
       {!hasData && (
@@ -235,7 +272,12 @@ function OverviewView({ loading, metrics, insights, isMobile, savedReports, onGo
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(240px,1fr))', gap: 12, marginBottom: 22 }}>
         {REPORT_LIBRARY.filter(r => ['delivery', 'attendance', 'impact', 'funding'].includes(r.key)).map(r => (
           <div key={r.key} style={card({ padding: 16 })}>
-            <div style={{ fontSize: 17, marginBottom: 8 }}>{r.icon}</div>
+            <div style={{
+              width: 34, height: 34, borderRadius: 10, display: 'inline-flex', alignItems: 'center',
+              justifyContent: 'center', fontSize: 16, marginBottom: 10,
+              background: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).bg,
+              border: `1px solid ${(TONES[CATEGORY_TONE[r.category]] || TONES.slate).bd}`,
+            }}>{r.icon}</div>
             <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
             <div style={{ fontSize: 12, color: '#64748B', marginTop: 4, lineHeight: 1.5 }}>{r.desc}</div>
             <button onClick={onOpenLibrary} style={{
@@ -306,9 +348,18 @@ function LibraryView({ role, isMobile, onRun }) {
           const allowed = canAccessReport(r, role)
           return (
             <div key={r.key} style={card({ padding: 18, opacity: allowed ? 1 : 0.6 })}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 18 }}>{r.icon}</span>
-                <span style={{ fontSize: 10.5, fontWeight: 800, color: '#64748B', background: '#F1F5F9', borderRadius: 99, padding: '3px 9px' }}>{r.category}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10, flexWrap: 'wrap' }}>
+                <span style={{
+                  width: 34, height: 34, borderRadius: 10, display: 'inline-flex', alignItems: 'center',
+                  justifyContent: 'center', fontSize: 16,
+                  background: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).bg,
+                  border: `1px solid ${(TONES[CATEGORY_TONE[r.category]] || TONES.slate).bd}`,
+                }}>{r.icon}</span>
+                <span style={{
+                  fontSize: 10.5, fontWeight: 800, borderRadius: 99, padding: '3px 9px',
+                  color: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).fg,
+                  background: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).bg,
+                }}>{r.category}</span>
                 {r.restricted && <span style={{ fontSize: 10.5, fontWeight: 800, color: '#B45309', background: '#FFFBEB', borderRadius: 99, padding: '3px 9px' }}>Restricted</span>}
               </div>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
