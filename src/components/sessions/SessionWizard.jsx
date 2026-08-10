@@ -550,13 +550,12 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
 
 // ─── STEP 4: REQUIREMENTS ───────────────────────────────────────
 
-function StepRequirements({ form, setForm, orgForms, org, onFormCreated, riskAssessments, onRiskAssessmentCreated, expectedChildren }) {
+function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expectedChildren }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const toggleForm = (id) => set('form_ids', form.form_ids.includes(id) ? form.form_ids.filter(x => x !== id) : [...form.form_ids, id])
   const toggleOutcome = (a) => set('outcome_areas', form.outcome_areas.includes(a) ? form.outcome_areas.filter(x => x !== a) : [...form.outcome_areas, a])
   const [showFormBuilder, setShowFormBuilder] = useState(false)
   const [emailFormFor, setEmailFormFor] = useState(null)
-  const [showRaBuilder, setShowRaBuilder] = useState(false)
   const primary = org?.primary_color || '#1B9AAA'
 
   const handleCreateForm = async (formData) => {
@@ -588,12 +587,10 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, riskAss
       ))}
 
       {form.risk_assessment_required && (
-        <RiskAssessmentPicker
-          form={form} setForm={setForm} org={org}
-          riskAssessments={riskAssessments || []}
-          onCreated={onRiskAssessmentCreated}
-          showBuilder={showRaBuilder} setShowBuilder={setShowRaBuilder}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: '1.5px solid #FDE68A', background: '#FFFBEB', marginBottom: 16, fontSize: 12.5, color: '#92400E', fontWeight: 600 }}>
+          <span style={{ fontSize: 15 }}>🛡️</span>
+          <span>The next step lets you attach an existing risk assessment or create one for this session.</span>
+        </div>
       )}
 
       <div style={card}>
@@ -675,7 +672,7 @@ function raRatingStyle(rating) {
   return { bg: 'var(--surface2)', border: 'var(--border)', color: 'var(--text3)' }
 }
 
-function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, showBuilder, setShowBuilder }) {
+function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, showBuilder, setShowBuilder, standalone }) {
   const [draft, setDraft] = useState({ name: '', activity_type: '', location: '', summary: '', control_measures: '', risk_rating: 'low', next_review_date: '' })
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
@@ -723,8 +720,30 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
     ? riskAssessments.filter(r => `${r.name} ${r.activity_type || ''} ${r.location || ''}`.toLowerCase().includes(search.toLowerCase()))
     : riskAssessments
 
+  const standaloneHeader = standalone ? (
+    <div style={{
+      borderRadius: 18, padding: 20, marginBottom: 16, position: 'relative', overflow: 'hidden',
+      background: 'linear-gradient(135deg, rgba(220,38,38,0.10), rgba(220,38,38,0.03))',
+      border: '1px solid rgba(220,38,38,0.22)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: 'linear-gradient(135deg,#DC2626,#EF4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 4px 14px -4px rgba(220,38,38,0.6)' }}>🛡️</div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.3 }}>Risk assessment</div>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
+            {attached
+              ? 'Attached — it will be linked to this session when you publish.'
+              : 'This session is marked as needing one. Attach an existing assessment or write one now.'}
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null
+
   if (showBuilder) {
     return (
+      <>
+      {standaloneHeader}
       <div style={{ ...card, borderColor: '#FCA5A5' }}>
         <SectionHeader icon="🛡️" title="New risk assessment" subtitle="Created as a draft and attached to this session. You can complete the full detail in Risk Assessments." color="#DC2626" />
         <div><label style={label}>Name *</label><input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} placeholder="e.g. Horse Riding — Risk Assessment" style={inp} /></div>
@@ -754,10 +773,13 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
           </button>
         </div>
       </div>
+      </>
     )
   }
 
   return (
+    <>
+      {standaloneHeader}
     <div style={{ ...card, borderColor: attached ? '#BBF7D0' : '#FCA5A5' }}>
       <SectionHeader icon="🛡️" title="Risk assessment"
         subtitle={attached ? 'Attached to this session on creation.' : 'This session needs one. Attach an existing assessment or create one now.'}
@@ -817,6 +839,39 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
         </>
       )}
     </div>
+    {standalone && !attached && (
+      <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', marginTop: -4 }}>
+        You can continue without one — Review will flag it as outstanding.
+      </div>
+    )}
+    </>
+  )
+}
+
+// The dedicated Risk step. Owns the builder toggle so the choice between
+// attaching and creating survives moving within the step, and opens straight
+// into the create form when there is nothing to attach -- showing an empty
+// list and making someone press "create" first is a wasted click.
+function StepRisk({ form, setForm, org, riskAssessments, onCreated }) {
+  const reusable = riskAssessments || []
+  const [showBuilder, setShowBuilder] = useState(reusable.length === 0 && !form.pending_risk_assessment_id)
+
+  // The list loads after mount, so the initial guess above can be made on an
+  // empty array. Correct it once, and only while nothing is chosen yet.
+  const decided = useRef(false)
+  useEffect(() => {
+    if (decided.current) return
+    if (reusable.length > 0) { decided.current = true; setShowBuilder(false) }
+  }, [reusable.length])
+
+  return (
+    <RiskAssessmentPicker
+      form={form} setForm={setForm} org={org}
+      riskAssessments={reusable}
+      onCreated={onCreated}
+      showBuilder={showBuilder} setShowBuilder={setShowBuilder}
+      standalone
+    />
   )
 }
 
@@ -1154,10 +1209,36 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     return []
   }, [form.participant_mode, form.bubbles, form.child_ids, children])
 
-  const STEPS = ['Type', 'Details', 'People', 'Requirements', 'Review']
+  // Steps are derived rather than a fixed list, because ticking "risk
+  // assessment required" inserts a dedicated Risk step between Requirements
+  // and Review. Everything downstream keys off STEP_DEFS rather than a hard
+  // number, so nothing has to know whether that step is present.
+  const STEP_DEFS = useMemo(() => {
+    const defs = [
+      { key: 'type', label: 'Type' },
+      { key: 'details', label: 'Details' },
+      { key: 'people', label: 'People' },
+      { key: 'requirements', label: 'Requirements' },
+    ]
+    if (form.risk_assessment_required) defs.push({ key: 'risk', label: 'Risk' })
+    defs.push({ key: 'review', label: 'Review' })
+    return defs
+  }, [form.risk_assessment_required])
+
+  const STEPS = STEP_DEFS.map(s => s.label)
+  const totalSteps = STEP_DEFS.length
+  const stepKey = STEP_DEFS[step - 1]?.key
+  const isLastStep = step >= totalSteps
+
+  // Turning the requirement back off removes a step. If that happened while
+  // standing on or past it, step would point past the end and the wizard would
+  // render a blank body with no way forward.
+  useEffect(() => {
+    if (step > totalSteps) setStep(totalSteps)
+  }, [step, totalSteps])
 
   const canContinue = () => {
-    if (step === 2) return form.title && form.session_date && form.start_time && form.end_time && form.location && form.lead_staff_id && form.max_capacity
+    if (stepKey === 'details') return form.title && form.session_date && form.start_time && form.end_time && form.location && form.lead_staff_id && form.max_capacity
     return true
   }
 
@@ -1409,7 +1490,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
           <div style={{ position: 'absolute', top: compact ? 14 : 17, left: `${100 / STEPS.length / 2}%`, right: `${100 / STEPS.length / 2}%`, height: 2, background: 'var(--border)', borderRadius: 2, zIndex: 0 }} />
           <motion.div
             initial={false}
-            animate={{ width: `${((step - 1) / (STEPS.length - 1)) * 100}%` }}
+            animate={{ width: `${totalSteps > 1 ? ((step - 1) / (totalSteps - 1)) * 100 : 0}%` }}
             transition={{ type: 'spring', stiffness: 260, damping: 30 }}
             style={{ position: 'absolute', top: compact ? 14 : 17, left: `${100 / STEPS.length / 2}%`, right: `${100 / STEPS.length / 2}%`, height: 2, background: `linear-gradient(90deg, #16A34A, ${typeColor})`, borderRadius: 2, zIndex: 0, maxWidth: `calc(100% - ${100 / STEPS.length}%)` }}
           />
@@ -1434,11 +1515,12 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
         <div style={{ minWidth: 0 }}>
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0, x: 18, scale: 0.99 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: -18, scale: 0.99 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} style={{ minWidth: 0 }}>
-              {step === 1 && <StepType form={form} setForm={setForm} templates={templates} appliedTemplateId={appliedTemplateId} onApplyTemplate={applyTemplate} />}
-              {step === 2 && <StepDetails form={form} setForm={setForm} staff={staff} org={org} />}
-              {step === 3 && <StepPeople form={form} setForm={setForm} staff={staff} children={children} expectedCount={expectedCount} bubbleDefs={bubbleDefs} org={org} />}
-              {step === 4 && <StepRequirements form={form} setForm={setForm} orgForms={orgForms} org={org} onFormCreated={(f) => setOrgForms(prev => [...prev, f])} riskAssessments={riskAssessments} onRiskAssessmentCreated={(ra) => setRiskAssessments(prev => [ra, ...prev])} expectedChildren={expectedChildren} />}
-              {step === 5 && <StepReview form={form} staff={staff} expectedCount={expectedCount} primary={primary} riskAssessments={riskAssessments} typeColor={typeColor} />}
+              {stepKey === 'type' && <StepType form={form} setForm={setForm} templates={templates} appliedTemplateId={appliedTemplateId} onApplyTemplate={applyTemplate} />}
+              {stepKey === 'details' && <StepDetails form={form} setForm={setForm} staff={staff} org={org} />}
+              {stepKey === 'people' && <StepPeople form={form} setForm={setForm} staff={staff} children={children} expectedCount={expectedCount} bubbleDefs={bubbleDefs} org={org} />}
+              {stepKey === 'requirements' && <StepRequirements form={form} setForm={setForm} orgForms={orgForms} org={org} onFormCreated={(f) => setOrgForms(prev => [...prev, f])} expectedChildren={expectedChildren} />}
+              {stepKey === 'risk' && <StepRisk form={form} setForm={setForm} org={org} riskAssessments={riskAssessments} onCreated={(ra) => setRiskAssessments(prev => [ra, ...prev])} />}
+              {stepKey === 'review' && <StepReview form={form} staff={staff} expectedCount={expectedCount} primary={primary} riskAssessments={riskAssessments} typeColor={typeColor} />}
             </motion.div>
           </AnimatePresence>
           {error && <div style={{ color: '#DC2626', fontWeight: 700, fontSize: 13, marginTop: 8 }}>{error}</div>}
@@ -1449,8 +1531,8 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       {/* Footer */}
       <div style={{
         padding: compact ? '12px 16px' : '16px 28px', borderTop: '1px solid var(--border)', flexShrink: 0,
-        display: 'flex', flexDirection: compact && step === 5 ? 'column-reverse' : 'row',
-        justifyContent: 'space-between', alignItems: compact && step === 5 ? 'stretch' : 'center', gap: compact && step === 5 ? 10 : 0,
+        display: 'flex', flexDirection: compact && isLastStep ? 'column-reverse' : 'row',
+        justifyContent: 'space-between', alignItems: compact && isLastStep ? 'stretch' : 'center', gap: compact && isLastStep ? 10 : 0,
       }}>
         <motion.button
           onClick={() => setStep(s => Math.max(1, s - 1))}
@@ -1462,7 +1544,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
           style={{ padding: compact ? '13px 22px' : '11px 22px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: step === 1 ? 'default' : 'pointer', flexShrink: 0 }}>
           Back
         </motion.button>
-        {step < 5 ? (
+        {!isLastStep ? (
           <motion.button
             onClick={() => canContinue() && setStep(s => s + 1)}
             disabled={!canContinue()}
