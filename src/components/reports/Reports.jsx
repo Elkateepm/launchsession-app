@@ -1,490 +1,430 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import PageHeader from '../shared/PageHeader'
-import { supabase } from '../../lib/supabase'
-import ProjectsReportTab from './ProjectsReportTab'
+import {
+  DATE_RANGES, rangeFor, getOverviewMetrics, getInsightExtras, deriveInsights,
+  listSavedReports, renameReport, deleteReport, duplicateReport, rerunReport,
+  REPORT_LIBRARY, REPORT_CATEGORIES, canAccessReport,
+} from '../../lib/reportingService'
+import ReportBuilder from './ReportBuilder'
 
-const TABS = [
-  { key: 'executive',  label: 'Executive',   icon: '🎯' },
-  { key: 'people',     label: 'Young People', icon: '👥' },
-  { key: 'delivery',   label: 'Delivery',     icon: '📅' },
-  { key: 'mentoring',  label: 'Mentoring',    icon: '🤝' },
-  { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
-  { key: 'projects',   label: 'Projects',     icon: '🚀' },
+const VIEWS = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'library', label: 'Report Library' },
+  { key: 'saved', label: 'Saved Reports' },
 ]
 
-function KPICard({ icon, label, value, sub, color, trend }) {
-  return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: (color || '#3B82F6') + '10' }} />
-      <div style={{ fontSize: 20, marginBottom: 10 }}>{icon}</div>
-      <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 30, fontWeight: 900, color: color || 'var(--text)', lineHeight: 1 }}>{value ?? '—'}</div>
-      {sub && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 6 }}>{sub}</div>}
-      {trend && <div style={{ fontSize: 11, fontWeight: 700, color: trend.up ? '#22C55E' : '#EF4444', marginTop: 4 }}>{trend.up ? '↑' : '↓'} {trend.text}</div>}
-    </div>
-  )
+const card = (extra = {}) => ({
+  background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14,
+  boxShadow: '0 1px 2px rgba(15,23,42,0.04)', ...extra,
+})
+const ctl = {
+  padding: '8px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff',
+  fontSize: 12.5, fontWeight: 600, color: '#334155', outline: 'none', cursor: 'pointer',
 }
 
-function InsightCard({ icon, text, type }) {
-  const bgs = { positive: 'rgba(34,197,94,0.06)', warning: 'rgba(245,158,11,0.06)', info: 'rgba(59,130,246,0.06)', celebrate: 'rgba(139,92,246,0.06)' }
-  const borders = { positive: 'rgba(34,197,94,0.2)', warning: 'rgba(245,158,11,0.2)', info: 'rgba(59,130,246,0.2)', celebrate: 'rgba(139,92,246,0.2)' }
-  return (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 14px', background: bgs[type] || bgs.info, border: '1px solid ' + (borders[type] || borders.info), borderRadius: 12 }}>
-      <span style={{ fontSize: 16, flexShrink: 0 }}>{icon}</span>
-      <span style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 500, lineHeight: 1.6 }}>{text}</span>
-    </div>
-  )
+function fmtDate(iso) {
+  if (!iso) return '—'
+  return new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function EmptyState({ icon, title, sub, action, onAction }) {
-  return (
-    <div style={{ padding: '48px 24px', textAlign: 'center', background: 'var(--surface)', borderRadius: 16, border: '1px dashed var(--border)' }}>
-      <div style={{ fontSize: 40, marginBottom: 12 }}>{icon}</div>
-      <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>{title}</div>
-      <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: action ? 20 : 0, lineHeight: 1.6 }}>{sub}</div>
-      {action && <button onClick={onAction} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: 'var(--org-primary,#1B9AAA)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{action}</button>}
-    </div>
-  )
-}
-
-function ProgressBar({ value, max, color }) {
-  const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0
-  return (
-    <div style={{ height: 8, background: 'var(--border)', borderRadius: 999, overflow: 'hidden' }}>
-      <div style={{ height: '100%', width: pct + '%', background: color || 'var(--org-primary,#1B9AAA)', borderRadius: 999, transition: 'width 0.6s ease' }} />
-    </div>
-  )
-}
-
-function SectionHeader({ title, sub }) {
-  return (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)' }}>{title}</div>
-      {sub && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{sub}</div>}
-    </div>
-  )
-}
-
-// ─── EXECUTIVE TAB ───────────────────────────────────────────
-function ExecutiveTab({ data, org }) {
-  const insights = []
-  if (data.attendance.rate >= 70) insights.push({ icon: '📈', text: `Attendance rate is ${data.attendance.rate}% — strong engagement across your sessions.`, type: 'positive' })
-  else if (data.attendance.rate > 0) insights.push({ icon: '⚠️', text: `Attendance rate is ${data.attendance.rate}% — consider reviewing session scheduling or outreach.`, type: 'warning' })
-  if (data.safeguarding.open === 0) insights.push({ icon: '🎉', text: 'No open safeguarding concerns. Your team is on top of it.', type: 'celebrate' })
-  else insights.push({ icon: '⚠️', text: `${data.safeguarding.open} open safeguarding concern${data.safeguarding.open > 1 ? 's' : ''} require${data.safeguarding.open === 1 ? 's' : ''} attention.`, type: 'warning' })
-  if (data.participants.newThisMonth > 0) insights.push({ icon: '⭐', text: `${data.participants.newThisMonth} new young ${data.participants.newThisMonth === 1 ? 'person' : 'people'} joined this month.`, type: 'positive' })
-  if (data.atRisk.length > 0) insights.push({ icon: '⚠️', text: `${data.atRisk.length} young ${data.atRisk.length === 1 ? 'person' : 'people'} may need follow-up due to low or declining attendance.`, type: 'warning' })
-  if (data.sessions.total > 0) insights.push({ icon: '📅', text: `${data.sessions.total} sessions delivered to date across all programmes.`, type: 'info' })
-
-  return (
-    <div>
-      <div style={{ background: 'linear-gradient(135deg, rgba(var(--org-primary-rgb,27,154,170),0.12), transparent)', border: '1px solid var(--border)', borderRadius: 20, padding: '24px 24px 20px', marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--org-primary,#1B9AAA)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Organisation Health</div>
-        <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>{org.name}</div>
-        <div style={{ fontSize: 13, color: 'var(--text3)' }}>All-time impact overview · Updated {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12, marginBottom: 28 }}>
-        <KPICard icon="👥" label="Young People" value={data.participants.active} sub="Active participants" color="#3B82F6" />
-        <KPICard icon="📅" label="Sessions" value={data.sessions.total} sub="Delivered to date" color="var(--org-primary,#1B9AAA)" />
-        <KPICard icon="✅" label="Attendance" value={data.attendance.rate + '%'} sub="Overall rate" color="#10B981" />
-        <KPICard icon="🤝" label="Team Members" value={data.team.total} sub="Staff & volunteers" color="#8B5CF6" />
-        <KPICard icon="🛡️" label="Safeguarding" value={data.safeguarding.open} sub="Open concerns" color={data.safeguarding.open > 0 ? '#EF4444' : '#22C55E'} />
-        <KPICard icon="🌟" label="Outcomes" value={data.mentoring.goalsAchieved} sub="Goals achieved" color="#F59E0B" />
-      </div>
-
-      <div style={{ marginBottom: 8 }}>
-        <SectionHeader title="AI Insights" sub="Automatically generated from your data" />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {insights.length === 0 ? (
-            <InsightCard icon="💡" text="Add sessions, participants and attendance records to unlock AI insights." type="info" />
-          ) : insights.map((ins, i) => <InsightCard key={i} {...ins} />)}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── YOUNG PEOPLE TAB ────────────────────────────────────────
-function PeopleTab({ data }) {
-  const engaged = data.participants.byEngagement?.high || 0
-  const moderate = data.participants.byEngagement?.moderate || 0
-  const atRisk = data.atRisk.length
-
-  return (
-    <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12, marginBottom: 28 }}>
-        <KPICard icon="👥" label="Active" value={data.participants.active} color="#3B82F6" />
-        <KPICard icon="🆕" label="New This Month" value={data.participants.newThisMonth} color="#10B981" />
-        <KPICard icon="✅" label="Attendance Rate" value={data.attendance.rate + '%'} color="#8B5CF6" />
-        <KPICard icon="📋" label="Total Registered" value={data.participants.total} color="var(--org-primary,#1B9AAA)" />
-      </div>
-
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 20 }}>
-        <SectionHeader title="Engagement Health" sub="Based on attendance frequency" />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {[
-            { label: 'Highly Engaged', value: engaged, color: '#22C55E', icon: '🟢' },
-            { label: 'Moderate Engagement', value: moderate, color: '#F59E0B', icon: '🟡' },
-            { label: 'At Risk', value: atRisk, color: '#EF4444', icon: '🔴' },
-          ].map((e, i) => (
-            <div key={i}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{e.icon} {e.label}</div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: e.color }}>{e.value} young people</div>
-              </div>
-              <ProgressBar value={e.value} max={data.participants.active || 1} color={e.color} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {data.atRisk.length > 0 ? (
-        <div style={{ background: 'var(--surface)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: 20 }}>
-          <SectionHeader title="Young People Needing Attention" sub="Low attendance or no recent engagement" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {data.atRisk.slice(0, 8).map((p, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < data.atRisk.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>👤</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{p.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text3)' }}>{p.reason}</div>
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#EF4444', background: 'rgba(239,68,68,0.1)', padding: '3px 8px', borderRadius: 999 }}>At Risk</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 16, padding: '20px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>🎉</div>
-          <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>No at-risk participants</div>
-          <div style={{ fontSize: 13, color: 'var(--text3)' }}>All active young people are engaging well.</div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── DELIVERY TAB ─────────────────────────────────────────────
-function DeliveryTab({ data }) {
-  const avgAtt = data.sessions.total > 0 && data.attendance.total > 0
-    ? Math.round(data.attendance.total / data.sessions.total)
-    : 0
-
-  const programmes = data.sessions.byProgramme || []
-
-  return (
-    <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12, marginBottom: 28 }}>
-        <KPICard icon="📅" label="Sessions Delivered" value={data.sessions.total} color="var(--org-primary,#1B9AAA)" />
-        <KPICard icon="📆" label="Upcoming" value={data.sessions.upcoming} color="#3B82F6" />
-        <KPICard icon="👥" label="Avg Attendance" value={avgAtt} sub="Per session" color="#10B981" />
-        <KPICard icon="✅" label="Attendance Rate" value={data.attendance.rate + '%'} color="#8B5CF6" />
-      </div>
-
-      {programmes.length > 0 ? (
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 20 }}>
-          <SectionHeader title="Programme Performance" />
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr>
-                  {['Programme', 'Sessions', 'Attendance %', 'Participants'].map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '8px 12px', fontSize: 11, fontWeight: 900, color: 'var(--text3)', letterSpacing: 1, textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {programmes.map((p, i) => (
-                  <tr key={i}>
-                    <td style={{ padding: '12px', color: 'var(--text)', fontWeight: 700, borderBottom: '1px solid var(--border)' }}>{p.name}</td>
-                    <td style={{ padding: '12px', color: 'var(--text2)', borderBottom: '1px solid var(--border)' }}>{p.sessions}</td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid var(--border)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ flex: 1, height: 6, background: 'var(--border)', borderRadius: 999, overflow: 'hidden', maxWidth: 60 }}>
-                          <div style={{ height: '100%', width: p.rate + '%', background: '#10B981', borderRadius: 999 }} />
-                        </div>
-                        <span style={{ color: 'var(--text2)', fontWeight: 600 }}>{p.rate}%</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px', color: 'var(--text2)', borderBottom: '1px solid var(--border)' }}>{p.participants}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : (
-        <EmptyState icon="📅" title="No sessions delivered yet" sub="Once you start running sessions, programme performance will appear here." action="Go to Sessions" />
-      )}
-    </div>
-  )
-}
-
-// ─── MENTORING TAB ────────────────────────────────────────────
-function MentoringTab({ data }) {
-  const outcomes = [
-    { label: 'Confidence', color: '#3B82F6' },
-    { label: 'Leadership', color: '#8B5CF6' },
-    { label: 'Communication', color: '#10B981' },
-    { label: 'Resilience', color: '#F59E0B' },
-    { label: 'Education', color: '#EF4444' },
-    { label: 'Employment Readiness', color: '#06B6D4' },
-  ]
-
-  return (
-    <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12, marginBottom: 28 }}>
-        <KPICard icon="🤝" label="Meetings" value={data.mentoring.total} color="#8B5CF6" />
-        <KPICard icon="🎯" label="Goals Achieved" value={data.mentoring.goalsAchieved} color="#10B981" />
-        <KPICard icon="👥" label="Relationships" value={data.mentoring.active} sub="Active" color="#3B82F6" />
-        <KPICard icon="⭐" label="Avg Progress" value={data.mentoring.avgProgress > 0 ? data.mentoring.avgProgress + '/5' : '—'} color="#F59E0B" />
-      </div>
-
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 20 }}>
-        <SectionHeader title="Outcome Areas" sub="Progress across key development areas" />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {outcomes.map((o, i) => (
-            <div key={i}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{o.label}</div>
-                <div style={{ fontSize: 12, color: 'var(--text3)' }}>Tracking enabled</div>
-              </div>
-              <ProgressBar value={data.mentoring.total > 0 ? 60 + i * 5 : 0} max={100} color={o.color} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {data.mentoring.total === 0 ? (
-        <EmptyState icon="🤝" title="No mentoring sessions yet" sub="Mentoring data will appear once sessions are recorded. Start tracking relationships to unlock insights." action="Start Mentoring" />
-      ) : (
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20 }}>
-          <SectionHeader title="Success Stories" sub="Young people with notable progress" />
-          <div style={{ padding: '16px', background: 'rgba(139,92,246,0.06)', borderRadius: 12, border: '1px solid rgba(139,92,246,0.15)' }}>
-            <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, fontStyle: 'italic' }}>
-              "Success stories will appear here as young people complete mentoring milestones and achieve their goals."
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── SAFEGUARDING TAB ─────────────────────────────────────────
-function SafeguardingTab({ data }) {
-  const avgResolution = data.safeguarding.resolved > 0 ? '4 days' : '—'
-
-  const concerns = [
-    { label: 'Bullying', value: 0, color: '#EF4444' },
-    { label: 'Mental Health', value: 0, color: '#8B5CF6' },
-    { label: 'Behaviour', value: 0, color: '#F59E0B' },
-    { label: 'Family Support', value: 0, color: '#3B82F6' },
-    { label: 'Attendance', value: 0, color: '#06B6D4' },
-    { label: 'Other', value: data.safeguarding.total, color: '#94A3B8' },
-  ]
-
-  return (
-    <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 12, marginBottom: 28 }}>
-        <KPICard icon="🔴" label="Open" value={data.safeguarding.open} color={data.safeguarding.open > 0 ? '#EF4444' : '#22C55E'} />
-        <KPICard icon="🟡" label="In Progress" value={data.safeguarding.inProgress} color="#F59E0B" />
-        <KPICard icon="🟢" label="Resolved" value={data.safeguarding.resolved} color="#22C55E" />
-        <KPICard icon="⏱️" label="Avg Resolution" value={avgResolution} color="#3B82F6" />
-      </div>
-
-      {data.safeguarding.open > 0 && (
-        <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: '16px 20px', marginBottom: 20 }}>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-            <span style={{ fontSize: 18 }}>⚠️</span>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 900, color: '#DC2626', marginBottom: 4 }}>{data.safeguarding.open} open concern{data.safeguarding.open > 1 ? 's' : ''} require attention</div>
-              <div style={{ fontSize: 13, color: 'var(--text2)' }}>Review and update case status in the Safeguarding module.</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 20 }}>
-        <SectionHeader title="Concern Categories" sub="Breakdown by concern type" />
-        {data.safeguarding.total === 0 ? (
-          <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text3)', fontSize: 13 }}>No concerns recorded yet.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {concerns.filter(c => c.value > 0).map((c, i) => (
-              <div key={i}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <div style={{ fontSize: 13, color: 'var(--text)' }}>{c.label}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: c.color }}>{c.value}</div>
-                </div>
-                <ProgressBar value={c.value} max={data.safeguarding.total} color={c.color} />
-              </div>
-            ))}
-            {concerns.every(c => c.value === 0) && (
-              <div style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: '10px 0' }}>Category breakdown will appear as concerns are submitted.</div>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20 }}>
-        <SectionHeader title="Risk Indicators" sub="Automatically identified patterns" />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {data.atRisk.length > 0 && (
-            <InsightCard icon="⚠️" text={`${data.atRisk.length} young ${data.atRisk.length === 1 ? 'person' : 'people'} showing attendance decline — may require welfare check.`} type="warning" />
-          )}
-          {data.safeguarding.followUp > 0 && (
-            <InsightCard icon="⚠️" text={`${data.safeguarding.followUp} concern${data.safeguarding.followUp > 1 ? 's' : ''} with outstanding follow-up actions.`} type="warning" />
-          )}
-          {data.atRisk.length === 0 && data.safeguarding.followUp === 0 && (
-            <InsightCard icon="✅" text="No risk indicators detected. Keep monitoring attendance and engagement." type="positive" />
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── MAIN COMPONENT ───────────────────────────────────────────
-export default function Reports({ org }) {
+export default function Reports({ org, session, userProfile, onNavigate }) {
   const isMobile = useIsMobile()
-  const [tab, setTab] = useState('executive')
+  const orgId = org?.id
+  const role = userProfile?.role || 'staff'
+
+  const [view, setView] = useState('overview')
+  const [rangeKey, setRangeKey] = useState('30d')
+  const [customRange, setCustomRange] = useState({ from: '', to: '' })
+  const [metrics, setMetrics] = useState(null)
+  const [extras, setExtras] = useState({})
   const [loading, setLoading] = useState(true)
-  const [data, setData] = useState(null)
+  const [error, setError] = useState('')
+  const [savedReports, setSavedReports] = useState([])
+  const [builderType, setBuilderType] = useState(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    const orgId = org.id
-    const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const range = useMemo(() => rangeFor(rangeKey, customRange), [rangeKey, customRange])
 
-    const [sessionsRes, upcomingRes, childrenRes, attRes, teamRes, safRes] = await Promise.all([
-      supabase.from('sessions').select('id, session_date, title').eq('org_id', orgId).lt('session_date', now.toISOString().split('T')[0]),
-      supabase.from('sessions').select('id').eq('org_id', orgId).gte('session_date', now.toISOString().split('T')[0]),
-      supabase.from('children').select('id, active, group_name, first_name, last_name, created_at').eq('org_id', orgId),
-      supabase.from('attendance').select('id, status, signed_in_at, child_id, session_id, org_id').eq('org_id', orgId),
-      supabase.from('user_profiles').select('id, role').eq('org_id', orgId),
-      supabase.from('cause_for_concern').select('id, status, follow_up_required, created_at').eq('org_id', orgId),
-    ])
-
-    const sessions = sessionsRes.data || []
-    const children = childrenRes.data || []
-    const attendance = attRes.data || []
-    const team = teamRes.data || []
-    const safeguarding = safRes.data || []
-
-    const activeChildren = children.filter(c => c.active)
-    const newThisMonth = children.filter(c => new Date(c.created_at) >= new Date(monthStart))
-
-    // Attendance stats
-    const attended = attendance.filter(a => a.status === 'signed_in' || a.status === 'signed_out')
-    const attRate = attendance.length > 0 ? Math.round((attended.length / attendance.length) * 100) : 0
-
-    // Engagement buckets — based on how many sessions each child attended
-    const childAttCount = {}
-    attended.forEach(a => { childAttCount[a.child_id] = (childAttCount[a.child_id] || 0) + 1 })
-    const totalSessions = sessions.length || 1
-    const highEngaged = activeChildren.filter(c => (childAttCount[c.id] || 0) / totalSessions >= 0.7)
-    const modEngaged = activeChildren.filter(c => { const r = (childAttCount[c.id] || 0) / totalSessions; return r >= 0.3 && r < 0.7 })
-    
-    // At risk — attended < 30% or no attendance in 30 days
-    const recentAtt = new Set(attendance.filter(a => a.signed_in_at && new Date(a.signed_in_at) >= new Date(thirtyDaysAgo)).map(a => a.child_id))
-    const atRisk = activeChildren.filter(c => {
-      const rate = (childAttCount[c.id] || 0) / totalSessions
-      return rate < 0.3 || !recentAtt.has(c.id)
-    }).map(c => ({
-      name: c.first_name && c.last_name ? `${c.first_name} ${c.last_name}` : c.first_name || 'Unknown',
-      reason: !recentAtt.has(c.id) ? 'No attendance in 30+ days' : `${Math.round(((childAttCount[c.id] || 0) / totalSessions) * 100)}% attendance rate`,
-    }))
-
-    // Programme breakdown by session title
-    const progMap = {}
-    sessions.forEach(s => {
-      const key = s.title || 'General'
-      if (!progMap[key]) progMap[key] = { sessions: 0, attended: 0, participants: new Set() }
-      progMap[key].sessions++
-      const sessAtt = attendance.filter(a => a.session_id === s.id)
-      sessAtt.forEach(a => {
-        if (a.status === 'signed_in' || a.status === 'signed_out') {
-          progMap[key].attended++
-          progMap[key].participants.add(a.child_id)
-        }
-      })
-    })
-    const byProgramme = Object.entries(progMap).slice(0, 8).map(([name, v]) => ({
-      name,
-      sessions: v.sessions,
-      rate: v.sessions > 0 ? Math.round((v.attended / (v.sessions * (activeChildren.length || 1))) * 100) : 0,
-      participants: v.participants.size,
-    }))
-
-    setData({
-      sessions: { total: sessions.length, upcoming: upcomingRes.data?.length || 0, byProgramme },
-      participants: {
-        total: children.length, active: activeChildren.length,
-        newThisMonth: newThisMonth.length,
-        byEngagement: { high: highEngaged.length, moderate: modEngaged.length },
-      },
-      attendance: { total: attendance.length, rate: attRate, byStatus: { signed_in: attended.length, absent: attendance.filter(a => a.status === 'absent').length, unmarked: attendance.filter(a => a.status === 'unmarked').length } },
-      team: { total: team.length },
-      safeguarding: {
-        total: safeguarding.length,
-        open: safeguarding.filter(s => s.status === 'open').length,
-        inProgress: safeguarding.filter(s => s.status === 'in_progress').length,
-        resolved: safeguarding.filter(s => s.status === 'resolved').length,
-        followUp: safeguarding.filter(s => s.follow_up_required).length,
-      },
-      mentoring: { total: 0, goalsAchieved: 0, active: 0, avgProgress: 0 },
-      atRisk,
-    })
+  const loadOverview = useCallback(async () => {
+    if (!orgId) return
+    setLoading(true); setError('')
+    try {
+      const [m, x] = await Promise.all([
+        getOverviewMetrics(range),
+        getInsightExtras(orgId, range),
+      ])
+      setMetrics(m); setExtras(x)
+    } catch (e) {
+      setError(e.message || 'Could not load report data.')
+      setMetrics(null)
+    }
     setLoading(false)
-  }, [org.id])
+  }, [orgId, range])
 
-  useEffect(() => { load() }, [load])
+  const loadSaved = useCallback(async () => {
+    if (!orgId) return
+    try { setSavedReports(await listSavedReports(orgId)) } catch { /* RLS hides restricted rows */ }
+  }, [orgId])
 
-  const primary = org?.primary_color || '#1B9AAA'
+  useEffect(() => { loadOverview() }, [loadOverview])
+  useEffect(() => { loadSaved() }, [loadSaved])
+
+  const insights = useMemo(() => deriveInsights(metrics, extras), [metrics, extras])
+
+  const goto = (target) => {
+    const map = { attendance: 'registers', safeguarding: 'safeguarding', impact: 'impact_outcomes', sessions: 'planner' }
+    if (onNavigate && map[target]) onNavigate(map[target])
+  }
+
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <PageHeader
-        icon="📊"
-        title="Reports & Impact"
-        orgName={org?.name}
-        subtitle={`Last updated ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}`}
-        primary={primary}
-        actions={[{ label: '↻ Refresh', onClick: load, variant: 'ghost' }]}
-      />
+    <div style={{ padding: isMobile ? 16 : 28, width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', marginBottom: 16 }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 27, fontWeight: 900, color: '#0F172A', letterSpacing: -0.6 }}>Reports</h1>
+          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: '#64748B', fontWeight: 500 }}>
+            Understand your delivery and turn your data into useful reports.
+          </p>
+        </div>
+        <button onClick={() => setBuilderType('delivery')} style={{
+          padding: '11px 18px', borderRadius: 11, border: 'none', color: '#fff',
+          background: 'linear-gradient(135deg,#4F46E5,#3B82F6)', fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
+        }}>{isMobile ? '+ Create' : '+ Create Report'}</button>
+      </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, padding: isMobile ? '10px 12px' : '10px 24px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', overflowX: 'auto', flexShrink: 0, WebkitOverflowScrolling: 'touch' }}>
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, border: tab === t.key ? '1px solid var(--org-primary,#1B9AAA)' : '1px solid transparent', background: tab === t.key ? 'rgba(27,154,170,0.1)' : 'transparent', color: tab === t.key ? 'var(--org-primary,#1B9AAA)' : 'var(--text3)', fontWeight: tab === t.key ? 800 : 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
-            <span>{t.icon}</span><span>{t.label}</span>
-          </button>
+      <div style={{ display: 'inline-flex', gap: 3, padding: 3, borderRadius: 12, background: '#F1F5F9', border: '1px solid #E2E8F0', marginBottom: 14, maxWidth: '100%', overflowX: 'auto' }}>
+        {VIEWS.map(v => {
+          const on = view === v.key
+          return (
+            <button key={v.key} onClick={() => setView(v.key)} style={{
+              padding: '8px 16px', border: 'none', borderRadius: 9, cursor: 'pointer',
+              fontSize: 12.5, fontWeight: 800, whiteSpace: 'nowrap',
+              background: on ? '#fff' : 'transparent', color: on ? '#4F46E5' : '#64748B',
+              boxShadow: on ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
+            }}>{v.label}</button>
+          )
+        })}
+      </div>
+
+      {view === 'overview' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 18 }}>
+          <select value={rangeKey} onChange={e => setRangeKey(e.target.value)} style={ctl}>
+            {DATE_RANGES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
+          </select>
+          {rangeKey === 'custom' && (
+            <>
+              <input type="date" value={customRange.from} onChange={e => setCustomRange(c => ({ ...c, from: e.target.value }))} style={ctl} />
+              <input type="date" value={customRange.to} onChange={e => setCustomRange(c => ({ ...c, to: e.target.value }))} style={ctl} />
+            </>
+          )}
+          <span style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600 }}>
+            {fmtDate(range.from)} – {fmtDate(range.to)}
+          </span>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ ...card({ padding: 16, marginBottom: 14 }), borderColor: '#FECACA', background: '#FEF2F2' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#B91C1C' }}>Couldn't load report data</div>
+          <div style={{ fontSize: 12.5, color: '#991B1B', marginTop: 3 }}>{error}</div>
+        </div>
+      )}
+
+      {view === 'overview' && (
+        <OverviewView
+          loading={loading} metrics={metrics} insights={insights} isMobile={isMobile}
+          savedReports={savedReports} onGoto={goto}
+          onOpenLibrary={() => setView('library')} onOpenSaved={() => setView('saved')}
+        />
+      )}
+
+      {view === 'library' && (
+        <LibraryView role={role} isMobile={isMobile} onRun={(key) => setBuilderType(key)} />
+      )}
+
+      {view === 'saved' && (
+        <SavedView
+          reports={savedReports} orgId={orgId} session={session}
+          onChanged={loadSaved} onCreate={() => setBuilderType('delivery')} range={range}
+        />
+      )}
+
+      {builderType && (
+        <ReportBuilder
+          org={org} session={session} role={role} initialType={builderType}
+          defaultRange={range}
+          onClose={() => setBuilderType(null)}
+          onSaved={() => { setBuilderType(null); loadSaved(); setView('saved') }}
+        />
+      )}
+    </div>
+  )
+}
+
+function OverviewView({ loading, metrics, insights, isMobile, savedReports, onGoto, onOpenLibrary, onOpenSaved }) {
+  if (loading) {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit,minmax(150px,1fr))', gap: 12 }}>
+        {[...Array(6)].map((_, i) => (
+          <div key={i} style={card({ padding: 16, height: 78, background: '#F8FAFC' })} />
+        ))}
+      </div>
+    )
+  }
+
+  if (!metrics) {
+    return (
+      <div style={{ ...card({ padding: 40 }), textAlign: 'center' }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>Report data unavailable</div>
+        <div style={{ fontSize: 13, color: '#64748B' }}>We couldn't load figures for this period. Try a different date range.</div>
+      </div>
+    )
+  }
+
+  const hasData = metrics.sessions > 0 || metrics.young_people > 0
+  const stats = [
+    { v: metrics.young_people, l: 'Young people' },
+    { v: metrics.sessions, l: 'Sessions' },
+    { v: metrics.attendance_rate !== null ? `${metrics.attendance_rate}%` : '—', l: 'Attendance' },
+    { v: `${metrics.delivery_hours}h`, l: 'Delivery' },
+    { v: metrics.outcomes, l: 'Outcomes' },
+    { v: metrics.open_concerns, l: 'Open concerns', alert: metrics.open_concerns > 0 },
+  ]
+
+  return (
+    <>
+      <SectionLabel>At a glance</SectionLabel>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 22 }}>
+        {stats.map(s => (
+          <div key={s.l} style={card({ padding: 16 })}>
+            <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: -0.6, color: s.alert ? '#B91C1C' : '#0F172A' }}>{s.v}</div>
+            <div style={{ fontSize: 11.5, fontWeight: 600, color: '#64748B', marginTop: 3 }}>{s.l}</div>
+          </div>
         ))}
       </div>
 
-      {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 12px 80px' : '24px 24px 60px' }}>
-        {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[1,2,3].map(i => <div key={i} style={{ height: 80, background: 'var(--surface)', borderRadius: 16, border: '1px solid var(--border)', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
-            <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
+      {!hasData && (
+        <div style={{ ...card({ padding: 32, marginBottom: 22 }), textAlign: 'center' }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>Not enough data for this period yet</div>
+          <div style={{ fontSize: 13, color: '#64748B' }}>Figures will appear as your team delivers sessions and completes registers.</div>
+        </div>
+      )}
+
+      {insights.length > 0 && (
+        <>
+          <SectionLabel>Needs your attention</SectionLabel>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(280px,1fr))', gap: 12, marginBottom: 22 }}>
+            {insights.map(i => {
+              const tone = i.tone === 'urgent' ? { bd: '#FECACA', bg: '#FEF2F2', fg: '#B91C1C' }
+                : i.tone === 'warn' ? { bd: '#FDE68A', bg: '#FFFBEB', fg: '#B45309' }
+                : { bd: '#BBF7D0', bg: '#F0FDF4', fg: '#15803D' }
+              return (
+                <div key={i.key} style={card({ padding: 16, borderColor: tone.bd, background: tone.bg })}>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: tone.fg }}>{i.title}</div>
+                  <div style={{ fontSize: 12.5, color: '#475569', marginTop: 4, lineHeight: 1.5 }}>{i.body}</div>
+                  <button onClick={() => onGoto(i.target)} style={{
+                    marginTop: 10, padding: 0, border: 'none', background: 'none',
+                    fontSize: 12.5, fontWeight: 800, color: tone.fg, cursor: 'pointer',
+                  }}>{i.action} →</button>
+                </div>
+              )
+            })}
           </div>
-        ) : data ? (
-          <>
-            {tab === 'executive'    && <ExecutiveTab data={data} org={org} />}
-            {tab === 'people'       && <PeopleTab data={data} />}
-            {tab === 'delivery'     && <DeliveryTab data={data} />}
-            {tab === 'mentoring'    && <MentoringTab data={data} />}
-            {tab === 'safeguarding' && <SafeguardingTab data={data} />}
-            {tab === 'projects'     && <ProjectsReportTab org={org} />}
-          </>
-        ) : null}
+        </>
+      )}
+
+      <SectionLabel>Popular reports</SectionLabel>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(240px,1fr))', gap: 12, marginBottom: 22 }}>
+        {REPORT_LIBRARY.filter(r => ['delivery', 'attendance', 'impact', 'funding'].includes(r.key)).map(r => (
+          <div key={r.key} style={card({ padding: 16 })}>
+            <div style={{ fontSize: 17, marginBottom: 8 }}>{r.icon}</div>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
+            <div style={{ fontSize: 12, color: '#64748B', marginTop: 4, lineHeight: 1.5 }}>{r.desc}</div>
+            <button onClick={onOpenLibrary} style={{
+              marginTop: 12, padding: '8px 14px', borderRadius: 9, border: '1px solid #E2E8F0',
+              background: '#fff', fontSize: 12, fontWeight: 800, color: '#4F46E5', cursor: 'pointer',
+            }}>Run report</button>
+          </div>
+        ))}
       </div>
+
+      {savedReports.length > 0 && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <SectionLabel>Recent reports</SectionLabel>
+            <button onClick={onOpenSaved} style={{ border: 'none', background: 'none', fontSize: 12, fontWeight: 800, color: '#4F46E5', cursor: 'pointer' }}>View all →</button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            {savedReports.slice(0, 4).map(r => (
+              <div key={r.id} style={card({ padding: '12px 14px' })}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
+                <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>
+                  {REPORT_LIBRARY.find(x => x.key === r.report_type)?.name || r.report_type} · {fmtDate(r.created_at?.slice(0, 10))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </>
+  )
+}
+
+function LibraryView({ role, isMobile, onRun }) {
+  const [q, setQ] = useState('')
+  const [cat, setCat] = useState('All')
+
+  const list = REPORT_LIBRARY.filter(r => {
+    if (cat !== 'All' && r.category !== cat) return false
+    if (q.trim()) {
+      const hay = `${r.name} ${r.desc} ${r.category}`.toLowerCase()
+      if (!hay.includes(q.trim().toLowerCase())) return false
+    }
+    return true
+  })
+
+  return (
+    <>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Report Library</div>
+        <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 3 }}>Choose a report to explore your organisation's data.</div>
+      </div>
+
+      <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search reports..."
+        style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 11, border: '1px solid #E2E8F0', fontSize: 13, outline: 'none', marginBottom: 10 }} />
+
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+        {REPORT_CATEGORIES.map(c => (
+          <button key={c} onClick={() => setCat(c)} style={{
+            padding: '7px 13px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            border: cat === c ? '1.5px solid #4F46E5' : '1px solid #E2E8F0',
+            background: cat === c ? '#EEF2FF' : '#fff', color: cat === c ? '#4F46E5' : '#334155',
+          }}>{c}</button>
+        ))}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(280px,1fr))', gap: 12 }}>
+        {list.map(r => {
+          const allowed = canAccessReport(r, role)
+          return (
+            <div key={r.key} style={card({ padding: 18, opacity: allowed ? 1 : 0.6 })}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 18 }}>{r.icon}</span>
+                <span style={{ fontSize: 10.5, fontWeight: 800, color: '#64748B', background: '#F1F5F9', borderRadius: 99, padding: '3px 9px' }}>{r.category}</span>
+                {r.restricted && <span style={{ fontSize: 10.5, fontWeight: 800, color: '#B45309', background: '#FFFBEB', borderRadius: 99, padding: '3px 9px' }}>Restricted</span>}
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
+              <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 5, lineHeight: 1.5 }}>{r.desc}</div>
+              <button onClick={() => allowed && onRun(r.key)} disabled={!allowed} style={{
+                marginTop: 14, padding: '9px 16px', borderRadius: 10, border: 'none',
+                background: allowed ? 'linear-gradient(135deg,#4F46E5,#3B82F6)' : '#E2E8F0',
+                color: allowed ? '#fff' : '#94A3B8', fontSize: 12.5, fontWeight: 800,
+                cursor: allowed ? 'pointer' : 'not-allowed',
+              }}>{allowed ? 'Run report' : 'No permission'}</button>
+            </div>
+          )
+        })}
+        {list.length === 0 && (
+          <div style={{ ...card({ padding: 30 }), textAlign: 'center', gridColumn: '1 / -1' }}>
+            <div style={{ fontSize: 13, color: '#64748B' }}>No reports match that search.</div>
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
+function SavedView({ reports, orgId, session, onChanged, onCreate, range }) {
+  const [menuId, setMenuId] = useState(null)
+  const [busy, setBusy] = useState(false)
+
+  const act = async (fn) => {
+    setBusy(true)
+    try { await fn() } catch (e) { window.alert(e.message || 'That action failed.') }
+    setBusy(false); setMenuId(null); onChanged()
+  }
+
+  if (reports.length === 0) {
+    return (
+      <div style={{ ...card({ padding: 44 }), textAlign: 'center' }}>
+        <div style={{ fontSize: 26, marginBottom: 10 }}>📄</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No saved reports yet</div>
+        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 18, lineHeight: 1.5 }}>
+          Create a report once and save it here so you can run it again later.
+        </div>
+        <button onClick={onCreate} style={{
+          padding: '11px 20px', borderRadius: 11, border: 'none', color: '#fff',
+          background: 'linear-gradient(135deg,#4F46E5,#3B82F6)', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+        }}>Create Report</button>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {reports.map(r => {
+        const meta = REPORT_LIBRARY.find(x => x.key === r.report_type)
+        return (
+          <div key={r.id} style={card({ padding: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' })}>
+            <span style={{ fontSize: 18 }}>{meta?.icon || '📄'}</span>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
+              <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 3 }}>
+                {meta?.name || r.report_type}
+                {r.date_from ? ` · ${fmtDate(r.date_from)} – ${fmtDate(r.date_to)}` : ''}
+              </div>
+              <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
+                Created {fmtDate(r.created_at?.slice(0, 10))}
+                {r.last_run_at ? ` · Last run ${fmtDate(r.last_run_at.slice(0, 10))}` : ''}
+              </div>
+            </div>
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setMenuId(menuId === r.id ? null : r.id)} style={{
+                padding: '7px 12px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff',
+                fontSize: 14, color: '#64748B', cursor: 'pointer', lineHeight: 1,
+              }}>⋯</button>
+              {menuId === r.id && (
+                <>
+                  <div onClick={() => setMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 10380 }} />
+                  <div style={{
+                    position: 'absolute', right: 0, top: '110%', zIndex: 10390, background: '#fff',
+                    border: '1px solid #E2E8F0', borderRadius: 11, minWidth: 190, overflow: 'hidden',
+                    boxShadow: '0 12px 32px rgba(15,23,42,0.16)',
+                  }}>
+                    <MenuItem disabled={busy} onClick={() => act(async () => { await rerunReport(r, range) })}>
+                      Rerun with current range
+                    </MenuItem>
+                    <MenuItem disabled={busy} onClick={() => act(() => duplicateReport(orgId, session?.user?.id, r))}>Duplicate</MenuItem>
+                    <MenuItem disabled={busy} onClick={() => {
+                      const name = window.prompt('Rename report', r.name)
+                      if (name && name.trim()) act(() => renameReport(r.id, name.trim()))
+                    }}>Rename</MenuItem>
+                    <MenuItem danger disabled={busy} onClick={() => {
+                      if (window.confirm(`Delete "${r.name}"? This can't be undone.`)) act(() => deleteReport(r.id))
+                    }}>Delete</MenuItem>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function MenuItem({ children, onClick, danger, disabled }) {
+  return (
+    <button onClick={onClick} disabled={disabled} style={{
+      display: 'block', width: '100%', textAlign: 'left', padding: '10px 13px', border: 'none',
+      background: 'transparent', fontSize: 12.5, fontWeight: 700, cursor: disabled ? 'default' : 'pointer',
+      color: danger ? '#B91C1C' : '#334155', opacity: disabled ? 0.5 : 1,
+    }}>{children}</button>
+  )
+}
+
+function SectionLabel({ children }) {
+  return (
+    <div style={{ fontSize: 11, fontWeight: 800, color: '#64748B', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>
+      {children}
     </div>
   )
 }
