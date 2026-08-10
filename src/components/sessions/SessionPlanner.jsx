@@ -855,7 +855,27 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
 // don't apply to a planning list — see the colour rules below, which are
 // the part that actually has to stay in sync.
 
-function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount, attendanceCounts, hasReflection }) {
+function Fact({ icon, label, value }) {
+  if (!value) return null
+  return (
+    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: '10px 12px' }}>
+      <div style={{ fontSize: 10, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 4 }}>
+        {icon} {label.toUpperCase()}
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', lineHeight: 1.3 }}>{value}</div>
+    </div>
+  )
+}
+
+function Chipline({ icon, text }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#334155', fontWeight: 600 }}>
+      <span style={{ fontSize: 13 }}>{icon}</span>{text}
+    </div>
+  )
+}
+
+function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount, attendanceCounts, hasReflection, project, onOpenProject, onOpenRegister }) {
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
   const isMultiDay = session.end_date && session.end_date !== session.session_date
   const isPast = session.session_date < format(new Date(), 'yyyy-MM-dd')
@@ -878,20 +898,16 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
     : format(parseISO(session.session_date), 'EEEE d MMMM')
 
   const statusChip = isPast
-    ? { label: 'Completed', bg: '#F1F5F9', color: '#64748B' }
+    ? { label: 'Completed', dot: '#94A3B8' }
     : isToday
-      ? { label: 'Live', bg: '#DCFCE7', color: '#16A34A' }
-      : { label: 'Upcoming', bg: type.color + '15', color: type.color }
+      ? { label: 'Live', dot: '#4ADE80' }
+      : { label: 'Upcoming', dot: '#FBBF24' }
 
-  const row = (icon, label, value) => value ? (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 0', borderBottom: '1px solid rgba(15,23,42,0.05)' }}>
-      <span style={{ fontSize: 16, width: 22, flexShrink: 0 }}>{icon}</span>
-      <div>
-        <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div>
-        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A', marginTop: 2 }}>{value}</div>
-      </div>
-    </div>
-  ) : null
+  // Times come back as HH:MM:SS from Postgres -- trim the seconds.
+  const hhmm = (t) => (t || '').slice(0, 5)
+  const timeLabel = session.start_time
+    ? `${hhmm(session.start_time)}${session.end_time ? ` – ${hhmm(session.end_time)}` : ''}`
+    : null
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
@@ -904,22 +920,110 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
         <div style={{ background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, padding: '22px 22px 18px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}>✕</button>
           <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 12 }}>{type.icon}</div>
-          <div style={{ fontSize: 19, fontWeight: 900, color: '#fff', marginBottom: 6, paddingRight: 40, lineHeight: 1.2 }}>{session.title}</div>
-          <span style={{ fontSize: 11, fontWeight: 800, color: statusChip.color, background: statusChip.bg, borderRadius: 99, padding: '4px 12px' }}>{statusChip.label}</span>
+          <div style={{ fontSize: 19, fontWeight: 900, color: '#fff', marginBottom: 8, paddingRight: 40, lineHeight: 1.2 }}>{session.title}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+            {/* Translucent chip -- the old pastel background was invisible against the banner */}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 99, padding: '4px 11px' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusChip.dot }} />
+              {statusChip.label}
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.14)', borderRadius: 99, padding: '4px 11px' }}>{type.label}</span>
+            {project && (
+              <button onClick={() => onOpenProject && onOpenProject(project)}
+                style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 99, padding: '4px 11px', cursor: 'pointer' }}>
+                🚀 {project.name}{session.project_day_number ? ` · Day ${session.project_day_number}` : ''}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '4px 22px' }}>
-          {row('📅', 'Date', dateLabel)}
-          {row('🕐', 'Time', session.start_time ? `${session.start_time}${session.end_time ? ` – ${session.end_time}` : ''}` : null)}
-          {row('📍', 'Location', session.location)}
-          {row('🎫', 'Session Type', type.label)}
-          {row('👥', 'Groups', session.bubbles?.length ? session.bubbles.join(', ') : null)}
-          {row('🔢', 'Capacity', session.max_capacity ? `${session.max_capacity} young people` : null)}
-          {needed > 0 && row(covered ? '✅' : '⚠️', 'Volunteers', `${volCount} / ${needed} ${covered ? '(covered)' : '(needs more)'}`)}
-          {ac.total > 0 && row('📋', 'Attendance', `${ac.signedIn} / ${ac.total} signed in`)}
-          {row('📝', 'Description', session.description)}
-          {isPast && row('⭐', 'Reflection', hasReflection ? 'Completed' : 'Due')}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 22px' }}>
+          {/* Attendance front and centre -- it's what staff actually open this for */}
+          {ac.total > 0 && (
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 14, padding: 14, marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                <span style={{ fontSize: 10.5, fontWeight: 800, color: '#64748B', letterSpacing: 0.4 }}>ATTENDANCE</span>
+                <span style={{ fontSize: 13, fontWeight: 900, color: '#0F172A' }}>{ac.signedIn} / {ac.total} signed in</span>
+              </div>
+              <div style={{ height: 7, background: '#E2E8F0', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ width: `${ac.total ? Math.round((ac.signedIn / ac.total) * 100) : 0}%`, height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#16A34A,#22C55E)', transition: 'width 400ms ease' }} />
+              </div>
+              {!isPast && (
+                <button onClick={() => onOpenRegister && onOpenRegister(session)}
+                  style={{ marginTop: 10, width: '100%', padding: '9px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', fontSize: 12.5, fontWeight: 800, color: type.color, cursor: 'pointer' }}>
+                  Open register →
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Key facts as a compact 2-up grid rather than one row each */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+            <Fact icon="📅" label="Date" value={dateLabel} />
+            <Fact icon="🕐" label="Time" value={timeLabel} />
+            <Fact icon="📍" label="Location" value={session.location} />
+            <Fact icon="🔢" label="Capacity" value={session.max_capacity ? `${session.max_capacity} places` : null} />
+          </div>
+
+          {/* Volunteer coverage, shown as a status rather than a bare ratio */}
+          {needed > 0 && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '11px 13px', borderRadius: 12, marginBottom: 14,
+              background: covered ? '#F0FDF4' : '#FFFBEB',
+              border: `1px solid ${covered ? '#BBF7D0' : '#FDE68A'}`,
+            }}>
+              <span style={{ fontSize: 15 }}>{covered ? '✅' : '⚠️'}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: covered ? '#15803D' : '#B45309' }}>
+                  {covered ? 'Volunteer cover confirmed' : `${needed - volCount} more volunteer${needed - volCount === 1 ? '' : 's'} needed`}
+                </div>
+                <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>{volCount} of {needed} places filled</div>
+              </div>
+            </div>
+          )}
+
+          {session.bubbles?.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 7 }}>GROUPS</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {session.bubbles.map(b => (
+                  <span key={b} style={{ fontSize: 11.5, fontWeight: 700, color: '#334155', background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 99, padding: '4px 11px' }}>{b}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(session.meeting_point || session.packed_lunch || session.consent_required) && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 7 }}>ON THE DAY</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {session.meeting_point && <Chipline icon="📌" text={`Meet at ${session.meeting_point}`} />}
+                {session.packed_lunch && <Chipline icon="🥪" text="Packed lunch required" />}
+                {session.consent_required && <Chipline icon="📝" text="Consent required" />}
+              </div>
+            </div>
+          )}
+
+          {session.description && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 6 }}>DESCRIPTION</div>
+              <div style={{ fontSize: 12.5, color: '#475569', lineHeight: 1.55 }}>{session.description}</div>
+            </div>
+          )}
+
+          {isPast && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '11px 13px', borderRadius: 12, marginBottom: 14,
+              background: hasReflection ? '#F0FDF4' : '#FFFBEB',
+              border: `1px solid ${hasReflection ? '#BBF7D0' : '#FDE68A'}`,
+            }}>
+              <span style={{ fontSize: 15 }}>{hasReflection ? '✅' : '⭐'}</span>
+              <div style={{ fontSize: 12.5, fontWeight: 800, color: hasReflection ? '#15803D' : '#B45309' }}>
+                {hasReflection ? 'Reflection complete' : 'Reflection still due'}
+              </div>
+            </div>
+          )}
 
           {isPast && absentees && absentees.length > 0 && (
             <div style={{ padding: '14px 0 4px' }}>
@@ -2480,6 +2584,9 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             volCount={volCounts[viewingSession.id] || 0}
             attendanceCounts={attendanceCounts}
             hasReflection={!!reflections[viewingSession.id]}
+            project={viewingSession.project_id ? projects[viewingSession.project_id] : null}
+            onOpenProject={(pr) => { setViewingSession(null); onNavigate && onNavigate('projects', { projectId: pr.id }) }}
+            onOpenRegister={(sess) => { setViewingSession(null); onNavigate && onNavigate('registers', { sessionId: sess.id }) }}
           />
         )}
       </AnimatePresence>
