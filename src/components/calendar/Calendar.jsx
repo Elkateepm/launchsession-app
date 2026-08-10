@@ -4,6 +4,12 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, ad
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
+// Postgres returns time columns as HH:MM:SS. Trim to HH:MM everywhere the
+// calendar shows a time -- the raw value was leaking into the month cells,
+// week/day views, the detail modal and the Upcoming Sessions sidebar.
+const hhmm = (t) => (t || '').slice(0, 5)
+const timeRange = (start, end) => start ? `${hhmm(start)}${end ? ` – ${hhmm(end)}` : ''}` : null
+
 const TYPE_CONFIG = {
   activity:  { label: 'Activity',  icon: '🏃', color: '#1B9AAA', bg: 'rgba(27,154,170,0.12)',  border: 'rgba(27,154,170,0.35)'  },
   workshop:  { label: 'Workshop',  icon: '🛠️', color: '#417505', bg: 'rgba(65,117,5,0.12)',   border: 'rgba(65,117,5,0.35)'   },
@@ -169,7 +175,7 @@ function PlanPickerModal({ date, org, onClose, onNavigate }) {
   )
 }
 
-function SessionModal({ session, org, onClose, onDelete }) {
+function SessionModal({ session, org, onClose, onDelete, project, onOpenProject }) {
   const cfg = getCfg(session.session_type)
   const [deleting, setDeleting] = useState(false)
 
@@ -189,13 +195,21 @@ function SessionModal({ session, org, onClose, onDelete }) {
           <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.08)', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
           <div style={{ fontSize: 36, marginBottom: 8 }}>{cfg.icon}</div>
           <div style={{ fontSize: 20, fontWeight: 900, color: '#111', marginBottom: 4 }}>{session.title}</div>
-          <span style={{ background: cfg.color, color: '#fff', borderRadius: 99, padding: '3px 12px', fontSize: 11, fontWeight: 800 }}>{cfg.label}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+            <span style={{ background: cfg.color, color: '#fff', borderRadius: 99, padding: '3px 12px', fontSize: 11, fontWeight: 800 }}>{cfg.label}</span>
+            {project && (
+              <button onClick={() => onOpenProject && onOpenProject(project)}
+                style={{ background: '#F5F3FF', color: '#5B21B6', border: '1px solid #DDD6FE', borderRadius: 99, padding: '3px 11px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
+                🚀 {project.name}{session.project_day_number ? ` · Day ${session.project_day_number}` : ''}
+              </button>
+            )}
+          </div>
         </div>
         <div style={{ padding: '20px 24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
             {[
               { icon: '📅', label: 'Date', value: session.session_date ? format(parseISO(session.session_date), 'EEEE, d MMMM yyyy') : '—' },
-              { icon: '⏰', label: 'Time', value: session.start_time ? `${session.start_time}${session.end_time ? ` – ${session.end_time}` : ''}` : '—' },
+              { icon: '⏰', label: 'Time', value: timeRange(session.start_time, session.end_time) || '—' },
               { icon: '📍', label: 'Location', value: session.location || '—' },
               { icon: '👥', label: 'Capacity', value: session.max_capacity ? `${session.max_capacity} max` : '—' },
             ].map(d => (
@@ -260,16 +274,25 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
     return NOVELTY_DAYS[dateStr.slice(5)] || null
   }, [])
 
+  const [projects, setProjects] = useState({})
+
   const load = useCallback(async (isBackground) => {
     if (!org?.id) return
     if (!isBackground) setLoading(true)
-    const { data } = await supabase.from('sessions').select('*').eq('org_id', org.id).order('session_date', { ascending: true })
+    const [{ data }, { data: projs }] = await Promise.all([
+      supabase.from('sessions').select('*').eq('org_id', org.id).order('session_date', { ascending: true }),
+      supabase.from('projects').select('id, name').eq('org_id', org.id),
+    ])
     setSessions(data || [])
+    const pm = {}
+    ;(projs || []).forEach(pr => { pm[pr.id] = pr })
+    setProjects(pm)
     setLoading(false)
   }, [org?.id])
 
   useEffect(() => { load(false) }, [load])
   useRealtimeTable('sessions', () => load(true), { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 5000 })
+  useRealtimeTable('projects', () => load(true), { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 15000 })
 
   useEffect(() => {
     if (!org?.id) return
@@ -588,7 +611,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                             onMouseLeave={e => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'scale(1)' }}>
                             <div style={{ fontSize: 13 }}>{cfg.icon}</div>
                             <div style={{ fontSize: 11, fontWeight: 800, color: cfg.color, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{s.title}</div>
-                            {s.start_time && <div style={{ fontSize: 10, color: cfg.color, opacity: 0.8, fontWeight: 600 }}>{s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}</div>}
+                            {s.start_time && <div style={{ fontSize: 10, color: cfg.color, opacity: 0.8, fontWeight: 600 }}>{timeRange(s.start_time, s.end_time)}</div>}
                           </button>
                         )
                       })}
@@ -636,7 +659,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>{s.title}</div>
                             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4, fontSize: 12, color: cfg.color, fontWeight: 700 }}>
-                              {s.start_time && <span>⏰ {s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}</span>}
+                              {s.start_time && <span>⏰ {timeRange(s.start_time, s.end_time)}</span>}
                               {s.location && <span>📍 {s.location}</span>}
                               {s.max_capacity && <span>👥 {s.max_capacity} max</span>}
                             </div>
@@ -686,7 +709,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{s.title}</div>
                               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 3, fontSize: 11.5, color: cfg.color, fontWeight: 700 }}>
-                                {s.start_time && <span>⏰ {s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}</span>}
+                                {s.start_time && <span>⏰ {timeRange(s.start_time, s.end_time)}</span>}
                                 {s.location && <span>📍 {s.location}</span>}
                                 {s.max_capacity && <span>👥 {s.max_capacity}</span>}
                               </div>
@@ -746,7 +769,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 800, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                       <div style={{ fontSize: 11, color: cfg.color, fontWeight: 700, marginTop: 2 }}>{dateStr}</div>
-                      {s.start_time && <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 1 }}>{s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}</div>}
+                      {s.start_time && <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 1 }}>{timeRange(s.start_time, s.end_time)}</div>}
                       {isSessionToday && <div style={{ fontSize: 10, fontWeight: 800, color: cfg.color, marginTop: 2 }}>🔴 TODAY</div>}
                     </div>
                   </button>
@@ -799,7 +822,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
     </div>
 
     {selectedSession && (
-      <SessionModal session={selectedSession} org={org} onClose={() => setSelectedSession(null)} onDelete={deleteSession} />
+      <SessionModal project={selectedSession?.project_id ? projects[selectedSession.project_id] : null} onOpenProject={(pr) => { setSelectedSession(null); onNavigate && onNavigate('projects', { projectId: pr.id }) }} session={selectedSession} org={org} onClose={() => setSelectedSession(null)} onDelete={deleteSession} />
     )}
 
     {planPickerDate && (
