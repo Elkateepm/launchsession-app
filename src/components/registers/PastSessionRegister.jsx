@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
+import AttendanceCorrectionModal from './AttendanceCorrectionModal'
 
 function fmtTime(d) {
   if (!d) return ''
@@ -350,97 +351,6 @@ function SessionTeamCard({ staffRows, peopleProfiles, canEdit, onSignIn, onSignO
 
 function teamPillBtn(color, bg) {
   return { fontSize: 10.5, fontWeight: 800, color, background: bg, border: 'none', borderRadius: 99, padding: '6px 11px', cursor: 'pointer', whiteSpace: 'nowrap' }
-}
-
-function AttendanceCorrectionModal({ session, org, rows, authUserId, groupLabel, onClose, onDone }) {
-  const [childId, setChildId] = useState('')
-  const [newStatus, setNewStatus] = useState('')
-  const [signedInAt, setSignedInAt] = useState('')
-  const [signedOutAt, setSignedOutAt] = useState('')
-  const [reason, setReason] = useState('')
-  const [saving, setSaving] = useState(false)
-
-  const selected = rows.find(r => r.child.id === childId)
-  const original = selected?.att || null
-
-  const handleConfirm = async () => {
-    if (!childId || !newStatus || !reason.trim()) return
-    setSaving(true)
-
-    const patch = { status: newStatus === 'unmarked' ? null : newStatus }
-    if (newStatus === 'signed_in' || newStatus === 'signed_out') patch.signed_in_at = signedInAt ? new Date(signedInAt).toISOString() : original?.signed_in_at || new Date().toISOString()
-    if (newStatus === 'signed_out') patch.signed_out_at = signedOutAt ? new Date(signedOutAt).toISOString() : original?.signed_out_at || new Date().toISOString()
-
-    let attendanceId = original?.id || null
-    if (original) {
-      await supabase.from('attendance').update(patch).eq('id', original.id)
-    } else {
-      const { data } = await supabase.from('attendance').insert({ org_id: org.id, session_id: session.id, child_id: childId, ...patch }).select().single()
-      attendanceId = data?.id || null
-    }
-
-    await supabase.from('attendance_audit_log').insert({
-      org_id: org.id, attendance_id: attendanceId, session_id: session.id, child_id: childId,
-      previous_status: original?.status || null, new_status: patch.status,
-      previous_signed_in_at: original?.signed_in_at || null, new_signed_in_at: patch.signed_in_at || null,
-      previous_signed_out_at: original?.signed_out_at || null, new_signed_out_at: patch.signed_out_at || null,
-      correction_reason: reason.trim(), changed_by: authUserId,
-    })
-
-    setSaving(false)
-    onDone()
-  }
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 14 }}>Correct attendance</div>
-
-        <div style={{ fontSize: 11.5, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 6 }}>1. Select child</div>
-        <select value={childId} onChange={e => setChildId(e.target.value)} style={sel}>
-          <option value="">Choose a young person...</option>
-          {rows.map(r => <option key={r.child.id} value={r.child.id}>{r.child.first_name} {r.child.last_name} · {groupLabel(r.child.group_name)}</option>)}
-        </select>
-
-        {childId && (
-          <>
-            <div style={{ fontSize: 11.5, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', margin: '14px 0 6px' }}>2. Original record</div>
-            <div style={{ background: '#F8FAFC', borderRadius: 10, padding: 10, fontSize: 12.5, color: '#374151' }}>
-              Status: {original?.status || 'unmarked'}{original?.signed_in_at ? ` · in ${fmtTime(original.signed_in_at)}` : ''}{original?.signed_out_at ? ` · out ${fmtTime(original.signed_out_at)}` : ''}
-            </div>
-
-            <div style={{ fontSize: 11.5, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', margin: '14px 0 6px' }}>3. Corrected status</div>
-            <select value={newStatus} onChange={e => setNewStatus(e.target.value)} style={sel}>
-              <option value="">Choose corrected status...</option>
-              <option value="signed_in">Attended</option>
-              <option value="signed_out">Signed out</option>
-              <option value="absent">Absent</option>
-              <option value="unmarked">Unmarked</option>
-            </select>
-
-            {(newStatus === 'signed_in' || newStatus === 'signed_out') && (
-              <>
-                <div style={{ fontSize: 11.5, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', margin: '14px 0 6px' }}>4. Corrected timestamps</div>
-                <input type="datetime-local" value={signedInAt} onChange={e => setSignedInAt(e.target.value)} style={{ ...sel, marginBottom: 8 }} />
-                {newStatus === 'signed_out' && <input type="datetime-local" value={signedOutAt} onChange={e => setSignedOutAt(e.target.value)} style={sel} />}
-              </>
-            )}
-
-            <div style={{ fontSize: 11.5, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', margin: '14px 0 6px' }}>5. Reason for correction</div>
-            <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Why is this being corrected?" style={{ ...sel, minHeight: 60 }} />
-          </>
-        )}
-
-        <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleConfirm} disabled={!childId || !newStatus || !reason.trim() || saving}
-            style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: (!childId || !newStatus || !reason.trim()) ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-            {saving ? 'Saving...' : '6. Confirm correction'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 function ReopenRegisterModal({ session, authUserId, onClose, onDone }) {

@@ -5,6 +5,7 @@ import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
 import PastSessionRegister from './PastSessionRegister'
 import RegisterPaymentBadge from '../payments/RegisterPaymentBadge'
+import AttendanceCorrectionModal from './AttendanceCorrectionModal'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -80,6 +81,9 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
   const [toast, setToast] = useState('')
   const [selectedChild, setSelectedChild] = useState(null)
   const [paymentBalances, setPaymentBalances] = useState({}) // childId -> { outstanding, hasAny }
+  // Correcting a mis-tap. null = closed; '' = open with no child chosen;
+  // a child id = open, focused on that child from their row.
+  const [correctChildId, setCorrectChildId] = useState(null)
 
   const loadPaymentBalances = useCallback(async () => {
     if (!org?.id) return
@@ -381,6 +385,11 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
         </div>
         <button onClick={() => setShowWalkIn(true)} style={ghostBtn}>+ Walk-in</button>
         <button onClick={() => setShowNotes(true)} style={ghostBtn}>📝 Notes {notes.length > 0 && <span style={{ color: '#7C3AED' }}>({notes.length})</span>}</button>
+        {/* Not gated to staff: volunteers can sign children in and out here, so
+            they are the most likely to mis-tap. Locking corrections to staff
+            would leave the register knowingly wrong until someone else is free.
+            Every correction is audited with changed_by and a reason. */}
+        <button onClick={() => setCorrectChildId('')} style={ghostBtn}>✎ Correct</button>
       </div>
 
       {/* LIST */}
@@ -395,7 +404,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
             {activeList.map(({ child, att }) => (
               <RegisterRow key={child.id} child={child} att={att} onOpen={() => setSelectedChild(child)} groupLabel={groupLabel}
                 org={org} authUserId={authUserId} paymentBalance={paymentBalances[child.id]} onPaymentChanged={loadPaymentBalances}
-                onSignIn={() => handleSignIn(child)} onSignOut={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} />
+                onSignIn={() => handleSignIn(child)} onSignOut={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} onCorrect={() => setCorrectChildId(child.id)} />
             ))}
           </div>
         )}
@@ -478,6 +487,14 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
           load()
         }} />
       )}
+      {correctChildId !== null && (
+        <AttendanceCorrectionModal
+          session={session} org={org} rows={rows} authUserId={authUserId} groupLabel={groupLabel}
+          presetChildId={correctChildId}
+          onClose={() => setCorrectChildId(null)}
+          onDone={() => { setCorrectChildId(null); showToast('Attendance corrected and logged.'); load() }}
+        />
+      )}
       {selectedChild && (
         <ChildQuickInfo child={selectedChild} att={attendanceByChild[selectedChild.id]} onClose={() => setSelectedChild(null)} groupLabel={groupLabel} />
       )}
@@ -502,7 +519,7 @@ function MiniStat({ icon, label, value, color }) {
   )
 }
 
-function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, groupLabel, org, authUserId, paymentBalance, onPaymentChanged }) {
+function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, onCorrect, groupLabel, org, authUserId, paymentBalance, onPaymentChanged }) {
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const status = att?.status
   const [hover, setHover] = useState(false)
@@ -544,10 +561,15 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, gr
           {child.collection_restricted && <span style={alertPill('#D97706', '#FEF3C7')}>⚠ Collection restriction</span>}
         </div>
       </div>
-      <div style={{ flexShrink: 0, display: 'flex', gap: 6 }}>
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
         {status === 'signed_in' ? (
-          <button onClick={onSignOut} style={actionBtn('#2563EB')}>Sign out</button>
-        ) : status === 'signed_out' || status === 'absent' ? null : (
+          <>
+            <button onClick={onSignOut} style={actionBtn('#2563EB')}>Sign out</button>
+            <button onClick={onCorrect} title="Correct this record" style={correctBtn}>Correct</button>
+          </>
+        ) : status === 'signed_out' || status === 'absent' ? (
+          <button onClick={onCorrect} title="Correct this record" style={correctBtn}>Correct</button>
+        ) : (
           <>
             <button onClick={onSignIn} style={actionBtn('#16A34A')}>Sign in</button>
             <button onClick={onMarkAbsent} style={{ ...actionBtn('#6B7280'), background: '#fff', color: '#64748B', border: '1.5px solid #E5E7EB', boxShadow: 'none' }}>Absent</button>
@@ -560,6 +582,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, gr
 
 function alertPill(color, bg) { return { fontSize: 9.5, fontWeight: 800, color, background: bg, border: `1px solid ${color}30`, borderRadius: 6, padding: '1px 6px' } }
 function actionBtn(color) { return { padding: '9px 14px', borderRadius: 10, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 3px 8px -2px ${color}55` } }
+const correctBtn = { padding: '8px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', color: '#64748B', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
 const ghostBtn = { padding: '9px 13px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }
 
 function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
