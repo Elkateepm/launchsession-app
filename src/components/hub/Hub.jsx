@@ -12,6 +12,7 @@ import AddVolunteersToSessionModal from "../volunteers/AddVolunteersToSessionMod
 import HistoricalAttendanceModal from "../shared/HistoricalAttendanceModal";
 import { isPushSupported, getNotificationPermission, subscribeToPush } from "../../services/pushNotifications";
 import { notifyEvent } from "../../services/notifyEvent";
+import { allowedModules } from '../../lib/moduleAccess'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -2810,7 +2811,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const orgId = org?.id;
   const primary = org?.primary_color || "#1B9AAA";
   const secondary = org?.secondary_color || "#0EA5E9";
-  const activeModules = org?.modules || [];
+  const activeModules = allowedModules(org);
   const hasModule = (key) => activeModules.includes(key);
   const orgName = org?.name || "LaunchSession";
 

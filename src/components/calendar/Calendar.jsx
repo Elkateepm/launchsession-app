@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, addDays, subDays, isSameMonth, parseISO, isToday, addWeeks, subWeeks } from 'date-fns'
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { allowedModules } from '../../lib/moduleAccess'
 
 // Postgres returns time columns as HH:MM:SS. Trim to HH:MM everywhere the
 // calendar shows a time -- the raw value was leaking into the month cells,
@@ -137,7 +138,7 @@ function ConfettiBurst({ color, secondary }) {
 
 function PlanPickerModal({ date, org, onClose, onNavigate }) {
   const primary = org?.primary_color || '#1B9AAA'
-  const activeModules = org?.modules || []
+  const activeModules = allowedModules(org)
   const hasModule = (key) => activeModules.includes(key)
   const dateLabel = date ? format(parseISO(date), 'EEEE, d MMMM yyyy') : ''
 

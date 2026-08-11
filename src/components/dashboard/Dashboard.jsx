@@ -37,6 +37,7 @@ import MobileBottomNav from './mobilenav/MobileBottomNav'
 import QRShareSheet from '../shared/QRShareSheet'
 import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
 import { useTerms } from '../../context/OrgContext'
+import { makeHasModule, isTrialActive } from '../../lib/moduleAccess'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -55,7 +56,6 @@ function computeIsMobileBottomNav() {
 }
 
 // Base modules always free — regardless of pack
-const BASE_MODULE_KEYS = ['home', 'calendar', 'planner', 'events_trips', 'team', 'settings', 'templates', 'risk_assessments']
 
 // Tabs that require an admin/owner role — hidden from nav and blocked at the tab-switch level for staff.
 // This is UX polish only; the real enforcement is server-side RLS (is_org_admin()).
@@ -93,7 +93,7 @@ const MODULE_TO_PACK = {
 }
 const PACK_COLORS = { Delivery: '#3B82F6', Safeguarding: '#EF4444', Growth: '#22C55E', Operations: '#A855F7' }
 
-function LockedModule({ moduleKey, label, icon, onNavigate }) {
+function LockedModule({ moduleKey, label, icon, onNavigate, onTrial }) {
   const pack = MODULE_TO_PACK[moduleKey] || 'a solution'
   const color = PACK_COLORS[pack] || '#6366F1'
   return (
@@ -102,13 +102,17 @@ function LockedModule({ moduleKey, label, icon, onNavigate }) {
         <div style={{ width: 80, height: 80, borderRadius: 24, background: color + '15', border: `2px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 20px' }}>{icon}</div>
         <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>{label}</div>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: color + '15', border: `1px solid ${color}40`, borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700, color, marginBottom: 16 }}>
-          🔒 {pack} Pack required
+          {onTrial ? `Not in your suggested set` : `🔒 ${pack} Pack required`}
         </div>
         <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 24 }}>
-          This module is part of the <strong>{pack} Pack</strong> (£19.99/month). Enable it in the Command Centre to unlock full access.
+          {onTrial ? (
+            <>This module isn't in the suggested set for your organisation type, but it's included in your trial. Turn it on in <strong>Settings &rarr; Modules</strong>.</>
+          ) : (
+            <>This module is part of the <strong>{pack} Pack</strong> (£19.99/month). Enable it in the Command Centre to unlock full access.</>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="mailto:hello@launchsession.co.uk?subject=Enable {pack} Pack" style={{ padding: '11px 22px', borderRadius: 12, border: 'none', background: color, color: '#fff', fontWeight: 800, fontSize: 13, textDecoration: 'none', display: 'inline-block' }}>
+          <a href={`mailto:hello@launchsession.co.uk?subject=Enable ${pack} Pack`} style={{ padding: '11px 22px', borderRadius: 12, border: 'none', background: color, color: '#fff', fontWeight: 800, fontSize: 13, textDecoration: 'none', display: 'inline-block' }}>
             🚀 Enable {pack} Pack
           </a>
           <button onClick={() => onNavigate && onNavigate('home')} style={{ padding: '11px 22px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
@@ -541,12 +545,12 @@ export default function Dashboard({ session, org }) {
 
   const plan    = org?.plan || 'starter'
   const terms   = useTerms()
-  // org.modules stores the paid module keys. Base modules are always accessible.
-  const paidModules = org?.modules || []
-  const allowed = [...BASE_MODULE_KEYS, ...paidModules]
+  // Module access is resolved centrally (see lib/moduleAccess) so the sidebar,
+  // Hub and Calendar can't disagree, and so an active trial grants everything.
+  const hasModule = makeHasModule(org)
+  const onTrial = isTrialActive(org)
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
-  const hasModule = (key) => allowed.includes(key)
 
   const handleSignOut = () => supabase.auth.signOut()
   const userEmail = session?.user?.email || ''
@@ -830,35 +834,35 @@ export default function Dashboard({ session, org }) {
           {tab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} /></ChildrenGate>}
           {tab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
-          {tab === 'team'       && (isAdmin ? <TeamTab org={org} session={session} /> : <RestrictedModule label="Team & Staff" icon="👥" onNavigate={handleSetTab} />)}
-          {tab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} />)}
-          {tab === 'settings'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} />)}
-          {tab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} />)}
+          {tab === 'team'       && (isAdmin ? <TeamTab org={org} session={session} /> : <RestrictedModule label="Team & Staff" icon="👥" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'settings'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── DELIVERY PACK ── */}
-          {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} />)}
-          {tab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} />)}
-          {tab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} />)}
-          {tab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} />)}
+          {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── SAFEGUARDING PACK ── */}
-          {tab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingGate org={org} session={session}><Safeguarding org={org} session={session} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} /></SafeguardingGate>                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} />)}
-          {tab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} />)}
-          {tab === 'case_management' && (hasModule('case_management') ? <CaseManagement org={org} session={session} initialOpenCaseId={openCaseId} />                        : <LockedModule moduleKey="case_management" label="Case Management" icon="📁" onNavigate={handleSetTab} />)}
-          {tab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} />)}
+          {tab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingGate org={org} session={session}><Safeguarding org={org} session={session} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} /></SafeguardingGate>                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'case_management' && (hasModule('case_management') ? <CaseManagement org={org} session={session} initialOpenCaseId={openCaseId} />                        : <LockedModule moduleKey="case_management" label="Case Management" icon="📁" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── GROWTH PACK ── */}
-          {tab === 'reports'         && (hasModule('reports')         ? <Reports org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />                                : <LockedModule moduleKey="reports"         label="Reports"           icon="📊" onNavigate={handleSetTab} />)}
-          {tab === 'impact_outcomes' && (hasModule('impact_outcomes') ? <ImpactOutcomes org={org} session={session} isAdmin={isAdmin} />                        : <LockedModule moduleKey="impact_outcomes" label="Impact & Outcomes" icon="🌱" onNavigate={handleSetTab} />)}
-          {tab === 'fundraising'     && (hasModule('fundraising')     ? <FundraisingGate org={org} session={session}><Fundraising org={org} session={session} isAdmin={isAdmin} /></FundraisingGate>                           : <LockedModule moduleKey="fundraising"     label="Fundraising"       icon="💷" onNavigate={handleSetTab} />)}
+          {tab === 'reports'         && (hasModule('reports')         ? <Reports org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />                                : <LockedModule moduleKey="reports"         label="Reports"           icon="📊" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'impact_outcomes' && (hasModule('impact_outcomes') ? <ImpactOutcomes org={org} session={session} isAdmin={isAdmin} />                        : <LockedModule moduleKey="impact_outcomes" label="Impact & Outcomes" icon="🌱" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'fundraising'     && (hasModule('fundraising')     ? <FundraisingGate org={org} session={session}><Fundraising org={org} session={session} isAdmin={isAdmin} /></FundraisingGate>                           : <LockedModule moduleKey="fundraising"     label="Fundraising"       icon="💷" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── OPERATIONS PACK ── */}
-          {tab === 'hr'               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : hasModule('hr')               ? <HR org={org} session={session} />                                  : <LockedModule moduleKey="hr"               label="HR"               icon="🧑‍💼" onNavigate={handleSetTab} />)}
-          {tab === 'payments'         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} />)}
-          {tab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} />)}
+          {tab === 'hr'               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : hasModule('hr')               ? <HR org={org} session={session} />                                  : <LockedModule moduleKey="hr"               label="HR"               icon="🧑‍💼" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'payments'         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── LEGACY / COMING SOON ── */}
-          {tab === 'mentoring'    && (hasModule('mentoring') ? <Mentoring org={org} session={session} /> : <LockedModule moduleKey="mentoring" label="Mentoring" icon="🤝" onNavigate={handleSetTab} />)}
+          {tab === 'mentoring'    && (hasModule('mentoring') ? <Mentoring org={org} session={session} /> : <LockedModule moduleKey="mentoring" label="Mentoring" icon="🤝" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {tab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
 
           {/* ── CATCH-ALL ── */}
