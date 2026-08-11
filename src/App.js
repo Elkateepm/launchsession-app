@@ -3,6 +3,8 @@ import { supabase } from './lib/supabase'
 import { OrgProvider, useOrg } from './context/OrgContext'
 import SplashScreen from './components/common/SplashScreen'
 import { useBreakpoint } from './hooks/useIsMobile'
+import { isEnrolledFor, isLocked, setLocked, getLockAfterMs } from './lib/biometricLock'
+import BiometricLockScreen from './components/auth/BiometricLockScreen'
 
 // Route-level code splitting: each of these becomes its own JS chunk, only
 // downloaded when that route is actually visited, instead of all being
@@ -138,9 +140,47 @@ function useMobileInactivityLogout(enabled) {
   }, [active])
 }
 
+// Biometric app lock. Engages when the app has been backgrounded or unused for
+// longer than the configured window, and is lifted by Face ID / fingerprint.
+//
+// This deliberately reuses the same "persist a timestamp" approach as the
+// inactivity logout above, for the same reason: mobile kills the process
+// freely, so an in-memory timer would silently stop locking after the first
+// time iOS reclaimed the tab.
+function useBiometricLock(userId) {
+  const [locked, setLockedState] = React.useState(() => isEnrolledFor(userId) && isLocked())
+  const backgroundedAt = React.useRef(null)
+
+  React.useEffect(() => {
+    if (!isEnrolledFor(userId)) { setLockedState(false); return }
+
+    // Cold start with an enrolment present always locks. We can't know how long
+    // the app was closed, and assuming it was brief is the wrong default for
+    // an app holding children's data.
+    if (!isLocked()) { setLocked(true) }
+    setLockedState(true)
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        backgroundedAt.current = Date.now()
+        return
+      }
+      const away = backgroundedAt.current ? Date.now() - backgroundedAt.current : 0
+      backgroundedAt.current = null
+      if (away >= getLockAfterMs()) { setLocked(true); setLockedState(true) }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [userId])
+
+  const unlock = React.useCallback(() => { setLocked(false); setLockedState(false) }, [])
+  return { locked, unlock }
+}
+
 function AuthedApp({ session, org, onReady }) {
   const [onboardingDone, setOnboardingDone] = React.useState(null)
   const [userRole, setUserRole] = React.useState(null)
+  const { locked, unlock } = useBiometricLock(session?.user?.id)
 
   React.useEffect(() => {
     supabase.from('user_profiles')
@@ -173,6 +213,23 @@ function AuthedApp({ session, org, onReady }) {
   React.useEffect(() => {
     if (onboardingDone !== null && userRole !== null && onReady) onReady()
   }, [onboardingDone, userRole, onReady])
+
+  // Gate before anything else renders, including the role redirects below --
+  // otherwise a locked device would still bounce a volunteer into their portal.
+  if (locked) {
+    return (
+      <BiometricLockScreen
+        org={org}
+        userName={session?.user?.email}
+        onUnlocked={unlock}
+        onSignOut={async () => {
+          setLocked(false)
+          try { await supabase.auth.signOut() } catch (e) { /* best effort */ }
+          window.location.replace('/landing.html')
+        }}
+      />
+    )
+  }
 
   if (onboardingDone === null || userRole === null) return null
 

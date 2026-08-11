@@ -7,6 +7,7 @@ import {
   isPushSupported, getNotificationPermission, subscribeToPush, unsubscribeFromPush,
   getCurrentSubscription, listMySubscriptions, revokeSubscriptionById, sendTestNotification,
 } from '../../services/pushNotifications'
+import { hasPlatformAuthenticator, enrolBiometric, clearEnrolment, isEnrolledFor, getLockAfterMs, setLockAfterMs } from '../../lib/biometricLock'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -1270,6 +1271,88 @@ function ModulePasswordCard({ moduleKey, label, icon, accentColor }) {
   )
 }
 
+// Device-local biometric app lock. Only offered where there's actually a
+// built-in authenticator to use, so it doesn't appear as a dead toggle on a
+// desktop with no Touch ID.
+function BiometricUnlockCard() {
+  const [available, setAvailable] = useState(null)
+  const [userId, setUserId] = useState(null)
+  const [enrolled, setEnrolled] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [lockAfter, setLockAfterState] = useState(getLockAfterMs())
+
+  useEffect(() => {
+    let cancelled = false
+    hasPlatformAuthenticator().then(v => { if (!cancelled) setAvailable(v) })
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return
+      const uid = data?.session?.user?.id || null
+      setUserId(uid)
+      setEnrolled(isEnrolledFor(uid))
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  const handleEnable = async () => {
+    setBusy(true); setMsg('')
+    const { data } = await supabase.auth.getSession()
+    const user = data?.session?.user
+    const res = await enrolBiometric({ userId: user?.id, userName: user?.email, displayName: user?.email })
+    setBusy(false)
+    if (res.ok) { setEnrolled(true); setMsg('✅ Biometric unlock is on for this device.') }
+    else setMsg(res.message)
+  }
+
+  const handleDisable = () => {
+    clearEnrolment()
+    setEnrolled(false)
+    setMsg('Biometric unlock turned off for this device.')
+  }
+
+  if (available === false) return null
+  if (available === null) return null
+
+  return (
+    <SettingCard title="Biometric unlock" description="Use Face ID, Touch ID or your fingerprint to unlock the app on this device.">
+      <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '10px 13px', fontSize: 12.5, color: '#92400E', marginBottom: 14, lineHeight: 1.5 }}>
+        This locks the app on this device. It doesn't replace your password, and
+        anyone who already knows your password can still sign in normally.
+      </div>
+
+      {enrolled ? (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 700, color: '#15803D', marginBottom: 14 }}>
+            <span>✅</span> Enabled on this device
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', marginBottom: 6 }}>Lock after</label>
+            <select value={lockAfter} onChange={e => { const v = parseInt(e.target.value, 10); setLockAfterState(v); setLockAfterMs(v) }}
+              style={{ padding: '9px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 13.5, background: 'var(--surface)', color: 'var(--text)' }}>
+              <option value={0}>Immediately</option>
+              <option value={60 * 1000}>1 minute</option>
+              <option value={3 * 60 * 1000}>3 minutes</option>
+              <option value={15 * 60 * 1000}>15 minutes</option>
+              <option value={60 * 60 * 1000}>1 hour</option>
+            </select>
+            <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 5 }}>How long the app can be in the background before it locks. It always locks when reopened from closed.</div>
+          </div>
+          <button onClick={handleDisable}
+            style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            Turn off on this device
+          </button>
+        </>
+      ) : (
+        <button onClick={handleEnable} disabled={busy || !userId}
+          style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: busy ? 'var(--border)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: busy ? 'default' : 'pointer' }}>
+          {busy ? 'Setting up...' : 'Enable on this device'}
+        </button>
+      )}
+      {msg && <div style={{ fontSize: 13, color: msg.startsWith('✅') ? '#16A34A' : '#DC2626', marginTop: 12, fontWeight: 600 }}>{msg}</div>}
+    </SettingCard>
+  )
+}
+
 function SecuritySection() {
   const [pwLoading, setPwLoading] = useState(false)
   const [pwMsg, setPwMsg] = useState('')
@@ -1294,6 +1377,7 @@ function SecuritySection() {
         <Toggle value={false} onChange={() => {}} label="Two-Factor Authentication (2FA) — coming soon" />
         <Toggle value={true} onChange={() => {}} label="Email login notifications" />
       </SettingCard>
+      <BiometricUnlockCard />
       <SettingCard title="Active Sessions" description="Devices currently logged in to your account">
         <div style={{ background: '#F0FFF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
