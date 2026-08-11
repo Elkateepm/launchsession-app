@@ -8,6 +8,7 @@ import {
   getCurrentSubscription, listMySubscriptions, revokeSubscriptionById, sendTestNotification,
 } from '../../services/pushNotifications'
 import { hasPlatformAuthenticator, enrolBiometric, clearEnrolment, isEnrolledFor, getLockAfterMs, setLockAfterMs } from '../../lib/biometricLock'
+import { getTerms } from '../../lib/terminology'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -66,6 +67,108 @@ function Toggle({ value, onChange, label }) {
 
 // ─── SECTIONS ─────────────────────────────────────────────────
 
+// Changing organisation type changes what the app calls things, so the control
+// shows the effect before it's applied rather than after. Modules are opt-in on
+// change: once someone has configured their sidebar, silently adding and
+// removing modules because they corrected their type would be jarring.
+const ORG_TYPE_OPTIONS = [
+  { key: 'charity', label: 'Charity' },
+  { key: 'sports_club', label: 'Sports Club' },
+  { key: 'community_centre', label: 'Community Centre' },
+  { key: 'after_school', label: 'After-School Club' },
+  { key: 'youth_club', label: 'Youth Club' },
+  { key: 'faith_community', label: 'Faith or Community Group' },
+  { key: 'holiday_club', label: 'Holiday Club' },
+  { key: 'mentoring', label: 'Mentoring Programme' },
+  { key: 'education', label: 'Education Provider' },
+  { key: 'local_authority', label: 'Local Authority' },
+  { key: 'social_enterprise', label: 'Social Enterprise' },
+  { key: 'other', label: 'Other' },
+]
+
+function OrgTypeCard({ org }) {
+  const { refreshOrg } = useOrg()
+  const current = org?.type || 'charity'
+  const [selected, setSelected] = useState(current)
+  const [alsoModules, setAlsoModules] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  useEffect(() => { setSelected(org?.type || 'charity') }, [org?.type])
+
+  const currentTerms = getTerms(current)
+  const nextTerms = getTerms(selected)
+  const changed = selected !== current
+  // Only show rows that actually differ, so the preview is about the change
+  // rather than a wall of identical words.
+  const diffs = [
+    ['People', currentTerms.People, nextTerms.People],
+    ['Sessions', currentTerms.Sessions, nextTerms.Sessions],
+    ['Staff', currentTerms.Staff, nextTerms.Staff],
+    ['Groups', currentTerms.Groups, nextTerms.Groups],
+  ].filter(([, a, b]) => a !== b)
+
+  const handleSave = async () => {
+    setSaving(true); setMsg('')
+    const patch = { type: selected }
+    if (alsoModules) {
+      const { data, error: rpcErr } = await supabase.rpc('default_modules_for_org_type', { p_type: selected })
+      if (!rpcErr && Array.isArray(data)) patch.modules = data
+    }
+    const { error } = await supabase.from('organisations').update(patch).eq('id', org?.id)
+    setSaving(false)
+    if (error) { setMsg('Could not save: ' + error.message); return }
+    setMsg('✅ Updated. Terminology across the app now matches.')
+    if (refreshOrg) refreshOrg()
+  }
+
+  return (
+    <SettingCard title="Organisation type" description="Changes what the app calls things — young people, sessions, staff.">
+      <Field label="Type">
+        <select style={inp} value={selected} onChange={e => { setSelected(e.target.value); setMsg('') }}>
+          {ORG_TYPE_OPTIONS.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+        </select>
+      </Field>
+
+      {changed && (
+        <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, marginTop: 4 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>
+            What will change
+          </div>
+          {diffs.length === 0 ? (
+            <div style={{ fontSize: 13, color: 'var(--text2)' }}>
+              Wording stays the same for this type — only the type label itself changes.
+            </div>
+          ) : diffs.map(([label, from, to]) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, marginBottom: 6 }}>
+              <span style={{ width: 76, color: 'var(--text3)', fontWeight: 600, flexShrink: 0 }}>{label}</span>
+              <span style={{ color: 'var(--text3)', textDecoration: 'line-through' }}>{from}</span>
+              <span style={{ color: 'var(--text3)' }}>→</span>
+              <span style={{ color: 'var(--text)', fontWeight: 700 }}>{to}</span>
+            </div>
+          ))}
+
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 9, marginTop: 14, cursor: 'pointer' }}>
+            <input type="checkbox" checked={alsoModules} onChange={e => setAlsoModules(e.target.checked)} style={{ marginTop: 2 }} />
+            <span style={{ fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.5 }}>
+              Also reset my modules to the suggested set for this type.
+              <span style={{ color: 'var(--text3)' }}> Off by default — your current modules are kept, and you can change them any time in Modules.</span>
+            </span>
+          </label>
+        </div>
+      )}
+
+      <button onClick={handleSave} disabled={!changed || saving}
+        style={{ marginTop: 14, padding: '10px 20px', borderRadius: 8, border: 'none',
+          background: (!changed || saving) ? 'var(--border)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)',
+          color: '#fff', fontSize: 14, fontWeight: 700, cursor: (!changed || saving) ? 'default' : 'pointer' }}>
+        {saving ? 'Saving...' : changed ? 'Save type' : 'Saved'}
+      </button>
+      {msg && <div style={{ fontSize: 13, marginTop: 12, fontWeight: 600, color: msg.startsWith('✅') ? '#16A34A' : '#DC2626' }}>{msg}</div>}
+    </SettingCard>
+  )
+}
+
 function OrgSection({ org }) {
   const isMobile = useIsMobile()
   const [form, setForm] = useState({
@@ -101,6 +204,7 @@ function OrgSection({ org }) {
           </div>
         </div>
       </div>
+      <OrgTypeCard org={org} />
       <SettingCard title="Organisation Profile" description="Basic information about your organisation">
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
           <Field label="Organisation Name"><input style={inp} value={form.name} onChange={e => set('name', e.target.value)} /></Field>
