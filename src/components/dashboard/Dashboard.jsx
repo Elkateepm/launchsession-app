@@ -36,6 +36,7 @@ import ResourceCentre from '../resources/ResourceCentre'
 import MobileBottomNav from './mobilenav/MobileBottomNav'
 import QRShareSheet from '../shared/QRShareSheet'
 import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
+import { useTerms } from '../../context/OrgContext'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -539,6 +540,7 @@ export default function Dashboard({ session, org }) {
   }, [org?.id])
 
   const plan    = org?.plan || 'starter'
+  const terms   = useTerms()
   // org.modules stores the paid module keys. Base modules are always accessible.
   const paidModules = org?.modules || []
   const allowed = [...BASE_MODULE_KEYS, ...paidModules]
@@ -654,7 +656,7 @@ export default function Dashboard({ session, org }) {
             <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => handleSetTab('calendar')} primary={primary} collapsed={sidebarCollapsed} />
             <NavItem icon="🗓️" label="Sessions" active={tab === 'planner'} onClick={() => handleSetTab('planner')} primary={primary} collapsed={sidebarCollapsed} />
             <NavItem icon="🚀" label="Projects" active={tab === 'projects_list' || tab === 'projects'} onClick={() => handleSetTab('projects_list')} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="🧒" label="Children" active={tab === 'children'} onClick={() => handleSetTab('children')} primary={primary} collapsed={sidebarCollapsed} />
+            <NavItem icon="🧒" label={terms.People} active={tab === 'children'} onClick={() => handleSetTab('children')} primary={primary} collapsed={sidebarCollapsed} />
             {/* Paid delivery modules — show all, locked ones navigate to locked screen */}
             {[
               { key: 'registers', label: 'Registers', icon: '📋' },

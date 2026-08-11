@@ -6,6 +6,7 @@ import { useRealtimeTable } from '../../lib/useRealtimeTable'
 import PastSessionRegister from './PastSessionRegister'
 import RegisterPaymentBadge from '../payments/RegisterPaymentBadge'
 import AttendanceCorrectionModal from './AttendanceCorrectionModal'
+import { useTerms } from '../../context/OrgContext'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -57,6 +58,7 @@ function fmtTime(d) {
 
 export default function LiveRegister({ session, org, authUserId, userRole, onClose, onNavigate }) {
   const { groups: orgGroups } = useOrgSettings(org?.id)
+  const terms = useTerms()
   const configuredGroupLabels = useMemo(() => new Map((orgGroups || []).map(g => [(g.label || '').trim().toLowerCase(), g.label])), [orgGroups])
   const groupLabel = (name) => configuredGroupLabels.get((name || '').trim().toLowerCase()) || 'Ungrouped'
   // Same rule everywhere a register can be closed from: only staff/admin/owner.
@@ -381,7 +383,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
       <div style={{ padding: '0 14px 12px', background: '#fff', borderBottom: '1px solid #F1F5F9', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 160px' }}>
           <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94A3B8', pointerEvents: 'none' }}>🔍</span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search young people..." style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, background: '#FAFBFC', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${terms.people}...`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, background: '#FAFBFC', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
         </div>
         <button onClick={() => setShowWalkIn(true)} style={ghostBtn}>+ Walk-in</button>
         <button onClick={() => setShowNotes(true)} style={ghostBtn}>📝 Notes {notes.length > 0 && <span style={{ color: '#7C3AED' }}>({notes.length})</span>}</button>
@@ -646,6 +648,7 @@ function AbsentSheet({ child, onClose, onMark }) {
 }
 
 function WalkInModal({ org, session, allChildren, onClose, onDone, onSignIn }) {
+  const terms = useTerms()
   const [search, setSearch] = useState('')
   const [form, setForm] = useState({ first_name: '', last_name: '', emergency_contact_name: '', emergency_contact_phone: '', consent: false })
   const [saving, setSaving] = useState(false)
@@ -675,7 +678,7 @@ function WalkInModal({ org, session, allChildren, onClose, onDone, onSignIn }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Add Walk-in</div>
-        <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 14 }}>Search existing young people first — don't create a duplicate record.</div>
+        <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 14 }}>Search existing {terms.people} first — don't create a duplicate record.</div>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..." style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, marginBottom: 10 }} />
         {matches.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
@@ -758,6 +761,7 @@ function NotesPanel({ notes, onClose, onAdd, onRaiseSafeguarding, children }) {
 }
 
 function ClosureFlow({ session, grouped, onClose, org, authUserId, canCloseRegister, onClosed, onMarkAllAbsent }) {
+  const terms = useTerms()
   const stillSignedIn = grouped.signed_in.length
   const unaccounted = grouped.expected.length
 
@@ -773,12 +777,12 @@ function ClosureFlow({ session, grouped, onClose, org, authUserId, canCloseRegis
 
         {stillSignedIn > 0 && (
           <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 12, fontSize: 13, fontWeight: 700, color: '#B91C1C' }}>
-            ⚠ {stillSignedIn} young people are still marked on site. Sign them out before closing, or confirm this is expected.
+            ⚠ {stillSignedIn} {terms.people} are still marked on site. Sign them out before closing, or confirm this is expected.
           </div>
         )}
         {unaccounted > 0 && (
           <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 13, color: '#92400E' }}>
-            {unaccounted} young people have no attendance status.
+            {unaccounted} {terms.people} have no attendance status.
           </div>
         )}
 

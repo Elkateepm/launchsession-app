@@ -8,6 +8,7 @@ import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { TemplatePicker } from './TemplateCreator'
 import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
+import { useTerms } from '../../context/OrgContext'
 
 const DEFAULT_BUBBLES = [
   { key: 'red',    label: 'Red',    color: '#E53935', dark: '#B71C1C' },
@@ -910,11 +911,12 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
 
 // ─── ENCOURAGEMENT PANEL ─────────────────────────────────────
 function EncouragementPanel({ org, primary }) {
+  const terms = useTerms()
   const orgName = org?.name || 'your team'
   const quotes = [
     { text: `Every child who walks through that door is lucky to have ${orgName} in their corner.`, emoji: '⭐' },
     { text: 'You\'re not just running a session. You\'re building someone\'s highlight reel.', emoji: '🌟' },
-    { text: `The work ${orgName} does today will stay with these young people for life.`, emoji: '💛' },
+    { text: `The work ${orgName} does today will stay with these ${terms.people} for life.`, emoji: '💛' },
     { text: 'Small moments of connection matter more than you know. Keep showing up.', emoji: '🤝' },
     { text: `${orgName} is the reason some of these kids get out of bed on a Saturday.`, emoji: '🚀' },
     { text: 'You are the constant in someone\'s inconsistent world. That\'s everything.', emoji: '🏡' },

@@ -6,6 +6,7 @@ import PageHeader from '../shared/PageHeader'
 import QRShareSheet from '../shared/QRShareSheet'
 import { Avatar, glass, inputStyle, btnGhost, btnPrimary } from '../volunteers/vh_shared'
 import ChildPaymentsCard from '../payments/ChildPaymentsCard'
+import { useTerms } from '../../context/OrgContext'
 
 const CONSENT_TYPES = [
   { key: 'photo', label: 'Photo consent' },
@@ -39,6 +40,7 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
   const authUserId = session?.user?.id
   const { groups: orgGroups } = useOrgSettings(org?.id)
 
+  const terms = useTerms()
   const [children, setChildren] = useState([])
   const [consents, setConsents] = useState([])
   const [attendance, setAttendance] = useState([])
@@ -135,7 +137,7 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F6F8FC' }}>
       <PageHeader
         icon="🧒"
-        title="Children & Young People"
+        title={terms.People}
         subtitle="Manage participant records, safety information, attendance and family contacts."
         primary={primary}
         orgName={org?.name}
@@ -212,7 +214,7 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
               {filtered.length === 0 && !loading ? (
                 <div style={{ padding: '40px 20px', textAlign: 'center' }}>
                   <div style={{ fontSize: 36, marginBottom: 10 }}>🧒</div>
-                  <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>No young people found</div>
+                  <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>No {terms.people} found</div>
                   <div style={{ fontSize: 12.5, color: '#94A3B8' }}>Try adjusting your search or filters.</div>
                 </div>
               ) : (

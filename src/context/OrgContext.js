@@ -4,6 +4,7 @@
 // informed consent rather than a silent default. /org-search clears this key too.
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { getTerms } from '../lib/terminology'
 
 // Shown as the tab favicon whenever the org hasn't set its own logo (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -149,10 +150,15 @@ export function OrgProvider({ children }) {
   }
 
   return (
-    <OrgContext.Provider value={{ org, loading, noOrg, refreshOrg }}>
+    <OrgContext.Provider value={{ org, loading, noOrg, refreshOrg, terms: getTerms(org?.type) }}>
       {children}
     </OrgContext.Provider>
   )
 }
 
 export const useOrg = () => useContext(OrgContext)
+
+// Terminology for the current org's type ("players" for a sports club,
+// "students" for a school). Safe outside the provider -- falls back to the
+// defaults rather than throwing, so a component can't crash on missing context.
+export const useTerms = () => useContext(OrgContext)?.terms || getTerms(null)
