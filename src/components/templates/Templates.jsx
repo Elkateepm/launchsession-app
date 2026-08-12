@@ -635,7 +635,7 @@ export default function Templates({ org, onNavigate }) {
   )
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '24px 24px 40px' }}>
+    <div style={{ padding: '24px 24px 40px' }}>
       {toast && (
         <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: toast.color, color: '#fff', padding: '10px 22px', borderRadius: 12, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>{toast.msg}</div>
       )}
