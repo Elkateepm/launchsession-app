@@ -466,6 +466,7 @@ export default function Dashboard({ session, org }) {
   const [editSessionId, setEditSessionId] = useState(null)
   const [openProjectId, setOpenProjectId] = useState(null)
   const [autoOpenAddChild, setAutoOpenAddChild] = useState(false)
+  const [openRegRequestsTab, setOpenRegRequestsTab] = useState(false)
   const [autoOpenInviteVolunteer, setAutoOpenInviteVolunteer] = useState(false)
   const [showMobileMore, setShowMobileMore] = React.useState(false);
   const [showQRSheet, setShowQRSheet] = React.useState(false);
@@ -504,6 +505,7 @@ export default function Dashboard({ session, org }) {
     setEditSessionId(t === 'planner' && payload?.editSessionId ? payload.editSessionId : null)
     setOpenProjectId(t === 'projects' && payload?.projectId ? payload.projectId : null)
     setAutoOpenAddChild(t === 'registers' && !!payload?.autoOpenAdd)
+    setOpenRegRequestsTab(t === 'children' && !!payload?.openRegistrationRequests)
     setAutoOpenInviteVolunteer(t === 'volunteers' && !!payload?.autoOpenInvite)
     setTab(t)
     persistTab(t)
@@ -832,7 +834,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'projects_list' && <ProjectsList org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
           {tab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
-          {tab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} /></ChildrenGate>}
+          {tab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} initialOpenRequestsTab={openRegRequestsTab} /></ChildrenGate>}
           {tab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'team'       && (isAdmin ? <TeamTab org={org} session={session} /> : <RestrictedModule label="Team & Staff" icon="👥" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {tab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} onTrial={onTrial} />)}

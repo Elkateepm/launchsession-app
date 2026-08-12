@@ -26,6 +26,7 @@ const EVENT_TEMPLATES = {
   SESSION_CREATED:              { title: 'New session created', body: 'A new session has been created.', category: 'sessions', priority: 'normal', url: '/?tab=registers' },
   SESSION_EDITED:                { title: 'Session updated', body: 'A session you\u2019re assigned to has been updated.', category: 'sessions', priority: 'normal', url: '/?tab=registers' },
   SECURITY_ALERT:                { title: 'Security alert', body: 'A security-related event needs your attention.', category: 'security', priority: 'critical', url: '/?tab=settings' },
+  CHILD_REGISTRATION_SUBMITTED: { title: 'New registration to authorise', body: 'A parent has submitted a new registration awaiting approval.', category: 'children', priority: 'high', url: '/?tab=children&sub=requests' },
 }
 
 // Which event types are actually wired up to resolve real recipients today.
@@ -62,6 +63,15 @@ const EVENT_TEMPLATES = {
 // (a user promoted to admin/owner) — org-wide rather than session-scoped, so
 // it passes an explicit recipient_ids array to db_event_push instead of a
 // session_id.
+// CHILD_REGISTRATION_SUBMITTED is raised by trg_notify_child_registration on
+// child_registration_requests (INSERT). Submitted by a parent on the public
+// registration form with no logged-in session, so — like SECURITY_ALERT —
+// it can't go through the session-gated `push` branch below; the trigger
+// resolves org admins/owners itself and passes them as recipient_ids to
+// db_event_push, using the shared DB_EVENT_SECRET rather than a user token.
+// This also writes the bell notification directly via notify_users, same as
+// the bell-only trigger group above, so it works even if VAPID/push isn't
+// configured.
 const IMPLEMENTED_EVENTS = new Set(['TEST_NOTIFICATION', 'SAFEGUARDING_ACTION_REQUIRED', 'NEW_MESSAGE', 'STAFF_ADDED_TO_SESSION'])
 
 // Shared delivery path for the cron_reminders sweeps below — resolves

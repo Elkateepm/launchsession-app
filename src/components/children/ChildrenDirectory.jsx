@@ -34,7 +34,7 @@ function hasMedicalAlert(child) {
   return medicalAlerts(child).length > 0
 }
 
-export default function ChildrenDirectory({ org, session, onNavigate }) {
+export default function ChildrenDirectory({ org, session, onNavigate, initialOpenRequestsTab }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#7C5CFC'
   const authUserId = session?.user?.id
@@ -54,7 +54,13 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
   const [showAdd, setShowAdd] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
   const [showQR, setShowQR] = useState(false)
-  const [mainTab, setMainTab] = useState('directory')
+  const [mainTab, setMainTab] = useState(initialOpenRequestsTab ? 'requests' : 'directory')
+
+  // A bell/push tap for a new registration lands here with the flag set —
+  // jump straight to the Requests tab instead of making the admin find it.
+  useEffect(() => {
+    if (initialOpenRequestsTab) setMainTab('requests')
+  }, [initialOpenRequestsTab])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -163,14 +169,33 @@ export default function ChildrenDirectory({ org, session, onNavigate }) {
           ['groups', '👥 Groups'],
           ['consents', `🔏 Consents${stats.consentIssues ? ` (${stats.consentIssues})` : ''}`],
           ['medical', `❤️ Medical & Support${stats.medical ? ` (${stats.medical})` : ''}`],
-          ['requests', `📥 Registration Requests${stats.pendingRegs ? ` (${stats.pendingRegs})` : ''}`],
-        ].map(([key, label]) => (
-          <button key={key} onClick={() => { setMainTab(key); setSelectedId(null) }}
-            style={{ padding: '9px 14px', borderRadius: '10px 10px 0 0', border: 'none', borderBottom: mainTab === key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: mainTab === key ? '#fff' : 'transparent', color: mainTab === key ? primary : '#64748B', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            {label}
-          </button>
-        ))}
+          ['requests', `📥 Registration Requests`],
+        ].map(([key, label]) => {
+          const isRequests = key === 'requests'
+          const flagged = isRequests && stats.pendingRegs > 0
+          const active = mainTab === key
+          return (
+            <button key={key} onClick={() => { setMainTab(key); setSelectedId(null) }}
+              style={{
+                position: 'relative', display: 'flex', alignItems: 'center', gap: 6,
+                padding: '9px 14px', borderRadius: '10px 10px 0 0', border: 'none',
+                borderBottom: active ? `2.5px solid ${flagged ? '#DC2626' : primary}` : flagged ? '2.5px solid #FCA5A5' : '2.5px solid transparent',
+                background: active ? '#fff' : flagged ? '#FEF2F2' : 'transparent',
+                color: active ? (flagged ? '#DC2626' : primary) : flagged ? '#B91C1C' : '#64748B',
+                fontWeight: flagged ? 800 : 700, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap',
+              }}>
+              {label}
+              {flagged && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#DC2626', color: '#fff', borderRadius: 99, padding: '1px 7px 1px 5px', fontSize: 10.5, fontWeight: 900, lineHeight: '15px' }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', animation: 'pulse-live 1.5s infinite', flexShrink: 0 }} />
+                  {stats.pendingRegs}
+                </span>
+              )}
+            </button>
+          )
+        })}
       </div>
+      <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 14 : 24 }}>
         {mainTab === 'directory' && (
@@ -718,18 +743,22 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
   return (
     <div style={{ display: 'grid', gridTemplateColumns: open ? '1fr 1.3fr' : '1fr', gap: 16, alignItems: 'start' }}>
       <div style={glass({ padding: 0, overflow: 'hidden' })}>
-        <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: '#0F172A' }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: pending.length ? '#B91C1C' : '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {pending.length > 0 && <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#DC2626', animation: 'pulse-live 1.5s infinite', flexShrink: 0 }} />}
           {pending.length} pending registration{pending.length === 1 ? '' : 's'}
         </div>
         {pending.length === 0 ? (
           <div style={{ padding: 30, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>No pending registrations.</div>
         ) : pending.map(r => (
-          <div key={r.id} onClick={() => setOpenId(r.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: openId === r.id ? `${primary}0c` : 'transparent' }}>
+          <div key={r.id} onClick={() => setOpenId(r.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: openId === r.id ? `${primary}0c` : '#FFFBFA', borderLeft: '3px solid #FCA5A5' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{r.first_name} {r.last_name}</div>
               <div style={{ fontSize: 11, color: '#94A3B8' }}>Submitted {new Date(r.submitted_at).toLocaleDateString('en-GB')} · {r.parent_name}</div>
             </div>
-            <span style={{ fontSize: 10, fontWeight: 800, color: '#B45309', background: '#FEF3C7', borderRadius: 99, padding: '2px 9px' }}>Pending</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: '#B45309', background: '#FEF3C7', borderRadius: 99, padding: '2px 9px' }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#D97706', animation: 'pulse-live 1.5s infinite', flexShrink: 0 }} />
+              Pending
+            </span>
           </div>
         ))}
         {reviewed.length > 0 && (

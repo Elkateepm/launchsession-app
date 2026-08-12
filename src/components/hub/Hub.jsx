@@ -2651,7 +2651,8 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
       try {
         const params = new URLSearchParams(n.target_url.split('?')[1] || '')
         const tab = params.get('tab')
-        if (tab) onNavigate(tab)
+        const sub = params.get('sub')
+        if (tab) onNavigate(tab, sub === 'requests' ? { openRegistrationRequests: true } : undefined)
       } catch {}
     }
   }
