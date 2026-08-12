@@ -2164,9 +2164,9 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
   // ── LIST / WEEK VIEW ──
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F6F8FC' }}>
+    <div style={{ background: '#F6F8FC' }}>
       <style>{`@keyframes sp-live-pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
-      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 28 }}>
+      <div style={{ padding: isMobile ? 16 : 28 }}>
 
         {/* ═══ HEADER ═══ */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
