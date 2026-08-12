@@ -13,6 +13,7 @@ import HistoricalAttendanceModal from "../shared/HistoricalAttendanceModal";
 import { isPushSupported, getNotificationPermission, subscribeToPush } from "../../services/pushNotifications";
 import { notifyEvent } from "../../services/notifyEvent";
 import { allowedModules } from '../../lib/moduleAccess'
+import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -2791,7 +2792,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [showConcernForm, setShowConcernForm] = React.useState(false)
   const [showInviteChild, setShowInviteChild] = React.useState(false)
   const [showReflectionsModal, setShowReflectionsModal] = React.useState(false)
-  const [statsView, setStatsView] = React.useState('today') // 'today' | 'month' — merged stats toggle
   const [sessionsView, setSessionsView] = React.useState('upcoming') // 'upcoming' | 'ended' — merged sessions toggle
 
   const getGreeting = () => {
@@ -2854,6 +2854,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   }, [org?.city]);
   const [reflections, setReflections] = useState([]);
   const [checkedOutCount, setCheckedOutCount] = useState(0);
+  const [pendingRegistrations, setPendingRegistrations] = useState(0);
   const [medicalReviews, setMedicalReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
@@ -2941,6 +2942,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       { data: checkoutData },
       { data: medicalReviewData },
       { data: projectData },
+      { data: pendingRegData },
     ] = await Promise.all([
       supabase.from("sessions").select("*").eq("org_id", orgId).order("session_date", { ascending: true }).order("start_time", { ascending: true }),
       supabase.from("attendance").select("*").eq("org_id", orgId),
@@ -2951,6 +2953,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       supabase.from("resource_checkouts").select("id").eq("org_id", orgId).in("status", ["checked_out", "overdue"]),
       supabase.from("medical_alert_reviews").select("*").eq("org_id", orgId),
       supabase.from("projects").select("id, name, start_date, end_date, status").eq("org_id", orgId).not("status", "in", '("archived","cancelled","completed")'),
+      supabase.from("child_registration_requests").select("id").eq("org_id", orgId).eq("status", "pending"),
     ]);
     setSessions(sessionData || []);
     setProjects(projectData || []);
@@ -2960,6 +2963,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     setReflections(reflectionData || []);
     setVolunteersCount(volunteerData?.length || 0);
     setCheckedOutCount(checkoutData?.length || 0);
+    setPendingRegistrations(pendingRegData?.length || 0);
     setMedicalReviews(medicalReviewData || []);
   }, [orgId]);
 
@@ -3084,13 +3088,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   }, [children, medicalReviewByChild]);
   const attendanceRate = children.length > 0 ? Math.round((signedIn / children.length) * 100) : 0;
   const strictlyTodaySessions = useMemo(() => todaySessions.filter(s => s.session_date === today), [todaySessions, today]);
-  const sessionsEndedToday = useMemo(() => {
-    const now = new Date()
-    return strictlyTodaySessions.filter(s => {
-      const end = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
-      return !!end && end < now
-    }).length
-  }, [strictlyTodaySessions]);
   const todayHasLiveSession = useMemo(() => {
     const now = new Date()
     return todaySessions.some(s => {
@@ -3100,23 +3097,83 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       return (!startDateTime || startDateTime <= now) && !hasEnded
     })
   }, [todaySessions]);
-  const nextSession = upcomingSessions[0];
-  const nextSessionStatus = useMemo(() => {
-    if (!nextSession) return null
-    const isToday = nextSession.session_date === today
-    const now = new Date()
-    const startDateTime = nextSession.start_time ? new Date(`${nextSession.session_date}T${nextSession.start_time}`) : null
-    const endDateTime = nextSession.end_time ? new Date(`${nextSession.session_date}T${nextSession.end_time}`) : null
-    const hasEnded = isToday && !!endDateTime && endDateTime < now
-    const isLiveNow = isToday && (!startDateTime || startDateTime <= now) && !hasEnded
-    if (isLiveNow) return 'live'
-    if (hasEnded) return 'ended'
-    return 'upcoming'
-  }, [nextSession, today]);
   const liveHeroSession = todaySessions[0];
   const trialDaysLeft = (org?.status === 'trial' && org?.created_at)
     ? Math.max(0, 7 - Math.floor((Date.now() - new Date(org.created_at).getTime()) / 86400000))
     : null;
+
+  // ── Home hero helpers ──────────────────────────────────────────────────
+  const INK_HERO = '#141A2E'
+  const heroGlassBtn = {
+    border: 'none', borderRadius: 13, padding: '11px 16px', fontSize: 13, fontWeight: 700,
+    cursor: 'pointer', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.12)', color: '#fff',
+    display: 'inline-flex', alignItems: 'center', gap: 7, transition: 'background 180ms ease, transform 180ms ease',
+  }
+
+  // One plain sentence about the day, instead of three separate status pills
+  // that each said a fraction of it.
+  const heroSummary = useMemo(() => {
+    const n = strictlyTodaySessions.length
+    if (n === 0) {
+      const next = upcomingSessions.find(s => s.session_date > today)
+      return next
+        ? `No sessions today. Next up: ${next.title} on ${formatDate(next.session_date)}.`
+        : 'No sessions today, and nothing booked yet. A good moment to plan one.'
+    }
+    const expected = todayAttendance.length
+    const bits = [`${n} session${n > 1 ? 's' : ''} today`]
+    if (expected > 0) bits.push(`${expected} young ${expected > 1 ? 'people' : 'person'} expected`)
+    if (concerns.length > 0) bits.push(`${concerns.length} open concern${concerns.length > 1 ? 's' : ''}`)
+    return bits.join(' · ') + '.'
+  }, [strictlyTodaySessions, upcomingSessions, today, todayAttendance, concerns])
+
+  // Sessions actually delivered this calendar month — "sessions run" is a more
+  // honest headline than "sessions planned", which counted future ones too.
+  const sessionsRunThisMonth = useMemo(() => {
+    const d = new Date()
+    const monthStart = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+    return sessions.filter(s => s.session_date >= monthStart && s.session_date <= today && (s.closed_at || s.session_date < today)).length
+  }, [sessions, today]);
+
+  // Six weekly buckets behind each stat, so the sparkline shows a real shape
+  // rather than decoration. Derived from data already in state.
+  const trends = useMemo(() => {
+    const weekStarts = []
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i * 7)
+      weekStarts.push(toLocalDateStr(d))
+    }
+    const bucket = (predicate) => weekStarts.map((start, i) => {
+      const end = weekStarts[i + 1] || '9999-12-31'
+      return predicate(start, end)
+    })
+    const sessionsPerWeek = bucket((start, end) => sessions.filter(s => s.session_date >= start && s.session_date < end).length)
+    const attendedPerWeek = bucket((start, end) => {
+      const ids = new Set(sessions.filter(s => s.session_date >= start && s.session_date < end).map(s => s.id))
+      const rows = attendance.filter(a => ids.has(a.session_id))
+      const present = rows.filter(a => a.status === 'signed_in' || a.status === 'signed_out').length
+      return rows.length > 0 ? Math.round((present / rows.length) * 100) : 0
+    })
+    const childrenPerWeek = bucket((start, end) => children.filter(c => !c.created_at || c.created_at.slice(0, 10) < end).length)
+    return {
+      sessions: sessionsPerWeek,
+      attendance: attendedPerWeek,
+      children: childrenPerWeek,
+      volunteers: sessionsPerWeek.map(() => volunteersCount),
+    }
+  }, [sessions, attendance, children, volunteersCount]);
+
+  const quickJumpActions = (() => {
+    const list = []
+    if (hasModule('registers')) list.push({ key: 'register', icon: '▶️', label: 'Start a register', onClick: () => go('registers') })
+    list.push({ key: 'session', icon: '➕', label: 'New session', onClick: () => go('planner', { autoOpenWizard: true }) })
+    list.push({ key: 'child', icon: '🧒', label: 'Add young person', onClick: () => setShowInviteChild(true) })
+    if (hasModule('gallery')) list.push({ key: 'photos', icon: '📷', label: 'Upload photos', onClick: () => go('gallery') })
+    if (hasModule('forms')) list.push({ key: 'forms', icon: '📋', label: 'Send a form', onClick: () => go('forms') })
+    if (hasModule('safeguarding')) list.push({ key: 'concern', icon: '🚨', label: 'Report a concern', onClick: () => setShowConcernForm(true) })
+    return list
+  })();
 
   const getLiveSessionStats = (item) => {
     const records = attendance.filter(a => a.session_id === item.id);
@@ -3178,6 +3235,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   return (
     <div style={styles.page}>
+      <style>{hubHomeKeyframes}</style>
+
       {/* ── HEADER ── */}
       <header style={{ background: `linear-gradient(120deg, ${primary}14 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px ${primary}50` }}>
 
@@ -3415,72 +3474,46 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </motion.div>
           )}
         </AnimatePresence>
-        {!isMobile ? (
-          <div style={{ padding: '14px 0 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--text, #0f172a)', lineHeight: 1.15, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.3px' }}>
-              {getGreeting()}, {hubUserName.split(' ')[0]}! 👋
-            </h1>
-            <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text3, #64748b)', fontWeight: 600, background: todaySessions.length > 0 ? '#DCFCE7' : '#F3F4F6', borderRadius: 99, padding: '3px 10px' }}>
-                <span style={{ color: todaySessions.length > 0 ? '#16A34A' : '#9ca3af', fontSize: 7 }}>●</span>
-                {todaySessions.length} session{todaySessions.length !== 1 ? 's' : ''} today
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, background: concerns.length > 0 ? '#FEF9C3' : '#DCFCE7', color: concerns.length > 0 ? '#92400E' : '#16A34A', borderRadius: 99, padding: '3px 10px' }}>
-                {concerns.length > 0 ? `⚠ ${concerns.length} concern${concerns.length > 1 ? 's' : ''}` : '✓ All clear'}
-              </span>
-              {children.length > 0 && (
-                <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>{children.length} young people</span>
-              )}
-            </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
-              <button onClick={() => setShowInviteChild(true)}
-                style={{ padding: '12px 22px', borderRadius: 99, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 13.5, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 7, boxShadow: `0 6px 16px -8px ${primary}80` }}>
-                🧒 Invite Child
-              </button>
-              {hasModule('volunteers') && (
-                <button onClick={() => go('volunteers', { autoOpenInvite: true })}
-                  style={{ padding: '12px 22px', borderRadius: 99, border: 'none', background: `linear-gradient(135deg, ${secondary}, ${primary})`, color: '#fff', fontWeight: 800, fontSize: 13.5, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 7, boxShadow: `0 6px 16px -8px ${secondary}80` }}>
-                  🤝 Invite Volunteer
-                </button>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div style={{ padding: '10px 0 12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 900, color: 'var(--text, #0f172a)', lineHeight: 1.2, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.3px' }}>
-                {getGreeting()}, {hubUserName.split(' ')[0]} 👋
+        {/* ── DAY HERO — greeting, primary actions and the day spine in one dark
+            block. Replaces the old greeting row plus the "N sessions today" and
+            "Next session" tiles, which all pointed at the same session. ── */}
+        <div className="ls-rise" style={{
+          background: INK_HERO, borderRadius: 26, padding: isMobile ? '18px 18px 16px' : '24px 26px 18px',
+          color: '#fff', position: 'relative', overflow: 'hidden', margin: '10px 0 4px',
+        }}>
+          <div aria-hidden="true" style={{ position: 'absolute', right: -90, top: -110, width: 340, height: 340, borderRadius: '50%', background: `radial-gradient(circle, ${primary}80, transparent 68%)`, pointerEvents: 'none' }} />
+
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 26, fontWeight: 900, lineHeight: 1.12, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.4px', color: '#fff' }}>
+                {getGreeting()}, {hubUserName.split(' ')[0]} <span style={{ display: 'inline-block', animation: 'lsWave 2.6s ease-in-out infinite', transformOrigin: '70% 70%' }}>👋</span>
               </h1>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0, color: concerns.length > 0 ? '#92400E' : '#16A34A', background: concerns.length > 0 ? '#FEF9C3' : '#DCFCE7', borderRadius: 99, padding: '3px 9px' }}>
-                {concerns.length > 0 ? `⚠ ${concerns.length}` : '✓ Clear'}
-              </span>
+              <p style={{ margin: '7px 0 0', fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.62)' }}>{heroSummary}</p>
             </div>
 
-            {/* Quick actions row */}
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button onClick={() => setShowInviteChild(true)} style={{
-                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                padding: '11px 10px', borderRadius: 14, border: 'none', cursor: 'pointer',
-                background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff',
-                fontSize: 13, fontWeight: 800, boxShadow: `0 6px 16px -8px ${primary}80`,
-              }}>
-                <span>🧒</span>Invite Child
-              </button>
+            <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', flexShrink: 0 }}>
+              <button onClick={() => setShowInviteChild(true)} style={heroGlassBtn}>🧒 Invite child</button>
               {hasModule('volunteers') && (
-                <button onClick={() => go('volunteers', { autoOpenInvite: true })} style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  padding: '11px 10px', borderRadius: 14, border: 'none', cursor: 'pointer',
-                  background: `linear-gradient(135deg, ${secondary}, ${primary})`, color: '#fff',
-                  fontSize: 13, fontWeight: 800, boxShadow: `0 6px 16px -8px ${secondary}80`,
-                }}>
-                  <span>🤝</span>Invite Volunteer
+                <button onClick={() => go('volunteers', { autoOpenInvite: true })} style={heroGlassBtn}>🤝 Invite volunteer</button>
+              )}
+              {todaySessions.length > 0 && (
+                <button onClick={() => go('registers')} style={{ ...heroGlassBtn, background: '#12C48B', color: '#05241A' }}>
+                  {todayHasLiveSession ? 'Open live register →' : "Open today's register →"}
                 </button>
               )}
             </div>
           </div>
-        )}
+
+          <DaySpine
+            sessions={strictlyTodaySessions}
+            statsFor={getLiveSessionStats}
+            primary={primary}
+            secondary={secondary}
+            isMobile={isMobile}
+            todayStr={today}
+            onOpenSession={() => go('registers')}
+          />
+        </div>
       </header>
 
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
@@ -3948,113 +3981,36 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           )}
 
-          {/* TODAY AT A GLANCE */}
-          <Panel title="📍 Right now">
-            {/* CSS Grid instead of flex+fixed-px basis: grid columns are a hard
-               limit the browser can't push past, unlike flex-basis which is
-               just a hint — this is what lets cards blow past the viewport
-               edge on phones since 220px/190px minimums don't fit 3-up on a
-               ~360-400px-wide panel. */}
-            <div className="ls-hub-rightnow-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(190px, 1fr))', gap: isMobile ? 10 : 12 }}>
+          {/* WEATHER — demoted from a large tile to a strip with a delivery
+              verdict attached, since that's the only decision it informs. The
+              session tiles that used to sit beside it are gone: the day spine
+              in the hero already shows today's sessions and what's next. */}
+          <WeatherStrip
+            weather={weather}
+            weatherError={weatherError}
+            icon={weather ? weatherFromCode(weather.code).icon : '🌡️'}
+            label={weather ? weatherFromCode(weather.code).label : ''}
+          />
 
-              {/* WEATHER CARD */}
-              <div style={{ minWidth: 0 }}>
-                <div style={{ background: weather ? `linear-gradient(135deg, #0EA5E9, #38BDF8)` : 'linear-gradient(135deg, #94A3B8, #CBD5E1)', borderRadius: 16, padding: isMobile ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 128, height: '100%', boxShadow: '0 10px 28px -10px rgba(14,165,233,0.5)', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
-                  <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
-                  {weatherError ? (
-                    <div style={{ position: 'relative' }}>
-                      <div style={{ fontSize: 22, marginBottom: 6 }}>🌡️</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.9 }}>Weather unavailable</div>
-                      <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>Add a city in Settings</div>
-                    </div>
-                  ) : !weather ? (
-                    <div style={{ position: 'relative' }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.85 }}>Loading weather...</div>
-                    </div>
-                  ) : (
-                    <div style={{ position: 'relative' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ fontSize: 11, fontWeight: 800, opacity: 0.85, textTransform: 'uppercase', letterSpacing: 0.5 }}>{weather.city}</div>
-                        <div style={{ fontSize: 26 }}>{weatherFromCode(weather.code).icon}</div>
-                      </div>
-                      <div style={{ fontSize: 34, fontWeight: 900, lineHeight: 1.1, marginTop: 4, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°<span style={{ fontSize: 16, fontWeight: 700, opacity: 0.8 }}>C</span></div>
-                      <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.9, marginTop: 2 }}>{weatherFromCode(weather.code).label}</div>
-                      <div style={{ display: 'flex', gap: 10, marginTop: 8, fontSize: 11, opacity: 0.85, fontWeight: 600 }}>
-                        {weather.high != null && <span>↑{weather.high}° ↓{weather.low}°</span>}
-                        {weather.rainChance != null && <span>💧 {weather.rainChance}%</span>}
-                        <span>💨 {weather.wind}mph</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ minWidth: 0 }}>
-                {todaySessions.length > 0 ? (
-                  <StatCard icon="🗓️" title={`${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} today`} text={todayHasLiveSession ? "In progress" : "Ready for delivery"} button={todayHasLiveSession ? "Open Register" : "Open Planner"} onClick={() => go(todayHasLiveSession ? "registers" : "planner")} colour={todayHasLiveSession ? '#DC2626' : primary} compact={isMobile} />
-                ) : (
-                  <StatCard icon="🚀" title="Create Session" text="Start planning your next activity, trip or workshop." button="+ New Session" onClick={() => go('planner', { autoOpenWizard: true })} colour="#0D9488" gradient="linear-gradient(135deg, #0F766E, #1E293B)" compact={isMobile} />
-                )}
-              </div>
-
-              <div style={{ minWidth: 0 }}>
-                <StatCard icon="⚽" title={nextSession ? nextSession.title : "Next Session"} text={nextSession ? `${formatDate(nextSession.session_date)} · ${nextSession.start_time || "No time"}` : "Nothing booked yet"} button={!nextSession ? "Plan now" : null} badge={nextSession ? (nextSessionStatus === 'live' ? 'Live now' : nextSessionStatus === 'ended' ? 'Ended' : 'Upcoming') : null} onClick={() => nextSession ? go(nextSessionStatus === 'live' ? "registers" : "planner") : go('planner', { autoOpenWizard: true })} colour={nextSessionStatus === 'live' ? '#DC2626' : secondary} compact={isMobile} />
-              </div>
-            </div>
+          {/* AT A GLANCE — four real numbers that count up on mount, each with a
+              six-week sparkline so the figure has context. Replaces the
+              today/month toggle plus the two GlanceCards below it, which
+              between them showed the same counts in three card styles. */}
+          <Panel title="🧭 This month at a glance" right={
+            <button onClick={() => go('reports')} style={{ background: `${primary}14`, color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>Full report →</button>
+          }>
+            <GlanceStats isMobile={isMobile} stats={[
+              { key: 'children', value: children.length, label: 'Young people', bg: `${primary}14`, colour: primary, trend: trends.children, onClick: () => go('children') },
+              { key: 'sessions', value: sessionsRunThisMonth, label: 'Sessions run', bg: '#DFF8EF', colour: '#06614A', trend: trends.sessions, onClick: () => go('planner') },
+              { key: 'attendance', value: attendanceRate, suffix: '%', label: 'Attendance rate', bg: '#FFF4DE', colour: '#7A4D00', trend: trends.attendance, onClick: () => go('reports') },
+              { key: 'volunteers', value: volunteersCount, label: 'Volunteers active', bg: '#E4F1FF', colour: '#0B4A85', trend: trends.volunteers, onClick: () => go('volunteers') },
+            ]} />
           </Panel>
 
-          {/* OVERVIEW — merged "today" and "this month" stats behind one toggle, instead of three separate stat blocks */}
-          <Panel title="🧭 Overview" right={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: 99, padding: 3 }}>
-                {['today', 'month'].map(v => (
-                  <button key={v} onClick={() => setStatsView(v)}
-                    style={{ border: 'none', borderRadius: 99, padding: '5px 12px', fontSize: 11.5, fontWeight: 800, cursor: 'pointer',
-                      background: statsView === v ? '#fff' : 'none', color: statsView === v ? primary : '#6B7280',
-                      boxShadow: statsView === v ? '0 1px 4px rgba(0,0,0,0.12)' : 'none' }}>
-                    {v === 'today' ? 'Today' : 'This month'}
-                  </button>
-                ))}
-              </div>
-              <button onClick={() => go('reports')} style={{ background: `${primary}14`, color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>View summary →</button>
-            </div>
-          }>
-            {statsView === 'today' ? (
-              <div className="ls-hub-overview-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
-                <GlanceStat icon="👥" iconImg="/icons/young-people-icon-v2.png" iconBg="#DCFCE7" value={children.length} valueColour="#16A34A" label="Young people" sub="Expected" onClick={() => go('registers')} />
-                <GlanceStat icon="↪" iconImg="/icons/signedin-icon.png" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="So far" onClick={() => go('registers')} />
-                <GlanceStat icon="🕐" iconImg="/icons/sessions-icon.png" iconBg="#FEF3C7" value={strictlyTodaySessions.length} valueColour="#D97706" label="Sessions" sub="Today" onClick={() => go('planner')} />
-                <GlanceStat icon="❤️" iconImg="/icons/volunteers-icon.png" iconBg={`${secondary}1A`} value={volunteersCount} valueColour={secondary} label="Volunteers" sub="Involved" onClick={() => go('volunteers')} />
-              </div>
-            ) : (
-              <div className="ls-hub-overview-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, paddingBottom: 18, marginBottom: 18, borderBottom: '1px solid #F1F5F9' }}>
-                <GlanceStat icon="👥" iconImg="/icons/young-people-icon-v2.png" iconBg="#DCFCE7" value={children.length} valueColour={primary} label="Young people" sub="This month" onClick={() => go('registers')} />
-                <GlanceStat icon="📅" iconImg="/icons/sessions-icon.png" iconBg={`${secondary}1A`} value={sessions.length} valueColour={secondary} label="Sessions" sub="Planned" onClick={() => go('planner')} />
-                <GlanceStat icon="↪" iconImg="/icons/signedin-icon.png" iconBg="#DBEAFE" value={signedIn} valueColour="#2563EB" label="Signed in" sub="Total" onClick={() => go('registers')} />
-                <GlanceStat icon="✓" iconBg="#DCFCE7" value={`${attendanceRate}%`} valueColour="#059669" label="Attendance" sub="Rate" onClick={() => go('reports')} />
-              </div>
-            )}
-
-            <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? '1fr 1fr' : undefined, gap: isMobile ? 10 : 12, flexWrap: 'wrap', marginBottom: 14 }}>
-              {hasModule('registers') ? (
-                <GlanceCard icon="📋" iconImg="/icons/registers-icon.png" tone="green" title="Registers" subtitle="Take today's register"
-                  fraction={`${sessionsEndedToday} / ${strictlyTodaySessions.length}`} fractionLabel="Sessions completed"
-                  onClick={() => go('registers')} compact={isMobile} />
-              ) : (
-                <GlanceCard icon="👥" tone="green" title="Young People" subtitle="View your roster"
-                  fraction={children.length} fractionLabel="On roll"
-                  onClick={() => go('planner')} compact={isMobile} />
-              )}
-              {hasModule('safeguarding') ? (
-                <GlanceCard icon="🛡️" iconImg="/icons/hub-safeguarding-icon-v2.png" tone={concerns.length > 0 ? "amber" : "blue"} title="Safeguarding" subtitle={concerns.length > 0 ? "Needs attention" : "All clear"}
-                  fraction={concerns.length} fractionLabel={concerns.length > 0 ? `Open concern${concerns.length > 1 ? 's' : ''}` : "No open concerns"}
-                  onClick={() => go('safeguarding')} compact={isMobile} />
-              ) : (
-                <GlanceCard icon="🚀" tone="blue" title="Grow your workspace" subtitle="Unlock more modules"
-                  fraction="→" fractionLabel="Explore plans"
-                  onClick={() => go('settings')} compact={isMobile} />
-              )}
-            </div>
+          {/* JUMP STRAIGHT IN — the handful of things people actually start from
+              Home, as one tappable grid rather than buried in the nav rail. */}
+          <Panel title="⚡ Jump straight in">
+            <QuickJump isMobile={isMobile} primary={primary} actions={quickJumpActions} />
           </Panel>
 
           {/* SESSIONS — merged Live & Upcoming + Ended sessions behind one segmented control, instead of two stacked lists */}
@@ -4261,47 +4217,61 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {/* NEEDS ATTENTION — merged Attention Centre + Safeguarding Snapshot + Reflection Due into
-              one list, sorted by real urgency (safeguarding concerns and overdue reflections first)
-              instead of three separate panels that repeated the same numbers in different card styles. */}
+          {/* NEEDS ATTENTION — only genuine outstanding work, colour-coded by
+              urgency. The old version padded this list with rows like
+              "Registers: no activity yet" and "Mentoring: view active matches",
+              which weren't actions at all — they made a quiet day look as busy
+              as a bad one, and buried the items that did need doing. When
+              there's nothing outstanding, one green line says so. */}
           {(() => {
             const items = []
             if (hasModule('safeguarding') && concerns.length > 0) {
-              items.push({ key: 'safeguarding', icon: '🛡️', label: 'Safeguarding', value: `${concerns.length} open concern${concerns.length > 1 ? 's' : ''}`, tone: 'amber', rank: 0, onClick: () => go('safeguarding') })
+              items.push({
+                key: 'safeguarding', icon: '🛡️', tone: 'punch',
+                title: `${concerns.length} open safeguarding concern${concerns.length > 1 ? 's' : ''}`,
+                detail: 'Review and record next steps',
+                onClick: () => go('safeguarding'),
+              })
+            }
+            if (pendingRegistrations > 0) {
+              items.push({
+                key: 'registrations', icon: '🧒', tone: 'punch',
+                title: `${pendingRegistrations} registration${pendingRegistrations > 1 ? 's' : ''} to authorise`,
+                detail: 'Submitted by parents, awaiting approval',
+                onClick: () => go('children', { openRegistrationRequests: true }),
+              })
             }
             if (completedWithoutReflection.length > 0) {
-              items.push({ key: 'reflections', icon: '⭐', label: 'Reflections due', value: `${completedWithoutReflection.length} session${completedWithoutReflection.length > 1 ? 's' : ''} to write up`, tone: 'amber', rank: 0, onClick: () => setShowReflectionsModal(true) })
-            }
-            if (hasModule('resource_booking') && checkedOutCount > 0) {
-              items.push({ key: 'resources', icon: '↗', label: 'Resources', value: `${checkedOutCount} item${checkedOutCount > 1 ? 's' : ''} checked out`, tone: 'amber', rank: 1, onClick: () => go('resource_booking') })
+              const oldest = completedWithoutReflection[completedWithoutReflection.length - 1]
+              const days = oldest ? Math.floor((Date.now() - new Date(oldest.session_date).getTime()) / 86400000) : 0
+              items.push({
+                key: 'reflections', icon: '✍️', tone: 'amber',
+                title: `${completedWithoutReflection.length} reflection${completedWithoutReflection.length > 1 ? 's' : ''} to write up`,
+                detail: days > 0 ? `Oldest is ${days} day${days > 1 ? 's' : ''} old` : 'From sessions that have ended',
+                onClick: () => setShowReflectionsModal(true),
+              })
             }
             if (medicalAlertsNeedingReview > 0) {
-              items.push({ key: 'medical', icon: '💊', iconImg: '/icons/medical-icon.png', label: 'Medical alerts', value: `${medicalAlertsNeedingReview} young ${medicalAlertsNeedingReview > 1 ? 'people' : 'person'} to review`, tone: 'amber', rank: 1, onClick: () => go('medical_alerts') })
+              items.push({
+                key: 'medical', icon: '💊', tone: 'amber',
+                title: `${medicalAlertsNeedingReview} medical record${medicalAlertsNeedingReview > 1 ? 's' : ''} to review`,
+                detail: 'Not confirmed in the last six months',
+                onClick: () => go('medical_alerts'),
+              })
             }
-            if (hasModule('registers')) {
-              items.push({ key: 'registers', icon: '📋', iconImg: '/icons/registers-icon.png', label: 'Registers', value: signedIn > 0 ? `${signedIn} signed in today` : 'No activity yet', tone: 'blue', rank: 2, onClick: () => go('registers') })
+            if (hasModule('resource_booking') && checkedOutCount > 0) {
+              items.push({
+                key: 'resources', icon: '📦', tone: 'sky',
+                title: `${checkedOutCount} item${checkedOutCount > 1 ? 's' : ''} still checked out`,
+                detail: 'Chase or mark as returned',
+                onClick: () => go('resource_booking'),
+              })
             }
-            if (hasModule('safeguarding') && concerns.length === 0) {
-              items.push({ key: 'safeguarding-clear', icon: '🛡️', label: 'Safeguarding', value: 'No open concerns', tone: 'blue', rank: 3, onClick: () => go('safeguarding') })
+
+            if (items.length === 0) {
+              return <AllClear label="Nothing needs your attention right now" />
             }
-            if (hasModule('volunteers')) {
-              items.push({ key: 'volunteers', icon: '❤️', label: 'Volunteers', value: 'Review session cover', tone: 'blue', rank: 3, onClick: () => go('volunteers') })
-            }
-            if (hasModule('mentoring')) {
-              items.push({ key: 'mentoring', icon: '🤝', label: 'Mentoring', value: 'View active matches', tone: 'blue', rank: 3, onClick: () => go('mentoring') })
-            }
-            if (hasModule('reports')) {
-              items.push({ key: 'reports', icon: '📊', label: 'Reports', value: 'View impact data', tone: 'blue', rank: 3, onClick: () => go('reports') })
-            }
-            items.sort((a, b) => a.rank - b.rank)
-            if (items.length === 0) return null
-            return (
-              <Panel title="🔔 Needs attention">
-                {items.map(item => (
-                  <AttentionRow key={item.key} icon={item.icon} iconImg={item.iconImg} label={item.label} value={item.value} tone={item.tone} onClick={item.onClick} />
-                ))}
-              </Panel>
-            )
+            return <ActionRow items={items} isMobile={isMobile} />
           })()}
 
           {/* PHOTO CAROUSEL — community content, kept below operational items */}
@@ -4470,137 +4440,9 @@ function Panel({ title, right, children }) {
   );
 }
 
-function GlanceStat({ icon, iconImg, iconBg, value, valueColour, label, sub, onClick }) {
-  const c = valueColour || '#64748B'
-  return (
-    <button onClick={onClick} style={{
-      display: 'flex', alignItems: 'center', gap: 12, cursor: onClick ? 'pointer' : 'default',
-      width: '100%', minWidth: 0, textAlign: 'left', boxSizing: 'border-box',
-      background: `${c}12`, border: `1.5px solid ${c}38`, borderRadius: 16, padding: '13px 14px',
-      boxShadow: `0 4px 14px -8px ${c}60`, transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
-    }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 8px 20px -8px ${c}70`; e.currentTarget.style.borderColor = `${c}55` }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 4px 14px -8px ${c}60`; e.currentTarget.style.borderColor = `${c}38` }}
-    >
-      {iconImg ? (
-        <span style={{ width: 58, height: 58, borderRadius: 16, flexShrink: 0, background: `${c}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 7, boxSizing: 'border-box', boxShadow: `inset 0 1px 0 rgba(255,255,255,0.4)` }}>
-          <img src={iconImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-        </span>
-      ) : (
-        <span style={{
-          width: 58, height: 58, borderRadius: 16, flexShrink: 0,
-          background: `linear-gradient(135deg, ${c}, ${c}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 24, boxShadow: `0 6px 14px -4px ${c}80, inset 0 1px 0 rgba(255,255,255,0.35)`,
-        }}>{icon}</span>
-      )}
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 23, fontWeight: 900, color: c, lineHeight: 1.05, letterSpacing: '-0.3px' }}>{value}</div>
-        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text, #111)', marginTop: 2 }}>{label}</div>
-        <div style={{ fontSize: 10.5, fontWeight: 600, color: '#94A3B8' }}>{sub}</div>
-      </div>
-    </button>
-  );
-}
 
-function GlanceCard({ icon, iconImg, tone, title, subtitle, fraction, fractionLabel, onClick, compact }) {
-  const tones = {
-    green: { bg: 'linear-gradient(135deg, #ECFDF5, #F0FDF4)', border: '#BBF7D0', iconBg: '#16A34A', pillBg: 'rgba(22,163,74,0.12)', pillColour: '#16A34A', arrowBg: '#16A34A' },
-    blue:  { bg: 'linear-gradient(135deg, #EFF6FF, #F5F8FF)', border: '#BFDBFE', iconBg: '#2563EB', pillBg: 'rgba(37,99,235,0.12)', pillColour: '#2563EB', arrowBg: '#2563EB' },
-    amber: { bg: 'linear-gradient(135deg, #FFFBEB, #FEF9F0)', border: '#FDE68A', iconBg: '#D97706', pillBg: 'rgba(217,119,6,0.12)', pillColour: '#D97706', arrowBg: '#D97706' },
-  }[tone] || { bg: '#F8FAFC', border: '#E5E7EB', iconBg: '#64748B', pillBg: 'rgba(100,116,139,0.12)', pillColour: '#64748B', arrowBg: '#64748B' };
 
-  return (
-    <button onClick={onClick} style={{ position: 'relative', flex: compact ? '1 1 auto' : '1 1 220px', width: compact ? '100%' : undefined, minWidth: compact ? 0 : 200, textAlign: 'left', background: tones.bg, border: `1.5px solid ${tones.border}`, borderRadius: compact ? 16 : 20, padding: compact ? 14 : 18, cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: compact ? 10 : 14, overflow: 'hidden', boxSizing: 'border-box', boxShadow: `0 8px 22px -12px ${tones.iconBg}90`, transition: 'transform 0.15s, box-shadow 0.15s' }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 12px 28px -12px ${tones.iconBg}A0` }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 8px 22px -12px ${tones.iconBg}90` }}
-    >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: compact ? 6 : 12 }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: compact ? 13 : 15, fontWeight: 900, color: 'var(--text, #111)', lineHeight: 1.15 }}>{title}</div>
-          <div style={{ fontSize: compact ? 10.5 : 12, color: '#6B7280', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: compact ? 'nowrap' : 'normal' }}>{subtitle}</div>
-        </div>
-        {iconImg && (
-          <img src={iconImg} alt="" style={{ width: compact ? 36 : 60, height: compact ? 36 : 60, borderRadius: compact ? 10 : 16, objectFit: 'contain', flexShrink: 0, pointerEvents: 'none' }} />
-        )}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: compact ? 6 : 8 }}>
-        <div style={{ background: tones.pillBg, borderRadius: compact ? 8 : 10, padding: compact ? '6px 9px' : '8px 12px', flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: compact ? 13 : 16, fontWeight: 900, color: tones.pillColour, lineHeight: 1.1 }}>{fraction}</div>
-          <div style={{ fontSize: compact ? 9.5 : 10.5, color: tones.pillColour, opacity: 0.85, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fractionLabel}</div>
-        </div>
-        <span style={{ width: compact ? 26 : 34, height: compact ? 26 : 34, borderRadius: '50%', background: '#fff', color: tones.arrowBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: compact ? 12 : 15, fontWeight: 900, flexShrink: 0, boxShadow: '0 2px 8px rgba(15,23,42,0.1)' }}>→</span>
-      </div>
-    </button>
-  );
-}
 
-function StatCard({ icon, title, text, button, badge, onClick, colour, gradient, compact }) {
-  return (
-    <button onClick={onClick} style={{
-      background: gradient || `linear-gradient(135deg, ${colour}, ${colour}CC)`,
-      borderRadius: 16, padding: compact ? '14px 14px' : '16px 18px', color: '#fff', position: 'relative', overflow: 'hidden',
-      minHeight: 128, height: '100%', boxShadow: `0 10px 28px -10px ${colour}80`, textAlign: 'left', cursor: 'pointer',
-      border: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-      width: '100%', minWidth: 0, boxSizing: 'border-box',
-    }}>
-      <div style={{ position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
-      <div style={{ position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: 26 }}>{icon}</div>
-        </div>
-        <h3 style={{ fontSize: 15, fontWeight: 900, color: '#fff', margin: '10px 0 4px', lineHeight: 1.25 }}>{title}</h3>
-        <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0 }}>{text}</p>
-      </div>
-      {(button || badge) && (
-        button ? (
-          <div style={{ position: 'relative', marginTop: 10, display: 'inline-block', background: '#fff', borderRadius: 9, padding: '7px 14px', fontSize: 11.5, fontWeight: 800, color: colour, alignSelf: 'flex-start' }}>
-            {button}
-          </div>
-        ) : (
-          <div style={{ position: 'relative', marginTop: 10, display: 'inline-block', background: 'rgba(255,255,255,0.2)', borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 800, color: '#fff', alignSelf: 'flex-start' }}>
-            {badge}
-          </div>
-        )
-      )}
-    </button>
-  );
-}
-
-function AttentionRow({ icon, iconImg, label, value, tone, onClick }) {
-  const tones = {
-    amber: { bg: '#FFFBEB', border: '#FDE68A', iconBg: 'linear-gradient(135deg, #FBBF24, #D97706)', glow: 'rgba(217,119,6,0.28)' },
-    blue:  { bg: '#F8FAFC', border: '#E2E8F0', iconBg: 'linear-gradient(135deg, #60A5FA, #2563EB)', glow: 'rgba(37,99,235,0.18)' },
-    green: { bg: '#F0FDF4', border: '#BBF7D0', iconBg: 'linear-gradient(135deg, #4ADE80, #16A34A)', glow: 'rgba(22,163,74,0.18)' },
-  }[tone] || { bg: '#F8FAFC', border: '#E2E8F0', iconBg: 'linear-gradient(135deg, #94A3B8, #64748B)', glow: 'rgba(100,116,139,0.18)' };
-
-  const urgent = tone === 'amber';
-
-  return (
-    <button onClick={onClick} style={{
-      position: 'relative', overflow: 'hidden', width: '100%', display: 'flex', alignItems: 'center', gap: 13,
-      background: tones.bg, border: `1px solid ${tones.border}`, borderRadius: 16,
-      padding: '12px 14px 12px 16px', marginBottom: 9, textAlign: 'left', cursor: 'pointer',
-      boxShadow: urgent ? `0 6px 16px -8px ${tones.glow}` : `0 3px 10px -6px ${tones.glow}`,
-    }}>
-      {urgent && (
-        <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: 'linear-gradient(180deg, #FBBF24, #D97706)' }} />
-      )}
-      <span style={{
-        width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: tones.iconBg,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19,
-        boxShadow: `0 4px 12px -4px ${tones.glow}, inset 0 1px 0 rgba(255,255,255,0.35)`,
-      }}>{iconImg ? <img src={iconImg} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} /> : icon}</span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)' }}>{label}</div>
-        <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 1.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</div>
-      </div>
-      {urgent && (
-        <span style={{ fontSize: 9, fontWeight: 900, color: '#B45309', background: 'rgba(217,119,6,0.14)', borderRadius: 99, padding: '4px 8px', flexShrink: 0, textTransform: 'uppercase', letterSpacing: 0.4 }}>Action</span>
-      )}
-      <span style={{ fontSize: 15, color: '#9CA3AF', flexShrink: 0 }}>→</span>
-    </button>
-  );
-}
 
 function weatherFromCode(code) {
   const map = {
