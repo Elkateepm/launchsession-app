@@ -181,7 +181,7 @@ export default function TeamTab({ org, session }) {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div>
       <PageHeader
         icon="👥"
         iconImg="/icons/team-icon-badge.png"
@@ -197,7 +197,7 @@ export default function TeamTab({ org, session }) {
           { label: 'Pending', value: pendingInvites, icon: '✉️', color: '#F59E0B' },
         ]}
       />
-      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 14 : 24 }}>
+      <div style={{ padding: isMobile ? 14 : 24 }}>
       <div style={{ maxWidth: 1120, margin: '0 auto' }}>
 
         {/* Invite card */}
