@@ -2660,7 +2660,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
   const current = NAV.find(n => n.key === active)
 
   return (
-    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%', overflow: 'hidden', background: '#F8FAFC' }}>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', background: '#F8FAFC' }}>
 
       {/* MOBILE NAV TOGGLE */}
       {isMobile && (
@@ -2673,7 +2673,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
       )}
 
       {/* SETTINGS SIDEBAR */}
-      <div style={{ width: isMobile ? '100%' : 190, background: '#fff', borderRight: isMobile ? 'none' : '1px solid #e5e7eb', borderBottom: isMobile ? '1px solid #e5e7eb' : 'none', display: isMobile ? (showSidebar ? 'flex' : 'none') : 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto', maxHeight: isMobile ? 320 : 'none' }}>
+      <div style={{ width: isMobile ? '100%' : 190, background: '#fff', borderRight: isMobile ? 'none' : '1px solid #e5e7eb', borderBottom: isMobile ? '1px solid #e5e7eb' : 'none', display: isMobile ? (showSidebar ? 'flex' : 'none') : 'flex', flexDirection: 'column', flexShrink: 0, maxHeight: isMobile ? 320 : 'none', overflowY: isMobile ? 'auto' : 'visible', position: isMobile ? 'static' : 'sticky', top: isMobile ? 'auto' : 0, alignSelf: isMobile ? 'auto' : 'flex-start' }}>
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>⚙️ Settings</div>
           <div style={{ position: 'relative' }}>
@@ -2701,7 +2701,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
       </div>
 
       {/* CONTENT */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '24px' }}>
+      <div style={{ flex: 1, minWidth: 0, padding: isMobile ? '16px' : '24px' }}>
         <div style={{ maxWidth: active === 'branding' ? 'none' : 700 }}>
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>{current?.icon} {current?.label}</div>
