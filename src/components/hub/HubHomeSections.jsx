@@ -16,8 +16,6 @@ import React from 'react'
 // Everything takes the org's `primary` so branding still flows through.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const INK = '#141A2E'
-
 export const hubHomeKeyframes = `
 @keyframes lsWave{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(16deg)}80%{transform:rotate(-8deg)}90%{transform:rotate(12deg)}}
 @keyframes lsNowPing{0%,100%{box-shadow:0 0 0 0 rgba(255,176,32,.7)}70%{box-shadow:0 0 0 9px rgba(255,176,32,0)}}
@@ -60,25 +58,26 @@ export function DaySpine({ sessions, statsFor, primary, secondary, isMobile, onO
 
   const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60
 
-  // Window the spine to the day's actual activity rather than a fixed 08:00–18:00,
-  // so an evening-only or all-day programme still fills the ribbon sensibly.
+  // Window the spine to the day's actual activity rather than a fixed
+  // 08:00–18:00, so an evening club or an all-day residential still reads
+  // properly. Deliberately NOT stretched to include the current time: doing
+  // that made the ribbon span 00:00–18:00 when someone opened the app just
+  // after midnight, squashing a six-hour session into the right-hand third.
+  // If now falls outside the window the marker simply isn't drawn.
   const { from, to } = React.useMemo(() => {
     const starts = sessions.map(s => toMin(s.start_time)).filter(v => v != null)
     const ends = sessions.map(s => toMin(s.end_time)).filter(v => v != null)
-    let lo = Math.min(8 * 60, ...(starts.length ? starts : [8 * 60]))
-    let hi = Math.max(18 * 60, ...(ends.length ? ends : [18 * 60]))
-    lo = Math.min(lo, nowMin)
-    hi = Math.max(hi, nowMin)
-    lo = Math.floor((lo - 30) / 60) * 60
-    hi = Math.ceil((hi + 30) / 60) * 60
-    return { from: Math.max(0, lo), to: Math.min(24 * 60, hi) }
-  }, [sessions, nowMin])
+    if (starts.length === 0) return { from: 8 * 60, to: 18 * 60 }
+    const lo = Math.floor((Math.min(...starts) - 60) / 60) * 60
+    const hi = Math.ceil((Math.max(...(ends.length ? ends : starts.map(s => s + 90))) + 60) / 60) * 60
+    return { from: Math.max(0, lo), to: Math.min(24 * 60, Math.max(hi, lo + 240)) }
+  }, [sessions])
 
   const span = Math.max(60, to - from)
   const pct = (min) => Math.max(0, Math.min(100, ((min - from) / span) * 100))
 
   const hourMarks = []
-  const step = span > 10 * 60 ? 180 : 120
+  const step = span > 8 * 60 ? 120 : span > 4 * 60 ? 60 : 30
   for (let m = from; m <= to; m += step) hourMarks.push(m)
 
   // The next thing that hasn't finished yet — what the countdown counts to.
@@ -133,13 +132,17 @@ export function DaySpine({ sessions, statsFor, primary, secondary, isMobile, onO
                 position: 'absolute', top: 7, bottom: 7, left: `${left}%`, right: `${Math.max(0, right)}%`,
                 minWidth: 72, borderRadius: 11, cursor: 'pointer', overflow: 'hidden',
                 display: 'flex', alignItems: 'center', gap: 9, padding: '0 12px',
-                background: `linear-gradient(100deg, ${primary}, ${secondary || primary})`,
-                boxShadow: `0 8px 26px -10px ${primary}`,
+                // Glass rather than brand-coloured: the hero behind this is now
+                // the org's own gradient, so a brand-coloured block would sink
+                // into it. White translucent reads on any palette.
+                background: live ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.18)',
+                border: '1px solid rgba(255,255,255,0.28)',
+                boxShadow: '0 8px 26px -12px rgba(0,0,0,0.45)',
                 outline: 'none',
               }}
             >
               {tot > 0 && (
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.round((done / tot) * 100)}%`, background: 'rgba(255,255,255,0.18)', transition: 'width 500ms ease' }} />
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.round((done / tot) * 100)}%`, background: 'rgba(255,255,255,0.22)', transition: 'width 500ms ease' }} />
               )}
               <span style={{ fontSize: 15, position: 'relative', flexShrink: 0 }}>{live ? '🔴' : '⚽'}</span>
               <div style={{ minWidth: 0, position: 'relative' }}>
@@ -326,17 +329,26 @@ export function QuickJump({ actions, isMobile, primary }) {
 // ─── Weather strip ───────────────────────────────────────────────────────────
 // Weather only matters as a delivery decision, so it gets a verdict attached
 // and a strip rather than the large tile it used to occupy.
-export function WeatherStrip({ weather, weatherError, icon, label }) {
+export function WeatherStrip({ weather, weatherError, icon, label, primary }) {
+  // Plain card, same as every other panel on the page. This used to be a blue
+  // gradient tile, which read as a fourth brand colour on a page that already
+  // has the org's primary and secondary.
+  const shell = {
+    display: 'flex', alignItems: 'center', gap: 13, padding: '13px 17px',
+    background: 'var(--surface, #fff)', borderRadius: 18,
+    border: '1px solid var(--border, #E6EAF4)', flexWrap: 'wrap',
+    boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 16px -12px rgba(15,23,42,0.18)',
+  }
   if (weatherError) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px 16px', background: 'var(--surface2, #F8FAFC)', borderRadius: 18, border: '1px solid var(--border, #E6EAF4)', fontSize: 12, color: 'var(--text3, #5A6484)', fontWeight: 600 }}>
+      <div style={{ ...shell, fontSize: 12, color: 'var(--text3, #5A6484)', fontWeight: 600 }}>
         <span style={{ fontSize: 19 }}>🌡️</span> Weather unavailable — add a city in Settings
       </div>
     )
   }
   if (!weather) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px 16px', background: 'var(--surface2, #F8FAFC)', borderRadius: 18, border: '1px solid var(--border, #E6EAF4)', fontSize: 12, color: 'var(--text3, #5A6484)', fontWeight: 600 }}>
+      <div style={{ ...shell, fontSize: 12, color: 'var(--text3, #5A6484)', fontWeight: 600 }}>
         Loading weather…
       </div>
     )
@@ -346,22 +358,23 @@ export function WeatherStrip({ weather, weatherError, icon, label }) {
   const windy = weather.wind >= 25
   const cold = weather.temp <= 6
   const verdict = wet ? 'Plan indoors' : windy ? 'Windy — secure kit' : cold ? 'Wrap up warm' : 'Good for outdoor'
-  const verdictTone = wet || cold ? { bg: '#FFF4DE', fg: '#7A4D00', bd: '#F5DCB0' } : { bg: '#fff', fg: '#0B4A85', bd: '#D3E7FA' }
+  const caution = wet || cold || windy
+  const tone = caution
+    ? { bg: '#FFF4DE', fg: '#7A4D00', bd: '#F5DCB0' }
+    : { bg: `${primary}14`, fg: primary, bd: `${primary}33` }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '13px 17px', background: 'linear-gradient(100deg, #E4F1FF, #F2F8FF)', borderRadius: 18, border: '1px solid #D3E7FA', flexWrap: 'wrap' }}>
+    <div style={shell}>
       <span style={{ fontSize: 26 }}>{icon}</span>
       <div>
-        <div style={{ fontSize: 24, fontWeight: 900, color: '#0B4A85', lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°</div>
-        <div style={{ fontSize: 11.5, color: '#2E6A9E', fontWeight: 600, marginTop: 3 }}>
+        <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text, #0F172A)', lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°</div>
+        <div style={{ fontSize: 11.5, color: 'var(--text3, #64748B)', fontWeight: 600, marginTop: 3 }}>
           {label} · {weather.city}{weather.high != null ? ` · ${weather.high}°/${weather.low}°` : ''}
         </div>
       </div>
-      <span style={{ marginLeft: 'auto', fontSize: 11.5, background: verdictTone.bg, color: verdictTone.fg, padding: '5px 11px', borderRadius: 99, fontWeight: 700, border: `1px solid ${verdictTone.bd}`, whiteSpace: 'nowrap' }}>
+      <span style={{ marginLeft: 'auto', fontSize: 11.5, background: tone.bg, color: tone.fg, padding: '5px 11px', borderRadius: 99, fontWeight: 700, border: `1px solid ${tone.bd}`, whiteSpace: 'nowrap' }}>
         {verdict}
       </span>
     </div>
   )
 }
-
-export { INK }

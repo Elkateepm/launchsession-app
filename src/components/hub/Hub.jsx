@@ -14,6 +14,7 @@ import { isPushSupported, getNotificationPermission, subscribeToPush } from "../
 import { notifyEvent } from "../../services/notifyEvent";
 import { allowedModules } from '../../lib/moduleAccess'
 import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
+import { useTerms } from '../../context/OrgContext'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -2779,6 +2780,9 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
 }
 
 export default function Hub({ org, session, setTab, onNavigate, userProfile, onAvatarClick }) {
+  // Home was the one module page still hardcoding "Young People" / "Sessions",
+  // so a sports club saw Players everywhere else and Young People here.
+  const terms = useTerms()
   const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
   const [search, setSearch] = React.useState('')
   const [searchResults, setSearchResults] = React.useState(null)
@@ -3103,7 +3107,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     : null;
 
   // ── Home hero helpers ──────────────────────────────────────────────────
-  const INK_HERO = '#141A2E'
+  // Attendance grades itself rather than taking a brand tint, matching the
+  // rule Reports already applies. A missing figure stays neutral: "no
+  // registers yet" must not render as a crisis.
+  const attendanceTone = React.useMemo(() => {
+    if (!children.length || attendanceRate == null) return { bg: '#F1F5F9', fg: '#64748B' }
+    if (attendanceRate >= 75) return { bg: '#DCFCE7', fg: '#15803D' }
+    if (attendanceRate >= 50) return { bg: '#FEF3C7', fg: '#B45309' }
+    return { bg: '#FEE2E2', fg: '#B91C1C' }
+  }, [attendanceRate, children.length])
   const heroGlassBtn = {
     border: 'none', borderRadius: 13, padding: '11px 16px', fontSize: 13, fontWeight: 700,
     cursor: 'pointer', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.12)', color: '#fff',
@@ -3117,15 +3129,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     if (n === 0) {
       const next = upcomingSessions.find(s => s.session_date > today)
       return next
-        ? `No sessions today. Next up: ${next.title} on ${formatDate(next.session_date)}.`
-        : 'No sessions today, and nothing booked yet. A good moment to plan one.'
+        ? `No ${terms.sessions} today. Next up: ${next.title} on ${formatDate(next.session_date)}.`
+        : `No ${terms.sessions} today, and nothing booked yet. A good moment to plan one.`
     }
     const expected = todayAttendance.length
-    const bits = [`${n} session${n > 1 ? 's' : ''} today`]
-    if (expected > 0) bits.push(`${expected} young ${expected > 1 ? 'people' : 'person'} expected`)
+    const bits = [`${n} ${n > 1 ? terms.sessions : terms.session} today`]
+    if (expected > 0) bits.push(`${expected} ${expected > 1 ? terms.people : terms.person} expected`)
     if (concerns.length > 0) bits.push(`${concerns.length} open concern${concerns.length > 1 ? 's' : ''}`)
     return bits.join(' · ') + '.'
-  }, [strictlyTodaySessions, upcomingSessions, today, todayAttendance, concerns])
+  }, [strictlyTodaySessions, upcomingSessions, today, todayAttendance, concerns, terms.session, terms.sessions, terms.person, terms.people])
 
   // Sessions actually delivered this calendar month — "sessions run" is a more
   // honest headline than "sessions planned", which counted future ones too.
@@ -3167,8 +3179,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const quickJumpActions = (() => {
     const list = []
     if (hasModule('registers')) list.push({ key: 'register', icon: '▶️', label: 'Start a register', onClick: () => go('registers') })
-    list.push({ key: 'session', icon: '➕', label: 'New session', onClick: () => go('planner', { autoOpenWizard: true }) })
-    list.push({ key: 'child', icon: '🧒', label: 'Add young person', onClick: () => setShowInviteChild(true) })
+    list.push({ key: 'session', icon: '➕', label: `New ${terms.session}`, onClick: () => go('planner', { autoOpenWizard: true }) })
+    list.push({ key: 'child', icon: '🧒', label: `Add ${terms.person}`, onClick: () => setShowInviteChild(true) })
     if (hasModule('gallery')) list.push({ key: 'photos', icon: '📷', label: 'Upload photos', onClick: () => go('gallery') })
     if (hasModule('forms')) list.push({ key: 'forms', icon: '📋', label: 'Send a form', onClick: () => go('forms') })
     if (hasModule('safeguarding')) list.push({ key: 'concern', icon: '🚨', label: 'Report a concern', onClick: () => setShowConcernForm(true) })
@@ -3478,10 +3490,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             block. Replaces the old greeting row plus the "N sessions today" and
             "Next session" tiles, which all pointed at the same session. ── */}
         <div className="ls-rise" style={{
-          background: INK_HERO, borderRadius: 26, padding: isMobile ? '18px 18px 16px' : '24px 26px 18px',
+          background: `linear-gradient(135deg, ${primary} 0%, ${primary}D9 42%, ${secondary}E6 100%)`,
+          borderRadius: isMobile ? 18 : 22, padding: isMobile ? '18px 18px 16px' : '24px 28px 18px',
           color: '#fff', position: 'relative', overflow: 'hidden', margin: '10px 0 4px',
+          boxShadow: `0 1px 0 rgba(255,255,255,0.14) inset, 0 18px 40px -24px ${primary}B3`,
         }}>
-          <div aria-hidden="true" style={{ position: 'absolute', right: -90, top: -110, width: 340, height: 340, borderRadius: '50%', background: `radial-gradient(circle, ${primary}80, transparent 68%)`, pointerEvents: 'none' }} />
+          {/* Same two soft blooms as the Projects hero, so the block doesn't
+              read as a flat slab and Home matches the rest of the product. */}
+          <div aria-hidden="true" style={{ position: 'absolute', top: -70, right: -40, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 70%)', pointerEvents: 'none' }} />
+          <div aria-hidden="true" style={{ position: 'absolute', bottom: -90, left: '30%', width: 300, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%)', pointerEvents: 'none' }} />
 
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
             <div style={{ minWidth: 0 }}>
@@ -3497,7 +3514,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 <button onClick={() => go('volunteers', { autoOpenInvite: true })} style={heroGlassBtn}>🤝 Invite volunteer</button>
               )}
               {todaySessions.length > 0 && (
-                <button onClick={() => go('registers')} style={{ ...heroGlassBtn, background: '#12C48B', color: '#05241A' }}>
+                <button onClick={() => go('registers')} style={{ ...heroGlassBtn, background: '#fff', color: primary, fontWeight: 800 }}>
                   {todayHasLiveSession ? 'Open live register →' : "Open today's register →"}
                 </button>
               )}
@@ -3990,6 +4007,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             weatherError={weatherError}
             icon={weather ? weatherFromCode(weather.code).icon : '🌡️'}
             label={weather ? weatherFromCode(weather.code).label : ''}
+            primary={primary}
           />
 
           {/* AT A GLANCE — four real numbers that count up on mount, each with a
@@ -3999,11 +4017,16 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           <Panel title="🧭 This month at a glance" right={
             <button onClick={() => go('reports')} style={{ background: `${primary}14`, color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>Full report →</button>
           }>
+            {/* Tints derive from the org's own primary/secondary rather than a
+                fixed four-colour set, so these sit in the same palette as the
+                hero and the rest of the module pages. Attendance is the one
+                exception: it grades itself, the same rule Reports already uses,
+                because a rate is a judgement and shouldn't read as brand. */}
             <GlanceStats isMobile={isMobile} stats={[
-              { key: 'children', value: children.length, label: 'Young people', bg: `${primary}14`, colour: primary, trend: trends.children, onClick: () => go('children') },
-              { key: 'sessions', value: sessionsRunThisMonth, label: 'Sessions run', bg: '#DFF8EF', colour: '#06614A', trend: trends.sessions, onClick: () => go('planner') },
-              { key: 'attendance', value: attendanceRate, suffix: '%', label: 'Attendance rate', bg: '#FFF4DE', colour: '#7A4D00', trend: trends.attendance, onClick: () => go('reports') },
-              { key: 'volunteers', value: volunteersCount, label: 'Volunteers active', bg: '#E4F1FF', colour: '#0B4A85', trend: trends.volunteers, onClick: () => go('volunteers') },
+              { key: 'children', value: children.length, label: terms.People, bg: `${primary}14`, colour: primary, trend: trends.children, onClick: () => go('children') },
+              { key: 'sessions', value: sessionsRunThisMonth, label: `${terms.Sessions} run`, bg: `${secondary}14`, colour: secondary, trend: trends.sessions, onClick: () => go('planner') },
+              { key: 'attendance', value: attendanceRate, suffix: '%', label: 'Attendance rate', bg: attendanceTone.bg, colour: attendanceTone.fg, trend: trends.attendance, onClick: () => go('reports') },
+              { key: 'volunteers', value: volunteersCount, label: 'Volunteers active', bg: `${primary}0D`, colour: primary, trend: trends.volunteers, onClick: () => go('volunteers') },
             ]} />
           </Panel>
 
