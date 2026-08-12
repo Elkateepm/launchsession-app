@@ -3726,25 +3726,34 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         )}
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexShrink: 0 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                          <AttendanceRing
-                            signedIn={attendedCount} total={attendeeTotal} expected={stats.expected} absent={stats.absent}
-                            closed={isClosed} primary={primary} secondary={secondary}
-                            onClick={(e) => { e.stopPropagation(); setAttendanceBreakdownSession(s) }}
-                          />
-                          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>Attendees</span>
+                      {/* The attendance and countdown rings restate exactly what
+                          the day spine in the hero already shows, so for today's
+                          sessions they're dropped — the same numbers rendered
+                          twice on one screen read as two different facts, and
+                          the card's real value here is its actions. Sessions on
+                          other days keep the rings: the spine only covers today,
+                          so this is the only place that information appears. */}
+                      {s.session_date !== today && (
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexShrink: 0 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                            <AttendanceRing
+                              signedIn={attendedCount} total={attendeeTotal} expected={stats.expected} absent={stats.absent}
+                              closed={isClosed} primary={primary} secondary={secondary}
+                              onClick={(e) => { e.stopPropagation(); setAttendanceBreakdownSession(s) }}
+                            />
+                            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>Attendees</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                            <TimeRing
+                              kind={countdownKind} target={countdownTarget} totalSeconds={timeRingTotalSeconds} isClosed={isClosed}
+                              onClick={(e) => { e.stopPropagation(); setTimeBreakdownSession(s) }}
+                            />
+                            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                              {cardStatus === 'live' ? 'Ends in' : cardStatus === 'upcoming' ? 'Begins in' : isClosed ? 'Closed' : 'Overrun'}
+                            </span>
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                          <TimeRing
-                            kind={countdownKind} target={countdownTarget} totalSeconds={timeRingTotalSeconds} isClosed={isClosed}
-                            onClick={(e) => { e.stopPropagation(); setTimeBreakdownSession(s) }}
-                          />
-                          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
-                            {cardStatus === 'live' ? 'Ends in' : cardStatus === 'upcoming' ? 'Begins in' : isClosed ? 'Closed' : 'Overrun'}
-                          </span>
-                        </div>
-                      </div>
+                      )}
                     </div>
 
                     {cardStatus !== 'upcoming' && !isClosed && (
