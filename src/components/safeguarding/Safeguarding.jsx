@@ -6,7 +6,7 @@ export default function Safeguarding({ org, session, onNavigate, initialOpenConc
   const [showForm, setShowForm] = useState(false)
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div>
       <SafeguardingDashboard org={org} session={session} onReportConcern={() => setShowForm(true)} onNavigate={onNavigate} initialOpenConcernId={initialOpenConcernId} />
 
       {/* Form modal */}
