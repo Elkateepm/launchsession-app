@@ -2669,10 +2669,11 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
 
   // On mobile the bell sits near the right edge of the header, so a wide
   // panel anchored to it (position: absolute, right: 0) overflows off the
-  // left of the screen. Break out to fixed positioning, centred in the
-  // viewport with even margins, instead of anchoring to the button.
+  // left of the screen. Pin it to the viewport width instead, but keep it
+  // vertically anchored to the button — the header scrolls now, so a fixed
+  // `top` would leave the panel floating away from the bell that opened it.
   const panelStyle = isMobile
-    ? { position: 'fixed', top: 78, left: 10, right: 10, width: 'auto', maxWidth: 460, margin: '0 auto', maxHeight: 'calc(100vh - 110px)' }
+    ? { position: 'absolute', top: '120%', left: 'auto', right: -8, width: 'min(calc(100vw - 20px), 460px)', maxHeight: 'calc(100vh - 160px)' }
     : { position: 'absolute', top: '120%', right: 0, width: 372, maxHeight: 480 }
 
   return (
@@ -3249,6 +3250,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     <div style={styles.page}>
       <style>{hubHomeKeyframes}</style>
 
+      {/* Single scroll region for the whole page — the header used to sit
+          outside it as a fixed flex sibling, so it stayed pinned while the
+          content moved under it. It now scrolls away with everything else,
+          which gives the hero the full height on a laptop screen. */}
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+
       {/* ── HEADER ── */}
       <header style={{ background: `linear-gradient(120deg, ${primary}14 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px ${primary}50` }}>
 
@@ -3533,7 +3540,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         </div>
       </header>
 
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
       {showPushPrompt && (
         <div style={{ padding: `${pad}px ${pad}px 0` }}>
           <div style={{
