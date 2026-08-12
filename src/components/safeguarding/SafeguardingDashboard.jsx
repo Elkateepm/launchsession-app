@@ -793,7 +793,7 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
   ]
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div>
       {/* Compact header — stays under ~100px, no oversized hero card */}
       <div style={{ background: 'var(--surface, #fff)', borderBottom: `2px solid ${PRIMARY}18`, padding: isMobile ? '14px 16px' : '16px 24px', flexShrink: 0, position: 'relative' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${PRIMARY}, ${PRIMARY}66, transparent)` }} />
@@ -815,7 +815,7 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
+      <div style={{ padding: isMobile ? 16 : 24 }}>
         <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
           {TABS.map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
