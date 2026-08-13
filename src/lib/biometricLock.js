@@ -17,6 +17,14 @@
 // the user and hands back a signature; no face or fingerprint data enters the
 // app, so none of it is in scope for the DPA.
 
+import { isNativeShell, nativeHasBiometry, nativeVerify } from './nativeBiometric'
+
+// Inside the Capacitor shell the WebAuthn path is replaced wholesale by the
+// OS biometric API -- see nativeBiometric.js for why. Everything else in this
+// file (enrolment record, lock state, timeout) is shared by both paths, so the
+// branch is kept as narrow as possible: three functions, nothing else.
+const NATIVE_CRED = 'native'
+
 const CRED_KEY = 'ls_biometric_cred'   // { credentialId, userId, enrolledAt }
 const LOCKED_KEY = 'ls_biometric_locked'
 const LOCK_AFTER_KEY = 'ls_biometric_lock_after'
@@ -50,6 +58,10 @@ function randomChallenge() {
 
 // WebAuthn needs a secure context. localhost counts, so dev still works.
 export function isBiometricCapable() {
+  // The native shell has no WebAuthn requirement to satisfy. Whether biometry
+  // is actually enrolled is an async question, answered by
+  // hasPlatformAuthenticator() below -- this is only the synchronous gate.
+  if (isNativeShell()) return true
   return typeof window !== 'undefined'
     && window.isSecureContext
     && !!window.PublicKeyCredential
@@ -60,6 +72,7 @@ export function isBiometricCapable() {
 // alone isn't enough: a desktop Chrome with no Touch ID reports PublicKeyCredential
 // but has nothing to verify with, and we shouldn't offer the toggle there.
 export async function hasPlatformAuthenticator() {
+  if (isNativeShell()) return nativeHasBiometry()
   if (!isBiometricCapable()) return false
   try {
     return await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
@@ -122,6 +135,27 @@ export async function enrolBiometric({ userId, userName, displayName }) {
   if (!isBiometricCapable()) return { ok: false, reason: 'unsupported', message: 'This device or browser cannot use biometric unlock.' }
   if (!userId) return { ok: false, reason: 'no_user', message: 'You need to be signed in to set this up.' }
 
+  if (isNativeShell()) {
+    // No credential is created natively -- there is nothing to enrol with the
+    // OS, we just ask it to verify. Prompting once here is still worth doing:
+    // it proves biometry works on this device before the user is told the lock
+    // is on, rather than discovering it fails the first time they are locked
+    // out of their own app.
+    const check = await nativeVerify({ reason: 'Turn on app lock for LaunchSession' })
+    if (!check.ok) return check
+    try {
+      localStorage.setItem(CRED_KEY, JSON.stringify({
+        credentialId: NATIVE_CRED,
+        userId,
+        enrolledAt: Date.now(),
+      }))
+    } catch (e) {
+      return { ok: false, reason: 'error', message: 'Could not save the setting on this device.' }
+    }
+    setLocked(false)
+    return { ok: true }
+  }
+
   try {
     const cred = await navigator.credentials.create({
       publicKey: {
@@ -172,11 +206,29 @@ export async function verifyBiometric() {
   if (!enrolment?.credentialId) return { ok: false, reason: 'not_enrolled', message: 'Biometric unlock is not set up on this device.' }
   if (!isBiometricCapable()) return { ok: false, reason: 'unsupported', message: 'This device or browser cannot use biometric unlock.' }
 
+  if (isNativeShell()) return nativeVerify({ reason: 'Unlock LaunchSession' })
+
+  // A credential enrolled in the native shell is meaningless to WebAuthn. This
+  // only happens if the same origin is opened in a browser after enrolling in
+  // the app, and silently failing the assertion would look like a broken lock.
+  if (enrolment.credentialId === NATIVE_CRED) {
+    return { ok: false, reason: 'not_enrolled', message: 'App lock was set up in the LaunchSession app. Set it up again to use it here.' }
+  }
+
   try {
     const assertion = await navigator.credentials.get({
       publicKey: {
         challenge: randomChallenge(),
-        allowCredentials: [{ type: 'public-key', id: b64urlToBuf(enrolment.credentialId) }],
+        // `transports: ['internal']` matters more than it looks. Without it the
+        // browser has to assume the credential might live on another device and
+        // offers the passkey chooser -- "Use a phone or tablet", QR code and
+        // all -- before anything happens. Declaring it as on-device sends iOS
+        // straight to the Face ID scan.
+        allowCredentials: [{
+          type: 'public-key',
+          id: b64urlToBuf(enrolment.credentialId),
+          transports: ['internal'],
+        }],
         userVerification: 'required',
         timeout: 60000,
         rpId: window.location.hostname,

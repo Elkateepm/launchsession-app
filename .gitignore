@@ -22,3 +22,44 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .env.local
+
+# --- Capacitor native shells ---
+# The ios/ and android/ folders ARE committed: they hold Info.plist, the Gradle
+# config, entitlements and any native tweaks, and losing them means losing real
+# configuration. What must NOT be committed is everything the toolchains
+# regenerate on every open/build -- Xcode and Gradle churn these constantly and
+# they turn a one-line change into a thousand-file diff.
+
+# Copied in by `cap sync` from build/ -- generated, never edited by hand.
+ios/App/App/public/
+android/app/src/main/assets/public/
+ios/App/App/capacitor.config.json
+android/app/src/main/assets/capacitor.config.json
+ios/App/App/config.xml
+android/app/src/main/assets/capacitor.plugins.json
+
+# CocoaPods / SPM artefacts
+ios/App/Pods/
+ios/App/Podfile.lock
+ios/App/output/
+ios/App/build/
+ios/capacitor-cordova-ios-plugins/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Gradle artefacts
+android/build/
+android/app/build/
+android/.gradle/
+android/captures/
+android/local.properties
+android/app/src/main/java/**/GeneratedPluginRegistrant.java
+android/capacitor-cordova-android-plugins/
+
+# Signing material -- these must never reach the repo.
+*.keystore
+*.jks
+*.mobileprovision
+*.p12
+*.p8
