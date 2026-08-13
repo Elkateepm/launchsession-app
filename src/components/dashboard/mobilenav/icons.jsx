@@ -51,6 +51,14 @@ export function MenuIcon(props) {
   )
 }
 
+export function ChevronRightIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M9.5 5.5 16 12l-6.5 6.5" />
+    </svg>
+  )
+}
+
 export function CalendarPlusIcon(props) {
   return (
     <svg {...base} {...props}>
