@@ -54,6 +54,8 @@ function Pill({ active, children, onClick }) {
 export default function DonationsLedger({ org, isAdmin, campaigns = [], onChanged }) {
   const isMobile = useIsMobile()
   const [rows, setRows] = useState([])
+  const [totals, setTotals] = useState(null)
+  const [truncated, setTruncated] = useState(false)
   const [supporters, setSupporters] = useState({})
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -71,16 +73,25 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
     if (!org?.id) return
     setLoading(true)
 
-    const [{ data: donations }, { data: people }] = await Promise.all([
+    const PAGE = 500
+
+    const [{ data: donations }, { data: people }, { data: agg }] = await Promise.all([
       supabase.from('fundraising_donations').select('*').eq('org_id', org.id)
         .order('donation_date', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(500),
+        .limit(PAGE),
       supabase.from('fundraising_supporters').select('id, first_name, last_name, email, anonymous')
+        .eq('org_id', org.id),
+      // Amount and status only, for every row -- narrow enough to stay cheap
+      // while keeping the headline figures true beyond the displayed page.
+      supabase.from('fundraising_donations')
+        .select('amount, refunded_amount, status, donation_date, created_at')
         .eq('org_id', org.id),
     ])
 
     setRows(donations || [])
+    setTruncated((donations || []).length >= PAGE)
+    setTotals(agg || [])
     setSupporters(Object.fromEntries((people || []).map(p => [p.id, p])))
     setLoading(false)
   }, [org?.id])
@@ -94,9 +105,12 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
   }, [supporters])
 
   const stats = useMemo(() => {
+    // Computed from the full aggregate, never from the displayed page -- the
+    // list is capped at 500 rows and totals must not be.
+    const source = totals || rows
     // Only money the organisation actually holds counts. A failed card payment
     // sitting in the ledger must not inflate the headline figure.
-    const counted = rows.filter(d => countsTowardsTotal(d.status))
+    const counted = source.filter(d => countsTowardsTotal(d.status))
     const total = counted.reduce((s, d) => s + Number(d.amount || 0) - Number(d.refunded_amount || 0), 0)
 
     const now = new Date()
@@ -109,9 +123,9 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
       total,
       thisMonth,
       average: counted.length ? Math.round(total / counted.length) : 0,
-      count: rows.length,
+      count: source.length,
     }
-  }, [rows])
+  }, [rows, totals])
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -373,6 +387,15 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
             </table>
           </div>
         )
+      )}
+
+      {truncated && (
+        <div style={{
+          marginTop: 12, padding: '10px 13px', borderRadius: 11, background: LS.bg,
+          border: `1px solid ${LS.border}`, fontSize: 12.5, color: LS.muted, textAlign: 'center',
+        }}>
+          Showing the 500 most recent donations. The totals above cover all {stats.count}.
+        </div>
       )}
 
       <RecordDonationDrawer

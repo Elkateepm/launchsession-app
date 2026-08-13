@@ -208,14 +208,16 @@ export async function createPaymentLink({ orgId, campaignId, campaignName, sugge
   // Slugs are globally unique because they sit in a public URL, so a collision
   // with another organisation's campaign is possible and must be resolved
   // rather than surfaced as a database error.
+  // Availability is answered by a security-definer RPC, not a table query: RLS
+  // correctly hides other organisations' links, but the unique index is global,
+  // so a client-side check can only ever see half the namespace.
   let slug = base
   for (let attempt = 0; attempt < 5; attempt++) {
-    const { data: taken } = await supabase
-      .from('fundraising_payment_links')
-      .select('id')
-      .ilike('slug', slug)
-      .maybeSingle()
-    if (!taken) break
+    const { data: available, error: checkErr } = await supabase
+      .rpc('fundraising_slug_available', { p_slug: slug })
+    // If the check itself fails, suffix rather than assuming availability --
+    // the insert is still protected by the unique index either way.
+    if (!checkErr && available) break
     slug = `${base}-${Math.random().toString(36).slice(2, 6)}`
   }
 
@@ -232,7 +234,12 @@ export async function createPaymentLink({ orgId, campaignId, campaignName, sugge
     .select()
     .single()
 
-  if (error) return { ok: false, message: error.message }
+  if (error) {
+    if (error.code === '23505') {
+      return { ok: false, message: 'That link address is already taken. Try renaming the campaign slightly.' }
+    }
+    return { ok: false, message: error.message }
+  }
 
   const provider = await getPaymentProvider(orgId)
   if (provider.supportsCheckout) {

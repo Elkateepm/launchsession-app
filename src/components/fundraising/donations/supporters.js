@@ -44,7 +44,13 @@ export async function listSupporters(orgId, { search } = {}) {
 export async function resolveSupporter({ orgId, mode, supporterId, name, email, phone, giftAid }) {
   if (mode === 'anonymous') return { supporterId: null, anonymous: true }
 
-  if (mode === 'existing' && supporterId) {
+  if (mode === 'existing' && !supporterId) {
+    // Falling through to the create path here inserted a supporter with no
+    // name and no email. Better to fail the donation than litter the list.
+    return { supporterId: null, anonymous: false, error: 'no_supporter_selected' }
+  }
+
+  if (mode === 'existing') {
     // Gift Aid status can be established at the point of a later donation, so
     // promote it -- but never downgrade a held declaration from a form where
     // the box simply wasn't ticked.
@@ -124,10 +130,16 @@ export function summariseSupporters(supporters, donations) {
     if (!d.supporter_id) return
     const rec = byId.get(d.supporter_id)
     if (!rec) return
-    if (d.status === 'paid' || d.status === 'recorded' || d.status === 'partially_refunded') {
-      rec.total += Number(d.amount || 0) - Number(d.refunded_amount || 0)
-      rec.count += 1
-    }
+
+    // A failed or cancelled attempt is not support. Counting it toward dates or
+    // campaign membership would show someone as a recent supporter of a
+    // campaign they never actually funded.
+    const counted = d.status === 'paid' || d.status === 'recorded' || d.status === 'partially_refunded'
+    if (!counted) return
+
+    rec.total += Number(d.amount || 0) - Number(d.refunded_amount || 0)
+    rec.count += 1
+
     const date = d.donation_date || d.created_at
     if (date) {
       if (!rec.first || date < rec.first) rec.first = date

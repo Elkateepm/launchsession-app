@@ -67,16 +67,24 @@ export default function RecordDonationDrawer({ open, onClose, org, campaigns = [
     return Number.isFinite(n) ? n : null
   }, [amount])
 
-  const canSave = parsedAmount !== null && parsedAmount > 0 && !!campaignId && !saving
+  // 'existing' without a selection previously fell through to the create path
+  // and inserted a supporter with no name or email.
+  const supporterChosen = mode !== 'existing' || !!supporterId
+  const canSave = parsedAmount !== null && parsedAmount > 0 && !!campaignId && supporterChosen && !saving
 
   async function save() {
     if (!canSave) return
     setSaving(true); setError(null)
 
     try {
-      const { supporterId: resolvedId, anonymous } = await resolveSupporter({
+      const { supporterId: resolvedId, anonymous, error: supErr } = await resolveSupporter({
         orgId: org.id, mode, supporterId, name, email, phone, giftAid,
       })
+      if (supErr === 'no_supporter_selected') {
+        setError('Choose a supporter, or switch to New or Anonymous.')
+        setSaving(false)
+        return
+      }
 
       const chosen = supporters.find(s => s.id === resolvedId)
       const displayName = anonymous
@@ -210,7 +218,14 @@ export default function RecordDonationDrawer({ open, onClose, org, campaigns = [
                   ].map(o => (
                     <button
                       key={o.key}
-                      onClick={() => setMode(o.key)}
+                      onClick={() => {
+                        setMode(o.key)
+                        // Gift Aid needs a named donor and their address, so an
+                        // anonymous gift can never carry it. Clearing here
+                        // rather than only disabling the control stops a
+                        // previously-ticked box being written to the row.
+                        if (o.key === 'anonymous') setGiftAid(false)
+                      }}
                       style={{
                         flex: 1, padding: '9px 4px', borderRadius: 10, fontSize: 13, fontWeight: 700,
                         cursor: 'pointer', fontFamily: 'inherit',
@@ -223,10 +238,17 @@ export default function RecordDonationDrawer({ open, onClose, org, campaigns = [
                 </div>
 
                 {mode === 'existing' && (
-                  <select value={supporterId} onChange={e => setSupporterId(e.target.value)} style={field}>
-                    <option value="">Select a supporter…</option>
-                    {supporters.map(s => <option key={s.id} value={s.id}>{supporterName(s)}</option>)}
-                  </select>
+                  <>
+                    <select value={supporterId} onChange={e => setSupporterId(e.target.value)} style={field}>
+                      <option value="">Select a supporter…</option>
+                      {supporters.map(s => <option key={s.id} value={s.id}>{supporterName(s)}</option>)}
+                    </select>
+                    {!supporters.length && (
+                      <div style={{ fontSize: 12, color: LS.muted, marginTop: 7, lineHeight: 1.45 }}>
+                        No supporters yet. Use <strong>New</strong> to add one as you record this gift.
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {mode === 'new' && (
