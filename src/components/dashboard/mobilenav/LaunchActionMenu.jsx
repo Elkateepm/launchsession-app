@@ -35,6 +35,15 @@ export default function LaunchActionMenu({ open, onClose, actions, reducedMotion
       if (existing) existing.items.push(a)
       else grouped.push({ name, items: [a] })
     })
+  // Without this the groups come out in whatever order the dock happens to list
+  // its actions in, which put "Admin" above "Bring people in" purely because
+  // Payments sits before Sign-Up QR in that array. Group order is an editorial
+  // decision and belongs here, next to the group names themselves.
+  grouped.sort((a, b) => {
+    const ai = GROUP_ORDER.indexOf(a.name)
+    const bi = GROUP_ORDER.indexOf(b.name)
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+  })
 
   // Rows fade in one after another so the eye is led down the list instead of
   // being hit with everything at once. Skipped entirely under reduced motion.
@@ -145,6 +154,9 @@ export const DEFAULT_ACTION_ICONS = {
   reportIncident: ShieldAlertIcon,
   addVolunteer: HeartHandshakeIcon,
 }
+
+// Group order, most-reached-for first.
+export const GROUP_ORDER = ['Bring people in', 'Admin']
 
 // Grouping, emphasis and one-line explanations, keyed by action. Kept here
 // rather than in the dock so the menu owns its own information design and any
