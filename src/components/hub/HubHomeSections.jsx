@@ -76,8 +76,13 @@ export function DaySpine({ sessions, statsFor, primary, secondary, isMobile, onO
   const span = Math.max(60, to - from)
   const pct = (min) => Math.max(0, Math.min(100, ((min - from) / span) * 100))
 
+  // Mobile-first tick density. On a 390px screen seven labels sit ~50px apart
+  // and read as noise, so phones get a coarser step and the labels are pinned
+  // to the same percentage as their gridline instead of being spread with
+  // space-between (which drifted out of alignment as the window changed).
   const hourMarks = []
-  const step = span > 8 * 60 ? 120 : span > 4 * 60 ? 60 : 30
+  const baseStep = span > 8 * 60 ? 120 : span > 4 * 60 ? 60 : 30
+  const step = isMobile ? Math.max(baseStep, Math.ceil(span / 4 / 60) * 60) : baseStep
   for (let m = from; m <= to; m += step) hourMarks.push(m)
 
   // The next thing that hasn't finished yet — what the countdown counts to.
@@ -101,8 +106,13 @@ export function DaySpine({ sessions, statsFor, primary, secondary, isMobile, onO
 
   return (
     <div className="ls-rise" style={{ marginTop: isMobile ? 16 : 22, position: 'relative', zIndex: 2 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'rgba(255,255,255,0.38)', fontWeight: 700, letterSpacing: 0.5, marginBottom: 7 }}>
-        {hourMarks.map(m => <span key={m}>{two(Math.floor(m / 60))}:{two(m % 60)}</span>)}
+      <div style={{ position: 'relative', height: 13, fontSize: 10, color: 'rgba(255,255,255,0.38)', fontWeight: 700, letterSpacing: 0.5, marginBottom: 7 }}>
+        {hourMarks.map((m, i) => (
+          <span key={m} style={{
+            position: 'absolute', left: `${pct(m)}%`, top: 0, whiteSpace: 'nowrap',
+            transform: i === 0 ? 'none' : i === hourMarks.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)',
+          }}>{two(Math.floor(m / 60))}:{two(m % 60)}</span>
+        ))}
       </div>
 
       <div style={{ height: isMobile ? 62 : 56, background: 'rgba(255,255,255,0.07)', borderRadius: 14, position: 'relative', overflow: 'hidden' }}>
@@ -120,6 +130,11 @@ export function DaySpine({ sessions, statsFor, primary, secondary, isMobile, onO
           const done = st.signedIn + st.signedOut
           const tot = done + st.expected + st.absent
           const live = start <= nowMin && (end == null || end > nowMin)
+          // A 40-minute block on a 12-hour phone-width ribbon is ~25px wide, so
+          // its title rendered as "E..". Below the threshold the block carries
+          // only its dot and the detail moves to the readable list underneath.
+          const widthPct = 100 - Math.max(0, right) - left
+          const compact = isMobile && widthPct < 34
           return (
             <div
               key={s.id}
@@ -130,8 +145,9 @@ export function DaySpine({ sessions, statsFor, primary, secondary, isMobile, onO
               title={`${s.title} — ${s.start_time || ''}${s.end_time ? `–${s.end_time}` : ''}`}
               style={{
                 position: 'absolute', top: 7, bottom: 7, left: `${left}%`, right: `${Math.max(0, right)}%`,
-                minWidth: 72, borderRadius: 11, cursor: 'pointer', overflow: 'hidden',
-                display: 'flex', alignItems: 'center', gap: 9, padding: '0 12px',
+                minWidth: compact ? 26 : isMobile ? 56 : 72, borderRadius: 11, cursor: 'pointer', overflow: 'hidden',
+                display: 'flex', alignItems: 'center', justifyContent: compact ? 'center' : 'flex-start',
+                gap: compact ? 0 : 9, padding: compact ? 0 : isMobile ? '0 9px' : '0 12px',
                 // Glass rather than brand-coloured: the hero behind this is now
                 // the org's own gradient, so a brand-coloured block would sink
                 // into it. White translucent reads on any palette.
@@ -145,12 +161,14 @@ export function DaySpine({ sessions, statsFor, primary, secondary, isMobile, onO
                 <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.round((done / tot) * 100)}%`, background: 'rgba(255,255,255,0.22)', transition: 'width 500ms ease' }} />
               )}
               <span style={{ fontSize: 15, position: 'relative', flexShrink: 0 }}>{live ? '🔴' : '⚽'}</span>
+              {!compact && (
               <div style={{ minWidth: 0, position: 'relative' }}>
                 <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.title}</div>
                 <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.75)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {s.start_time?.slice(0, 5)}{s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}{s.location ? ` · ${s.location}` : ''}{tot > 0 ? ` · ${done}/${tot} in` : ''}
                 </div>
               </div>
+              )}
             </div>
           )
         })}
@@ -162,7 +180,48 @@ export function DaySpine({ sessions, statsFor, primary, secondary, isMobile, onO
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 13, flexWrap: 'wrap' }}>
+      {/* Phones read the day as a list, not a chart. The ribbon above stays as
+          the at-a-glance shape of the day; this is where the detail actually
+          lives, at full width with a 44px tap target per session. */}
+      {isMobile && (
+        <div style={{ display: 'grid', gap: 6, marginTop: 10 }}>
+          {sessions.map(s => {
+            const start = toMin(s.start_time)
+            const end = toMin(s.end_time)
+            const st = statsFor(s)
+            const done = st.signedIn + st.signedOut
+            const tot = done + st.expected + st.absent
+            const live = start != null && start <= nowMin && (end == null || end > nowMin)
+            return (
+              <div
+                key={s.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => onOpenSession && onOpenSession(s)}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenSession && onOpenSession(s) } }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '8px 12px',
+                  borderRadius: 12, background: live ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.16)', cursor: 'pointer', outline: 'none',
+                }}
+              >
+                <span style={{ fontSize: 14, flexShrink: 0 }}>{live ? '🔴' : '⚽'}</span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.title}</div>
+                  <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {s.start_time?.slice(0, 5)}{s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}{s.location ? ` · ${s.location.split(',')[0]}` : ''}
+                  </div>
+                </div>
+                {tot > 0 && (
+                  <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.8)', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{done}/{tot}</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16, marginTop: 13, flexWrap: 'wrap' }}>
         {upNext && (
           isLive ? (
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
@@ -177,8 +236,8 @@ export function DaySpine({ sessions, statsFor, primary, secondary, isMobile, onO
           )
         )}
         {totalExpected > 0 && (
-          <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
-            {Array.from({ length: Math.min(totalExpected, 14) }).map((_, i) => (
+          <div style={{ display: 'flex', gap: 4, marginLeft: isMobile ? 0 : 'auto', width: isMobile ? '100%' : 'auto', flexWrap: 'wrap' }}>
+            {Array.from({ length: Math.min(totalExpected, isMobile ? 10 : 14) }).map((_, i) => (
               <span key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: i < arrived ? '#12C48B' : 'rgba(255,255,255,0.16)', transition: 'background 300ms ease' }} />
             ))}
           </div>
