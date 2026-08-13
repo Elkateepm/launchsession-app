@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useBreakpoint } from '../../hooks/useIsMobile'
+import { isPasskeyCapable, hasPlatformAuthenticator, passkeyUsedHere, signInWithPasskey, supportsAutofill } from '../../lib/passkey'
 
 const STEPS = { ROLE: 'role', EMAIL: 'email', PASSWORD: 'password', MAGIC: 'magic', FORGOT: 'forgot' }
 
@@ -69,6 +70,8 @@ export default function Login({ org }) {
   const [forgotSent, setForgotSent] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
+  const [passkeyReady, setPasskeyReady] = useState(false)
+  const [passkeyBusy, setPasskeyBusy] = useState(false)
   const { isDesktop } = useBreakpoint()
   // Mobile/tablet is a personal device — same reasoning as the idle-logout
   // carve-out (App.js), so there's no shared-computer risk to opt out of.
@@ -78,6 +81,43 @@ export default function Login({ org }) {
   const primary = org?.primary_color || '#3B82F6'
   const orgName = org?.name || 'LaunchSession'
   const hasOrg = !!org
+
+  // Only offer the passkey route where it can actually work: a secure context
+  // with a real platform authenticator. Offering it on a desktop Chrome with
+  // no Touch ID would put a button there that always fails.
+  useEffect(() => {
+    let cancelled = false
+    if (!isPasskeyCapable()) return
+    hasPlatformAuthenticator().then(ok => { if (!cancelled) setPasskeyReady(ok) })
+    return () => { cancelled = true }
+  }, [])
+
+  // Passkey autofill: the browser offers a saved passkey from the email field
+  // itself, so the common case is one tap and no typing at all. Aborted on
+  // unmount so it doesn't outlive the screen.
+  useEffect(() => {
+    if (!passkeyReady || step !== STEPS.EMAIL) return
+    const controller = new AbortController()
+    let cancelled = false
+    supportsAutofill().then(async ok => {
+      if (!ok || cancelled) return
+      const result = await signInWithPasskey({ conditional: true, signal: controller.signal })
+      // Success is picked up by App.js via the auth state change. A cancelled
+      // or failed autofill attempt is silent by design — the user never asked
+      // for it, so an error here would be noise.
+      if (!cancelled && result.ok === false && result.error && !result.cancelled) setError(result.error)
+    })
+    return () => { cancelled = true; controller.abort() }
+  }, [passkeyReady, step])
+
+  const handlePasskey = async () => {
+    setError('')
+    setPasskeyBusy(true)
+    const result = await signInWithPasskey()
+    if (result.ok) return // App.js picks up the session
+    if (result.error) setError(result.error)
+    setPasskeyBusy(false)
+  }
 
   const handleEmailContinue = async e => {
     e.preventDefault()
@@ -250,6 +290,41 @@ export default function Login({ org }) {
                   {loading ? 'Checking…' : 'Continue  →'}
                 </button>
               </form>
+
+              {passkeyReady && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 16px' }}>
+                    <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: 0.3 }}>or</span>
+                    <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }} />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handlePasskey}
+                    disabled={passkeyBusy}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                      padding: '15px 18px', borderRadius: 14, cursor: passkeyBusy ? 'default' : 'pointer',
+                      border: '1px solid rgba(255,255,255,0.16)',
+                      background: passkeyUsedHere() ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)',
+                      color: '#fff', fontSize: 15, fontWeight: 700, fontFamily: 'inherit',
+                      transition: 'background 0.18s',
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width: 19, height: 19, flexShrink: 0 }}>
+                      <circle cx="10" cy="8" r="4" />
+                      <path d="M10 12c-3.3 0-6 2.2-6 5v3" />
+                      <path d="M15.5 13.5a3.5 3.5 0 1 1 5 3.1V21l-1.5-1.2L17.5 21v-4.4a3.5 3.5 0 0 1-2-3.1z" />
+                    </svg>
+                    {passkeyBusy ? 'Waiting for your device…' : 'Sign in with a passkey'}
+                  </button>
+
+                  <div style={{ textAlign: 'center', fontSize: 12.5, color: 'rgba(255,255,255,0.4)', marginTop: 10, lineHeight: 1.45 }}>
+                    Uses Face ID, Touch ID or your screen lock. No password to type.
+                  </div>
+                </>
+              )}
 
               <div style={{ margin: '20px 0 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
