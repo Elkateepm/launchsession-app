@@ -12,6 +12,8 @@ import FundraisingCalendar from './FundraisingCalendar'
 import DocumentVault from './DocumentVault'
 import ApplicationTracker from './ApplicationTracker'
 import DonationsLedger from './donations/DonationsLedger'
+import SupportersPanel from './donations/SupportersPanel'
+import PaymentsPanel from './donations/PaymentsPanel'
 import successCheckAnimation from '../../assets/lottie/success-check.json'
 import { LS } from './fundraisingShared'
 import FundraisingHeader from './hub/FundraisingHeader'
@@ -49,6 +51,8 @@ const DAY_MS = 1000 * 60 * 60 * 24
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'donations', label: 'Donations' },
+  { key: 'supporters', label: 'Supporters' },
+  { key: 'payments', label: 'Payments' },
   { key: 'discover', label: 'Discover Funding' },
   { key: 'calendar', label: 'Deadlines' },
   { key: 'documents', label: 'Documents' },
@@ -267,13 +271,17 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
     setSaving(true)
     setDonationError(null)
     const amount = parseFloat(newDonation.amount)
-    const { data, error } = await supabase.from('fundraising_donations').insert({ campaign_id: campaign.id, org_id: org.id, donor_name: newDonation.donor_name || 'Anonymous', amount, message: newDonation.message || null, gift_aid: newDonation.gift_aid }).select().single()
+    const { data, error } = await supabase.from('fundraising_donations').insert({ campaign_id: campaign.id, org_id: org.id, donor_name: newDonation.donor_name || 'Anonymous', amount, message: newDonation.message || null, gift_aid: newDonation.gift_aid, status: 'recorded', payment_method: 'other' }).select().single()
     if (error) { setDonationError(error.message); setSaving(false); return }
     if (data) {
       setDonations(d => [data, ...d])
-      const newRaised = (campaign.raised || 0) + amount
-      await supabase.from('fundraising_campaigns').update({ raised: newRaised }).eq('id', campaign.id)
-      onUpdate({ ...campaign, raised: newRaised })
+      // `raised` is maintained by the trg_donation_totals trigger, so it is not
+      // written here. Re-read it rather than adding the amount locally: a
+      // computed total accounts for refunds and non-counting statuses, an
+      // incremented one does not.
+      const { data: fresh } = await supabase
+        .from('fundraising_campaigns').select('raised').eq('id', campaign.id).single()
+      onUpdate({ ...campaign, raised: fresh?.raised ?? ((campaign.raised || 0) + amount) })
     }
     setNewDonation({ donor_name: '', amount: '', message: '', gift_aid: false })
     setShowAdd(false)
@@ -772,6 +780,12 @@ export default function Fundraising({ org, isAdmin }) {
             campaigns={campaigns}
             onChanged={load}
           />
+        )}
+        {activeTab === 'supporters' && (
+          <SupportersPanel org={org} isAdmin={isAdmin} campaigns={campaigns} />
+        )}
+        {activeTab === 'payments' && (
+          <PaymentsPanel org={org} isAdmin={isAdmin} campaigns={campaigns} />
         )}
         {activeTab === 'discover' && <FundingMarketplace org={org} primary={primary} onTrack={() => setTrackerRefresh(k => k + 1)} />}
         {activeTab === 'calendar' && <FundraisingCalendar org={org} />}
