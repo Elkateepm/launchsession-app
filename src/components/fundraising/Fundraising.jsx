@@ -460,14 +460,15 @@ export default function Fundraising({ org, isAdmin }) {
   const [showCreate, setShowCreate] = useState(false)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState(null)
-  const [newCampaign, setNewCampaign] = useState({ name: '', description: '', campaign_type: 'general', target_amount: '', start_date: new Date().toISOString().slice(0, 10), end_date: '' })
+  const [newCampaign, setNewCampaign] = useState({ name: '', description: '', campaign_type: 'general', target_amount: '', start_date: new Date().toISOString().slice(0, 10), end_date: '', linked_project_id: '' })
+  const [projects, setProjects] = useState([])
   const primary = org?.primary_color || '#1B9AAA'
 
   const load = useCallback(async () => {
     setLoading(true)
     const [{ data: camps }, { data: dons }, { data: grantPreview }] = await Promise.all([
       supabase.from('fundraising_campaigns').select('*, fundraising_donations(count)').eq('org_id', org.id).order('created_at', { ascending: false }),
-      supabase.from('fundraising_donations').select('campaign_id, donor_name, amount, gift_aid, created_at').eq('org_id', org.id).order('created_at', { ascending: false }),
+      supabase.from('fundraising_donations').select('campaign_id, donor_name, amount, refunded_amount, status, gift_aid, created_at, donation_date').eq('org_id', org.id).order('created_at', { ascending: false }),
       supabase.from('grants').select('id, name, funder_name, amount_min, amount_max, category').eq('active', true).order('funder_name').limit(2),
     ])
     setCampaigns(camps || [])
@@ -480,6 +481,19 @@ export default function Fundraising({ org, isAdmin }) {
   }, [org.id])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!org?.id) return
+    let cancelled = false
+    supabase.from('projects').select('id, name').eq('org_id', org.id).order('name')
+      .then(({ data, error }) => {
+        // Projects are optional context for a campaign. If the module isn't
+        // enabled for this org the query errors, and the selector simply
+        // doesn't render -- campaign creation must not depend on it.
+        if (!cancelled && !error) setProjects(data || [])
+      })
+    return () => { cancelled = true }
+  }, [org?.id])
 
   // Powers both the KPI/hero "next deadline" figures and the Upcoming Deadlines
   // strip — fetched once here and passed down, rather than re-queried per card.
@@ -515,6 +529,10 @@ export default function Fundraising({ org, isAdmin }) {
     const payload = {
       ...newCampaign,
       org_id: org.id,
+      status: 'active',
+      linked_project_id: newCampaign.linked_project_id || null,
+      // `raised` is owned by the donation trigger; seeding 0 here is only the
+      // starting value for a campaign with no donations yet.
       raised: 0,
       target_amount: newCampaign.target_amount ? parseFloat(newCampaign.target_amount) : 0,
       start_date: newCampaign.start_date || null,
@@ -523,8 +541,16 @@ export default function Fundraising({ org, isAdmin }) {
     const { data, error } = await supabase.from('fundraising_campaigns').insert(payload).select().single()
     setCreating(false)
     if (error) { setCreateError(error.message); return }
-    if (data) { setCampaigns(c => [{ ...data, fundraising_donations: [{ count: 0 }] }, ...c]); setShowCreate(false); setNewCampaign({ name: '', description: '', campaign_type: 'general', target_amount: '', start_date: new Date().toISOString().slice(0, 10), end_date: '' }) }
+    if (data) { setCampaigns(c => [{ ...data, fundraising_donations: [{ count: 0 }] }, ...c]); setShowCreate(false); setNewCampaign({ name: '', description: '', campaign_type: 'general', target_amount: '', start_date: new Date().toISOString().slice(0, 10), end_date: '', linked_project_id: '' }) }
   }
+
+  // Excludes failed, cancelled, pending and fully refunded gifts, and nets off
+  // partial refunds -- matching recalc_campaign_raised() in the database.
+  const countedDonations = useMemo(
+    () => donationHistory.filter(d => ['paid', 'recorded', 'partially_refunded'].includes(d.status)),
+    [donationHistory]
+  )
+  const netAmount = d => (Number(d.amount) || 0) - (Number(d.refunded_amount) || 0)
 
   const totalTarget = campaigns.reduce((s, c) => s + (c.target_amount || 0), 0)
   const completedCount = campaigns.filter(c => statusOf(c).key === 'completed').length
@@ -533,7 +559,7 @@ export default function Fundraising({ org, isAdmin }) {
 
   const recentActivity = useMemo(() => {
     const campaignName = id => campaigns.find(c => c.id === id)?.name || 'a campaign'
-    const donationEvents = donationHistory.slice(0, 6).map(d => ({
+    const donationEvents = countedDonations.slice(0, 6).map(d => ({
       type: 'donation', date: d.created_at,
       text: `${d.donor_name || 'Anonymous'} donated £${Number(d.amount).toLocaleString()} to ${campaignName(d.campaign_id)}${d.gift_aid ? ' (Gift Aid)' : ''}`,
     }))
@@ -541,31 +567,33 @@ export default function Fundraising({ org, isAdmin }) {
       type: 'milestone', date: c.created_at, text: `🎉 ${c.name} reached its £${Number(c.target_amount).toLocaleString()} target!`,
     }))
     return [...donationEvents, ...milestoneEvents].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6)
-  }, [donationHistory, campaigns])
+  }, [countedDonations, campaigns])
 
   // ── Fundraising Hub redesign: derived stats for the hero/KPI/focus cards ──
   const raisedThisYear = useMemo(() => {
     const y = new Date().getFullYear()
-    return donationHistory.filter(d => new Date(d.created_at).getFullYear() === y).reduce((s, d) => s + (Number(d.amount) || 0), 0)
-  }, [donationHistory])
+    return countedDonations
+      .filter(d => new Date(d.donation_date || d.created_at).getFullYear() === y)
+      .reduce((s, d) => s + netAmount(d), 0)
+  }, [countedDonations])
 
   const yearDelta = useMemo(() => {
     const now = new Date()
     const thisYear = now.getFullYear()
     const dayOfYear = Math.floor((now - new Date(thisYear, 0, 1)) / DAY_MS)
     let thisYearTotal = 0, lastYearToDateTotal = 0
-    donationHistory.forEach(d => {
-      const dt = new Date(d.created_at)
-      if (dt.getFullYear() === thisYear) thisYearTotal += Number(d.amount) || 0
+    countedDonations.forEach(d => {
+      const dt = new Date(d.donation_date || d.created_at)
+      if (dt.getFullYear() === thisYear) thisYearTotal += netAmount(d)
       else if (dt.getFullYear() === thisYear - 1) {
         const doy = Math.floor((dt - new Date(thisYear - 1, 0, 1)) / DAY_MS)
-        if (doy <= dayOfYear) lastYearToDateTotal += Number(d.amount) || 0
+        if (doy <= dayOfYear) lastYearToDateTotal += netAmount(d)
       }
     })
     if (lastYearToDateTotal > 0) return Math.round(((thisYearTotal - lastYearToDateTotal) / lastYearToDateTotal) * 100)
     if (thisYearTotal > 0) return 'new'
     return null
-  }, [donationHistory])
+  }, [countedDonations])
 
   const endingSoonCount = useMemo(() => campaigns.filter(c => {
     const status = statusOf(c)
@@ -626,7 +654,7 @@ export default function Fundraising({ org, isAdmin }) {
 
           <FundraisingHero
             campaigns={campaigns}
-            donationHistory={donationHistory}
+            donationHistory={countedDonations}
             totalTarget={totalTarget}
             focusItems={focusItems}
             onReviewFocus={() => { deadlineEvents.length > 0 ? setActiveTab('calendar') : scrollToReports() }}
@@ -676,6 +704,15 @@ export default function Fundraising({ org, isAdmin }) {
                 <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Target (£)</label><input type="number" value={newCampaign.target_amount} onChange={e => setNewCampaign(n => ({ ...n, target_amount: e.target.value }))} placeholder="0 = no target" style={inp} /></div>
                 <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Start date</label><input type="date" value={newCampaign.start_date} onChange={e => setNewCampaign(n => ({ ...n, start_date: e.target.value }))} style={inp} /></div>
                 <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>End date</label><input type="date" value={newCampaign.end_date} onChange={e => setNewCampaign(n => ({ ...n, end_date: e.target.value }))} style={inp} /></div>
+                {projects.length > 0 && (
+                  <div style={{ gridColumn: '1/-1' }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>What is this funding? (optional)</label>
+                    <select value={newCampaign.linked_project_id} onChange={e => setNewCampaign(n => ({ ...n, linked_project_id: e.target.value }))} style={inp}>
+                      <option value="">General organisation fundraising</option>
+                      {projects.map(pr => <option key={pr.id} value={pr.id}>{pr.name}</option>)}
+                    </select>
+                  </div>
+                )}
                 <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Description</label><textarea value={newCampaign.description} onChange={e => setNewCampaign(n => ({ ...n, description: e.target.value }))} rows={2} placeholder="What are you raising money for?" style={{ ...inp, resize: 'none' }} /></div>
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -708,7 +745,7 @@ export default function Fundraising({ org, isAdmin }) {
             <FundingMixChart campaigns={campaigns} />
             <CampaignComparisonChart campaigns={campaigns} />
           </div>
-          <GivingHeatmap donations={donationHistory} />
+          <GivingHeatmap donations={countedDonations} />
 
           {/* Recent activity */}
           {recentActivity.length > 0 && (

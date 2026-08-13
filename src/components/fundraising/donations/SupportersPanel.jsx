@@ -27,8 +27,9 @@ export default function SupportersPanel({ org, isAdmin, campaigns = [] }) {
     const [{ data: people }, { data: gifts }] = await Promise.all([
       supabase.from('fundraising_supporters').select('*').eq('org_id', org.id),
       supabase.from('fundraising_donations')
-        .select('id, supporter_id, campaign_id, amount, refunded_amount, status, donation_date, created_at, gift_aid')
-        .eq('org_id', org.id),
+        .select('id, supporter_id, campaign_id, amount, refunded_amount, status, donation_date, created_at')
+        .eq('org_id', org.id)
+        .not('supporter_id', 'is', null),
     ])
     setSupporters(people || [])
     setDonations(gifts || [])
