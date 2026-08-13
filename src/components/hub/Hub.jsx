@@ -20,6 +20,18 @@ import { useTerms } from '../../context/OrgContext'
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
 
 const ANNOUNCEMENT_EMOJIS = ['📣', '🎉', '⭐', '🔥', '💡', '📌', '🚨', '🙌', '❤️', '🏆']
+
+// Section-header actions ("View all registers →", "+ New session", "+ Post
+// announcement"). These were bare text buttons at 11px with padding:0, which
+// on a phone is a ~14px-tall tap target sitting a few pixels off the screen
+// edge. The padding gives them a 44px hit area and the negative margin keeps
+// them optically flush with the section heading opposite.
+const sectionLinkBtn = (colour) => ({
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  minHeight: 44, padding: '0 6px', margin: '-10px -6px',
+  fontSize: 12, fontWeight: 700, color: colour, lineHeight: 1,
+  background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
+})
 const RA_RATING_COLORS = {
   low: { bg: 'rgba(34,197,94,0.18)', color: '#86EFAC' },
   medium: { bg: 'rgba(245,158,11,0.18)', color: '#FDE047' },
@@ -408,12 +420,12 @@ function PhotoCarousel({ orgId, primary, userId }) {
         <div style={{ display: 'flex', gap: 8 }}>
           {photos.length > 0 && (
             <button onClick={() => setManaging(m => !m)}
-              style={{ padding: '6px 14px', borderRadius: 99, border: '1.5px solid #E5E7EB', background: managing ? '#F1F5F9' : '#fff', color: managing ? '#374151' : '#6B7280', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              style={{ minHeight: 40, padding: '0 16px', borderRadius: 99, border: '1.5px solid #E5E7EB', background: managing ? '#F1F5F9' : '#fff', color: managing ? '#374151' : '#6B7280', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
               {managing ? 'Done' : 'Manage'}
             </button>
           )}
           <button onClick={() => inputRef.current?.click()} disabled={uploading}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${primary}`, background: uploading ? '#F3F4F6' : '#fff', color: primary, fontSize: 12, fontWeight: 800, cursor: uploading ? 'default' : 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 40, padding: '0 16px', borderRadius: 99, border: `1.5px solid ${primary}`, background: uploading ? '#F3F4F6' : '#fff', color: primary, fontSize: 12, fontWeight: 800, cursor: uploading ? 'default' : 'pointer' }}>
             📷 {uploading ? 'Uploading...' : 'Add Photo'}
           </button>
         </div>
@@ -544,7 +556,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}>📣 Announcements</h3>
-        <button onClick={() => setComposing(c => !c)} style={{ fontSize: 11, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+        <button onClick={() => setComposing(c => !c)} style={sectionLinkBtn(primary)}>
           {composing ? 'Cancel' : '+ Post announcement'}
         </button>
       </div>
@@ -4077,24 +4089,38 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {/* SESSIONS — merged Live & Upcoming + Ended sessions behind one segmented control, instead of two stacked lists */}
           <div>
             <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
-              <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: 99, padding: 3 }}>
+            {/* Mobile-first: the segmented control takes the full width with two
+                equal halves, and Calendar / New session drop onto their own row
+                as bordered buttons. Previously all four sat on one line at 11px,
+                leaving "+ New session" a few pixels from the screen edge. */}
+            <div style={{
+              display: 'flex', flexDirection: isMobile ? 'column' : 'row',
+              alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between',
+              marginBottom: 14, flexWrap: 'wrap', gap: isMobile ? 10 : 8,
+            }}>
+              <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: 99, padding: 3, width: isMobile ? '100%' : 'auto' }}>
                 <button onClick={() => setSessionsView('upcoming')}
                   style={{ border: 'none', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                    flex: isMobile ? 1 : 'none', minHeight: isMobile ? 38 : 'auto',
                     background: sessionsView === 'upcoming' ? '#fff' : 'none', color: sessionsView === 'upcoming' ? primary : '#6B7280',
                     boxShadow: sessionsView === 'upcoming' ? '0 1px 4px rgba(0,0,0,0.12)' : 'none' }}>
                   📅 Upcoming
                 </button>
                 <button onClick={() => setSessionsView('ended')}
                   style={{ border: 'none', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                    flex: isMobile ? 1 : 'none', minHeight: isMobile ? 38 : 'auto',
                     background: sessionsView === 'ended' ? '#fff' : 'none', color: sessionsView === 'ended' ? primary : '#6B7280',
                     boxShadow: sessionsView === 'ended' ? '0 1px 4px rgba(0,0,0,0.12)' : 'none' }}>
                   🔒 Ended{endedSessions.length > 0 ? ` (${endedSessions.length})` : ''}
                 </button>
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={() => go('calendar')} style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>📆 Calendar</button>
-                <button onClick={() => go('planner')} style={{ fontSize: 11, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ New session</button>
+              <div style={{ display: 'flex', gap: isMobile ? 8 : 12, width: isMobile ? '100%' : 'auto' }}>
+                <button onClick={() => go('calendar')} style={isMobile
+                  ? { flex: 1, minHeight: 42, borderRadius: 12, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 12, fontWeight: 700, color: '#6B7280', cursor: 'pointer' }
+                  : { fontSize: 11, fontWeight: 700, color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>📆 Calendar</button>
+                <button onClick={() => go('planner')} style={isMobile
+                  ? { flex: 1, minHeight: 42, borderRadius: 12, border: `1.5px solid ${primary}`, background: '#fff', fontSize: 12, fontWeight: 800, color: primary, cursor: 'pointer' }
+                  : { fontSize: 11, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ New session</button>
               </div>
             </div>
             {sessionsView === 'ended' ? (
@@ -4245,29 +4271,34 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>📜 Recent Registers</div>
                 <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 1 }}>Last 7 days</div>
               </div>
-              <button onClick={() => go('registers')} style={{ fontSize: 11, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View all registers →</button>
+              <button onClick={() => go('registers')} style={sectionLinkBtn(primary)}>View all registers →</button>
             </div>
             {endedSessions.length === 0 ? (
               <div style={{ boxSizing: 'border-box', width: '100%', background: '#F8FAFC', border: '1.5px dashed #E5E7EB', borderRadius: 20, padding: '28px 24px', textAlign: 'center', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
                 No sessions have closed in the last 7 days yet
               </div>
             ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', flexWrap: 'wrap', gap: 8 }}>
                 {endedSessions.slice(0, 3).map(s => {
                   const stats = getLiveSessionStats(s)
                   const attendedTotal = stats.signedIn + stats.absent + stats.signedOut + stats.expected
                   const attended = stats.signedIn + stats.signedOut
                   return (
+                    // Ragged-width pills read as noise in a vertical stack, so on
+                    // phones each register becomes a full-width row with the
+                    // attendance and date aligned right.
                     <button key={s.id} onClick={() => setOpenLiveSessionId(s.id)} style={{
-                      display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: '1.5px solid #EEF1F6', borderRadius: 99, padding: '8px 14px 8px 8px',
+                      display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: '1.5px solid #EEF1F6',
+                      borderRadius: isMobile ? 14 : 99, padding: isMobile ? '10px 14px 10px 10px' : '8px 14px 8px 8px',
+                      width: isMobile ? '100%' : 'auto', minHeight: isMobile ? 44 : 'auto', textAlign: 'left',
                       background: '#fff', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
                     }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = '#EEF1F6' }}>
                       <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🔒</span>
-                      <span style={{ fontSize: 12.5, fontWeight: 800, color: '#374151', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280' }}>🧒 {attended}/{attendedTotal}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF' }}>· {formatDate(s.session_date)}</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 800, color: '#374151', maxWidth: isMobile ? 'none' : 140, flex: isMobile ? 1 : 'none', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', flexShrink: 0 }}>🧒 {attended}/{attendedTotal}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', flexShrink: 0 }}>· {formatDate(s.session_date)}</span>
                     </button>
                   )
                 })}
