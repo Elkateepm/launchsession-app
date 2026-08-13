@@ -2236,7 +2236,7 @@ function SessionInfoModal({ session, attendance, allChildren, primary, secondary
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', marginTop: 7 }}>
               {(s.session_date || s.start_time) && (
                 <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
-                  📅 {formatDate ? formatDate(s.session_date) : s.session_date}{s.start_time ? ` · ${s.start_time}${s.end_time ? ` – ${s.end_time}` : ''}` : ''}
+                  📅 {formatDate ? formatDate(s.session_date) : s.session_date}{s.start_time ? ` · ${s.start_time.slice(0, 5)}${s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}` : ''}
                 </span>
               )}
               {s.location && (
@@ -3117,10 +3117,18 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     if (attendanceRate >= 50) return { bg: '#FEF3C7', fg: '#B45309' }
     return { bg: '#FEE2E2', fg: '#B91C1C' }
   }, [attendanceRate, children.length])
+  // Mobile-first: full-width, 44px-tall touch targets that lay out in a grid.
+  // These used to be an inline-flex row with flexShrink:0, which pushed the
+  // primary "Open live register" CTA off the right edge of a 390px screen.
   const heroGlassBtn = {
-    border: 'none', borderRadius: 13, padding: '11px 16px', fontSize: 13, fontWeight: 700,
+    border: 'none', borderRadius: 13,
+    padding: isMobile ? '0 12px' : '11px 16px',
+    minHeight: isMobile ? 44 : 'auto',
+    fontSize: isMobile ? 12.5 : 13, fontWeight: 700,
     cursor: 'pointer', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.12)', color: '#fff',
-    display: 'inline-flex', alignItems: 'center', gap: 7, transition: 'background 180ms ease, transform 180ms ease',
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    gap: isMobile ? 5 : 7, width: isMobile ? '100%' : 'auto', minWidth: 0,
+    transition: 'background 180ms ease, transform 180ms ease',
   }
 
   // One plain sentence about the day, instead of three separate status pills
@@ -3348,7 +3356,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                               <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
-                                <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time || 'No time'}</div>
+                                <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time ? s.start_time.slice(0, 5) : 'No time'}</div>
                               </div>
                             </button>
                           ))}
@@ -3478,7 +3486,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                                   <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
                                   <div>
                                     <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
-                                    <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time || 'No time'}</div>
+                                    <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time ? s.start_time.slice(0, 5) : 'No time'}</div>
                                   </div>
                                 </button>
                               ))}
@@ -3507,21 +3515,36 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           <div aria-hidden="true" style={{ position: 'absolute', top: -70, right: -40, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 70%)', pointerEvents: 'none' }} />
           <div aria-hidden="true" style={{ position: 'absolute', bottom: -90, left: '30%', width: 300, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%)', pointerEvents: 'none' }} />
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
-            <div style={{ minWidth: 0 }}>
+          <div style={{
+            display: 'flex', alignItems: isMobile ? 'stretch' : 'flex-start',
+            justifyContent: 'space-between', flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? 14 : 18, flexWrap: 'wrap', position: 'relative', zIndex: 2,
+          }}>
+            <div style={{ minWidth: 0, width: isMobile ? '100%' : 'auto' }}>
               <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 26, fontWeight: 900, lineHeight: 1.12, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.4px', color: '#fff' }}>
                 {getGreeting()}, {hubUserName.split(' ')[0]} <span style={{ display: 'inline-block', animation: 'lsWave 2.6s ease-in-out infinite', transformOrigin: '70% 70%' }}>👋</span>
               </h1>
               <p style={{ margin: '7px 0 0', fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.62)' }}>{heroSummary}</p>
             </div>
 
-            <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', flexShrink: 0 }}>
+            {/* On phones this is a 2-column grid with the register CTA spanning
+                the full width underneath, so nothing gets clipped and the most
+                important action is the widest tap target on the screen. */}
+            <div style={{
+              display: isMobile ? 'grid' : 'flex',
+              gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : undefined,
+              width: isMobile ? '100%' : 'auto',
+              gap: isMobile ? 8 : 9, flexWrap: 'wrap', flexShrink: 0,
+            }}>
               <button onClick={() => setShowInviteChild(true)} style={heroGlassBtn}>🧒 Invite child</button>
               {hasModule('volunteers') && (
                 <button onClick={() => go('volunteers', { autoOpenInvite: true })} style={heroGlassBtn}>🤝 Invite volunteer</button>
               )}
               {todaySessions.length > 0 && (
-                <button onClick={() => go('registers')} style={{ ...heroGlassBtn, background: '#fff', color: primary, fontWeight: 800 }}>
+                <button onClick={() => go('registers')} style={{
+                  ...heroGlassBtn, background: '#fff', color: primary, fontWeight: 800,
+                  ...(isMobile ? { gridColumn: '1 / -1' } : null),
+                }}>
                   {todayHasLiveSession ? 'Open live register →' : "Open today's register →"}
                 </button>
               )}
@@ -3715,7 +3738,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 10px' }}>
                             {s.start_time && (
                               <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <span>⏰</span> {s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}
+                                <span>⏰</span> {s.start_time.slice(0, 5)}{s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}
                               </span>
                             )}
                             {s.location && (
@@ -4172,7 +4195,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                             </span>
                             {s.start_time && (
                               <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <span>⏰</span> {s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}
+                                <span>⏰</span> {s.start_time.slice(0, 5)}{s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}
                               </span>
                             )}
                             {s.location && (
@@ -4428,7 +4451,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                     <span style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #FBBF24, #D97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, color: '#fff' }}>📝</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.title || 'Untitled session'}</div>
-                      <div style={{ fontSize: 11.5, color: '#92400E', marginTop: 1 }}>{formatDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}</div>
+                      <div style={{ fontSize: 11.5, color: '#92400E', marginTop: 1 }}>{formatDate(s.session_date)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}` : ''}</div>
                     </div>
                     <span style={{ fontSize: 11, fontWeight: 800, color: '#B45309', flexShrink: 0 }}>Write →</span>
                   </button>
