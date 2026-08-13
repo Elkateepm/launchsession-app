@@ -2644,21 +2644,33 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
   const total = unread.length
   const visibleItems = filter === 'unread' ? unread : items
 
+  // Identical alerts fire more than once (two "Reflection due" rows for the
+  // same session, for example). Collapse repeats within the same day into a
+  // single row carrying a count, so 25 notifications don't read as 25 things.
   const groupedItems = React.useMemo(() => {
     const groups = []
     let lastLabel = null
+    let seen = new Map()
     visibleItems.forEach(n => {
       const label = notifDayLabel(n.created_at)
-      if (label !== lastLabel) { groups.push({ label, items: [] }); lastLabel = label }
-      groups[groups.length - 1].items.push(n)
+      if (label !== lastLabel) { groups.push({ label, items: [] }); lastLabel = label; seen = new Map() }
+      const key = `${n.category}|${n.title}|${n.body}`
+      const hit = seen.get(key)
+      if (hit) { hit.dupes.push(n); return }
+      const stack = { ...n, dupes: [n] }
+      seen.set(key, stack)
+      groups[groups.length - 1].items.push(stack)
     })
     return groups
   }, [visibleItems])
 
   const openItem = async (n) => {
-    if (!n.read_at) {
-      setItems(prev => prev.map(x => x.id === n.id ? { ...x, read_at: new Date().toISOString() } : x))
-      supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', n.id).then(() => {})
+    // A row may stand for several identical notifications — read them all.
+    const ids = (n.dupes || [n]).filter(x => !x.read_at).map(x => x.id)
+    if (ids.length) {
+      const now = new Date().toISOString()
+      setItems(prev => prev.map(x => ids.includes(x.id) ? { ...x, read_at: now } : x))
+      supabase.from('notifications').update({ read_at: now }).in('id', ids).then(() => {})
     }
     setOpen(false)
     if (n.target_url) {
@@ -2679,14 +2691,19 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
     supabase.from('notifications').update({ read_at: now }).in('id', ids).then(() => {})
   }
 
-  // On mobile the bell sits near the right edge of the header, so a wide
-  // panel anchored to it (position: absolute, right: 0) overflows off the
-  // left of the screen. Pin it to the viewport width instead, but keep it
-  // vertically anchored to the button — the header scrolls now, so a fixed
-  // `top` would leave the panel floating away from the bell that opened it.
+  // The bell sits near the right edge of a header that now lives inside the
+  // scroll container, so anchoring a near-full-width panel to it left the
+  // content clipped off the left of the screen. On mobile, stop anchoring
+  // altogether: a fixed bottom sheet is the native pattern here and cannot be
+  // clipped by an ancestor's positioning or overflow. Desktop keeps the
+  // dropdown, which has room to sit under the bell.
   const panelStyle = isMobile
-    ? { position: 'absolute', top: '120%', left: 'auto', right: -8, width: 'min(calc(100vw - 20px), 460px)', maxHeight: 'calc(100vh - 160px)' }
-    : { position: 'absolute', top: '120%', right: 0, width: 372, maxHeight: 480 }
+    ? {
+        position: 'fixed', left: 0, right: 0, bottom: 0, top: 'auto', width: 'auto',
+        maxHeight: '85dvh', borderRadius: '24px 24px 0 0',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }
+    : { position: 'absolute', top: '120%', right: 0, width: 372, maxHeight: 480, borderRadius: 20 }
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
@@ -2712,37 +2729,43 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
               <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
                 onClick={() => setOpen(false)}
-                style={{ position: 'fixed', inset: 0, background: 'rgba(15,20,35,0.35)', zIndex: 199 }}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(15,20,35,0.42)', zIndex: 199 }}
               />
             )}
             <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.98 }}
-              transition={{ duration: 0.16, ease: [0.4, 0, 0.2, 1] }}
-              style={{ ...panelStyle, display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: 20, boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 20px 50px -12px rgba(15,23,42,0.28), 0 0 0 1px rgba(15,23,42,0.06)', zIndex: 200, overflow: 'hidden' }}>
+              initial={isMobile ? { y: '100%' } : { opacity: 0, y: -8, scale: 0.98 }}
+              animate={isMobile ? { y: 0 } : { opacity: 1, y: 0, scale: 1 }}
+              exit={isMobile ? { y: '100%' } : { opacity: 0, y: -6, scale: 0.98 }}
+              transition={{ duration: isMobile ? 0.26 : 0.16, ease: [0.4, 0, 0.2, 1] }}
+              style={{ ...panelStyle, display: 'flex', flexDirection: 'column', background: '#fff', boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 20px 50px -12px rgba(15,23,42,0.28), 0 0 0 1px rgba(15,23,42,0.06)', zIndex: 200, overflow: 'hidden' }}>
+
+              {isMobile && (
+                <div style={{ padding: '10px 0 2px', flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 4.5, borderRadius: 99, background: '#E2E8F0', margin: '0 auto' }} />
+                </div>
+              )}
 
               {/* Header */}
-              <div style={{ padding: '16px 18px 12px', borderBottom: '1px solid #F1F5F9', flexShrink: 0, background: 'linear-gradient(180deg, #FAFBFF 0%, #fff 100%)' }}>
+              <div style={{ padding: isMobile ? '12px 16px 12px' : '16px 18px 12px', borderBottom: '1px solid #F1F5F9', flexShrink: 0, background: 'linear-gradient(180deg, #FAFBFF 0%, #fff 100%)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 15, fontWeight: 900, color: '#0F172A', letterSpacing: -0.2 }}>Notifications</span>
+                    <span style={{ fontSize: isMobile ? 19 : 15, fontWeight: 900, color: '#0F172A', letterSpacing: -0.3 }}>Notifications</span>
                     {total > 0 && (
-                      <span style={{ fontSize: 10.5, fontWeight: 800, color: primary, background: primary + '14', borderRadius: 99, padding: '2px 8px' }}>{total} new</span>
+                      <span style={{ fontSize: isMobile ? 12 : 10.5, fontWeight: 800, color: primary, background: primary + '14', borderRadius: 99, padding: isMobile ? '3px 9px' : '2px 8px' }}>{total} new</span>
                     )}
                   </div>
-                  <button onClick={() => setOpen(false)} style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#F1F5F9', color: '#64748B', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-label="Close">✕</button>
+                  <button onClick={() => setOpen(false)} style={{ width: isMobile ? 34 : 26, height: isMobile ? 34 : 26, borderRadius: isMobile ? 11 : 8, border: 'none', background: '#F1F5F9', color: '#64748B', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-label="Close">✕</button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <div style={{ display: 'flex', gap: 4, background: '#F1F5F9', borderRadius: 10, padding: 3 }}>
                     {[{ key: 'all', label: 'All' }, { key: 'unread', label: `Unread${total ? ` (${total})` : ''}` }].map(f => (
                       <button key={f.key} onClick={() => setFilter(f.key)}
-                        style={{ padding: '5px 11px', borderRadius: 7, border: 'none', background: filter === f.key ? '#fff' : 'transparent', color: filter === f.key ? '#0F172A' : '#64748B', fontSize: 11, fontWeight: 700, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none', transition: 'all 0.15s' }}>
+                        style={{ padding: isMobile ? '8px 15px' : '5px 11px', borderRadius: isMobile ? 9 : 7, border: 'none', background: filter === f.key ? '#fff' : 'transparent', color: filter === f.key ? '#0F172A' : '#64748B', fontSize: isMobile ? 13 : 11, fontWeight: 700, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none', transition: 'all 0.15s' }}>
                         {f.label}
                       </button>
                     ))}
                   </div>
-                  {total > 0 && <button onClick={markAllRead} style={{ border: 'none', background: 'none', color: primary, fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: '4px 2px', whiteSpace: 'nowrap' }}>Mark all read</button>}
+                  {total > 0 && <button onClick={markAllRead} style={{ border: 'none', background: 'none', color: primary, fontSize: isMobile ? 13.5 : 11.5, fontWeight: 700, cursor: 'pointer', padding: isMobile ? '8px 4px' : '4px 2px', whiteSpace: 'nowrap' }}>Mark all read</button>}
                 </div>
               </div>
 
@@ -2751,30 +2774,39 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                 {visibleItems.length === 0 ? (
                   <div style={{ padding: '40px 20px', textAlign: 'center' }}>
                     <div style={{ width: 52, height: 52, borderRadius: 16, background: primary + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, margin: '0 auto 12px' }}>{filter === 'unread' ? '🎉' : '🔔'}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>{filter === 'unread' ? "You're all caught up" : 'No notifications yet'}</div>
-                    <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 3 }}>{filter === 'unread' ? 'New updates will show up here.' : "We'll let you know when something needs attention."}</div>
+                    <div style={{ fontSize: isMobile ? 16 : 13, fontWeight: 700, color: '#334155' }}>{filter === 'unread' ? "You're all caught up" : 'No notifications yet'}</div>
+                    <div style={{ fontSize: isMobile ? 13.5 : 11.5, color: '#94A3B8', marginTop: 4 }}>{filter === 'unread' ? 'New updates will show up here.' : "We'll let you know when something needs attention."}</div>
                   </div>
                 ) : (
-                  <div style={{ padding: '4px 8px 10px' }}>
+                  <div style={{ padding: isMobile ? '4px 10px calc(18px + env(safe-area-inset-bottom))' : '4px 8px 10px' }}>
                     {groupedItems.map(group => (
                       <div key={group.label}>
-                        <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, padding: '12px 8px 6px' }}>{group.label}</div>
+                        <div style={{ fontSize: isMobile ? 11.5 : 10.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.6, padding: isMobile ? '14px 8px 7px' : '12px 8px 6px' }}>{group.label}</div>
                         {group.items.map(n => {
                           const color = notifColor(n, primary)
                           const isCritical = n.priority === 'critical'
+                          const repeats = (n.dupes || []).length
                           return (
                             <button key={n.id} onClick={() => openItem(n)}
-                              style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'flex-start', gap: 11, padding: '11px 10px 11px 14px', marginBottom: 2, border: 'none', background: n.read_at ? 'transparent' : color + '0A', cursor: 'pointer', textAlign: 'left', borderRadius: 12, transition: 'background 0.12s' }}
+                              style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'flex-start', gap: isMobile ? 12 : 11, padding: isMobile ? '14px 12px 14px 16px' : '11px 10px 11px 14px', marginBottom: isMobile ? 6 : 2, border: 'none', background: n.read_at ? 'transparent' : color + '0A', cursor: 'pointer', textAlign: 'left', borderRadius: isMobile ? 16 : 12, transition: 'background 0.12s' }}
                               onMouseEnter={e => e.currentTarget.style.background = isCritical ? '#FEE2E2' : color + '14'}
                               onMouseLeave={e => e.currentTarget.style.background = n.read_at ? 'transparent' : color + '0A'}>
                               {!n.read_at && <span style={{ position: 'absolute', left: 3, top: 12, bottom: 12, width: 3, borderRadius: 2, background: color }} />}
-                              <div style={{ width: 34, height: 34, borderRadius: 10, background: color + '18', border: `1px solid ${color}2A`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{NOTIF_ICONS[n.category] || '🔔'}</div>
+                              <div style={{ position: 'relative', width: isMobile ? 40 : 34, height: isMobile ? 40 : 34, borderRadius: isMobile ? 13 : 10, background: color + '18', border: `1px solid ${color}2A`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 18 : 15, flexShrink: 0 }}>
+                                {NOTIF_ICONS[n.category] || '🔔'}
+                                {repeats > 1 && (
+                                  <span style={{ position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, padding: '0 4px', borderRadius: 99, background: color, color: '#fff', fontSize: 10.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>{repeats}</span>
+                                )}
+                              </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-                                  <div style={{ fontSize: 12.5, fontWeight: n.read_at ? 600 : 800, color: '#0F172A', lineHeight: 1.3 }}>{n.title}</div>
-                                  <div style={{ fontSize: 10, color: '#A1A9B8', fontWeight: 600, flexShrink: 0 }}>{timeAgo(n.created_at)}</div>
+                                  <div style={{ fontSize: isMobile ? 15 : 12.5, fontWeight: n.read_at ? 600 : 800, color: '#0F172A', lineHeight: 1.3 }}>{n.title}</div>
+                                  <div style={{ fontSize: isMobile ? 11.5 : 10, color: '#A1A9B8', fontWeight: 600, flexShrink: 0 }}>{timeAgo(n.created_at)}</div>
                                 </div>
-                                <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{n.body}</div>
+                                <div style={{ fontSize: isMobile ? 13.5 : 11.5, color: '#64748B', marginTop: 3, lineHeight: 1.42, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{n.body}</div>
+                                {repeats > 1 && (
+                                  <div style={{ fontSize: isMobile ? 12 : 10.5, color: color, fontWeight: 700, marginTop: 4 }}>{repeats} times</div>
+                                )}
                               </div>
                             </button>
                           )
