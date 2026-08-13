@@ -3570,7 +3570,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             secondary={secondary}
             isMobile={isMobile}
             todayStr={today}
-            onOpenSession={() => go('registers')}
+            onOpenSession={(s) => openRegisterForSession(s.id)}
           />
         </div>
       </header>
