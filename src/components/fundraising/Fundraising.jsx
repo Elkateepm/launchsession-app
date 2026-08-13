@@ -11,6 +11,7 @@ import GivingHeatmap from './GivingHeatmap'
 import FundraisingCalendar from './FundraisingCalendar'
 import DocumentVault from './DocumentVault'
 import ApplicationTracker from './ApplicationTracker'
+import DonationsLedger from './donations/DonationsLedger'
 import successCheckAnimation from '../../assets/lottie/success-check.json'
 import { LS } from './fundraisingShared'
 import FundraisingHeader from './hub/FundraisingHeader'
@@ -47,6 +48,7 @@ const DAY_MS = 1000 * 60 * 60 * 24
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
+  { key: 'donations', label: 'Donations' },
   { key: 'discover', label: 'Discover Funding' },
   { key: 'calendar', label: 'Deadlines' },
   { key: 'documents', label: 'Documents' },
@@ -763,6 +765,14 @@ export default function Fundraising({ org, isAdmin }) {
       <AnimatePresence mode="wait">
         <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
         {activeTab === 'overview' && overviewContent}
+        {activeTab === 'donations' && (
+          <DonationsLedger
+            org={org}
+            isAdmin={isAdmin}
+            campaigns={campaigns}
+            onChanged={load}
+          />
+        )}
         {activeTab === 'discover' && <FundingMarketplace org={org} primary={primary} onTrack={() => setTrackerRefresh(k => k + 1)} />}
         {activeTab === 'calendar' && <FundraisingCalendar org={org} />}
         {activeTab === 'documents' && <DocumentVault org={org} isAdmin={isAdmin} />}
