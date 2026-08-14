@@ -37,6 +37,14 @@ import MobileBottomNav from './mobilenav/MobileBottomNav'
 import QRShareSheet from '../shared/QRShareSheet'
 import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
 import { useTerms } from '../../context/OrgContext'
+import Today from './Today'
+import {
+  NAV_SECTIONS, NAV_GROUPS, CREATE_ACTIONS,
+  visibleItems, groupContainingTab, isItemActive,
+} from './sidebar/navConfig'
+import {
+  SidebarItem, SidebarSection, SidebarCollapsibleGroup, CreateMenu,
+} from './sidebar/SidebarParts'
 import { makeHasModule, isTrialActive } from '../../lib/moduleAccess'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
@@ -164,62 +172,6 @@ function ComingSoonModule({ icon, label, desc }) {
 // back. One value, one system removes the conflict outright.
 const NavVisibleContext = React.createContext(true)
 
-function NavItem({ icon, label, active, onClick, badge, primary, collapsed, locked }) {
-  const [hovered, setHovered] = useState(false)
-  const navVisible = React.useContext(NavVisibleContext)
-  return (
-    <button
-      title={collapsed ? label : undefined}
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-        padding: collapsed ? '10px 0' : '8px 12px',
-        justifyContent: collapsed ? 'center' : 'flex-start',
-        borderRadius: 10, border: 'none',
-        willChange: 'opacity',
-        background: active
-          ? `linear-gradient(90deg, ${primary}28, ${primary}10)`
-          : hovered && !locked ? 'rgba(255,255,255,0.05)' : 'transparent',
-        color: locked ? 'rgba(255,255,255,0.2)' : active ? '#fff' : hovered ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.45)',
-        fontSize: 13, fontWeight: active ? 700 : 500,
-        marginBottom: 1, cursor: locked ? 'default' : 'pointer', textAlign: 'left',
-        transition: 'background 0.15s ease, color 0.15s ease, opacity 0.4s ease-out', position: 'relative',
-        borderLeft: active ? `3px solid ${primary}` : '3px solid transparent',
-        opacity: !navVisible ? 0 : locked ? 0.5 : 1,
-      }}
-    >
-      <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0, transform: hovered && !active && !locked ? 'translateX(1px)' : 'none', transition: 'transform 0.15s' }}>{icon}</span>
-      {!collapsed && <span style={{ flex: 1, fontSize: 13 }}>{label}</span>}
-      {!collapsed && locked && <span style={{ fontSize: 9, opacity: 0.6 }}>🔒</span>}
-      {!collapsed && !locked && badge && (
-        <span style={{ background: badge.color || '#EF4444', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>
-          {badge.text}
-        </span>
-      )}
-      {active && !collapsed && !locked && <div style={{ width: 7, height: 7, borderRadius: '50%', background: primary, boxShadow: `0 0 8px ${primary}`, flexShrink: 0, animation: 'pulse-dot 2s infinite' }} />}
-    </button>
-  )
-}
-
-function NavSection({ title, children, collapsed, packColor }) {
-  return (
-    <div style={{ marginBottom: 4 }}>
-      {!collapsed && title && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px 4px', marginTop: 4 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 3, background: packColor || 'rgba(255,255,255,0.2)', flexShrink: 0, boxShadow: packColor ? `0 0 6px ${packColor}80` : 'none' }} />
-          <div style={{ fontSize: 9.5, fontWeight: 900, color: packColor || 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: 1.4 }}>{title}</div>
-          <div style={{ flex: 1, height: 1, background: packColor ? `linear-gradient(90deg, ${packColor}40, transparent)` : 'rgba(255,255,255,0.05)' }} />
-        </div>
-      )}
-      {collapsed && <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '6px 14px' }} />}
-      {children}
-    </div>
-  )
-}
-
-// ─── FLOATING GLASS HEADER ────────────────────────────────────
 function LiveClock() {
   const [now, setNow] = useState(new Date())
   useEffect(() => {
@@ -443,6 +395,17 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
   )
 }
 
+// Create actions reuse the existing flows rather than duplicating any form --
+// each entry is the payload the destination already understands.
+const CREATE_PAYLOADS = {
+  session: { autoOpenWizard: true },
+  register: { autoOpenAdd: true },
+}
+
+// Tabs reached through the Organisation entry point. Their routes are
+// unchanged; only where they are surfaced has moved.
+const ORG_TABS = ['settings', 'branding', 'team']
+
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState(() => {
     // A page reload fully remounts this component, wiping any in-memory
@@ -455,7 +418,14 @@ export default function Dashboard({ session, org }) {
       return fromUrl || sessionStorage.getItem('ls_dashboard_tab') || 'home'
     } catch (e) { return 'home' }
   })
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem('launchsession_sidebar_collapsed') === '1' } catch (e) { return false }
+  })
+  // Group expansion lasts the browser session: re-collapsing Insights on every
+  // navigation is the kind of small friction that makes a nav feel hostile.
+  const [openGroups, setOpenGroups] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('ls_sidebar_groups') || '{}') } catch (e) { return {} }
+  })
   const [registersKey, setRegistersKey] = useState(0)
   const [reflectSessionId, setReflectSessionId] = useState(null)
   const [openAssessmentId, setOpenAssessmentId] = useState(null)
@@ -482,6 +452,14 @@ export default function Dashboard({ session, org }) {
   React.useEffect(() => {
     if (isTablet) { setSidebarCollapsed(false); setTabletNavOpen(false) }
   }, [isTablet])
+
+  React.useEffect(() => {
+    try { localStorage.setItem('launchsession_sidebar_collapsed', sidebarCollapsed ? '1' : '0') } catch (e) { /* ignore */ }
+  }, [sidebarCollapsed])
+
+  React.useEffect(() => {
+    try { sessionStorage.setItem('ls_sidebar_groups', JSON.stringify(openGroups)) } catch (e) { /* ignore */ }
+  }, [openGroups])
 
   const persistTab = (t) => {
     try {
@@ -550,6 +528,7 @@ export default function Dashboard({ session, org }) {
   // Module access is resolved centrally (see lib/moduleAccess) so the sidebar,
   // Hub and Calendar can't disagree, and so an active trial grants everything.
   const hasModule = makeHasModule(org)
+
   const onTrial = isTrialActive(org)
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
@@ -579,6 +558,17 @@ export default function Dashboard({ session, org }) {
 
   const userName = userProfile?.full_name || userEmail.split('@')[0]
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'owner'
+  const activeGroup = React.useMemo(() => groupContainingTab(tab), [tab])
+
+  // Only offer creation of things this organisation actually has, and that this
+  // user may create. An action that opens a locked screen is worse than no
+  // action at all.
+  const createActions = React.useMemo(
+    () => visibleItems(CREATE_ACTIONS, { hasModule, isAdmin })
+      .map(a => ({ ...a, label: a.label || `${a.labelPrefix || ''}${terms[a.termKey] || ''}`.trim() })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [org?.id, org?.modules, isAdmin, terms]
+  )
 
   const [unreadSubs, setUnreadSubs] = useState([])
   useEffect(() => {
@@ -645,86 +635,95 @@ export default function Dashboard({ session, org }) {
           </div>
         </div>
 
+        {/* CREATE */}
+        <CreateMenu
+          actions={createActions}
+          primary={primary}
+          collapsed={sidebarCollapsed}
+          onSelect={a => handleSetTab(a.tab, CREATE_PAYLOADS[a.id] || undefined)}
+        />
+
         {/* NAV */}
         <NavVisibleContext.Provider value={isTablet ? tabletNavOpen : true}>
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-        {/* Home — sticky, always visible */}
-        <div style={{ padding: '4px 8px 0', flexShrink: 0 }}>
-          <NavSection collapsed={sidebarCollapsed} packColor={primary}>
-            <NavItem icon="🏠" label="Home" active={tab === 'home'} onClick={() => { handleSetTab('home') }} primary={primary} collapsed={sidebarCollapsed} />
-          </NavSection>
+
+        <div style={{ padding: '0 8px 6px', flexShrink: 0 }}>
+          <SidebarItem icon="🏠" label="Home" active={tab === 'home'} primary={primary}
+            collapsed={sidebarCollapsed} onClick={() => handleSetTab('home')} />
+          <SidebarItem icon="⚡" label="Today" active={tab === 'today'} primary={primary}
+            collapsed={sidebarCollapsed} onClick={() => handleSetTab('today')} />
         </div>
-        <div style={{ height: 1, margin: '0 12px', background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
+        <div style={{ height: 1, margin: '0 12px 10px', background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
 
-        <div className="sb-nav" style={{ flex: 1, padding: '4px 8px 8px', overflowY: 'auto' }}>
+        <div className="sb-nav" style={{ flex: 1, padding: '0 8px 8px', overflowY: 'auto' }}>
 
-          <NavSection collapsed={sidebarCollapsed} title="Delivery" packColor="#3B82F6">
-            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => handleSetTab('calendar')} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="🗓️" label="Sessions" active={tab === 'planner'} onClick={() => handleSetTab('planner')} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="🚀" label="Projects" active={tab === 'projects_list' || tab === 'projects'} onClick={() => handleSetTab('projects_list')} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="🧒" label={terms.People} active={tab === 'children'} onClick={() => handleSetTab('children')} primary={primary} collapsed={sidebarCollapsed} />
-            {/* Paid delivery modules — show all, locked ones navigate to locked screen */}
-            {[
-              { key: 'registers', label: 'Registers', icon: '📋' },
-              { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
-              { key: 'messaging', label: 'Messaging', icon: '💬' },
-              { key: 'gallery', label: 'Gallery', icon: '🖼️' },
-            ].map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
-                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
-                locked={!hasModule(m.key)} />
-            ))}
-          </NavSection>
+          {NAV_SECTIONS.map(section => {
+            const items = visibleItems(section.items, { hasModule, isAdmin })
+            if (!items.length) return null
+            return (
+              <SidebarSection key={section.id} title={section.label} collapsed={sidebarCollapsed}>
+                {items.map(item => (
+                  <SidebarItem
+                    key={item.id}
+                    icon={item.icon}
+                    label={item.label || terms[item.termKey] || item.id}
+                    active={isItemActive(item, tab)}
+                    primary={primary}
+                    collapsed={sidebarCollapsed}
+                    badge={item.badgeKey === 'forms' && unreadSubs.length ? unreadSubs.length : undefined}
+                    onClick={() => handleSetTab(item.tab)}
+                  />
+                ))}
+              </SidebarSection>
+            )
+          })}
 
-          <NavSection collapsed={sidebarCollapsed} title="Safeguarding" packColor="#EF4444">
-            {[
-              { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
-              { key: 'forms', label: 'Forms', icon: '📝' },
-              { key: 'case_management', label: 'Case Management', icon: '📁' },
-              { key: 'risk_assessments', label: 'Risk Assessments', icon: '🛡️' },
-            ].map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
-                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
-                locked={!hasModule(m.key)}
-                badge={m.key === 'forms' && unreadSubs.length > 0 ? { text: unreadSubs.length > 9 ? '9+' : String(unreadSubs.length) } : undefined} />
-            ))}
-          </NavSection>
+          <div style={{ height: 1, margin: '4px 12px 12px', background: 'rgba(255,255,255,0.06)' }} />
 
-          <NavSection collapsed={sidebarCollapsed} title="Growth" packColor="#22C55E">
-            {[
-              { key: 'reports', label: 'Reports', icon: '📊' },
-              { key: 'impact_outcomes', label: 'Impact & Outcomes', icon: '🌱' },
-              { key: 'fundraising', label: 'Fundraising', icon: '💷' },
-            ].map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
-                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
-                locked={!hasModule(m.key)} />
-            ))}
-          </NavSection>
-
-          <NavSection collapsed={sidebarCollapsed} title="Operations" packColor="#A855F7">
-            {[
-              { key: 'hr', label: 'HR', icon: '🧑‍💼' },
-              { key: 'payments', label: 'Payments', icon: '💳' },
-              { key: 'resource_booking', label: 'Resource Booking', icon: '🗓️' },
-              { key: 'events_trips', label: 'Events & Trips', icon: '✈️' },
-            ].filter(m => m.key !== 'hr' || isAdmin).map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
-                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
-                locked={!hasModule(m.key)} />
-            ))}
-            {isAdmin && (
-              <NavItem icon="🗂" label="Templates" active={tab === 'templates'}
-                onClick={() => handleSetTab('templates')} primary={primary} collapsed={sidebarCollapsed} />
-            )}
-          </NavSection>
+          {NAV_GROUPS.map(group => {
+            const items = visibleItems(group.items, { hasModule, isAdmin })
+            if (!items.length) return null
+            const active = activeGroup === group.id
+            return (
+              <SidebarCollapsibleGroup
+                key={group.id}
+                label={group.label}
+                icon={group.icon}
+                primary={primary}
+                collapsed={sidebarCollapsed}
+                open={!!openGroups[group.id] || active}
+                hasActiveChild={active}
+                items={items}
+                tab={tab}
+                onSelect={item => handleSetTab(item.tab)}
+                onToggle={() => setOpenGroups(g => ({ ...g, [group.id]: !(g[group.id] || active) }))}
+              >
+                {items.map(item => (
+                  <SidebarItem
+                    key={item.id}
+                    icon={item.icon}
+                    label={item.label}
+                    active={isItemActive(item, tab)}
+                    primary={primary}
+                    indent
+                    muted
+                    onClick={() => handleSetTab(item.tab)}
+                  />
+                ))}
+              </SidebarCollapsibleGroup>
+            )
+          })}
 
           {isAdmin && (
-            <NavSection collapsed={sidebarCollapsed} title="Organisation" packColor="rgba(255,255,255,0.2)">
-              <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => { handleSetTab('team') }} primary={primary} collapsed={sidebarCollapsed} />
-              <NavItem icon="🎨" label="Branding" active={tab === 'branding'} onClick={() => { handleSetTab('branding') }} primary={primary} collapsed={sidebarCollapsed} />
-              <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => { handleSetTab('settings') }} primary={primary} collapsed={sidebarCollapsed} />
-            </NavSection>
+            <>
+              <div style={{ height: 1, margin: '12px 12px', background: 'rgba(255,255,255,0.06)' }} />
+              <SidebarItem
+                icon="⚙️" label="Organisation"
+                active={ORG_TABS.includes(tab)}
+                primary={primary} collapsed={sidebarCollapsed}
+                onClick={() => handleSetTab('settings')}
+              />
+            </>
           )}
         </div>
         </div>
@@ -828,6 +827,7 @@ export default function Dashboard({ session, org }) {
             )
           })()}
           {/* ── BASE MODULES — always free ── */}
+          {tab === 'today'      && <Today org={org} onNavigate={handleSetTab} terms={terms} />}
           {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
           {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
           {tab === 'projects'   && <ProjectOverview org={org} session={session} projectId={openProjectId} onNavigate={handleSetTab} onBack={() => handleSetTab('projects_list')} />}
