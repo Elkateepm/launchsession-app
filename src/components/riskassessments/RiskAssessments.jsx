@@ -19,6 +19,7 @@ import { DynamicUpdateDrawer, DynamicUpdateList, EmergencyView } from './RALiveS
 import { buildCoverage } from './ra_safety'
 
 const RATING_ORDER = { low: 1, medium: 2, high: 3, critical: 4 }
+const SESSION_WINDOW = 40
 
 export default function RiskAssessments({ org, session: authSession, initialOpenAssessmentId }) {
   const isMobile = useIsMobile()
@@ -48,6 +49,10 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
   const [dynamicOpen, setDynamicOpen] = useState(false)
   const [emergencyOpen, setEmergencyOpen] = useState(false)
   const [liveRefresh, setLiveRefresh] = useState(0)
+  // The overview evaluates a window of upcoming sessions, not the whole
+  // schedule. The window is stated in the UI so "Everything is ready" is not
+  // read as a guarantee about sessions beyond it.
+  const [sessionsTruncated, setSessionsTruncated] = useState(false)
   const [upcomingSessions, setUpcomingSessions] = useState([])
   const [coverageLinks, setCoverageLinks] = useState([])
   const [outstandingByAssessment, setOutstandingByAssessment] = useState({})
@@ -83,6 +88,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
         .eq('org_id', org.id).eq('completed', false),
     ])
     setUpcomingSessions(sess || [])
+    setSessionsTruncated((sess || []).length >= SESSION_WINDOW)
     setCoverageLinks(links || [])
 
     const outstanding = {}
@@ -158,9 +164,16 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
     // Created from an uncovered session on the overview: attach it now, so the
     // session stops showing as uncovered without a second manual step.
     if (linkSessionId) {
-      await supabase.from('risk_assessment_sessions')
+      const { error: linkErr } = await supabase.from('risk_assessment_sessions')
         .insert({ assessment_id: ra.id, session_id: linkSessionId, org_id: org.id })
-      await logAudit(ra.id, 'linked', 'Attached to session on creation')
+      if (linkErr) {
+        // The assessment exists either way, so this is not fatal -- but staying
+        // silent would leave the session still showing as uncovered with no
+        // explanation, which is the exact confusion this flow exists to remove.
+        alert('The assessment was created, but it could not be attached to the session. You can attach it from the Linked tab.')
+      } else {
+        await logAudit(ra.id, 'linked', 'Attached to session on creation')
+      }
     }
     setShowCreate(false); setShowTemplates(false); setPrefillSession(null)
     await loadAll()
@@ -275,6 +288,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
           outstandingByAssessment={outstandingByAssessment}
           staff={staff}
           primary={primary}
+          sessionsTruncated={sessionsTruncated}
           safetyFilter={safetyFilter}
           onSafetyFilter={setSafetyFilter}
           onOpen={a => { setSelected(a); setTab('overview'); logAudit(a.id, 'viewed', null) }}

@@ -28,9 +28,13 @@ export const SAFETY_META = {
 // on the coach.
 const REVIEW_WARNING_DAYS = 7
 
+export function isArchived(assessment) {
+  return !!assessment?.archived || assessment?.status === 'archived'
+}
+
 export function safetyStateOf(assessment) {
   if (!assessment) return SAFETY.ACTION
-  if (assessment.archived) return SAFETY.DRAFT
+  if (isArchived(assessment)) return SAFETY.DRAFT
 
   const reviewDate = assessment.next_review_date || assessment.review_date
   const days = daysUntil(reviewDate)
@@ -51,9 +55,17 @@ export function safetyStateOf(assessment) {
   return SAFETY.READY
 }
 
+// Finding 8: archived records inflated the Drafts figure and reappeared under
+// Recent assessments even though the library filters them out. The overview is
+// a picture of live safety, so archived work is excluded here in one place
+// rather than at each call site.
+export function activeOnly(assessments = []) {
+  return assessments.filter(a => !isArchived(a))
+}
+
 export function summariseSafety(assessments = []) {
   const counts = { [SAFETY.READY]: 0, [SAFETY.REVIEW]: 0, [SAFETY.ACTION]: 0, [SAFETY.DRAFT]: 0 }
-  assessments.forEach(a => { counts[safetyStateOf(a)] += 1 })
+  activeOnly(assessments).forEach(a => { counts[safetyStateOf(a)] += 1 })
   return counts
 }
 
@@ -69,7 +81,7 @@ export function buildAttentionItems({ assessments = [], sessions = [], coverage 
   const items = []
 
   assessments.forEach(a => {
-    if (a.archived) return
+    if (isArchived(a)) return
     const reviewDate = a.next_review_date || a.review_date
     const days = daysUntil(reviewDate)
 
@@ -175,20 +187,44 @@ export function buildAttentionItems({ assessments = [], sessions = [], coverage 
  * project-level assessment covers every session in that project, so a session
  * with no direct link can still be covered.
  */
+// When more than one assessment could cover an activity, prefer the one that
+// best evidences the activity is safe: ready over needing review, and among
+// equals the one reviewed most recently. Without this the winner was whichever
+// row the database happened to return last.
+const COVERAGE_RANK = { [SAFETY.READY]: 0, [SAFETY.REVIEW]: 1, [SAFETY.ACTION]: 2, [SAFETY.DRAFT]: 3 }
+
+function preferredCover(a, b) {
+  if (!a) return b
+  if (!b) return a
+  const ra = COVERAGE_RANK[safetyStateOf(a)]
+  const rb = COVERAGE_RANK[safetyStateOf(b)]
+  if (ra !== rb) return ra < rb ? a : b
+
+  const da = a.next_review_date || a.review_date || ''
+  const db = b.next_review_date || b.review_date || ''
+  if (da !== db) return da > db ? a : b
+
+  return (a.updated_at || a.created_at || '') >= (b.updated_at || b.created_at || '') ? a : b
+}
+
 export function buildCoverage({ links = [], assessments = [], sessions = [] }) {
   const byId = new Map(assessments.map(a => [a.id, a]))
   const coverage = {}
 
   links.forEach(l => {
     const a = byId.get(l.assessment_id)
-    if (!a || a.archived) return
-    // A direct link always wins over project-level cover.
-    coverage[l.session_id] = a
+    if (!a || isArchived(a)) return
+    // A direct link always wins over project-level cover, but between two
+    // direct links the better assessment wins rather than the later row.
+    coverage[l.session_id] = preferredCover(coverage[l.session_id], a)
   })
 
-  const projectLevel = assessments.filter(a => a.is_project_level && a.project_id && !a.archived)
+  const projectLevel = assessments.filter(a => a.is_project_level && a.project_id && !isArchived(a))
   if (projectLevel.length) {
-    const byProject = new Map(projectLevel.map(a => [a.project_id, a]))
+    const byProject = new Map()
+    projectLevel.forEach(a => {
+      byProject.set(a.project_id, preferredCover(byProject.get(a.project_id), a))
+    })
     sessions.forEach(s => {
       if (coverage[s.id] || !s.project_id) return
       const a = byProject.get(s.project_id)

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { ACTIVITY_ICON, RatingBadge, timeAgo, daysUntil } from './ra_shared'
-import { SAFETY, SAFETY_META, safetyStateOf, summariseSafety, buildAttentionItems } from './ra_safety'
+import { SAFETY, SAFETY_META, safetyStateOf, summariseSafety, buildAttentionItems, activeOnly } from './ra_safety'
 
 // The operational overview. Ordered by urgency rather than by data model: what
 // needs doing, what is coming up, then the library. A manager should be able to
@@ -75,7 +75,7 @@ function SafetyStrip({ counts, activeFilter, onFilter }) {
   )
 }
 
-function NeedsAttention({ items, onOpen, onCreateForSession, primary }) {
+function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated }) {
   const isMobile = useIsMobile()
 
   if (!items.length) {
@@ -86,7 +86,9 @@ function NeedsAttention({ items, onOpen, onCreateForSession, primary }) {
           Everything is ready
         </div>
         <div style={{ fontSize: 13.5, color: '#8B87A3' }}>
-          There are no outstanding risk assessment actions.
+          {truncated
+            ? 'No outstanding actions across your next 40 scheduled activities.'
+            : 'There are no outstanding risk assessment actions.'}
         </div>
       </div>
     )
@@ -333,6 +335,7 @@ function RecentAssessments({ assessments, onOpen, staffById }) {
 
 export default function RAOverview({
   assessments = [],
+  sessionsTruncated = false,
   sessions = [],
   coverage = {},
   outstandingByAssessment = {},
@@ -343,11 +346,13 @@ export default function RAOverview({
   onOpen,
   onCreateForSession,
 }) {
-  const counts = useMemo(() => summariseSafety(assessments), [assessments])
+  // Archived work is history, not part of the live safety picture.
+  const live = useMemo(() => activeOnly(assessments), [assessments])
+  const counts = useMemo(() => summariseSafety(live), [live])
 
   const attention = useMemo(
-    () => buildAttentionItems({ assessments, sessions, coverage, outstandingByAssessment }),
-    [assessments, sessions, coverage, outstandingByAssessment]
+    () => buildAttentionItems({ assessments: live, sessions, coverage, outstandingByAssessment }),
+    [live, sessions, coverage, outstandingByAssessment]
   )
 
   const staffById = useMemo(
@@ -356,9 +361,9 @@ export default function RAOverview({
   )
 
   const filtered = useMemo(() => {
-    if (!safetyFilter) return assessments
-    return assessments.filter(a => safetyStateOf(a) === safetyFilter)
-  }, [assessments, safetyFilter])
+    if (!safetyFilter) return live
+    return live.filter(a => safetyStateOf(a) === safetyFilter)
+  }, [live, safetyFilter])
 
   return (
     <div>
@@ -369,6 +374,7 @@ export default function RAOverview({
         onOpen={onOpen}
         onCreateForSession={onCreateForSession}
         primary={primary}
+        truncated={sessionsTruncated}
       />
 
       <UpcomingActivities

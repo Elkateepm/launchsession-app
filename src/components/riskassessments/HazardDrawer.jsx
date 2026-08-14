@@ -157,15 +157,23 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
         // Kept in sync so the existing grid view and PDF export, which still
         // read this column, don't show a hazard with no controls at all.
         control_measures: cleanControls.map(c => c.description.trim()).join('\n'),
-        status: cleanControls.length && cleanControls.every(c => c.completed !== false || !c.due_date)
+        // A hazard is controlled only when every control is actually in place.
+        // Nothing else counts: an outstanding control with no due date is still
+        // outstanding, and treating it as done is how an activity ends up
+        // showing "Ready to run" with no mitigation actually applied.
+        status: cleanControls.length && cleanControls.every(c => c.completed === true)
           ? 'controlled' : 'open',
       }
 
       let hazardId = hazard?.id
+      let priorControlIds = []
+
       if (editing) {
         const { error: e } = await supabase.from('risk_assessment_hazards').update(payload).eq('id', hazard.id)
         if (e) throw e
-        await supabase.from('risk_controls').delete().eq('hazard_id', hazard.id)
+        // Note what is currently stored, but do not remove it yet.
+        const { data: existing } = await supabase.from('risk_controls').select('id').eq('hazard_id', hazard.id)
+        priorControlIds = (existing || []).map(c => c.id)
       } else {
         const { data, error: e } = await supabase.from('risk_assessment_hazards')
           .insert({ ...payload, sort_order: 999 }).select().single()
@@ -173,6 +181,10 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
         hazardId = data.id
       }
 
+      // Insert the replacements before removing the originals. There is no
+      // transaction across two REST calls, so the order decides what a failure
+      // costs: this way a failed insert leaves the old controls intact, where
+      // delete-then-insert would have destroyed them.
       if (cleanControls.length) {
         const { error: ce } = await supabase.from('risk_controls').insert(
           cleanControls.map((c, i) => ({
@@ -186,6 +198,10 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
           }))
         )
         if (ce) throw ce
+      }
+
+      if (priorControlIds.length) {
+        await supabase.from('risk_controls').delete().in('id', priorControlIds)
       }
 
       onSaved?.()
