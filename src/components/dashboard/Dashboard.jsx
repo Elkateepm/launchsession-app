@@ -43,7 +43,7 @@ import {
   visibleItems, groupContainingTab, isItemActive,
 } from './sidebar/navConfig'
 import {
-  SidebarItem, SidebarSection, SidebarCollapsibleGroup, CreateMenu,
+  SidebarItem, SidebarSection, SidebarCollapsibleGroup, CreateMenu, ProfileMenu,
 } from './sidebar/SidebarParts'
 import { makeHasModule, isTrialActive } from '../../lib/moduleAccess'
 
@@ -406,6 +406,15 @@ const CREATE_PAYLOADS = {
 // unchanged; only where they are surfaced has moved.
 const ORG_TABS = ['settings', 'branding', 'team']
 
+// Sign out sits at the end behind a divider: it is destructive and infrequent,
+// and putting it adjacent to everyday navigation invites mis-clicks.
+const PROFILE_MENU_ITEMS = [
+  { id: 'profile', label: 'My profile', icon: '👤' },
+  { id: 'notifications', label: 'Notifications', icon: '🔔', tab: 'settings', adminOnly: true },
+  { id: 'org', label: 'Organisation settings', icon: '⚙️', tab: 'settings', adminOnly: true },
+  { id: 'signout', label: 'Sign out', icon: '↪️', danger: true, dividerBefore: true },
+]
+
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState(() => {
     // A page reload fully remounts this component, wiping any in-memory
@@ -730,38 +739,19 @@ export default function Dashboard({ session, org }) {
         </NavVisibleContext.Provider>
 
         {/* USER PROFILE */}
-        <div style={{ padding: '10px 10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <div
-            onClick={() => setShowProfile(true)}
-            title={sidebarCollapsed ? userName : undefined}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, cursor: 'pointer', marginBottom: 6, transition: 'background 0.15s', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-          >
-            <div style={{ width: 34, height: 34, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}99, #6366F199)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff', flexShrink: 0, overflow: 'hidden', border: `1.5px solid ${primary}55` }}>
-              {userProfile?.photo_url
-                ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : userName[0]?.toUpperCase() || '?'}
-            </div>
-            {!sidebarCollapsed && (
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userProfile?.role || userEmail}</div>
-              </div>
-            )}
-            {!sidebarCollapsed && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>›</span>}
-          </div>
-          {!sidebarCollapsed && (
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button onClick={handleSignOut}
-                style={{ flex: 1, padding: '6px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#FCA5A5'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}>
-                Sign out
-              </button>
-            </div>
-          )}
-        </div>
+        <ProfileMenu
+          userName={userName}
+          roleLabel={userProfile?.role || userEmail}
+          photoUrl={userProfile?.photo_url}
+          primary={primary}
+          collapsed={sidebarCollapsed}
+          items={PROFILE_MENU_ITEMS.filter(i => !i.adminOnly || isAdmin)}
+          onSelect={item => {
+            if (item.id === 'signout') { handleSignOut(); return }
+            if (item.id === 'profile') { setShowProfile(true); return }
+            if (item.tab) handleSetTab(item.tab)
+          }}
+        />
       </div>
 
       <AnimatePresence>

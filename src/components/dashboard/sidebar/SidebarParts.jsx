@@ -281,3 +281,111 @@ export function CreateMenu({ actions, onSelect, primary, collapsed }) {
     </div>
   )
 }
+
+/**
+ * Compact profile control with a popover, replacing the permanent full-width
+ * Sign Out button. Sign out moves inside the popover: it is the least frequent
+ * action in the sidebar and did not deserve permanent space, but it stays one
+ * click from a visible control.
+ */
+export function ProfileMenu({
+  userName, roleLabel, photoUrl, primary, collapsed, items, onSelect,
+}) {
+  const [open, setOpen] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    const onEsc = e => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onEsc)
+    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onEsc) }
+  }, [open])
+
+  return (
+    <div ref={ref} style={{ position: 'relative', padding: '10px 10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        aria-expanded={open}
+        aria-label={collapsed ? userName : undefined}
+        title={collapsed ? userName : undefined}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+          padding: '8px 10px', borderRadius: 10, border: 'none',
+          background: hovered || open ? 'rgba(255,255,255,0.05)' : 'transparent',
+          cursor: 'pointer', fontFamily: 'inherit',
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          transition: 'background 180ms ease',
+        }}
+      >
+        <span style={{
+          width: 32, height: 32, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
+          background: `linear-gradient(135deg, ${primary}99, #6366F199)`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 13, fontWeight: 800, color: '#fff',
+          border: `1.5px solid ${primary}55`,
+        }}>
+          {photoUrl
+            ? <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : (userName?.[0]?.toUpperCase() || '?')}
+        </span>
+
+        {!collapsed && (
+          <>
+            <span style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+              <span style={{
+                display: 'block', fontSize: 12.5, fontWeight: 700, color: '#f1f5f9',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>{userName}</span>
+              <span style={{
+                display: 'block', fontSize: 10.5, color: 'rgba(255,255,255,0.35)',
+                textTransform: 'capitalize',
+              }}>{roleLabel}</span>
+            </span>
+            <span style={{
+              fontSize: 12, color: 'rgba(255,255,255,0.25)',
+              transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 180ms ease',
+            }}>›</span>
+          </>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={{ duration: 0.16 }}
+            style={{
+              position: 'absolute', bottom: '100%', left: collapsed ? '100%' : 10,
+              right: collapsed ? 'auto' : 10, marginBottom: 6, marginLeft: collapsed ? 8 : 0,
+              zIndex: 40, minWidth: 200,
+              background: '#141B26', border: '1px solid rgba(255,255,255,0.09)',
+              borderRadius: 12, padding: 6,
+              boxShadow: '0 18px 44px rgba(0,0,0,0.5)',
+            }}
+          >
+            {items.map(item => (
+              <React.Fragment key={item.id}>
+                {item.dividerBefore && (
+                  <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '5px 8px' }} />
+                )}
+                <SidebarItem
+                  icon={item.icon}
+                  label={item.label}
+                  primary={item.danger ? '#E5484D' : primary}
+                  onClick={() => { onSelect(item); setOpen(false) }}
+                />
+              </React.Fragment>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
