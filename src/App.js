@@ -38,7 +38,7 @@ function RouteLoading() {
   )
 }
 
-const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000 // 2 hours
+const IDLE_TIMEOUT_MS = 8 * 60 * 60 * 1000 // 8 hours — a full working day
 const MOBILE_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 const LAST_ACTIVITY_KEY = 'ls_last_activity'
 
@@ -48,6 +48,15 @@ const LAST_ACTIVITY_KEY = 'ls_last_activity'
 // until they explicitly log out, since idle timeouts on personal devices
 // mostly just cause unwanted logouts (app backgrounded, phone locked, etc.)
 // rather than the shared-desktop security case this was built for.
+//
+// The window is 8 hours of inactivity: long enough to cover a working day
+// without re-authenticating, short enough that a machine left unattended
+// overnight in a shared office does not stay signed in.
+//
+// Last activity is persisted rather than held only in memory. A reload used to
+// reset the in-memory clock, so closing the laptop and reopening the tab the
+// next morning restarted the countdown and the timeout never actually fired —
+// which made the desktop session effectively unbounded.
 function useIdleLogout(enabled) {
   const timerRef = useRef(null)
   const { isDesktop } = useBreakpoint()
@@ -58,32 +67,59 @@ function useIdleLogout(enabled) {
 
     const logout = async () => {
       try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
+      try { localStorage.removeItem(LAST_ACTIVITY_KEY) } catch (e) { /* ignore */ }
       window.location.replace('/landing.html')
     }
 
+    const readLast = () => {
+      try {
+        const v = parseInt(localStorage.getItem(LAST_ACTIVITY_KEY), 10)
+        return Number.isNaN(v) ? null : v
+      } catch (e) { return null }
+    }
+    const writeLast = () => {
+      try { localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now())) } catch (e) { /* storage unavailable */ }
+    }
+
+    // Writing on every mousemove would hammer localStorage, so throttle: the
+    // resolution that matters here is minutes, not milliseconds.
+    let lastWrite = 0
+    const markActivity = () => {
+      const now = Date.now()
+      if (now - lastWrite > 60 * 1000) { lastWrite = now; writeLast() }
+    }
+
     const reset = () => {
+      markActivity()
       if (timerRef.current) clearTimeout(timerRef.current)
-      timerRef.current = setTimeout(logout, IDLE_TIMEOUT_MS)
+      const last = readLast() || Date.now()
+      const remaining = Math.max(IDLE_TIMEOUT_MS - (Date.now() - last), 0)
+      timerRef.current = setTimeout(logout, remaining)
     }
 
     const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click']
     events.forEach(e => window.addEventListener(e, reset, { passive: true }))
 
-    // Re-check on tab focus: if the machine was asleep/backgrounded past the
+    // Re-check on tab focus: if the machine was asleep or backgrounded past the
     // timeout, setTimeout may not have fired reliably, so verify elapsed time.
-    let lastActivity = Date.now()
-    const markActivity = () => { lastActivity = Date.now() }
-    events.forEach(e => window.addEventListener(e, markActivity, { passive: true }))
     const onVisible = () => {
-      if (document.visibilityState === 'visible' && Date.now() - lastActivity >= IDLE_TIMEOUT_MS) logout()
+      if (document.visibilityState !== 'visible') return
+      const last = readLast()
+      if (last && Date.now() - last >= IDLE_TIMEOUT_MS) logout()
+      else reset()
     }
     document.addEventListener('visibilitychange', onVisible)
 
+    // On mount, honour a clock that was already running before this reload
+    // instead of starting a fresh 8 hours.
+    const existing = readLast()
+    if (existing && Date.now() - existing >= IDLE_TIMEOUT_MS) { logout(); return }
+    if (!existing) writeLast()
     reset()
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
-      events.forEach(e => { window.removeEventListener(e, reset); window.removeEventListener(e, markActivity) })
+      events.forEach(e => window.removeEventListener(e, reset))
       document.removeEventListener('visibilitychange', onVisible)
     }
   }, [active])
