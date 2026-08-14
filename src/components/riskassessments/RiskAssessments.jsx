@@ -13,6 +13,8 @@ import RAHazards from './RAHazards'
 import RAEmergencyPlan from './RAEmergencyPlan'
 import RAAttachments from './RAAttachments'
 import RALinkedSessions, { printRiskAssessment } from './RALinkedSessions'
+import RAOverview from './RAOverview'
+import { buildCoverage } from './ra_safety'
 
 const RATING_ORDER = { low: 1, medium: 2, high: 3, critical: 4 }
 
@@ -35,6 +37,14 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
   const [rowMenuFor, setRowMenuFor] = useState(null)
   const [page, setPage] = useState(1)
   const perPage = 10
+  const [view, setView] = useState('overview')      // overview | library
+  const [safetyFilter, setSafetyFilter] = useState(null)
+  // Set when creation is started from an uncovered session, so the new
+  // assessment can be linked to it on save instead of afterwards.
+  const [prefillSession, setPrefillSession] = useState(null)
+  const [upcomingSessions, setUpcomingSessions] = useState([])
+  const [coverageLinks, setCoverageLinks] = useState([])
+  const [outstandingByAssessment, setOutstandingByAssessment] = useState({})
 
   const loadAll = useCallback(async () => {
     const [{ data: ra }, { data: st }, { data: vs }] = await Promise.all([
@@ -49,6 +59,40 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
   }, [org.id])
 
   useEffect(() => { loadAll() }, [loadAll])
+
+  // The overview answers "is what we're about to run covered?", which the
+  // assessment list alone cannot show -- an uncovered session is invisible
+  // until you look at the schedule.
+  const loadOperational = useCallback(async () => {
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
+    const [{ data: sess }, { data: links }, { data: controls }] = await Promise.all([
+      supabase.from('sessions')
+        .select('id, title, session_date, start_time, location, session_type, project_id')
+        .eq('org_id', org.id).gte('session_date', today)
+        .order('session_date').order('start_time').limit(40),
+      supabase.from('risk_assessment_sessions').select('assessment_id, session_id').eq('org_id', org.id),
+      // Outstanding controls drive the "still require controls" attention item.
+      supabase.from('risk_controls')
+        .select('hazard_id, completed, risk_assessment_hazards!inner(assessment_id)')
+        .eq('org_id', org.id).eq('completed', false),
+    ])
+    setUpcomingSessions(sess || [])
+    setCoverageLinks(links || [])
+
+    const outstanding = {}
+    ;(controls || []).forEach(c => {
+      const aid = c.risk_assessment_hazards?.assessment_id
+      if (aid) outstanding[aid] = (outstanding[aid] || 0) + 1
+    })
+    setOutstandingByAssessment(outstanding)
+  }, [org.id])
+
+  useEffect(() => { loadOperational() }, [loadOperational])
+
+  const coverage = useMemo(
+    () => buildCoverage({ links: coverageLinks, assessments, sessions: upcomingSessions }),
+    [coverageLinks, assessments, upcomingSessions]
+  )
 
   // Deep-link: auto-open a specific assessment when navigated here with one (e.g. from the Home hero card)
   useEffect(() => {
@@ -84,7 +128,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
     return data
   }
 
-  const createAssessment = async ({ name, activity_type, location, summary, hazards, template_source_id, venue_id }) => {
+  const createAssessment = async ({ name, activity_type, location, summary, hazards, template_source_id, venue_id, linkSessionId }) => {
     // If a venue was picked and no hazards were supplied some other way (e.g. a template),
     // seed the assessment with that venue's default hazards so common site-specific risks
     // (uneven terrain, water hazards, etc.) don't have to be re-typed every time.
@@ -96,6 +140,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
     const { data: ra, error } = await supabase.from('risk_assessments').insert({
       org_id: org.id, name, activity_type, location, summary, status: 'draft', venue_id: venue_id || null,
       risk_score: top, risk_rating: riskRating(top), created_by: authSession?.user?.id,
+      owner_id: authSession?.user?.id,
       template_source_id: template_source_id || null,
     }).select().single()
     if (error) { alert('Failed to create: ' + error.message); return }
@@ -104,8 +149,16 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
     }
     const usedVenueDefaults = (!hazards || hazards.length === 0) && venue?.default_hazards?.length > 0
     await logAudit(ra.id, 'created', usedVenueDefaults ? `Created "${name}" with ${seededHazards.length} hazard(s) from ${venue.name}` : `Created "${name}"`)
-    setShowCreate(false); setShowTemplates(false)
+    // Created from an uncovered session on the overview: attach it now, so the
+    // session stops showing as uncovered without a second manual step.
+    if (linkSessionId) {
+      await supabase.from('risk_assessment_sessions')
+        .insert({ assessment_id: ra.id, session_id: linkSessionId, org_id: org.id })
+      await logAudit(ra.id, 'linked', 'Attached to session on creation')
+    }
+    setShowCreate(false); setShowTemplates(false); setPrefillSession(null)
     await loadAll()
+    await loadOperational()
     setSelected(ra); setTab('overview')
   }
 
@@ -182,14 +235,54 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 18 }}>
         <div>
           <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 10 }}>🛡️ Risk Assessments</div>
-          <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>Create, manage and review risk assessments for all activities.</div>
+          <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>Keep activities safe, reviewed and ready to run.</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setShowTemplates(true)} style={btnGhost}>📄 From Template</button>
-          <button onClick={() => setShowCreate(true)} style={btnPrimary(primary)}>+ New Risk Assessment</button>
+          <button onClick={() => setShowTemplates(true)} style={btnGhost}>📄 Use Template</button>
+          <button onClick={() => setShowCreate(true)} style={btnPrimary(primary)}>+ New Assessment</button>
         </div>
       </div>
 
+      {!selected && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+          {[['overview', 'Overview'], ['library', 'All assessments']].map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setView(key)}
+              style={{
+                padding: '8px 15px', borderRadius: 999, fontSize: 13, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+                border: `1px solid ${view === key ? 'transparent' : '#ECE9F5'}`,
+                background: view === key ? primary : '#fff',
+                color: view === key ? '#fff' : '#64748B',
+              }}
+            >{label}</button>
+          ))}
+        </div>
+      )}
+
+      {!selected && view === 'overview' && (
+        <RAOverview
+          assessments={assessments}
+          sessions={upcomingSessions}
+          coverage={coverage}
+          outstandingByAssessment={outstandingByAssessment}
+          staff={staff}
+          primary={primary}
+          safetyFilter={safetyFilter}
+          onSafetyFilter={setSafetyFilter}
+          onOpen={a => { setSelected(a); setTab('overview'); logAudit(a.id, 'viewed', null) }}
+          onCreateForSession={sess => {
+            // Carry the session through to creation so the assessment starts
+            // pre-linked rather than needing to be attached afterwards.
+            setPrefillSession(sess)
+            setShowCreate(true)
+          }}
+        />
+      )}
+
+      {(selected || view === 'library') && (
+      <>
       {/* KPI CARDS */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 18 }}>
         {[
@@ -233,6 +326,11 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
         </select>
       </div>
 
+      </>
+      )}
+
+      {(selected || view === 'library') && (
+      <>
       {/* MAIN LAYOUT */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : selected ? '1fr 1.5fr 0.85fr' : '1.4fr 0.85fr', gap: 16, alignItems: 'start' }}>
 
@@ -485,10 +583,20 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* CREATE MODAL */}
       <AnimatePresence>
-        {showCreate && <CreateModal org={org} staff={staff} venues={venues} onClose={() => setShowCreate(false)} onCreate={createAssessment} primary={primary} />}
+        {showCreate && (
+          <CreateModal
+            org={org} staff={staff} venues={venues}
+            prefillSession={prefillSession}
+            onClose={() => { setShowCreate(false); setPrefillSession(null) }}
+            onCreate={createAssessment}
+            primary={primary}
+          />
+        )}
       </AnimatePresence>
 
       {/* TEMPLATES MODAL */}
@@ -546,13 +654,25 @@ function ReviewHistory({ assessment, org, staff }) {
 }
 
 // ── Create modal ──
-function CreateModal({ org, staff, venues, onClose, onCreate, primary }) {
+function CreateModal({ org, staff, venues, onClose, onCreate, primary, prefillSession }) {
   const activeVenues = (venues || []).filter(v => v.is_active)
-  const [form, setForm] = useState({ name: '', activity_type: '', location: '', venue_id: null, summary: '' })
+  // Started from an uncovered session on the overview: carry its name, type and
+  // location across so the staff member isn't retyping what we already know.
+  const [form, setForm] = useState({
+    name: prefillSession?.title ? `${prefillSession.title} Risk Assessment` : '',
+    activity_type: prefillSession?.session_type || '',
+    location: prefillSession?.location || '',
+    venue_id: null,
+    summary: '',
+  })
   const [useCustomLocation, setUseCustomLocation] = useState(activeVenues.length === 0)
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const submit = async () => { if (!form.name.trim()) return; setSaving(true); await onCreate({ ...form, hazards: [] }) }
+  const submit = async () => {
+    if (!form.name.trim()) return
+    setSaving(true)
+    await onCreate({ ...form, hazards: [], linkSessionId: prefillSession?.id || null })
+  }
   const selectedVenue = form.venue_id ? activeVenues.find(v => v.id === form.venue_id) : null
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
