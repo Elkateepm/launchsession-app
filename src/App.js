@@ -65,10 +65,30 @@ function useIdleLogout(enabled) {
   useEffect(() => {
     if (!active) return
 
+    // Guards against the timer and the visibilitychange handler both firing a
+    // sign-out, and against repeated attempts while one is in flight.
+    let loggingOut = false
     const logout = async () => {
+      if (loggingOut) return
+      loggingOut = true
       try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
       try { localStorage.removeItem(LAST_ACTIVITY_KEY) } catch (e) { /* ignore */ }
       window.location.replace('/landing.html')
+    }
+
+    // The session is shared across tabs, so a background tab reaching its
+    // deadline must not sign out a tab that is actively in use. Re-read the
+    // shared clock and reschedule rather than acting on this tab's timer alone.
+    const expireIfIdle = () => {
+      const last = readLast()
+      if (!last || Date.now() - last >= IDLE_TIMEOUT_MS) { logout(); return }
+      scheduleFrom(last)
+    }
+
+    const scheduleFrom = last => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      const remaining = Math.max(IDLE_TIMEOUT_MS - (Date.now() - last), 0)
+      timerRef.current = setTimeout(expireIfIdle, remaining)
     }
 
     const readLast = () => {
@@ -91,10 +111,7 @@ function useIdleLogout(enabled) {
 
     const reset = () => {
       markActivity()
-      if (timerRef.current) clearTimeout(timerRef.current)
-      const last = readLast() || Date.now()
-      const remaining = Math.max(IDLE_TIMEOUT_MS - (Date.now() - last), 0)
-      timerRef.current = setTimeout(logout, remaining)
+      scheduleFrom(readLast() || Date.now())
     }
 
     const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click']
@@ -104,11 +121,19 @@ function useIdleLogout(enabled) {
     // timeout, setTimeout may not have fired reliably, so verify elapsed time.
     const onVisible = () => {
       if (document.visibilityState !== 'visible') return
-      const last = readLast()
-      if (last && Date.now() - last >= IDLE_TIMEOUT_MS) logout()
-      else reset()
+      expireIfIdle()
     }
     document.addEventListener('visibilitychange', onVisible)
+
+    // Another tab signing out, or recording activity, should be reflected here
+    // immediately rather than at this tab's next scheduled wake-up.
+    const onStorage = e => {
+      if (e.key !== LAST_ACTIVITY_KEY) return
+      if (e.newValue === null) return          // another tab logged out; it handles redirect
+      const last = parseInt(e.newValue, 10)
+      if (!Number.isNaN(last)) scheduleFrom(last)
+    }
+    window.addEventListener('storage', onStorage)
 
     // On mount, honour a clock that was already running before this reload
     // instead of starting a fresh 8 hours.
@@ -121,6 +146,7 @@ function useIdleLogout(enabled) {
       if (timerRef.current) clearTimeout(timerRef.current)
       events.forEach(e => window.removeEventListener(e, reset))
       document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('storage', onStorage)
     }
   }, [active])
 }
@@ -138,27 +164,39 @@ function useMobileInactivityLogout(enabled) {
   useEffect(() => {
     if (!active) return
 
+    let loggingOut = false
     const logout = async () => {
+      if (loggingOut) return
+      loggingOut = true
       try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
       try { localStorage.removeItem(LAST_ACTIVITY_KEY) } catch (e) { /* ignore */ }
       window.location.replace('/landing.html')
     }
 
     const markActivity = () => {
+      // Never renew a clock that has already been judged stale -- doing so
+      // makes an expiring session look freshly active while sign-out is still
+      // in flight.
+      if (loggingOut) return
       try { localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now())) } catch (e) { /* storage unavailable */ }
     }
 
+    // Returns true when the session is stale, so callers can stop rather than
+    // continuing on to write a new timestamp.
     const checkStale = () => {
+      if (loggingOut) return true
       let last = null
       try { last = parseInt(localStorage.getItem(LAST_ACTIVITY_KEY), 10) } catch (e) { /* storage unavailable */ }
-      if (!last || Number.isNaN(last)) { markActivity(); return }
-      if (Date.now() - last >= MOBILE_INACTIVITY_MS) logout()
+      if (!last || Number.isNaN(last)) { markActivity(); return false }
+      if (Date.now() - last >= MOBILE_INACTIVITY_MS) { logout(); return true }
+      return false
     }
 
     // Check immediately on mount (covers reopening the app after days away)
-    // then stamp fresh activity so the 7-day clock restarts from now.
-    checkStale()
-    markActivity()
+    // then stamp fresh activity so the 7-day clock restarts from now. The
+    // stamp is skipped when the session is already stale, otherwise the write
+    // would renew the very clock that just failed the check.
+    if (!checkStale()) markActivity()
 
     const events = ['touchstart', 'mousedown', 'keydown', 'scroll', 'click']
     events.forEach(e => window.addEventListener(e, markActivity, { passive: true }))
@@ -166,7 +204,8 @@ function useMobileInactivityLogout(enabled) {
     // Re-check whenever the app comes back to the foreground, since that's
     // the moment a long-dormant install would otherwise silently stay signed in.
     const onVisible = () => {
-      if (document.visibilityState === 'visible') { checkStale(); markActivity() }
+      if (document.visibilityState !== 'visible') return
+      if (!checkStale()) markActivity()
     }
     document.addEventListener('visibilitychange', onVisible)
 
