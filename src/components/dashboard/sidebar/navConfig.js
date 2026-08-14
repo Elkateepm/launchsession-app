@@ -85,7 +85,6 @@ export const NAV_GROUPS = [
 export const ORG_ITEMS = [
   { id: 'settings', label: 'Settings', icon: '⚙️', tab: 'settings', adminOnly: true },
   { id: 'branding', label: 'Branding', icon: '🎨', tab: 'branding', adminOnly: true },
-  { id: 'team', label: 'Team & Staff', icon: '👥', tab: 'team', adminOnly: true },
 ]
 
 // Actions offered by the Create button. Each points at an existing flow --

@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 export function SidebarItem({
   icon, label, active, onClick, badge, primary, collapsed, indent, muted,
+  expanded, hasPopup,
 }) {
   const [hovered, setHovered] = useState(false)
   const [focused, setFocused] = useState(false)
@@ -19,7 +20,9 @@ export function SidebarItem({
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      aria-current={active ? 'page' : undefined}
+      aria-current={active && !hasPopup ? 'page' : undefined}
+      aria-haspopup={hasPopup ? 'menu' : undefined}
+      aria-expanded={hasPopup ? !!expanded : undefined}
       aria-label={collapsed ? label : undefined}
       title={collapsed ? label : undefined}
       style={{
@@ -38,6 +41,7 @@ export function SidebarItem({
         marginBottom: 1, cursor: 'pointer', textAlign: 'left',
         outline: focused ? `2px solid ${primary}88` : 'none',
         outlineOffset: -2,
+        position: 'relative',
         transition: 'background 180ms ease, color 180ms ease',
       }}
     >
@@ -118,8 +122,13 @@ export function SidebarCollapsibleGroup({
   useEffect(() => {
     if (!flyout) return
     const onDoc = e => { if (ref.current && !ref.current.contains(e.target)) setFlyout(false) }
+    const onEsc = e => { if (e.key === 'Escape') setFlyout(false) }
     document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onEsc)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onEsc)
+    }
   }, [flyout])
 
   // Collapsed rail has no room for children, so the group opens sideways.
@@ -132,6 +141,8 @@ export function SidebarCollapsibleGroup({
           active={hasActiveChild}
           collapsed
           primary={primary}
+          expanded={flyout}
+          hasPopup
           onClick={() => setFlyout(f => !f)}
         />
         <AnimatePresence>
@@ -233,6 +244,7 @@ export function CreateMenu({ actions, onSelect, primary, collapsed }) {
     <div ref={ref} style={{ position: 'relative', padding: collapsed ? '10px 8px' : '10px 12px' }}>
       <button
         onClick={() => setOpen(o => !o)}
+        aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Create"
         title={collapsed ? 'Create' : undefined}
@@ -310,6 +322,7 @@ export function ProfileMenu({
         onClick={() => setOpen(o => !o)}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        aria-haspopup="menu"
         aria-expanded={open}
         aria-label={collapsed ? userName : undefined}
         title={collapsed ? userName : undefined}

@@ -15,20 +15,22 @@ const CARD = { background: '#fff', border: '1px solid #ECE9F5', borderRadius: 16
 const londonToday = () =>
   new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
 
-export default function Today({ org, onNavigate, terms }) {
+export default function Today({ org, onNavigate }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#7C5CFC'
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
     if (!org?.id) return
-    setLoading(true)
+    setLoading(true); setError(false)
     const today = londonToday()
-    const { data } = await supabase.from('sessions')
+    const { data, error: e } = await supabase.from('sessions')
       .select('id, title, session_date, start_time, end_time, location, session_type')
       .eq('org_id', org.id).eq('session_date', today)
       .order('start_time')
+    if (e) setError(true)
     setSessions(data || [])
     setLoading(false)
   }, [org?.id])
@@ -52,7 +54,22 @@ export default function Today({ org, onNavigate, terms }) {
         </div>
       )}
 
-      {!loading && sessions.length === 0 && (
+      {!loading && error && (
+        <div style={{ ...CARD, padding: '26px 22px', textAlign: 'center' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 5 }}>
+            Couldn't load today's schedule
+          </div>
+          <div style={{ fontSize: 13.5, color: '#8B87A3', marginBottom: 14 }}>
+            This is a connection problem, not an empty day.
+          </div>
+          <button onClick={load} style={{
+            padding: '10px 18px', borderRadius: 11, border: 'none', background: primary,
+            color: '#fff', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+          }}>Try again</button>
+        </div>
+      )}
+
+      {!loading && !error && sessions.length === 0 && (
         <div style={{ ...CARD, padding: '38px 24px', textAlign: 'center' }}>
           <div style={{ fontSize: 30, marginBottom: 10 }}>☕</div>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 5 }}>
@@ -64,7 +81,7 @@ export default function Today({ org, onNavigate, terms }) {
         </div>
       )}
 
-      {!loading && sessions.length > 0 && (
+      {!loading && !error && sessions.length > 0 && (
         <div style={{ display: 'grid', gap: 10 }}>
           {sessions.map(s => (
             <div key={s.id} style={{ ...CARD, padding: 16 }}>

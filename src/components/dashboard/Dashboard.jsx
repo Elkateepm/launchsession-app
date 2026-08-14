@@ -39,7 +39,7 @@ import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
 import { useTerms } from '../../context/OrgContext'
 import Today from './Today'
 import {
-  NAV_SECTIONS, NAV_GROUPS, CREATE_ACTIONS,
+  NAV_SECTIONS, NAV_GROUPS, ORG_ITEMS, CREATE_ACTIONS,
   visibleItems, groupContainingTab, isItemActive,
 } from './sidebar/navConfig'
 import {
@@ -606,7 +606,10 @@ export default function Dashboard({ session, org }) {
         background: 'linear-gradient(175deg, #0D1117 0%, #0A0F1A 60%, #080C14 100%)',
         transition: isTablet ? 'transform 0.28s cubic-bezier(0.4,0,0.2,1)' : 'width 0.28s cubic-bezier(0.4,0,0.2,1)',
         display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0,
-        borderRight: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+        // Not 'hidden' when collapsed: flyout menus are absolutely positioned
+        // outside the 64px rail and would be clipped away entirely.
+        overflow: sidebarCollapsed ? 'visible' : 'hidden',
         position: isTablet ? 'fixed' : 'relative', top: isTablet ? 0 : undefined, left: isTablet ? 0 : undefined, bottom: isTablet ? 0 : undefined,
         zIndex: isTablet ? 960 : undefined,
         transform: isTablet ? (tabletNavOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
@@ -726,12 +729,34 @@ export default function Dashboard({ session, org }) {
           {isAdmin && (
             <>
               <div style={{ height: 1, margin: '12px 12px', background: 'rgba(255,255,255,0.06)' }} />
-              <SidebarItem
-                icon="⚙️" label="Organisation"
-                active={ORG_TABS.includes(tab)}
-                primary={primary} collapsed={sidebarCollapsed}
-                onClick={() => handleSetTab('settings')}
-              />
+              <SidebarCollapsibleGroup
+                label="Organisation"
+                icon="⚙️"
+                primary={primary}
+                collapsed={sidebarCollapsed}
+                open={!!openGroups.organisation || ORG_TABS.includes(tab)}
+                hasActiveChild={ORG_TABS.includes(tab)}
+                items={ORG_ITEMS}
+                tab={tab}
+                onSelect={item => handleSetTab(item.tab)}
+                onToggle={() => setOpenGroups(g => ({
+                  ...g,
+                  organisation: !(g.organisation || ORG_TABS.includes(tab)),
+                }))}
+              >
+                {ORG_ITEMS.map(item => (
+                  <SidebarItem
+                    key={item.id}
+                    icon={item.icon}
+                    label={item.label}
+                    active={item.tab === tab}
+                    primary={primary}
+                    indent
+                    muted
+                    onClick={() => handleSetTab(item.tab)}
+                  />
+                ))}
+              </SidebarCollapsibleGroup>
             </>
           )}
         </div>
@@ -817,7 +842,7 @@ export default function Dashboard({ session, org }) {
             )
           })()}
           {/* ── BASE MODULES — always free ── */}
-          {tab === 'today'      && <Today org={org} onNavigate={handleSetTab} terms={terms} />}
+          {tab === 'today'      && <Today org={org} onNavigate={handleSetTab} />}
           {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
           {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
           {tab === 'projects'   && <ProjectOverview org={org} session={session} projectId={openProjectId} onNavigate={handleSetTab} onBack={() => handleSetTab('projects_list')} />}
@@ -858,7 +883,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list'].includes(tab) && (
+          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today'].includes(tab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
