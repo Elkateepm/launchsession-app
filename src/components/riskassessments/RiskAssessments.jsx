@@ -14,6 +14,8 @@ import RAEmergencyPlan from './RAEmergencyPlan'
 import RAAttachments from './RAAttachments'
 import RALinkedSessions, { printRiskAssessment } from './RALinkedSessions'
 import RAOverview from './RAOverview'
+import HazardDrawer from './HazardDrawer'
+import { DynamicUpdateDrawer, DynamicUpdateList, EmergencyView } from './RALiveSafety'
 import { buildCoverage } from './ra_safety'
 
 const RATING_ORDER = { low: 1, medium: 2, high: 3, critical: 4 }
@@ -42,6 +44,10 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
   // Set when creation is started from an uncovered session, so the new
   // assessment can be linked to it on save instead of afterwards.
   const [prefillSession, setPrefillSession] = useState(null)
+  const [hazardDrawer, setHazardDrawer] = useState({ open: false, hazard: null })
+  const [dynamicOpen, setDynamicOpen] = useState(false)
+  const [emergencyOpen, setEmergencyOpen] = useState(false)
+  const [liveRefresh, setLiveRefresh] = useState(0)
   const [upcomingSessions, setUpcomingSessions] = useState([])
   const [coverageLinks, setCoverageLinks] = useState([])
   const [outstandingByAssessment, setOutstandingByAssessment] = useState({})
@@ -421,7 +427,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: '#F1F5F9', borderRadius: 12, padding: 4, flexWrap: 'wrap' }}>
-              {[['overview', 'Overview'], ['hazards', `Hazards${selectedHazards.length ? ` (${selectedHazards.length})` : ''}`], ['matrix', 'Matrix'], ['emergency', 'Emergency'], ['attachments', 'Attachments'], ['sessions', 'Linked'], ['reviews', 'History']].map(([key, label]) => (
+              {[['overview', 'Overview'], ['hazards', `Hazards${selectedHazards.length ? ` (${selectedHazards.length})` : ''}`], ['matrix', 'Matrix'], ['emergency', 'Emergency'], ['attachments', 'Attachments'], ['sessions', 'Linked'], ['live', 'Live updates'], ['reviews', 'History']].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key)} style={{ flex: '1 1 auto', padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#0F172A' : '#64748B', whiteSpace: 'nowrap' }}>{label}</button>
               ))}
             </div>
@@ -478,6 +484,13 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                 </div>
               </div>
             )}
+            {tab === 'hazards' && (
+              <div style={{ marginBottom: 12 }}>
+                <button onClick={() => setHazardDrawer({ open: true, hazard: null })} style={btnPrimary(primary)}>
+                  + Add Hazard (guided)
+                </button>
+              </div>
+            )}
             {tab === 'hazards' && <RAHazards assessment={selected} org={org} session={authSession} venues={venues} onHazardsChanged={(score, rating) => { setSelected(s => ({ ...s, risk_score: score, risk_rating: rating })); supabase.from('risk_assessment_hazards').select('*').eq('assessment_id', selected.id).order('sort_order').then(({ data }) => setSelectedHazards(data || [])) }} />}
             {tab === 'matrix' && (
               <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
@@ -487,6 +500,21 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
             {tab === 'emergency' && <RAEmergencyPlan assessment={selected} org={org} venues={venues} />}
             {tab === 'attachments' && <RAAttachments assessment={selected} org={org} session={authSession} />}
             {tab === 'sessions' && <RALinkedSessions assessment={selected} org={org} session={authSession} />}
+            {tab === 'live' && (
+              <div>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+                  <button onClick={() => setDynamicOpen(true)} style={btnPrimary(primary)}>
+                    + Dynamic Risk Update
+                  </button>
+                  <button onClick={() => setEmergencyOpen(true)} style={btnGhost}>
+                    🚨 Emergency View
+                  </button>
+                </div>
+                <DynamicUpdateList
+                  assessment={selected} org={org} staff={staff} refreshKey={liveRefresh}
+                />
+              </div>
+            )}
             {tab === 'reviews' && <ReviewHistory assessment={selected} org={org} staff={staff} />}
           </div>
         )}
@@ -585,6 +613,47 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
       </div>
       </>
       )}
+
+      <HazardDrawer
+        open={hazardDrawer.open}
+        hazard={hazardDrawer.hazard}
+        assessment={selected}
+        org={org}
+        authSession={authSession}
+        onClose={() => setHazardDrawer({ open: false, hazard: null })}
+        onSaved={async () => {
+          if (!selected) return
+          const { data } = await supabase.from('risk_assessment_hazards')
+            .select('*').eq('assessment_id', selected.id).order('sort_order')
+          setSelectedHazards(data || [])
+          const top = (data || []).reduce((m, h) => Math.max(m, riskScore(h.likelihood, h.severity)), 0)
+          await supabase.from('risk_assessments')
+            .update({ risk_score: top, risk_rating: riskRating(top), updated_at: new Date().toISOString() })
+            .eq('id', selected.id)
+          setSelected(sel => ({ ...sel, risk_score: top, risk_rating: riskRating(top) }))
+          await loadOperational()
+        }}
+      />
+
+      <DynamicUpdateDrawer
+        open={dynamicOpen}
+        assessment={selected}
+        org={org}
+        authSession={authSession}
+        onClose={() => setDynamicOpen(false)}
+        onSaved={() => {
+          setLiveRefresh(k => k + 1)
+          if (selected) logAudit(selected.id, 'dynamic_update', 'Dynamic risk update recorded')
+        }}
+      />
+
+      <EmergencyView
+        open={emergencyOpen}
+        assessment={selected}
+        org={org}
+        venue={selected?.venue_id ? venues.find(v => v.id === selected.venue_id) : null}
+        onClose={() => setEmergencyOpen(false)}
+      />
 
       {/* CREATE MODAL */}
       <AnimatePresence>
