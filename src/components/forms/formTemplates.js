@@ -1,0 +1,636 @@
+// Built-in form template library.
+//
+// Kept separate from org_form_templates so a product update never overwrites an
+// organisation's own wording. Every template is a complete, sendable form: the
+// point is that a standard consent form takes under a minute, not that staff get
+// a head start on building one.
+//
+// `accent` is used for the template card and, when the template is used, as the
+// form's default accent unless the organisation has set its own.
+
+export const TEMPLATE_CATEGORIES = [
+  { id: 'popular', label: 'Popular', blurb: 'The forms most organisations need first' },
+  { id: 'consent', label: 'Consent', blurb: 'Permission for trips, activities and photography' },
+  { id: 'health', label: 'Health & Safety', blurb: 'Medical, dietary and emergency information' },
+  { id: 'registration', label: 'Registration', blurb: 'Bringing new people into the organisation' },
+  { id: 'people', label: 'Staff & Volunteers', blurb: 'Applications, availability and details' },
+  { id: 'feedback', label: 'Feedback & Voice', blurb: 'What people think of what you do' },
+  { id: 'operations', label: 'Operations', blurb: 'Day-to-day running and reporting' },
+]
+
+const f = (label, type, required = false, extra = {}) => ({ label, type, required, ...extra })
+
+export const FORM_TEMPLATES = [
+  // ---------------------------------------------------------------- popular
+  {
+    id: 'young-person-registration',
+    title: 'Young Person Registration',
+    description: 'Everything you need to bring a new young person onto the register.',
+    categories: ['popular', 'registration'],
+    purpose: 'register_young_person',
+    icon: '🧒',
+    accent: '#7C5CFC',
+    fields: [
+      f("Young person's full name", 'text', true),
+      f('Date of birth', 'date', true),
+      f('Gender', 'select', false, { options: ['Male', 'Female', 'Non-binary', 'Prefer not to say'] }),
+      f('Home address', 'textarea', true),
+      f('School or college', 'text'),
+      f('Parent / carer name', 'text', true),
+      f('Parent / carer phone', 'phone', true),
+      f('Parent / carer email', 'email', true),
+      f('Relationship to young person', 'text'),
+      f('Any medical conditions or allergies we should know about?', 'textarea'),
+      f('Does the young person take any medication?', 'textarea'),
+      f('Any additional needs or support requirements?', 'textarea'),
+      f('I confirm the information above is accurate', 'checkbox', true),
+    ],
+  },
+  {
+    id: 'parent-consent',
+    title: 'Parent / Carer Consent',
+    description: 'General permission to take part, with emergency and medical confirmation.',
+    categories: ['popular', 'consent'],
+    purpose: 'consent',
+    icon: '✍️',
+    accent: '#F5A623',
+    fields: [
+      f("Young person's name", 'text', true),
+      f('Parent / carer name', 'text', true),
+      f('Contact phone number', 'phone', true),
+      f('Emergency contact name', 'text', true),
+      f('Emergency contact phone', 'phone', true),
+      f('Have there been any changes to medical information?', 'textarea'),
+      f('I give permission for my child to take part', 'checkbox', true),
+      f('I confirm I am the parent or legal guardian', 'checkbox', true),
+      f('Date', 'date', true),
+    ],
+  },
+  {
+    id: 'emergency-contacts',
+    title: 'Emergency Contacts',
+    description: 'Keep the people you would call in an emergency up to date.',
+    categories: ['popular', 'health'],
+    purpose: 'emergency_contacts',
+    icon: '📞',
+    accent: '#E5484D',
+    fields: [
+      f("Young person's name", 'text', true),
+      f('First emergency contact — name', 'text', true),
+      f('First contact — relationship', 'text', true),
+      f('First contact — phone', 'phone', true),
+      f('Second emergency contact — name', 'text'),
+      f('Second contact — relationship', 'text'),
+      f('Second contact — phone', 'phone'),
+      f('Is there anyone who must NOT collect this young person?', 'textarea'),
+      f('GP surgery name and phone', 'text'),
+    ],
+  },
+  {
+    id: 'medical-information',
+    title: 'Medical Information Update',
+    description: 'Allergies, medication and conditions — reviewed before it changes a record.',
+    categories: ['popular', 'health'],
+    purpose: 'medical',
+    icon: '❤️',
+    accent: '#12B76A',
+    fields: [
+      f("Young person's name", 'text', true),
+      f('Any allergies?', 'textarea'),
+      f('How severe is the allergic reaction?', 'select', false, {
+        options: ['No known allergies', 'Mild', 'Moderate', 'Severe — carries medication', 'Severe — anaphylaxis'],
+      }),
+      f('Current medication', 'textarea'),
+      f('Does the young person carry their own medication?', 'select', false, { options: ['Yes', 'No', 'Not applicable'] }),
+      f('Medical conditions', 'textarea'),
+      f('Dietary requirements', 'textarea'),
+      f('Anything else staff should be aware of?', 'textarea'),
+      f('I confirm this information is current and accurate', 'checkbox', true),
+    ],
+  },
+  {
+    id: 'young-person-feedback',
+    title: 'Young Person Feedback',
+    description: 'Short, friendly, and actually answerable by a young person.',
+    categories: ['popular', 'feedback'],
+    purpose: 'feedback',
+    icon: '💬',
+    accent: '#0EA5E9',
+    fields: [
+      f('Your name (optional)', 'text'),
+      f('How much did you enjoy it?', 'select', true, {
+        options: ['Loved it', 'Liked it', 'It was OK', 'Not for me'],
+      }),
+      f('What was the best bit?', 'textarea'),
+      f('What would you change?', 'textarea'),
+      f('Did you feel safe and welcome?', 'select', true, { options: ['Always', 'Mostly', 'Sometimes', 'Not really'] }),
+      f('Anything you want to tell us privately?', 'textarea'),
+    ],
+  },
+
+  // ---------------------------------------------------------------- consent
+  {
+    id: 'trip-consent',
+    title: 'Day Trip Consent',
+    description: 'Permission, transport and collection arrangements for a day out.',
+    categories: ['consent'],
+    purpose: 'consent',
+    icon: '🚌',
+    accent: '#F5A623',
+    fields: [
+      f("Young person's name", 'text', true),
+      f('Parent / carer name', 'text', true),
+      f('Contact number on the day', 'phone', true),
+      f('I give permission for my child to attend this trip', 'checkbox', true),
+      f('I give permission for my child to travel by minibus or coach', 'checkbox', true),
+      f('Will your child be collected, or may they travel home independently?', 'select', true, {
+        options: ['I will collect them', 'Another named adult will collect them', 'They may travel home independently'],
+      }),
+      f('If someone else is collecting, who?', 'text'),
+      f('Packed lunch or dietary needs', 'textarea'),
+      f('Any medical changes since we last asked?', 'textarea'),
+      f('Date', 'date', true),
+    ],
+  },
+  {
+    id: 'residential-consent',
+    title: 'Residential / Overnight Consent',
+    description: 'The fuller permission set an overnight stay actually needs.',
+    categories: ['consent'],
+    purpose: 'consent',
+    icon: '🏕',
+    accent: '#8B5CF6',
+    fields: [
+      f("Young person's name", 'text', true),
+      f('Parent / carer name', 'text', true),
+      f('Contact number for the duration', 'phone', true),
+      f('Alternative contact number', 'phone', true),
+      f('I give permission for my child to attend this residential', 'checkbox', true),
+      f('I give permission for emergency medical treatment if I cannot be reached', 'checkbox', true),
+      f('I give permission for my child to take part in planned activities', 'checkbox', true),
+      f('Can your child swim?', 'select', false, { options: ['Confident swimmer', 'Can swim a little', 'Non-swimmer'] }),
+      f('Medication to be brought — name, dose and timing', 'textarea'),
+      f('Bedtime routine or night-time needs we should know about', 'textarea'),
+      f('Dietary requirements', 'textarea'),
+      f('Anything that might make being away from home difficult?', 'textarea'),
+      f('Date', 'date', true),
+    ],
+  },
+  {
+    id: 'photo-consent',
+    title: 'Photography & Media Consent',
+    description: 'Granular permissions, because "can we use photos" is not one question.',
+    categories: ['consent'],
+    purpose: 'consent',
+    icon: '📸',
+    accent: '#EC4899',
+    fields: [
+      f("Young person's name", 'text', true),
+      f('Parent / carer name', 'text', true),
+      f('Photos may be taken during activities', 'checkbox'),
+      f('Photos may be used on our website', 'checkbox'),
+      f('Photos may be used on social media', 'checkbox'),
+      f('Photos may be used in printed materials and funding reports', 'checkbox'),
+      f('My child may be named alongside their photo', 'checkbox'),
+      f('I understand I can withdraw this consent at any time', 'checkbox', true),
+      f('Date', 'date', true),
+    ],
+  },
+  {
+    id: 'activity-consent',
+    title: 'Activity Consent',
+    description: 'For sports, swimming, climbing and anything with its own risks.',
+    categories: ['consent'],
+    purpose: 'consent',
+    icon: '⚽',
+    accent: '#F59E0B',
+    fields: [
+      f("Young person's name", 'text', true),
+      f('Parent / carer name', 'text', true),
+      f('I give permission for my child to take part in this activity', 'checkbox', true),
+      f('Relevant experience or ability level', 'textarea'),
+      f('Any injuries or physical limitations?', 'textarea'),
+      f('Emergency contact on the day', 'phone', true),
+      f('Date', 'date', true),
+    ],
+  },
+  {
+    id: 'consent-withdrawal',
+    title: 'Withdraw Consent',
+    description: 'A clear route to say no — required, and often missing.',
+    categories: ['consent'],
+    purpose: 'consent',
+    icon: '🚫',
+    accent: '#64748B',
+    fields: [
+      f("Young person's name", 'text', true),
+      f('Parent / carer name', 'text', true),
+      f('Which consent are you withdrawing?', 'select', true, {
+        options: ['Photography and media', 'Activity participation', 'Trip or residential', 'Data sharing', 'All consents'],
+      }),
+      f('Effective from', 'date', true),
+      f('Anything you would like us to know? (optional)', 'textarea'),
+    ],
+  },
+
+  // ----------------------------------------------------------------- health
+  {
+    id: 'dietary-requirements',
+    title: 'Dietary Requirements',
+    description: 'Before catering for a trip, residential or event.',
+    categories: ['health'],
+    purpose: 'medical',
+    icon: '🥪',
+    accent: '#10B981',
+    fields: [
+      f('Name', 'text', true),
+      f('Any food allergies?', 'textarea'),
+      f('Dietary requirement', 'select', false, {
+        options: ['No requirements', 'Vegetarian', 'Vegan', 'Halal', 'Kosher', 'Gluten free', 'Dairy free', 'Other'],
+      }),
+      f('If other, please describe', 'textarea'),
+      f('Foods to avoid for any other reason', 'textarea'),
+    ],
+  },
+  {
+    id: 'accessibility-needs',
+    title: 'Accessibility & Support Needs',
+    description: 'So a session can be planned around someone, not adapted at the door.',
+    categories: ['health'],
+    purpose: 'medical',
+    icon: '♿',
+    accent: '#3B82F6',
+    fields: [
+      f('Name', 'text', true),
+      f('Mobility needs', 'textarea'),
+      f('Communication needs', 'textarea'),
+      f('Sensory needs — light, noise, crowds', 'textarea'),
+      f('Does the person have a diagnosis they would like us to know about?', 'textarea'),
+      f('What helps when things become difficult?', 'textarea'),
+      f('Does the person have a support worker who attends with them?', 'select', false, { options: ['Yes', 'No'] }),
+    ],
+  },
+  {
+    id: 'incident-report',
+    title: 'Incident Report',
+    description: 'Recorded at the time, by whoever was there.',
+    categories: ['health', 'operations'],
+    purpose: 'other',
+    icon: '⚠️',
+    accent: '#EF4444',
+    fields: [
+      f('Date of incident', 'date', true),
+      f('Time of incident', 'text', true),
+      f('Location', 'text', true),
+      f('Who was involved?', 'textarea', true),
+      f('What happened?', 'textarea', true),
+      f('What action was taken?', 'textarea', true),
+      f('Was first aid given?', 'select', true, { options: ['No', 'Yes — minor', 'Yes — emergency services called'] }),
+      f('Were parents or carers informed?', 'select', true, { options: ['Yes', 'No', 'Not applicable'] }),
+      f('Reported by', 'text', true),
+    ],
+  },
+
+  // ----------------------------------------------------------- registration
+  {
+    id: 'parent-registration',
+    title: 'Parent / Carer Registration',
+    description: 'For the adults around a young person already on the register.',
+    categories: ['registration'],
+    purpose: 'register_parent',
+    icon: '👨‍👩‍👧',
+    accent: '#7C5CFC',
+    fields: [
+      f('Your full name', 'text', true),
+      f('Relationship to young person', 'text', true),
+      f("Young person's name", 'text', true),
+      f('Phone number', 'phone', true),
+      f('Email address', 'email', true),
+      f('Home address', 'textarea'),
+      f('Preferred way to be contacted', 'select', false, { options: ['Phone call', 'Text message', 'Email', 'WhatsApp'] }),
+      f('May we contact you about future opportunities?', 'checkbox'),
+    ],
+  },
+  {
+    id: 'session-signup',
+    title: 'Session Sign-Up',
+    description: 'A short form for a single session or one-off event.',
+    categories: ['registration', 'operations'],
+    purpose: 'other',
+    icon: '🚀',
+    accent: '#06B6D4',
+    fields: [
+      f('Name', 'text', true),
+      f('Age', 'number'),
+      f('Contact number', 'phone', true),
+      f('Which session are you signing up for?', 'text', true),
+      f('Any dietary or access requirements?', 'textarea'),
+      f('How did you hear about this?', 'select', false, {
+        options: ['Word of mouth', 'Social media', 'School', 'Community centre', 'Referral', 'Other'],
+      }),
+    ],
+  },
+  {
+    id: 'waiting-list',
+    title: 'Waiting List',
+    description: 'Capture interest when a programme is full.',
+    categories: ['registration'],
+    purpose: 'other',
+    icon: '📋',
+    accent: '#A855F7',
+    fields: [
+      f("Young person's name", 'text', true),
+      f('Age', 'number', true),
+      f('Parent / carer name', 'text', true),
+      f('Contact number', 'phone', true),
+      f('Email address', 'email'),
+      f('Which programme are you interested in?', 'text', true),
+      f('Which days would work for you?', 'textarea'),
+    ],
+  },
+
+  // ----------------------------------------------------------------- people
+  {
+    id: 'volunteer-application',
+    title: 'Volunteer Application',
+    description: 'Interests, availability and the safeguarding basics.',
+    categories: ['people'],
+    purpose: 'register_volunteer',
+    icon: '🙌',
+    accent: '#14B8A6',
+    fields: [
+      f('Full name', 'text', true),
+      f('Email address', 'email', true),
+      f('Phone number', 'phone', true),
+      f('Date of birth', 'date', true),
+      f('Home address', 'textarea', true),
+      f('Why would you like to volunteer with us?', 'textarea', true),
+      f('Relevant experience or skills', 'textarea'),
+      f('Which days are you usually available?', 'textarea'),
+      f('Do you hold a current DBS certificate?', 'select', true, {
+        options: ['Yes — on the update service', 'Yes — not on the update service', 'No', 'Not sure'],
+      }),
+      f('Reference 1 — name and contact', 'textarea', true),
+      f('Reference 2 — name and contact', 'textarea', true),
+      f('Do you have any unspent convictions you need to tell us about?', 'select', true, { options: ['No', 'Yes — I will discuss this'] }),
+      f('I confirm the information above is accurate', 'checkbox', true),
+    ],
+  },
+  {
+    id: 'staff-details',
+    title: 'Staff Information',
+    description: 'Details, next of kin and qualifications for someone joining the team.',
+    categories: ['people'],
+    purpose: 'register_staff',
+    icon: '👤',
+    accent: '#6366F1',
+    fields: [
+      f('Full name', 'text', true),
+      f('Role', 'text', true),
+      f('Email address', 'email', true),
+      f('Phone number', 'phone', true),
+      f('Home address', 'textarea', true),
+      f('Next of kin — name', 'text', true),
+      f('Next of kin — phone', 'phone', true),
+      f('DBS certificate number', 'text'),
+      f('DBS issue date', 'date'),
+      f('Relevant qualifications', 'textarea'),
+      f('First aid trained?', 'select', false, { options: ['Yes — in date', 'Yes — expired', 'No'] }),
+      f('Dietary requirements for team events', 'text'),
+    ],
+  },
+  {
+    id: 'availability',
+    title: 'Staff & Volunteer Availability',
+    description: 'Who can cover what, before the rota is built.',
+    categories: ['people', 'operations'],
+    purpose: 'other',
+    icon: '🗓',
+    accent: '#0EA5E9',
+    fields: [
+      f('Name', 'text', true),
+      f('Which weeks are you asking about?', 'text'),
+      f('Monday', 'select', false, { options: ['Available', 'Morning only', 'Afternoon only', 'Not available'] }),
+      f('Tuesday', 'select', false, { options: ['Available', 'Morning only', 'Afternoon only', 'Not available'] }),
+      f('Wednesday', 'select', false, { options: ['Available', 'Morning only', 'Afternoon only', 'Not available'] }),
+      f('Thursday', 'select', false, { options: ['Available', 'Morning only', 'Afternoon only', 'Not available'] }),
+      f('Friday', 'select', false, { options: ['Available', 'Morning only', 'Afternoon only', 'Not available'] }),
+      f('Weekend availability', 'textarea'),
+      f('Anything else we should know?', 'textarea'),
+    ],
+  },
+
+  // --------------------------------------------------------------- feedback
+  {
+    id: 'parent-feedback',
+    title: 'Parent / Carer Feedback',
+    description: 'What the adults think, in questions they will actually finish.',
+    categories: ['feedback'],
+    purpose: 'feedback',
+    icon: '🗣',
+    accent: '#0EA5E9',
+    fields: [
+      f('Your name (optional)', 'text'),
+      f("Your child's name (optional)", 'text'),
+      f('How happy are you with the sessions?', 'select', true, {
+        options: ['Very happy', 'Happy', 'Neither happy nor unhappy', 'Unhappy', 'Very unhappy'],
+      }),
+      f('Have you noticed a difference in your child?', 'textarea'),
+      f('How well do we communicate with you?', 'select', false, {
+        options: ['Very well', 'Well', 'Could be better', 'Poorly'],
+      }),
+      f('What could we do better?', 'textarea'),
+      f('Would you recommend us to another family?', 'select', false, { options: ['Definitely', 'Probably', 'Not sure', 'No'] }),
+    ],
+  },
+  {
+    id: 'programme-evaluation',
+    title: 'Programme Evaluation',
+    description: 'End-of-programme questions that produce something a funder can read.',
+    categories: ['feedback', 'operations'],
+    purpose: 'feedback',
+    icon: '📊',
+    accent: '#8B5CF6',
+    fields: [
+      f('Name (optional)', 'text'),
+      f('Which programme are you evaluating?', 'text', true),
+      f('How many sessions did you attend?', 'select', false, { options: ['Nearly all', 'About half', 'A few', 'One'] }),
+      f('I learned something new', 'select', true, { options: ['Strongly agree', 'Agree', 'Neither', 'Disagree', 'Strongly disagree'] }),
+      f('I felt more confident by the end', 'select', true, { options: ['Strongly agree', 'Agree', 'Neither', 'Disagree', 'Strongly disagree'] }),
+      f('I made friends', 'select', true, { options: ['Strongly agree', 'Agree', 'Neither', 'Disagree', 'Strongly disagree'] }),
+      f('What was the most useful part?', 'textarea'),
+      f('What should we do differently next time?', 'textarea'),
+    ],
+  },
+  {
+    id: 'youth-voice',
+    title: 'Youth Voice Survey',
+    description: 'Give young people a real say in what runs next.',
+    categories: ['feedback'],
+    purpose: 'feedback',
+    icon: '📣',
+    accent: '#F43F5E',
+    fields: [
+      f('Your name (optional)', 'text'),
+      f('What would you like us to run more of?', 'textarea', true),
+      f('What days and times work best for you?', 'textarea'),
+      f('Is there anything stopping you coming?', 'textarea'),
+      f('Would you like to help plan sessions?', 'select', false, { options: ['Yes', 'Maybe', 'No thanks'] }),
+      f('Anything else?', 'textarea'),
+    ],
+  },
+  {
+    id: 'exit-survey',
+    title: 'Leaving Survey',
+    description: 'For when someone stops coming — the most useful feedback there is.',
+    categories: ['feedback'],
+    purpose: 'feedback',
+    icon: '👋',
+    accent: '#64748B',
+    fields: [
+      f('Name (optional)', 'text'),
+      f('What is the main reason you are leaving?', 'select', true, {
+        options: ['Moved away', 'Aged out', 'Timing no longer works', 'Cost', 'Did not enjoy it', 'Something happened', 'Other'],
+      }),
+      f('Would you like to tell us more?', 'textarea'),
+      f('Is there anything that would have made you stay?', 'textarea'),
+      f('Would you consider coming back?', 'select', false, { options: ['Yes', 'Maybe', 'No'] }),
+    ],
+  },
+
+  // ------------------------------------------------------------- operations
+  {
+    id: 'transport-request',
+    title: 'Transport Request',
+    description: 'Who needs a lift, from where, and who may collect them.',
+    categories: ['operations'],
+    purpose: 'other',
+    icon: '🚐',
+    accent: '#F59E0B',
+    fields: [
+      f("Young person's name", 'text', true),
+      f('Pick-up address', 'textarea', true),
+      f('Drop-off address (if different)', 'textarea'),
+      f('Which days is transport needed?', 'textarea', true),
+      f('Who is authorised to collect?', 'textarea', true),
+      f('Any mobility or seating requirements?', 'textarea'),
+      f('I give permission for my child to travel in organisation transport', 'checkbox', true),
+    ],
+  },
+  {
+    id: 'expense-claim',
+    title: 'Expense Claim',
+    description: 'A simple claim with a receipt attached.',
+    categories: ['operations'],
+    purpose: 'other',
+    icon: '🧾',
+    accent: '#10B981',
+    fields: [
+      f('Your name', 'text', true),
+      f('Date of expense', 'date', true),
+      f('What was it for?', 'textarea', true),
+      f('Amount (£)', 'number', true),
+      f('Payment method used', 'select', false, { options: ['Own card', 'Cash', 'Organisation card'] }),
+      f('Receipt reference or description', 'text'),
+      f('I confirm this claim is accurate', 'checkbox', true),
+    ],
+  },
+  {
+    id: 'venue-checklist',
+    title: 'Venue Opening Checklist',
+    description: 'The checks worth having a record of.',
+    categories: ['operations'],
+    purpose: 'other',
+    icon: '🏛',
+    accent: '#6366F1',
+    fields: [
+      f('Completed by', 'text', true),
+      f('Date', 'date', true),
+      f('Fire exits clear', 'checkbox', true),
+      f('First aid kit present and stocked', 'checkbox', true),
+      f('Accident book available', 'checkbox', true),
+      f('Space checked for hazards', 'checkbox', true),
+      f('Equipment checked and safe', 'checkbox', true),
+      f('Anything requiring attention?', 'textarea'),
+    ],
+  },
+]
+
+export function templatesForCategory(categoryId) {
+  if (!categoryId || categoryId === 'all') return FORM_TEMPLATES
+  return FORM_TEMPLATES.filter(t => t.categories.includes(categoryId))
+}
+
+export function searchTemplates(query) {
+  const q = (query || '').trim().toLowerCase()
+  if (!q) return FORM_TEMPLATES
+  return FORM_TEMPLATES.filter(t =>
+    t.title.toLowerCase().includes(q) ||
+    t.description.toLowerCase().includes(q) ||
+    (t.fields || []).some(field => field.label.toLowerCase().includes(q))
+  )
+}
+
+// Intent-first entry points for the Create chooser. Deliberately phrased as
+// things a youth worker wants to do, not as form categories.
+export const CREATE_INTENTS = [
+  { id: 'register_young_person', label: 'Register someone', icon: '🧒', accent: '#7C5CFC', templateId: 'young-person-registration' },
+  { id: 'consent', label: 'Collect consent', icon: '✍️', accent: '#F5A623', templateId: 'parent-consent' },
+  { id: 'medical', label: 'Update medical information', icon: '❤️', accent: '#12B76A', templateId: 'medical-information' },
+  { id: 'emergency_contacts', label: 'Emergency contacts', icon: '📞', accent: '#E5484D', templateId: 'emergency-contacts' },
+  { id: 'feedback', label: 'Get feedback', icon: '💬', accent: '#0EA5E9', templateId: 'young-person-feedback' },
+  { id: 'trip', label: 'Session or trip form', icon: '🚌', accent: '#8B5CF6', templateId: 'trip-consent' },
+  { id: 'register_volunteer', label: 'Staff or volunteer form', icon: '🙌', accent: '#14B8A6', templateId: 'volunteer-application' },
+  { id: 'other', label: 'Something else', icon: '📝', accent: '#64748B', templateId: null },
+]
+
+// ---------------------------------------------------------------- adapter
+//
+// Forms.jsx already ships 36 templates in its own shape, and its template
+// browser, preview and "use template" flow are all built around it. Rather than
+// replace that set (and lose 36 working templates to gain 26), these are
+// translated into the same shape and merged, deduped on name.
+
+const CATEGORY_MAP = {
+  popular: 'youth',
+  consent: 'parents',
+  health: 'safeguarding',
+  registration: 'youth',
+  people: 'volunteers',
+  feedback: 'youth',
+  operations: 'organisation',
+}
+
+/** Convert one library template into the shape Forms.jsx's browser expects. */
+export function toLegacyTemplate(t) {
+  // The first category that has a mapping wins; every template declares at
+  // least one, and 'popular' is deliberately never the only one.
+  const category = CATEGORY_MAP[t.categories.find(c => CATEGORY_MAP[c] && c !== 'popular') || t.categories[0]] || 'organisation'
+  return {
+    name: t.title,
+    icon: t.icon,
+    category,
+    desc: t.description,
+    accent: t.accent,
+    purpose: t.purpose,
+    fields: t.fields.map(f => ({
+      type: f.type,
+      label: f.label,
+      required: !!f.required,
+      ...(f.options ? { options: f.options } : {}),
+    })),
+  }
+}
+
+/**
+ * Merge the library into an existing template array without creating
+ * duplicates. Existing entries win on a name clash -- an organisation may
+ * already have built habits around the wording of the ones that shipped first.
+ */
+export function mergeTemplates(existing = []) {
+  const seen = new Set(existing.map(t => (t.name || '').trim().toLowerCase()))
+  const additions = FORM_TEMPLATES
+    .map(toLegacyTemplate)
+    .filter(t => !seen.has(t.name.trim().toLowerCase()))
+  return [...existing, ...additions]
+}
