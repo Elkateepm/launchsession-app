@@ -5,6 +5,7 @@ import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { FormsOverview, ResponseInbox } from './FormsOverview'
+import { mergeTemplates } from './formTemplates'
 
 function CountUp({ value, duration = 0.6 }) {
   const [display, setDisplay] = React.useState(value)
@@ -70,7 +71,7 @@ const STATUS_STYLE = {
   archived: { label: 'Archived', bg: '#F1F5F9', color: '#64748B', dot: '#94A3B8' },
 }
 
-const TEMPLATES = [
+const BASE_TEMPLATES = [
   // ── YOUTH ──
   { name: 'Youth Registration', icon: '📋', category: 'youth', desc: 'Collect participant information for new members', fields: [
     { type: 'text', label: 'Child First Name', required: true },
@@ -322,6 +323,9 @@ const TEMPLATES = [
     { type: 'textarea', label: 'Notes' },
   ]},
 ]
+
+// Built-in set plus the expanded library, deduped on name.
+const TEMPLATES = mergeTemplates(BASE_TEMPLATES)
 
 function FieldPreview({ field }) {
   const base = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'inherit', background: '#fff', color: '#94A3B8' }
@@ -1049,7 +1053,7 @@ export default function Forms({ org, session, isAdmin }) {
     setLoading(true)
     const [{ data: formRows }, { data: subRows }, { data: staffRows }] = await Promise.all([
       supabase.from('org_forms').select('*').eq('org_id', org.id).order('updated_at', { ascending: false }),
-      supabase.from('form_submissions').select('id, form_id, data, created_at').eq('org_id', org.id).order('created_at', { ascending: false }).limit(3000),
+      supabase.from('form_submissions').select('id, form_id, data, created_at, review_status, flags, submitted_name').eq('org_id', org.id).order('created_at', { ascending: false }).limit(3000),
       supabase.from('user_profiles').select('id, full_name, role').eq('org_id', org.id),
     ])
     setForms(formRows || [])
@@ -1243,7 +1247,7 @@ export default function Forms({ org, session, isAdmin }) {
             <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '13px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(109,93,246,0.4)', width: '100%' }}>+ Create Form</button>
           ) : (
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setTab('templates')} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>📋 Browse Templates</button>
+              <button onClick={() => { setSection('templates'); setTab('templates') }} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>📋 Browse Templates</button>
               <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '11px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(109,93,246,0.4)', whiteSpace: 'nowrap' }}>+ Create Form</button>
             </div>
           )
@@ -1560,7 +1564,7 @@ export default function Forms({ org, session, isAdmin }) {
             <div style={{ background: 'linear-gradient(150deg, #6D5DF6, #5B8DEF)', borderRadius: 16, padding: 20, color: '#fff' }}>
               <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 6 }}>Need inspiration?</div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, marginBottom: 14 }}>Browse our template gallery to get started quickly.</div>
-              <button onClick={() => setTab('templates')} style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>Browse Templates</button>
+              <button onClick={() => { setSection('templates'); setTab('templates') }} style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>Browse Templates</button>
             </div>
           </div>
         )}

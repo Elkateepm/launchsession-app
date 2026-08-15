@@ -112,6 +112,50 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
   }
 }
 
+function Shell({ org, primary, secondary, children }) {
+  return (
+    <div style={{ minHeight: '100vh', background: '#F7F8FC', paddingBottom: 48 }}>
+      <div style={{
+        background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`,
+        padding: '26px 20px 34px',
+      }}>
+        <div style={{ maxWidth: 620, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{
+            width: 54, height: 54, borderRadius: 15, background: '#fff', flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.16)', overflow: 'hidden',
+          }}>
+            <img src={org?.logo_url || FALLBACK_LOGO_URL} alt=""
+              style={{
+                width: org?.logo_url ? '100%' : 42, height: org?.logo_url ? '100%' : 42,
+                objectFit: 'contain', padding: org?.logo_url ? 6 : 0,
+              }} />
+          </div>
+          <div style={{
+            fontSize: 19, fontWeight: 900, letterSpacing: -0.3, minWidth: 0,
+            color: isLightHex(primary) && isLightHex(secondary) ? '#0F172A' : '#fff',
+          }}>{org?.name}</div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 620, margin: '-18px auto 0', padding: '0 16px' }}>{children}</div>
+
+      <div style={{ textAlign: 'center', marginTop: 22, fontSize: 11.5, color: '#94A3B8' }}>
+        Powered by LaunchSession
+      </div>
+    </div>
+  )
+}
+
+function Card({ children, pad = 24 }) {
+  return (
+    <div style={{
+      background: '#fff', borderRadius: 20, padding: pad,
+      border: '1px solid #ECE9F5', boxShadow: '0 12px 32px -20px rgba(15,23,42,0.35)',
+    }}>{children}</div>
+  )
+}
+
 export default function PublicForm() {
   const [org, setOrg] = useState(null)
   const [form, setForm] = useState(null)
@@ -168,8 +212,31 @@ export default function PublicForm() {
     return key ? String(answers[key] || '').slice(0, 120) : null
   }
 
+  // Submission is a click handler rather than a native form submit, so the
+  // browser no longer runs its own type validation. An invalid email address
+  // would otherwise pass simply for being non-empty.
+  const formatProblem = fl => {
+    const raw = String(data[fl.label] ?? '').trim()
+    if (!raw) return null
+    if (fl.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw)) return 'That email address does not look right.'
+    if (fl.type === 'phone' && raw.replace(/[^\d]/g, '').length < 7) return 'That phone number looks too short.'
+    if (fl.type === 'number' && Number.isNaN(Number(raw))) return 'Please enter a number.'
+    return null
+  }
+
   const validateSection = () => {
-    const missing = (sections[step] || [])
+    const section = sections[step] || []
+
+    const badFormat = section.filter(fl => formatProblem(fl))
+    if (badFormat.length) {
+      setInvalid(badFormat.map(fl => fl.label))
+      setError(formatProblem(badFormat[0]))
+      const bi = fields.findIndex(fl => fl.label === badFormat[0].label)
+      document.getElementById(`fld-${bi}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return false
+    }
+
+    const missing = section
       .filter(fl => fl.required && (fl.type === 'checkbox' ? !data[fl.label] : !String(data[fl.label] ?? '').trim()))
       .map(fl => fl.label)
     setInvalid(missing)
@@ -206,46 +273,6 @@ export default function PublicForm() {
     setStatus('done')
   }
 
-  const Shell = ({ children }) => (
-    <div style={{ minHeight: '100vh', background: '#F7F8FC', paddingBottom: 48 }}>
-      <div style={{
-        background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`,
-        padding: '26px 20px 34px',
-      }}>
-        <div style={{ maxWidth: 620, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{
-            width: 54, height: 54, borderRadius: 15, background: '#fff', flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 6px 18px rgba(0,0,0,0.16)', overflow: 'hidden',
-          }}>
-            <img src={org?.logo_url || FALLBACK_LOGO_URL} alt=""
-              style={{
-                width: org?.logo_url ? '100%' : 42, height: org?.logo_url ? '100%' : 42,
-                objectFit: 'contain', padding: org?.logo_url ? 6 : 0,
-              }} />
-          </div>
-          <div style={{
-            fontSize: 19, fontWeight: 900, letterSpacing: -0.3, minWidth: 0,
-            color: isLightHex(primary) && isLightHex(secondary) ? '#0F172A' : '#fff',
-          }}>{org?.name}</div>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 620, margin: '-18px auto 0', padding: '0 16px' }}>{children}</div>
-
-      <div style={{ textAlign: 'center', marginTop: 22, fontSize: 11.5, color: '#94A3B8' }}>
-        Powered by LaunchSession
-      </div>
-    </div>
-  )
-
-  const Card = ({ children, pad = 24 }) => (
-    <div style={{
-      background: '#fff', borderRadius: 20, padding: pad,
-      border: '1px solid #ECE9F5', boxShadow: '0 12px 32px -20px rgba(15,23,42,0.35)',
-    }}>{children}</div>
-  )
-
   if (status === 'loading') {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#F7F8FC' }}>
@@ -273,7 +300,7 @@ export default function PublicForm() {
 
   if (status === 'done') {
     return (
-      <Shell>
+      <Shell org={org} primary={primary} secondary={secondary}>
         <Card pad={30}>
           <div style={{ textAlign: 'center' }}>
             <div style={{
@@ -299,7 +326,7 @@ export default function PublicForm() {
   if (status === 'intro') {
     const mins = Math.max(1, Math.round(fields.length / 5))
     return (
-      <Shell>
+      <Shell org={org} primary={primary} secondary={secondary}>
         <Card pad={28}>
           <h1 style={{ fontSize: 25, fontWeight: 900, color: '#0F172A', margin: '0 0 10px', lineHeight: 1.25 }}>
             {form.name}
@@ -332,7 +359,7 @@ export default function PublicForm() {
   const pct = sections.length > 1 ? ((step + 1) / sections.length) * 100 : null
 
   return (
-    <Shell>
+    <Shell org={org} primary={primary} secondary={secondary}>
       <Card>
         {pct !== null && (
           <div style={{ marginBottom: 20 }}>

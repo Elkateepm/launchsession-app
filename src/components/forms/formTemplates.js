@@ -583,3 +583,54 @@ export const CREATE_INTENTS = [
   { id: 'register_volunteer', label: 'Staff or volunteer form', icon: '🙌', accent: '#14B8A6', templateId: 'volunteer-application' },
   { id: 'other', label: 'Something else', icon: '📝', accent: '#64748B', templateId: null },
 ]
+
+// ---------------------------------------------------------------- adapter
+//
+// Forms.jsx already ships 36 templates in its own shape, and its template
+// browser, preview and "use template" flow are all built around it. Rather than
+// replace that set (and lose 36 working templates to gain 26), these are
+// translated into the same shape and merged, deduped on name.
+
+const CATEGORY_MAP = {
+  popular: 'youth',
+  consent: 'parents',
+  health: 'safeguarding',
+  registration: 'youth',
+  people: 'volunteers',
+  feedback: 'youth',
+  operations: 'organisation',
+}
+
+/** Convert one library template into the shape Forms.jsx's browser expects. */
+export function toLegacyTemplate(t) {
+  // The first category that has a mapping wins; every template declares at
+  // least one, and 'popular' is deliberately never the only one.
+  const category = CATEGORY_MAP[t.categories.find(c => CATEGORY_MAP[c] && c !== 'popular') || t.categories[0]] || 'organisation'
+  return {
+    name: t.title,
+    icon: t.icon,
+    category,
+    desc: t.description,
+    accent: t.accent,
+    purpose: t.purpose,
+    fields: t.fields.map(f => ({
+      type: f.type,
+      label: f.label,
+      required: !!f.required,
+      ...(f.options ? { options: f.options } : {}),
+    })),
+  }
+}
+
+/**
+ * Merge the library into an existing template array without creating
+ * duplicates. Existing entries win on a name clash -- an organisation may
+ * already have built habits around the wording of the ones that shipped first.
+ */
+export function mergeTemplates(existing = []) {
+  const seen = new Set(existing.map(t => (t.name || '').trim().toLowerCase()))
+  const additions = FORM_TEMPLATES
+    .map(toLegacyTemplate)
+    .filter(t => !seen.has(t.name.trim().toLowerCase()))
+  return [...existing, ...additions]
+}
