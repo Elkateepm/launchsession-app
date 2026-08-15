@@ -37,6 +37,14 @@ import MobileBottomNav from './mobilenav/MobileBottomNav'
 import QRShareSheet from '../shared/QRShareSheet'
 import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
 import { useTerms } from '../../context/OrgContext'
+import Today from './Today'
+import {
+  NAV_SECTIONS, NAV_GROUPS, ORG_ITEMS, CREATE_ACTIONS,
+  visibleItems, groupContainingTab, isItemActive,
+} from './sidebar/navConfig'
+import {
+  SidebarItem, SidebarSection, SidebarCollapsibleGroup, CreateMenu, ProfileMenu,
+} from './sidebar/SidebarParts'
 import { makeHasModule, isTrialActive } from '../../lib/moduleAccess'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
@@ -164,62 +172,6 @@ function ComingSoonModule({ icon, label, desc }) {
 // back. One value, one system removes the conflict outright.
 const NavVisibleContext = React.createContext(true)
 
-function NavItem({ icon, label, active, onClick, badge, primary, collapsed, locked }) {
-  const [hovered, setHovered] = useState(false)
-  const navVisible = React.useContext(NavVisibleContext)
-  return (
-    <button
-      title={collapsed ? label : undefined}
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-        padding: collapsed ? '10px 0' : '8px 12px',
-        justifyContent: collapsed ? 'center' : 'flex-start',
-        borderRadius: 10, border: 'none',
-        willChange: 'opacity',
-        background: active
-          ? `linear-gradient(90deg, ${primary}28, ${primary}10)`
-          : hovered && !locked ? 'rgba(255,255,255,0.05)' : 'transparent',
-        color: locked ? 'rgba(255,255,255,0.2)' : active ? '#fff' : hovered ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.45)',
-        fontSize: 13, fontWeight: active ? 700 : 500,
-        marginBottom: 1, cursor: locked ? 'default' : 'pointer', textAlign: 'left',
-        transition: 'background 0.15s ease, color 0.15s ease, opacity 0.4s ease-out', position: 'relative',
-        borderLeft: active ? `3px solid ${primary}` : '3px solid transparent',
-        opacity: !navVisible ? 0 : locked ? 0.5 : 1,
-      }}
-    >
-      <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0, transform: hovered && !active && !locked ? 'translateX(1px)' : 'none', transition: 'transform 0.15s' }}>{icon}</span>
-      {!collapsed && <span style={{ flex: 1, fontSize: 13 }}>{label}</span>}
-      {!collapsed && locked && <span style={{ fontSize: 9, opacity: 0.6 }}>🔒</span>}
-      {!collapsed && !locked && badge && (
-        <span style={{ background: badge.color || '#EF4444', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>
-          {badge.text}
-        </span>
-      )}
-      {active && !collapsed && !locked && <div style={{ width: 7, height: 7, borderRadius: '50%', background: primary, boxShadow: `0 0 8px ${primary}`, flexShrink: 0, animation: 'pulse-dot 2s infinite' }} />}
-    </button>
-  )
-}
-
-function NavSection({ title, children, collapsed, packColor }) {
-  return (
-    <div style={{ marginBottom: 4 }}>
-      {!collapsed && title && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px 4px', marginTop: 4 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 3, background: packColor || 'rgba(255,255,255,0.2)', flexShrink: 0, boxShadow: packColor ? `0 0 6px ${packColor}80` : 'none' }} />
-          <div style={{ fontSize: 9.5, fontWeight: 900, color: packColor || 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: 1.4 }}>{title}</div>
-          <div style={{ flex: 1, height: 1, background: packColor ? `linear-gradient(90deg, ${packColor}40, transparent)` : 'rgba(255,255,255,0.05)' }} />
-        </div>
-      )}
-      {collapsed && <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '6px 14px' }} />}
-      {children}
-    </div>
-  )
-}
-
-// ─── FLOATING GLASS HEADER ────────────────────────────────────
 function LiveClock() {
   const [now, setNow] = useState(new Date())
   useEffect(() => {
@@ -443,6 +395,26 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
   )
 }
 
+// Create actions reuse the existing flows rather than duplicating any form --
+// each entry is the payload the destination already understands.
+const CREATE_PAYLOADS = {
+  session: { autoOpenWizard: true },
+  register: { autoOpenAdd: true },
+}
+
+// Tabs reached through the Organisation entry point. Their routes are
+// unchanged; only where they are surfaced has moved.
+const ORG_TABS = ['settings', 'branding', 'team']
+
+// Sign out sits at the end behind a divider: it is destructive and infrequent,
+// and putting it adjacent to everyday navigation invites mis-clicks.
+const PROFILE_MENU_ITEMS = [
+  { id: 'profile', label: 'My profile', icon: '👤' },
+  { id: 'notifications', label: 'Notifications', icon: '🔔', tab: 'settings', adminOnly: true },
+  { id: 'org', label: 'Organisation settings', icon: '⚙️', tab: 'settings', adminOnly: true },
+  { id: 'signout', label: 'Sign out', icon: '↪️', danger: true, dividerBefore: true },
+]
+
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState(() => {
     // A page reload fully remounts this component, wiping any in-memory
@@ -455,7 +427,14 @@ export default function Dashboard({ session, org }) {
       return fromUrl || sessionStorage.getItem('ls_dashboard_tab') || 'home'
     } catch (e) { return 'home' }
   })
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem('launchsession_sidebar_collapsed') === '1' } catch (e) { return false }
+  })
+  // Group expansion lasts the browser session: re-collapsing Insights on every
+  // navigation is the kind of small friction that makes a nav feel hostile.
+  const [openGroups, setOpenGroups] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('ls_sidebar_groups') || '{}') } catch (e) { return {} }
+  })
   const [registersKey, setRegistersKey] = useState(0)
   const [reflectSessionId, setReflectSessionId] = useState(null)
   const [openAssessmentId, setOpenAssessmentId] = useState(null)
@@ -482,6 +461,14 @@ export default function Dashboard({ session, org }) {
   React.useEffect(() => {
     if (isTablet) { setSidebarCollapsed(false); setTabletNavOpen(false) }
   }, [isTablet])
+
+  React.useEffect(() => {
+    try { localStorage.setItem('launchsession_sidebar_collapsed', sidebarCollapsed ? '1' : '0') } catch (e) { /* ignore */ }
+  }, [sidebarCollapsed])
+
+  React.useEffect(() => {
+    try { sessionStorage.setItem('ls_sidebar_groups', JSON.stringify(openGroups)) } catch (e) { /* ignore */ }
+  }, [openGroups])
 
   const persistTab = (t) => {
     try {
@@ -550,6 +537,7 @@ export default function Dashboard({ session, org }) {
   // Module access is resolved centrally (see lib/moduleAccess) so the sidebar,
   // Hub and Calendar can't disagree, and so an active trial grants everything.
   const hasModule = makeHasModule(org)
+
   const onTrial = isTrialActive(org)
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
@@ -579,6 +567,17 @@ export default function Dashboard({ session, org }) {
 
   const userName = userProfile?.full_name || userEmail.split('@')[0]
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'owner'
+  const activeGroup = React.useMemo(() => groupContainingTab(tab), [tab])
+
+  // Only offer creation of things this organisation actually has, and that this
+  // user may create. An action that opens a locked screen is worse than no
+  // action at all.
+  const createActions = React.useMemo(
+    () => visibleItems(CREATE_ACTIONS, { hasModule, isAdmin })
+      .map(a => ({ ...a, label: a.label || `${a.labelPrefix || ''}${terms[a.termKey] || ''}`.trim() })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [org?.id, org?.modules, isAdmin, terms]
+  )
 
   const [unreadSubs, setUnreadSubs] = useState([])
   useEffect(() => {
@@ -607,7 +606,10 @@ export default function Dashboard({ session, org }) {
         background: 'linear-gradient(175deg, #0D1117 0%, #0A0F1A 60%, #080C14 100%)',
         transition: isTablet ? 'transform 0.28s cubic-bezier(0.4,0,0.2,1)' : 'width 0.28s cubic-bezier(0.4,0,0.2,1)',
         display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0,
-        borderRight: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+        // Not 'hidden' when collapsed: flyout menus are absolutely positioned
+        // outside the 64px rail and would be clipped away entirely.
+        overflow: sidebarCollapsed ? 'visible' : 'hidden',
         position: isTablet ? 'fixed' : 'relative', top: isTablet ? 0 : undefined, left: isTablet ? 0 : undefined, bottom: isTablet ? 0 : undefined,
         zIndex: isTablet ? 960 : undefined,
         transform: isTablet ? (tabletNavOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
@@ -645,124 +647,136 @@ export default function Dashboard({ session, org }) {
           </div>
         </div>
 
+        {/* CREATE */}
+        <CreateMenu
+          actions={createActions}
+          primary={primary}
+          collapsed={sidebarCollapsed}
+          onSelect={a => handleSetTab(a.tab, CREATE_PAYLOADS[a.id] || undefined)}
+        />
+
         {/* NAV */}
         <NavVisibleContext.Provider value={isTablet ? tabletNavOpen : true}>
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-        {/* Home — sticky, always visible */}
-        <div style={{ padding: '4px 8px 0', flexShrink: 0 }}>
-          <NavSection collapsed={sidebarCollapsed} packColor={primary}>
-            <NavItem icon="🏠" label="Home" active={tab === 'home'} onClick={() => { handleSetTab('home') }} primary={primary} collapsed={sidebarCollapsed} />
-          </NavSection>
+
+        <div style={{ padding: '0 8px 6px', flexShrink: 0 }}>
+          <SidebarItem icon="🏠" label="Home" active={tab === 'home'} primary={primary}
+            collapsed={sidebarCollapsed} onClick={() => handleSetTab('home')} />
+          <SidebarItem icon="⚡" label="Today" active={tab === 'today'} primary={primary}
+            collapsed={sidebarCollapsed} onClick={() => handleSetTab('today')} />
         </div>
-        <div style={{ height: 1, margin: '0 12px', background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
+        <div style={{ height: 1, margin: '0 12px 10px', background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
 
-        <div className="sb-nav" style={{ flex: 1, padding: '4px 8px 8px', overflowY: 'auto' }}>
+        <div className="sb-nav" style={{ flex: 1, padding: '0 8px 8px', overflowY: 'auto' }}>
 
-          <NavSection collapsed={sidebarCollapsed} title="Delivery" packColor="#3B82F6">
-            <NavItem icon="📅" label="Calendar" active={tab === 'calendar'} onClick={() => handleSetTab('calendar')} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="🗓️" label="Sessions" active={tab === 'planner'} onClick={() => handleSetTab('planner')} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="🚀" label="Projects" active={tab === 'projects_list' || tab === 'projects'} onClick={() => handleSetTab('projects_list')} primary={primary} collapsed={sidebarCollapsed} />
-            <NavItem icon="🧒" label={terms.People} active={tab === 'children'} onClick={() => handleSetTab('children')} primary={primary} collapsed={sidebarCollapsed} />
-            {/* Paid delivery modules — show all, locked ones navigate to locked screen */}
-            {[
-              { key: 'registers', label: 'Registers', icon: '📋' },
-              { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
-              { key: 'messaging', label: 'Messaging', icon: '💬' },
-              { key: 'gallery', label: 'Gallery', icon: '🖼️' },
-            ].map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
-                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
-                locked={!hasModule(m.key)} />
-            ))}
-          </NavSection>
+          {NAV_SECTIONS.map(section => {
+            const items = visibleItems(section.items, { hasModule, isAdmin })
+            if (!items.length) return null
+            return (
+              <SidebarSection key={section.id} title={section.label} collapsed={sidebarCollapsed}>
+                {items.map(item => (
+                  <SidebarItem
+                    key={item.id}
+                    icon={item.icon}
+                    label={item.label || terms[item.termKey] || item.id}
+                    active={isItemActive(item, tab)}
+                    primary={primary}
+                    collapsed={sidebarCollapsed}
+                    badge={item.badgeKey === 'forms' && unreadSubs.length ? unreadSubs.length : undefined}
+                    onClick={() => handleSetTab(item.tab)}
+                  />
+                ))}
+              </SidebarSection>
+            )
+          })}
 
-          <NavSection collapsed={sidebarCollapsed} title="Safeguarding" packColor="#EF4444">
-            {[
-              { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
-              { key: 'forms', label: 'Forms', icon: '📝' },
-              { key: 'case_management', label: 'Case Management', icon: '📁' },
-              { key: 'risk_assessments', label: 'Risk Assessments', icon: '🛡️' },
-            ].map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
-                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
-                locked={!hasModule(m.key)}
-                badge={m.key === 'forms' && unreadSubs.length > 0 ? { text: unreadSubs.length > 9 ? '9+' : String(unreadSubs.length) } : undefined} />
-            ))}
-          </NavSection>
+          <div style={{ height: 1, margin: '4px 12px 12px', background: 'rgba(255,255,255,0.06)' }} />
 
-          <NavSection collapsed={sidebarCollapsed} title="Growth" packColor="#22C55E">
-            {[
-              { key: 'reports', label: 'Reports', icon: '📊' },
-              { key: 'impact_outcomes', label: 'Impact & Outcomes', icon: '🌱' },
-              { key: 'fundraising', label: 'Fundraising', icon: '💷' },
-            ].map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
-                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
-                locked={!hasModule(m.key)} />
-            ))}
-          </NavSection>
-
-          <NavSection collapsed={sidebarCollapsed} title="Operations" packColor="#A855F7">
-            {[
-              { key: 'hr', label: 'HR', icon: '🧑‍💼' },
-              { key: 'payments', label: 'Payments', icon: '💳' },
-              { key: 'resource_booking', label: 'Resource Booking', icon: '🗓️' },
-              { key: 'events_trips', label: 'Events & Trips', icon: '✈️' },
-            ].filter(m => m.key !== 'hr' || isAdmin).map(m => (
-              <NavItem key={m.key} icon={m.icon} label={m.label} active={tab === m.key}
-                onClick={() => handleSetTab(m.key)} primary={primary} collapsed={sidebarCollapsed}
-                locked={!hasModule(m.key)} />
-            ))}
-            {isAdmin && (
-              <NavItem icon="🗂" label="Templates" active={tab === 'templates'}
-                onClick={() => handleSetTab('templates')} primary={primary} collapsed={sidebarCollapsed} />
-            )}
-          </NavSection>
+          {NAV_GROUPS.map(group => {
+            const items = visibleItems(group.items, { hasModule, isAdmin })
+            if (!items.length) return null
+            const active = activeGroup === group.id
+            return (
+              <SidebarCollapsibleGroup
+                key={group.id}
+                label={group.label}
+                icon={group.icon}
+                primary={primary}
+                collapsed={sidebarCollapsed}
+                open={!!openGroups[group.id] || active}
+                hasActiveChild={active}
+                items={items}
+                tab={tab}
+                onSelect={item => handleSetTab(item.tab)}
+                onToggle={() => setOpenGroups(g => ({ ...g, [group.id]: !(g[group.id] || active) }))}
+              >
+                {items.map(item => (
+                  <SidebarItem
+                    key={item.id}
+                    icon={item.icon}
+                    label={item.label}
+                    active={isItemActive(item, tab)}
+                    primary={primary}
+                    indent
+                    muted
+                    onClick={() => handleSetTab(item.tab)}
+                  />
+                ))}
+              </SidebarCollapsibleGroup>
+            )
+          })}
 
           {isAdmin && (
-            <NavSection collapsed={sidebarCollapsed} title="Organisation" packColor="rgba(255,255,255,0.2)">
-              <NavItem icon="👥" label="Team & Staff" active={tab === 'team'} onClick={() => { handleSetTab('team') }} primary={primary} collapsed={sidebarCollapsed} />
-              <NavItem icon="🎨" label="Branding" active={tab === 'branding'} onClick={() => { handleSetTab('branding') }} primary={primary} collapsed={sidebarCollapsed} />
-              <NavItem icon="⚙️" label="Settings" active={tab === 'settings'} onClick={() => { handleSetTab('settings') }} primary={primary} collapsed={sidebarCollapsed} />
-            </NavSection>
+            <>
+              <div style={{ height: 1, margin: '12px 12px', background: 'rgba(255,255,255,0.06)' }} />
+              <SidebarCollapsibleGroup
+                label="Organisation"
+                icon="⚙️"
+                primary={primary}
+                collapsed={sidebarCollapsed}
+                open={!!openGroups.organisation || ORG_TABS.includes(tab)}
+                hasActiveChild={ORG_TABS.includes(tab)}
+                items={ORG_ITEMS}
+                tab={tab}
+                onSelect={item => handleSetTab(item.tab)}
+                onToggle={() => setOpenGroups(g => ({
+                  ...g,
+                  organisation: !(g.organisation || ORG_TABS.includes(tab)),
+                }))}
+              >
+                {ORG_ITEMS.map(item => (
+                  <SidebarItem
+                    key={item.id}
+                    icon={item.icon}
+                    label={item.label}
+                    active={item.tab === tab}
+                    primary={primary}
+                    indent
+                    muted
+                    onClick={() => handleSetTab(item.tab)}
+                  />
+                ))}
+              </SidebarCollapsibleGroup>
+            </>
           )}
         </div>
         </div>
         </NavVisibleContext.Provider>
 
         {/* USER PROFILE */}
-        <div style={{ padding: '10px 10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <div
-            onClick={() => setShowProfile(true)}
-            title={sidebarCollapsed ? userName : undefined}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, cursor: 'pointer', marginBottom: 6, transition: 'background 0.15s', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-          >
-            <div style={{ width: 34, height: 34, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}99, #6366F199)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff', flexShrink: 0, overflow: 'hidden', border: `1.5px solid ${primary}55` }}>
-              {userProfile?.photo_url
-                ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : userName[0]?.toUpperCase() || '?'}
-            </div>
-            {!sidebarCollapsed && (
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userProfile?.role || userEmail}</div>
-              </div>
-            )}
-            {!sidebarCollapsed && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>›</span>}
-          </div>
-          {!sidebarCollapsed && (
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button onClick={handleSignOut}
-                style={{ flex: 1, padding: '6px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#FCA5A5'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}>
-                Sign out
-              </button>
-            </div>
-          )}
-        </div>
+        <ProfileMenu
+          userName={userName}
+          roleLabel={userProfile?.role || userEmail}
+          photoUrl={userProfile?.photo_url}
+          primary={primary}
+          collapsed={sidebarCollapsed}
+          items={PROFILE_MENU_ITEMS.filter(i => !i.adminOnly || isAdmin)}
+          onSelect={item => {
+            if (item.id === 'signout') { handleSignOut(); return }
+            if (item.id === 'profile') { setShowProfile(true); return }
+            if (item.tab) handleSetTab(item.tab)
+          }}
+        />
       </div>
 
       <AnimatePresence>
@@ -828,6 +842,7 @@ export default function Dashboard({ session, org }) {
             )
           })()}
           {/* ── BASE MODULES — always free ── */}
+          {tab === 'today'      && <Today org={org} onNavigate={handleSetTab} />}
           {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
           {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
           {tab === 'projects'   && <ProjectOverview org={org} session={session} projectId={openProjectId} onNavigate={handleSetTab} onBack={() => handleSetTab('projects_list')} />}
@@ -851,7 +866,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingGate org={org} session={session}><Safeguarding org={org} session={session} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} /></SafeguardingGate>                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {tab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {tab === 'case_management' && (hasModule('case_management') ? <CaseManagement org={org} session={session} initialOpenCaseId={openCaseId} />                        : <LockedModule moduleKey="case_management" label="Case Management" icon="📁" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} userProfile={userProfile} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── GROWTH PACK ── */}
           {tab === 'reports'         && (hasModule('reports')         ? <Reports org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />                                : <LockedModule moduleKey="reports"         label="Reports"           icon="📊" onNavigate={handleSetTab} onTrial={onTrial} />)}
@@ -868,7 +883,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list'].includes(tab) && (
+          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today'].includes(tab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
