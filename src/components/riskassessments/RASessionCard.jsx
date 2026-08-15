@@ -2,13 +2,21 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { RatingBadge, RAStatusChip } from './ra_shared'
+import { safetyStateOf, SAFETY_META } from './ra_safety'
+import { DynamicUpdateDrawer, EmergencyView } from './RALiveSafety'
 
 // Embeds inside the Session Planner form (Details step). Two modes:
 //  - sessionId present (editing an existing session): reads/writes risk_assessment_sessions directly.
 //  - sessionId null (creating a new session): tracks a "pending" assessment id via onPendingChange,
 //    which the parent links to risk_assessment_sessions once the session itself is saved.
-export default function RASessionCard({ sessionId, sessionTitle, org, onNavigate, pendingAssessmentId, onPendingChange, onLinkedChange }) {
+export default function RASessionCard({ sessionId, sessionTitle, org, session: authSession, onNavigate, pendingAssessmentId, onPendingChange, onLinkedChange }) {
   const primary = org?.primary_color || '#7C5CFC'
+  // Reachable from the session itself, because that is where staff are standing
+  // when conditions change or something goes wrong -- not in the Risk
+  // Assessments module three taps away.
+  const [dynamicOpen, setDynamicOpen] = useState(false)
+  const [emergencyOpen, setEmergencyOpen] = useState(false)
+  const [full, setFull] = useState(null)
   const [linked, setLinked] = useState(null) // { id, name, risk_rating, status, linkRowId }
   const [loading, setLoading] = useState(true)
   const [picker, setPicker] = useState(false)
@@ -21,8 +29,11 @@ export default function RASessionCard({ sessionId, sessionTitle, org, onNavigate
   const load = useCallback(async () => {
     setLoading(true)
     if (sessionId) {
-      const { data } = await supabase.from('risk_assessment_sessions').select('id, risk_assessments(id, name, risk_rating, status)').eq('session_id', sessionId).limit(1).maybeSingle()
-      if (mounted.current) setLinked(data?.risk_assessments ? { ...data.risk_assessments, linkRowId: data.id } : null)
+      const { data } = await supabase.from('risk_assessment_sessions').select('id, risk_assessments(*)').eq('session_id', sessionId).limit(1).maybeSingle()
+      if (mounted.current) {
+        setLinked(data?.risk_assessments ? { ...data.risk_assessments, linkRowId: data.id } : null)
+        setFull(data?.risk_assessments || null)
+      }
     } else if (pendingAssessmentId) {
       const { data } = await supabase.from('risk_assessments').select('id, name, risk_rating, status').eq('id', pendingAssessmentId).single()
       if (mounted.current) setLinked(data || null)
@@ -94,14 +105,33 @@ export default function RASessionCard({ sessionId, sessionTitle, org, onNavigate
               <span style={{ fontSize: 16 }}>🛡️</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{linked.name}</div>
-                <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
+                <div style={{ display: 'flex', gap: 6, marginTop: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                   {linked.risk_rating && <RatingBadge rating={linked.risk_rating} size="sm" />}
                   {linked.status && <RAStatusChip status={linked.status} />}
+                  {full && (() => {
+                    const meta = SAFETY_META[safetyStateOf(full)]
+                    return (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        padding: '2px 8px', borderRadius: 999, fontSize: 10.5, fontWeight: 700,
+                        background: meta.bg, color: meta.text,
+                      }}>
+                        <span style={{ width: 5, height: 5, borderRadius: 5, background: meta.dot }} />
+                        {meta.label}
+                      </span>
+                    )
+                  })()}
                 </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button onClick={() => onNavigate && onNavigate('risk_assessments')} style={{ fontSize: 11.5, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View Assessment →</button>
+              {sessionId && full && (
+                <>
+                  <button onClick={() => setDynamicOpen(true)} style={{ fontSize: 11.5, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Dynamic Update</button>
+                  <button onClick={() => setEmergencyOpen(true)} style={{ fontSize: 11.5, fontWeight: 700, color: '#B42318', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>🚨 Emergency</button>
+                </>
+              )}
               <button onClick={detach} style={{ fontSize: 11.5, fontWeight: 700, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: 'auto' }}>Detach</button>
             </div>
           </div>
@@ -118,6 +148,22 @@ export default function RASessionCard({ sessionId, sessionTitle, org, onNavigate
           </div>
         )}
       </div>
+
+      <DynamicUpdateDrawer
+        open={dynamicOpen}
+        assessment={full}
+        org={org}
+        authSession={authSession}
+        sessionId={sessionId}
+        onClose={() => setDynamicOpen(false)}
+      />
+
+      <EmergencyView
+        open={emergencyOpen}
+        assessment={full}
+        org={org}
+        onClose={() => setEmergencyOpen(false)}
+      />
 
       <AnimatePresence>
         {picker && (
