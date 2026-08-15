@@ -93,16 +93,22 @@ export default function PublicForm() {
     if (!ORG_SLUG || !FORM_ID) { setStatus('notfound'); return }
     let cancelled = false
     ;(async () => {
-      // Public-safe view -- public form, no auth context.
-      const { data: orgRow } = await supabase.from('organisations_public').select('id, name, slug, logo_url, primary_color, secondary_color').eq('slug', ORG_SLUG).maybeSingle()
+      const { data: rows, error: rpcErr } = await supabase
+        .rpc('get_public_form', { p_org_slug: ORG_SLUG, p_form_id: FORM_ID })
       if (cancelled) return
-      if (!orgRow) { setStatus('notfound'); return }
-      setOrg(orgRow)
+      if (rpcErr || !rows?.length) { setStatus('notfound'); return }
 
-      const { data: formRow } = await supabase.from('org_forms').select('*').eq('id', FORM_ID).eq('org_id', orgRow.id).eq('is_active', true).maybeSingle()
-      if (cancelled) return
-      if (!formRow) { setStatus('notfound'); return }
-      setForm(formRow)
+      const row = rows[0]
+      // The org id is not returned by the RPC -- it is not needed to render, and
+      // the submission policy derives it from the form. Branding comes from the
+      // same call so the page cannot render unbranded while it waits.
+      setOrg({
+        name: row.org_name,
+        logo_url: row.org_logo_url,
+        primary_color: row.accent_color || row.org_primary_color,
+        secondary_color: row.org_secondary_color,
+      })
+      setForm(row)
       setStatus('ready')
     })()
     return () => { cancelled = true }
@@ -113,6 +119,13 @@ export default function PublicForm() {
 
   const setField = (label, value) => setData(d => ({ ...d, [label]: value }))
 
+  // A submission that arrives with no identifiable name is nearly useless to
+  // whoever reviews it, so pull the most likely one out of the answers.
+  const nameFrom = answers => {
+    const key = Object.keys(answers).find(k => /name/i.test(k) && !/school|contact|gp|surgery/i.test(k))
+    return key ? String(answers[key] || '').slice(0, 120) : null
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     const missing = (form.fields || []).find(f => f.required && !data[f.label] && f.type !== 'checkbox')
@@ -120,7 +133,11 @@ export default function PublicForm() {
     if (missing || missingCheckbox) { setError('Please fill in all required fields before submitting.'); return }
     setError('')
     setStatus('submitting')
-    const { error: insertError } = await supabase.from('form_submissions').insert({ form_id: form.id, org_id: org.id, data })
+    const { error: insertError } = await supabase.rpc('submit_public_form', {
+      p_form_id: form.id,
+      p_data: data,
+      p_name: nameFrom(data),
+    })
     if (insertError) { setError('Something went wrong submitting your form. Please try again.'); setStatus('ready'); return }
     setStatus('done')
   }
