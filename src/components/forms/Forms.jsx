@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion'
 import { createPortal } from 'react-dom'
+import { FormsOverview, ResponseInbox } from './FormsOverview'
 
 function CountUp({ value, duration = 0.6 }) {
   const [display, setDisplay] = React.useState(value)
@@ -1001,6 +1002,11 @@ export default function Forms({ org, session, isAdmin }) {
   const [view, setView] = useState('list') // 'list' | 'builder' | 'submissions'
   const [selectedForm, setSelectedForm] = useState(null)
   const [tab, setTab] = useState('all') // 'all' | 'active' | 'draft' | 'archived' | 'templates'
+  // The redesign leads with what needs doing rather than with counts. The
+  // existing list survives as the 'Forms' section rather than being deleted --
+  // it holds working search, filters, the builder and the email flow.
+  const [section, setSection] = useState('overview')  // overview | forms | responses | templates
+  const [responseFilter, setResponseFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [templateSearch, setTemplateSearch] = useState('')
   const [templateCategory, setTemplateCategory] = useState('all')
@@ -1229,7 +1235,7 @@ export default function Forms({ org, session, isAdmin }) {
                 <option value="all">All time</option>
               </select>
             </div>
-            <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>Build digital forms, applications and consent packs.</div>
+            <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>Create it, send it, see who replied.</div>
           </div>
         </div>
         {isAdmin && (
@@ -1244,6 +1250,46 @@ export default function Forms({ org, session, isAdmin }) {
         )}
       </div>
 
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18, overflowX: 'auto', paddingBottom: 2 }}>
+        {[['overview', 'Overview'], ['forms', 'Forms'], ['responses', 'Responses'], ['templates', 'Templates']].map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => { setSection(key); if (key === 'templates') setTab('templates') }}
+            style={{
+              padding: '8px 16px', borderRadius: 999, fontSize: 13, fontWeight: 700,
+              whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit',
+              border: `1px solid ${section === key ? 'transparent' : '#E2E8F0'}`,
+              background: section === key ? 'linear-gradient(135deg, #6D5DF6, #5B8DEF)' : '#fff',
+              color: section === key ? '#fff' : '#64748B',
+            }}
+          >{label}</button>
+        ))}
+      </div>
+
+      {section === 'overview' && (
+        <FormsOverview
+          org={org}
+          forms={forms}
+          submissions={submissions}
+          primary={org?.primary_color || '#6D5DF6'}
+          onOpenForm={f => { setSelectedForm(f); setView('submissions') }}
+          onGoResponses={filter => { setResponseFilter(filter); setSection('responses') }}
+          onCreate={() => { setSelectedForm(null); setView('builder') }}
+        />
+      )}
+
+      {section === 'responses' && (
+        <ResponseInbox
+          org={org}
+          forms={forms}
+          primary={org?.primary_color || '#6D5DF6'}
+          initialFilter={responseFilter}
+          onChanged={load}
+        />
+      )}
+
+      {(section === 'forms' || section === 'templates') && (
+      <>
       {/* STATS */}
       <div style={{ display: 'grid', gridTemplateColumns: isCompact ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
         {statCards.map((s, i) => (
@@ -1519,6 +1565,8 @@ export default function Forms({ org, session, isAdmin }) {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {emailModalFor && (
         <EmailFormModal form={emailModalFor} primary={primary} onClose={() => setEmailModalFor(null)} />
