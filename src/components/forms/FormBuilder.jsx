@@ -1059,6 +1059,9 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [smsPreview, setSmsPreview] = useState(null)
+  const [smsBusy, setSmsBusy] = useState(false)
+  const [smsResult, setSmsResult] = useState(null)
 
   const load = useCallback(async () => {
     if (!formId) { setLoading(false); return }
@@ -1096,6 +1099,34 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
   }
 
   const card = { background: '#fff', border: '1px solid #ECE9F5', borderRadius: 18, padding: 22 }
+
+  // Preview before send is not politeness -- each message costs money and goes
+  // out under the organisation's name, so seeing the exact text and the exact
+  // count first is the difference between a reminder and an incident.
+  async function smsCall(preview) {
+    setSmsBusy(true); setSmsResult(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const resp = await fetch('/api/send-form-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ type: 'sms', purpose: 'form_reminder', form_id: formId, preview }),
+      })
+      const json = await resp.json()
+      if (!resp.ok) { setSmsResult({ error: json.error || 'Could not send.' }); return }
+      if (preview) { setSmsPreview(json); return }
+      setSmsPreview(null)
+      setSmsResult({ sent: json.sent, skipped: json.skipped || [] })
+      load()
+    } catch (e) {
+      setSmsResult({ error: 'Could not reach the server. Nothing was sent.' })
+    } finally {
+      setSmsBusy(false)
+    }
+  }
 
   if (!formId) {
     return (
@@ -1137,10 +1168,70 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
           </>
         )}
 
-        <button onClick={() => setPicking(p => !p)} style={{
-          padding: '10px 17px', borderRadius: 11, border: 'none', background: primary,
-          color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-        }}>{picking ? 'Close' : '+ Add recipients'}</button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button onClick={() => setPicking(p => !p)} style={{
+            padding: '10px 17px', borderRadius: 11, border: 'none', background: primary,
+            color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+          }}>{picking ? 'Close' : '+ Add recipients'}</button>
+
+          {outstanding.length > 0 && (
+            <button onClick={() => smsCall(true)} disabled={smsBusy} style={{
+              padding: '10px 17px', borderRadius: 11, border: '1px solid #E2E8F0',
+              background: '#fff', color: '#0F172A', fontSize: 13.5, fontWeight: 700,
+              cursor: smsBusy ? 'wait' : 'pointer', fontFamily: 'inherit',
+            }}>{smsBusy ? 'Checking…' : `Text the ${outstanding.length} outstanding`}</button>
+          )}
+        </div>
+
+        {smsPreview && (
+          <div style={{
+            marginTop: 14, padding: 14, borderRadius: 12,
+            background: '#F8FAFC', border: '1px solid #E2E8F0',
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 7 }}>
+              THIS IS WHAT THEY'LL RECEIVE
+            </div>
+            <div style={{
+              fontSize: 13.5, color: '#0F172A', lineHeight: 1.55, whiteSpace: 'pre-wrap',
+              background: '#fff', border: '1px solid #ECE9F5', borderRadius: 10, padding: 12,
+            }}>{smsPreview.body}</div>
+
+            <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 10 }}>
+              Sending to {smsPreview.would_send} {smsPreview.would_send === 1 ? 'person' : 'people'}.
+              {smsPreview.skipped?.length > 0 && ` ${smsPreview.skipped.length} skipped (no number or opted out).`}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button onClick={() => setSmsPreview(null)} style={{
+                padding: '9px 15px', borderRadius: 10, border: '1px solid #E2E8F0',
+                background: '#fff', color: '#64748B', fontSize: 13, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}>Cancel</button>
+              <button
+                onClick={() => smsCall(false)}
+                disabled={smsBusy || !smsPreview.would_send}
+                style={{
+                  padding: '9px 15px', borderRadius: 10, border: 'none',
+                  background: smsPreview.would_send ? primary : '#E2E8F0', color: '#fff',
+                  fontSize: 13, fontWeight: 800,
+                  cursor: smsPreview.would_send && !smsBusy ? 'pointer' : 'not-allowed',
+                  fontFamily: 'inherit',
+                }}
+              >{smsBusy ? 'Sending…' : `Send ${smsPreview.would_send}`}</button>
+            </div>
+          </div>
+        )}
+
+        {smsResult && (
+          <div style={{
+            marginTop: 12, padding: '11px 13px', borderRadius: 10, fontSize: 13,
+            background: smsResult.error ? '#FEF2F2' : '#E7F8ED',
+            border: `1px solid ${smsResult.error ? '#FECACA' : '#A7E9C1'}`,
+            color: smsResult.error ? '#B42318' : '#04713C',
+          }}>
+            {smsResult.error || `Sent ${smsResult.sent} message${smsResult.sent === 1 ? '' : 's'}.`}
+          </div>
+        )}
 
         {error && (
           <div style={{

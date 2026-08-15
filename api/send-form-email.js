@@ -710,6 +710,203 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, sent: cleanEmails.length - failed.length, failed })
     }
 
+
+    // ── SMS via Twilio ──
+    //
+    // Copy is generated here, never accepted from the client. The browser sends
+    // a purpose and a target; it cannot dictate the text of a message that goes
+    // out under the organisation's name and costs them money.
+    //
+    // Lives in this handler rather than its own file because Vercel's Hobby
+    // plan caps the project at 12 serverless functions and api/ is at 12.
+    if (req.body?.type === 'sms') {
+      const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER } = process.env
+      if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+        return res.status(503).json({ error: 'SMS is not configured yet.' })
+      }
+
+      const { purpose, form_id, session_id, child_ids, preview } = req.body || {}
+
+      const ALLOWED_PURPOSES = ['form_reminder', 'session_reminder', 'test']
+      if (!ALLOWED_PURPOSES.includes(purpose)) {
+        return res.status(400).json({ error: 'Unsupported SMS purpose' })
+      }
+
+      const { data: org } = await adminClient.from('organisations')
+        .select('id, name, slug, sms_enabled, sms_monthly_limit')
+        .eq('id', profile.org_id).maybeSingle()
+      if (!org) return res.status(404).json({ error: 'Organisation not found' })
+      if (!org.sms_enabled) return res.status(403).json({ error: 'SMS is not enabled for your organisation.' })
+
+      // Build the recipient list server-side from the organisation's own
+      // records. Accepting numbers from the client would let a compromised
+      // session text arbitrary people from a trusted sender.
+      let recipients = []
+      let body = ''
+      let relatedForm = null
+
+      if (purpose === 'form_reminder') {
+        const { data: form } = await adminClient.from('org_forms')
+          .select('id, name, org_id').eq('id', form_id).eq('org_id', org.id).maybeSingle()
+        if (!form) return res.status(404).json({ error: 'Form not found for your organisation' })
+        relatedForm = form
+
+        const { data: outstanding } = await adminClient.from('form_recipients')
+          .select('id, child_id, recipient_name, recipient_phone')
+          .eq('form_id', form.id).eq('org_id', org.id).neq('status', 'completed')
+
+        // Recipient rows hold a phone only sometimes; fall back to the child's
+        // parent number, which is where it usually lives.
+        const childIds = (outstanding || []).map(r => r.child_id).filter(Boolean)
+        const { data: kids } = childIds.length
+          ? await adminClient.from('children')
+              .select('id, first_name, parent_phone, sms_opt_out')
+              .eq('org_id', org.id).in('id', childIds)
+          : { data: [] }
+        const byChild = Object.fromEntries((kids || []).map(k => [k.id, k]))
+
+        recipients = (outstanding || []).map(r => {
+          const kid = r.child_id ? byChild[r.child_id] : null
+          return {
+            child_id: r.child_id || null,
+            name: r.recipient_name,
+            phone: r.recipient_phone || kid?.parent_phone || null,
+            opted_out: !!kid?.sms_opt_out,
+          }
+        })
+
+        body = `${org.name}: a reminder that "${form.name}" is still outstanding. Please complete it here: https://launchsession.co.uk/forms/${org.slug}/${form.id}\nReply STOP to opt out.`
+      }
+
+      if (purpose === 'session_reminder') {
+        const { data: sess } = await adminClient.from('sessions')
+          .select('id, title, session_date, start_time, org_id')
+          .eq('id', session_id).eq('org_id', org.id).maybeSingle()
+        if (!sess) return res.status(404).json({ error: 'Session not found for your organisation' })
+
+        const { data: kids } = await adminClient.from('children')
+          .select('id, first_name, parent_phone, sms_opt_out')
+          .eq('org_id', org.id).in('id', Array.isArray(child_ids) ? child_ids : [])
+        recipients = (kids || []).map(k => ({
+          child_id: k.id, name: k.first_name, phone: k.parent_phone, opted_out: !!k.sms_opt_out,
+        }))
+
+        const when = sess.start_time ? `${sess.session_date} at ${String(sess.start_time).slice(0, 5)}` : sess.session_date
+        body = `${org.name}: reminder that ${sess.title} is on ${when}.\nReply STOP to opt out.`
+      }
+
+      if (purpose === 'test') {
+        // Deliberately only ever to the sender's own number, so the test path
+        // cannot be used to message anyone else.
+        const { data: me } = await adminClient.from('user_profiles')
+          .select('phone').eq('id', user.id).maybeSingle()
+        if (!me?.phone) return res.status(400).json({ error: 'Add a phone number to your profile to send a test.' })
+        recipients = [{ child_id: null, name: 'You', phone: me.phone, opted_out: false }]
+        body = `${org.name}: this is a test message from LaunchSession. SMS is working.`
+      }
+
+      // UK numbers are stored in local form; Twilio needs E.164.
+      const toE164 = raw => {
+        const digits = String(raw || '').replace(/[^\d+]/g, '')
+        if (digits.startsWith('+')) return digits
+        if (digits.startsWith('07') && digits.length === 11) return `+44${digits.slice(1)}`
+        if (digits.startsWith('44')) return `+${digits}`
+        return null
+      }
+
+      const { data: optOuts } = await adminClient.from('sms_opt_outs').select('phone')
+      const blocked = new Set((optOuts || []).map(o => o.phone))
+
+      const targets = []
+      const skipped = []
+      const seen = new Set()
+      for (const r of recipients) {
+        const e164 = toE164(r.phone)
+        if (!e164) { skipped.push({ name: r.name, reason: 'no valid number' }); continue }
+        if (r.opted_out || blocked.has(e164)) { skipped.push({ name: r.name, reason: 'opted out' }); continue }
+        // One person can be recipient for two children; texting them twice
+        // about the same form is how an organisation gets reported as spam.
+        if (seen.has(e164)) { skipped.push({ name: r.name, reason: 'duplicate number' }); continue }
+        seen.add(e164)
+        targets.push({ ...r, e164 })
+      }
+
+      if (preview) {
+        return res.status(200).json({ success: true, preview: true, body, would_send: targets.length, skipped })
+      }
+
+      if (targets.length === 0) {
+        return res.status(200).json({ success: true, sent: 0, skipped, body })
+      }
+
+      // Monthly cap. Checked against what has actually been sent, and enforced
+      // before the first message rather than partway through the batch.
+      const { data: used } = await adminClient.rpc('sms_usage_this_month', { p_org_id: org.id })
+      const remaining = (org.sms_monthly_limit || 0) - (used || 0)
+      if (remaining <= 0) {
+        return res.status(429).json({ error: 'Monthly SMS limit reached for your organisation.' })
+      }
+      if (targets.length > remaining) {
+        return res.status(429).json({
+          error: `This would send ${targets.length} messages but only ${remaining} remain in this month's allowance.`,
+        })
+      }
+
+      const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64')
+      const results = []
+
+      for (const t of targets) {
+        // Logged before sending: if Twilio accepts and the write then fails, a
+        // charge has gone out with no record of it.
+        const { data: logRow } = await adminClient.from('sms_messages').insert({
+          org_id: org.id, to_number: t.e164, body, purpose,
+          related_form_id: relatedForm?.id || null,
+          related_session_id: session_id || null,
+          child_id: t.child_id, status: 'queued', sent_by: user.id,
+        }).select('id').single()
+
+        try {
+          const resp = await fetch(
+            `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Basic ${auth}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: new URLSearchParams({ To: t.e164, From: TWILIO_PHONE_NUMBER, Body: body }),
+            }
+          )
+          const payload = await resp.json()
+
+          if (!resp.ok) {
+            await adminClient.from('sms_messages').update({
+              status: 'failed', error_message: payload?.message || `HTTP ${resp.status}`,
+              updated_at: new Date().toISOString(),
+            }).eq('id', logRow?.id)
+            results.push({ to: t.e164, ok: false })
+            continue
+          }
+
+          await adminClient.from('sms_messages').update({
+            status: 'sent', provider_sid: payload.sid,
+            segments: payload.num_segments ? Number(payload.num_segments) : null,
+            updated_at: new Date().toISOString(),
+          }).eq('id', logRow?.id)
+          results.push({ to: t.e164, ok: true })
+        } catch (e) {
+          await adminClient.from('sms_messages').update({
+            status: 'failed', error_message: String(e.message || e).slice(0, 500),
+            updated_at: new Date().toISOString(),
+          }).eq('id', logRow?.id)
+          results.push({ to: t.e164, ok: false })
+        }
+      }
+
+      const sent = results.filter(r => r.ok).length
+      return res.status(200).json({ success: true, sent, failed: results.length - sent, skipped })
+    }
+
     // ── Existing form-email flow ──
     const { form_id, emails } = req.body || {}
     if (!form_id || !Array.isArray(emails) || emails.length === 0) {
