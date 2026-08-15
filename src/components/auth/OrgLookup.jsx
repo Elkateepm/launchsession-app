@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import SpaceBackground from './SpaceBackground'
 import RocketIllustration from './RocketIllustration'
+import { isNativeApp } from '../../lib/nativeEnv'
 
 // Shown wherever an org logo would go, whenever the org hasn't set one yet
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -318,6 +319,7 @@ export default function OrgLookup() {
           </>
         )}
 
+        {!isNativeApp() && (
         <button onClick={() => window.location.href = 'https://www.launchsession.co.uk/landing.html'} style={{
           width: '100%', marginTop: 28, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: 14, padding: '13px 16px', color: 'rgba(255,255,255,0.55)', fontSize: 13.5, fontWeight: 600,
@@ -325,6 +327,7 @@ export default function OrgLookup() {
         }}>
           <span style={{ fontSize: 15 }}>←</span> Back to launchsession.co.uk
         </button>
+        )}
 
         <div style={{ textAlign: 'center', marginTop: 18, fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
           Powered by <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 700 }}>LaunchSession</span>
