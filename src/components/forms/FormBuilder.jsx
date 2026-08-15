@@ -236,8 +236,8 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
   }
 
   const TABS = isMobile
-    ? [['build', 'Build'], ['preview', 'Preview']]
-    : [['build', 'Build'], ['settings', 'Settings'], ['preview', 'Preview']]
+    ? [['build', 'Build'], ['recipients', 'Recipients'], ['preview', 'Preview']]
+    : [['build', 'Build'], ['recipients', 'Recipients'], ['settings', 'Settings'], ['preview', 'Preview']]
 
   return (
     <div style={{ background: '#F8FAFC', minHeight: '100%', padding: isMobile ? 14 : 22 }}>
@@ -315,6 +315,16 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
           onDelete={() => removeField(selected.id)}
           onClose={() => setSelectedId(null)}
           hasResponses={!!initial?.id}
+        />
+      )}
+
+      {tab === 'recipients' && (
+        <RecipientsPanel
+          org={org}
+          formId={formIdRef.current}
+          form={form}
+          primary={primary}
+          isMobile={isMobile}
         />
       )}
 
@@ -994,3 +1004,229 @@ function PreviewPanel({ form, primary, value, onChange, isMobile }) {
 }
 
 export { typeLabel }
+
+// ------------------------------------------------------------- recipients
+
+/**
+ * Who the form is for, and who has not replied.
+ *
+ * The point of holding recipients at all is that "3 parents haven't completed
+ * this" is answerable without anyone comparing a response list against a
+ * register by hand. A submission ticks its recipient off automatically via a
+ * database trigger matching on email.
+ */
+function RecipientsPanel({ org, formId, form, primary, isMobile }) {
+  const [recipients, setRecipients] = useState([])
+  const [children, setChildren] = useState([])
+  const [picking, setPicking] = useState(false)
+  const [chosen, setChosen] = useState([])
+  const [bubble, setBubble] = useState('all')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const load = useCallback(async () => {
+    if (!formId) { setLoading(false); return }
+    setLoading(true)
+    const [{ data: recs }, { data: kids }] = await Promise.all([
+      supabase.from('form_recipients').select('*').eq('form_id', formId).order('recipient_name'),
+      supabase.from('children').select('id, first_name, surname, bubble, parent_name, parent_email')
+        .eq('org_id', org.id).order('surname'),
+    ])
+    setRecipients(recs || [])
+    setChildren(kids || [])
+    setLoading(false)
+  }, [formId, org?.id])
+
+  useEffect(() => { load() }, [load])
+
+  const bubbles = [...new Set(children.map(c => c.bubble).filter(Boolean))]
+  const visible = bubble === 'all' ? children : children.filter(c => c.bubble === bubble)
+  const already = new Set(recipients.map(r => r.child_id).filter(Boolean))
+
+  const completed = recipients.filter(r => r.status === 'completed')
+  const outstanding = recipients.filter(r => r.status !== 'completed')
+  const pct = recipients.length ? Math.round((completed.length / recipients.length) * 100) : 0
+
+  async function addChosen() {
+    if (!chosen.length) return
+    setBusy(true); setError(null)
+    const { error: e } = await supabase.rpc('add_form_recipients_from_children', {
+      p_form_id: formId, p_child_ids: chosen,
+    })
+    setBusy(false)
+    if (e) { setError(e.message); return }
+    setChosen([]); setPicking(false)
+    load()
+  }
+
+  const card = { background: '#fff', border: '1px solid #ECE9F5', borderRadius: 18, padding: 22 }
+
+  if (!formId) {
+    return (
+      <div style={{ ...card, maxWidth: 620 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
+          Give the form a name first
+        </div>
+        <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.55 }}>
+          Recipients attach to a saved form. Add a name on the Build tab and this
+          will be ready.
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ maxWidth: 720, display: 'grid', gap: 14 }}>
+      <div style={card}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
+          Who is this for?
+        </div>
+        <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.55, marginBottom: 16 }}>
+          {form.visibility === 'public'
+            ? 'Anyone with the link can respond. Adding recipients also lets you see who has and hasn\u2019t.'
+            : 'Only staff can respond to this form.'}
+        </div>
+
+        {recipients.length > 0 && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
+              <span style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
+                {completed.length} of {recipients.length} completed
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: primary }}>{pct}%</span>
+            </div>
+            <div style={{ height: 8, background: '#F1F5F9', borderRadius: 8, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ width: `${pct}%`, height: '100%', background: primary, borderRadius: 8 }} />
+            </div>
+          </>
+        )}
+
+        <button onClick={() => setPicking(p => !p)} style={{
+          padding: '10px 17px', borderRadius: 11, border: 'none', background: primary,
+          color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+        }}>{picking ? 'Close' : '+ Add recipients'}</button>
+
+        {error && (
+          <div style={{
+            marginTop: 12, padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
+            border: '1px solid #FECACA', color: '#B42318', fontSize: 13,
+          }}>{error}</div>
+        )}
+      </div>
+
+      {picking && (
+        <div style={card}>
+          <div style={{ display: 'flex', gap: 7, marginBottom: 12, flexWrap: 'wrap' }}>
+            {['all', ...bubbles].map(b => (
+              <button key={b} onClick={() => setBubble(b)} style={{
+                padding: '6px 12px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
+                border: `1px solid ${bubble === b ? 'transparent' : '#E2E8F0'}`,
+                background: bubble === b ? primary : '#fff',
+                color: bubble === b ? '#fff' : '#64748B',
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}>{b === 'all' ? 'Everyone' : b}</button>
+            ))}
+          </div>
+
+          <div style={{ maxHeight: 300, overflowY: 'auto', display: 'grid', gap: 4 }}>
+            {visible.map(c => {
+              const added = already.has(c.id)
+              const sel = chosen.includes(c.id)
+              return (
+                <button
+                  key={c.id}
+                  disabled={added}
+                  onClick={() => setChosen(list => sel ? list.filter(x => x !== c.id) : [...list, c.id])}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '9px 11px',
+                    borderRadius: 10, textAlign: 'left', fontFamily: 'inherit',
+                    border: `1px solid ${sel ? primary : '#F1F5F9'}`,
+                    background: added ? '#F8FAFC' : sel ? `${primary}0D` : '#fff',
+                    cursor: added ? 'not-allowed' : 'pointer', opacity: added ? 0.55 : 1,
+                  }}
+                >
+                  <span style={{
+                    width: 17, height: 17, borderRadius: 5, flexShrink: 0,
+                    display: 'grid', placeItems: 'center', fontSize: 10, color: '#fff',
+                    border: `1.5px solid ${sel ? primary : '#CBD5E1'}`,
+                    background: sel ? primary : '#fff',
+                  }}>{sel ? '\u2713' : ''}</span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>
+                      {c.first_name} {c.surname}
+                    </span>
+                    <span style={{ display: 'block', fontSize: 11.5, color: '#94A3B8' }}>
+                      {/* No parent email means the form can be shared but this
+                          person can never be ticked off automatically. */}
+                      {c.parent_email || 'No parent email on record'}
+                    </span>
+                  </span>
+                  {added && <span style={{ fontSize: 11.5, color: '#94A3B8' }}>Added</span>}
+                </button>
+              )
+            })}
+          </div>
+
+          <button
+            onClick={addChosen}
+            disabled={!chosen.length || busy}
+            style={{
+              marginTop: 12, width: '100%', padding: '12px', borderRadius: 11, border: 'none',
+              background: chosen.length && !busy ? primary : '#E2E8F0', color: '#fff',
+              fontSize: 14, fontWeight: 800,
+              cursor: chosen.length && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
+            }}
+          >{busy ? 'Adding\u2026' : `Add ${chosen.length || ''} recipient${chosen.length === 1 ? '' : 's'}`}</button>
+        </div>
+      )}
+
+      {loading && <div style={{ ...card, color: '#94A3B8', fontSize: 13.5 }}>Loading\u2026</div>}
+
+      {!loading && outstanding.length > 0 && (
+        <div style={card}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>
+            Haven't replied ({outstanding.length})
+          </div>
+          <div style={{ display: 'grid', gap: 5 }}>
+            {outstanding.map(r => (
+              <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5 }}>
+                <span style={{ width: 7, height: 7, borderRadius: 7, background: '#F79009', flexShrink: 0 }} />
+                <span style={{ color: '#0F172A', flex: 1 }}>{r.recipient_name || 'Unnamed'}</span>
+                <span style={{ color: '#94A3B8', fontSize: 12 }}>{r.recipient_email || 'no email'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!loading && completed.length > 0 && (
+        <div style={card}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>
+            Completed ({completed.length})
+          </div>
+          <div style={{ display: 'grid', gap: 5 }}>
+            {completed.map(r => (
+              <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5 }}>
+                <span style={{ color: '#12B76A', flexShrink: 0 }}>{'\u2713'}</span>
+                <span style={{ color: '#0F172A', flex: 1 }}>{r.recipient_name || 'Unnamed'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!loading && recipients.length === 0 && !picking && (
+        <div style={{ ...card, textAlign: 'center' }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 5 }}>
+            No recipients yet
+          </div>
+          <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.55 }}>
+            Add people and LaunchSession will track who has replied. The public link
+            keeps working either way.
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
