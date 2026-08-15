@@ -95,14 +95,22 @@ export default function CreatePassword() {
     const loadInvite = async () => {
       const token = new URLSearchParams(window.location.search).get('token')
       if (!token) { setError('Invite token missing.'); setLoading(false); return }
-      const { data, error } = await supabase
-        .from('admin_invites')
-        .select('*, organisations(name, slug, logo_url, primary_color)')
-        .eq('token', token)
-        .eq('status', 'pending')
-        .single()
+      const { data: rows, error } = await supabase
+        .rpc('get_invite_by_token', { p_token: token })
+      const data = rows?.[0]
       if (error || !data) setError('Invite not found or already used.')
-      else { setInvite(data); setPreferredName((data.full_name || '').split(' ')[0] || '') }
+      else {
+        // Shaped to match what the rest of this component already expects, so
+        // the change is confined to how the invite is fetched.
+        setInvite({
+          ...data,
+          organisations: {
+            name: data.org_name, slug: data.org_slug,
+            logo_url: data.org_logo_url, primary_color: data.org_primary_color,
+          },
+        })
+        setPreferredName((data.full_name || '').split(' ')[0] || '')
+      }
       setLoading(false)
     }
     loadInvite()
@@ -165,7 +173,11 @@ export default function CreatePassword() {
         id: uid, org_id: invite.org_id,
         email: invite.email, full_name: invite.full_name, role: invite.role || 'admin'
       }], { onConflict: 'id' })
-      await supabase.from('admin_invites').update({ status: 'accepted', accepted_at: new Date().toISOString() }).eq('id', invite.id)
+      // Accepting requires the token too -- a pending status alone used to be
+      // enough for anyone to mark any invite accepted.
+      await supabase.rpc('accept_invite_by_token', {
+        p_token: new URLSearchParams(window.location.search).get('token'),
+      })
     }
 
     await supabase.auth.signInWithPassword({ email: invite.email, password })

@@ -30,10 +30,9 @@ export const NAV_SECTIONS = [
       // Label comes from the org's own terminology (People / Young People /
       // Members / Players), resolved at render.
       { id: 'children', label: null, termKey: 'People', icon: '👧', tab: 'children' },
-      // Staff and Volunteers were in different sections despite being the same
-      // question: who delivers the work. Grouped here without touching either
-      // page — Volunteers stays its own module and route.
-      { id: 'team', label: 'Staff & Volunteers', icon: '👥', tab: 'team', adminOnly: true },
+      // Staff are managed in HR (Operations). Volunteers stay separate: they
+      // are a different relationship with different records, and merging them
+      // would recreate the ambiguity this consolidation removed.
       { id: 'volunteers', label: 'Volunteers', icon: '❤️', tab: 'volunteers', moduleKey: 'volunteers' },
     ],
   },

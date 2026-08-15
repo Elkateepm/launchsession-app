@@ -3,7 +3,6 @@ import Settings from '../settings/Settings'
 import { motion, AnimatePresence } from 'framer-motion'
 import Volunteers from '../volunteers/Volunteers'
 import ProfilePage from '../profile/ProfilePage'
-import TeamTab from '../team/TeamTab'
 import Mentoring from '../mentoring/Mentoring'
 import SessionPlanner from '../sessions/SessionPlanner'
 import ProjectOverview from '../projects/ProjectOverview'
@@ -30,7 +29,7 @@ import RiskAssessments from '../riskassessments/RiskAssessments'
 import ImpactOutcomes from '../impact/ImpactOutcomes'
 import Fundraising from '../fundraising/Fundraising'
 import FundraisingGate from '../fundraising/FundraisingGate'
-import HR from '../hr/HR'
+import HR from '../hr/HRCentre'
 import Payments from '../payments/Payments'
 import ResourceCentre from '../resources/ResourceCentre'
 import MobileBottomNav from './mobilenav/MobileBottomNav'
@@ -424,7 +423,10 @@ export default function Dashboard({ session, org }) {
     // just a fallback for the rare case the query string got stripped.
     try {
       const fromUrl = new URLSearchParams(window.location.search).get('tab')
-      return fromUrl || sessionStorage.getItem('ls_dashboard_tab') || 'home'
+      const resolved = fromUrl || sessionStorage.getItem('ls_dashboard_tab') || 'home'
+      // 'team' was Staff & Volunteers, now part of HR. Applied here as well as
+      // in handleSetTab so a bookmarked link resolves on first paint.
+      return resolved === 'team' ? 'hr' : resolved
     } catch (e) { return 'home' }
   })
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -479,7 +481,13 @@ export default function Dashboard({ session, org }) {
     } catch (e) { /* best-effort only — never block navigation on this */ }
   }
 
+  // 'team' was the Staff & Volunteers module, now consolidated into HR. The
+  // route is kept and redirected rather than removed, so existing bookmarks and
+  // ?tab=team links still land somewhere sensible.
+  const TAB_ALIASES = { team: 'hr' }
+
   const handleSetTab = (t, payload) => {
+    t = TAB_ALIASES[t] || t
     setShowMobileMore(false)
     if (ADMIN_ONLY_TABS.includes(t) && !isAdmin) { setTab('home'); persistTab('home'); return }
     if (t === 'registers') setRegistersKey(k => k + 1)
@@ -851,7 +859,6 @@ export default function Dashboard({ session, org }) {
           {tab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
           {tab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} initialOpenRequestsTab={openRegRequestsTab} /></ChildrenGate>}
           {tab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
-          {tab === 'team'       && (isAdmin ? <TeamTab org={org} session={session} /> : <RestrictedModule label="Team & Staff" icon="👥" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {tab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {tab === 'settings'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {tab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} onTrial={onTrial} />)}
@@ -874,7 +881,7 @@ export default function Dashboard({ session, org }) {
           {tab === 'fundraising'     && (hasModule('fundraising')     ? <FundraisingGate org={org} session={session}><Fundraising org={org} session={session} isAdmin={isAdmin} /></FundraisingGate>                           : <LockedModule moduleKey="fundraising"     label="Fundraising"       icon="💷" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── OPERATIONS PACK ── */}
-          {tab === 'hr'               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : hasModule('hr')               ? <HR org={org} session={session} />                                  : <LockedModule moduleKey="hr"               label="HR"               icon="🧑‍💼" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {tab === 'hr'               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : hasModule('hr')               ? <HR org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />                                  : <LockedModule moduleKey="hr"               label="HR"               icon="🧑‍💼" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {tab === 'payments'         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {tab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
