@@ -104,3 +104,63 @@ grant execute on function public.accept_invite_by_token(uuid) to anon, authentic
 drop policy if exists "Anyone can read pending invites by token" on public.admin_invites;
 drop policy if exists "public can read invite by token" on public.admin_invites;
 drop policy if exists "public can accept invite" on public.admin_invites;
+
+
+-- ---------------------------------------------------------------- hardening
+-- Applied as hr_directory_admin_only_and_tenant_pairing.
+
+-- The directory is SECURITY DEFINER, so it reads past the admin-only RLS on
+-- hr_staff and staff_leave. Granted to every authenticated user and scoped only
+-- by organisation, it let any staff member or volunteer read colleagues' DBS
+-- status, training expiry and leave through a direct RPC call. The admin check
+-- in the Dashboard is client-side and is not a control.
+create or replace function public.hr_staff_directory()
+returns table (
+  source text, user_id uuid, hr_id uuid, full_name text, email text, role text,
+  job_title text, is_active boolean, dbs_status text, dbs_expiry date,
+  safeguarding_training_expiry date, first_aid_expiry date, start_date date,
+  leave_allowance integer, on_leave_today boolean
+)
+language plpgsql security definer set search_path = public stable
+as $$
+begin
+  if not is_org_admin() then
+    raise exception 'Not permitted.' using errcode = 'insufficient_privilege';
+  end if;
+
+  return query
+  with me as (select get_my_org_id() as org_id),
+  today as (select (now() at time zone 'Europe/London')::date as d)
+  select 'account'::text, p.id, h.id, coalesce(p.full_name, p.email), p.email, p.role,
+         h.job_title, coalesce(h.is_active, true), h.dbs_status, h.dbs_expiry,
+         h.safeguarding_training_expiry, h.first_aid_expiry, h.start_date, h.leave_allowance,
+         exists (select 1 from public.staff_leave l, today
+                  where l.staff_id = h.id and today.d between l.start_date and l.end_date)
+  from public.user_profiles p
+  left join public.hr_staff h on h.user_id = p.id and h.org_id = p.org_id
+  where p.org_id = (select org_id from me)
+  union all
+  select 'record'::text, null, h.id, h.full_name, h.email, h.role, h.job_title,
+         coalesce(h.is_active, true), h.dbs_status, h.dbs_expiry,
+         h.safeguarding_training_expiry, h.first_aid_expiry, h.start_date, h.leave_allowance,
+         exists (select 1 from public.staff_leave l, today
+                  where l.staff_id = h.id and today.d between l.start_date and l.end_date)
+  from public.hr_staff h
+  where h.org_id = (select org_id from me) and h.user_id is null;
+end $$;
+
+revoke all on function public.hr_staff_directory() from public;
+revoke execute on function public.hr_staff_directory() from anon;
+grant execute on function public.hr_staff_directory() to authenticated;
+
+-- The user_id FK covered user_id alone, so an admin could link an HR row in
+-- their org to an account in another org. The directory join would then surface
+-- that row for the victim's organisation, and the global unique index would
+-- stop the victim's own org linking the account properly.
+alter table public.user_profiles drop constraint if exists user_profiles_id_org_uniq;
+alter table public.user_profiles add constraint user_profiles_id_org_uniq unique (id, org_id);
+
+alter table public.hr_staff drop constraint if exists hr_staff_user_id_fkey;
+alter table public.hr_staff drop constraint if exists hr_staff_user_org_fk;
+alter table public.hr_staff add constraint hr_staff_user_org_fk
+  foreign key (user_id, org_id) references public.user_profiles(id, org_id) on delete set null;

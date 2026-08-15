@@ -58,12 +58,12 @@ function Pill({ state }) {
   )
 }
 
-export default function HRCentre({ org, session, userProfile, onNavigate }) {
+export default function HRCentre({ org, session, userProfile, onNavigate, hasHRModule = true }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#6D5DF6'
   const isAdmin = ['owner', 'admin'].includes(userProfile?.role)
 
-  const [tab, setTab] = useState('overview')
+  const [tab, setTab] = useState(hasHRModule ? 'overview' : 'staff')
   const [directory, setDirectory] = useState([])
   const [invites, setInvites] = useState([])
   const [leave, setLeave] = useState([])
@@ -155,11 +155,14 @@ export default function HRCentre({ org, session, userProfile, onNavigate }) {
     })
   }, [directory, search, statusFilter])
 
-  const TABS = [['overview', 'Overview'], ['staff', 'Staff'], ['compliance', 'Compliance'], ['leave', 'Leave']]
+  const TABS = hasHRModule
+    ? [['overview', 'Overview'], ['staff', 'Staff'], ['compliance', 'Compliance'], ['leave', 'Leave']]
+    : [['staff', 'Staff']]
 
   if (selected) {
     return <StaffProfile person={selected} org={org} leave={leave} primary={primary}
-      isAdmin={isAdmin} onBack={() => setSelected(null)} onChanged={load} />
+      isAdmin={isAdmin} hasHRModule={hasHRModule}
+      onBack={() => setSelected(null)} onChanged={() => { load(); setSelected(null) }} />
   }
 
   return (
@@ -580,9 +583,11 @@ function LeaveTab({ leave, directory }) {
 
 // ------------------------------------------------------------ staff profile
 
-function StaffProfile({ person, org, leave, primary, isAdmin, onBack, onChanged }) {
+function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, onBack, onChanged }) {
   const isMobile = useIsMobile()
   const [tab, setTab] = useState('overview')
+  const [editing, setEditing] = useState(false)
+  const [bookingLeave, setBookingLeave] = useState(false)
   const theirLeave = leave.filter(l => l.staff_id === person.hr_id)
 
   const field = (label, value) => (
@@ -616,11 +621,21 @@ function StaffProfile({ person, org, leave, primary, isAdmin, onBack, onChanged 
               {person.source === 'record' ? ' · No account' : ''}
             </div>
           </div>
+          {isAdmin && (
+            <button onClick={() => setEditing(true)} style={{
+              padding: '10px 16px', borderRadius: 11, border: '1px solid #E2E8F0',
+              background: '#fff', color: '#0F172A', fontSize: 13.5, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>Edit details</button>
+          )}
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 14, overflowX: 'auto' }}>
-        {[['overview', 'Overview'], ['compliance', 'Compliance'], ['leave', 'Leave']].map(([k, l]) => (
+        {(hasHRModule
+          ? [['overview', 'Overview'], ['compliance', 'Compliance'], ['leave', 'Leave']]
+          : [['overview', 'Overview']]
+        ).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k)} style={{
             padding: '8px 15px', borderRadius: 999, fontSize: 13, fontWeight: 700,
             whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit',
@@ -648,7 +663,13 @@ function StaffProfile({ person, org, leave, primary, isAdmin, onBack, onChanged 
         </div>
       )}
 
-      {tab === 'compliance' && (
+      {tab === 'compliance' && !hasHRModule && (
+        <div style={{ ...CARD, padding: 22, fontSize: 13.5, color: '#64748B', lineHeight: 1.55 }}>
+          Compliance tracking is part of the HR module.
+        </div>
+      )}
+
+      {tab === 'compliance' && hasHRModule && (
         <div style={{ ...CARD, padding: 20, display: 'grid', gap: 16 }}>
           {[
             ['DBS', person.dbs_expiry, person.dbs_status],
@@ -668,9 +689,22 @@ function StaffProfile({ person, org, leave, primary, isAdmin, onBack, onChanged 
 
       {tab === 'leave' && (
         <div style={{ ...CARD, padding: 20 }}>
-          <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 12 }}>
-            Allowance {person.leave_allowance ?? '—'} days
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 13.5, color: '#64748B', flex: 1 }}>
+              Allowance {person.leave_allowance ?? '—'} days
+            </div>
+            {isAdmin && person.hr_id && (
+              <button onClick={() => setBookingLeave(true)} style={{
+                padding: '9px 15px', borderRadius: 10, border: 'none', background: primary,
+                color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              }}>+ Record leave</button>
+            )}
           </div>
+          {isAdmin && !person.hr_id && (
+            <div style={{ fontSize: 12.5, color: '#8B87A3', marginBottom: 12, lineHeight: 1.5 }}>
+              Add employment details first — leave is recorded against a staff record.
+            </div>
+          )}
           {theirLeave.length === 0 ? (
             <div style={{ fontSize: 13.5, color: '#8B87A3' }}>No upcoming leave.</div>
           ) : (
@@ -683,6 +717,22 @@ function StaffProfile({ person, org, leave, primary, isAdmin, onBack, onChanged 
             </div>
           )}
         </div>
+      )}
+
+      {editing && (
+        <EditStaffModal
+          person={person} org={org} primary={primary}
+          onClose={() => setEditing(false)}
+          onSaved={() => { setEditing(false); onChanged?.() }}
+        />
+      )}
+
+      {bookingLeave && (
+        <RecordLeaveModal
+          person={person} org={org} primary={primary}
+          onClose={() => setBookingLeave(false)}
+          onSaved={() => { setBookingLeave(false); onChanged?.() }}
+        />
       )}
     </div>
   )
@@ -708,24 +758,42 @@ function InviteStaffModal({ org, primary, onClose, onSent }) {
 
   const fullName = `${firstName.trim()} ${lastName.trim()}`.trim()
 
+  const [existingUser, setExistingUser] = useState(false)
+
   async function send() {
-    if (!email.trim()) return
+    const clean = email.trim().toLowerCase()
+    if (!clean) return
     setBusy(true); setError(null)
-    const { error: e } = await supabase.from('admin_invites').insert({
-      org_id: org.id,
-      email: email.trim().toLowerCase(),
-      full_name: fullName || null,
-      role,
-      status: 'pending',
-    })
-    setBusy(false)
-    if (e) {
-      setError(e.message.includes('duplicate')
-        ? 'That person already has a pending invite.'
-        : e.message)
+
+    const { data: alreadyHere } = await supabase.from('user_profiles')
+      .select('id').eq('email', clean).eq('org_id', org.id).maybeSingle()
+    if (alreadyHere) {
+      setBusy(false)
+      setError('This person is already in your team.')
       return
     }
-    setSent(true)
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/invite-volunteer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          email: clean, name: fullName, org_id: org.id, org_slug: org.slug, role,
+        }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      setExistingUser(!!json.existing_user)
+      setSent(true)
+    } catch (err) {
+      setError(err.message || 'Could not send the invite.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -746,7 +814,9 @@ function InviteStaffModal({ org, primary, onClose, onSent }) {
             <div style={{ fontSize: 30, marginBottom: 10 }}>✓</div>
             <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Invite sent</div>
             <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.55, marginBottom: 18 }}>
-              {fullName || email} has been invited to join {org?.name}.
+              {existingUser
+                ? `${email} already had an account — they've been added to ${org?.name} and notified by email.`
+                : `${fullName || email} has been invited to join ${org?.name}. They'll get an email to set up their account.`}
             </div>
             <button onClick={() => onSent(fullName || email)} style={{
               width: '100%', padding: '13px', borderRadius: 12, border: 'none',
@@ -804,6 +874,242 @@ function InviteStaffModal({ org, primary, onClose, onSent }) {
             </div>
           </>
         )}
+      </div>
+    </div>
+  )
+}
+
+// ------------------------------------------------------- edit staff record
+
+/**
+ * Creates or updates the hr_staff record behind a person.
+ *
+ * An account with no HR record has hr_id null; saving creates the row and links
+ * it by user_id. Without this the directory could show people but never record
+ * anything about them, which was the state the first version shipped in.
+ */
+export function EditStaffModal({ person, org, primary, onClose, onSaved }) {
+  const isMobile = useIsMobile()
+  const [form, setForm] = useState({
+    job_title: person.job_title || '',
+    dbs_status: person.dbs_status || '',
+    dbs_expiry: person.dbs_expiry || '',
+    safeguarding_training_expiry: person.safeguarding_training_expiry || '',
+    first_aid_expiry: person.first_aid_expiry || '',
+    start_date: person.start_date || '',
+    leave_allowance: person.leave_allowance ?? '',
+  })
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  const input = {
+    width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
+    border: '1px solid #E2E8F0', fontSize: 14.5, fontFamily: 'inherit', outline: 'none',
+  }
+  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  async function save() {
+    setBusy(true); setError(null)
+    const payload = {
+      org_id: org.id,
+      full_name: person.full_name,
+      email: person.email,
+      role: person.role,
+      job_title: form.job_title || null,
+      dbs_status: form.dbs_status || null,
+      dbs_expiry: form.dbs_expiry || null,
+      safeguarding_training_expiry: form.safeguarding_training_expiry || null,
+      first_aid_expiry: form.first_aid_expiry || null,
+      start_date: form.start_date || null,
+      leave_allowance: form.leave_allowance === '' ? null : Number(form.leave_allowance),
+      updated_at: new Date().toISOString(),
+    }
+
+    let e
+    if (person.hr_id) {
+      ({ error: e } = await supabase.from('hr_staff').update(payload).eq('id', person.hr_id).eq('org_id', org.id))
+    } else {
+      // First time: create the record and link it to the account.
+      ({ error: e } = await supabase.from('hr_staff').insert({ ...payload, user_id: person.user_id || null }))
+    }
+
+    setBusy(false)
+    if (e) { setError(e.message); return }
+    onSaved?.()
+  }
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 1200, background: 'rgba(17,15,35,0.42)',
+      display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center',
+      padding: isMobile ? 0 : 16,
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: '#fff', width: isMobile ? '100%' : 480, maxWidth: '100%',
+        borderRadius: isMobile ? '20px 20px 0 0' : 18, padding: 22,
+        maxHeight: '90vh', overflowY: 'auto',
+      }}>
+        <div style={{ fontSize: 17, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
+          {person.full_name}
+        </div>
+        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 18 }}>
+          Employment and compliance details
+        </div>
+
+        <div style={{ display: 'grid', gap: 14 }}>
+          <div>
+            <label style={label}>JOB TITLE</label>
+            <input value={form.job_title} onChange={set('job_title')} style={input} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+            <div>
+              <label style={label}>DBS STATUS</label>
+              <select value={form.dbs_status} onChange={set('dbs_status')} style={input}>
+                <option value="">Not recorded</option>
+                <option value="clear">Clear</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+            <div>
+              <label style={label}>DBS EXPIRY</label>
+              <input type="date" value={form.dbs_expiry} onChange={set('dbs_expiry')} style={input} />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+            <div>
+              <label style={label}>SAFEGUARDING EXPIRY</label>
+              <input type="date" value={form.safeguarding_training_expiry}
+                onChange={set('safeguarding_training_expiry')} style={input} />
+            </div>
+            <div>
+              <label style={label}>FIRST AID EXPIRY</label>
+              <input type="date" value={form.first_aid_expiry} onChange={set('first_aid_expiry')} style={input} />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+            <div>
+              <label style={label}>START DATE</label>
+              <input type="date" value={form.start_date} onChange={set('start_date')} style={input} />
+            </div>
+            <div>
+              <label style={label}>LEAVE ALLOWANCE (DAYS)</label>
+              <input type="number" value={form.leave_allowance} onChange={set('leave_allowance')} style={input} />
+            </div>
+          </div>
+
+          {error && (
+            <div style={{
+              padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
+              border: '1px solid #FECACA', color: '#B42318', fontSize: 13,
+            }}>{error}</div>
+          )}
+
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={onClose} style={{
+              padding: '12px 18px', borderRadius: 12, border: '1px solid #E2E8F0',
+              background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>Cancel</button>
+            <button onClick={save} disabled={busy} style={{
+              flex: 1, padding: '12px 18px', borderRadius: 12, border: 'none',
+              background: busy ? '#E2E8F0' : primary, color: '#fff',
+              fontSize: 14, fontWeight: 800,
+              cursor: busy ? 'wait' : 'pointer', fontFamily: 'inherit',
+            }}>{busy ? 'Saving…' : 'Save'}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Books leave against a staff member's HR record. */
+export function RecordLeaveModal({ person, org, primary, onClose, onSaved }) {
+  const isMobile = useIsMobile()
+  const [type, setType] = useState('Annual leave')
+  const [start, setStart] = useState('')
+  const [end, setEnd] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  const input = {
+    width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
+    border: '1px solid #E2E8F0', fontSize: 14.5, fontFamily: 'inherit', outline: 'none',
+  }
+  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }
+
+  async function save() {
+    if (!start || !end) return
+    if (end < start) { setError('The end date is before the start date.'); return }
+    setBusy(true); setError(null)
+
+    const days = Math.round((new Date(end) - new Date(start)) / 86400000) + 1
+    const { error: e } = await supabase.from('staff_leave').insert({
+      staff_id: person.hr_id, org_id: org.id, type, start_date: start, end_date: end, days,
+    })
+    setBusy(false)
+    if (e) { setError(e.message); return }
+    onSaved?.()
+  }
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 1200, background: 'rgba(17,15,35,0.42)',
+      display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center',
+      padding: isMobile ? 0 : 16,
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: '#fff', width: isMobile ? '100%' : 420, maxWidth: '100%',
+        borderRadius: isMobile ? '20px 20px 0 0' : 18, padding: 22,
+      }}>
+        <div style={{ fontSize: 17, fontWeight: 800, color: '#0F172A', marginBottom: 18 }}>
+          Record leave — {person.full_name}
+        </div>
+        <div style={{ display: 'grid', gap: 14 }}>
+          <div>
+            <label style={label}>TYPE</label>
+            <select value={type} onChange={e => setType(e.target.value)} style={input}>
+              {['Annual leave', 'Sick leave', 'Unpaid leave', 'Parental leave', 'Other'].map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <label style={label}>FROM</label>
+              <input type="date" value={start} onChange={e => setStart(e.target.value)} style={input} />
+            </div>
+            <div>
+              <label style={label}>TO</label>
+              <input type="date" value={end} onChange={e => setEnd(e.target.value)} style={input} />
+            </div>
+          </div>
+
+          {error && (
+            <div style={{
+              padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
+              border: '1px solid #FECACA', color: '#B42318', fontSize: 13,
+            }}>{error}</div>
+          )}
+
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={onClose} style={{
+              padding: '12px 18px', borderRadius: 12, border: '1px solid #E2E8F0',
+              background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>Cancel</button>
+            <button onClick={save} disabled={busy || !start || !end} style={{
+              flex: 1, padding: '12px 18px', borderRadius: 12, border: 'none',
+              background: busy || !start || !end ? '#E2E8F0' : primary, color: '#fff',
+              fontSize: 14, fontWeight: 800,
+              cursor: busy || !start || !end ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+            }}>{busy ? 'Saving…' : 'Record leave'}</button>
+          </div>
+        </div>
       </div>
     </div>
   )
