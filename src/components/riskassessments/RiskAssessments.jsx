@@ -16,14 +16,19 @@ import RALinkedSessions, { printRiskAssessment } from './RALinkedSessions'
 import RAOverview from './RAOverview'
 import HazardDrawer from './HazardDrawer'
 import { DynamicUpdateDrawer, DynamicUpdateList, EmergencyView } from './RALiveSafety'
+import { assessmentProgress, ProgressStrip, ApprovalPanel } from './RAProgress'
+import ReuseAssessmentDrawer from './ReuseAssessmentDrawer'
 import { buildCoverage } from './ra_safety'
 
 const RATING_ORDER = { low: 1, medium: 2, high: 3, critical: 4 }
 const SESSION_WINDOW = 40
 
-export default function RiskAssessments({ org, session: authSession, initialOpenAssessmentId }) {
+export default function RiskAssessments({ org, session: authSession, initialOpenAssessmentId, userProfile }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#7C5CFC'
+  // Mirrors is_org_manager() in the database. The UI hides what a user cannot
+  // do; RLS is what actually stops them.
+  const isManager = ['owner', 'admin', 'manager'].includes(userProfile?.role)
 
   const [assessments, setAssessments] = useState([])
   const [staff, setStaff] = useState([])
@@ -53,6 +58,9 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
   // schedule. The window is stated in the UI so "Everything is ready" is not
   // read as a guarantee about sessions beyond it.
   const [sessionsTruncated, setSessionsTruncated] = useState(false)
+  const [selectedOutstanding, setSelectedOutstanding] = useState(0)
+  const [selectedAttachments, setSelectedAttachments] = useState(0)
+  const [reuseFor, setReuseFor] = useState(null)
   const [upcomingSessions, setUpcomingSessions] = useState([])
   const [coverageLinks, setCoverageLinks] = useState([])
   const [outstandingByAssessment, setOutstandingByAssessment] = useState({})
@@ -100,6 +108,25 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
   }, [org.id])
 
   useEffect(() => { loadOperational() }, [loadOperational])
+
+  useEffect(() => {
+    if (!selected?.id) { setSelectedOutstanding(0); setSelectedAttachments(0); return }
+    let cancelled = false
+    Promise.all([
+      supabase.from('risk_controls')
+        .select('id, risk_assessment_hazards!inner(assessment_id)', { count: 'exact', head: false })
+        .eq('org_id', org.id).eq('completed', false),
+      supabase.from('risk_assessment_documents')
+        .select('id').eq('assessment_id', selected.id).eq('org_id', org.id),
+    ]).then(([{ data: controls }, { data: docs }]) => {
+      if (cancelled) return
+      setSelectedOutstanding((controls || []).filter(
+        c => c.risk_assessment_hazards?.assessment_id === selected.id
+      ).length)
+      setSelectedAttachments((docs || []).length)
+    })
+    return () => { cancelled = true }
+  }, [selected?.id, org.id, selectedHazards.length, liveRefresh])
 
   const coverage = useMemo(
     () => buildCoverage({ links: coverageLinks, assessments, sessions: upcomingSessions }),
@@ -257,6 +284,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
           <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>Keep activities safe, reviewed and ready to run.</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => setReuseFor({})} style={btnGhost}>♻️ Use Previous</button>
           <button onClick={() => setShowTemplates(true)} style={btnGhost}>📄 Use Template</button>
           <button onClick={() => setShowCreate(true)} style={btnPrimary(primary)}>+ New Assessment</button>
         </div>
@@ -292,6 +320,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
           safetyFilter={safetyFilter}
           onSafetyFilter={setSafetyFilter}
           onOpen={a => { setSelected(a); setTab('overview'); logAudit(a.id, 'viewed', null) }}
+          onReuseForSession={sess => setReuseFor(sess)}
           onCreateForSession={sess => {
             // Carry the session through to creation so the assessment starts
             // pre-linked rather than needing to be attached afterwards.
@@ -448,6 +477,35 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
 
             {tab === 'overview' && (
               <div>
+                <ProgressStrip
+                  steps={assessmentProgress({
+                    assessment: selected,
+                    hazards: selectedHazards,
+                    outstandingControls: selectedOutstanding,
+                    attachmentCount: selectedAttachments,
+                  })}
+                  onJump={key => {
+                    // 'controls' lives inside the hazards tab; everything else
+                    // maps to a tab of the same name.
+                    const target = key === 'controls' ? 'hazards' : key === 'approval' ? 'overview' : key
+                    setTab(target)
+                  }}
+                />
+
+                <ApprovalPanel
+                  assessment={selected}
+                  org={org}
+                  authSession={authSession}
+                  staff={staff}
+                  isManager={isManager}
+                  onChanged={async () => {
+                    const { data } = await supabase.from('risk_assessments').select('*').eq('id', selected.id).single()
+                    if (data) setSelected(data)
+                    await loadAll()
+                    await loadOperational()
+                  }}
+                />
+
                 <div style={{ marginBottom: 14 }}>
                   <label style={{ fontSize: 12, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }}>Assessment Summary</label>
                   <textarea value={selected.summary || ''} onChange={e => setSelected(s => ({ ...s, summary: e.target.value }))} onBlur={e => update(selected.id, { summary: e.target.value })}
@@ -627,6 +685,20 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
       </div>
       </>
       )}
+
+      <ReuseAssessmentDrawer
+        open={!!reuseFor}
+        session={reuseFor && reuseFor.id ? reuseFor : null}
+        org={org}
+        authSession={authSession}
+        onClose={() => setReuseFor(null)}
+        onCreated={async ra => {
+          await loadAll()
+          await loadOperational()
+          setSelected(ra)
+          setTab('overview')
+        }}
+      />
 
       <HazardDrawer
         open={hazardDrawer.open}

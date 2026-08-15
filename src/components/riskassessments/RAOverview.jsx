@@ -154,7 +154,7 @@ function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated 
   )
 }
 
-function UpcomingActivities({ sessions, coverage, onOpen, onCreateForSession, primary }) {
+function UpcomingActivities({ sessions, coverage, onOpen, onCreateForSession, onReuseForSession, primary }) {
   const isMobile = useIsMobile()
   const upcoming = sessions.slice(0, isMobile ? 4 : 6)
 
@@ -210,6 +210,18 @@ function UpcomingActivities({ sessions, coverage, onOpen, onCreateForSession, pr
                   fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >{cover ? 'View Assessment' : 'Create Assessment'}</button>
+
+              {!cover && onReuseForSession && (
+                <button
+                  onClick={() => onReuseForSession(s)}
+                  style={{
+                    display: 'block', width: '100%', marginTop: 6,
+                    padding: '8px 12px', borderRadius: 10, border: '1px solid #ECE9F5',
+                    background: '#fff', color: '#5A5772',
+                    fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >Reuse a previous one</button>
+              )}
             </div>
           )
         })}
@@ -345,6 +357,7 @@ export default function RAOverview({
   onSafetyFilter,
   onOpen,
   onCreateForSession,
+  onReuseForSession,
 }) {
   // Archived work is history, not part of the live safety picture.
   const live = useMemo(() => activeOnly(assessments), [assessments])
@@ -382,6 +395,7 @@ export default function RAOverview({
         coverage={coverage}
         onOpen={onOpen}
         onCreateForSession={onCreateForSession}
+        onReuseForSession={onReuseForSession}
         primary={primary}
       />
 
