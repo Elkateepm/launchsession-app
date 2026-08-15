@@ -50,27 +50,33 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
   const timerRef = useRef(null)
   const dirtyRef = useRef(false)
   const firstRun = useRef(true)
+  // Serialises writes. Without it a slower earlier save can land after a newer
+  // one and restore the older snapshot, and a publish during the first insert
+  // sees no id yet and inserts a second row.
+  const inFlightRef = useRef(null)
+  const doWriteRef = useRef(null)
+  const latestRef = useRef(form)
+  latestRef.current = form
 
   const selected = form.fields.find(f => f.id === selectedId) || null
 
   // ------------------------------------------------------------- smart data
-  useEffect(() => {
-    if (!org?.id) return
-    let cancelled = false
-    ;(async () => {
-      const [groups, sessions, projects] = await Promise.all([
-        supabase.from('children').select('bubble').eq('org_id', org.id).not('bubble', 'is', null).limit(500),
-        supabase.from('sessions').select('title').eq('org_id', org.id).order('session_date', { ascending: false }).limit(40),
-        supabase.from('projects').select('name').eq('org_id', org.id).limit(40),
-      ])
-      if (cancelled) return
-      setSmartOptions({
-        groups: [...new Set((groups.data || []).map(r => r.bubble).filter(Boolean))],
-        sessions: [...new Set((sessions.data || []).map(r => r.title).filter(Boolean))],
-        projects: [...new Set((projects.data || []).map(r => r.name).filter(Boolean))],
-      })
-    })()
-    return () => { cancelled = true }
+  const smartLoaded = useRef(false)
+  const loadSmartOptions = useCallback(async () => {
+    if (smartLoaded.current || !org?.id) return
+    smartLoaded.current = true
+    const [groups, sessions, projects] = await Promise.all([
+      // Only the group name is needed, so this reads one column rather than
+      // pulling child records the builder has no use for.
+      supabase.from('children').select('bubble').eq('org_id', org.id).not('bubble', 'is', null),
+      supabase.from('sessions').select('title').eq('org_id', org.id).order('session_date', { ascending: false }).limit(40),
+      supabase.from('projects').select('name').eq('org_id', org.id).limit(40),
+    ])
+    setSmartOptions({
+      groups: [...new Set((groups.data || []).map(r => r.bubble).filter(Boolean))].sort(),
+      sessions: [...new Set((sessions.data || []).map(r => r.title).filter(Boolean))],
+      projects: [...new Set((projects.data || []).map(r => r.name).filter(Boolean))],
+    })
   }, [org?.id])
 
   // -------------------------------------------------------------- autosave
@@ -79,8 +85,17 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
       // A form with no name cannot be meaningfully saved or found again, so hold
       // rather than writing an untitled row the user will never locate.
       setSaveState('idle')
-      return
+      return { ok: false, reason: 'no_name' }
     }
+
+    // Queue behind any save already running, so writes apply in order and the
+    // insert that establishes the id completes before anything else uses it.
+    const run = (inFlightRef.current || Promise.resolve()).then(() => doWriteRef.current(snapshot))
+    inFlightRef.current = run.catch(() => {})
+    return run
+  }, [])
+
+  const doWrite = useCallback(async snapshot => {
     setSaveState('saving')
     const payload = {
       name: snapshot.name,
@@ -108,11 +123,18 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
       if (data?.id) formIdRef.current = data.id
     }
 
-    if (error) { setSaveState('error'); return }
-    dirtyRef.current = false
-    setSaveState('saved')
+    if (error) { setSaveState('error'); return { ok: false, error } }
+
+    // Only clear the dirty flag if nothing changed while this write was in
+    // flight, otherwise the UI claims 'Saved' over unsaved edits.
+    if (latestRef.current === snapshot) {
+      dirtyRef.current = false
+      setSaveState('saved')
+    }
     onSaved?.()
+    return { ok: true, id: formIdRef.current }
   }, [org?.id, onSaved])
+  doWriteRef.current = doWrite
 
   useEffect(() => {
     if (firstRun.current) { firstRun.current = false; return }
@@ -134,6 +156,14 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
     window.addEventListener('beforeunload', beforeUnload)
     return () => window.removeEventListener('beforeunload', beforeUnload)
   }, [])
+
+  // Leaving cancels the pending debounce, so flush first. Otherwise the last
+  // thing typed is lost by an interface that has been saying 'Saved'.
+  const leave = async () => {
+    clearTimeout(timerRef.current)
+    if (dirtyRef.current) await persist(latestRef.current)
+    onCancel?.()
+  }
 
   // ------------------------------------------------------------ field ops
   const patch = updater => setForm(f => ({ ...f, ...updater(f) }))
@@ -205,10 +235,14 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
   const isDraft = (form.status || 'draft') !== 'active'
 
   const publish = async () => {
-    const next = { ...form, status: isDraft ? 'active' : 'active' }
+    const next = { ...form, status: 'active' }
     setForm(next)
+    latestRef.current = next
     clearTimeout(timerRef.current)
-    await persist(next)
+    const result = await persist(next)
+    // Leaving the builder on a failed write loses the form from this flow
+    // entirely, and for a first insert would hand back a null id.
+    if (!result?.ok) return
     onSave?.({ ...next, id: formIdRef.current })
   }
 
@@ -235,15 +269,16 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
     )
   }
 
-  const TABS = isMobile
-    ? [['build', 'Build'], ['recipients', 'Recipients'], ['preview', 'Preview']]
-    : [['build', 'Build'], ['recipients', 'Recipients'], ['settings', 'Settings'], ['preview', 'Preview']]
+  const TABS = [
+    ['build', 'Build'], ['recipients', 'Recipients'],
+    ['settings', 'Settings'], ['preview', 'Preview'],
+  ]
 
   return (
     <div style={{ background: '#F8FAFC', minHeight: '100%', padding: isMobile ? 14 : 22 }}>
       {/* header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
-        <button onClick={onCancel} style={{
+        <button onClick={leave} style={{
           padding: '7px 13px', borderRadius: 9, border: '1px solid #E2E8F0',
           background: '#fff', color: '#64748B', fontSize: 12.5, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
@@ -282,7 +317,7 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
               menuFor={menuFor}
               setMenuFor={setMenuFor}
               adderAt={adderAt}
-              setAdderAt={setAdderAt}
+              setAdderAt={idx => { if (idx !== null) loadSmartOptions(); setAdderAt(idx) }}
               addField={addField}
               updateField={updateField}
               removeField={removeField}
@@ -877,7 +912,7 @@ function SettingsPanel({ form, setForm, primary }) {
         <label style={label}>WHO CAN RESPOND?</label>
         <select value={form.visibility || 'public'} onChange={e => set({ visibility: e.target.value })} style={input}>
           <option value="public">Anyone with the link</option>
-          <option value="internal">Staff only</option>
+          <option value="private">Staff only</option>
         </select>
         {form.visibility === 'public' && (
           <div style={{ fontSize: 12, color: '#64748B', marginTop: 6 }}>
@@ -1185,15 +1220,30 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
 
       {!loading && outstanding.length > 0 && (
         <div style={card}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
             Haven't replied ({outstanding.length})
           </div>
+          {outstanding.some(r => !r.recipient_email) && (
+            <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 10, lineHeight: 1.5 }}>
+              Anyone without an email can still be sent the link, but their response
+              can't be matched back automatically.
+            </div>
+          )}
           <div style={{ display: 'grid', gap: 5 }}>
             {outstanding.map(r => (
               <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5 }}>
-                <span style={{ width: 7, height: 7, borderRadius: 7, background: '#F79009', flexShrink: 0 }} />
+                <span style={{
+                  width: 7, height: 7, borderRadius: 7, flexShrink: 0,
+                  background: r.recipient_email ? '#F79009' : '#CBD5E1',
+                }} />
                 <span style={{ color: '#0F172A', flex: 1 }}>{r.recipient_name || 'Unnamed'}</span>
-                <span style={{ color: '#94A3B8', fontSize: 12 }}>{r.recipient_email || 'no email'}</span>
+                {r.recipient_email ? (
+                  <span style={{ color: '#94A3B8', fontSize: 12 }}>{r.recipient_email}</span>
+                ) : (
+                  <span style={{ color: '#94A3B8', fontSize: 11.5, fontStyle: 'italic' }}>
+                    no email — tick off by hand
+                  </span>
+                )}
               </div>
             ))}
           </div>

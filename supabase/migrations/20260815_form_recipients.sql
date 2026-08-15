@@ -84,3 +84,52 @@ drop trigger if exists trg_submission_completes_recipient on public.form_submiss
 create trigger trg_submission_completes_recipient
 after insert on public.form_submissions
 for each row execute function public.trg_form_submission_completes_recipient();
+
+-- ---------------------------------------------------------------- hardening
+-- Applied as form_recipients_hardening + form_recipient_trigger_fix_uuid_agg.
+
+-- Orphan cleanup before the constraints can be added.
+delete from public.form_recipients r
+where r.child_id is not null
+  and not exists (select 1 from public.children c where c.id = r.child_id);
+
+alter table public.form_recipients drop constraint if exists form_recipients_child_fk;
+alter table public.form_recipients add constraint form_recipients_child_fk
+  foreign key (child_id) references public.children(id) on delete cascade;
+
+alter table public.form_recipients drop constraint if exists form_recipients_submission_fk;
+alter table public.form_recipients add constraint form_recipients_submission_fk
+  foreign key (submission_id) references public.form_submissions(id) on delete set null;
+
+-- Revoking from PUBLIC does not remove a direct grant to anon.
+revoke execute on function public.add_form_recipients_from_children(uuid, uuid[]) from anon;
+
+-- Completion, corrected. The first version took the first email-shaped value
+-- anywhere in the payload and updated EVERY recipient sharing it -- so siblings,
+-- who have separate rows but one parent email, were all marked complete by a
+-- single submission.
+create or replace function public.trg_form_submission_completes_recipient()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare v_ids uuid[];
+begin
+  select array_agg(r.id) into v_ids
+  from public.form_recipients r
+  where r.form_id = new.form_id and r.org_id = new.org_id
+    and r.status <> 'completed' and r.recipient_email is not null
+    and lower(r.recipient_email) in (
+      select lower(value) from jsonb_each_text(new.data)
+      where value ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'
+    );
+
+  -- Zero: the respondent isn't on the list, which is fine. More than one:
+  -- ambiguous, and ticking off the wrong child's consent is worse than leaving
+  -- both outstanding, so it is left for a human.
+  if v_ids is null or array_length(v_ids, 1) <> 1 then
+    return new;
+  end if;
+
+  update public.form_recipients
+     set status = 'completed', completed_at = now(), submission_id = new.id
+   where id = v_ids[1];
+  return new;
+end $$;
