@@ -32,9 +32,14 @@ export function isArchived(assessment) {
   return !!assessment?.archived || assessment?.status === 'archived'
 }
 
-export function safetyStateOf(assessment) {
+export function safetyStateOf(assessment, ctx = {}) {
   if (!assessment) return SAFETY.ACTION
   if (isArchived(assessment)) return SAFETY.DRAFT
+
+  // A control that is not yet in place is mitigation that does not exist.
+  // Callers without the counts pass nothing and get the old behaviour, so no
+  // screen silently claims certainty it doesn't have.
+  const outstanding = ctx.outstandingByAssessment?.[assessment.id] || 0
 
   const reviewDate = assessment.next_review_date || assessment.review_date
   const days = daysUntil(reviewDate)
@@ -45,6 +50,8 @@ export function safetyStateOf(assessment) {
   if (assessment.status === 'expired') return SAFETY.ACTION
 
   if (assessment.status === 'draft') return SAFETY.DRAFT
+
+  if (outstanding > 0) return SAFETY.REVIEW
 
   if (assessment.status === 'review_due') return SAFETY.REVIEW
   if (days !== null && days <= REVIEW_WARNING_DAYS) return SAFETY.REVIEW
@@ -63,9 +70,9 @@ export function activeOnly(assessments = []) {
   return assessments.filter(a => !isArchived(a))
 }
 
-export function summariseSafety(assessments = []) {
+export function summariseSafety(assessments = [], ctx = {}) {
   const counts = { [SAFETY.READY]: 0, [SAFETY.REVIEW]: 0, [SAFETY.ACTION]: 0, [SAFETY.DRAFT]: 0 }
-  activeOnly(assessments).forEach(a => { counts[safetyStateOf(a)] += 1 })
+  activeOnly(assessments).forEach(a => { counts[safetyStateOf(a, ctx)] += 1 })
   return counts
 }
 
@@ -162,7 +169,7 @@ export function buildAttentionItems({ assessments = [], sessions = [], coverage 
       return
     }
 
-    const state = safetyStateOf(cover)
+    const state = safetyStateOf(cover, { outstandingByAssessment })
     if (state !== SAFETY.READY && days <= 7) {
       items.push({
         id: `cover-${s.id}`,
@@ -193,11 +200,11 @@ export function buildAttentionItems({ assessments = [], sessions = [], coverage 
 // row the database happened to return last.
 const COVERAGE_RANK = { [SAFETY.READY]: 0, [SAFETY.REVIEW]: 1, [SAFETY.ACTION]: 2, [SAFETY.DRAFT]: 3 }
 
-function preferredCover(a, b) {
+function preferredCover(a, b, ctx) {
   if (!a) return b
   if (!b) return a
-  const ra = COVERAGE_RANK[safetyStateOf(a)]
-  const rb = COVERAGE_RANK[safetyStateOf(b)]
+  const ra = COVERAGE_RANK[safetyStateOf(a, ctx)]
+  const rb = COVERAGE_RANK[safetyStateOf(b, ctx)]
   if (ra !== rb) return ra < rb ? a : b
 
   const da = a.next_review_date || a.review_date || ''
@@ -207,7 +214,8 @@ function preferredCover(a, b) {
   return (a.updated_at || a.created_at || '') >= (b.updated_at || b.created_at || '') ? a : b
 }
 
-export function buildCoverage({ links = [], assessments = [], sessions = [] }) {
+export function buildCoverage({ links = [], assessments = [], sessions = [], outstandingByAssessment = {} }) {
+  const ctx = { outstandingByAssessment }
   const byId = new Map(assessments.map(a => [a.id, a]))
   const coverage = {}
 
@@ -216,14 +224,14 @@ export function buildCoverage({ links = [], assessments = [], sessions = [] }) {
     if (!a || isArchived(a)) return
     // A direct link always wins over project-level cover, but between two
     // direct links the better assessment wins rather than the later row.
-    coverage[l.session_id] = preferredCover(coverage[l.session_id], a)
+    coverage[l.session_id] = preferredCover(coverage[l.session_id], a, ctx)
   })
 
   const projectLevel = assessments.filter(a => a.is_project_level && a.project_id && !isArchived(a))
   if (projectLevel.length) {
     const byProject = new Map()
     projectLevel.forEach(a => {
-      byProject.set(a.project_id, preferredCover(byProject.get(a.project_id), a))
+      byProject.set(a.project_id, preferredCover(byProject.get(a.project_id), a, ctx))
     })
     sessions.forEach(s => {
       if (coverage[s.id] || !s.project_id) return

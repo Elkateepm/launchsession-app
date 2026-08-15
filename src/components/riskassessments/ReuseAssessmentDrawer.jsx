@@ -58,6 +58,11 @@ export default function ReuseAssessmentDrawer({
 
   async function reuse(source) {
     setBusyId(source.id); setError(null)
+    // There is no transaction across REST calls, so failure is handled by
+    // undoing the copy: a half-built assessment sitting in the library looking
+    // complete is worse than none at all, and the cascade removes its hazards
+    // and controls with it.
+    let createdId = null
     try {
       // Copy the record, not a reference to it. Approval and review dates are
       // deliberately NOT carried across: the new assessment has not been
@@ -88,6 +93,7 @@ export default function ReuseAssessmentDrawer({
         version: 1,
       }).select().single()
       if (e1) throw e1
+      createdId = fresh.id
 
       const { data: hazards } = await supabase.from('risk_assessment_hazards')
         .select('*').eq('assessment_id', source.id).order('sort_order')
@@ -100,7 +106,10 @@ export default function ReuseAssessmentDrawer({
             likelihood: h.likelihood, severity: h.severity,
             residual_likelihood: h.residual_likelihood, residual_severity: h.residual_severity,
             control_measures: h.control_measures, owner: h.owner,
-            status: h.status, sort_order: i,
+            // Not h.status: the copied controls are reset to not-in-place, so
+            // carrying 'controlled' across would contradict them and show as
+            // reassurance in the grid and the PDF export.
+            status: 'open', sort_order: i,
           }))
         ).select()
         if (e2) throw e2
@@ -109,8 +118,9 @@ export default function ReuseAssessmentDrawer({
         // earlier session; whether they are in place for this one is precisely
         // what the person reusing this needs to confirm.
         const oldIds = hazards.map(h => h.id)
-        const { data: controls } = await supabase.from('risk_controls')
+        const { data: controls, error: e3 } = await supabase.from('risk_controls')
           .select('*').in('hazard_id', oldIds)
+        if (e3) throw e3
 
         if (controls?.length && newHazards?.length) {
           const idMap = {}
@@ -125,25 +135,37 @@ export default function ReuseAssessmentDrawer({
               completed: false,
               sort_order: c.sort_order,
             }))
-          if (rows.length) await supabase.from('risk_controls').insert(rows)
+          if (rows.length) {
+            const { error: e4 } = await supabase.from('risk_controls').insert(rows)
+            if (e4) throw e4
+          }
         }
       }
 
       if (session?.id) {
-        await supabase.from('risk_assessment_sessions')
+        const { error: e5 } = await supabase.from('risk_assessment_sessions')
           .insert({ assessment_id: fresh.id, session_id: session.id, org_id: org.id })
+        if (e5) throw e5
       }
 
-      await supabase.from('risk_assessment_audit').insert({
+      const { error: eAudit } = await supabase.from('risk_assessment_audit').insert({
         assessment_id: fresh.id, org_id: org.id, action: 'created',
         detail: `Reused from "${source.name}" — controls reset for re-checking`,
         actor_id: authSession?.user?.id || null,
       })
+      // The assessment itself is sound, so a missing audit row is not worth
+      // discarding the copy over.
+      if (eAudit) console.warn('Reuse audit entry failed:', eAudit.message)
 
       onCreated?.(fresh)
       onClose?.()
     } catch (e) {
-      setError(e.message || 'Could not reuse that assessment.')
+      if (createdId) {
+        // Best effort. If this also fails the user sees the error and a draft
+        // they can delete, rather than silence.
+        await supabase.from('risk_assessments').delete().eq('id', createdId)
+      }
+      setError(e.message || 'Could not reuse that assessment. Nothing was saved.')
     } finally {
       setBusyId(null)
     }

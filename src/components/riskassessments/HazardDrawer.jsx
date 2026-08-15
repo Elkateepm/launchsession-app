@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -93,6 +93,9 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
   const primary = org?.primary_color || '#7C5CFC'
   const editing = !!hazard
 
+  const hazardIdRef = useRef(null)
+  const cancelledRef = useRef(false)
+
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -106,7 +109,9 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
   const [resSeverity, setResSeverity] = useState(3)
 
   useEffect(() => {
-    if (!open) return
+    hazardIdRef.current = hazard?.id || null
+    cancelledRef.current = false
+    if (!open) { cancelledRef.current = true; return }
     setStep(0); setError(null)
     if (hazard) {
       setName(hazard.hazard || '')
@@ -115,8 +120,13 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
       setSeverity(hazard.severity || 3)
       setResLikelihood(hazard.residual_likelihood || 1)
       setResSeverity(hazard.residual_severity || 3)
-      supabase.from('risk_controls').select('*').eq('hazard_id', hazard.id).order('sort_order')
+      const wantedId = hazard.id
+      supabase.from('risk_controls').select('*').eq('hazard_id', wantedId).order('sort_order')
         .then(({ data }) => {
+          // The drawer may have moved on while this was in flight. Applying a
+          // stale response would load one hazard's controls into another and
+          // then save them there.
+          if (cancelledRef.current || wantedId !== hazardIdRef.current) return
           setControls(data?.length
             ? data.map(c => ({ ...c, due_date: c.due_date || '' }))
             // Controls used to be one free-text blob on the hazard. Carry it
@@ -128,6 +138,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
       setControls([{ description: '', due_date: '', completed: false }])
       setResLikelihood(1); setResSeverity(3)
     }
+    return () => { cancelledRef.current = true }
   }, [open, hazard])
 
   const canAdvance = () => {
@@ -169,10 +180,13 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
       let priorControlIds = []
 
       if (editing) {
-        const { error: e } = await supabase.from('risk_assessment_hazards').update(payload).eq('id', hazard.id)
-        if (e) throw e
-        // Note what is currently stored, but do not remove it yet.
-        const { data: existing } = await supabase.from('risk_controls').select('id').eq('hazard_id', hazard.id)
+        // Note what is currently stored, but do not remove or overwrite
+        // anything yet -- the hazard row is updated at the end, once the new
+        // controls are known to have saved. Otherwise a failed insert leaves
+        // control_measures and status describing controls that don't exist.
+        const { data: existing, error: eList } = await supabase
+          .from('risk_controls').select('id').eq('hazard_id', hazard.id).eq('org_id', org.id)
+        if (eList) throw eList
         priorControlIds = (existing || []).map(c => c.id)
       } else {
         const { data, error: e } = await supabase.from('risk_assessment_hazards')
@@ -201,7 +215,16 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
       }
 
       if (priorControlIds.length) {
-        await supabase.from('risk_controls').delete().in('id', priorControlIds)
+        const { error: eDel } = await supabase.from('risk_controls').delete().in('id', priorControlIds)
+        // Leaving the old rows behind would double every control on the hazard,
+        // so this is worth surfacing rather than swallowing.
+        if (eDel) throw eDel
+      }
+
+      if (editing) {
+        const { error: eUpd } = await supabase.from('risk_assessment_hazards')
+          .update(payload).eq('id', hazard.id).eq('org_id', org.id)
+        if (eUpd) throw eUpd
       }
 
       onSaved?.()

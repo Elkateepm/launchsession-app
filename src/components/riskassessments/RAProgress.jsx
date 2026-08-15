@@ -174,6 +174,10 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
       patch.manager_approved_by = null
     } else {
       patch.next_review_date = iso(next)
+      // review_date is the legacy column and is still read as a fallback in
+      // ra_safety and by the PDF export. Writing both keeps them from drifting
+      // apart; they agree across every existing row today.
+      patch.review_date = iso(next)
       patch.status = 'active'
     }
 
@@ -248,7 +252,13 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
             </div>
           )}
 
-          {approved && (
+          {approved && !isManager && (
+            <div style={{ fontSize: 13, color: '#8B87A3' }}>
+              A manager needs to carry out the review.
+            </div>
+          )}
+
+          {approved && isManager && (
             <button onClick={() => setReviewing(true)} style={{
               padding: '10px 18px', borderRadius: 11, border: '1px solid #ECE9F5',
               background: '#fff', color: '#0F172A', fontSize: 13.5, fontWeight: 700,

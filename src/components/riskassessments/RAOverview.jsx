@@ -154,7 +154,7 @@ function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated 
   )
 }
 
-function UpcomingActivities({ sessions, coverage, onOpen, onCreateForSession, onReuseForSession, primary }) {
+function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, onOpen, onCreateForSession, onReuseForSession, primary }) {
   const isMobile = useIsMobile()
   const upcoming = sessions.slice(0, isMobile ? 4 : 6)
 
@@ -172,7 +172,7 @@ function UpcomingActivities({ sessions, coverage, onOpen, onCreateForSession, on
       }}>
         {upcoming.map(s => {
           const cover = coverage[s.id]
-          const state = cover ? safetyStateOf(cover) : null
+          const state = cover ? safetyStateOf(cover, { outstandingByAssessment }) : null
           const meta = state ? SAFETY_META[state] : { dot: '#E5484D', bg: '#FEF2F2', text: '#B42318', label: 'No risk assessment' }
 
           return (
@@ -230,7 +230,7 @@ function UpcomingActivities({ sessions, coverage, onOpen, onCreateForSession, on
   )
 }
 
-function RecentAssessments({ assessments, onOpen, staffById }) {
+function RecentAssessments({ assessments, onOpen, staffById, outstandingByAssessment = {} }) {
   const isMobile = useIsMobile()
   const rows = assessments.slice(0, 8)
 
@@ -245,7 +245,7 @@ function RecentAssessments({ assessments, onOpen, staffById }) {
       {isMobile ? (
         <div style={{ display: 'grid', gap: 8 }}>
           {rows.map(a => {
-            const state = safetyStateOf(a)
+            const state = safetyStateOf(a, { outstandingByAssessment })
             const meta = SAFETY_META[state]
             return (
               <button key={a.id} onClick={() => onOpen(a)} style={{
@@ -287,7 +287,7 @@ function RecentAssessments({ assessments, onOpen, staffById }) {
             </thead>
             <tbody>
               {rows.map(a => {
-                const state = safetyStateOf(a)
+                const state = safetyStateOf(a, { outstandingByAssessment })
                 const meta = SAFETY_META[state]
                 const review = a.next_review_date || a.review_date
                 const days = daysUntil(review)
@@ -361,7 +361,10 @@ export default function RAOverview({
 }) {
   // Archived work is history, not part of the live safety picture.
   const live = useMemo(() => activeOnly(assessments), [assessments])
-  const counts = useMemo(() => summariseSafety(live), [live])
+  const counts = useMemo(
+    () => summariseSafety(live, { outstandingByAssessment }),
+    [live, outstandingByAssessment]
+  )
 
   const attention = useMemo(
     () => buildAttentionItems({ assessments: live, sessions, coverage, outstandingByAssessment }),
@@ -375,8 +378,8 @@ export default function RAOverview({
 
   const filtered = useMemo(() => {
     if (!safetyFilter) return live
-    return live.filter(a => safetyStateOf(a) === safetyFilter)
-  }, [live, safetyFilter])
+    return live.filter(a => safetyStateOf(a, { outstandingByAssessment }) === safetyFilter)
+  }, [live, safetyFilter, outstandingByAssessment])
 
   return (
     <div>
@@ -393,6 +396,7 @@ export default function RAOverview({
       <UpcomingActivities
         sessions={sessions}
         coverage={coverage}
+        outstandingByAssessment={outstandingByAssessment}
         onOpen={onOpen}
         onCreateForSession={onCreateForSession}
         onReuseForSession={onReuseForSession}
@@ -403,6 +407,7 @@ export default function RAOverview({
         assessments={filtered}
         onOpen={onOpen}
         staffById={staffById}
+        outstandingByAssessment={outstandingByAssessment}
       />
     </div>
   )

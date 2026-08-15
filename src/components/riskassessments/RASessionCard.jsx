@@ -53,18 +53,26 @@ export default function RASessionCard({ sessionId, sessionTitle, org, session: a
   }
 
   const attach = async (a) => {
+    // The picker query selects four columns; Emergency View needs the whole
+    // record, so read it rather than showing the button with nothing behind it.
+    const { data: whole } = await supabase.from('risk_assessments')
+      .select('*').eq('id', a.id).eq('org_id', org.id).maybeSingle()
+
     if (sessionId) {
       const { data } = await supabase.from('risk_assessment_sessions').insert({ assessment_id: a.id, session_id: sessionId, org_id: org.id }).select().single()
       setLinked({ ...a, linkRowId: data?.id })
+      setFull(whole || a)
       await supabase.from('risk_assessment_audit').insert({ assessment_id: a.id, org_id: org.id, action: 'attached', detail: `Attached to session "${sessionTitle}"` })
     } else {
       setLinked(a)
+      setFull(whole || a)
       if (onPendingChange) onPendingChange(a.id)
     }
     setPicker(false)
   }
 
   const detach = async () => {
+    setFull(null)
     if (sessionId && linked?.linkRowId) {
       await supabase.from('risk_assessment_sessions').delete().eq('id', linked.linkRowId)
       await supabase.from('risk_assessment_audit').insert({ assessment_id: linked.id, org_id: org.id, action: 'detached', detail: `Detached from session "${sessionTitle}"` })
@@ -84,8 +92,10 @@ export default function RASessionCard({ sessionId, sessionTitle, org, session: a
     if (sessionId) {
       const { data } = await supabase.from('risk_assessment_sessions').insert({ assessment_id: ra.id, session_id: sessionId, org_id: org.id }).select().single()
       setLinked({ ...ra, linkRowId: data?.id })
+      setFull(ra)
     } else {
       setLinked(ra)
+      setFull(ra)
       if (onPendingChange) onPendingChange(ra.id)
     }
     setCreating(false)

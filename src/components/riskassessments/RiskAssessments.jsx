@@ -129,8 +129,8 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
   }, [selected?.id, org.id, selectedHazards.length, liveRefresh])
 
   const coverage = useMemo(
-    () => buildCoverage({ links: coverageLinks, assessments, sessions: upcomingSessions }),
-    [coverageLinks, assessments, upcomingSessions]
+    () => buildCoverage({ links: coverageLinks, assessments, sessions: upcomingSessions, outstandingByAssessment }),
+    [coverageLinks, assessments, upcomingSessions, outstandingByAssessment]
   )
 
   // Deep-link: auto-open a specific assessment when navigated here with one (e.g. from the Home hero card)
