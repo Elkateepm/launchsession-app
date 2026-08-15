@@ -3,7 +3,8 @@ import { format, addDays } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FormBuilder, EmailFormModal } from '../forms/Forms'
+import { EmailFormModal } from '../forms/Forms'
+import FormBuilder from '../forms/FormBuilder'
 import { GroupsQuickSetupModal } from '../registers/Registers'
 
 // ─── CONSTANTS ──────────────────────────────────────────────────
@@ -558,16 +559,15 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
   const [emailFormFor, setEmailFormFor] = useState(null)
   const primary = org?.primary_color || '#1B9AAA'
 
-  const handleCreateForm = async (formData) => {
-    if (!org?.id) return
-    const { data, error } = await supabase.from('org_forms').insert({
-      org_id: org.id, name: formData.name, description: formData.description, fields: formData.fields,
-      tag: formData.tag || 'Other', visibility: formData.visibility || 'public', status: 'active', is_active: true,
-    }).select().single()
-    if (!error && data) {
-      if (onFormCreated) onFormCreated(data)
-      set('form_ids', [...form.form_ids, data.id])
-    }
+  const handleCreateForm = async (created) => {
+    if (!org?.id || !created?.id) { setShowFormBuilder(false); return }
+    // Re-read rather than trusting the builder's in-memory copy, so the wizard
+    // holds exactly what was stored.
+    const { data } = await supabase.from('org_forms')
+      .select('*').eq('id', created.id).eq('org_id', org.id).maybeSingle()
+    const row = data || created
+    if (onFormCreated) onFormCreated(row)
+    set('form_ids', [...form.form_ids, row.id])
     setShowFormBuilder(false)
   }
 

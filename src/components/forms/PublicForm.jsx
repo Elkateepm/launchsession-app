@@ -60,7 +60,10 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
           <input {...common} type="checkbox" checked={!!value} onChange={e => onChange(e.target.checked)}
             style={{ marginTop: 2, width: 20, height: 20, flexShrink: 0, accentColor: accent }} />
           <span style={{ fontSize: 15, color: '#0F172A', lineHeight: 1.45 }}>
-            {field.label}{field.required && <span style={{ color: '#DC2626' }}> *</span>}
+            {/* Must match the builder preview, or staff approve wording that
+                respondents never see. */}
+            {field.checkboxText || field.label}
+            {field.required && <span style={{ color: '#DC2626' }}> *</span>}
           </span>
         </label>
       )
