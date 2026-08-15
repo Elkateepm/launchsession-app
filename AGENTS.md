@@ -153,9 +153,30 @@ Do not merge these to `main` without being asked.
   touches auth, the app shell, or `public/`, say so: that branch needs `main`
   merged into it afterwards. Native push (APNs) is blocked on a paid Apple
   Developer account; service workers do not run in a Capacitor WebView.
-- **`feat/fundraising-hub`** — Fundraising Hub rebuild. Payment abstraction in
-  `src/services/paymentService.js`: no component may import Stripe or any
-  provider directly, everything goes through that service.
+- **`feat/risk-redesign`** — Risk Assessments redesign. Operational overview,
+  guided hazard builder, dynamic updates and emergency view. Not merged.
+
+Merged since: the Fundraising Hub (payment abstraction lives in
+`src/services/paymentService.js` — no component may import Stripe or any
+provider directly).
+
+## Role model
+
+`user_profiles.role` is one of `owner`, `admin`, `manager`, `staff`,
+`volunteer`. RLS helpers:
+
+- `is_org_admin()` — owner, admin
+- `is_org_manager()` — owner, admin, manager
+- `can_edit_risk()` — owner, admin, manager, staff
+
+An org-scoped policy alone is **not** access control. `org_id =
+get_user_org_id()` lets every member of the organisation write, including
+volunteers, whatever the UI shows. Any table holding safety, safeguarding or
+financial records needs a role predicate as well as an org predicate.
+
+Where a rule concerns specific columns rather than whole rows — approval
+fields, for instance — RLS cannot express it. Use a `BEFORE UPDATE` trigger;
+see `trg_risk_guard_approval`.
 
 ---
 

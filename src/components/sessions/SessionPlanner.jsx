@@ -104,7 +104,7 @@ function RotationPlanner({ slots, onChange, selectedBubbles, bubbleDefs }) {
 }
 
 // ─── SESSION FORM ─────────────────────────────────────────────
-function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNavigate, compact }) {
+function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, session, onNavigate, compact }) {
   const [form, setForm] = useState(initial || EMPTY_FORM)
   const [step, setStep] = useState(0)
   const [raLinked, setRaLinked] = useState(null) // null = unknown/loading, true/false once RASessionCard reports in
@@ -343,6 +343,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, onNav
               sessionId={initial?.id || null}
               sessionTitle={form.title}
               org={org}
+              session={session}
               onNavigate={onNavigate}
               pendingAssessmentId={pendingRaId}
               onPendingChange={setPendingRaId}
@@ -2109,12 +2110,12 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     const compact = isMobile || isTablet
     if (!compact) return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--surface, #fff)' }}>
-        <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} org={org} onNavigate={onNavigate} compact={false} />
+        <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} org={org} session={session} onNavigate={onNavigate} compact={false} />
       </div>
     )
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 10200, background: 'var(--surface, #fff)' }}>
-        <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} org={org} onNavigate={onNavigate} compact />
+        <SessionForm initial={editing} onSave={handleSave} onCancel={() => { setView('list'); setEditing(null) }} saving={saving} bubbleDefs={bubbleDefs} org={org} session={session} onNavigate={onNavigate} compact />
       </div>
     )
   }
