@@ -30,10 +30,9 @@ export const NAV_SECTIONS = [
       // Label comes from the org's own terminology (People / Young People /
       // Members / Players), resolved at render.
       { id: 'children', label: null, termKey: 'People', icon: '👧', tab: 'children' },
-      // Staff and Volunteers were in different sections despite being the same
-      // question: who delivers the work. Grouped here without touching either
-      // page — Volunteers stays its own module and route.
-      { id: 'team', label: 'Staff & Volunteers', icon: '👥', tab: 'team', adminOnly: true },
+      // Staff are managed in HR (Operations). Volunteers stay separate: they
+      // are a different relationship with different records, and merging them
+      // would recreate the ambiguity this consolidation removed.
       { id: 'volunteers', label: 'Volunteers', icon: '❤️', tab: 'volunteers', moduleKey: 'volunteers' },
     ],
   },
@@ -73,7 +72,10 @@ export const NAV_GROUPS = [
       { id: 'events_trips', label: 'Events & Trips', icon: '✈️', tab: 'events_trips', moduleKey: 'events_trips' },
       { id: 'messaging', label: 'Messaging', icon: '💬', tab: 'messaging', moduleKey: 'messaging' },
       { id: 'gallery', label: 'Gallery', icon: '🖼', tab: 'gallery', moduleKey: 'gallery' },
-      { id: 'hr', label: 'HR', icon: '🧑‍💼', tab: 'hr', moduleKey: 'hr', adminOnly: true },
+      // Not module-gated: staff management absorbed the old Staff & Volunteers
+      // page, which was always available. Compliance and leave inside HR are
+      // still gated on the module.
+      { id: 'hr', label: 'HR', icon: '🧑‍💼', tab: 'hr', adminOnly: true },
       { id: 'parent_portal', label: 'Parent Portal', icon: '👨‍👩‍👧', tab: 'parent_portal', moduleKey: 'parent_portal' },
       { id: 'templates', label: 'Templates', icon: '📄', tab: 'templates', adminOnly: true },
     ],

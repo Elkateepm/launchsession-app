@@ -95,14 +95,22 @@ export default function CreatePassword() {
     const loadInvite = async () => {
       const token = new URLSearchParams(window.location.search).get('token')
       if (!token) { setError('Invite token missing.'); setLoading(false); return }
-      const { data, error } = await supabase
-        .from('admin_invites')
-        .select('*, organisations(name, slug, logo_url, primary_color)')
-        .eq('token', token)
-        .eq('status', 'pending')
-        .single()
+      const { data: rows, error } = await supabase
+        .rpc('get_invite_by_token', { p_token: token })
+      const data = rows?.[0]
       if (error || !data) setError('Invite not found or already used.')
-      else { setInvite(data); setPreferredName((data.full_name || '').split(' ')[0] || '') }
+      else {
+        // Shaped to match what the rest of this component already expects, so
+        // the change is confined to how the invite is fetched.
+        setInvite({
+          ...data,
+          organisations: {
+            name: data.org_name, slug: data.org_slug,
+            logo_url: data.org_logo_url, primary_color: data.org_primary_color,
+          },
+        })
+        setPreferredName((data.full_name || '').split(' ')[0] || '')
+      }
       setLoading(false)
     }
     loadInvite()
@@ -161,11 +169,32 @@ export default function CreatePassword() {
 
     const uid = authData?.user?.id || authData?.session?.user?.id
     if (uid) {
-      await supabase.from('user_profiles').upsert([{
+      const { error: profileErr } = await supabase.from('user_profiles').upsert([{
         id: uid, org_id: invite.org_id,
         email: invite.email, full_name: invite.full_name, role: invite.role || 'admin'
       }], { onConflict: 'id' })
-      await supabase.from('admin_invites').update({ status: 'accepted', accepted_at: new Date().toISOString() }).eq('id', invite.id)
+      if (profileErr) {
+        // Without a profile the account has no organisation, so stopping here
+        // and leaving the invite pending is recoverable; continuing is not.
+        setError("We couldn't finish setting up your account. Please try again, or ask your organisation to resend the invite.")
+        setSaving(false)
+        return
+      }
+      // Accepting requires the token too -- a pending status alone used to be
+      // enough for anyone to mark any invite accepted.
+      //
+      // Ordered deliberately: the profile must exist before the invite is
+      // consumed. If acceptance fails the invite stays pending and can be
+      // retried; if it were the other way round a failure would burn the invite
+      // and leave the person with no account and no way back.
+      const { error: acceptErr } = await supabase.rpc('accept_invite_by_token', {
+        p_token: new URLSearchParams(window.location.search).get('token'),
+      })
+      if (acceptErr) {
+        setError("Your account was created, but we couldn't finish setting up the invite. Please sign in and contact your organisation.")
+        setSaving(false)
+        return
+      }
     }
 
     await supabase.auth.signInWithPassword({ email: invite.email, password })
