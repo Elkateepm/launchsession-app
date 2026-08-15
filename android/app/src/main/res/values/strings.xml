@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LaunchSession</string>
+    <string name="title_activity_main">LaunchSession</string>
+    <string name="package_name">uk.co.launchsession.app</string>
+    <string name="custom_url_scheme">uk.co.launchsession.app</string>
+</resources>
