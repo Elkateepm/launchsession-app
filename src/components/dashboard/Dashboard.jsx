@@ -66,7 +66,7 @@ function computeIsMobileBottomNav() {
 
 // Tabs that require an admin/owner role — hidden from nav and blocked at the tab-switch level for staff.
 // This is UX polish only; the real enforcement is server-side RLS (is_org_admin()).
-const ADMIN_ONLY_TABS = ['team', 'branding', 'settings', 'hr', 'templates']
+const ADMIN_ONLY_TABS = ['branding', 'settings', 'hr', 'templates', 'today']
 
 const ALL_MODULES = [
   { key: 'calendar',        label: 'Calendar',         icon: '📅', group: 'delivery' },
@@ -670,8 +670,10 @@ export default function Dashboard({ session, org }) {
         <div style={{ padding: '0 8px 6px', flexShrink: 0 }}>
           <SidebarItem icon="🏠" label="Home" active={tab === 'home'} primary={primary}
             collapsed={sidebarCollapsed} onClick={() => handleSetTab('home')} />
-          <SidebarItem icon="⚡" label="Today" active={tab === 'today'} primary={primary}
-            collapsed={sidebarCollapsed} onClick={() => handleSetTab('today')} />
+          {isAdmin && (
+            <SidebarItem icon="⚡" label="Today" active={tab === 'today'} primary={primary}
+              collapsed={sidebarCollapsed} onClick={() => handleSetTab('today')} />
+          )}
         </div>
         <div style={{ height: 1, margin: '0 12px 10px', background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
 
@@ -850,7 +852,9 @@ export default function Dashboard({ session, org }) {
             )
           })()}
           {/* ── BASE MODULES — always free ── */}
-          {tab === 'today'      && <Today org={org} onNavigate={handleSetTab} />}
+          {tab === 'today'      && (isAdmin
+            ? <Today org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />
+            : <RestrictedModule label="Today" icon="⚡" onNavigate={handleSetTab} />)}
           {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
           {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
           {tab === 'projects'   && <ProjectOverview org={org} session={session} projectId={openProjectId} onNavigate={handleSetTab} onBack={() => handleSetTab('projects_list')} />}
