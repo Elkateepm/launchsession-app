@@ -313,6 +313,15 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
 
 // ─── STEP 2: DETAILS ────────────────────────────────────────────
 
+// Compliance shown at the point of assignment rather than only in HR: the
+// moment someone is put on a session is when a lapsed DBS actually matters.
+// States come from compliance_state_for() in the database, so this and the HR
+// screens cannot disagree.
+const COMPLIANCE_FLAG = {
+  expired:  { label: 'Checks expired', color: '#DC2626' },
+  expiring: { label: 'Checks expiring', color: '#B45309' },
+}
+
 function StepDetails({ form, setForm, staff, org }) {
   const [venues, setVenues] = useState([])
   const [useCustomLocation, setUseCustomLocation] = useState(false)
@@ -407,7 +416,11 @@ function StepDetails({ form, setForm, staff, org }) {
             <label style={label}>Session lead *</label>
             <select style={inp} value={form.lead_staff_id} onChange={e => set('lead_staff_id', e.target.value)}>
               <option value="">— Select lead —</option>
-              {staff.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
+              {staff.filter(s => s.assignable).map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.full_name}{s.compliance === 'expired' ? ' — checks expired' : ''}
+                </option>
+              ))}
             </select>
           </div>
           <div>
@@ -514,11 +527,24 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
         </div>
         <label style={label}>Supporting staff</label>
         <div style={{ maxHeight: 160, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, padding: 8, marginBottom: 10 }}>
-          {staff.filter(s => s.id !== form.lead_staff_id).map(s => (
-            <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', cursor: 'pointer', fontSize: 13 }}>
-              <input type="checkbox" checked={form.supporting_staff_ids.includes(s.id)} onChange={() => toggleSupport(s.id)} /> {s.full_name}
-            </label>
-          ))}
+          {staff.filter(s => !s.assignable || s.id !== form.lead_staff_id).map((s, i) => {
+            const flag = COMPLIANCE_FLAG[s.compliance]
+            return (
+              <label key={s.id || `hr-${i}`} title={s.assignable ? undefined : 'Needs a LaunchSession account before they can be assigned'}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px',
+                         cursor: s.assignable ? 'pointer' : 'not-allowed', fontSize: 13,
+                         opacity: s.assignable ? 1 : 0.55 }}>
+                <input type="checkbox" disabled={!s.assignable}
+                  checked={s.assignable && form.supporting_staff_ids.includes(s.id)}
+                  onChange={() => s.assignable && toggleSupport(s.id)} />
+                <span>{s.full_name}</span>
+                {s.job_title && <span style={{ color: 'var(--text3)', fontSize: 11.5 }}>{s.job_title}</span>}
+                {flag && <span style={{ fontSize: 11, fontWeight: 700, color: flag.color }}>{flag.label}</span>}
+                {s.on_leave_today && <span style={{ fontSize: 11, fontWeight: 700, color: '#7C5CFC' }}>On leave</span>}
+                {!s.assignable && <span style={{ fontSize: 11, color: 'var(--text3)', marginLeft: 'auto' }}>No account yet</span>}
+              </label>
+            )
+          })}
         </div>
         {minStaffUnmet && (
           <div style={{ background: '#FFFBEB', border: '1.5px solid #F5D000', borderRadius: 10, padding: '10px 14px', fontSize: 12.5, color: '#856404', fontWeight: 700 }}>
@@ -907,8 +933,38 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
   const attachedRa = riskAssessments.find(r => r.id === form.pending_risk_assessment_id) || null
   const accent = typeColor || primary
 
+  // Everyone actually going on this session, so a lapsed check is caught here
+  // rather than discovered on the day.
+  const assigned = staff.filter(s =>
+    s.id && (s.id === form.lead_staff_id || form.supporting_staff_ids.includes(s.id)))
+  const expiredStaff  = assigned.filter(s => s.compliance === 'expired')
+  const expiringStaff = assigned.filter(s => s.compliance === 'expiring')
+  const onLeaveStaff  = assigned.filter(s => s.on_leave_today)
+
   const checks = [
     { ok: !!form.lead_staff_id, label: form.lead_staff_id ? 'Lead staff assigned' : 'No lead staff assigned', severity: 'blocker' },
+    // A blocker, not a warning: running a session with someone whose DBS or
+    // safeguarding training has lapsed is the thing the compliance data exists
+    // to prevent, and burying it in a soft warning defeats the point.
+    {
+      ok: expiredStaff.length === 0,
+      label: expiredStaff.length === 0
+        ? 'All assigned staff have current checks'
+        : `Checks expired — ${expiredStaff.map(s => s.full_name).join(', ')}`,
+      severity: 'blocker',
+    },
+    {
+      ok: expiringStaff.length === 0,
+      label: expiringStaff.length === 0
+        ? 'No checks expiring soon'
+        : `Checks expiring within 30 days — ${expiringStaff.map(s => s.full_name).join(', ')}`,
+    },
+    {
+      ok: onLeaveStaff.length === 0,
+      label: onLeaveStaff.length === 0
+        ? 'No assigned staff on leave'
+        : `On leave — ${onLeaveStaff.map(s => s.full_name).join(', ')}`,
+    },
     { ok: !form.venue_confirmation_required || !!form.location, label: 'Venue confirmed' },
     { ok: volunteerSpaces === 0, label: volunteerSpaces === 0 ? 'No volunteer spaces to fill' : `${volunteerSpaces} volunteer space${volunteerSpaces === 1 ? '' : 's'} still to fill` },
     // Now reflects what was actually attached in the wizard rather than
@@ -1121,8 +1177,30 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
 
   useEffect(() => {
     if (!org?.id) return
-    supabase.from('user_profiles').select('id, full_name').eq('org_id', org.id).in('role', ['admin', 'staff'])
-      .then(({ data }) => setStaff(data || []))
+    // session_assignable_staff() rather than user_profiles: HR can hold staff
+    // with no login (sessional coaches, bank staff, anyone not yet signed up)
+    // and reading user_profiles made those people invisible to rostering.
+    // The RPC returns a compliance STATE only, never the underlying DBS or
+    // training dates, so this is safe for staff-role planners as well as admins.
+    supabase.rpc('session_assignable_staff')
+      .then(({ data, error }) => {
+        if (error) { console.warn('Staff list failed:', error.message); setStaff([]); return }
+        setStaff((data || [])
+          .filter(s => s.is_active)
+          // id stays the account id: sessions.lead_staff_id references
+          // user_profiles and session_staff.user_id references auth.users, so
+          // someone with no account genuinely cannot be stored against a
+          // session. They are listed, but not selectable, with the reason shown.
+          .map(s => ({
+            id: s.user_id,
+            full_name: s.full_name,
+            job_title: s.job_title,
+            assignable: !!s.user_id,
+            compliance: s.compliance,
+            on_leave_today: s.on_leave_today,
+          }))
+          .sort((a, b) => (b.assignable - a.assignable) || a.full_name.localeCompare(b.full_name)))
+      })
     supabase.from('children').select('id, first_name, last_name, group_name, parent_email').eq('org_id', org.id).eq('active', true)
       .then(({ data }) => setChildren(data || []))
     supabase.from('org_forms').select('id, name').eq('org_id', org.id).eq('is_active', true)
