@@ -8,6 +8,7 @@ import {
   getCurrentSubscription, listMySubscriptions, revokeSubscriptionById, sendTestNotification,
 } from '../../services/pushNotifications'
 import { hasPlatformAuthenticator, enrolBiometric, clearEnrolment, isEnrolledFor, getLockAfterMs, setLockAfterMs } from '../../lib/biometricLock'
+import { hasPlatformAuthenticator as hasPasskeyAuthenticator, enrolPasskey, listPasskeys, removePasskey } from '../../lib/passkey'
 import { getTerms } from '../../lib/terminology'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
@@ -1457,6 +1458,95 @@ function BiometricUnlockCard() {
   )
 }
 
+
+// Passkeys. Unlike the biometric card above, this is authentication: the
+// assertion is verified server-side before any session exists, so a passkey
+// genuinely replaces the password rather than sitting in front of it.
+function PasskeyCard() {
+  const [available, setAvailable] = useState(null)
+  const [passkeys, setPasskeys] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  const refresh = React.useCallback(async () => {
+    setLoading(true)
+    setPasskeys(await listPasskeys())
+    setLoading(false)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    hasPasskeyAuthenticator().then(v => { if (!cancelled) setAvailable(v) })
+    refresh()
+    return () => { cancelled = true }
+  }, [refresh])
+
+  const handleAdd = async () => {
+    setBusy(true); setMsg('')
+    const res = await enrolPasskey()
+    setBusy(false)
+    if (res.ok) { setMsg('\u2705 Passkey added. You can sign in with it from the login screen.'); refresh() }
+    else if (res.error) setMsg(res.error)
+  }
+
+  const handleRemove = async (pk) => {
+    // Removing the last passkey is not destructive — the password still
+    // works — so this doesn't need a confirmation step.
+    setBusy(true); setMsg('')
+    const res = await removePasskey(pk.id)
+    setBusy(false)
+    if (res.ok) { setMsg('Passkey removed.'); refresh() }
+    else setMsg(res.error || 'Could not remove that passkey.')
+  }
+
+  if (available === null) return null
+
+  return (
+    <SettingCard title="Passkeys" description="Sign in with Face ID, Touch ID or your screen lock instead of typing a password.">
+      {passkeys.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          {passkeys.map(pk => (
+            <div key={pk.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', border: '1px solid var(--border)', borderRadius: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 18 }}>{pk.backed_up ? '\u2601\ufe0f' : '\ud83d\udcf1'}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{pk.device_label || 'Unnamed device'}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>
+                  {pk.last_used_at ? 'Last used ' + new Date(pk.last_used_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Not used yet'}
+                  {pk.backed_up ? ' \u00b7 synced to your account' : ' \u00b7 this device only'}
+                </div>
+              </div>
+              <button onClick={() => handleRemove(pk)} disabled={busy}
+                style={{ padding: '7px 13px', borderRadius: 8, border: '1.5px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && passkeys.length === 0 && (
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 14, lineHeight: 1.5 }}>
+          No passkeys yet. Adding one lets you sign in on this device without a password.
+        </div>
+      )}
+
+      {available ? (
+        <button onClick={handleAdd} disabled={busy}
+          style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: busy ? 'var(--border)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: busy ? 'default' : 'pointer' }}>
+          {busy ? 'Waiting for your device\u2026' : passkeys.length ? 'Add another passkey' : 'Add a passkey'}
+        </button>
+      ) : (
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', lineHeight: 1.5 }}>
+          This device has no built-in authenticator, so a passkey can\u2019t be created here. Try on your phone.
+        </div>
+      )}
+
+      {msg && <div style={{ fontSize: 13, color: msg.startsWith('\u2705') ? '#16A34A' : '#DC2626', marginTop: 12, fontWeight: 600 }}>{msg}</div>}
+    </SettingCard>
+  )
+}
+
 function SecuritySection() {
   const [pwLoading, setPwLoading] = useState(false)
   const [pwMsg, setPwMsg] = useState('')
@@ -1481,6 +1571,7 @@ function SecuritySection() {
         <Toggle value={false} onChange={() => {}} label="Two-Factor Authentication (2FA) — coming soon" />
         <Toggle value={true} onChange={() => {}} label="Email login notifications" />
       </SettingCard>
+      <PasskeyCard />
       <BiometricUnlockCard />
       <SettingCard title="Active Sessions" description="Devices currently logged in to your account">
         <div style={{ background: '#F0FFF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

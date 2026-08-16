@@ -1,5 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
+import {
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse,
+} from '@simplewebauthn/server'
 
 // Server-generated notification copy — the frontend only ever sends an
 // event_type + minimal targeting info, never raw title/body text. This is
@@ -27,6 +33,39 @@ const EVENT_TEMPLATES = {
   SESSION_EDITED:                { title: 'Session updated', body: 'A session you\u2019re assigned to has been updated.', category: 'sessions', priority: 'normal', url: '/?tab=registers' },
   SECURITY_ALERT:                { title: 'Security alert', body: 'A security-related event needs your attention.', category: 'security', priority: 'critical', url: '/?tab=settings' },
   CHILD_REGISTRATION_SUBMITTED: { title: 'New registration to authorise', body: 'A parent has submitted a new registration awaiting approval.', category: 'children', priority: 'high', url: '/?tab=children&sub=requests' },
+}
+
+
+// ── Passkeys (WebAuthn) ───────────────────────────────────────────────────
+// Shares this function to stay within the Hobby plan's 12-serverless-function
+// limit, same as the push and cron branches above.
+//
+// The relying party ID is the registrable domain a credential is bound to. It
+// cannot be taken from the request unchecked — an attacker-controlled Host
+// header would otherwise let a credential be minted for another origin — so
+// it is resolved against a fixed allowlist.
+const PASSKEY_ORIGINS = {
+  'https://app.launchsession.co.uk': 'launchsession.co.uk',
+  'https://launchsession.co.uk':     'launchsession.co.uk',
+  'http://localhost:3000':           'localhost',
+}
+
+function resolveRp(req) {
+  const origin = req.headers.origin || ''
+  const rpID = PASSKEY_ORIGINS[origin]
+  return rpID ? { rpID, origin } : null
+}
+
+// Single-use: consumed challenges are deleted, so an intercepted assertion
+// cannot be replayed. Expired ones are swept at the same time.
+async function consumeChallenge(adminClient, id, kind) {
+  if (!id) return null
+  const { data } = await adminClient.from('webauthn_challenges')
+    .select('*').eq('id', id).eq('kind', kind).maybeSingle()
+  if (!data) return null
+  await adminClient.from('webauthn_challenges').delete().eq('id', id)
+  if (new Date(data.expires_at).getTime() < Date.now()) return null
+  return data
 }
 
 // Which event types are actually wired up to resolve real recipients today.
@@ -548,6 +587,109 @@ export default async function handler(req, res) {
       })
     }
 
+    // ── Passkey sign-in. Deliberately above the auth-header check: the whole
+    // point is that the caller has no session yet. Both branches are safe to
+    // expose because neither reveals whether an account exists — options are
+    // returned unconditionally, and a failed assertion returns the same
+    // generic error whether the credential is unknown or the signature is
+    // bad. ──
+    if (req.body?.type === 'passkey_auth_options' || req.body?.type === 'passkey_auth_verify') {
+      const { REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY } = process.env
+      if (!REACT_APP_SUPABASE_URL || !REACT_APP_SUPABASE_SERVICE_KEY) {
+        console.error('send-form-email(passkey): missing Supabase credentials')
+        return res.status(500).json({ error: 'Passkeys are not configured on the server yet' })
+      }
+      const rp = resolveRp(req)
+      if (!rp) return res.status(400).json({ error: 'Passkeys are not available on this domain' })
+
+      const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
+
+      if (req.body.type === 'passkey_auth_options') {
+        // No allowCredentials: passkeys here are discoverable, so the
+        // authenticator tells us which account it holds. That is what lets
+        // sign-in skip the email step entirely, and it avoids handing out a
+        // credential list to an unauthenticated caller.
+        const options = await generateAuthenticationOptions({
+          rpID: rp.rpID,
+          userVerification: 'required',
+          timeout: 60000,
+        })
+        const { data: row, error } = await adminClient.from('webauthn_challenges')
+          .insert({ challenge: options.challenge, kind: 'authentication' })
+          .select('id').single()
+        if (error) {
+          console.error('send-form-email(passkey): challenge insert failed', error)
+          return res.status(500).json({ error: 'Could not start passkey sign-in' })
+        }
+        adminClient.rpc('purge_expired_webauthn_challenges').then(() => {}, () => {})
+        return res.status(200).json({ options, challengeId: row.id })
+      }
+
+      // ── verify ──
+      const { challengeId, credential } = req.body
+      const generic = { error: 'That passkey didn\u2019t work. Try again, or use your password.' }
+      if (!credential?.rawId) return res.status(400).json(generic)
+
+      const challenge = await consumeChallenge(adminClient, challengeId, 'authentication')
+      if (!challenge) return res.status(400).json({ error: 'That sign-in attempt expired. Try again.' })
+
+      const { data: stored } = await adminClient.from('webauthn_credentials')
+        .select('*').eq('credential_id', credential.rawId).maybeSingle()
+      if (!stored) return res.status(401).json(generic)
+
+      let verification
+      try {
+        verification = await verifyAuthenticationResponse({
+          response: credential,
+          expectedChallenge: challenge.challenge,
+          expectedOrigin: rp.origin,
+          expectedRPID: rp.rpID,
+          requireUserVerification: true,
+          authenticator: {
+            credentialID: stored.credential_id,
+            credentialPublicKey: Buffer.from(stored.public_key, 'base64url'),
+            counter: Number(stored.counter) || 0,
+            transports: stored.transports || undefined,
+          },
+        })
+      } catch (e) {
+        console.error('send-form-email(passkey): assertion failed', e.message)
+        return res.status(401).json(generic)
+      }
+      if (!verification.verified) return res.status(401).json(generic)
+
+      // A counter that fails to advance suggests a cloned authenticator.
+      // Authenticators that always report 0 are legitimate and common
+      // (Apple's, notably), so only a *regression* is treated as suspect.
+      const newCounter = verification.authenticationInfo?.newCounter ?? 0
+      const oldCounter = Number(stored.counter) || 0
+      if (oldCounter > 0 && newCounter > 0 && newCounter <= oldCounter) {
+        console.error('send-form-email(passkey): counter regression for credential', stored.id)
+        return res.status(401).json(generic)
+      }
+
+      await adminClient.from('webauthn_credentials')
+        .update({ counter: newCounter, last_used_at: new Date().toISOString() })
+        .eq('id', stored.id)
+
+      // Mint a session. The assertion is verified at this point, so issuing a
+      // one-time token for this user is exactly as strong as a correct
+      // password would have been.
+      const { data: userData, error: userErr } = await adminClient.auth.admin.getUserById(stored.user_id)
+      if (userErr || !userData?.user?.email) return res.status(401).json(generic)
+
+      const { data: link, error: linkErr } = await adminClient.auth.admin.generateLink({
+        type: 'magiclink',
+        email: userData.user.email,
+      })
+      if (linkErr || !link?.properties?.hashed_token) {
+        console.error('send-form-email(passkey): could not mint session', linkErr)
+        return res.status(500).json({ error: 'Signed in, but the session couldn\u2019t be created' })
+      }
+
+      return res.status(200).json({ token_hash: link.properties.hashed_token })
+    }
+
     const authHeader = req.headers.authorization
     if (!authHeader) return res.status(401).json({ error: 'Unauthorized' })
 
@@ -566,6 +708,113 @@ export default async function handler(req, res) {
     const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
     const { data: profile, error: profileErr } = await adminClient.from('user_profiles').select('org_id, full_name').eq('id', user.id).maybeSingle()
     if (profileErr || !profile?.org_id) return res.status(403).json({ error: 'No organisation found for this account' })
+
+    // ── Passkey enrolment and management. These need a real session: a
+    // passkey is added to an account you have already proved you own. ──
+    if (req.body?.type?.startsWith('passkey_')) {
+      const rp = resolveRp(req)
+      if (!rp) return res.status(400).json({ error: 'Passkeys are not available on this domain' })
+
+      if (req.body.type === 'passkey_list') {
+        const { data } = await adminClient.from('webauthn_credentials')
+          .select('id, device_label, created_at, last_used_at, backed_up')
+          .eq('user_id', user.id).order('created_at', { ascending: false })
+        return res.status(200).json({ passkeys: data || [] })
+      }
+
+      if (req.body.type === 'passkey_delete') {
+        // Scoped to the caller's own credentials, so an id from another
+        // account is a no-op rather than a deletion.
+        await adminClient.from('webauthn_credentials')
+          .delete().eq('id', req.body.id).eq('user_id', user.id)
+        return res.status(200).json({ ok: true })
+      }
+
+      if (req.body.type === 'passkey_register_options') {
+        const { data: existing } = await adminClient.from('webauthn_credentials')
+          .select('credential_id, transports').eq('user_id', user.id)
+
+        const options = await generateRegistrationOptions({
+          rpName: 'LaunchSession',
+          rpID: rp.rpID,
+          userID: Buffer.from(user.id),
+          userName: user.email,
+          userDisplayName: profile.full_name || user.email,
+          timeout: 60000,
+          attestationType: 'none',
+          // Exclude what's already enrolled, so the authenticator says "you
+          // already have one" rather than silently creating a duplicate.
+          excludeCredentials: (existing || []).map(c => ({
+            id: c.credential_id, type: 'public-key', transports: c.transports || undefined,
+          })),
+          authenticatorSelection: {
+            residentKey: 'required',      // discoverable: sign-in needs no email
+            userVerification: 'required', // Face ID / Touch ID, not just presence
+          },
+        })
+
+        const { data: row, error } = await adminClient.from('webauthn_challenges')
+          .insert({ challenge: options.challenge, kind: 'registration', user_id: user.id })
+          .select('id').single()
+        if (error) {
+          console.error('send-form-email(passkey): challenge insert failed', error)
+          return res.status(500).json({ error: 'Could not start passkey setup' })
+        }
+        return res.status(200).json({ options, challengeId: row.id })
+      }
+
+      if (req.body.type === 'passkey_register_verify') {
+        const { challengeId, credential, deviceLabel } = req.body
+        const challenge = await consumeChallenge(adminClient, challengeId, 'registration')
+        if (!challenge || challenge.user_id !== user.id) {
+          return res.status(400).json({ error: 'That setup attempt expired. Try again.' })
+        }
+
+        let verification
+        try {
+          verification = await verifyRegistrationResponse({
+            response: credential,
+            expectedChallenge: challenge.challenge,
+            expectedOrigin: rp.origin,
+            expectedRPID: rp.rpID,
+            requireUserVerification: true,
+          })
+        } catch (e) {
+          console.error('send-form-email(passkey): registration failed', e.message)
+          return res.status(400).json({ error: 'That passkey couldn\u2019t be saved. Try again.' })
+        }
+        if (!verification.verified || !verification.registrationInfo) {
+          return res.status(400).json({ error: 'That passkey couldn\u2019t be saved. Try again.' })
+        }
+
+        const info = verification.registrationInfo
+        const credentialId = typeof info.credentialID === 'string'
+          ? info.credentialID
+          : Buffer.from(info.credentialID).toString('base64url')
+
+        const { error: insErr } = await adminClient.from('webauthn_credentials').insert({
+          user_id: user.id,
+          org_id: profile.org_id,
+          credential_id: credentialId,
+          public_key: Buffer.from(info.credentialPublicKey).toString('base64url'),
+          counter: info.counter || 0,
+          transports: credential?.response?.transports || null,
+          device_label: (deviceLabel || 'This device').slice(0, 60),
+          backed_up: !!info.credentialBackedUp,
+        })
+        if (insErr) {
+          // Unique violation: this credential is already enrolled. Not an
+          // error worth alarming anyone about.
+          if (insErr.code === '23505') return res.status(200).json({ ok: true, alreadyEnrolled: true })
+          console.error('send-form-email(passkey): credential insert failed', insErr)
+          return res.status(500).json({ error: 'That passkey couldn\u2019t be saved. Try again.' })
+        }
+
+        return res.status(200).json({ ok: true })
+      }
+
+      return res.status(400).json({ error: 'Unknown passkey action' })
+    }
 
     // ── Push notifications (shares this function to stay within the Hobby
     // plan's 12-serverless-functions-per-deployment limit) ──
