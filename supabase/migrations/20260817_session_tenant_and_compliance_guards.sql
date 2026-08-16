@@ -1,0 +1,56 @@
+-- Findings 3, 4 and 8 from independent review.
+--
+-- 3. create_session_with_dependencies (BOTH overloads -- there are two, one
+--    with p_venue_id) inserted caller-supplied p_lead_staff_id and
+--    p_supporting_staff_ids with no check that those users belong to the
+--    caller's org. The only constraints are sessions.lead_staff_id ->
+--    user_profiles(id) and session_staff.user_id -> auth.users(id); neither is
+--    composite on org_id. A caller who knew another user's UUID could roster
+--    someone from a different tenant, which also seeds session-scoped message
+--    threads. Both overloads were also granted EXECUTE to PUBLIC and anon with
+--    no positive role check, so any authenticated profile -- parent or
+--    volunteer included -- could create sessions.
+--
+-- 4. The wizard's Review step labelled expired checks severity:'blocker', but
+--    that array was purely presentational: publish was gated only on `saving`.
+--    A planner could read "Checks expired" and publish anyway, and a direct RPC
+--    call skipped the screen entirely. A safeguarding control that does not
+--    control anything is worse than none, because it is trusted.
+--
+-- Enforced with triggers rather than by patching the RPCs, because the same
+-- writes happen from several places: two RPC overloads, the wizard's edit path
+-- (which writes session_staff directly), SessionPlanner and EventsTrips. A
+-- check inside one function would leave the others open, and every future call
+-- site too.
+--
+-- Compliance is evaluated only when an assignment is NEW or CHANGING. The first
+-- version checked on every update touching status, which would have blocked
+-- ordinary edits to sessions that already have a lead whose checks have since
+-- lapsed -- including, on this database, a session scheduled for the next day.
+-- The rule is "do not newly assign someone whose checks have lapsed", not
+-- "freeze every session that has one". Cross-org and inactive checks still
+-- apply on every write, since those are never valid.
+--
+-- Only 'expired' blocks, and only on non-draft sessions. Someone with no HR
+-- record grades 'unknown' and must not be blocked -- an org can easily have
+-- accounts before it has paperwork. Drafts stay editable so a planner can build
+-- a session and resolve compliance before publishing.
+--
+-- auth.uid() null means a service-role or internal caller (migrations, seeds,
+-- the mailer); those bypass, exactly as RLS does.
+--
+-- 8. compliance_state_for was declared IMMUTABLE while calling current_date --
+--    neither immutable nor stable, and the planner may constant-fold it. It
+--    also used UTC, so during BST between midnight and 01:00 UK time it graded
+--    against the previous UK day. Now STABLE and Europe/London, matching the
+--    `today` CTE in hr_staff_directory.
+--
+-- Verified after applying: cross-org lead refused; own-org lead allowed;
+-- expired staff allowed on a draft, refused on a published session; staff with
+-- no HR record (unknown) not blocked; and an existing session whose lead has
+-- since expired remains editable.
+
+-- Bodies as applied in migrations compliance_state_stable_uk_date,
+-- session_staff_tenant_and_compliance_guards,
+-- session_rpc_planner_role_and_grants and
+-- session_lead_compliance_only_on_change.
