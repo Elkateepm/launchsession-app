@@ -162,51 +162,34 @@ export default function Signup() {
     const resolvedOrgType = (orgType === 'other' && orgTypeOther.trim()) ? orgTypeOther.trim() : orgType
 
     setSubmitStep(SUBMIT_STEPS[0].label)
-    const { data: trial, error: insertError } = await supabase
-      .from('trial_requests')
-      .insert([{
-        organisation_name: organisationName.trim(),
-        full_name: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        org_type: resolvedOrgType,
-        status: 'new',
-        terms_agreed: agreedToTerms,
-        terms_agreed_at: agreedToTerms ? new Date().toISOString() : null,
-      }])
-      .select()
-      .single()
+    // One call: the row insert, the approval, and the values needed to send the
+    // invite email all happen server-side under SECURITY DEFINER. The client
+    // used to insert, approve, then re-read trial_requests -- which required
+    // anon to hold SELECT on that table, and the only workable policy there
+    // (recent rows) let anyone read anyone else's admin_invite_token.
+    const { data: rows, error: signupError } = await supabase.rpc('create_trial_signup', {
+      p_organisation_name: organisationName.trim(),
+      p_full_name: fullName.trim(),
+      p_email: email.trim().toLowerCase(),
+      p_org_type: resolvedOrgType,
+      p_terms_agreed: agreedToTerms,
+    })
 
-    if (insertError || !trial) {
-      setError(insertError?.message || 'Could not create your workspace. Please try again.')
-      setLoading(false)
-      setSubmitStep(null)
-      return
-    }
-
-    setSubmitStep(SUBMIT_STEPS[1].label)
-    const { error: approveError } = await supabase.rpc('approve_trial_request', { trial_id: trial.id })
-
-    if (approveError) {
-      const raw = approveError.message || ''
+    if (signupError) {
+      const raw = signupError.message || ''
       if (raw.includes('ORG_NAME_TAKEN')) {
         setError(`An organisation called "${organisationName.trim()}" is already active on LaunchSession. If this is you, check your email for the original login link, or use a different name.`)
       } else {
-        setError('Workspace setup failed: ' + raw)
+        setError('Could not create your workspace. Please try again, or contact support@launchsession.co.uk if it keeps happening.')
+        console.warn('Signup failed:', raw)
       }
       setLoading(false)
       setSubmitStep(null)
       return
     }
 
-    const { data: approved, error: fetchError } = await supabase
-      .from('trial_requests')
-      .select('*')
-      .eq('id', trial.id)
-      .single()
-
-    if (fetchError || !approved) {
-      console.warn('Could not fetch approved trial:', fetchError?.message)
-    }
+    // A set-returning function comes back as an array.
+    const approved = Array.isArray(rows) ? rows[0] : rows
 
     setSubmitStep(SUBMIT_STEPS[2].label)
     let sendFailed = false
@@ -217,8 +200,11 @@ export default function Signup() {
           full_name: approved.full_name,
           org_name: approved.organisation_name,
           org_slug: approved.generated_slug,
-          org_color: approved.primary_color || '#3B82F6',
-          org_logo: approved.logo_url || null,
+          // A brand-new org has no branding yet -- these were always undefined
+          // here, since trial_requests never carried them. Stated as literals
+          // so the fallback is visible rather than accidental.
+          org_color: '#3B82F6',
+          org_logo: null,
           token: approved.admin_invite_token,
           role: 'admin',
         }
