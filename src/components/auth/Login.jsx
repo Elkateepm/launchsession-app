@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useBreakpoint } from '../../hooks/useIsMobile'
+import { isNativeApp } from '../../lib/nativeEnv'
 
 const STEPS = { ROLE: 'role', EMAIL: 'email', PASSWORD: 'password', MAGIC: 'magic', FORGOT: 'forgot' }
 
@@ -383,11 +384,13 @@ export default function Login({ org }) {
           <span style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.42)' }}>Your data is secure with LaunchSession</span>
         </div>
 
+        {!isNativeApp() && (
         <div style={{ textAlign: 'center', marginTop: 14 }}>
           <button onClick={() => leaveOrg('https://www.launchsession.co.uk/landing.html')} style={{ background: 'none', border: 'none', color: '#8B7BF7', fontSize: 14, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: font, padding: 8 }}>
             ← Back to launchsession.co.uk
           </button>
         </div>
+        )}
       </div>
     </div>
   )

@@ -16,6 +16,15 @@ root.render(
 // time a user opts in from the branded prompt or Settings. This does NOT
 // request notification permission or subscribe — that only happens after an
 // explicit user action (see src/services/pushNotifications.js).
+// The native splash is configured with launchAutoHide:false so it covers the
+// gap while the JS bundle parses -- but nothing was dismissing it, so it stayed
+// up for ever. Hidden once React has actually rendered.
+if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.()) {
+  import('@capacitor/splash-screen')
+    .then(({ SplashScreen }) => SplashScreen.hide())
+    .catch(() => { /* plugin absent in a web build; nothing to hide */ })
+}
+
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => { registerServiceWorker() });
 }

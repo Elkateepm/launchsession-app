@@ -346,6 +346,12 @@ function isStandalonePWA() {
 // Decide up-front, before any rendering, whether this is a bare root visit
 // that should go straight to the marketing landing page.
 function shouldGoToLanding() {
+  // The native shell IS the app. Its hostname is localhost, so the app-subdomain
+  // check below never matches and it was redirecting to the marketing landing
+  // page -- whose Sign in button is a hardcoded https://app.launchsession.co.uk,
+  // which iOS then hands to Safari. The app effectively ejected users into the
+  // browser on launch.
+  if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.()) return false
   if (isStandalonePWA()) return false
   const pathname = window.location.pathname
   const hostname = window.location.hostname

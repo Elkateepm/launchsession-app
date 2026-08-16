@@ -26,9 +26,9 @@ const config: CapacitorConfig = {
     contentInset: 'never',
     // Match the app shell rather than flashing white on overscroll.
     backgroundColor: '#0B1B33',
-    // Links to anything that isn't us open in the system browser rather than
-    // navigating the app WebView away from itself with no way back.
-    limitsNavigationsToAppBoundDomains: true,
+    // Deliberately not setting limitsNavigationsToAppBoundDomains: without a
+    // declared WKAppBoundDomains list it treats our own domain as external and
+    // ejects to Safari. Links to other sites open externally regardless.
   },
 
   android: {
