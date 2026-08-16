@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
+import crypto from 'crypto'
 import {
   generateRegistrationOptions,
   verifyRegistrationResponse,
@@ -611,6 +612,20 @@ export default async function handler(req, res) {
       const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
 
       if (req.body.type === 'passkey_auth_options') {
+        // Unauthenticated and it writes a row, so it needs a bound or it is a
+        // free anonymous insert primitive. Keyed on a hash of the client IP:
+        // the raw address is not stored, and the origin allowlist is no defence
+        // here since a non-browser client can just send an allowed Origin.
+        const fwd = req.headers['x-forwarded-for'] || ''
+        const clientIp = String(fwd).split(',')[0].trim() || 'unknown'
+        const ipHash = crypto.createHash('sha256').update(clientIp).digest('hex').slice(0, 32)
+        const { data: allowed } = await adminClient.rpc('check_rate_limit', {
+          p_bucket: 'passkey_auth:' + ipHash, p_max: 20, p_window_secs: 300,
+        })
+        if (allowed === false) {
+          return res.status(429).json({ error: 'Too many passkey attempts. Please wait a moment and try again.' })
+        }
+
         // No allowCredentials: passkeys here are discoverable, so the
         // authenticator tells us which account it holds. That is what lets
         // sign-in skip the email step entirely, and it avoids handing out a

@@ -440,9 +440,10 @@ function AppContent() {
   }
 
   // Special routes that bypass the org/session splash entirely.
-  if (pathname === '/create-password') return <Suspense fallback={<RouteLoading />}><CreatePassword /></Suspense>
+  // /signup and /create-password are deliberately NOT here: App() returns those
+  // before AppContent is ever mounted, so a copy at this level is dead code.
+  // /reset-password is not handled up there, so it does belong here.
   if (pathname === '/reset-password') return <Suspense fallback={<RouteLoading />}><ResetPassword /></Suspense>
-  if (window.location.pathname === '/signup') return <Suspense fallback={<RouteLoading />}><Signup /></Suspense>
 
   const baseLoading = orgLoading || loading
   const willShowAuthedApp = !baseLoading && !noOrg && !orgError && session
