@@ -48,6 +48,37 @@ export default async function handler(req, res) {
     }
     if (!matchedUser) return res.status(404).json({ error: 'No account found for this email' })
 
+    // An invite token is NOT proof of mailbox ownership, so it must never be
+    // able to overwrite the password of an account someone is already using.
+    //
+    // Live chain this closes: signup is anonymous and hands the caller an
+    // admin_invite_token for whatever email they type. Submitting a victim's
+    // address produced a valid token, and this endpoint then reset that
+    // victim's password and moved their profile into the attacker's new org.
+    //
+    // The stray-row case this endpoint exists for is narrow and identifiable:
+    // an auth.users row created by an earlier invite attempt that was never
+    // activated. Such a row has never been signed into and owns no profile.
+    // Anything else is a real account and must go through Supabase's
+    // mailbox-controlled recovery flow instead.
+    if (matchedUser.last_sign_in_at) {
+      return res.status(409).json({
+        error: 'An account already exists for this email. Please sign in, or use "Forgot password" to reset it.',
+      })
+    }
+
+    const { data: existingProfile } = await adminClient
+      .from('user_profiles').select('id, org_id').eq('id', matchedUser.id).maybeSingle()
+
+    // A profile in a different organisation means this is an established user
+    // being pulled across tenants -- refuse regardless of sign-in history.
+    if (existingProfile && existingProfile.org_id && existingProfile.org_id !== invite.org_id) {
+      console.warn('complete-invite-account: refused cross-org claim for', matchedUser.id)
+      return res.status(409).json({
+        error: 'An account already exists for this email. Please sign in, or use "Forgot password" to reset it.',
+      })
+    }
+
     const { error: updateErr } = await adminClient.auth.admin.updateUserById(matchedUser.id, { password })
     if (updateErr) return res.status(500).json({ error: updateErr.message })
 

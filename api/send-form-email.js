@@ -186,6 +186,60 @@ export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
+    // ── Signup invite — called by create_trial_signup via pg_net once the
+    // signup transaction commits, never by the browser. The whole point is
+    // that admin_invite_token must reach the mailbox and nowhere else: the
+    // email IS the proof that whoever filled in the form actually owns the
+    // address they typed. Returning it in the RPC response skipped that proof
+    // entirely and let an anonymous caller mint an admin token for any address.
+    // Gated by the same shared secret as db_event_push. ──
+    if (req.body?.type === 'signup_invite_email') {
+      const providedSecret = req.headers['x-db-event-secret']
+      const { DB_EVENT_SECRET } = process.env
+      if (!DB_EVENT_SECRET || providedSecret !== DB_EVENT_SECRET) return res.status(401).json({ error: 'Unauthorized' })
+
+      const { REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY } = process.env
+      if (!REACT_APP_SUPABASE_URL || !REACT_APP_SUPABASE_SERVICE_KEY) {
+        console.error('send-form-email(signup_invite_email): missing Supabase env vars')
+        return res.status(500).json({ error: 'Server misconfiguration' })
+      }
+
+      const { trial_id } = req.body
+      if (!trial_id) return res.status(400).json({ error: 'Missing trial_id' })
+
+      // The token is read here, server-side, rather than accepted from the
+      // caller -- so even this endpoint cannot be used to post an arbitrary
+      // token to an arbitrary address.
+      const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
+      const { data: trial, error: trialErr } = await adminClient
+        .from('trial_requests')
+        .select('email, full_name, organisation_name, generated_slug, admin_invite_token, status')
+        .eq('id', trial_id).maybeSingle()
+
+      if (trialErr || !trial || trial.status !== 'approved' || !trial.admin_invite_token) {
+        console.error('send-form-email(signup_invite_email): no approved trial for', trial_id)
+        return res.status(400).json({ error: 'Invalid signup' })
+      }
+
+      const { error: fnErr } = await adminClient.functions.invoke('send-invite-email', {
+        body: {
+          email: trial.email,
+          full_name: trial.full_name,
+          org_name: trial.organisation_name,
+          org_slug: trial.generated_slug,
+          org_color: '#3B82F6',
+          org_logo: null,
+          token: trial.admin_invite_token,
+          role: 'admin',
+        },
+      })
+      if (fnErr) {
+        console.error('send-form-email(signup_invite_email): send failed', fnErr.message)
+        return res.status(500).json({ error: 'Could not send invite' })
+      }
+      return res.status(200).json({ ok: true })
+    }
+
     // ── SESSION_CREATED / SESSION_EDITED — called by the
     // notify_session_created_or_edited Postgres trigger via pg_net right
     // after an insert/update commits, not by a logged-in user, so it's

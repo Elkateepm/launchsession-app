@@ -85,7 +85,6 @@ export default function Signup() {
   const [submitStep, setSubmitStep]              = useState(null)
   const [done, setDone]                          = useState(false)
   const [launching, setLaunching]                = useState(false)
-  const [emailFailed, setEmailFailed]            = useState(false)
   const [error, setError]                        = useState('')
   const [agreedToTerms, setAgreedToTerms]        = useState(false)
   const [legalModal, setLegalModal]              = useState(null) // null | 'terms' | 'privacy'
@@ -167,7 +166,7 @@ export default function Signup() {
     // used to insert, approve, then re-read trial_requests -- which required
     // anon to hold SELECT on that table, and the only workable policy there
     // (recent rows) let anyone read anyone else's admin_invite_token.
-    const { data: rows, error: signupError } = await supabase.rpc('create_trial_signup', {
+    const { error: signupError } = await supabase.rpc('create_trial_signup', {
       p_organisation_name: organisationName.trim(),
       p_full_name: fullName.trim(),
       p_email: email.trim().toLowerCase(),
@@ -188,37 +187,17 @@ export default function Signup() {
       return
     }
 
-    // A set-returning function comes back as an array.
-    const approved = Array.isArray(rows) ? rows[0] : rows
-
+    // Deliberately nothing read from the response beyond success. The RPC no
+    // longer returns admin_invite_token, and must not: the invite email is what
+    // proves whoever filled this in owns the address they typed. The send is
+    // triggered server-side once the row commits, so the token never reaches
+    // the browser.
     setSubmitStep(SUBMIT_STEPS[2].label)
-    let sendFailed = false
-    if (approved?.admin_invite_token) {
-      const { error: emailError } = await supabase.functions.invoke('send-invite-email', {
-        body: {
-          email: approved.email,
-          full_name: approved.full_name,
-          org_name: approved.organisation_name,
-          org_slug: approved.generated_slug,
-          // A brand-new org has no branding yet -- these were always undefined
-          // here, since trial_requests never carried them. Stated as literals
-          // so the fallback is visible rather than accidental.
-          org_color: '#3B82F6',
-          org_logo: null,
-          token: approved.admin_invite_token,
-          role: 'admin',
-        }
-      })
-      if (emailError) { console.warn('Email send failed:', emailError.message); sendFailed = true }
-    } else {
-      sendFailed = true
-    }
 
     try { localStorage.removeItem(DRAFT_KEY) } catch (e) {}
 
     setLoading(false)
     setSubmitStep(null)
-    setEmailFailed(sendFailed)
 
     // Brief "launch" beat -- rocket accent + glow brighten -- before the
     // success screen replaces the panel. Kept well under 900ms and never
@@ -235,21 +214,13 @@ export default function Signup() {
   if (done) return (
     <OnboardingLayout wide={false}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 60, marginBottom: 16, lineHeight: 1 }}>{emailFailed ? '⚠️' : '🎉'}</div>
-        <h2 style={{ ...cardTitle, textAlign: 'center', marginBottom: 12 }}>{emailFailed ? 'Workspace created — one thing to check' : "You're all set!"}</h2>
-        {emailFailed ? (
-          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 20 }}>
-            Your <strong style={{ color: 'rgba(255,255,255,0.85)' }}>{organisationName}</strong> workspace is ready, but we couldn't confirm the login link email actually sent to <strong style={{ color: '#60A5FA' }}>{email}</strong>. If it doesn't arrive shortly, contact <a href="mailto:support@launchsession.co.uk" style={{ color: '#60A5FA' }}>support@launchsession.co.uk</a> and we'll get you a fresh link right away.
-          </p>
-        ) : (
-          <>
-            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>We've sent a login link to</p>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#60A5FA', marginBottom: 20, wordBreak: 'break-all' }}>{email}</div>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
-              Click the link to set your password and access your <strong style={{ color: 'rgba(255,255,255,0.75)' }}>{organisationName}</strong> workspace — with full access to everything for your first 14 days. Check your spam folder if it doesn't arrive within a couple of minutes.
-            </p>
-          </>
-        )}
+        <div style={{ fontSize: 60, marginBottom: 16, lineHeight: 1 }}>🎉</div>
+        <h2 style={{ ...cardTitle, textAlign: 'center', marginBottom: 12 }}>You're all set!</h2>
+        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>We've sent a login link to</p>
+        <div style={{ fontSize: 16, fontWeight: 800, color: '#60A5FA', marginBottom: 20, wordBreak: 'break-all' }}>{email}</div>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
+          Click the link to set your password and access your <strong style={{ color: 'rgba(255,255,255,0.75)' }}>{organisationName}</strong> workspace — with full access to everything for your first 14 days. Check your spam folder if it doesn't arrive within a couple of minutes, and contact <a href="mailto:support@launchsession.co.uk" style={{ color: '#60A5FA' }}>support@launchsession.co.uk</a> if it still hasn't turned up.
+        </p>
         <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '14px 18px', fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, textAlign: 'left' }}>
           💡 Once you've set your password, you can sign in anytime at{' '}
           <a href="https://app.launchsession.co.uk" target="_blank" rel="noreferrer" style={{ color: '#60A5FA', fontWeight: 700 }}>app.launchsession.co.uk</a>
