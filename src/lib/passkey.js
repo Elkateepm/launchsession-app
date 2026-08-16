@@ -40,8 +40,19 @@ function bufToB64url(buf) {
 
 // WebAuthn needs a secure context; localhost counts, so dev still works.
 export function isPasskeyCapable() {
-  return typeof window !== 'undefined'
-    && window.isSecureContext
+  if (typeof window === 'undefined') return false
+
+  // Off inside the native shell. The bundled WebView's origin is
+  // capacitor://localhost, which is not on the server's RP allowlist, and iOS
+  // additionally requires an Associated Domains entitlement
+  // (webcredentials:launchsession.co.uk) plus a matching AASA entry before
+  // WebKit will honour a passkey request at all. Neither exists yet, so the
+  // browser reports PublicKeyCredential as present and the call then fails
+  // with an opaque domain error. Offering a button that cannot work is worse
+  // than not offering it: the native shell has its own biometric unlock.
+  if (window.Capacitor) return false
+
+  return window.isSecureContext
     && !!window.PublicKeyCredential
     && !!navigator.credentials?.get
 }

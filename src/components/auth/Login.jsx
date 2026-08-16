@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useBreakpoint } from '../../hooks/useIsMobile'
 import { isNativeApp } from '../../lib/nativeEnv'
@@ -86,6 +86,10 @@ export default function Login({ org }) {
   // Only offer the passkey route where it can actually work: a secure context
   // with a real platform authenticator. Offering it on a desktop Chrome with
   // no Touch ID would put a button there that always fails.
+  // Holds the in-flight conditional (autofill) request so the explicit passkey
+  // button can abort it before starting its own.
+  const conditionalRef = useRef(null)
+
   useEffect(() => {
     let cancelled = false
     if (!isPasskeyCapable()) return
@@ -99,6 +103,7 @@ export default function Login({ org }) {
   useEffect(() => {
     if (!passkeyReady || step !== STEPS.EMAIL) return
     const controller = new AbortController()
+    conditionalRef.current = controller
     let cancelled = false
     supportsAutofill().then(async ok => {
       if (!ok || cancelled) return
@@ -108,11 +113,22 @@ export default function Login({ org }) {
       // for it, so an error here would be noise.
       if (!cancelled && result.ok === false && result.error && !result.cancelled) setError(result.error)
     })
-    return () => { cancelled = true; controller.abort() }
+    return () => {
+      cancelled = true
+      controller.abort()
+      if (conditionalRef.current === controller) conditionalRef.current = null
+    }
   }, [passkeyReady, step])
 
   const handlePasskey = async () => {
     setError('')
+    // A conditional (autofill) request may still be pending. The WebAuthn spec
+    // allows only one outstanding get() at a time, so starting the modal flow
+    // without aborting it first makes the browser reject the new request.
+    if (conditionalRef.current) {
+      conditionalRef.current.abort()
+      conditionalRef.current = null
+    }
     setPasskeyBusy(true)
     const result = await signInWithPasskey()
     if (result.ok) return // App.js picks up the session
@@ -284,7 +300,7 @@ export default function Login({ org }) {
                   <div style={{ position: 'relative' }}>
                     <MailIcon />
                     <input className="ls-in" type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      required autoFocus autoComplete="email" placeholder="you@organisation.com" style={inp} />
+                      required autoFocus autoComplete="username webauthn" placeholder="you@organisation.com" style={inp} />
                   </div>
                 </div>
                 <button type="submit" disabled={loading || !email.trim()} style={gradientBtn(loading || !email.trim())}>

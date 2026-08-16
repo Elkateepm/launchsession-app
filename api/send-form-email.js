@@ -60,10 +60,16 @@ function resolveRp(req) {
 // cannot be replayed. Expired ones are swept at the same time.
 async function consumeChallenge(adminClient, id, kind) {
   if (!id) return null
-  const { data } = await adminClient.from('webauthn_challenges')
-    .select('*').eq('id', id).eq('kind', kind).maybeSingle()
-  if (!data) return null
-  await adminClient.from('webauthn_challenges').delete().eq('id', id)
+  // DELETE ... RETURNING, in one statement. A prior SELECT-then-DELETE let two
+  // concurrent verifies both read the row before either delete committed, so a
+  // captured assertion could be replayed to mint a second session. Postgres
+  // serialises the delete, so exactly one caller gets the row back.
+  const { data, error } = await adminClient.from('webauthn_challenges')
+    .delete().eq('id', id).eq('kind', kind)
+    .select('*').maybeSingle()
+  // A failed delete must not be treated as a successful consume, or the
+  // challenge stays reusable while the assertion is accepted.
+  if (error || !data) return null
   if (new Date(data.expires_at).getTime() < Date.now()) return null
   return data
 }
@@ -799,7 +805,13 @@ export default async function handler(req, res) {
           public_key: Buffer.from(info.credentialPublicKey).toString('base64url'),
           counter: info.counter || 0,
           transports: credential?.response?.transports || null,
-          device_label: (deviceLabel || 'This device').slice(0, 60),
+          // Typed rather than truthy-checked: a non-string deviceLabel would
+          // throw on .slice() *after* the authenticator has already registered
+          // the credential, 500ing a setup the user cannot simply retry
+          // (the challenge is consumed by then).
+          device_label: typeof deviceLabel === 'string' && deviceLabel.trim()
+            ? deviceLabel.trim().slice(0, 60)
+            : 'This device',
           backed_up: !!info.credentialBackedUp,
         })
         if (insErr) {
