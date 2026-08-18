@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { supabase } from "../../lib/supabase";
+import { signRows } from "../../lib/storageUrl";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { useRealtimeTable } from "../../lib/useRealtimeTable";
 import { useOrgSettings } from "../../hooks/useOrgSettings";
@@ -371,7 +372,7 @@ function PhotoCarousel({ orgId, primary, userId }) {
 
   const load = React.useCallback(() => {
     supabase.from('gallery_photos').select('*').eq('org_id', orgId).order('created_at', { ascending: false }).limit(50)
-      .then(({ data }) => setPhotos(data || []))
+      .then(async ({ data }) => setPhotos(await signRows('gallery', data || [])))
   }, [orgId])
 
   React.useEffect(() => { load() }, [load])

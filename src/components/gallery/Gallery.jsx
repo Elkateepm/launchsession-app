@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
+import { signRows } from '../../lib/storageUrl'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { LS, IconGlyph, CATEGORIES, timelineGroupLabel } from './galleryShared'
 import MemoryHero from './gallery_hub/MemoryHero'
@@ -59,7 +60,7 @@ export default function Gallery({ org, session }) {
       supabase.from('gallery_collections').select('*').eq('org_id', org.id).order('created_at'),
     ])
     if (mErr) { setError('Could not load your gallery. Please try again.'); setLoading(false); return }
-    setMedia(photos || [])
+    setMedia(await signRows('gallery', photos || []))
     const sMap = {}
     ;(sessions || []).forEach(s => { sMap[s.id] = s })
     setSessionsById(sMap)

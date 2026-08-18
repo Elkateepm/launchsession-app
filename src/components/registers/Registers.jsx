@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { motion, useDragControls } from 'framer-motion'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
+import { signRows, signOne } from '../../lib/storageUrl'
 import { useTodaySession, useAttendance, useChildren, useOnlineStatus } from '../../lib/hooks'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -469,7 +470,7 @@ function PhotosTab({ child, org }) {
       .select('*, uploader:uploaded_by(full_name)')
       .eq('child_id', child.id)
       .order('created_at', { ascending: false })
-    setAttachments(data || [])
+    setAttachments(await signRows('gallery', data || [], { pathField: 'storage_path' }))
     setLoading(false)
   }, [child.id])
 
@@ -483,7 +484,7 @@ function PhotosTab({ child, org }) {
     if (!file) return
     setUploading(true)
     const ext = file.name.split('.').pop()
-    const path = `children/${child.id}/attachments/${Date.now()}.${ext}`
+    const path = `${org?.id}/children/${child.id}/attachments/${Date.now()}.${ext}`
     const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
     if (!upErr) {
       const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(path)
@@ -559,7 +560,16 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   const isMobile = useIsMobile()
   const dragControls = useDragControls()
   const [drawerTab, setDrawerTab] = useState('info')
-  const [photoUrl, setPhotoUrl] = useState(child.photo_url || null)
+  const [photoUrl, setPhotoUrl] = useState(null)
+
+  // child.photo_url holds an object path (or a legacy public URL) in the now
+  // private gallery bucket, so it has to be signed before it can be rendered.
+  useEffect(() => {
+    let cancelled = false
+    if (!child.photo_url) { setPhotoUrl(null); return }
+    signOne('gallery', child.photo_url).then(u => { if (!cancelled) setPhotoUrl(u) })
+    return () => { cancelled = true }
+  }, [child.photo_url])
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const currentGroup = child.group_name || ''
   const photoInputRef = React.useRef()
@@ -586,13 +596,13 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
     if (!file) return
     setUploadingPhoto(true)
     const ext = file.name.split('.').pop()
-    const path = `children/${child.id}/photo.${ext}`
+    const path = `${org?.id}/children/${child.id}/photo.${ext}`
     const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { upsert: true, contentType: file.type })
     if (!upErr) {
-      const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(path)
-      const url = urlData.publicUrl
-      await supabase.from('children').update({ photo_url: url }).eq('id', child.id)
-      setPhotoUrl(url)
+      // Store the object path, not a URL: the bucket is private, so the only
+      // durable reference is the path and signed URLs are minted at read time.
+      await supabase.from('children').update({ photo_url: path }).eq('id', child.id)
+      setPhotoUrl(await signOne('gallery', path))
     }
     setUploadingPhoto(false)
   }
