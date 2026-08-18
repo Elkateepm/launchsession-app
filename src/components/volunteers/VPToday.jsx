@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { activityTheme, tierFor, computeAchievements, glassCard, timeAgo } from './vp_shared'
+import SignedImg from '../shared/SignedImg'
 
 function useCountdown(target) {
   const [now, setNow] = useState(Date.now())
@@ -78,7 +79,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
         <motion.div animate={{ y: [0, -14, 0] }} transition={{ duration: 8, repeat: Infinity }} style={{ position: 'absolute', top: -50, right: -50, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
           <div style={{ width: 50, height: 50, borderRadius: '50%', background: profile?.photo_url ? 'transparent' : 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.3)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            {profile?.photo_url ? <img src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>{firstName[0]}</span>}
+            {profile?.photo_url ? <SignedImg bucket="staff-photos" src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>{firstName[0]}</span>}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 19, fontWeight: 900, color: '#fff' }}>{greeting}, {firstName} 👋</div>

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import SignedImg from '../../shared/SignedImg'
 
 // Sidebar primitives. Kept deliberately small: the previous nav repeated the
 // same 25-line button ten times, so a change to hover, focus or active styling
@@ -343,7 +344,7 @@ export function ProfileMenu({
           border: `1.5px solid ${primary}55`,
         }}>
           {photoUrl
-            ? <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ? <SignedImg src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             : (userName?.[0]?.toUpperCase() || '?')}
         </span>
 

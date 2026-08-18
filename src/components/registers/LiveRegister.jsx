@@ -7,6 +7,7 @@ import PastSessionRegister from './PastSessionRegister'
 import RegisterPaymentBadge from '../payments/RegisterPaymentBadge'
 import AttendanceCorrectionModal from './AttendanceCorrectionModal'
 import { useTerms } from '../../context/OrgContext'
+import SignedImg from '../shared/SignedImg'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -541,7 +542,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         background: 'linear-gradient(135deg,#8B5CF6,#3B82F6)',
         boxShadow: '0 3px 8px -2px rgba(124,58,237,0.4)',
       }}>
-        {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+        {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
       <div onClick={onOpen} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: '#111827', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>

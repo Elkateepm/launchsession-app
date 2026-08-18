@@ -221,7 +221,7 @@ function UploadDocModal({ org, user, onClose }) {
     const path = `certificates/${org.id}/${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
     const { error } = await supabase.storage.from('safeguarding-docs').upload(path, file)
     if (!error) {
-      const { data: urlData } = supabase.storage.from('safeguarding-docs').getPublicUrl(path)
+      const urlData = { publicUrl: path } // private bucket: store the path, sign on open
       await supabase.from('volunteer_training').insert({ org_id: org.id, volunteer_id: user.id, training_type: file.name, status: 'completed', completed_at: new Date().toISOString().slice(0, 10), certificate_url: urlData?.publicUrl })
       setDone(true)
     }

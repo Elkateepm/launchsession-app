@@ -9,6 +9,7 @@ import VPSessionDetail from './VPSessionDetail'
 import VPMessages from './VPMessages'
 import VPProfile from './VPProfile'
 import VPQuickActionMenu from './VPQuickActionMenu'
+import { signOne } from '../../lib/storageUrl'
 
 const SLUG = window.location.pathname.split('/volunteer/')[1]?.split('/')[0]
 
@@ -98,10 +99,11 @@ function OnboardingWizard({ user, org, onComplete }) {
     const file = e.target.files?.[0]; if(!file) return
     setPhotoUploading(true)
     const ext = file.name.split('.').pop()
-    const path = `${user.id}/avatar.${ext}`
+    // Flat `<user id>.<ext>`, matching every existing object and the upload
+    // policy. The previous `<user id>/avatar.<ext>` form matched neither.
+    const path = `${user.id}.${ext}`
     await supabase.storage.from('staff-photos').upload(path, file, { upsert:true })
-    const { data } = supabase.storage.from('staff-photos').getPublicUrl(path)
-    setPhotoUrl(data.publicUrl)
+    setPhotoUrl(await signOne('staff-photos', path))
     setPhotoUploading(false)
   }
 

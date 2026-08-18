@@ -10,6 +10,8 @@ import {
 import { hasPlatformAuthenticator, enrolBiometric, clearEnrolment, isEnrolledFor, getLockAfterMs, setLockAfterMs } from '../../lib/biometricLock'
 import { hasPlatformAuthenticator as hasPasskeyAuthenticator, enrolPasskey, listPasskeys, removePasskey } from '../../lib/passkey'
 import { getTerms } from '../../lib/terminology'
+import SignedImg from '../shared/SignedImg'
+import { signOne } from '../../lib/storageUrl'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -2087,9 +2089,10 @@ function SafeguardingSection({ org }) {
     const path = `${org.id}/safeguarding-policy_${Date.now()}.${file.name.split('.').pop()}`
     const { error: upErr } = await supabase.storage.from('safeguarding-docs').upload(path, file)
     if (upErr) { setUploadErr(upErr.message); setUploading(false); return }
-    const { data: { publicUrl } } = supabase.storage.from('safeguarding-docs').getPublicUrl(path)
-    await supabase.from('organisations').update({ safeguarding_policy_url: publicUrl }).eq('id', org?.id)
-    setPolicyUrl(publicUrl)
+    // Store the object path. The bucket is private, so a stored URL is dead on
+    // arrival; links are signed at the point they are opened.
+    await supabase.from('organisations').update({ safeguarding_policy_url: path }).eq('id', org?.id)
+    setPolicyUrl(path)
     setUploading(false)
   }
 
@@ -2129,7 +2132,7 @@ function SafeguardingSection({ org }) {
             <span style={{ fontSize: 22 }}>📄</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Policy document uploaded</div>
-              <a href={policyUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#DC2626', fontWeight: 600, textDecoration: 'none' }}>View / Download ↗</a>
+              <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', policyUrl, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ fontSize: 12, color: '#DC2626', fontWeight: 600, textDecoration: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>View / Download ↗</button>
             </div>
             <button onClick={() => setPolicyUrl('')} style={{ background: 'none', border: 'none', color: '#9ca3af', fontSize: 18, cursor: 'pointer', padding: 4 }}>×</button>
           </div>
@@ -2620,7 +2623,7 @@ function UserRow({ user, isAdmin, isSelf, busy, onRoleChange, onRemove }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)' }}>
       <div style={{ width: 36, height: 36, borderRadius: 10, background: rc.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
-        {user.photo_url ? <img src={user.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+        {user.photo_url ? <SignedImg bucket="staff-photos" src={user.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>

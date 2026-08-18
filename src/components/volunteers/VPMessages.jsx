@@ -141,7 +141,7 @@ function VPThread({ thread, org, user, primary, onBack }) {
     const path = `messages/${org.id}/${thread.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
     const { error } = await supabase.storage.from('safeguarding-docs').upload(path, file)
     if (!error) {
-      const { data: urlData } = supabase.storage.from('safeguarding-docs').getPublicUrl(path)
+      const urlData = { publicUrl: path } // private bucket: store the path, sign on open
       const { data } = await supabase.from('message_thread_messages').insert({ thread_id: thread.id, org_id: org.id, sender_id: user.id, body: '', attachment_url: urlData?.publicUrl, attachment_type: file.type }).select().single()
       if (data) setMessages(m => [...m, data])
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
+import SignedImg from '../shared/SignedImg'
 
 const PURPLE = '#6D5DF6'
 const card = (extra = {}) => ({
@@ -301,7 +302,7 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
                     border: on ? `2px solid ${PURPLE}` : '1px solid #F1F5F9', background: on ? '#F5F3FF' : '#fff',
                   }}>
                     <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#EDE9FE', color: '#5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
-                      {c.photo_url ? <img src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`.toUpperCase()}
+                      {c.photo_url ? <SignedImg bucket="gallery" src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`.toUpperCase()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>
@@ -391,7 +392,7 @@ export function AddTeamModal({ org, projectId, existingUserIds, onClose, onAdded
               {filtered.map(p => (
                 <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, border: '1px solid #F1F5F9' }}>
                   <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#EDE9FE', color: '#5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
-                    {p.photo_url ? <img src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.full_name || '?')[0]?.toUpperCase()}
+                    {p.photo_url ? <SignedImg bucket="staff-photos" src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.full_name || '?')[0]?.toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{p.full_name || 'Unnamed'}</div>

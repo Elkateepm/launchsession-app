@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { tierFor, computeAchievements, glassCard, DAYS, SLOTS } from './vp_shared'
+import SignedImg from '../shared/SignedImg'
 
 const SEGMENTS = [
   { key: 'overview', label: 'Overview' },
@@ -25,7 +26,7 @@ export default function VPProfile({ org, user, profile, attendance, primary, ini
     <div style={{ padding: '0 0 100px' }}>
       <div style={{ background: `linear-gradient(150deg, ${primary}, ${primary}CC)`, padding: '20px 18px 24px', color: '#fff', textAlign: 'center' }}>
         <div style={{ width: 72, height: 72, borderRadius: '50%', background: profile?.photo_url ? 'transparent' : 'rgba(255,255,255,0.2)', border: '3px solid rgba(255,255,255,0.35)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-          {profile?.photo_url ? <img src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 24, fontWeight: 900 }}>{initials}</span>}
+          {profile?.photo_url ? <SignedImg bucket="staff-photos" src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 24, fontWeight: 900 }}>{initials}</span>}
         </div>
         <div style={{ fontSize: 18, fontWeight: 900 }}>{profile?.full_name}</div>
         <div style={{ fontSize: 12, opacity: 0.85, marginTop: 2 }}>{org?.name} Volunteer</div>

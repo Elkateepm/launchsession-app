@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import SignedImg from '../shared/SignedImg'
+import { forgetSignedUrl } from '../../lib/storageUrl'
 
 const ROLE_CONFIG = {
   admin:     { label: 'Administrator', badge: 'Admin',     color: '#4F6EF7', light: '#EEF2FF' },
@@ -97,10 +99,11 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
     const filePath = `${userId}.${ext}`
     const { error: uploadError } = await supabase.storage.from('staff-photos').upload(filePath, file, { upsert: true })
     if (!uploadError) {
-      const { data } = supabase.storage.from('staff-photos').getPublicUrl(filePath)
-      const url = data.publicUrl + '?t=' + Date.now()
-      await supabase.from('user_profiles').update({ photo_url: url }).eq('id', userId)
-      setProfile(p => ({ ...p, photo_url: url }))
+      // Store the object path: the bucket is private, so signed URLs are
+      // minted at read time and a stored URL would only go stale.
+      await supabase.from('user_profiles').update({ photo_url: filePath }).eq('id', userId)
+      forgetSignedUrl('staff-photos', filePath)
+      setProfile(p => ({ ...p, photo_url: filePath }))
       if (onProfileUpdate) onProfileUpdate()
     }
     setPhotoUploading(false)
@@ -154,7 +157,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
             <div style={{ position: 'relative', display: 'inline-block', marginBottom: 12 }}>
               <div onClick={() => fileInputRef.current?.click()} style={{ width: 72, height: 72, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', cursor: 'pointer', overflow: 'hidden', margin: '0 auto' }}>
                 {profile?.photo_url
-                  ? <img src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ? <SignedImg bucket="staff-photos" src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : photoUploading ? '...' : initials}
               </div>
               <div onClick={() => fileInputRef.current?.click()} style={{ position: 'absolute', bottom: 0, right: 0, width: 22, height: 22, borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px solid #fff', fontSize: 10 }}>📷</div>

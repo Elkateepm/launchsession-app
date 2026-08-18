@@ -3,6 +3,7 @@
 // the same visual language without re-declaring the same style objects everywhere.
 import React from 'react'
 import { motion } from 'framer-motion'
+import SignedImg from '../shared/SignedImg'
 
 export const PURPLE = '#7C5CFC'
 export const PAGE_BG = '#F6F8FC'
@@ -57,7 +58,7 @@ export function Badge({ children, color = '#475569', bg = '#F1F5F9' }) {
 
 export function Avatar({ name, photoUrl, size = 40, color = PURPLE }) {
   return photoUrl ? (
-    <img src={photoUrl} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+    <SignedImg src={photoUrl} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
   ) : (
     <div style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0,

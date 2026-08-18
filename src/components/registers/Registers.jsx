@@ -10,6 +10,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { TemplatePicker } from './TemplateCreator'
 import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
 import { useTerms } from '../../context/OrgContext'
+import SignedImg from '../shared/SignedImg'
 
 const DEFAULT_BUBBLES = [
   { key: 'red',    label: 'Red',    color: '#E53935', dark: '#B71C1C' },
@@ -487,9 +488,8 @@ function PhotosTab({ child, org }) {
     const path = `${org?.id}/children/${child.id}/attachments/${Date.now()}.${ext}`
     const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
     if (!upErr) {
-      const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(path)
       await supabase.from('child_attachments').insert({
-        org_id: org?.id, child_id: child.id, url: urlData.publicUrl, storage_path: path, uploaded_by: authUserId,
+        org_id: org?.id, child_id: child.id, url: path, storage_path: path, uploaded_by: authUserId,
       })
       await load()
     }
@@ -881,7 +881,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
       {/* Avatar + name */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
         <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg, ${bColor}, ${bColor}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 3px 10px -4px ${bColor}90`, transition: 'transform 0.15s', transform: hovered ? 'scale(1.06)' : 'none' }}>
-          {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+          {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: dark ? '#F1F5F9' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

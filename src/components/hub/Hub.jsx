@@ -16,6 +16,7 @@ import { notifyEvent } from "../../services/notifyEvent";
 import { allowedModules } from '../../lib/moduleAccess'
 import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
 import { useTerms } from '../../context/OrgContext'
+import SignedImg from '../shared/SignedImg'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -383,8 +384,8 @@ function PhotoCarousel({ orgId, primary, userId }) {
       const path = `${orgId}/${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`
       const { error } = await supabase.storage.from('gallery').upload(path, file)
       if (!error) {
-        const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(path)
-        await supabase.from('gallery_photos').insert({ org_id: orgId, url: publicUrl, path })
+        // Private bucket: the path is the durable reference, signed at read.
+        await supabase.from('gallery_photos').insert({ org_id: orgId, url: path, path })
       }
     }
     setUploading(false)
@@ -1523,7 +1524,7 @@ function RegisterAndStaffContent({
             return (
               <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 10 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: gColor + '30', border: `1.5px solid ${gColor}60`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
-                  {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+                  {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1736,7 +1737,7 @@ function KioskModeOverlay({ session, org, primary, secondary, regTab, setRegTab,
           return (
             <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 14 }}>
               <div style={{ width: 46, height: 46, borderRadius: 13, background: gColor + '30', border: `1.5px solid ${gColor}60`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
-                {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+                {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15.5, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{child.first_name} {child.last_name}</div>
@@ -1914,9 +1915,8 @@ function SessionQuickActions({ session, org, orgId, authUserId, onNavigate }) {
       const path = `${orgId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
       const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
       if (!upErr) {
-        const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(path)
         const { error: insErr } = await supabase.from('gallery_photos').insert({
-          org_id: orgId, url: urlData.publicUrl, path,
+          org_id: orgId, url: path, path,
           category: 'Sessions', session_id: session.id,
           media_type: file.type.startsWith('video') ? 'video' : 'image',
           consent_status: 'pending_review',
@@ -2291,7 +2291,7 @@ function SessionInfoModal({ session, attendance, allChildren, primary, secondary
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: 12, fontWeight: 900, color: '#fff',
                         }}>
-                          {r.child.photo_url ? <img src={r.child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(r.child)}
+                          {r.child.photo_url ? <SignedImg bucket="gallery" src={r.child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(r.child)}
                         </div>
                         <span style={{ fontSize: 13.5, fontWeight: 700, color: '#fff', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {r.child.first_name} {r.child.last_name}
@@ -3450,7 +3450,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               onMouseEnter={e => { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px ${primary}45` }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = primary + '22'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` }}>
               <div style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 3px 10px -2px ${primary}50` }}>
-                {userProfile?.photo_url ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : hubUserName[0]?.toUpperCase() || '?'}
+                {userProfile?.photo_url ? <SignedImg bucket="staff-photos" src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : hubUserName[0]?.toUpperCase() || '?'}
               </div>
               {!isMobile && (
                 <div>

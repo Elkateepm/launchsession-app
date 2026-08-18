@@ -45,9 +45,8 @@ export default function GalleryUploadWizard({ org, collections, onClose, onDone,
       const path = `${org.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
       const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
       if (!upErr) {
-        const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(path)
         await supabase.from('gallery_photos').insert({
-          org_id: org.id, url: urlData.publicUrl, path,
+          org_id: org.id, url: path, path,
           category: meta.category, caption: meta.caption || null,
           media_type: type, session_id: meta.sessionId || null,
           collection_id: meta.collectionId || null,

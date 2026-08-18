@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { activityTheme } from './vp_shared'
+import SignedImg from '../shared/SignedImg'
 
 export default function VPSessionDetail({ session, org, onClose, onNavigateTab, primary }) {
   const theme = activityTheme(session.session_type)
@@ -126,7 +127,7 @@ function VPRegister({ session, org, primary, theme, onClose }) {
               return (
                 <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.08)' }}>
                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#F1F5F9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#64748B', flexShrink: 0 }}>
-                    {c.photo_url ? <img src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`}
+                    {c.photo_url ? <SignedImg bucket="gallery" src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>

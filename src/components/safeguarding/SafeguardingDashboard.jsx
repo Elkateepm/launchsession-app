@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import SignedImg from '../shared/SignedImg'
+import { signOne } from '../../lib/storageUrl'
 
 const PRIMARY = '#DC2626' // safeguarding stays red-branded regardless of org colour — deliberate, signals seriousness
 
@@ -350,7 +352,7 @@ function ChildrenTab({ org, cases, isMobile }) {
               <div key={c.id} style={{ ...card, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: PRIMARY + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: PRIMARY, flexShrink: 0, overflow: 'hidden' }}>
-                    {c.photo_url ? <img src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (c.first_name?.[0] || '?')}
+                    {c.photo_url ? <SignedImg bucket="gallery" src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (c.first_name?.[0] || '?')}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
@@ -490,7 +492,13 @@ function DocumentsTab({ org, userId, isMobile }) {
     load()
   }
 
-  const docUrl = (path) => supabase.storage.from('safeguarding-docs').getPublicUrl(path).data.publicUrl
+  // safeguarding-docs is a private bucket, so getPublicUrl produced a URL that
+  // never resolved. Sign on click instead -- a short-lived link, opened once.
+  const openDoc = async (e, path) => {
+    e.preventDefault()
+    const url = await signOne('safeguarding-docs', path, 300)
+    if (url) window.open(url, '_blank', 'noopener,noreferrer')
+  }
 
   const fileIcon = (type) => {
     if (type?.includes('pdf')) return '📄'
@@ -522,14 +530,14 @@ function DocumentsTab({ org, userId, isMobile }) {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
           {docs.map(d => (
-            <a key={d.id} href={docUrl(d.file_path)} target="_blank" rel="noreferrer"
+            <button key={d.id} type="button" onClick={e => openDoc(e, d.file_path)}
               style={{ ...card, padding: 14, display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
               <div style={{ fontSize: 22 }}>{fileIcon(d.file_type)}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.file_name}</div>
                 <div style={{ fontSize: 11, color: 'var(--text3)' }}>{timeAgo(d.created_at)}</div>
               </div>
-            </a>
+            </button>
           ))}
         </div>
       )}

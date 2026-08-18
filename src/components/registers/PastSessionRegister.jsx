@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import AttendanceCorrectionModal from './AttendanceCorrectionModal'
+import SignedImg from '../shared/SignedImg'
 
 function fmtTime(d) {
   if (!d) return ''
@@ -272,7 +273,7 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14, padding: 12 }}>
       <div onClick={onOpen} style={{ width: 46, height: 46, borderRadius: 14, background: '#7C3AED', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 15, flexShrink: 0, cursor: 'pointer', overflow: 'hidden' }}>
-        {child.photo_url ? <img src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+        {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
       <div onClick={onOpen} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>

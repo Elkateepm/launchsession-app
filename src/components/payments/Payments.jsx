@@ -10,6 +10,7 @@ import {
   chargeTypeLabel, methodLabel, chipStyle, card, inputStyle, btnPrimary, btnGhost,
   initials, summarise,
 } from './paymentsShared'
+import SignedImg from '../shared/SignedImg'
 
 const TABS = [
   { key: 'overview', label: 'Overview', shortLabel: 'Overview' },
@@ -400,7 +401,7 @@ function ChargeCardMobile({ charge, child, onRecordPayment, extraAction }) {
 function ChildAvatar({ child, size = 32 }) {
   if (!child) return <div style={{ width: size, height: size, borderRadius: '50%', background: '#E2E8F0', flexShrink: 0 }} />
   return child.photo_url ? (
-    <img src={child.photo_url} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+    <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
   ) : (
     <div style={{ width: size, height: size, borderRadius: '50%', background: PB.purple, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.38, fontWeight: 800, flexShrink: 0 }}>
       {initials(child.first_name, child.last_name)}

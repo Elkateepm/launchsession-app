@@ -45,6 +45,7 @@ import {
   SidebarItem, SidebarSection, SidebarCollapsibleGroup, CreateMenu, ProfileMenu,
 } from './sidebar/SidebarParts'
 import { makeHasModule, isTrialActive } from '../../lib/moduleAccess'
+import SignedImg from '../shared/SignedImg'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -369,7 +370,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
         >
           <div style={{ position: 'relative', flexShrink: 0 }}>
             <div style={{ width: isMobile ? 30 : 32, height: isMobile ? 30 : 32, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden' }}>
-              {userProfile?.photo_url ? <img src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (userName[0]?.toUpperCase() || '?')}
+              {userProfile?.photo_url ? <SignedImg bucket="staff-photos" src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (userName[0]?.toUpperCase() || '?')}
             </div>
             <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 2, repeat: Infinity }}
               style={{ position: 'absolute', bottom: -1, right: -1, width: 9, height: 9, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import SignedImg from '../shared/SignedImg'
 
 function fmtTime(d) { if (!d) return ''; return new Date(d).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' }) }
 function fmtDate(dateStr) {
@@ -133,7 +134,7 @@ export default function HistoricalAttendanceModal({ session, attendance, allChil
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 12, fontWeight: 900, color: '#fff',
                     }}>
-                      {r.child.photo_url ? <img src={r.child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(r.child)}
+                      {r.child.photo_url ? <SignedImg bucket="gallery" src={r.child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(r.child)}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
