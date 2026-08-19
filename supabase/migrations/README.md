@@ -13,6 +13,17 @@ Applied to project `ssahcqeqrxawmwtjpwvh`, in order:
 - `20260815_forms_redesign_schema.sql`
 - `20260815_forms_public_access.sql`
 
+Storage bucket hardening, applied 18 Aug 2026:
+
+- `20260818_private_gallery_bucket_org_scoped.sql`
+- `20260818_private_staff_photos_bucket_org_scoped.sql`
+
+Both were applied to the live project before being written here, which is the
+exact gap this README warns about. They are captured now and are idempotent
+enough to re-run: the bucket updates are no-ops if already applied, and the
+policy drops use `if exists`. The `create policy` statements will fail on a
+second run, so a fresh environment applies them once.
+
 Earlier work (Fundraising, Risk Assessments, sidebar) was applied directly and
 is not yet captured. Those migrations are additive and already live; they should
 be exported here when there is a reason to touch them.
