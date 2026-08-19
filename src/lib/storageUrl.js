@@ -17,8 +17,8 @@ import { supabase } from './supabase'
 // to recover the object path, so `storagePath` accepts either a bare path or
 // any stored URL and there is no data migration to run.
 
-const DEFAULT_TTL_SECONDS = 60 * 60
-const REFRESH_MARGIN_MS = 5 * 60 * 1000
+const DEFAULT_TTL_SECONDS = 10 * 60
+const REFRESH_MARGIN_MS = 60 * 1000
 
 // `${bucket}:${path}` -> { url, expiresAt }
 const cache = new Map()
@@ -133,3 +133,20 @@ export function forgetSignedUrl(bucket, value) {
 export function clearSignedUrlCache() {
   cache.clear()
 }
+
+// Drop every cached URL when the session changes.
+//
+// The cache is module-scoped and keyed only by bucket and path, so without
+// this it outlives a sign-out: on a shared tablet -- the normal way a charity
+// runs a register -- the next user inherits the previous user's signed URLs
+// until they expire. Cross-tenant reach is limited, because obtaining a path
+// at all requires a row that RLS allowed you to read, but a user whose access
+// is revoked mid-session would otherwise keep working URLs for the full TTL.
+//
+// Wired here rather than at the sign-out handlers: there are ten of those and
+// the eleventh would forget.
+supabase.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+    cache.clear()
+  }
+})
