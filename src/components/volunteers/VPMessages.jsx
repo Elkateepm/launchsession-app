@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { timeAgo } from './vp_shared'
+import SignedImg from '../shared/SignedImg'
+import { signOne } from '../../lib/storageUrl'
 
 const REACTIONS = ['👍', '❤️', '😊', '🎉']
 
@@ -141,7 +143,7 @@ function VPThread({ thread, org, user, primary, onBack }) {
     const path = `messages/${org.id}/${thread.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
     const { error } = await supabase.storage.from('safeguarding-docs').upload(path, file)
     if (!error) {
-      const urlData = { publicUrl: path } // private bucket: store the path, sign on open
+      const urlData = { publicUrl: path } // private bucket: path stored, signed on read
       const { data } = await supabase.from('message_thread_messages').insert({ thread_id: thread.id, org_id: org.id, sender_id: user.id, body: '', attachment_url: urlData?.publicUrl, attachment_type: file.type }).select().single()
       if (data) setMessages(m => [...m, data])
     }
@@ -168,7 +170,9 @@ function VPThread({ thread, org, user, primary, onBack }) {
             <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 10 }}>
               <div style={{ maxWidth: '78%' }}>
                 <div style={{ background: mine ? primary : '#fff', color: mine ? '#fff' : '#0F172A', borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16, borderBottomLeftRadius: mine ? 16 : 4, padding: '10px 13px', fontSize: 13.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                  {m.attachment_url && (m.attachment_type?.startsWith('image/') ? <img src={m.attachment_url} alt="" style={{ maxWidth: '100%', borderRadius: 10, marginBottom: m.body ? 6 : 0 }} /> : <a href={m.attachment_url} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>📎 Attachment</a>)}
+                  {m.attachment_url && (m.attachment_type?.startsWith('image/')
+                    ? <SignedImg bucket="safeguarding-docs" src={m.attachment_url} alt="" style={{ maxWidth: '100%', borderRadius: 10, marginBottom: m.body ? 6 : 0 }} />
+                    : <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', m.attachment_url, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ color: 'inherit', background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer' }}>📎 Attachment</button>)}
                   {m.body}
                 </div>
                 <div style={{ display: 'flex', gap: 4, marginTop: 4, justifyContent: mine ? 'flex-end' : 'flex-start', alignItems: 'center' }}>

@@ -566,10 +566,16 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   // private gallery bucket, so it has to be signed before it can be rendered.
   useEffect(() => {
     let cancelled = false
-    if (!child.photo_url) { setPhotoUrl(null); return }
+    // Clear first. The drawer is reused across children rather than remounted,
+    // so without this the previous child's photograph stays on screen until the
+    // next one finishes signing -- and stays indefinitely if signing fails.
+    // Showing one child's photo against another child's record is its own
+    // safeguarding problem, so nothing is better than something stale here.
+    setPhotoUrl(null)
+    if (!child.photo_url) return undefined
     signOne('gallery', child.photo_url).then(u => { if (!cancelled) setPhotoUrl(u) })
     return () => { cancelled = true }
-  }, [child.photo_url])
+  }, [child.photo_url, child.id])
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const currentGroup = child.group_name || ''
   const photoInputRef = React.useRef()

@@ -32,8 +32,15 @@ const isFresh = (entry) => entry && entry.expiresAt - Date.now() > REFRESH_MARGI
 export function storagePath(bucket, value) {
   if (!value || typeof value !== 'string') return null
 
+  // Protocol-relative (//cdn.example/x.jpg), scheme-qualified non-HTTP, and
+  // root-relative values are not our object paths. Treating them as such sent
+  // external avatar URLs to the storage API and mangled them.
+  if (/^\/\//.test(value) || /^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith('/')) {
+    return null
+  }
+
   if (!/^https?:\/\//i.test(value)) {
-    return value.replace(/^\/+/, '') || null
+    return value || null
   }
 
   for (const kind of ['public', 'sign', 'authenticated']) {
@@ -146,7 +153,10 @@ export function clearSignedUrlCache() {
 // Wired here rather than at the sign-out handlers: there are ten of those and
 // the eleventh would forget.
 supabase.auth.onAuthStateChange((event) => {
-  if (event === 'SIGNED_OUT' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+  // PASSWORD_RECOVERY is distinct from SIGNED_IN: a recovery link opened in an
+  // already-running tab replaces the session without emitting either of the
+  // other two, which left the previous user's URLs cached.
+  if (event === 'SIGNED_OUT' || event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'PASSWORD_RECOVERY') {
     cache.clear()
   }
 })

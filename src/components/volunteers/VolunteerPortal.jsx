@@ -70,6 +70,7 @@ function OnboardingWizard({ user, org, onComplete }) {
   const [saving, setSaving] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoUrl, setPhotoUrl] = useState(null)
+  const [photoPath, setPhotoPath] = useState(null)
   const photoRef = useRef(null)
   const primary = (org?.logo_url || (org?.primary_color && org.primary_color !== '#1B9AAA')) ? (org?.primary_color || '#1B9AAA') : '#7C5CFC'
   const TOTAL = 12
@@ -103,6 +104,10 @@ function OnboardingWizard({ user, org, onComplete }) {
     // policy. The previous `<user id>/avatar.<ext>` form matched neither.
     const path = `${user.id}.${ext}`
     await supabase.storage.from('staff-photos').upload(path, file, { upsert:true })
+    // Keep the path for the profile row and the signed URL only for the
+    // preview: writing the signed URL to photo_url would persist something
+    // that expires in ten minutes.
+    setPhotoPath(path)
     setPhotoUrl(await signOne('staff-photos', path))
     setPhotoUploading(false)
   }
@@ -113,7 +118,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     await supabase.from('user_profiles').update({
       first_name: f.first_name, last_name: f.last_name, full_name,
       preferred_name: f.preferred_name, phone: f.phone, date_of_birth: f.date_of_birth||null,
-      photo_url: photoUrl,
+      photo_url: photoPath || null,
       emergency_contact_name: f.emergency_contact_name,
       emergency_contact_relationship: f.emergency_contact_relationship,
       emergency_contact_phone: f.emergency_contact_phone,
