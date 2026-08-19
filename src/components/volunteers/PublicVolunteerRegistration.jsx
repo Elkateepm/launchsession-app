@@ -24,6 +24,7 @@ export default function PublicVolunteerRegistration() {
   const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  const [needsVerification, setNeedsVerification] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     first_name: '', last_name: '', date_of_birth: '', email: '', phone: '',
@@ -51,7 +52,7 @@ export default function PublicVolunteerRegistration() {
   const submit = async () => {
     setSubmitting(true)
     setError('')
-    const { error: err } = await supabase.rpc('submit_volunteer_application', {
+    const { data: applicationId, error: err } = await supabase.rpc('submit_volunteer_application', {
       p_org_slug: org.slug,
       p_first_name: form.first_name.trim(), p_last_name: form.last_name.trim() || null,
       p_email: form.email || null, p_phone: form.phone || null, p_dob: form.date_of_birth || null,
@@ -60,8 +61,31 @@ export default function PublicVolunteerRegistration() {
       p_dbs_number: form.dbs_number || null, p_dbs_expiry: form.dbs_expiry || null,
       p_notes: form.notes || null,
     })
+    if (err) {
+      setSubmitting(false)
+      setError("Something went wrong submitting this — please try again, or contact the organisation directly.")
+      return
+    }
+
+    // With an email address the application lands as 'unverified' and stays
+    // invisible to the organisation until the applicant confirms the address
+    // is theirs. Without one there is nothing to confirm, so it goes straight
+    // through and the confirmation screen says so.
+    const wantsVerification = !!form.email.trim()
+    if (wantsVerification && applicationId) {
+      const { error: sendErr } = await supabase.functions.invoke('send-volunteer-verification', {
+        body: { application_id: applicationId },
+      })
+      // The row exists either way; failing to send is worth telling them about
+      // so they can retry rather than waiting on an email that never arrives.
+      if (sendErr) {
+        setSubmitting(false)
+        setError("We saved your application but couldn't send the confirmation email. Please try again, or contact the organisation directly.")
+        return
+      }
+    }
+    setNeedsVerification(wantsVerification)
     setSubmitting(false)
-    if (err) { setError("Something went wrong submitting this — please try again, or contact the organisation directly."); return }
     setDone(true)
   }
 
@@ -78,7 +102,9 @@ export default function PublicVolunteerRegistration() {
         <div style={{ fontSize: 46, marginBottom: 14 }}>✅</div>
         <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Application received</div>
         <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5 }}>
-          Thanks {form.first_name} — your volunteer application has been sent to {org.name} for review. They'll be in touch soon.
+          {needsVerification
+            ? <>Thanks {form.first_name} — one last step. We've emailed <strong style={{ color: '#0F172A' }}>{form.email.trim()}</strong> with a link to confirm it's yours. Your application reaches {org.name} once you've clicked it.</>
+            : <>Thanks {form.first_name} — your volunteer application has been sent to {org.name} for review. They'll be in touch soon.</>}
         </div>
       </div>
     </div>

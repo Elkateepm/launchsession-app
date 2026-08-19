@@ -25,6 +25,7 @@ const PublicForm = lazy(() => import('./components/forms/PublicForm'))
 const PublicDonationPage = lazy(() => import('./components/fundraising/PublicDonationPage'))
 const PublicChildRegistration = lazy(() => import('./components/children/PublicChildRegistration'))
 const PublicVolunteerRegistration = lazy(() => import('./components/volunteers/PublicVolunteerRegistration'))
+const VerifyVolunteerApplication = lazy(() => import('./components/volunteers/VerifyVolunteerApplication'))
 
 // Minimal fallback shown while a lazy chunk downloads. Kept intentionally
 // tiny/inline (no imports) since it needs to render before other chunks
@@ -357,7 +358,7 @@ function shouldGoToLanding() {
   const hostname = window.location.hostname
   const hasOrg = new URLSearchParams(window.location.search).get('org')
   const isDashboard = pathname === '/dashboard'
-  const isSpecialRoute = ['/login', '/signup', '/create-password', '/org-search', '/reset-password'].includes(pathname) || pathname.startsWith('/volunteer') || pathname.startsWith('/forms/') || pathname.startsWith('/pay/')
+  const isSpecialRoute = ['/login', '/signup', '/create-password', '/org-search', '/reset-password'].includes(pathname) || pathname.startsWith('/volunteer') || pathname.startsWith('/forms/') || pathname.startsWith('/pay/') || pathname === '/verify-volunteer' || pathname.startsWith('/register-volunteer/')
   // The app subdomain is the application itself — never redirect it to the
   // marketing landing page, regardless of path or org context.
   const isAppSubdomain = hostname.startsWith('app.')
@@ -488,6 +489,7 @@ export default function App() {
   if (pathname.startsWith('/pay/')) return <Suspense fallback={<RouteLoading />}><PublicDonationPage /></Suspense>
   if (pathname.startsWith('/register-child/')) return <Suspense fallback={<RouteLoading />}><PublicChildRegistration /></Suspense>
   if (pathname.startsWith('/register-volunteer/')) return <Suspense fallback={<RouteLoading />}><PublicVolunteerRegistration /></Suspense>
+  if (pathname === '/verify-volunteer') return <Suspense fallback={<RouteLoading />}><VerifyVolunteerApplication /></Suspense>
   if (pathname === '/signup') return <Suspense fallback={<RouteLoading />}><Signup /></Suspense>
   if (pathname === '/create-password') return <Suspense fallback={<RouteLoading />}><CreatePassword /></Suspense>
   return (
