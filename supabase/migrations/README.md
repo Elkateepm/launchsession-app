@@ -24,6 +24,10 @@ enough to re-run: the bucket updates are no-ops if already applied, and the
 policy drops use `if exists`. The `create policy` statements will fail on a
 second run, so a fresh environment applies them once.
 
+RLS review fixes, applied 19 Aug 2026:
+
+- `20260819_close_role_escalation_and_anon_invite_holes.sql`
+
 Earlier work (Fundraising, Risk Assessments, sidebar) was applied directly and
 is not yet captured. Those migrations are additive and already live; they should
 be exported here when there is a reason to touch them.
