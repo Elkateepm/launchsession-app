@@ -69,7 +69,8 @@ export default function AccessSection({ org, isAdmin }) {
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Role access</div>
         <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.6 }}>
           What each role can reach by default. Enforced in the database — a hidden menu item is also a blocked query.
-          Admins and owners always have full access and do not appear here.
+          Admins and owners always have full access and do not appear here, and neither do volunteers or
+          parents — they use their own portals rather than the dashboard.
         </div>
       </div>
 

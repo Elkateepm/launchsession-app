@@ -102,15 +102,29 @@ export const ACCESS_MODULES = [
   { key: 'mentoring', label: 'Mentoring', icon: '🤝' },
 ]
 
-// Roles whose access can be templated. Owner and admin are absent on purpose:
-// they always resolve to 'edit'. Making administrators restrictable means one
-// bad save locks an organisation out of the screen that would undo it.
+// Roles whose access can be templated.
+//
+// Owner and admin are absent because they always resolve to 'edit' -- making
+// administrators restrictable means one bad save locks an organisation out of
+// the screen that would undo it.
+//
+// Volunteers and parents are absent because they never reach the dashboard:
+// both are routed to their own portals, so a module grant against one would be
+// a control that looks like it does something and does not. The database
+// refuses rows for these roles outright rather than storing that lie.
 export const TEMPLATABLE_ROLES = [
   { key: 'manager', label: 'Managers' },
   { key: 'staff', label: 'Staff' },
-  { key: 'volunteer', label: 'Volunteers' },
-  { key: 'parent', label: 'Parents' },
 ]
+
+// Roles this layer deliberately does not govern, and why -- shown in place of
+// the editor rather than presenting controls that would be refused on save.
+export const UNGOVERNED_ROLES = {
+  owner: 'Owners can reach every module. To restrict this person, change their account role to Staff first.',
+  admin: 'Administrators can reach every module. To restrict this person, change their account role to Staff first.',
+  volunteer: 'Volunteers use the volunteer portal, not the dashboard, so module access does not apply to them.',
+  parent: 'Parents use the parent portal, not the dashboard, so module access does not apply to them.',
+}
 
 export const LEVEL_OPTIONS = [
   { key: 'none', label: 'No access', desc: 'Hidden from the menu and blocked in the database' },

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
-import { ACCESS_MODULES, LEVEL_OPTIONS, allowedModules } from '../../lib/moduleAccess'
+import { ACCESS_MODULES, LEVEL_OPTIONS, allowedModules, UNGOVERNED_ROLES } from '../../lib/moduleAccess'
 
 // Per-member module access, shown in the staff drawer.
 //
@@ -16,11 +16,14 @@ export default function MemberAccess({ member, org, viewerRole, showToast }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(null)
 
-  const targetIsAdmin = member?.role === 'admin' || member?.role === 'owner'
+  // Roles this layer does not govern at all -- admins (always full access) and
+  // the portal roles (never reach the dashboard). The database refuses grants
+  // for all four, so showing the editor would only produce a failed save.
+  const ungovernedReason = UNGOVERNED_ROLES[member?.role]
   // Mirrors the database trigger. Enforced there; reflected here so the
   // control is disabled rather than failing on save.
   const viewerMayEdit = viewerRole === 'admin' || viewerRole === 'owner'
-    || (viewerRole === 'manager' && !targetIsAdmin && member?.role !== 'manager')
+    || (viewerRole === 'manager' && !ungovernedReason && member?.role !== 'manager')
 
   const orgModules = allowedModules(org)
 
@@ -57,12 +60,14 @@ export default function MemberAccess({ member, org, viewerRole, showToast }) {
     if (error) showToast?.(error.message, 'error')
   }
 
-  if (targetIsAdmin) {
+  if (ungovernedReason) {
+    const isAdminTarget = member?.role === 'admin' || member?.role === 'owner'
     return (
       <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 18, fontSize: 13, color: '#6B7280', lineHeight: 1.7 }}>
-        <div style={{ fontWeight: 800, color: '#111827', marginBottom: 6 }}>Full access</div>
-        Administrators can reach every module. To restrict this person, change their account role to Staff first —
-        otherwise an admin could be locked out of the screen that undoes it.
+        <div style={{ fontWeight: 800, color: '#111827', marginBottom: 6 }}>
+          {isAdminTarget ? 'Full access' : 'Not applicable'}
+        </div>
+        {ungovernedReason}
       </div>
     )
   }
