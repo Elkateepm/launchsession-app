@@ -41,3 +41,14 @@ Both were written here at the same time they were applied. The resolver
 (`module_access(module_key)`) falls back to the pre-feature role behaviour when
 no template or grant row exists, so applying these two files alone changes
 nothing about who can reach what.
+
+Module access RLS enforcement, applied 20 Aug 2026:
+
+- `20260820174217_module_access_legacy_default_is_permissive.sql`
+- `20260820174243_module_access_rls_gates_all_modules.sql`
+
+The gate was applied live in two steps (`..._all_modules` then
+`..._split_per_command`) because the first version let a `view`-level member
+DELETE. The file here is the corrected end state and is the only one a fresh
+environment needs; there is deliberately no separate file for the correction.
+
