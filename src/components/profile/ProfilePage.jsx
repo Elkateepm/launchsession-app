@@ -200,7 +200,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
 
           {/* Sign out */}
           <div style={{ padding: '12px 16px', borderTop: '1px solid #f0f0f0' }}>
-            <button onClick={() => { supabase.auth.signOut(); onSignOut && onSignOut() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: '#DC2626' }}>
+            <button onClick={() => { onSignOut && onSignOut() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: '#DC2626' }}>
               <span style={{ fontSize: 16 }}>🚪</span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>Sign Out</div>

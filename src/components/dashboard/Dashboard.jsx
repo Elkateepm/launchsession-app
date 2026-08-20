@@ -10,6 +10,7 @@ import ProjectsList from '../projects/ProjectsList'
 import Hub from '../hub/Hub'
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { redirectToSignIn } from '../../lib/authRedirect'
 import Registers from '../registers/Registers'
 import { useBreakpoint, useIsMobile } from '../../hooks/useIsMobile'
 import EventsTrips from '../events/EventsTrips'
@@ -551,7 +552,13 @@ export default function Dashboard({ session, org }) {
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
 
-  const handleSignOut = () => supabase.auth.signOut()
+  // Await the sign-out before navigating: replacing the location mid-flight can
+  // tear the page down before Supabase has cleared the persisted session, which
+  // leaves a stale token behind for the next load to pick up.
+  const handleSignOut = async () => {
+    try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
+    redirectToSignIn()
+  }
   const userEmail = session?.user?.email || ''
   const [userProfile, setUserProfile] = useState(null)
   const [showProfile, setShowProfile] = useState(false)
@@ -1022,7 +1029,7 @@ export default function Dashboard({ session, org }) {
           session={session}
           org={org}
           onClose={() => setShowProfile(false)}
-          onSignOut={() => { setShowProfile(false); supabase.auth.signOut() }}
+          onSignOut={() => { setShowProfile(false); handleSignOut() }}
           onProfileUpdate={refreshUserProfile}
         />
       )}

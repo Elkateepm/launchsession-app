@@ -5,6 +5,7 @@ import SplashScreen from './components/common/SplashScreen'
 import { useBreakpoint } from './hooks/useIsMobile'
 import { isEnrolledFor, isLocked, setLocked, getLockAfterMs } from './lib/biometricLock'
 import BiometricLockScreen from './components/auth/BiometricLockScreen'
+import { redirectToSignIn } from './lib/authRedirect'
 
 // Route-level code splitting: each of these becomes its own JS chunk, only
 // downloaded when that route is actually visited, instead of all being
@@ -43,8 +44,8 @@ const IDLE_TIMEOUT_MS = 8 * 60 * 60 * 1000 // 8 hours — a full working day
 const MOBILE_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 const LAST_ACTIVITY_KEY = 'ls_last_activity'
 
-// Signs the user out and returns them to the marketing landing page after a
-// sustained period with no interaction. Only active while `enabled` (a live
+// Signs the user out and returns them to their organisation's sign-in screen
+// after a sustained period with no interaction. Only active while `enabled` (a live
 // session) is true AND on desktop widths - mobile/iPad users stay signed in
 // until they explicitly log out, since idle timeouts on personal devices
 // mostly just cause unwanted logouts (app backgrounded, phone locked, etc.)
@@ -74,7 +75,7 @@ function useIdleLogout(enabled) {
       loggingOut = true
       try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
       try { localStorage.removeItem(LAST_ACTIVITY_KEY) } catch (e) { /* ignore */ }
-      window.location.replace('/landing.html')
+      redirectToSignIn()
     }
 
     // The session is shared across tabs, so a background tab reaching its
@@ -171,7 +172,7 @@ function useMobileInactivityLogout(enabled) {
       loggingOut = true
       try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
       try { localStorage.removeItem(LAST_ACTIVITY_KEY) } catch (e) { /* ignore */ }
-      window.location.replace('/landing.html')
+      redirectToSignIn()
     }
 
     const markActivity = () => {
@@ -302,7 +303,7 @@ function AuthedApp({ session, org, onReady }) {
         onSignOut={async () => {
           setLocked(false)
           try { await supabase.auth.signOut() } catch (e) { /* best effort */ }
-          window.location.replace('/landing.html')
+          redirectToSignIn()
         }}
       />
     )
