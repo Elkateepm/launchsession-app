@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
+import MemberAccess from './MemberAccess'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
 // HR Centre — the single place staff are managed.
@@ -161,7 +162,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
 
   if (selected) {
     return <StaffProfile person={selected} org={org} leave={leave} primary={primary}
-      isAdmin={isAdmin} hasHRModule={hasHRModule}
+      isAdmin={isAdmin} hasHRModule={hasHRModule} viewerRole={userProfile?.role}
       onBack={() => setSelected(null)} onChanged={() => { load(); setSelected(null) }} />
   }
 
@@ -583,7 +584,7 @@ function LeaveTab({ leave, directory }) {
 
 // ------------------------------------------------------------ staff profile
 
-function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, onBack, onChanged }) {
+function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewerRole, onBack, onChanged }) {
   const isMobile = useIsMobile()
   const [tab, setTab] = useState('overview')
   const [editing, setEditing] = useState(false)
@@ -635,7 +636,7 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, onBac
         {(hasHRModule
           ? [['overview', 'Overview'], ['compliance', 'Compliance'], ['leave', 'Leave']]
           : [['overview', 'Overview']]
-        ).map(([k, l]) => (
+        ).concat(isAdmin ? [['access', 'Access']] : []).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k)} style={{
             padding: '8px 15px', borderRadius: 999, fontSize: 13, fontWeight: 700,
             whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit',
@@ -661,6 +662,23 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, onBac
             {field('Account', person.source === 'account' ? 'Has a LaunchSession login' : 'No login yet')}
           </div>
         </div>
+      )}
+
+      {tab === 'access' && (
+        person.user_id ? (
+          <div style={{ ...CARD, padding: 20 }}>
+            <MemberAccess
+              member={{ id: person.user_id, role: person.role, full_name: person.full_name }}
+              org={org}
+              viewerRole={viewerRole}
+            />
+          </div>
+        ) : (
+          <div style={{ ...CARD, padding: 22, fontSize: 13.5, color: '#64748B', lineHeight: 1.55 }}>
+            Module access applies to a LaunchSession login. {person.full_name} doesn't have one yet —
+            invite them first and their access can be set here.
+          </div>
+        )
       )}
 
       {tab === 'compliance' && !hasHRModule && (
