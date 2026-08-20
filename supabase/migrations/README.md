@@ -31,3 +31,13 @@ RLS review fixes, applied 19 Aug 2026:
 Earlier work (Fundraising, Risk Assessments, sidebar) was applied directly and
 is not yet captured. Those migrations are additive and already live; they should
 be exported here when there is a reason to touch them.
+
+Per-member module access, applied 20 Aug 2026:
+
+- `20260820173447_module_access_layer_schema.sql`
+- `20260820173528_module_access_escalation_guard_and_rls.sql`
+
+Both were written here at the same time they were applied. The resolver
+(`module_access(module_key)`) falls back to the pre-feature role behaviour when
+no template or grant row exists, so applying these two files alone changes
+nothing about who can reach what.
