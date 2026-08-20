@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format, differenceInDays, isWithinInterval, parseISO } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
+import MemberAccess from './MemberAccess'
 import * as XLSX from 'xlsx'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
@@ -101,7 +102,7 @@ function KpiCard({ icon, label: lbl, value, color, sub, onClick, active }) {
 // ─────────────────────────────────────────────────────────────────────────
 // Staff profile slide-over
 // ─────────────────────────────────────────────────────────────────────────
-function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpdate, onInviteSent, showToast }) {
+function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpdate, onInviteSent, showToast, viewerRole }) {
   const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState('profile')
   const [leaveLog, setLeaveLog] = useState([])
@@ -264,7 +265,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
         )}
 
         <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #e5e7eb', marginBottom: 20 }}>
-          {[['profile', '📋 Profile'], ['leave', '🏖️ Leave'], ['account', '🔐 Account']].map(([key, lbl]) => (
+          {[['profile', '📋 Profile'], ['leave', '🏖️ Leave'], ['account', '🔐 Account'], ['access', '🔑 Access']].map(([key, lbl]) => (
             <button key={key} onClick={() => setActiveTab(key)} style={{ padding: '10px 16px', border: 'none', borderBottom: `2.5px solid ${activeTab === key ? primary : 'transparent'}`, background: 'transparent', color: activeTab === key ? primary : '#6B7280', fontWeight: activeTab === key ? 800 : 500, fontSize: 13, cursor: 'pointer' }}>
               {lbl}
             </button>
@@ -348,6 +349,17 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === 'access' && (
+          accountStatus === 'active' && accountProfile ? (
+            <MemberAccess member={{ ...accountProfile, full_name: staff.full_name }} org={org} viewerRole={viewerRole} showToast={showToast} />
+          ) : (
+            <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 18, fontSize: 13, color: '#6B7280', lineHeight: 1.7 }}>
+              Module access applies to a LaunchSession login. Invite {staff.full_name} from the Account tab first,
+              and their access can be set here once they've signed in.
+            </div>
+          )
         )}
 
         {activeTab === 'account' && (
@@ -504,7 +516,7 @@ function AddStaffModal({ org, onClose, onAdded, showToast }) {
 // ─────────────────────────────────────────────────────────────────────────
 // Main HR Centre
 // ─────────────────────────────────────────────────────────────────────────
-export default function HR({ org, session }) {
+export default function HR({ org, session, userProfile }) {
   const isMobile = useIsMobile()
   const [staff, setStaff] = useState([])
   const [profiles, setProfiles] = useState([])
@@ -844,6 +856,7 @@ export default function HR({ org, session }) {
             onUpdate={u => { setStaff(s => s.map(x => x.id === u.id ? { ...x, ...u } : x)); setSelected(u) }}
             onInviteSent={load}
             showToast={showToast}
+            viewerRole={userProfile?.role}
           />
         )}
       </AnimatePresence>

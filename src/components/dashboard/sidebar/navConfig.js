@@ -16,7 +16,7 @@ export const NAV_SECTIONS = [
     items: [
       { id: 'calendar', label: 'Calendar', icon: '📅', tab: 'calendar', moduleKey: 'calendar' },
       { id: 'planner', label: 'Sessions', icon: '🚀', tab: 'planner', moduleKey: 'planner' },
-      { id: 'projects', label: 'Projects', icon: '🗂', tab: 'projects_list', matchTabs: ['projects_list', 'projects'] },
+      { id: 'projects', label: 'Projects', icon: '🗂', tab: 'projects_list', matchTabs: ['projects_list', 'projects'], accessKey: 'planner' },
       { id: 'registers', label: 'Registers', icon: '✅', tab: 'registers', moduleKey: 'registers' },
       // Rendered by Dashboard but absent from the old sidebar, so it was only
       // reachable by deep link. Module-gated, so it appears only where enabled.
@@ -29,7 +29,7 @@ export const NAV_SECTIONS = [
     items: [
       // Label comes from the org's own terminology (People / Young People /
       // Members / Players), resolved at render.
-      { id: 'children', label: null, termKey: 'People', icon: '👧', tab: 'children' },
+      { id: 'children', label: null, termKey: 'People', icon: '👧', tab: 'children', accessKey: 'people' },
       // Staff are managed in HR (Operations). Volunteers stay separate: they
       // are a different relationship with different records, and merging them
       // would recreate the ambiguity this consolidation removed.
@@ -93,8 +93,8 @@ export const ORG_ITEMS = [
 // nothing here builds a second way to create anything.
 export const CREATE_ACTIONS = [
   { id: 'session', label: 'New Session', icon: '🚀', tab: 'planner', moduleKey: 'planner', intent: 'create' },
-  { id: 'project', label: 'New Project', icon: '🗂', tab: 'projects_list', intent: 'create' },
-  { id: 'child', label: null, termKey: 'Person', labelPrefix: 'Add ', icon: '👧', tab: 'children', intent: 'create' },
+  { id: 'project', label: 'New Project', icon: '🗂', tab: 'projects_list', intent: 'create', accessKey: 'planner' },
+  { id: 'child', label: null, termKey: 'Person', labelPrefix: 'Add ', icon: '👧', tab: 'children', intent: 'create', accessKey: 'people' },
   { id: 'register', label: 'New Register', icon: '✅', tab: 'registers', moduleKey: 'registers', intent: 'create' },
   { id: 'concern', label: 'Safeguarding Concern', icon: '🛡', tab: 'safeguarding', moduleKey: 'safeguarding', intent: 'create' },
   { id: 'risk', label: 'Risk Assessment', icon: '⚠️', tab: 'risk_assessments', moduleKey: 'risk_assessments', intent: 'create' },
@@ -111,9 +111,14 @@ export const CREATE_ACTIONS = [
  * screen and its routes still exist, so upgrade prompts elsewhere and any
  * existing deep link continue to work.
  */
-export function isItemVisible(item, { hasModule, isAdmin }) {
+export function isItemVisible(item, { hasModule, isAdmin, moduleLevel }) {
   if (item.adminOnly && !isAdmin) return false
   if (item.moduleKey && !hasModule(item.moduleKey)) return false
+  // Per-member access. Some items have no moduleKey because they are core
+  // rather than purchasable (Young People, Projects); accessKey names the
+  // module that governs them so they can still be restricted per person.
+  const accessKey = item.accessKey || item.moduleKey
+  if (accessKey && moduleLevel && moduleLevel(accessKey) === 'none') return false
   return true
 }
 

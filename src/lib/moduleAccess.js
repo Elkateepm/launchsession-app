@@ -58,3 +58,79 @@ export function makeHasModule(org) {
   const allowed = allowedModules(org)
   return (key) => allowed.includes(key)
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Per-member access levels
+//
+// Layer three, beneath the organisation's purchased modules (above) and the
+// role checks. The authoritative resolution lives in the database function
+// module_access(), which the RLS policies consult; the client reads the same
+// answer through the my_module_access() RPC rather than recomputing it, so the
+// nav cannot disagree with what the policies will actually allow.
+// ─────────────────────────────────────────────────────────────────────────
+
+export const LEVELS = { NONE: 'none', VIEW: 'view', EDIT: 'edit' }
+
+export function levelRank(level) {
+  if (level === 'edit') return 2
+  if (level === 'view') return 1
+  return 0
+}
+
+// Modules that can be granted per member, in the order the Access screens
+// list them. `people` and `planner` cover the core records that have no
+// purchasable module of their own but still need to be restrictable.
+export const ACCESS_MODULES = [
+  { key: 'people', label: 'Young People', icon: '👧', hint: 'Records, consents and attachments' },
+  { key: 'planner', label: 'Sessions & Projects', icon: '🚀', hint: 'Planning, notes and reflections' },
+  { key: 'registers', label: 'Registers', icon: '✅', hint: 'Attendance and corrections' },
+  { key: 'calendar', label: 'Calendar', icon: '📅' },
+  { key: 'safeguarding', label: 'Safeguarding', icon: '🛡', hint: 'Concerns and safeguarding documents' },
+  { key: 'case_management', label: 'Case Management', icon: '📁' },
+  { key: 'risk_assessments', label: 'Risk Assessments', icon: '⚠️' },
+  { key: 'medical_alerts', label: 'Medical Alerts', icon: '💊' },
+  { key: 'forms', label: 'Forms', icon: '📝' },
+  { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
+  { key: 'messaging', label: 'Messaging', icon: '💬', hint: 'Threads, announcements and SMS' },
+  { key: 'gallery', label: 'Gallery', icon: '🖼' },
+  { key: 'reports', label: 'Reports', icon: '📈' },
+  { key: 'impact_outcomes', label: 'Impact & Outcomes', icon: '🌱' },
+  { key: 'fundraising', label: 'Fundraising', icon: '💷', hint: 'Campaigns, donations and grants' },
+  { key: 'payments', label: 'Payments', icon: '💳' },
+  { key: 'resource_booking', label: 'Resource Booking', icon: '🗓' },
+  { key: 'events_trips', label: 'Events & Trips', icon: '✈️' },
+  { key: 'mentoring', label: 'Mentoring', icon: '🤝' },
+]
+
+// Roles whose access can be templated. Owner and admin are absent on purpose:
+// they always resolve to 'edit'. Making administrators restrictable means one
+// bad save locks an organisation out of the screen that would undo it.
+export const TEMPLATABLE_ROLES = [
+  { key: 'manager', label: 'Managers' },
+  { key: 'staff', label: 'Staff' },
+  { key: 'volunteer', label: 'Volunteers' },
+  { key: 'parent', label: 'Parents' },
+]
+
+export const LEVEL_OPTIONS = [
+  { key: 'none', label: 'No access', desc: 'Hidden from the menu and blocked in the database' },
+  { key: 'view', label: 'View only', desc: 'Can open and read, cannot add, change or delete' },
+  { key: 'edit', label: 'Full access', desc: 'Can read and make changes' },
+]
+
+/**
+ * Combines all three layers into the single question a component asks:
+ * what can this person do with this module, right now?
+ *
+ * A module the organisation has not enabled is 'none' regardless of any grant
+ * -- a grant narrows, it never buys.
+ */
+export function makeModuleLevel(org, levels) {
+  const allowed = allowedModules(org)
+  return (key) => {
+    // Base modules are always org-allowed; `people` and `planner` are among
+    // them, so a grant is the only thing that can restrict those.
+    if (!allowed.includes(key) && ALL_MODULE_KEYS.includes(key)) return 'none'
+    return (levels && levels[key]) || 'edit'
+  }
+}

@@ -3,6 +3,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { useOrg } from '../../context/OrgContext'
 import OrgSettingsPanel from './OrgSettingsPanel'
+import AccessSection from './AccessSection'
 import {
   isPushSupported, getNotificationPermission, subscribeToPush, unsubscribeFromPush,
   getCurrentSubscription, listMySubscriptions, revokeSubscriptionById, sendTestNotification,
@@ -20,6 +21,7 @@ const NAV = [
   { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform', requiresAdmin: true },
   { key: 'users',        icon: '👥', label: 'Admin', group: 'Platform' },
   { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform', requiresBranding: true },
+  { key: 'access',       icon: '🔑', label: 'Role Access', group: 'Platform', requiresAdmin: true },
   { key: 'safeguarding', icon: '🛡', label: 'Safeguarding', group: 'Operations' },
   { key: 'registers',    icon: '📋', label: 'Registers', group: 'Operations' },
   { key: 'sessions',     icon: '📍', label: 'Venues', group: 'Operations' },
@@ -2739,6 +2741,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
         </div>
       )
       case 'users':           return <UsersSection org={org} session={session} isAdmin={isAdmin} currentUserId={session?.user?.id} />
+      case 'access':         return <AccessSection org={org} isAdmin={isAdmin} />
       case 'security':       return <SecuritySection />
       case 'notifications':  return <NotificationsSection org={org} session={session} />
       case 'integrations':   return <IntegrationsSection />

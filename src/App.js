@@ -6,6 +6,7 @@ import { useBreakpoint } from './hooks/useIsMobile'
 import { isEnrolledFor, isLocked, setLocked, getLockAfterMs } from './lib/biometricLock'
 import BiometricLockScreen from './components/auth/BiometricLockScreen'
 import { redirectToSignIn } from './lib/authRedirect'
+import { ModuleAccessProvider } from './context/ModuleAccessContext'
 
 // Route-level code splitting: each of these becomes its own JS chunk, only
 // downloaded when that route is actually visited, instead of all being
@@ -326,7 +327,11 @@ function AuthedApp({ session, org, onReady }) {
   }
 
   if (!onboardingDone) return <Onboarding session={session} org={org} onComplete={() => setOnboardingDone(true)} />
-  return <Dashboard session={session} org={org} />
+  return (
+    <ModuleAccessProvider userId={session.user.id}>
+      <Dashboard session={session} org={org} />
+    </ModuleAccessProvider>
+  )
 }
 
 // True when running as an installed home-screen app (iOS Safari's
