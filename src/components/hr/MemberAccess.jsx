@@ -130,7 +130,13 @@ export default function MemberAccess({ member, org, viewerRole }) {
         })}
       </div>
 
-      <div style={{ fontSize: 11.5, color: '#9CA3AF', marginTop: 14, lineHeight: 1.6 }}>
+      <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '10px 13px', fontSize: 11.5, color: '#64748B', marginTop: 14, lineHeight: 1.6 }}>
+        Removing <strong>Young People</strong> hides the directory and stops this person adding or editing a young
+        person anywhere — but names still appear in the registers and sessions they can already reach, otherwise
+        those screens would load empty.
+      </div>
+
+      <div style={{ fontSize: 11.5, color: '#9CA3AF', marginTop: 12, lineHeight: 1.6 }}>
         “Inherit” follows whatever the role template says, and changes with it. Setting a level here pins this
         person to it regardless.{' '}
         <span style={{ color: '#6B7280' }}>Set the role template in Settings → Access.</span>

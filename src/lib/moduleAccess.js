@@ -81,8 +81,8 @@ export function levelRank(level) {
 // list them. `people` and `planner` cover the core records that have no
 // purchasable module of their own but still need to be restrictable.
 export const ACCESS_MODULES = [
-  { key: 'people', label: 'Young People', icon: '👧', hint: 'Records, consents and attachments' },
-  { key: 'planner', label: 'Sessions & Projects', icon: '🚀', hint: 'Planning, notes and reflections' },
+  { key: 'people', label: 'Young People', icon: '👧', hint: 'The directory — browsing, adding and editing' },
+  { key: 'planner', label: 'Sessions & Projects', icon: '🚀', hint: 'Planning, notes, reflections and participants' },
   { key: 'registers', label: 'Registers', icon: '✅', hint: 'Attendance and corrections' },
   { key: 'calendar', label: 'Calendar', icon: '📅' },
   { key: 'safeguarding', label: 'Safeguarding', icon: '🛡', hint: 'Concerns and safeguarding documents' },
