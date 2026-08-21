@@ -42,6 +42,19 @@ function timeAgo(ts) {
   return new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
+// A person's name for display. Falls back through preferred name to the email
+// only as a last resort: some profiles have no full_name set, and showing a
+// blank where a colleague's name belongs is worse than showing their address.
+function personName(p) {
+  if (!p) return null
+  const full = (p.full_name || '').trim()
+  if (full) return full
+  const built = [p.first_name, p.last_name].filter(Boolean).join(' ').trim()
+  if (built) return built
+  if ((p.preferred_name || '').trim()) return p.preferred_name.trim()
+  return p.email || 'Unknown'
+}
+
 async function logAudit(orgId, caseId, eventType, detail, userId) {
   await supabase.from('safeguarding_audit_log').insert({ org_id: orgId, case_id: caseId, event_type: eventType, detail, performed_by: userId })
 }
@@ -54,9 +67,14 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate
   const [staff, setStaff] = useState([])
   useEffect(() => {
     let cancelled = false
-    supabase.from('user_profiles').select('id, email, role').eq('org_id', orgId)
+    supabase.from('user_profiles').select('id, email, full_name, first_name, last_name, preferred_name, role').eq('org_id', orgId)
       .in('role', ['owner', 'admin', 'manager', 'staff'])
-      .then(({ data }) => { if (!cancelled) setStaff(data || []) })
+      .then(({ data }) => {
+        if (cancelled) return
+        // Sorted by the name actually shown, so the list reads alphabetically
+        // rather than in whatever order rows came back.
+        setStaff((data || []).sort((a, b) => personName(a).localeCompare(personName(b))))
+      })
     return () => { cancelled = true }
   }, [orgId])
 
@@ -126,7 +144,7 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate
     }
     if ((assignedTo || '') !== (c.assigned_to || '')) {
       const who = staff.find(m => m.id === assignedTo)
-      await logAudit(orgId, c.id, 'assignment', assignedTo ? `Assigned to ${who?.email || 'a colleague'}` : 'Assignment cleared', userId)
+      await logAudit(orgId, c.id, 'assignment', assignedTo ? `Assigned to ${personName(who) || 'a colleague'}` : 'Assignment cleared', userId)
     }
     if (dslNotified && !c.dsl_notified) {
       await logAudit(orgId, c.id, 'dsl_notified', 'DSL recorded as notified', userId)
@@ -234,7 +252,13 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate
               <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)}
                 style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 13, boxSizing: 'border-box' }}>
                 <option value="">Nobody — unassigned</option>
-                {staff.map(m => <option key={m.id} value={m.id}>{m.email}</option>)}
+                {staff.map(m => {
+                  // Two colleagues can share a name. Only then is the email
+                  // added, so it disambiguates without being the default.
+                  const label = personName(m)
+                  const duplicated = staff.filter(x => personName(x) === label).length > 1
+                  return <option key={m.id} value={m.id}>{duplicated ? `${label} (${m.email})` : label}</option>
+                })}
               </select>
               {!assignedTo && (
                 <div style={{ fontSize: 11.5, color: '#B45309', marginTop: 5 }}>An unassigned concern has nobody to chase it.</div>
