@@ -48,21 +48,91 @@ async function logAudit(orgId, caseId, eventType, detail, userId) {
 
 // ── CASE DETAIL MODAL ─────────────────────────────────────────
 function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate }) {
+  // Who a concern can be assigned to. Safeguarding work sits with staff, so
+  // volunteers and parents are not offered.
+  const isNarrow = useIsMobile()
+  const [staff, setStaff] = useState([])
+  useEffect(() => {
+    let cancelled = false
+    supabase.from('user_profiles').select('id, email, role').eq('org_id', orgId)
+      .in('role', ['owner', 'admin', 'manager', 'staff'])
+      .then(({ data }) => { if (!cancelled) setStaff(data || []) })
+    return () => { cancelled = true }
+  }, [orgId])
+
   const [status, setStatus] = useState(c.status)
   const [notes, setNotes] = useState(c.resolution_notes || '')
+  const [assignedTo, setAssignedTo] = useState(c.assigned_to || '')
+  const [followUp, setFollowUp] = useState(!!c.follow_up_required)
+  const [followUpDue, setFollowUpDue] = useState(c.follow_up_due || '')
+  const [dslNotified, setDslNotified] = useState(!!c.dsl_notified)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [escalating, setEscalating] = useState(false)
 
+  const isClosing = (st) => st === 'resolved' || st === 'closed'
+
   const handleSave = async () => {
+    // A concern cannot be closed on nothing. The whole point of the resolution
+    // note is that someone can later say why this was considered dealt with.
+    if (isClosing(status) && !isClosing(c.status) && !notes.trim()) {
+      setSaveError('Add a resolution note before closing this concern.')
+      return
+    }
+    if (followUp && !followUpDue) {
+      setSaveError('A follow-up needs a date, otherwise nothing can ever chase it.')
+      return
+    }
     setSaving(true)
-    const update = { status, resolution_notes: notes, updated_at: new Date().toISOString() }
-    if (status === 'resolved' && c.status !== 'resolved') update.resolved_at = new Date().toISOString()
+    setSaveError('')
+    const update = {
+      status,
+      resolution_notes: notes,
+      assigned_to: assignedTo || null,
+      follow_up_required: followUp,
+      follow_up_due: followUp ? (followUpDue || null) : null,
+      dsl_notified: dslNotified,
+      updated_at: new Date().toISOString(),
+    }
+    // Both closing states stamp the closure. Previously only 'resolved' set
+    // resolved_at, so every concern closed as 'closed' left no record of when
+    // it happened or who did it -- which is exactly what an inspection asks
+    // for, and why the Resolved counter read zero against five closed rows.
+    if (isClosing(status) && !isClosing(c.status)) {
+      update.closed_at = new Date().toISOString()
+      update.closed_by = userId || null
+      if (status === 'resolved') { update.resolved_at = update.closed_at; update.resolved_by = userId || null }
+    }
+    // Reopening clears the closure rather than leaving a stale one behind.
+    if (!isClosing(status) && isClosing(c.status)) {
+      update.closed_at = null; update.closed_by = null
+      update.resolved_at = null; update.resolved_by = null
+    }
+    // The DSL notification is evidence, so it gets a real timestamp the moment
+    // it is ticked. dsl_notified_time was free text and unverifiable.
+    if (dslNotified && !c.dsl_notified) {
+      update.dsl_notified_at = new Date().toISOString()
+      update.dsl_notified_by = userId || null
+    }
+
     const { error } = await supabase.from('cause_for_concern').update(update).eq('id', c.id)
-    if (!error && status !== c.status) {
+    if (error) {
+      setSaving(false)
+      setSaveError(error.message)
+      return
+    }
+    if (status !== c.status) {
       await logAudit(orgId, c.id, 'status_change', `Status changed to ${STATUS_COLORS[status]?.label || status}`, userId)
     }
+    if ((assignedTo || '') !== (c.assigned_to || '')) {
+      const who = staff.find(m => m.id === assignedTo)
+      await logAudit(orgId, c.id, 'assignment', assignedTo ? `Assigned to ${who?.email || 'a colleague'}` : 'Assignment cleared', userId)
+    }
+    if (dslNotified && !c.dsl_notified) {
+      await logAudit(orgId, c.id, 'dsl_notified', 'DSL recorded as notified', userId)
+    }
     setSaving(false)
-    if (!error) { onStatusChange(); onClose() }
+    onStatusChange(); onClose()
   }
 
   const RISK_MAP = { urgent: 'critical', high: 'high', medium: 'medium', low: 'low' }
@@ -158,8 +228,57 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate
               <button key={key} onClick={() => setStatus(key)} style={{ padding: '7px 14px', borderRadius: 999, border: status === key ? '2px solid ' + val.color : '1px solid var(--border)', background: status === key ? val.bg : 'transparent', color: status === key ? val.color : 'var(--text3)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>{val.label}</button>
             ))}
           </div>
+          <div style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 1fr', gap: 14, marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text3)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Assigned to</div>
+              <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 13, boxSizing: 'border-box' }}>
+                <option value="">Nobody — unassigned</option>
+                {staff.map(m => <option key={m.id} value={m.id}>{m.email}</option>)}
+              </select>
+              {!assignedTo && (
+                <div style={{ fontSize: 11.5, color: '#B45309', marginTop: 5 }}>An unassigned concern has nobody to chase it.</div>
+              )}
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text3)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Follow-up</div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text)', marginBottom: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={followUp} onChange={e => setFollowUp(e.target.checked)} />
+                Follow-up required
+              </label>
+              {followUp && (
+                <input type="date" value={followUpDue || ''} onChange={e => setFollowUpDue(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 13, boxSizing: 'border-box' }} />
+              )}
+            </div>
+          </div>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text)', marginBottom: 16, cursor: 'pointer' }}>
+            <input type="checkbox" checked={dslNotified} onChange={e => setDslNotified(e.target.checked)} />
+            Designated Safeguarding Lead has been notified
+            {c.dsl_notified_at && (
+              <span style={{ fontSize: 11.5, color: 'var(--text3)' }}>
+                — recorded {new Date(c.dsl_notified_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </label>
+
           <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text3)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Resolution / Case Notes</div>
           <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add resolution notes, outcomes, or case updates..." style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 13, outline: 'none', resize: 'vertical', minHeight: 90, boxSizing: 'border-box' }} />
+
+          {(c.closed_at || (isClosing(c.status) && !c.closed_at)) && (
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 8 }}>
+              {c.closed_at
+                ? `Closed ${new Date(c.closed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                : 'Closed before closure dates were recorded — date not known.'}
+            </div>
+          )}
+
+          {saveError && (
+            <div style={{ marginTop: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#B91C1C', borderRadius: 10, padding: '9px 12px', fontSize: 12.5, fontWeight: 600 }}>
+              {saveError}
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', flexWrap: 'wrap' }}>
@@ -319,8 +438,22 @@ function ChildrenTab({ org, cases, isMobile }) {
 
   useEffect(() => { load() }, [load])
 
-  const concernCounts = {}
-  cases.forEach(c => { concernCounts[c.child_name] = (concernCounts[c.child_name] || 0) + 1 })
+  // Counted by child_id where the concern is linked, falling back to the
+  // recorded name for older records that predate the link. Matching on name
+  // alone meant a concern filed as "Jineen Osman " or "jineen osman" counted
+  // against a different person than the register knew about -- and a child's
+  // concern history is the one thing here that must not fragment.
+  const concernCountsById = {}
+  const concernCountsByName = {}
+  cases.forEach(c => {
+    if (c.child_id) concernCountsById[c.child_id] = (concernCountsById[c.child_id] || 0) + 1
+    else if (c.child_name) {
+      const k = c.child_name.trim().toLowerCase()
+      concernCountsByName[k] = (concernCountsByName[k] || 0) + 1
+    }
+  })
+  const concernsFor = (ch) => (concernCountsById[ch.id] || 0)
+    + (concernCountsByName[`${ch.first_name} ${ch.last_name}`.trim().toLowerCase()] || 0)
 
   const filtered = children.filter(c => !search || `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase()))
 
@@ -372,8 +505,8 @@ function ChildrenTab({ org, cases, isMobile }) {
                   {c.sen && <span style={{ fontSize: 10, fontWeight: 700, color: '#059669', background: 'rgba(5,150,105,0.1)', padding: '2px 8px', borderRadius: 999 }}>SEN</span>}
                 </div>
 
-                {concernCounts[`${c.first_name} ${c.last_name}`] > 0 && (
-                  <div style={{ fontSize: 11, color: '#DC2626', fontWeight: 700 }}>{concernCounts[`${c.first_name} ${c.last_name}`]} concern(s) on file</div>
+                {concernsFor(c) > 0 && (
+                  <div style={{ fontSize: 11, color: '#DC2626', fontWeight: 700 }}>{concernsFor(c)} concern{concernsFor(c) === 1 ? '' : 's'} on file</div>
                 )}
 
                 <button onClick={() => setWellbeingChild(c)} style={{ marginTop: 4, padding: '9px 12px', borderRadius: 10, border: 'none', background: PRIMARY, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
@@ -669,9 +802,59 @@ function StatusPills({ stats }) {
   )
 }
 
-// ── NEEDS ATTENTION CARD ─────────────────────────────────────────
-function NeedsAttentionCard({ followUps, onSelect }) {
-  if (followUps.length === 0) {
+// ── NEEDS ATTENTION ───────────────────────────────────────────
+//
+// What an open concern looks like when it has gone wrong. Previously this
+// only knew about follow-ups, and follow-ups had no due date, so it could
+// only ever say "nothing requires your attention" -- including on a day with
+// an unassigned open concern and no DSL notified.
+//
+// Ordered by how bad it is, not by date: an open concern the DSL has never
+// been told about outranks a follow-up that slipped by a day.
+export function attentionItems(cases) {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const isOpen = c => c.status !== 'resolved' && c.status !== 'closed'
+  const days = ts => Math.floor((today - new Date(ts)) / 86400000)
+  const out = []
+
+  for (const c of cases) {
+    if (!isOpen(c)) continue
+    if (!c.dsl_notified) {
+      out.push({ id: c.id + '-dsl', c, rank: 0, title: 'DSL not notified', detail: c.child_name || 'Unnamed concern' })
+    }
+    if (c.follow_up_required && c.follow_up_due) {
+      const due = new Date(c.follow_up_due); due.setHours(0, 0, 0, 0)
+      const overdue = Math.floor((today - due) / 86400000)
+      if (overdue > 0) out.push({ id: c.id + '-od', c, rank: 1, title: `Follow-up ${overdue} day${overdue === 1 ? '' : 's'} overdue`, detail: c.child_name })
+      else if (overdue === 0) out.push({ id: c.id + '-due', c, rank: 2, title: 'Follow-up due today', detail: c.child_name })
+    }
+    // A follow-up with no date can never come due, so it would otherwise sit
+    // silently forever. Surface it as the omission it is.
+    if (c.follow_up_required && !c.follow_up_due) {
+      out.push({ id: c.id + '-nodate', c, rank: 3, title: 'Follow-up has no date set', detail: c.child_name })
+    }
+    if (!c.assigned_to) {
+      out.push({ id: c.id + '-unassigned', c, rank: 4, title: 'Nobody assigned', detail: c.child_name })
+    }
+    if (c.created_at && days(c.created_at) >= 14) {
+      out.push({ id: c.id + '-stale', c, rank: 5, title: `Open ${days(c.created_at)} days`, detail: c.child_name })
+    }
+  }
+  return out.sort((a, b) => a.rank - b.rank)
+}
+
+const ATTENTION_TONE = [
+  { bg: 'rgba(239,68,68,0.07)', border: 'rgba(239,68,68,0.3)', color: '#B91C1C', icon: '🚨' },
+  { bg: 'rgba(239,68,68,0.07)', border: 'rgba(239,68,68,0.3)', color: '#B91C1C', icon: '⏰' },
+  { bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.3)', color: '#B45309', icon: '⚠️' },
+  { bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.3)', color: '#B45309', icon: '⚠️' },
+  { bg: 'rgba(100,116,139,0.07)', border: 'rgba(100,116,139,0.28)', color: '#475569', icon: '👤' },
+  { bg: 'rgba(100,116,139,0.07)', border: 'rgba(100,116,139,0.28)', color: '#475569', icon: '🕐' },
+]
+
+function NeedsAttentionCard({ items, onSelect }) {
+  const [showAll, setShowAll] = useState(false)
+  if (items.length === 0) {
     return (
       <div style={{ ...card, padding: 16, display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(34,197,94,0.06)', borderColor: 'rgba(34,197,94,0.2)' }}>
         <span style={{ fontSize: 22 }}>✅</span>
@@ -682,31 +865,41 @@ function NeedsAttentionCard({ followUps, onSelect }) {
       </div>
     )
   }
+  const shown = showAll ? items : items.slice(0, 4)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {followUps.slice(0, 3).map(c => (
-        <button key={c.id} onClick={() => onSelect(c)}
-          style={{ ...card, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer', textAlign: 'left', background: 'rgba(245,158,11,0.06)', borderColor: 'rgba(245,158,11,0.25)' }}>
-          <span style={{ fontSize: 20, flexShrink: 0 }}>⚠️</span>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>Follow-up due</div>
-            <div style={{ fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.child_name}</div>
-          </div>
-          <span style={{ fontSize: 11.5, fontWeight: 800, color: '#D97706', flexShrink: 0 }}>View →</span>
+      {shown.map(item => {
+        const tone = ATTENTION_TONE[item.rank] || ATTENTION_TONE[5]
+        return (
+          <button key={item.id} onClick={() => onSelect(item.c)}
+            style={{ ...card, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer', textAlign: 'left', background: tone.bg, borderColor: tone.border }}>
+            <span style={{ fontSize: 19, flexShrink: 0 }} aria-hidden="true">{tone.icon}</span>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{item.title}</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.detail}</div>
+            </div>
+            <span style={{ fontSize: 11.5, fontWeight: 800, color: tone.color, flexShrink: 0 }}>Open →</span>
+          </button>
+        )
+      })}
+      {items.length > 4 && (
+        <button onClick={() => setShowAll(v => !v)}
+          style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', padding: '4px 0', textAlign: 'left' }}>
+          {showAll ? 'Show less' : `Show ${items.length - 4} more`}
         </button>
-      ))}
+      )}
     </div>
   )
 }
 
 // ── OVERVIEW TAB ─────────────────────────────────────────
-function OverviewTab({ cases, followUps, quickActions, onSelect, isMobile }) {
+function OverviewTab({ cases, attention, quickActions, onSelect, isMobile }) {
   const recent = cases.slice(0, 5)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
       <div>
         <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Needs Attention</div>
-        <NeedsAttentionCard followUps={followUps} onSelect={onSelect} />
+        <NeedsAttentionCard items={attention} onSelect={onSelect} />
       </div>
 
       <div>
@@ -778,11 +971,16 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
   }, [initialOpenConcernId, cases])
 
   const stats = {
-    open: cases.filter(c => c.status === 'open').length,
+    open: cases.filter(c => c.status === 'open' || c.status === 'in_progress').length,
     followUp: cases.filter(c => c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed').length,
-    resolvedThisMonth: cases.filter(c => c.resolved_at && new Date(c.resolved_at).getMonth() === new Date().getMonth() && new Date(c.resolved_at).getFullYear() === new Date().getFullYear()).length,
+    // Counts closed_at, not resolved_at. Only the 'resolved' status ever set
+    // resolved_at, so a concern closed as 'closed' was invisible here -- which
+    // is why this read zero against five closed concerns.
+    resolvedThisMonth: cases.filter(c => c.closed_at
+      && new Date(c.closed_at).getMonth() === new Date().getMonth()
+      && new Date(c.closed_at).getFullYear() === new Date().getFullYear()).length,
   }
-  const followUps = cases.filter(c => c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed')
+  const attention = attentionItems(cases)
 
   const TABS = [
     ['overview', '🏠 Overview'],
@@ -835,7 +1033,7 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile || tab !== 'cases' ? '1fr' : '1fr 280px', gap: 20, alignItems: 'flex-start' }}>
           <div>
-            {tab === 'overview' && <OverviewTab cases={cases} followUps={followUps} quickActions={QUICK_ACTIONS} onSelect={setSelected} isMobile={isMobile} />}
+            {tab === 'overview' && <OverviewTab cases={cases} attention={attention} quickActions={QUICK_ACTIONS} onSelect={setSelected} isMobile={isMobile} />}
             {tab === 'cases' && <CasesTab cases={cases} loading={loading} filter={filter} setFilter={setFilter} onSelect={setSelected} isMobile={isMobile} />}
             {tab === 'children' && <ChildrenTab org={{ ...org, _sessionUserId: userId }} cases={cases} isMobile={isMobile} />}
             {tab === 'medical' && <MedicalTab org={org} isMobile={isMobile} />}

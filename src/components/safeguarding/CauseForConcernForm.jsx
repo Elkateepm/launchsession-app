@@ -41,6 +41,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
   const [children, setChildren] = useState([])
   const [childSearch, setChildSearch] = useState('')
   const [showChildPicker, setShowChildPicker] = useState(false)
+  const [linkedChildId, setLinkedChildId] = useState(null)
   const [form, setForm] = useState({
     submitter_name: authSession?.user?.email?.split('@')[0] || '',
     child_name: '',
@@ -90,6 +91,12 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
     const already = current.split(',').map(n => n.trim().toLowerCase()).includes(fullName.toLowerCase())
     const next = !current ? fullName : already ? current : `${current}, ${fullName}`
     set('child_name', next)
+    // Record the link to the actual record, not just the typed name, so the
+    // concern shows up in that child's history. The field can name several
+    // people -- staff, a sibling, a member of the public -- so only the first
+    // child picked from the register becomes the linked subject; the rest stay
+    // in the text where they belong.
+    setLinkedChildId(prev => prev || child.id)
     setChildSearch('')
     setShowChildPicker(false)
   }
@@ -106,6 +113,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
       submitted_by: authSession?.user?.id,
       submitter_name: form.submitter_name,
       child_name: form.child_name,
+      child_id: linkedChildId,
       concern_type: 'general',
       description: form.description,
       date_of_incident: form.date_of_incident,
@@ -203,6 +211,16 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
           )}
         </div>
         <textarea style={taStyle} value={form.child_name} onChange={e => set('child_name', e.target.value)} placeholder="Names of children, staff, volunteers or members of the public involved" />
+        {/* Whether this concern joins a child's history depends on it being
+            picked from the register, and that is not obvious from a text box.
+            Say which it is instead of leaving it to chance. */}
+        {form.child_name.trim() !== '' && (
+          <div style={{ fontSize: 11.5, marginTop: 6, color: linkedChildId ? '#15803D' : '#B45309', fontWeight: 600 }}>
+            {linkedChildId
+              ? '✓ Linked to a child on the register — this will show in their safeguarding history.'
+              : 'Not linked to anyone on the register. Search above to link it, so it appears in that child\'s history.'}
+          </div>
+        )}
       </div>
       <div style={{ marginBottom: 14 }}>
         <label style={lStyle}>3. Location of the incident *</label>
