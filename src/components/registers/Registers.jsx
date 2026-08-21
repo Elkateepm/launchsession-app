@@ -415,20 +415,50 @@ function NotesTab({ child }) {
   const [notes, setNotes] = useState(child.notes || '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
   const timerRef = React.useRef(null)
+  const latestRef = React.useRef(child.notes || '')
+  const dirtyRef = React.useRef(false)
+  const mountedRef = React.useRef(true)
 
   const save = React.useCallback(async (value) => {
     setSaving(true)
-    await supabase.from('children').update({ notes: value || null }).eq('id', child.id)
+    const { error: e } = await supabase.from('children').update({ notes: value || null }).eq('id', child.id)
+    if (!mountedRef.current) return
     setSaving(false)
+    if (e) {
+      // Previously any failure still showed "Saved". Someone recording a
+      // concern about a child would have walked away believing it was stored.
+      setError('Not saved — check your connection and try again')
+      return
+    }
+    dirtyRef.current = false
+    setError('')
     setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setTimeout(() => { if (mountedRef.current) setSaved(false) }, 2000)
+  }, [child.id])
+
+  // The debounce is 1.2s, so closing the drawer straight after typing used to
+  // drop the last edit silently and then setState on an unmounted component.
+  // Flush the pending value on the way out instead of cancelling it.
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      clearTimeout(timerRef.current)
+      if (dirtyRef.current) {
+        supabase.from('children').update({ notes: latestRef.current || null }).eq('id', child.id)
+      }
+    }
   }, [child.id])
 
   const handleChange = (e) => {
     const value = e.target.value
+    latestRef.current = value
+    dirtyRef.current = true
     setNotes(value)
     setSaved(false)
+    setError('')
     clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => save(value), 1200)
   }
@@ -437,8 +467,8 @@ function NotesTab({ child }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>Private notes about {child.first_name}</div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: saving ? '#F59E0B' : saved ? '#16A34A' : 'transparent' }}>
-          {saving ? 'Saving...' : '✓ Saved'}
+        <div aria-live="polite" style={{ fontSize: 11, fontWeight: 700, color: error ? '#DC2626' : saving ? '#B45309' : saved ? '#15803D' : 'transparent' }}>
+          {error || (saving ? 'Saving…' : '✓ Saved')}
         </div>
       </div>
       <textarea
@@ -463,6 +493,20 @@ function PhotosTab({ child, org }) {
   const [viewing, setViewing] = useState(null)
   const [authUserId, setAuthUserId] = useState(null)
   const fileInputRef = React.useRef()
+
+  // The drawer closes on Escape via a document-level listener. Without this,
+  // pressing Escape to dismiss an enlarged photo closed the whole child record
+  // instead. Capture phase so this runs first, and stop it going further.
+  useEffect(() => {
+    if (!viewing) return undefined
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      setViewing(null)
+    }
+    document.addEventListener('keydown', onKey, true)
+    return () => document.removeEventListener('keydown', onKey, true)
+  }, [viewing])
 
   const load = React.useCallback(async () => {
     setLoading(true)
@@ -565,19 +609,36 @@ function PhotosTab({ child, org }) {
 function ActivityTab({ child, org }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       setLoading(true)
-      const { data } = await supabase
+      setError('')
+      if (!org?.id) { setLoading(false); return }
+      // Fetched wider than it is shown. limit() applies to attendance rows,
+      // and one row yields up to two events, so limiting to 50 rows here and
+      // showing 50 events would cut the timeline at an arbitrary point. Rows
+      // are ordered by created_at because that is the only column every row
+      // has -- an unmarked row has neither timestamp -- so the real ordering
+      // is done below, after the events exist.
+      const { data, error: e } = await supabase
         .from('attendance')
-        .select('id, status, signed_in_at, signed_out_at, absence_reason, session_id, sessions(title, session_date)')
+        .select('id, status, signed_in_at, signed_out_at, absence_reason, created_at, session_id, sessions(title, session_date)')
         .eq('child_id', child.id)
-        .eq('org_id', org?.id)
+        .eq('org_id', org.id)
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(120)
       if (cancelled) return
+      if (e) {
+        // An unreadable history is not an empty history. Saying "no activity"
+        // when the query failed tells a safeguarding lead this child has never
+        // attended, which is a different and much worse claim.
+        setError('Activity could not be loaded')
+        setLoading(false)
+        return
+      }
       // One attendance row can be two events -- arrived, then left -- so it is
       // flattened into separate timeline entries and re-sorted by the moment
       // each thing actually happened.
@@ -587,17 +648,23 @@ function ActivityTab({ child, org }) {
         if (r.signed_in_at) events.push({ id: r.id + '-in', at: r.signed_in_at, title: 'Signed in', detail: label, tone: 'green' })
         if (r.signed_out_at) events.push({ id: r.id + '-out', at: r.signed_out_at, title: 'Signed out', detail: label, tone: 'blue' })
         if (r.status === 'absent' && !r.signed_in_at) {
+          // session_date is the only date an absence has, and it arrives
+          // through the embedded join -- which returns null for anyone without
+          // Planner access, since sessions carries its own module gate. Those
+          // entries still appear, dated from the attendance row instead.
           events.push({
             id: r.id + '-abs',
-            at: r.sessions?.session_date || null,
+            at: r.sessions?.session_date || r.created_at || null,
             title: 'Marked absent',
             detail: r.absence_reason ? `${label} — ${r.absence_reason}` : label,
             tone: 'slate',
           })
         }
       }
-      events.sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0))
-      setRows(events)
+      // Tie-break on id so two events sharing a timestamp keep a stable order
+      // between renders rather than depending on fetch order.
+      events.sort((a, b) => (new Date(b.at || 0) - new Date(a.at || 0)) || a.id.localeCompare(b.id))
+      setRows(events.slice(0, 60))
       setLoading(false)
     })()
     return () => { cancelled = true }
@@ -609,7 +676,18 @@ function ActivityTab({ child, org }) {
     slate: '#94A3B8',
   }
 
-  if (loading) return <div style={{ padding: '28px 0', textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>Loading activity…</div>
+  if (loading) return <div style={{ padding: '28px 0', textAlign: 'center', fontSize: 13, color: '#64748B' }}>Loading activity…</div>
+
+  if (error) {
+    return (
+      <div style={{ padding: '22px 18px', textAlign: 'center', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 12 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#B91C1C', marginBottom: 3 }}>{error}</div>
+        <div style={{ fontSize: 12.5, color: '#B91C1C', lineHeight: 1.55 }}>
+          This does not mean {child.first_name} has no attendance history — the record could not be read.
+        </div>
+      </div>
+    )
+  }
 
   if (rows.length === 0) {
     return (
@@ -631,7 +709,7 @@ function ActivityTab({ child, org }) {
             <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{r.title}</div>
             <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 1 }}>{r.detail}</div>
           </div>
-          <div style={{ fontSize: 12, color: '#94A3B8', whiteSpace: 'nowrap', textAlign: 'right' }}>
+          <div style={{ fontSize: 12, color: '#64748B', whiteSpace: 'nowrap', textAlign: 'right' }}>
             {r.at ? format(new Date(r.at), 'd MMM · HH:mm') : '—'}
           </div>
         </div>
@@ -656,7 +734,7 @@ function InfoRow({ label, children, last }) {
 function SectionHeading({ children, action }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '20px 0 2px' }}>
-      <h3 style={{ fontSize: 12, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>{children}</h3>
+      <h3 style={{ fontSize: 12, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>{children}</h3>
       {action}
     </div>
   )
@@ -674,6 +752,8 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   const [copied, setCopied] = useState(false)
   const dialogRef = React.useRef(null)
   const menuRef = React.useRef(null)
+  const closeBtnRef = React.useRef(null)
+  const tablistRef = React.useRef(null)
   // Focus has to go back where it came from when the modal closes, or a
   // keyboard user is dumped at the top of the register every time they look
   // at a child.
@@ -698,6 +778,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   // attachments itself when that tab is opened.
   useEffect(() => {
     let cancelled = false
+    setPhotoCount(null)
     supabase.from('child_attachments').select('id', { count: 'exact', head: true }).eq('child_id', child.id)
       .then(({ count }) => { if (!cancelled) setPhotoCount(count ?? null) })
     return () => { cancelled = true }
@@ -723,21 +804,43 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
     return () => { if (opener && typeof opener.focus === 'function') opener.focus() }
   }, [])
 
-  // Keep the tab order inside the dialog while it is open.
+  // Move focus into the dialog on open, then keep it there.
+  //
+  // Wrapping at the first and last control is not a trap on its own: if focus
+  // never enters the dialog it simply tabs on through to the register behind,
+  // which is exactly what happened here, because opening the modal by pointer
+  // usually leaves activeElement on body. So focus is placed on the close
+  // button first, and a focusin listener pulls anything that lands outside
+  // back in.
   useEffect(() => {
     const node = dialogRef.current
     if (!node) return undefined
+    const focusablesIn = () => Array.from(
+      node.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])')
+    ).filter(el => el.offsetParent !== null || el === document.activeElement)
+
+    closeBtnRef.current?.focus()
+
     const onKeyDown = (e) => {
       if (e.key !== 'Tab') return
-      const focusable = node.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
-      if (focusable.length === 0) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
+      const f = focusablesIn()
+      if (f.length === 0) return
+      const first = f[0]
+      const last = f[f.length - 1]
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
     }
+    const onFocusIn = (e) => {
+      if (node.contains(e.target)) return
+      const f = focusablesIn()
+      if (f.length) f[0].focus()
+    }
     node.addEventListener('keydown', onKeyDown)
-    return () => node.removeEventListener('keydown', onKeyDown)
+    document.addEventListener('focusin', onFocusIn)
+    return () => {
+      node.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('focusin', onFocusIn)
+    }
   }, [])
 
   // Close the overflow menu on any outside click.
@@ -797,7 +900,13 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   const removeFromRegister = async () => {
     setMenuOpen(false)
     if (!window.confirm(`Remove ${name} from the register?`)) return
-    await supabase.from('children').update({ active: false }).eq('id', child.id)
+    const { error: e } = await supabase.from('children').update({ active: false }).eq('id', child.id)
+    if (e) {
+      // Closing regardless made a refused write look like a completed removal;
+      // the child reappears on the next load and nobody knows why.
+      window.alert(`${name} could not be removed: ${e.message}`)
+      return
+    }
     onClose()
   }
 
@@ -840,7 +949,10 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         onDragEnd={(e, info) => { if (info.offset.y > 100 || info.velocity.y > 500) onClose() }}
         style={{
           background: '#fff', borderRadius: isMobile ? '24px 24px 0 0' : 23,
-          width: '100%', maxWidth: isMobile ? '100%' : 486, maxHeight: isMobile ? '94vh' : '88vh',
+          width: '100%', maxWidth: isMobile ? '100%' : 486,
+          // dvh follows the visible area rather than the layout viewport, so an
+          // open keyboard does not push the Notes textarea behind itself.
+          maxHeight: isMobile ? '94dvh' : '88vh',
           border: isMobile ? 'none' : '1px solid #EEF1F5',
           boxShadow: '0 24px 64px -12px rgba(15,23,42,0.28)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
@@ -855,7 +967,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         )}
 
         {/* ── SCROLLING BODY ── */}
-        <div style={{ overflowY: 'auto', flex: 1, WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ overflowY: 'auto', flex: 1, WebkitOverflowScrolling: 'touch', scrollPaddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}>
 
           {/* Top controls */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 6, padding: '12px 14px 0' }}>
@@ -894,7 +1006,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                 </div>
               )}
             </div>
-            <button onClick={onClose} aria-label="Close" title="Close"
+            <button ref={closeBtnRef} onClick={onClose} aria-label="Close" title="Close"
               style={{ width: 32, height: 32, borderRadius: 9, background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 19, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               onMouseEnter={e => { e.currentTarget.style.background = '#F1F5F9' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>×</button>
@@ -954,12 +1066,37 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
           </div>
 
           {/* ── TABS ── */}
-          <div role="tablist" aria-label="Child profile sections" style={{ display: 'flex', gap: 20, padding: '18px 24px 0', borderBottom: '1px solid #F1F5F9', margin: '4px 0 0' }}>
+          <div
+            role="tablist"
+            aria-label="Child profile sections"
+            ref={tablistRef}
+            // Arrow keys move between tabs and only the selected tab is a Tab
+            // stop, which is the ARIA tab pattern. Four separate Tab stops
+            // made reaching the content four presses away.
+            onKeyDown={e => {
+              const keys = TABS.map(t => t[0])
+              const i = keys.indexOf(drawerTab)
+              let next = null
+              if (e.key === 'ArrowRight') next = keys[(i + 1) % keys.length]
+              else if (e.key === 'ArrowLeft') next = keys[(i - 1 + keys.length) % keys.length]
+              else if (e.key === 'Home') next = keys[0]
+              else if (e.key === 'End') next = keys[keys.length - 1]
+              if (!next) return
+              e.preventDefault()
+              setDrawerTab(next)
+              setEditing(false)
+              tablistRef.current?.querySelector(`#child-tab-${next}`)?.focus()
+            }}
+            style={{ display: 'flex', gap: 20, padding: '18px 24px 0', borderBottom: '1px solid #F1F5F9', margin: '4px 0 0' }}>
             {TABS.map(([key, label]) => (
-              <button key={key} role="tab" aria-selected={drawerTab === key} onClick={() => { setDrawerTab(key); setEditing(false) }}
+              <button key={key} id={`child-tab-${key}`} role="tab"
+                aria-selected={drawerTab === key}
+                aria-controls={`child-panel-${key}`}
+                tabIndex={drawerTab === key ? 0 : -1}
+                onClick={() => { setDrawerTab(key); setEditing(false) }}
                 style={{
                   padding: '0 0 10px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit',
-                  color: drawerTab === key ? PURPLE : '#94A3B8',
+                  color: drawerTab === key ? PURPLE : '#64748B',
                   fontWeight: drawerTab === key ? 800 : 600, fontSize: 13.5,
                   borderBottom: `2px solid ${drawerTab === key ? PURPLE : 'transparent'}`,
                   marginBottom: -1, transition: 'color 0.15s',
@@ -970,7 +1107,12 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
           </div>
 
           {/* ── CONTENT ── */}
-          <div style={{ padding: '4px 24px 22px' }}>
+          <div
+            id={`child-panel-${drawerTab}`}
+            role="tabpanel"
+            aria-labelledby={`child-tab-${drawerTab}`}
+            tabIndex={-1}
+            style={{ padding: '4px 24px 22px' }}>
 
             {editing ? (
               <div>
@@ -1017,14 +1159,14 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                                 Call
                               </a>
                               <button onClick={() => copyNumber(child.emergency_contact_phone)} style={ghostBtn}>
-                                {copied ? '✓ Copied' : 'Copy number'}
+                                <span aria-live="polite">{copied ? '✓ Copied' : 'Copy number'}</span>
                               </button>
                             </div>
                           </>
                         )}
                       </div>
                     ) : (
-                      <div style={{ fontSize: 13, color: '#94A3B8', paddingTop: 8 }}>No emergency contact recorded</div>
+                      <div style={{ fontSize: 13, color: '#64748B', paddingTop: 8 }}>No emergency contact recorded</div>
                     )}
 
                     {(child.parent_name || child.parent_phone) && (
@@ -1062,10 +1204,10 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
             LiveRegister, which owns the sign-in/out correctness rules, so this
             reports state rather than duplicating that logic. */}
         {hasSession && (signedInTime || signedOutTime) && (
-          <div style={{ borderTop: '1px solid #F1F5F9', background: '#FCFCFD', padding: '13px 24px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700 }}>
+          <div style={{ borderTop: '1px solid #F1F5F9', background: '#FCFCFD', padding: '13px 24px calc(13px + env(safe-area-inset-bottom))', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700 }}>
             {signedOutTime ? (
               <><span style={{ color: '#2563EB' }} aria-hidden="true">✓</span><span style={{ color: '#1D4ED8' }}>Signed out at {signedOutTime}</span>
-                <span style={{ color: '#94A3B8', fontWeight: 500, marginLeft: 'auto' }}>In at {signedInTime}</span></>
+                <span style={{ color: '#64748B', fontWeight: 500, marginLeft: 'auto' }}>In at {signedInTime}</span></>
             ) : (
               <><span style={{ color: '#16A34A' }} aria-hidden="true">✓</span><span style={{ color: '#15803D' }}>Signed in at {signedInTime}</span></>
             )}
@@ -2001,6 +2143,12 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       {/* CHILD DRAWER */}
       {selectedChild && (
         <ChildDrawer
+          // Keyed so switching child remounts rather than reuses. Without
+          // this, NotesTab keeps the previous child's text in state while the
+          // save closure moves to the new child's id -- one child's notes get
+          // written onto another's record. Tab, menu and photo-count state
+          // were leaking across children for the same reason.
+          key={selectedChild.child.id}
           child={selectedChild.child}
           status={selectedChild.status}
           attendanceRecord={selectedChild.attRec}
