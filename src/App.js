@@ -3,7 +3,7 @@ import { supabase } from './lib/supabase'
 import { OrgProvider, useOrg } from './context/OrgContext'
 import SplashScreen from './components/common/SplashScreen'
 import { useBreakpoint } from './hooks/useIsMobile'
-import { isEnrolledFor, isLocked, setLocked, getLockAfterMs } from './lib/biometricLock'
+import { isEnrolledFor, isLocked, setLocked, getLockAfterMs, isAppLockPlatform } from './lib/biometricLock'
 import BiometricLockScreen from './components/auth/BiometricLockScreen'
 import { redirectToSignIn } from './lib/authRedirect'
 import { ModuleAccessProvider } from './context/ModuleAccessContext'
@@ -227,10 +227,21 @@ function useMobileInactivityLogout(enabled) {
 // freely, so an in-memory timer would silently stop locking after the first
 // time iOS reclaimed the tab.
 function useBiometricLock(userId) {
-  const [locked, setLockedState] = React.useState(() => isEnrolledFor(userId) && isLocked())
+  const [locked, setLockedState] = React.useState(() => isAppLockPlatform() && isEnrolledFor(userId) && isLocked())
   const backgroundedAt = React.useRef(null)
 
   React.useEffect(() => {
+    // Phones and tablets only. On a desktop the lock was firing on every cold
+    // start and after three minutes in another window, for a machine that is
+    // sitting on a desk behind an OS screen lock -- all of the interruption,
+    // almost none of the benefit it was designed for.
+    if (!isAppLockPlatform()) {
+      // Clear any flag left by the previous behaviour, or this desktop stays
+      // stuck behind a lock screen it can no longer be asked to lift.
+      if (isLocked()) setLocked(false)
+      setLockedState(false)
+      return
+    }
     if (!isEnrolledFor(userId)) { setLockedState(false); return }
 
     // Cold start with an enrolment present always locks. We can't know how long

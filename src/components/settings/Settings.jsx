@@ -8,7 +8,7 @@ import {
   isPushSupported, getNotificationPermission, subscribeToPush, unsubscribeFromPush,
   getCurrentSubscription, listMySubscriptions, revokeSubscriptionById, sendTestNotification,
 } from '../../services/pushNotifications'
-import { hasPlatformAuthenticator, enrolBiometric, clearEnrolment, isEnrolledFor, getLockAfterMs, setLockAfterMs } from '../../lib/biometricLock'
+import { hasPlatformAuthenticator, enrolBiometric, clearEnrolment, isEnrolledFor, getLockAfterMs, setLockAfterMs, isAppLockPlatform } from '../../lib/biometricLock'
 import { hasPlatformAuthenticator as hasPasskeyAuthenticator, enrolPasskey, listPasskeys, removePasskey } from '../../lib/passkey'
 import { getTerms } from '../../lib/terminology'
 import SignedImg from '../shared/SignedImg'
@@ -1382,7 +1382,10 @@ function ModulePasswordCard({ moduleKey, label, icon, accentColor }) {
 
 // Device-local biometric app lock. Only offered where there's actually a
 // built-in authenticator to use, so it doesn't appear as a dead toggle on a
-// desktop with no Touch ID.
+// desktop with no Touch ID -- and only where the lock actually runs, which is
+// phones and tablets. A Touch ID MacBook can satisfy the authenticator check
+// but no longer locks, so offering the toggle there would enrol a device and
+// then do nothing with it.
 function BiometricUnlockCard() {
   const [available, setAvailable] = useState(null)
   const [userId, setUserId] = useState(null)
@@ -1421,6 +1424,34 @@ function BiometricUnlockCard() {
 
   if (available === false) return null
   if (available === null) return null
+
+  // Enrolled on a desktop under the previous behaviour: say so plainly and let
+  // them clear it, rather than showing a green "Enabled" for a lock that will
+  // never engage here.
+  if (!isAppLockPlatform()) {
+    return (
+      <SettingCard title="App lock" description="Lock the app behind Face ID, Touch ID or your fingerprint.">
+        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: enrolled ? 14 : 0 }}>
+          App lock runs on phones and tablets, where the app might be left open and unattended during a session.
+          On a computer it's your operating system's screen lock that does this job, so LaunchSession doesn't
+          add a second one.
+          {' '}You can still sign in with a passkey here — see Passkeys below.
+        </div>
+        {enrolled && (
+          <>
+            <div style={{ fontSize: 12.5, color: '#92400E', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '10px 13px', marginBottom: 14, lineHeight: 1.5 }}>
+              This computer was set up for app lock previously. It no longer locks.
+            </div>
+            <button onClick={handleDisable}
+              style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+              Clear the setting on this computer
+            </button>
+          </>
+        )}
+        {msg && <div style={{ fontSize: 13, color: msg.startsWith('✅') ? '#16A34A' : '#DC2626', marginTop: 12, fontWeight: 600 }}>{msg}</div>}
+      </SettingCard>
+    )
+  }
 
   return (
     <SettingCard title="Biometric unlock" description="Use Face ID, Touch ID or your fingerprint to unlock the app on this device.">
