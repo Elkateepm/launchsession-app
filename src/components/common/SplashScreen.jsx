@@ -345,99 +345,67 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 900 }) {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          paddingTop: 'clamp(40px, 8vh, 90px)',
+          paddingTop: 'clamp(28px, 6vh, 72px)',
           boxSizing: 'border-box',
         }}
       >
-        {/* ── Badge with concentric rings ── */}
+        {/* ── Logo lockup ──
+            The new mark carries the wordmark itself, so the separate
+            "LaunchSession" text that used to sit under the badge is gone --
+            printing the name twice, in two different typefaces, read as a
+            mistake. The concentric rings went with it: they were sized for a
+            square badge and a wide lockup sat awkwardly inside them. The soft
+            pulse glow stays, since the mark is lit from within anyway. */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {/* Outer soft pulse glow */}
           <div
             style={{
               position: 'absolute',
-              width: 'clamp(230px, 26vh, 300px)',
-              height: 'clamp(230px, 26vh, 300px)',
+              width: 'clamp(260px, 30vh, 380px)',
+              height: 'clamp(260px, 30vh, 380px)',
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(139,92,246,0.40) 0%, transparent 68%)',
-              filter: 'blur(14px)',
+              background: 'radial-gradient(circle, rgba(139,92,246,0.34) 0%, transparent 68%)',
+              filter: 'blur(16px)',
               animation: reducedMotion ? 'none' : 'ls-pulse 3.4s ease-in-out infinite',
               pointerEvents: 'none',
             }}
           />
-          {/* Outer thin ring */}
-          <div
-            style={{
-              position: 'absolute',
-              width: 'clamp(206px, 23.5vh, 272px)',
-              height: 'clamp(206px, 23.5vh, 272px)',
-              borderRadius: '50%',
-              border: '1px solid rgba(167,139,250,0.28)',
-              pointerEvents: 'none',
-            }}
-          />
-          {/* Inner glow ring hugging the badge */}
-          <div
-            style={{
-              position: 'absolute',
-              width: 'clamp(182px, 21vh, 240px)',
-              height: 'clamp(182px, 21vh, 240px)',
-              borderRadius: '50%',
-              border: '1.5px solid rgba(196,181,253,0.55)',
-              boxShadow: '0 0 26px rgba(167,139,250,0.45), inset 0 0 22px rgba(167,139,250,0.22)',
-              pointerEvents: 'none',
-            }}
-          />
-
           <div
             style={{
               position: 'relative',
               animation: reducedMotion || phase !== 'loading' ? 'none' : 'ls-badge-bob 4.5s ease-in-out infinite',
-              transform: phase === 'complete' || exiting ? 'scale(1.12)' : 'scale(1)',
+              transform: phase === 'complete' || exiting ? 'scale(1.08)' : 'scale(1)',
               transition: 'transform 550ms cubic-bezier(0.22, 1, 0.36, 1)',
             }}
           >
-            <img
-              src="/assets/badge-logo-centered.png"
-              alt="LaunchSession"
-              style={{
-                width: 'clamp(168px, 19.5vh, 224px)',
-                height: 'clamp(168px, 19.5vh, 224px)',
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 12px 30px rgba(139,92,246,0.45))',
-              }}
-            />
+            {/* WebP first: this is a soft glow over a gradient, which is what
+                PNG compresses worst -- 212KB against 496KB for the same image,
+                and the palette-reduced PNG banded visibly across the letters.
+                The PNG stays as a fallback that no current browser will fetch.
+                Loaded eagerly and decoded synchronously, because this is the
+                screen covering load time and a late-appearing logo defeats it. */}
+            <picture>
+              <source srcSet="/assets/launchsession-logo.webp" type="image/webp" />
+              <img
+                src="/assets/launchsession-logo.png"
+                alt="LaunchSession"
+                fetchPriority="high"
+                decoding="sync"
+                style={{
+                  width: 'clamp(280px, 44vh, 460px)',
+                  maxWidth: '82vw',
+                  height: 'auto',
+                  display: 'block',
+                  filter: 'drop-shadow(0 14px 36px rgba(139,92,246,0.40))',
+                }}
+              />
+            </picture>
           </div>
-        </div>
-
-        {/* ── Wordmark ── */}
-        <div
-          style={{
-            marginTop: 'clamp(20px, 3.2vh, 34px)',
-            fontSize: 'clamp(38px, 5.6vh, 62px)',
-            fontWeight: 800,
-            letterSpacing: -1.2,
-            color: '#fff',
-            lineHeight: 1,
-            fontFamily: 'var(--font-display, sans-serif)',
-          }}
-        >
-          Launch
-          <span
-            style={{
-              background: 'linear-gradient(90deg, #8B7CF6 0%, #6D5AF0 100%)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              color: 'transparent',
-            }}
-          >
-            Session
-          </span>
         </div>
 
         {/* ── Tagline ── */}
         <div
           style={{
-            marginTop: 'clamp(10px, 1.6vh, 18px)',
+            marginTop: 'clamp(4px, 1vh, 12px)',
             fontSize: 'clamp(14px, 1.9vh, 20px)',
             fontWeight: 500,
             color: 'rgba(226,232,240,0.72)',
