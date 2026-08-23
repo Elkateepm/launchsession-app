@@ -55,7 +55,7 @@ export function SidebarItem({
         fontSize: 15, width: 20, display: 'flex', alignItems: 'center',
         justifyContent: 'center', flexShrink: 0,
         opacity: active ? 1 : muted ? 0.75 : 0.85,
-      }}><Icon name={icon} size={17} /></span>
+      }}><Icon name={icon} size={17} tone={active ? 'brand' : 'inherit'} /></span>
 
       {!collapsed && (
         <span style={{
@@ -205,7 +205,7 @@ export function SidebarCollapsibleGroup({
           transition: 'background 180ms ease, color 180ms ease',
         }}
       >
-        <span style={{ fontSize: 15, width: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: 0.85 }}><Icon name={icon} size={17} /></span>
+        <span style={{ fontSize: 15, width: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: 0.85 }}><Icon name={icon} size={17} tone={hasActiveChild ? 'brand' : 'inherit'} /></span>
         <span style={{ flex: 1 }}>{label}</span>
         <span style={{
           fontSize: 11, color: 'rgba(255,255,255,0.3)',

@@ -148,7 +148,27 @@ const EMOJI = {
  * surrounding button or link is already doing rather than needing a colour
  * passed at every call site.
  */
-export default function Icon({ name, size = '1em', strokeWidth = 1.75, style, ...rest }) {
+// Named tones instead of a colour at every call site.
+//
+// `brand` reads the CSS variable the org's palette publishes, so an icon
+// follows the organisation's colour without the component needing to know
+// which org it is in or subscribe to anything.
+//
+// The semantic tones exist so brand colour does not swallow meaning: a warning
+// triangle in a charity's brand purple stops reading as a warning. Colour that
+// carries information keeps its own.
+const TONES = {
+  inherit: undefined,
+  brand: 'var(--org-primary)',
+  brandInk: 'var(--org-ink)',       // brand-coloured text on white, contrast-safe
+  onBrand: 'var(--org-on-primary)', // sitting on top of the brand colour
+  danger: '#DC2626',
+  warn: '#B45309',
+  ok: '#15803D',
+  muted: 'var(--text3, #94A3B8)',
+}
+
+export default function Icon({ name, size = '1em', strokeWidth = 1.75, tone = 'inherit', style, ...rest }) {
   const Cmp = ICONS[name] || EMOJI[name]
   if (!Cmp) {
     // Unmapped: an unconverted screen, or genuinely the org's own text.
@@ -166,7 +186,12 @@ export default function Icon({ name, size = '1em', strokeWidth = 1.75, style, ..
       aria-hidden="true"
       // SVG aligns to the baseline by default, which sits an icon slightly low
       // against the text it follows.
-      style={{ flexShrink: 0, verticalAlign: '-0.125em', ...style }}
+      style={{
+        flexShrink: 0,
+        verticalAlign: '-0.125em',
+        ...(TONES[tone] ? { color: TONES[tone] } : null),
+        ...style,
+      }}
       {...rest}
     />
   )

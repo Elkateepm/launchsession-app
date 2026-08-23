@@ -14,6 +14,7 @@ import { getTerms } from '../../lib/terminology'
 import SignedImg from '../shared/SignedImg'
 import { signOne } from '../../lib/storageUrl'
 import Icon from '../../lib/icons'
+import { applyBrandPalette } from '../../lib/brandColors'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -929,7 +930,9 @@ function BrandingSection({ org, refreshOrg }) {
       return
     }
 
-    document.documentElement.style.setProperty('--org-primary', color)
+    // Same derivation as OrgContext, so the live preview cannot disagree
+    // with what the app looks like after a reload.
+    applyBrandPalette(color)
     {
       const faviconTarget = iconUrl || logoUrl || FALLBACK_LOGO_URL
       const bustedIcon = faviconTarget + (faviconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()

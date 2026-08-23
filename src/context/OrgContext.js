@@ -5,6 +5,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { getTerms } from '../lib/terminology'
+import { applyBrandPalette } from '../lib/brandColors'
 
 // Shown as the tab favicon whenever the org hasn't set its own logo (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -106,7 +107,7 @@ export function OrgProvider({ children }) {
       } else {
         setOrg(data)
         setNoOrg(false)
-        document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
+        applyBrandPalette(data.primary_color || '#1B9AAA')
         {
           const iconTarget = data.icon_url || data.logo_url || FALLBACK_LOGO_URL
           const bustedIcon = iconTarget + (iconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
@@ -135,7 +136,7 @@ export function OrgProvider({ children }) {
     const { data } = await supabase.from('organisations_safe').select('*').eq('slug', slug).single()
     if (data) {
       setOrg(data)
-      document.documentElement.style.setProperty('--org-primary', data.primary_color || '#1B9AAA')
+      applyBrandPalette(data.primary_color || '#1B9AAA')
       document.title = data.name || 'LaunchSession'
       {
         const iconTarget = data.icon_url || data.logo_url || FALLBACK_LOGO_URL
