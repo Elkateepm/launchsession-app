@@ -7,7 +7,7 @@ import { signRows, signOne } from '../../lib/storageUrl'
 import { useTodaySession, useAttendance, useChildren, useOnlineStatus } from '../../lib/hooks'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { TemplatePicker } from './TemplateCreator'
+import { TemplatePicker, AVAILABLE_FIELDS, SAMPLE_ROW } from './TemplateCreator'
 import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
@@ -296,7 +296,10 @@ function EditChildForm({ child, onSaved }) {
 }
 
 // ─── INLINE IMPORT ────────────────────────────────────────────
-const CSV_COLS = ['first_name','last_name','date_of_birth','group_name','allergies','medical_notes','sen','emergency_contact_name','emergency_contact_phone']
+// Default column set when no custom template is chosen. Deliberately the full
+// set rather than a minimal one: an org that imports without parent_email ends
+// up with an empty newsletter audience and no obvious reason why.
+const CSV_COLS = AVAILABLE_FIELDS.map(f => f.key)
 
 function InlineChildImport({ org, template, onImported }) {
   const [step, setStep] = useState('upload')
@@ -339,13 +342,18 @@ function InlineChildImport({ org, template, onImported }) {
   const handleImport = async () => {
     setImporting(true)
     const { data: { session } } = await supabase.auth.getSession()
-    const records = rows.filter(r => r.first_name && r.last_name).map(r => ({
-      first_name: r.first_name.trim(), last_name: r.last_name.trim(),
-      date_of_birth: r.date_of_birth || null, group_name: r.group_name || null,
-      allergies: r.allergies || null, medical_notes: r.medical_notes || null,
-      emergency_contact_name: r.emergency_contact_name || null,
-      emergency_contact_phone: r.emergency_contact_phone || null, active: true,
-    }))
+    // Whatever columns the file actually has, filtered to the ones the app
+    // knows about. This used to be a hardcoded list of nine, so a template
+    // including SEN or parent email produced a CSV with those columns and then
+    // silently threw the values away on import.
+    const allowed = new Set(AVAILABLE_FIELDS.map(f => f.key))
+    const records = rows.filter(r => r.first_name && r.last_name).map(r => {
+      const rec = { active: true }
+      Object.entries(r).forEach(([k, v]) => {
+        if (allowed.has(k) && String(v).trim() !== '') rec[k] = String(v).trim()
+      })
+      return rec
+    })
     const res = await fetch('/api/import-children', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
@@ -359,9 +367,11 @@ function InlineChildImport({ org, template, onImported }) {
   }
 
   const downloadTemplate = () => {
-    const sample = { first_name: 'Sarah', last_name: 'Jones', date_of_birth: '2015-06-14', group_name: 'Red', allergies: 'Nut allergy', medical_notes: 'Asthma', sen: '', emergency_contact_name: 'Jane Jones', emergency_contact_phone: '07700900000' }
     const cols = template?.fields?.length ? template.fields.map(f => f.key) : CSV_COLS
-    const row = cols.map(c => sample[c] || '').join(',')
+    // Quote every cell: notes and medication details routinely contain commas,
+    // and one unquoted comma shifts every later column by a place.
+    const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`
+    const row = cols.map(c => q(SAMPLE_ROW[c] ?? '')).join(',')
     const blob = new Blob([`${cols.join(',')}\n${row}\n`], { type: 'text/csv' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${template?.name?.replace(/[^a-z0-9]+/gi,'-').toLowerCase() || 'children'}-import.csv`; a.click()
   }

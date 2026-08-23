@@ -7,16 +7,59 @@ import { supabase } from '../../lib/supabase'
 // Blue, etc.) are managed separately in Branding/Settings — the template only
 // ever references the generic "group_name" column, never specific group values.
 export const AVAILABLE_FIELDS = [
-  { key: 'first_name',              label: 'First Name',              icon: '👤', alwaysRequired: true },
-  { key: 'last_name',               label: 'Last Name',               icon: '👤', alwaysRequired: true },
-  { key: 'date_of_birth',           label: 'Date of Birth',           icon: '🎂' },
-  { key: 'group_name',              label: 'Group',                   icon: '🏷️' },
-  { key: 'allergies',               label: 'Allergies',                icon: '⚠️' },
-  { key: 'medical_notes',           label: 'Medical Notes',           icon: '⚕️' },
-  { key: 'sen',                     label: 'SEN / Additional Needs',  icon: '💜' },
-  { key: 'emergency_contact_name',  label: 'Emergency Contact Name',  icon: '📞' },
-  { key: 'emergency_contact_phone', label: 'Emergency Contact Phone', icon: '📱' },
+  // Identity
+  { key: 'first_name',              label: 'First Name',              icon: '👤', section: 'About them', alwaysRequired: true },
+  { key: 'last_name',               label: 'Last Name',               icon: '👤', section: 'About them', alwaysRequired: true },
+  { key: 'date_of_birth',           label: 'Date of Birth',           icon: '🎂', section: 'About them', hint: 'YYYY-MM-DD' },
+  { key: 'group_name',              label: 'Group',                   icon: '🏷️', section: 'About them' },
+  { key: 'school',                  label: 'School',                  icon: '🎓', section: 'About them' },
+
+  // Parent / carer. parent_email is what the newsletter's Parents audience
+  // reads, so leaving it out of an import leaves that mailing list empty.
+  { key: 'parent_name',             label: 'Parent / Carer Name',     icon: '👪', section: 'Parent / carer' },
+  { key: 'parent_phone',            label: 'Parent / Carer Phone',    icon: '📞', section: 'Parent / carer' },
+  { key: 'parent_email',            label: 'Parent / Carer Email',    icon: '✉️', section: 'Parent / carer', hint: 'Used for newsletters and form invites' },
+  { key: 'emergency_contact_name',  label: 'Emergency Contact Name',  icon: '🚨', section: 'Parent / carer' },
+  { key: 'emergency_contact_phone', label: 'Emergency Contact Phone', icon: '📱', section: 'Parent / carer' },
+
+  // Health
+  { key: 'allergies',               label: 'Allergies',               icon: '⚠️', section: 'Health & support' },
+  { key: 'medical_notes',           label: 'Medical Notes',           icon: '⚕️', section: 'Health & support' },
+  { key: 'has_asthma',              label: 'Has Asthma',              icon: '🫁', section: 'Health & support', bool: true },
+  { key: 'has_diabetes',            label: 'Has Diabetes',            icon: '🩸', section: 'Health & support', bool: true },
+  { key: 'has_epipen',              label: 'Carries an EpiPen',       icon: '💉', section: 'Health & support', bool: true },
+  { key: 'takes_medication',        label: 'Takes Medication',        icon: '💊', section: 'Health & support', bool: true },
+  { key: 'medication_details',      label: 'Medication Details',      icon: '💊', section: 'Health & support' },
+  { key: 'sen',                     label: 'SEN / Additional Needs',  icon: '💜', section: 'Health & support' },
+  { key: 'has_behaviour_plan',      label: 'Has a Support Plan',      icon: '🧭', section: 'Health & support', bool: true },
+  { key: 'behaviour_plan_notes',    label: 'Support Plan Notes',      icon: '🧭', section: 'Health & support' },
+
+  // Permissions and free text
+  { key: 'travel_consent',          label: 'Can Travel Home Alone',   icon: '🚶', section: 'Other', bool: true },
+  { key: 'notes',                   label: 'Other Notes',             icon: '📝', section: 'Other' },
 ]
+
+// Yes/no columns. A spreadsheet will have "Yes", "y", "TRUE" or "1" in these
+// and the importer coerces all of them; anything else counts as no.
+export const BOOLEAN_KEYS = new Set(AVAILABLE_FIELDS.filter(f => f.bool).map(f => f.key))
+
+// Sections, in the order the creator should show them.
+export const FIELD_SECTIONS = ['About them', 'Parent / carer', 'Health & support', 'Other']
+
+// A realistic sample row for the downloadable CSV. Blank is worse than wrong
+// here: someone filling this in needs to see the date format and how a yes/no
+// column is meant to look.
+export const SAMPLE_ROW = {
+  first_name: 'Sarah', last_name: 'Jones', date_of_birth: '2015-06-14',
+  group_name: 'Tigers', school: 'Central Primary',
+  parent_name: 'Jane Jones', parent_phone: '07700900000', parent_email: 'jane.jones@example.com',
+  emergency_contact_name: 'Mark Jones', emergency_contact_phone: '07700900001',
+  allergies: 'Peanuts', medical_notes: 'Mild asthma, inhaler in bag',
+  has_asthma: 'Yes', has_diabetes: 'No', has_epipen: 'Yes',
+  takes_medication: 'Yes', medication_details: 'Blue inhaler as needed',
+  sen: 'EHCP in place', has_behaviour_plan: 'No', behaviour_plan_notes: '',
+  travel_consent: 'No', notes: '',
+}
 
 export function useImportTemplates(orgId) {
   const [templates, setTemplates] = useState([])
