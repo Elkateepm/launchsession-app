@@ -19,6 +19,7 @@ import EventsTrips from '../events/EventsTrips'
 import Calendar from '../calendar/Calendar';
 import Templates from '../templates/Templates'
 import SafeguardingHub from '../safeguarding/SafeguardingHub'
+import NewsletterStudio from '../messaging/NewsletterStudio'
 import Reports from '../reports/Reports'
 import Gallery from '../gallery/Gallery'
 import Messaging from '../messaging/Messaging'
@@ -77,6 +78,7 @@ const ALL_MODULES = [
   { key: 'volunteers',      label: 'Volunteers',       icon: '❤️', group: 'delivery' },
   { key: 'messaging',       label: 'Messaging',        icon: '💬', group: 'delivery' },
   { key: 'gallery',         label: 'Gallery',          icon: '🖼️', group: 'delivery' },
+  { key: 'newsletter',      label: 'Newsletter',       icon: '📨', group: 'delivery' },
   { key: 'safeguarding',    label: 'Safeguarding Hub', icon: '🛡️', group: 'safeguarding' },
   { key: 'forms',           label: 'Forms',            icon: '📝', group: 'safeguarding' },
   { key: 'risk_assessments', label: 'Risk Assessments', icon: '🛡️', group: 'safeguarding' },
@@ -532,7 +534,7 @@ export default function Dashboard({ session, org }) {
   const TAB_ACCESS_MODULE = {
     children: 'people', planner: 'planner', projects: 'planner', projects_list: 'planner',
     calendar: 'calendar', registers: 'registers', volunteers: 'volunteers',
-    messaging: 'messaging', gallery: 'gallery', safeguarding: 'safeguarding',
+    messaging: 'messaging', newsletter: 'messaging', gallery: 'gallery', safeguarding: 'safeguarding',
     forms: 'forms', risk_assessments: 'risk_assessments',
     medical_alerts: 'medical_alerts', reports: 'reports', impact_outcomes: 'impact_outcomes',
     fundraising: 'fundraising', payments: 'payments', resource_booking: 'resource_booking',
@@ -953,6 +955,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'newsletter' && (hasModule('messaging')  ? <NewsletterStudio org={org} session={session} />            : <LockedModule moduleKey="messaging"  label="Newsletter" icon="📨" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── SAFEGUARDING PACK ── */}
           {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingHub org={org} session={session} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} initialOpenCaseId={openCaseId} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding Hub"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
@@ -974,7 +977,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','__no_access'].includes(effectiveTab) && (
+          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','newsletter','gallery','safeguarding','forms','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','__no_access'].includes(effectiveTab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>

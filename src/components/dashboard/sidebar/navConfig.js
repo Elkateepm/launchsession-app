@@ -34,6 +34,7 @@ export const NAV_SECTIONS = [
       // are a different relationship with different records, and merging them
       // would recreate the ambiguity this consolidation removed.
       { id: 'volunteers', label: 'Volunteers', icon: '❤️', tab: 'volunteers', moduleKey: 'volunteers' },
+      { id: 'newsletter', label: 'Newsletter', icon: '📨', tab: 'newsletter', moduleKey: 'messaging' },
     ],
   },
   {
