@@ -83,8 +83,12 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
   }
   const staffRoles = ['admin', 'staff'].filter(r => roles.includes(r))
   if (staffRoles.length) {
+    // Suspended accounts are excluded. A suspended member has had their access
+    // revoked, so continuing to mail them is exactly the thing suspension is
+    // supposed to stop.
     const { data } = await adminClient.from('user_profiles')
-      .select('email, first_name, full_name, role').eq('org_id', nl.org_id).in('role', staffRoles)
+      .select('email, first_name, full_name, role')
+      .eq('org_id', nl.org_id).in('role', staffRoles).eq('status', 'active')
     ;(data || []).forEach(p => add(p.email, p.first_name || (p.full_name || '').split(' ')[0]))
   }
 
