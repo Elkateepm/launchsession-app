@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import shrinkImage from '../../lib/shrinkImage'
+import AudienceBuilder from './AudienceBuilder'
 
 // Newsletter Studio.
 //
@@ -13,13 +14,6 @@ import shrinkImage from '../../lib/shrinkImage'
 // Audience is resolved at send time rather than frozen into the draft, so a
 // newsletter written on Monday and sent on Friday goes to whoever is on the
 // books on Friday.
-
-const AUDIENCES = [
-  { key: 'parent', label: 'Parents', hint: 'The parent email on each young person\'s record' },
-  { key: 'volunteer', label: 'Volunteers', hint: 'Everyone in your volunteer list' },
-  { key: 'staff', label: 'Staff', hint: 'Staff accounts in your organisation' },
-  { key: 'admin', label: 'Admins', hint: 'Admin accounts in your organisation' },
-]
 
 const BLOCK_TYPES = [
   { type: 'heading', label: 'Heading', icon: 'H', hint: 'Section title' },
@@ -241,8 +235,12 @@ export default function NewsletterStudio({ org, session }) {
   const [preheader, setPreheader] = useState('')
   const [blocks, setBlocks] = useState([])
   const [roles, setRoles] = useState(['parent'])
-  const [audienceCount, setAudienceCount] = useState(null)
-  const [countError, setCountError] = useState(false)
+  const [groupNames, setGroupNames] = useState([])
+  const [projectIds, setProjectIds] = useState([])
+  const [manualEmails, setManualEmails] = useState([])
+  const [excludedEmails, setExcludedEmails] = useState([])
+  const [resolved, setResolved] = useState([])
+  const audienceCount = resolved.filter(r => !r.suppressed).length
   const [past, setPast] = useState([])
   const [draftId, setDraftId] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -258,22 +256,6 @@ export default function NewsletterStudio({ org, session }) {
 
   useEffect(() => { load() }, [load])
 
-  useEffect(() => {
-    let cancelled = false
-    if (roles.length === 0) { setAudienceCount(0); setCountError(false); return undefined }
-    setAudienceCount(null)
-    supabase.rpc('count_newsletter_audience', { p_roles: roles })
-      .then(({ data, error }) => {
-        if (cancelled) return
-        // Previously an error here left the count on "Counting…" forever, which
-        // looked like a slow network rather than something being wrong.
-        setCountError(!!error)
-        setAudienceCount(typeof data === 'number' ? data : null)
-      })
-    return () => { cancelled = true }
-  }, [roles])
-
-  const toggleRole = (k) => setRoles(r => (r.includes(k) ? r.filter(x => x !== k) : [...r, k]))
   const addBlock = (type) => setBlocks(b => [...b, blank(type)])
   const updateBlock = (i, next) => setBlocks(b => b.map((x, j) => (j === i ? next : x)))
   const removeBlock = (i) => setBlocks(b => b.filter((_, j) => j !== i))
@@ -286,7 +268,7 @@ export default function NewsletterStudio({ org, session }) {
   })
 
   const hasContent = subject.trim() && blocks.some(b => (b.text || '').trim() || b.url || (b.label || '').trim())
-  const canSend = hasContent && roles.length > 0 && !busy
+  const canSend = hasContent && roles.length > 0 && audienceCount > 0 && !busy
 
   // Says what is actually missing rather than leaving a disabled button with no
   // explanation, which was the main thing wrong with the first version.
@@ -294,6 +276,7 @@ export default function NewsletterStudio({ org, session }) {
     : blocks.length === 0 ? 'Add at least one block of content.'
     : !hasContent ? 'Your blocks are still empty.'
     : roles.length === 0 ? 'Choose who gets it.'
+    : audienceCount === 0 ? 'Nobody in that audience can be emailed.'
     : null
 
   const save = async () => {
@@ -303,6 +286,9 @@ export default function NewsletterStudio({ org, session }) {
       preheader: preheader.trim() || null,
       blocks,
       audience_roles: roles,
+      audience: { group_names: groupNames, project_ids: projectIds },
+      manual_emails: manualEmails,
+      excluded_emails: excludedEmails,
       status: 'draft',
       created_by: session?.user?.id || null,
     }
@@ -357,6 +343,10 @@ export default function NewsletterStudio({ org, session }) {
     setPreheader(n.preheader || '')
     setBlocks(Array.isArray(n.blocks) ? n.blocks.map(b => ({ ...b, id: b.id || uid() })) : [])
     setRoles(n.audience_roles || ['parent'])
+    setGroupNames(n.audience?.group_names || [])
+    setProjectIds(n.audience?.project_ids || [])
+    setManualEmails(n.manual_emails || [])
+    setExcludedEmails(n.excluded_emails || [])
     setDraftId(n.status === 'draft' ? n.id : null)
     setResult(n.status === 'draft' ? null : { ok: true, text: 'Opened as a copy — sending will create a new one.' })
     setTab('write')
@@ -367,18 +357,6 @@ export default function NewsletterStudio({ org, session }) {
   const TABS = wide
     ? [['write', 'Write'], ['past', `Sent & drafts (${past.length})`]]
     : [['write', 'Write'], ['preview', 'Preview'], ['past', `Sent & drafts (${past.length})`]]
-
-  const audienceLine = () => {
-    if (roles.length === 0) return { text: 'Nobody selected yet — choose at least one group above.', tone: 'warn' }
-    if (countError) return { text: "Couldn't work out the audience size. You can still send.", tone: 'warn' }
-    if (audienceCount === null) return { text: 'Counting…', tone: 'muted' }
-    if (audienceCount === 0) return { text: 'Nobody in those groups has an email address on file.', tone: 'warn' }
-    return {
-      text: `${audienceCount} ${audienceCount === 1 ? 'person' : 'people'} will receive this. Someone in two groups still only gets one email.`,
-      tone: 'ok',
-    }
-  }
-  const aud = audienceLine()
 
   const composer = (
     <>
@@ -393,32 +371,16 @@ export default function NewsletterStudio({ org, session }) {
       </div>
 
       <div style={card}>
-        <label style={miniLabel}>Who gets it</label>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-          {AUDIENCES.map(a => {
-            const active = roles.includes(a.key)
-            return (
-              <button key={a.key} type="button" onClick={() => toggleRole(a.key)} title={a.hint}
-                aria-pressed={active}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '8px 14px', borderRadius: 99, cursor: 'pointer', fontSize: 12.5, fontWeight: 800, fontFamily: 'inherit',
-                  border: `1.5px solid ${active ? primary : 'var(--border)'}`,
-                  background: active ? primary : 'transparent',
-                  color: active ? '#fff' : 'var(--text3)',
-                  transition: 'all 0.15s',
-                }}>
-                <span aria-hidden="true" style={{ fontSize: 11, opacity: active ? 1 : 0.35 }}>{active ? '✓' : '+'}</span>
-                {a.label}
-              </button>
-            )
-          })}
-        </div>
-        <div style={{
-          fontSize: 12.5, lineHeight: 1.5,
-          color: aud.tone === 'warn' ? '#B45309' : aud.tone === 'ok' ? 'var(--text)' : 'var(--text3)',
-          fontWeight: aud.tone === 'ok' ? 600 : 500,
-        }}>{aud.text}</div>
+        <AudienceBuilder
+          org={org}
+          primary={primary}
+          roles={roles} setRoles={setRoles}
+          groupNames={groupNames} setGroupNames={setGroupNames}
+          projectIds={projectIds} setProjectIds={setProjectIds}
+          manualEmails={manualEmails} setManualEmails={setManualEmails}
+          excludedEmails={excludedEmails} setExcludedEmails={setExcludedEmails}
+          onResolved={setResolved}
+        />
       </div>
 
       <div style={card}>
@@ -484,7 +446,7 @@ export default function NewsletterStudio({ org, session }) {
             color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
             cursor: canSend ? 'pointer' : 'default', opacity: canSend ? 1 : 0.45,
           }}>
-            {busy ? 'Sending…' : audienceCount && roles.length
+            {busy ? 'Sending…' : audienceCount
               ? `Send to ${audienceCount} ${audienceCount === 1 ? 'person' : 'people'}`
               : 'Send newsletter'}
           </button>

@@ -58,42 +58,34 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
   const { data: org } = await adminClient
     .from('organisations').select('name, primary_color, logo_url').eq('id', nl.org_id).single()
 
-  // Build the audience from its three sources. Parents are an email column on
-  // the child record rather than an account, so a family with three children
-  // would otherwise be mailed three times -- the map is keyed on the lowercased
-  // address to collapse that, and to collapse someone who is both a parent and
-  // a volunteer.
-  const people = new Map()
-  const add = (email, first) => {
-    const key = String(email || '').trim().toLowerCase()
-    if (!key || !key.includes('@')) return
-    if (!people.has(key)) people.set(key, { email: key, first_name: first || null })
-  }
+  // One resolver, shared with the composer. Assembling the audience here by
+  // hand is what previously let the confirmation dialog promise one number
+  // while a different set of people got the email.
+  const aud = nl.audience || {}
+  const { data: resolved, error: resolveErr } = await adminClient
+    .rpc('resolve_newsletter_audience', {
+      p_org_id: nl.org_id,
+      p_roles: roles,
+      p_group_names: aud.group_names || [],
+      p_project_ids: aud.project_ids || [],
+      p_manual_emails: nl.manual_emails || [],
+      p_excluded_emails: nl.excluded_emails || [],
+    })
+  if (resolveErr) return res.status(500).json({ error: 'Could not work out the audience: ' + resolveErr.message })
 
-  if (roles.includes('parent')) {
-    const { data } = await adminClient.from('children')
-      .select('parent_email, parent_name').eq('org_id', nl.org_id)
-    ;(data || []).forEach(c => add(c.parent_email, (c.parent_name || '').split(' ')[0]))
-  }
-  if (roles.includes('volunteer')) {
-    // volunteers has no full_name column -- first_name is all there is.
-    const { data } = await adminClient.from('volunteers')
-      .select('email, first_name').eq('org_id', nl.org_id)
-    ;(data || []).forEach(v => add(v.email, v.first_name))
-  }
-  const staffRoles = ['admin', 'staff'].filter(r => roles.includes(r))
-  if (staffRoles.length) {
-    // Suspended accounts are excluded. A suspended member has had their access
-    // revoked, so continuing to mail them is exactly the thing suspension is
-    // supposed to stop.
-    const { data } = await adminClient.from('user_profiles')
-      .select('email, first_name, full_name, role')
-      .eq('org_id', nl.org_id).in('role', staffRoles).eq('status', 'active')
-    ;(data || []).forEach(p => add(p.email, p.first_name || (p.full_name || '').split(' ')[0]))
-  }
+  // Suppressed addresses are resolved and then dropped here rather than being
+  // filtered out in SQL, so the composer can show "3 people have unsubscribed"
+  // instead of silently returning a smaller number.
+  const audience = (resolved || []).filter(r => !r.suppressed)
+  const suppressed = (resolved || []).length - audience.length
 
-  const audience = [...people.values()]
-  if (audience.length === 0) return res.status(400).json({ error: 'Nobody in this organisation matches that audience' })
+  if (audience.length === 0) {
+    return res.status(400).json({
+      error: suppressed
+        ? 'Everyone matching that audience has unsubscribed.'
+        : 'Nobody in this organisation matches that audience',
+    })
+  }
 
   // Recipient rows first, then claim. The unique (newsletter_id, email) means
   // a retry re-inserts nothing and re-claims nothing already sent, so a
@@ -122,7 +114,10 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
   try {
     const { data: fnResult, error: fnError } = await adminClient.functions.invoke('send-volunteer-broadcast', {
       body: {
-        recipients: claimed.map(c => ({ email: c.email, first_name: c.first_name })),
+        // id travels through so the edge function can build a per-person
+        // unsubscribe link rather than a shared mailto nobody reads.
+        recipients: claimed.map(c => ({ id: c.id, email: c.email, first_name: c.first_name })),
+        app_url: process.env.PUBLIC_APP_URL || 'https://app.launchsession.co.uk',
         subject: nl.subject,
         preheader: nl.preheader || '',
         body_html,
@@ -172,7 +167,7 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
     sent_at: new Date().toISOString(),
   }).eq('id', nl.id)
 
-  return res.status(200).json({ success: true, sent, failed, remaining: pending || 0 })
+  return res.status(200).json({ success: true, sent, failed, suppressed, remaining: pending || 0 })
 }
 
 export default async function handler(req, res) {
