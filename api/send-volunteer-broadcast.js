@@ -76,9 +76,10 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
     ;(data || []).forEach(c => add(c.parent_email, (c.parent_name || '').split(' ')[0]))
   }
   if (roles.includes('volunteer')) {
+    // volunteers has no full_name column -- first_name is all there is.
     const { data } = await adminClient.from('volunteers')
-      .select('email, first_name, full_name').eq('org_id', nl.org_id)
-    ;(data || []).forEach(v => add(v.email, v.first_name || (v.full_name || '').split(' ')[0]))
+      .select('email, first_name').eq('org_id', nl.org_id)
+    ;(data || []).forEach(v => add(v.email, v.first_name))
   }
   const staffRoles = ['admin', 'staff'].filter(r => roles.includes(r))
   if (staffRoles.length) {
