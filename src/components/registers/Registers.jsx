@@ -1226,7 +1226,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 
 
 // ─── CHILD CARD ───────────────────────────────────────────────
-function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, selectMode, onToggleSelect, dark }) {
+function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, selectMode, onToggleSelect, dark, roster }) {
   const bColor = bubble?.color || primary || '#1B9AAA'
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const [hovered, setHovered] = React.useState(false)
@@ -1311,6 +1311,23 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
 
       {/* Status + chevron */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        {roster ? (
+          // No session is open, so there is nothing to mark. Fifty-four grey
+          // "Not marked" chips implied a pending job that could not be done;
+          // school and age are at least worth reading while browsing the roster.
+          <div style={{ textAlign: 'right', minWidth: 0 }}>
+            {child.school && (
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: dark ? '#94A3B8' : '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>
+                {child.school}
+              </div>
+            )}
+            {child.date_of_birth && (
+              <div style={{ fontSize: 11, color: dark ? '#64748B' : '#94A3B8', marginTop: 1 }}>
+                {Math.floor((Date.now() - new Date(child.date_of_birth)) / 31557600000)} yrs
+              </div>
+            )}
+          </div>
+        ) : (
         <div
           onClick={e => { e.stopPropagation(); if (onMark) onMark() }}
           style={{ display: 'flex', alignItems: 'center', gap: 5, background: dark ? 'transparent' : sc.bg, borderRadius: 99, padding: dark ? '5px 0' : '5px 12px', cursor: onMark ? 'pointer' : 'default', transition: 'transform 0.12s', boxShadow: !dark && (status === 'signed_in' || status === 'signed_out' || status === 'absent') ? '0 2px 6px -3px rgba(0,0,0,0.25)' : 'none' }}
@@ -1320,6 +1337,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
           <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.dot }} />
           <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
         </div>
+        )}
         {dark && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>›</span>}
       </div>
     </motion.div>
@@ -1879,6 +1897,46 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           </div>
         )}
 
+        {/* No session open. The register cannot be marked, so say so once and
+            offer the way forward, rather than leaving a screen that looks like
+            a register nobody has got round to filling in. */}
+        {!session && !loading && children.length > 0 && (
+          <div style={{ padding: isMobile ? '0 10px' : '0 14px', marginTop: 2 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+              padding: isMobile ? '14px 15px' : '16px 18px', borderRadius: 16,
+              background: darkMode
+                ? `linear-gradient(160deg, ${primary}26, ${primary}0D)`
+                : `linear-gradient(160deg, ${primary}14, #fff)`,
+              border: `1.5px solid ${primary}${darkMode ? '3A' : '2E'}`,
+            }}>
+              <span aria-hidden="true" style={{
+                width: 40, height: 40, borderRadius: 13, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                background: `linear-gradient(135deg, ${primary}, ${primary}CC)`,
+                boxShadow: `0 4px 12px -4px ${primary}80`,
+              }}>📋</span>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ fontSize: 14.5, fontWeight: 800, color: t.text }}>No session is open</div>
+                <div style={{ fontSize: 12.5, color: t.textSub, marginTop: 2, lineHeight: 1.5 }}>
+                  You're looking at the full roster of {children.length}. Open a session to start signing people in.
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button onClick={() => onNavigate && onNavigate('sessions')} style={{
+                  padding: '10px 17px', borderRadius: 11, border: 'none', background: primary,
+                  color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                }}>Open a session</button>
+                <button onClick={() => setShowPastRegisters(true)} style={{
+                  padding: '10px 15px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
+                  border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.14)' : '#E2E8F0'}`,
+                  background: 'transparent', color: t.textSub, fontSize: 13, fontWeight: 700,
+                }}>Past registers</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* CHILDREN LIST */}
         <div style={{ flex: 1, overflowY: 'auto', background: t.listBg, padding: isMobile ? '10px 10px' : '12px 14px' }}>
           {loading ? (
@@ -1893,8 +1951,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {filtered.map(child => (
+            (() => {
+              const renderCard = child => (
                 <ChildCard
                   key={child.id}
                   child={child}
@@ -1907,9 +1965,53 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   onClick={() => selectMode ? toggleSelect(child.id) : setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
                   onMark={null}
                   dark={darkMode}
+                  roster={!session}
                 />
-              ))}
-            </div>
+              )
+
+              // Only section when showing everyone. Filtered to one group, the
+              // headers would just repeat the chip you already pressed, and
+              // searching wants a flat list of hits rather than hits scattered
+              // under group headings.
+              if (activeGroup !== 'all' || search.trim()) {
+                return <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{filtered.map(renderCard)}</div>
+              }
+
+              const sections = []
+              filtered.forEach(c => {
+                const key = c.group_name || 'Ungrouped'
+                let sec = sections.find(x => x.key === key)
+                if (!sec) { sec = { key, children: [] }; sections.push(sec) }
+                sec.children.push(c)
+              })
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {sections.map(sec => {
+                    const col = getBubble(sec.children[0])?.color || primary
+                    return (
+                      <div key={sec.key}>
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+                          position: 'sticky', top: -2, zIndex: 2,
+                          background: t.listBg, padding: '4px 2px',
+                        }}>
+                          <span style={{ width: 9, height: 9, borderRadius: '50%', background: col, flexShrink: 0 }} />
+                          <span style={{ fontSize: 11.5, fontWeight: 900, color: t.text, textTransform: 'uppercase', letterSpacing: 0.7 }}>
+                            {sec.key}
+                          </span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: t.textMuted }}>{sec.children.length}</span>
+                          <span style={{ flex: 1, height: 1, background: darkMode ? 'rgba(255,255,255,0.07)' : '#E9EDF3' }} />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {sec.children.map(renderCard)}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()
           )}
         </div>
 
@@ -2007,8 +2109,12 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           <div style={{ padding: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}>🛡 Safeguarding</div>
             <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, padding: '10px 12px' }}>
+              {/* Counts children, not alerts, and says which -- this panel and
+                  the Medical Alerts stat chip both read "medical alerts" while
+                  one counted medical_notes and the other counted allergies OR
+                  medical_notes, so the same screen showed two numbers. */}
               <div style={{ fontSize: 11, fontWeight: 800, color: '#92400E', marginBottom: 3 }}>
-                {children.filter(c => c.allergies || c.medical_notes).length} medical alert{children.filter(c => c.allergies || c.medical_notes).length !== 1 ? 's' : ''} on register
+                {children.filter(c => c.allergies || c.medical_notes).length} child{children.filter(c => c.allergies || c.medical_notes).length !== 1 ? 'ren' : ''} with a medical or allergy alert
               </div>
               <div style={{ fontSize: 11, color: '#92400E', lineHeight: 1.4, opacity: 0.8 }}>Log all concerns immediately.</div>
             </div>
