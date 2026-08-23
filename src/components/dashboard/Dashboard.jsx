@@ -18,13 +18,11 @@ import { useBreakpoint, useIsMobile } from '../../hooks/useIsMobile'
 import EventsTrips from '../events/EventsTrips'
 import Calendar from '../calendar/Calendar';
 import Templates from '../templates/Templates'
-import Safeguarding from '../safeguarding/Safeguarding'
-import SafeguardingGate from '../safeguarding/SafeguardingGate'
+import SafeguardingHub from '../safeguarding/SafeguardingHub'
 import Reports from '../reports/Reports'
 import Gallery from '../gallery/Gallery'
 import Messaging from '../messaging/Messaging'
 import Forms from '../forms/Forms'
-import CaseManagement from '../casemgmt/CaseManagement'
 import ChildrenDirectory from '../children/ChildrenDirectory'
 import ChildrenGate from '../children/ChildrenGate'
 import MedicalAlerts from '../medical/MedicalAlerts'
@@ -79,9 +77,8 @@ const ALL_MODULES = [
   { key: 'volunteers',      label: 'Volunteers',       icon: '❤️', group: 'delivery' },
   { key: 'messaging',       label: 'Messaging',        icon: '💬', group: 'delivery' },
   { key: 'gallery',         label: 'Gallery',          icon: '🖼️', group: 'delivery' },
-  { key: 'safeguarding',    label: 'Safeguarding',     icon: '🛡️', group: 'safeguarding' },
+  { key: 'safeguarding',    label: 'Safeguarding Hub', icon: '🛡️', group: 'safeguarding' },
   { key: 'forms',           label: 'Forms',            icon: '📝', group: 'safeguarding' },
-  { key: 'case_management', label: 'Case Management',  icon: '📁', group: 'safeguarding' },
   { key: 'risk_assessments', label: 'Risk Assessments', icon: '🛡️', group: 'safeguarding' },
   { key: 'medical_alerts',  label: 'Medical Alerts',    icon: '💊', group: 'safeguarding' },
   { key: 'reports',         label: 'Reports',          icon: '📊', group: 'growth' },
@@ -98,7 +95,7 @@ const ALL_MODULES = [
 
 const MODULE_TO_PACK = {
   registers: 'Delivery', volunteers: 'Delivery', messaging: 'Delivery', gallery: 'Delivery',
-  safeguarding: 'Safeguarding', forms: 'Safeguarding', case_management: 'Safeguarding', risk_assessments: 'Safeguarding',
+  safeguarding: 'Safeguarding', forms: 'Safeguarding', risk_assessments: 'Safeguarding',
   reports: 'Growth', impact_outcomes: 'Growth', fundraising: 'Growth',
   hr: 'Operations', resource_booking: 'Operations', payments: 'Operations',
 }
@@ -523,7 +520,10 @@ export default function Dashboard({ session, org }) {
   // 'team' was the Staff & Volunteers module, now consolidated into HR. The
   // route is kept and redirected rather than removed, so existing bookmarks and
   // ?tab=team links still land somewhere sensible.
-  const TAB_ALIASES = { team: 'hr' }
+  // case_management was merged into the Safeguarding Hub. The alias keeps
+  // persisted tabs, push notification payloads and any bookmarked deep link
+  // working rather than dropping the user on a blank screen.
+  const TAB_ALIASES = { team: 'hr', case_management: 'safeguarding' }
 
   // Which module governs each tab, for the per-member access layer. Tabs
   // absent from this map are ungoverned (Home, Today, Settings, Branding,
@@ -533,7 +533,7 @@ export default function Dashboard({ session, org }) {
     children: 'people', planner: 'planner', projects: 'planner', projects_list: 'planner',
     calendar: 'calendar', registers: 'registers', volunteers: 'volunteers',
     messaging: 'messaging', gallery: 'gallery', safeguarding: 'safeguarding',
-    forms: 'forms', case_management: 'case_management', risk_assessments: 'risk_assessments',
+    forms: 'forms', risk_assessments: 'risk_assessments',
     medical_alerts: 'medical_alerts', reports: 'reports', impact_outcomes: 'impact_outcomes',
     fundraising: 'fundraising', payments: 'payments', resource_booking: 'resource_booking',
     events_trips: 'events_trips', mentoring: 'mentoring',
@@ -546,7 +546,9 @@ export default function Dashboard({ session, org }) {
     if (t === 'registers') setRegistersKey(k => k + 1)
     setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
     setOpenAssessmentId(t === 'risk_assessments' && payload?.openAssessmentId ? payload.openAssessmentId : null)
-    setOpenCaseId(t === 'case_management' && payload?.openCaseId ? payload.openCaseId : null)
+    // t has already been aliased to 'safeguarding' by this point, so the
+    // payload is what identifies a case deep link.
+    setOpenCaseId(t === 'safeguarding' && payload?.openCaseId ? payload.openCaseId : null)
     setOpenConcernId(t === 'safeguarding' && payload?.openConcernId ? payload.openConcernId : null)
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
@@ -953,9 +955,8 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── SAFEGUARDING PACK ── */}
-          {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingGate org={org} session={session}><Safeguarding org={org} session={session} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} /></SafeguardingGate>                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingHub org={org} session={session} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} initialOpenCaseId={openCaseId} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding Hub"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'case_management' && (hasModule('case_management') ? <CaseManagement org={org} session={session} initialOpenCaseId={openCaseId} />                        : <LockedModule moduleKey="case_management" label="Case Management" icon="📁" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} userProfile={userProfile} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── GROWTH PACK ── */}
@@ -973,7 +974,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','__no_access'].includes(effectiveTab) && (
+          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','__no_access'].includes(effectiveTab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
@@ -1030,7 +1031,7 @@ export default function Dashboard({ session, org }) {
                   { key: 'calendar', label: 'Calendar', icon: '📅' },
                   { key: 'team', label: 'Team & Staff', icon: '👥' },
                   { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
-                  { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
+                  { key: 'safeguarding', label: 'Safeguarding Hub', icon: '🛡️' },
                   { key: 'reports', label: 'Reports', icon: '📊' },
                   { key: 'settings', label: 'Settings', icon: '⚙️' }
                 ].filter(item => !ADMIN_ONLY_TABS.includes(item.key) || isAdmin).map(item => (

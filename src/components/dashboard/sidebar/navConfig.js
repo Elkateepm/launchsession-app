@@ -40,9 +40,8 @@ export const NAV_SECTIONS = [
     id: 'safety',
     label: 'Safety',
     items: [
-      { id: 'safeguarding', label: 'Safeguarding', icon: '🛡', tab: 'safeguarding', moduleKey: 'safeguarding' },
+      { id: 'safeguarding', label: 'Safeguarding Hub', icon: '🛡', tab: 'safeguarding', moduleKey: 'safeguarding' },
       { id: 'risk_assessments', label: 'Risk Assessments', icon: '⚠️', tab: 'risk_assessments', moduleKey: 'risk_assessments' },
-      { id: 'case_management', label: 'Case Management', icon: '📁', tab: 'case_management', moduleKey: 'case_management' },
       { id: 'forms', label: 'Forms', icon: '📝', tab: 'forms', moduleKey: 'forms', badgeKey: 'forms' },
       { id: 'medical_alerts', label: 'Medical Alerts', icon: '💊', tab: 'medical_alerts', moduleKey: 'medical_alerts' },
     ],

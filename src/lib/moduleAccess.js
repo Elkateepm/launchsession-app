@@ -15,7 +15,7 @@
 // of step with the nav when a module is added.
 export const ALL_MODULE_KEYS = [
   'calendar', 'registers', 'planner', 'volunteers', 'messaging', 'gallery',
-  'safeguarding', 'forms', 'case_management', 'risk_assessments', 'medical_alerts',
+  'safeguarding', 'forms', 'risk_assessments', 'medical_alerts',
   'reports', 'impact_outcomes', 'fundraising',
   'hr', 'payments', 'resource_booking', 'events_trips',
   'parent_portal', 'mentoring',
@@ -85,8 +85,7 @@ export const ACCESS_MODULES = [
   { key: 'planner', label: 'Sessions & Projects', icon: '🚀', hint: 'Planning, notes, reflections and participants' },
   { key: 'registers', label: 'Registers', icon: '✅', hint: 'Attendance and corrections' },
   { key: 'calendar', label: 'Calendar', icon: '📅' },
-  { key: 'safeguarding', label: 'Safeguarding', icon: '🛡', hint: 'Concerns and safeguarding documents' },
-  { key: 'case_management', label: 'Case Management', icon: '📁' },
+  { key: 'safeguarding', label: 'Safeguarding Hub', icon: '🛡', hint: 'Concerns, cases and safeguarding documents' },
   { key: 'risk_assessments', label: 'Risk Assessments', icon: '⚠️' },
   { key: 'medical_alerts', label: 'Medical Alerts', icon: '💊' },
   { key: 'forms', label: 'Forms', icon: '📝' },
