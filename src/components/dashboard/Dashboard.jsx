@@ -48,6 +48,7 @@ import {
 } from './sidebar/SidebarParts'
 import { makeHasModule, isTrialActive } from '../../lib/moduleAccess'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -1054,7 +1055,7 @@ export default function Dashboard({ session, org }) {
                       cursor: 'pointer'
                     }}
                   >
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
+                    <div style={{ fontSize: 24, marginBottom: 8, color: 'var(--text)' }}><Icon name={item.icon} size={24} /></div>
                     <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)' }}>{item.label}</div>
                     {item.badge > 0 && (
                       <span style={{ position: 'absolute', top: 10, right: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, borderRadius: 99, minWidth: 17, height: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>

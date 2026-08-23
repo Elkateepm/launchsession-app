@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import SignedImg from '../../shared/SignedImg'
+import Icon from '../../../lib/icons'
 
 // Sidebar primitives. Kept deliberately small: the previous nav repeated the
 // same 25-line button ten times, so a change to hover, focus or active styling
@@ -46,11 +47,15 @@ export function SidebarItem({
         transition: 'background 180ms ease, color 180ms ease',
       }}
     >
+      {/* grayscale() was there to mute emoji. A Lucide icon inherits
+          currentColor, so opacity alone does the same job without the
+          filter, and Icon falls back to the raw glyph for anything not
+          converted yet. */}
       <span style={{
-        fontSize: 15, width: 20, textAlign: 'center', flexShrink: 0,
-        opacity: active ? 1 : muted ? 0.7 : 0.9,
-        filter: active ? 'none' : 'grayscale(0.25)',
-      }}>{icon}</span>
+        fontSize: 15, width: 20, display: 'flex', alignItems: 'center',
+        justifyContent: 'center', flexShrink: 0,
+        opacity: active ? 1 : muted ? 0.75 : 0.85,
+      }}><Icon name={icon} size={17} /></span>
 
       {!collapsed && (
         <span style={{
@@ -200,7 +205,7 @@ export function SidebarCollapsibleGroup({
           transition: 'background 180ms ease, color 180ms ease',
         }}
       >
-        <span style={{ fontSize: 15, width: 20, textAlign: 'center', flexShrink: 0, filter: 'grayscale(0.25)' }}>{icon}</span>
+        <span style={{ fontSize: 15, width: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: 0.85 }}><Icon name={icon} size={17} /></span>
         <span style={{ flex: 1 }}>{label}</span>
         <span style={{
           fontSize: 11, color: 'rgba(255,255,255,0.3)',

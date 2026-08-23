@@ -14,13 +14,13 @@ export const NAV_SECTIONS = [
     id: 'delivery',
     label: 'Delivery',
     items: [
-      { id: 'calendar', label: 'Calendar', icon: '📅', tab: 'calendar', moduleKey: 'calendar' },
-      { id: 'planner', label: 'Sessions', icon: '🚀', tab: 'planner', moduleKey: 'planner' },
-      { id: 'projects', label: 'Projects', icon: '🗂', tab: 'projects_list', matchTabs: ['projects_list', 'projects'], accessKey: 'planner' },
-      { id: 'registers', label: 'Registers', icon: '✅', tab: 'registers', moduleKey: 'registers' },
+      { id: 'calendar', label: 'Calendar', icon: 'calendar', tab: 'calendar', moduleKey: 'calendar' },
+      { id: 'planner', label: 'Sessions', icon: 'sessions', tab: 'planner', moduleKey: 'planner' },
+      { id: 'projects', label: 'Projects', icon: 'projects', tab: 'projects_list', matchTabs: ['projects_list', 'projects'], accessKey: 'planner' },
+      { id: 'registers', label: 'Registers', icon: 'registers', tab: 'registers', moduleKey: 'registers' },
       // Rendered by Dashboard but absent from the old sidebar, so it was only
       // reachable by deep link. Module-gated, so it appears only where enabled.
-      { id: 'mentoring', label: 'Mentoring', icon: '🤝', tab: 'mentoring', moduleKey: 'mentoring' },
+      { id: 'mentoring', label: 'Mentoring', icon: 'mentoring', tab: 'mentoring', moduleKey: 'mentoring' },
     ],
   },
   {
@@ -29,22 +29,22 @@ export const NAV_SECTIONS = [
     items: [
       // Label comes from the org's own terminology (People / Young People /
       // Members / Players), resolved at render.
-      { id: 'children', label: null, termKey: 'People', icon: '👧', tab: 'children', accessKey: 'people' },
+      { id: 'children', label: null, termKey: 'People', icon: 'children', tab: 'children', accessKey: 'people' },
       // Staff are managed in HR (Operations). Volunteers stay separate: they
       // are a different relationship with different records, and merging them
       // would recreate the ambiguity this consolidation removed.
-      { id: 'volunteers', label: 'Volunteers', icon: '❤️', tab: 'volunteers', moduleKey: 'volunteers' },
-      { id: 'newsletter', label: 'Newsletter', icon: '📨', tab: 'newsletter', moduleKey: 'messaging' },
+      { id: 'volunteers', label: 'Volunteers', icon: 'volunteers', tab: 'volunteers', moduleKey: 'volunteers' },
+      { id: 'newsletter', label: 'Newsletter', icon: 'newsletter', tab: 'newsletter', moduleKey: 'messaging' },
     ],
   },
   {
     id: 'safety',
     label: 'Safety',
     items: [
-      { id: 'safeguarding', label: 'Safeguarding Hub', icon: '🛡', tab: 'safeguarding', moduleKey: 'safeguarding' },
-      { id: 'risk_assessments', label: 'Risk Assessments', icon: '⚠️', tab: 'risk_assessments', moduleKey: 'risk_assessments' },
-      { id: 'forms', label: 'Forms', icon: '📝', tab: 'forms', moduleKey: 'forms', badgeKey: 'forms' },
-      { id: 'medical_alerts', label: 'Medical Alerts', icon: '💊', tab: 'medical_alerts', moduleKey: 'medical_alerts' },
+      { id: 'safeguarding', label: 'Safeguarding Hub', icon: 'safeguarding', tab: 'safeguarding', moduleKey: 'safeguarding' },
+      { id: 'risk_assessments', label: 'Risk Assessments', icon: 'risk', tab: 'risk_assessments', moduleKey: 'risk_assessments' },
+      { id: 'forms', label: 'Forms', icon: 'forms', tab: 'forms', moduleKey: 'forms', badgeKey: 'forms' },
+      { id: 'medical_alerts', label: 'Medical Alerts', icon: 'medical', tab: 'medical_alerts', moduleKey: 'medical_alerts' },
     ],
   },
 ]
@@ -55,29 +55,29 @@ export const NAV_GROUPS = [
   {
     id: 'insights',
     label: 'Insights',
-    icon: '📊',
+    icon: 'insights',
     items: [
-      { id: 'reports', label: 'Reports', icon: '📈', tab: 'reports', moduleKey: 'reports' },
-      { id: 'impact_outcomes', label: 'Impact & Outcomes', icon: '🌱', tab: 'impact_outcomes', moduleKey: 'impact_outcomes' },
-      { id: 'fundraising', label: 'Fundraising', icon: '💷', tab: 'fundraising', moduleKey: 'fundraising' },
+      { id: 'reports', label: 'Reports', icon: 'reports', tab: 'reports', moduleKey: 'reports' },
+      { id: 'impact_outcomes', label: 'Impact & Outcomes', icon: 'impact', tab: 'impact_outcomes', moduleKey: 'impact_outcomes' },
+      { id: 'fundraising', label: 'Fundraising', icon: 'fundraising', tab: 'fundraising', moduleKey: 'fundraising' },
     ],
   },
   {
     id: 'operations',
     label: 'Operations',
-    icon: '🧰',
+    icon: 'operations',
     items: [
-      { id: 'payments', label: 'Payments', icon: '💳', tab: 'payments', moduleKey: 'payments' },
-      { id: 'resource_booking', label: 'Resource Booking', icon: '🗓', tab: 'resource_booking', moduleKey: 'resource_booking' },
-      { id: 'events_trips', label: 'Events & Trips', icon: '✈️', tab: 'events_trips', moduleKey: 'events_trips' },
-      { id: 'messaging', label: 'Messaging', icon: '💬', tab: 'messaging', moduleKey: 'messaging' },
-      { id: 'gallery', label: 'Gallery', icon: '🖼', tab: 'gallery', moduleKey: 'gallery' },
+      { id: 'payments', label: 'Payments', icon: 'payments', tab: 'payments', moduleKey: 'payments' },
+      { id: 'resource_booking', label: 'Resource Booking', icon: 'resources', tab: 'resource_booking', moduleKey: 'resource_booking' },
+      { id: 'events_trips', label: 'Events & Trips', icon: 'events', tab: 'events_trips', moduleKey: 'events_trips' },
+      { id: 'messaging', label: 'Messaging', icon: 'messaging', tab: 'messaging', moduleKey: 'messaging' },
+      { id: 'gallery', label: 'Gallery', icon: 'gallery', tab: 'gallery', moduleKey: 'gallery' },
       // Not module-gated: staff management absorbed the old Staff & Volunteers
       // page, which was always available. Compliance and leave inside HR are
       // still gated on the module.
-      { id: 'hr', label: 'HR', icon: '🧑‍💼', tab: 'hr', adminOnly: true },
-      { id: 'parent_portal', label: 'Parent Portal', icon: '👨‍👩‍👧', tab: 'parent_portal', moduleKey: 'parent_portal' },
-      { id: 'templates', label: 'Templates', icon: '📄', tab: 'templates', adminOnly: true },
+      { id: 'hr', label: 'HR', icon: 'hr', tab: 'hr', adminOnly: true },
+      { id: 'parent_portal', label: 'Parent Portal', icon: 'parents', tab: 'parent_portal', moduleKey: 'parent_portal' },
+      { id: 'templates', label: 'Templates', icon: 'templates', tab: 'templates', adminOnly: true },
     ],
   },
 ]
@@ -85,21 +85,21 @@ export const NAV_GROUPS = [
 // Reached through the Organisation item rather than sitting permanently in the
 // nav. The routes are untouched; only their entry point moved.
 export const ORG_ITEMS = [
-  { id: 'settings', label: 'Settings', icon: '⚙️', tab: 'settings', adminOnly: true },
-  { id: 'branding', label: 'Branding', icon: '🎨', tab: 'branding', adminOnly: true },
+  { id: 'settings', label: 'Settings', icon: 'settings', tab: 'settings', adminOnly: true },
+  { id: 'branding', label: 'Branding', icon: 'branding', tab: 'branding', adminOnly: true },
 ]
 
 // Actions offered by the Create button. Each points at an existing flow --
 // nothing here builds a second way to create anything.
 export const CREATE_ACTIONS = [
-  { id: 'session', label: 'New Session', icon: '🚀', tab: 'planner', moduleKey: 'planner', intent: 'create' },
-  { id: 'project', label: 'New Project', icon: '🗂', tab: 'projects_list', intent: 'create', accessKey: 'planner' },
-  { id: 'child', label: null, termKey: 'Person', labelPrefix: 'Add ', icon: '👧', tab: 'children', intent: 'create', accessKey: 'people' },
-  { id: 'register', label: 'New Register', icon: '✅', tab: 'registers', moduleKey: 'registers', intent: 'create' },
-  { id: 'concern', label: 'Safeguarding Concern', icon: '🛡', tab: 'safeguarding', moduleKey: 'safeguarding', intent: 'create' },
-  { id: 'risk', label: 'Risk Assessment', icon: '⚠️', tab: 'risk_assessments', moduleKey: 'risk_assessments', intent: 'create' },
-  { id: 'form', label: 'New Form', icon: '📝', tab: 'forms', moduleKey: 'forms', intent: 'create' },
-  { id: 'payment', label: 'Record Payment', icon: '💳', tab: 'payments', moduleKey: 'payments', intent: 'create' },
+  { id: 'session', label: 'New Session', icon: 'sessions', tab: 'planner', moduleKey: 'planner', intent: 'create' },
+  { id: 'project', label: 'New Project', icon: 'projects', tab: 'projects_list', intent: 'create', accessKey: 'planner' },
+  { id: 'child', label: null, termKey: 'Person', labelPrefix: 'Add ', icon: 'children', tab: 'children', intent: 'create', accessKey: 'people' },
+  { id: 'register', label: 'New Register', icon: 'registers', tab: 'registers', moduleKey: 'registers', intent: 'create' },
+  { id: 'concern', label: 'Safeguarding Concern', icon: 'safeguarding', tab: 'safeguarding', moduleKey: 'safeguarding', intent: 'create' },
+  { id: 'risk', label: 'Risk Assessment', icon: 'risk', tab: 'risk_assessments', moduleKey: 'risk_assessments', intent: 'create' },
+  { id: 'form', label: 'New Form', icon: 'forms', tab: 'forms', moduleKey: 'forms', intent: 'create' },
+  { id: 'payment', label: 'Record Payment', icon: 'payments', tab: 'payments', moduleKey: 'payments', intent: 'create' },
 ]
 
 /**
