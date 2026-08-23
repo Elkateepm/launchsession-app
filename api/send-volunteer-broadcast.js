@@ -28,8 +28,14 @@ function renderBlocks(blocks, primary) {
       return paras.join('')
     }
     if (b.type === 'image' && safeUrl(b.url)) {
+      // Mirrors IMAGE_SIZES in NewsletterStudio.jsx. A portrait phone photo at
+      // the full 496px column is around 880px tall, which is a screenful of
+      // one picture, so the block carries its own width.
+      const px = { small: 240, medium: 360, full: 496 }[b.size] || 496
       const cap = b.caption ? `<div style="font-size:12px;color:#94A3B8;margin-top:6px;">${esc(b.caption)}</div>` : ''
-      return `<div style="margin:0 0 18px;"><img src="${safeUrl(b.url)}" alt="${esc(b.alt || '')}" style="width:100%;max-width:496px;border-radius:8px;display:block;" />${cap}</div>`
+      // width attribute as well as the style: Outlook ignores CSS width on
+      // images often enough that leaving it off means a full-bleed original.
+      return `<div style="margin:0 0 18px;text-align:center;"><img src="${safeUrl(b.url)}" alt="${esc(b.alt || '')}" width="${px}" style="width:${px}px;max-width:100%;height:auto;border-radius:8px;display:inline-block;" />${cap}</div>`
     }
     if (b.type === 'callout' && (b.title || b.text)) {
       const t = b.title ? `<div style="font-size:14px;font-weight:800;color:#0F172A;margin-bottom:4px;">${esc(b.title)}</div>` : ''

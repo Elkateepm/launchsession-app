@@ -24,13 +24,22 @@ const BLOCK_TYPES = [
   { type: 'divider', label: 'Divider', icon: '—', hint: 'A line break' },
 ]
 
+// Widths in px inside the 496px-wide email content column. Shared by the
+// on-screen preview and mirrored in renderBlocks in the send route.
+const IMAGE_SIZES = [
+  { key: 'small', label: 'Small', px: 240 },
+  { key: 'medium', label: 'Medium', px: 360 },
+  { key: 'full', label: 'Full', px: 496 },
+]
+const imageWidth = (size) => (IMAGE_SIZES.find(s => s.key === size) || IMAGE_SIZES[2]).px
+
 const uid = () => Math.random().toString(36).slice(2, 9)
 
 const blank = (type) => {
   switch (type) {
     case 'heading': return { id: uid(), type, text: '' }
     case 'text': return { id: uid(), type, text: '' }
-    case 'image': return { id: uid(), type, url: '', alt: '', caption: '' }
+    case 'image': return { id: uid(), type, url: '', alt: '', caption: '', size: 'full' }
     case 'callout': return { id: uid(), type, title: '', text: '' }
     case 'button': return { id: uid(), type, label: '', url: '' }
     default: return { id: uid(), type }
@@ -66,11 +75,24 @@ function BlockEditor({ block, orgId, primary, onChange, onRemove, onMove, isFirs
   const [err, setErr] = useState('')
   const set = (k, v) => onChange({ ...block, [k]: v })
 
+  // Measured so the block knows its own shape. A phone photo is portrait, and
+  // a portrait image at full content width is about 880px tall in an inbox --
+  // the reader scrolls past a wall of one picture. Landscape at full width is
+  // fine, so the default depends on the shape rather than being one size.
+  const measure = (file) => new Promise(resolve => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => { URL.revokeObjectURL(url); resolve({ w: img.naturalWidth, h: img.naturalHeight }) }
+    img.onerror = () => { URL.revokeObjectURL(url); resolve({ w: 0, h: 0 }) }
+    img.src = url
+  })
+
   const upload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     setBusy(true); setErr('')
     const up = await shrinkImage(file, { maxDimension: 1200 })
+    const dims = await measure(up)
     const path = `${orgId}/${Date.now()}-${(up.name || 'image').replace(/[^a-z0-9.]/gi, '_')}`
     const { error } = await supabase.storage
       .from('newsletter-images').upload(path, up, { contentType: up.type })
@@ -80,7 +102,8 @@ function BlockEditor({ block, orgId, primary, onChange, onRemove, onMove, isFirs
       // A public URL, not a signed one. An email lives in an inbox for years
       // and a signed URL would stop resolving an hour after sending.
       const { data } = supabase.storage.from('newsletter-images').getPublicUrl(path)
-      set('url', data.publicUrl)
+      const portrait = dims.h > dims.w * 1.1
+      onChange({ ...block, url: data.publicUrl, w: dims.w, h: dims.h, size: portrait ? 'small' : 'full' })
     }
     setBusy(false)
     e.target.value = ''
@@ -127,7 +150,39 @@ function BlockEditor({ block, orgId, primary, onChange, onRemove, onMove, isFirs
 
       {block.type === 'image' && (
         <>
-          {block.url && <img src={block.url} alt="" style={{ width: '100%', borderRadius: 9, marginBottom: 9, display: 'block' }} />}
+          {block.url && (
+            <>
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'var(--border)', borderRadius: 9, marginBottom: 9,
+                maxHeight: 200, overflow: 'hidden',
+              }}>
+                {/* Capped so a tall photo does not push the rest of the
+                    controls off the screen while you are still editing. */}
+                <img src={block.url} alt="" style={{ maxHeight: 200, maxWidth: '100%', objectFit: 'contain', display: 'block' }} />
+              </div>
+              <label style={miniLabel}>Size in the email</label>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 11 }}>
+                {IMAGE_SIZES.map(sz => {
+                  const active = (block.size || 'full') === sz.key
+                  return (
+                    <button key={sz.key} type="button" onClick={() => set('size', sz.key)} style={{
+                      flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                      fontSize: 11.5, fontWeight: 800,
+                      border: `1.5px solid ${active ? primary : 'var(--border)'}`,
+                      background: active ? `${primary}18` : 'transparent',
+                      color: active ? primary : 'var(--text3)',
+                    }}>{sz.label}</button>
+                  )
+                })}
+              </div>
+              {block.w > 0 && block.h > block.w * 1.1 && (block.size || 'full') === 'full' && (
+                <div style={{ fontSize: 11.5, color: '#B45309', marginBottom: 9, lineHeight: 1.5 }}>
+                  This is a tall photo — at full width it will be roughly {Math.round(496 * block.h / block.w)}px high in the email.
+                </div>
+              )}
+            </>
+          )}
           <input type="file" accept="image/*" onChange={upload} disabled={busy} style={{ fontSize: 12.5, marginBottom: 9 }} />
           {busy && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6 }}>Uploading…</div>}
           {err && <div style={{ fontSize: 12, color: '#DC2626', marginBottom: 6 }}>{err}</div>}
@@ -197,8 +252,11 @@ function Preview({ subject, preheader, blocks, org, compact }) {
             if (b.type === 'heading' && b.text) return <h2 key={b.id} style={{ margin: '0 0 12px', fontSize: 19, fontWeight: 800, color: '#0F172A' }}>{b.text}</h2>
             if (b.type === 'text' && b.text) return <div key={b.id} style={{ margin: '0 0 14px', fontSize: 15, lineHeight: 1.7, color: '#334155', whiteSpace: 'pre-wrap' }}>{fill(b.text)}</div>
             if (b.type === 'image' && b.url) return (
-              <div key={b.id} style={{ marginBottom: 18 }}>
-                <img src={b.url} alt={b.alt || ''} style={{ width: '100%', borderRadius: 8, display: 'block' }} />
+              <div key={b.id} style={{ marginBottom: 18, textAlign: 'center' }}>
+                <img src={b.url} alt={b.alt || ''} style={{
+                  width: imageWidth(b.size), maxWidth: '100%', height: 'auto',
+                  borderRadius: 8, display: 'inline-block',
+                }} />
                 {b.caption && <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>{b.caption}</div>}
               </div>
             )
