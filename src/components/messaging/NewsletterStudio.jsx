@@ -1,37 +1,45 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import shrinkImage from '../../lib/shrinkImage'
 import AudienceBuilder from './AudienceBuilder'
 
 // Newsletter Studio.
 //
-// A newsletter is an ordered array of blocks stored on the `newsletters` row.
-// The blocks are rendered to email HTML server-side in the send route; the
-// preview here is an on-screen approximation of that. Two renderers is a known
-// cost -- the alternative is shipping the email HTML into the browser -- so
-// they are kept deliberately close and any change to one wants the other.
+// Three stages rather than one long scroll: write it, choose who gets it,
+// check it and send. Those are genuinely separate jobs -- previously the
+// audience controls sat between the subject and the content, so you scrolled
+// past recipient configuration every time you edited a paragraph.
 //
-// Audience is resolved at send time rather than frozen into the draft, so a
-// newsletter written on Monday and sent on Friday goes to whoever is on the
-// books on Friday.
+// The preview is not a stage. It stays on screen throughout on a wide screen,
+// because the whole point is watching the thing take shape.
+//
+// Blocks are rendered to email HTML server-side in the send route; Preview
+// below is an on-screen approximation. Two renderers is a known cost and they
+// want changing together.
 
-const BLOCK_TYPES = [
-  { type: 'heading', label: 'Heading', icon: 'H', hint: 'Section title' },
-  { type: 'text', label: 'Text', icon: '¶', hint: 'A paragraph' },
-  { type: 'image', label: 'Image', icon: '🖼', hint: 'A photo' },
-  { type: 'callout', label: 'Highlight', icon: '★', hint: 'Make it stand out' },
-  { type: 'button', label: 'Button', icon: '⬤', hint: 'A link to tap' },
-  { type: 'divider', label: 'Divider', icon: '—', hint: 'A line break' },
-]
-
-// Widths in px inside the 496px-wide email content column. Shared by the
-// on-screen preview and mirrored in renderBlocks in the send route.
+// Widths in px inside the 496px email content column. Mirrored by renderBlocks
+// in api/send-volunteer-broadcast.js.
 const IMAGE_SIZES = [
   { key: 'small', label: 'Small', px: 240 },
   { key: 'medium', label: 'Medium', px: 360 },
   { key: 'full', label: 'Full', px: 496 },
 ]
 const imageWidth = (size) => (IMAGE_SIZES.find(s => s.key === size) || IMAGE_SIZES[2]).px
+
+const BLOCK_TYPES = [
+  { type: 'heading', label: 'Heading', icon: 'H' },
+  { type: 'text', label: 'Text', icon: '¶' },
+  { type: 'image', label: 'Image', icon: '🖼' },
+  { type: 'callout', label: 'Highlight', icon: '★' },
+  { type: 'button', label: 'Button', icon: '⬤' },
+  { type: 'divider', label: 'Divider', icon: '—' },
+]
+
+const STAGES = [
+  { key: 'write', label: 'Write', n: 1 },
+  { key: 'audience', label: 'Audience', n: 2 },
+  { key: 'review', label: 'Review & send', n: 3 },
+]
 
 const uid = () => Math.random().toString(36).slice(2, 9)
 
@@ -70,15 +78,23 @@ function useWide() {
   return wide
 }
 
-function BlockEditor({ block, orgId, primary, onChange, onRemove, onMove, isFirst, isLast }) {
+const summarise = (b) => {
+  if (b.type === 'heading') return b.text || 'Empty heading'
+  if (b.type === 'text') return b.text || 'Empty paragraph'
+  if (b.type === 'callout') return b.title || b.text || 'Empty highlight'
+  if (b.type === 'button') return b.label || 'Unlabelled button'
+  if (b.type === 'image') return b.url ? (b.caption || 'Image') : 'No image chosen'
+  return 'Divider'
+}
+
+function BlockEditor({ block, orgId, primary, open, onOpen, onChange, onRemove, onMove, onDuplicate, isFirst, isLast }) {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const set = (k, v) => onChange({ ...block, [k]: v })
 
   // Measured so the block knows its own shape. A phone photo is portrait, and
   // a portrait image at full content width is about 880px tall in an inbox --
-  // the reader scrolls past a wall of one picture. Landscape at full width is
-  // fine, so the default depends on the shape rather than being one size.
+  // a whole screen of one picture. Landscape at full width is fine.
   const measure = (file) => new Promise(resolve => {
     const url = URL.createObjectURL(file)
     const img = new Image()
@@ -111,110 +127,132 @@ function BlockEditor({ block, orgId, primary, onChange, onRemove, onMove, isFirs
 
   const meta = BLOCK_TYPES.find(b => b.type === block.type)
   const iconBtn = (disabled) => ({
-    background: 'none', border: 'none', padding: '3px 5px', fontSize: 13,
+    background: 'none', border: 'none', padding: '4px 6px', fontSize: 12.5,
     cursor: disabled ? 'default' : 'pointer', color: disabled ? 'var(--border)' : 'var(--text3)',
   })
+  const empty = !['divider'].includes(block.type) &&
+    !(block.text || '').trim() && !block.url && !(block.label || '').trim() && !(block.title || '').trim()
 
   return (
-    <div style={{ border: '1.5px solid var(--border)', borderRadius: 13, padding: 13, marginBottom: 10, background: 'var(--surface)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: block.type === 'divider' ? 0 : 11 }}>
-        <span aria-hidden="true" style={{
-          width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: 'flex', alignItems: 'center',
-          justifyContent: 'center', fontSize: 11, fontWeight: 800,
-          background: `${primary}18`, color: primary,
-        }}>{meta?.icon}</span>
-        <span style={{ flex: 1, fontSize: 11.5, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-          {meta?.label || block.type}
-        </span>
+    <div style={{
+      border: `1.5px solid ${open ? primary : 'var(--border)'}`,
+      borderRadius: 13, marginBottom: 9, background: 'var(--surface)', overflow: 'hidden',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '11px 12px' }}>
+        <button type="button" onClick={onOpen} aria-expanded={open} style={{
+          flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 9,
+          background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+          textAlign: 'left', fontFamily: 'inherit',
+        }}>
+          <span aria-hidden="true" style={{
+            width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800,
+            background: `${primary}18`, color: primary,
+          }}>{meta?.icon}</span>
+          <span style={{ minWidth: 0, flex: 1 }}>
+            <span style={{
+              display: 'block', fontSize: 13, fontWeight: 700,
+              color: empty ? 'var(--text3)' : 'var(--text)',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              fontStyle: empty ? 'italic' : 'normal',
+            }}>{summarise(block)}</span>
+          </span>
+        </button>
         <button onClick={() => onMove(-1)} disabled={isFirst} aria-label="Move up" style={iconBtn(isFirst)}>↑</button>
         <button onClick={() => onMove(1)} disabled={isLast} aria-label="Move down" style={iconBtn(isLast)}>↓</button>
+        <button onClick={onDuplicate} aria-label="Duplicate" style={iconBtn(false)}>⧉</button>
         <button onClick={onRemove} aria-label={`Remove ${meta?.label || 'block'}`} style={iconBtn(false)}>✕</button>
       </div>
 
-      {block.type === 'heading' && (
-        <input style={inp} value={block.text} placeholder="Section heading"
-          onChange={e => set('text', e.target.value)} />
-      )}
+      {open && block.type !== 'divider' && (
+        <div style={{ padding: '2px 12px 14px', borderTop: '1px solid var(--border)' }}>
+          <div style={{ height: 12 }} />
 
-      {block.type === 'text' && (
-        <>
-          <textarea style={{ ...inp, minHeight: 110, resize: 'vertical', lineHeight: 1.6 }} value={block.text}
-            placeholder="Write your paragraph. Leave a blank line to start a new one."
-            onChange={e => set('text', e.target.value)} />
-          <button type="button" onClick={() => set('text', `${block.text || ''}{{first_name}}`)}
-            style={{ marginTop: 7, padding: '4px 10px', borderRadius: 99, border: '1.5px solid var(--border)', background: 'transparent', cursor: 'pointer', fontSize: 10.5, fontWeight: 800, color: primary, fontFamily: 'inherit' }}>
-            + Their first name
-          </button>
-        </>
-      )}
+          {block.type === 'heading' && (
+            <input style={inp} value={block.text} placeholder="Section heading" autoFocus
+              onChange={e => set('text', e.target.value)} />
+          )}
 
-      {block.type === 'image' && (
-        <>
-          {block.url && (
+          {block.type === 'text' && (
             <>
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'var(--border)', borderRadius: 9, marginBottom: 9,
-                maxHeight: 200, overflow: 'hidden',
-              }}>
-                {/* Capped so a tall photo does not push the rest of the
-                    controls off the screen while you are still editing. */}
-                <img src={block.url} alt="" style={{ maxHeight: 200, maxWidth: '100%', objectFit: 'contain', display: 'block' }} />
+              <textarea style={{ ...inp, minHeight: 120, resize: 'vertical', lineHeight: 1.6 }} value={block.text}
+                placeholder="Write your paragraph. Leave a blank line to start a new one."
+                onChange={e => set('text', e.target.value)} />
+              <button type="button" onClick={() => set('text', `${block.text || ''}{{first_name}}`)}
+                style={{ marginTop: 7, padding: '4px 10px', borderRadius: 99, border: '1.5px solid var(--border)', background: 'transparent', cursor: 'pointer', fontSize: 10.5, fontWeight: 800, color: primary, fontFamily: 'inherit' }}>
+                + Their first name
+              </button>
+            </>
+          )}
+
+          {block.type === 'image' && (
+            <>
+              {block.url && (
+                <>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'var(--border)', borderRadius: 9, marginBottom: 10,
+                    maxHeight: 200, overflow: 'hidden',
+                  }}>
+                    {/* Capped so a tall photo doesn't push the controls off screen. */}
+                    <img src={block.url} alt="" style={{ maxHeight: 200, maxWidth: '100%', objectFit: 'contain', display: 'block' }} />
+                  </div>
+                  <label style={miniLabel}>Size in the email</label>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 11 }}>
+                    {IMAGE_SIZES.map(sz => {
+                      const active = (block.size || 'full') === sz.key
+                      return (
+                        <button key={sz.key} type="button" onClick={() => set('size', sz.key)} style={{
+                          flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                          fontSize: 11.5, fontWeight: 800,
+                          border: `1.5px solid ${active ? primary : 'var(--border)'}`,
+                          background: active ? `${primary}18` : 'transparent',
+                          color: active ? primary : 'var(--text3)',
+                        }}>{sz.label}</button>
+                      )
+                    })}
+                  </div>
+                  {block.w > 0 && block.h > block.w * 1.1 && (block.size || 'full') === 'full' && (
+                    <div style={{ fontSize: 11.5, color: '#B45309', marginBottom: 10, lineHeight: 1.5 }}>
+                      Tall photo — at full width it'll be about {Math.round(496 * block.h / block.w)}px high in the email.
+                    </div>
+                  )}
+                </>
+              )}
+              <input type="file" accept="image/*" onChange={upload} disabled={busy} style={{ fontSize: 12.5, marginBottom: 9 }} />
+              {busy && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6 }}>Uploading…</div>}
+              {err && <div style={{ fontSize: 12, color: '#DC2626', marginBottom: 6 }}>{err}</div>}
+              <label style={miniLabel}>Caption (optional)</label>
+              <input style={inp} value={block.caption} onChange={e => set('caption', e.target.value)} placeholder="Caption" />
+              <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 10, lineHeight: 1.5, paddingLeft: 9, borderLeft: '2px solid var(--border)' }}>
+                Images here are publicly readable, so they still load in an inbox a year from now. Don't upload photographs of young people unless you have consent to publish them.
               </div>
-              <label style={miniLabel}>Size in the email</label>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 11 }}>
-                {IMAGE_SIZES.map(sz => {
-                  const active = (block.size || 'full') === sz.key
-                  return (
-                    <button key={sz.key} type="button" onClick={() => set('size', sz.key)} style={{
-                      flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
-                      fontSize: 11.5, fontWeight: 800,
-                      border: `1.5px solid ${active ? primary : 'var(--border)'}`,
-                      background: active ? `${primary}18` : 'transparent',
-                      color: active ? primary : 'var(--text3)',
-                    }}>{sz.label}</button>
-                  )
-                })}
-              </div>
-              {block.w > 0 && block.h > block.w * 1.1 && (block.size || 'full') === 'full' && (
-                <div style={{ fontSize: 11.5, color: '#B45309', marginBottom: 9, lineHeight: 1.5 }}>
-                  This is a tall photo — at full width it will be roughly {Math.round(496 * block.h / block.w)}px high in the email.
+            </>
+          )}
+
+          {block.type === 'callout' && (
+            <>
+              <input style={{ ...inp, marginBottom: 9 }} value={block.title} placeholder="Highlight title" autoFocus
+                onChange={e => set('title', e.target.value)} />
+              <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={block.text}
+                placeholder="What you want to stand out" onChange={e => set('text', e.target.value)} />
+            </>
+          )}
+
+          {block.type === 'button' && (
+            <>
+              <input style={{ ...inp, marginBottom: 9 }} value={block.label} placeholder="Button text" autoFocus
+                onChange={e => set('label', e.target.value)} />
+              <input style={inp} value={block.url} placeholder="https://…"
+                onChange={e => set('url', e.target.value)} />
+              {block.url && !/^https?:\/\//i.test(block.url) && (
+                <div style={{ fontSize: 11.5, color: '#B45309', marginTop: 7 }}>
+                  Needs to start with https:// or it won't be linked in the email.
                 </div>
               )}
             </>
           )}
-          <input type="file" accept="image/*" onChange={upload} disabled={busy} style={{ fontSize: 12.5, marginBottom: 9 }} />
-          {busy && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6 }}>Uploading…</div>}
-          {err && <div style={{ fontSize: 12, color: '#DC2626', marginBottom: 6 }}>{err}</div>}
-          <label style={miniLabel}>Caption (optional)</label>
-          <input style={inp} value={block.caption} onChange={e => set('caption', e.target.value)} placeholder="Caption" />
-          <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 9, lineHeight: 1.5, paddingLeft: 9, borderLeft: '2px solid var(--border)' }}>
-            Images here are publicly readable, so they still load in an inbox a year from now. Don't upload photographs of young people unless you have consent to publish them.
-          </div>
-        </>
-      )}
-
-      {block.type === 'callout' && (
-        <>
-          <input style={{ ...inp, marginBottom: 9 }} value={block.title} placeholder="Highlight title"
-            onChange={e => set('title', e.target.value)} />
-          <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={block.text}
-            placeholder="What you want to stand out" onChange={e => set('text', e.target.value)} />
-        </>
-      )}
-
-      {block.type === 'button' && (
-        <>
-          <input style={{ ...inp, marginBottom: 9 }} value={block.label} placeholder="Button text"
-            onChange={e => set('label', e.target.value)} />
-          <input style={inp} value={block.url} placeholder="https://…"
-            onChange={e => set('url', e.target.value)} />
-          {block.url && !/^https?:\/\//i.test(block.url) && (
-            <div style={{ fontSize: 11.5, color: '#B45309', marginTop: 7 }}>
-              Needs to start with https:// or it won't be linked in the email.
-            </div>
-          )}
-        </>
+        </div>
       )}
     </div>
   )
@@ -288,10 +326,14 @@ function Preview({ subject, preheader, blocks, org, compact }) {
 
 export default function NewsletterStudio({ org, session }) {
   const wide = useWide()
-  const [tab, setTab] = useState('write')
+  const [view, setView] = useState('compose') // compose | past
+  const [stage, setStage] = useState('write')
+
   const [subject, setSubject] = useState('')
   const [preheader, setPreheader] = useState('')
   const [blocks, setBlocks] = useState([])
+  const [openBlock, setOpenBlock] = useState(null)
+
   const [roles, setRoles] = useState(['parent'])
   const [groupNames, setGroupNames] = useState([])
   const [projectIds, setProjectIds] = useState([])
@@ -299,10 +341,14 @@ export default function NewsletterStudio({ org, session }) {
   const [excludedEmails, setExcludedEmails] = useState([])
   const [resolved, setResolved] = useState([])
   const audienceCount = resolved.filter(r => !r.suppressed).length
+  const suppressedCount = resolved.filter(r => r.suppressed).length
+
   const [past, setPast] = useState([])
   const [draftId, setDraftId] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [testing, setTesting] = useState(false)
   const [result, setResult] = useState(null)
+  const [savedAt, setSavedAt] = useState(null)
 
   const primary = org?.primary_color || '#3B82F6'
 
@@ -314,9 +360,17 @@ export default function NewsletterStudio({ org, session }) {
 
   useEffect(() => { load() }, [load])
 
-  const addBlock = (type) => setBlocks(b => [...b, blank(type)])
+  const addBlock = (type) => {
+    const b = blank(type)
+    setBlocks(x => [...x, b])
+    setOpenBlock(b.id)
+  }
   const updateBlock = (i, next) => setBlocks(b => b.map((x, j) => (j === i ? next : x)))
   const removeBlock = (i) => setBlocks(b => b.filter((_, j) => j !== i))
+  const duplicateBlock = (i) => setBlocks(b => {
+    const copy = { ...b[i], id: uid() }
+    return [...b.slice(0, i + 1), copy, ...b.slice(i + 1)]
+  })
   const moveBlock = (i, dir) => setBlocks(b => {
     const j = i + dir
     if (j < 0 || j >= b.length) return b
@@ -328,51 +382,67 @@ export default function NewsletterStudio({ org, session }) {
   const hasContent = subject.trim() && blocks.some(b => (b.text || '').trim() || b.url || (b.label || '').trim())
   const canSend = hasContent && roles.length > 0 && audienceCount > 0 && !busy
 
-  // Says what is actually missing rather than leaving a disabled button with no
-  // explanation, which was the main thing wrong with the first version.
-  const blocker = !subject.trim() ? 'Add a subject to send.'
-    : blocks.length === 0 ? 'Add at least one block of content.'
-    : !hasContent ? 'Your blocks are still empty.'
-    : roles.length === 0 ? 'Choose who gets it.'
-    : audienceCount === 0 ? 'Nobody in that audience can be emailed.'
-    : null
+  const row = useCallback(() => ({
+    org_id: org?.id,
+    subject: subject.trim(),
+    preheader: preheader.trim() || null,
+    blocks,
+    audience_roles: roles,
+    audience: { group_names: groupNames, project_ids: projectIds },
+    manual_emails: manualEmails,
+    excluded_emails: excludedEmails,
+    status: 'draft',
+    created_by: session?.user?.id || null,
+  }), [org?.id, subject, preheader, blocks, roles, groupNames, projectIds, manualEmails, excludedEmails, session])
 
-  const save = async () => {
-    const row = {
-      org_id: org?.id,
-      subject: subject.trim(),
-      preheader: preheader.trim() || null,
-      blocks,
-      audience_roles: roles,
-      audience: { group_names: groupNames, project_ids: projectIds },
-      manual_emails: manualEmails,
-      excluded_emails: excludedEmails,
-      status: 'draft',
-      created_by: session?.user?.id || null,
-    }
+  const save = useCallback(async () => {
+    const r = row()
     if (draftId) {
-      const { error } = await supabase.from('newsletters').update(row).eq('id', draftId)
+      const { error } = await supabase.from('newsletters').update(r).eq('id', draftId)
       if (error) throw new Error(error.message)
       return draftId
     }
-    const { data, error } = await supabase.from('newsletters').insert([row]).select().single()
+    const { data, error } = await supabase.from('newsletters').insert([r]).select().single()
     if (error || !data) throw new Error(error?.message || 'Could not save the newsletter')
     setDraftId(data.id)
     return data.id
-  }
+  }, [row, draftId])
 
-  const saveDraft = async () => {
-    setBusy(true); setResult(null)
-    try { await save(); setResult({ ok: true, text: 'Saved as a draft.' }); load() }
-    catch (err) { setResult({ ok: false, text: err.message }) }
-    setBusy(false)
+  // Autosave. Only once there is a subject to save under, and only for drafts
+  // -- a sent newsletter reopened as a copy must not be silently written back
+  // over the record of what actually went out.
+  const dirtyRef = useRef(false)
+  useEffect(() => { dirtyRef.current = true }, [subject, preheader, blocks, roles, groupNames, projectIds, manualEmails, excludedEmails])
+  useEffect(() => {
+    if (!subject.trim() || busy) return undefined
+    const t = setTimeout(async () => {
+      if (!dirtyRef.current) return
+      try { await save(); dirtyRef.current = false; setSavedAt(new Date()) } catch { /* autosave stays quiet */ }
+    }, 2500)
+    return () => clearTimeout(t)
+  }, [subject, preheader, blocks, roles, groupNames, projectIds, manualEmails, excludedEmails, busy, save])
+
+  const sendTest = async () => {
+    if (!hasContent || testing) return
+    setTesting(true); setResult(null)
+    try {
+      const id = await save()
+      const { data: { session: s } } = await supabase.auth.getSession()
+      const res = await fetch('/api/send-volunteer-broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s?.access_token || ''}` },
+        body: JSON.stringify({ newsletterId: id, testTo: s?.user?.email }),
+      })
+      const payload = await res.json()
+      if (!res.ok) throw new Error(payload?.error || 'Test failed')
+      setResult({ ok: true, text: `Test sent to ${payload.to}. Nothing else was changed.` })
+    } catch (err) { setResult({ ok: false, text: err.message }) }
+    setTesting(false)
   }
 
   const send = async () => {
     if (!canSend) return
-    const who = audienceCount === null ? 'the selected audience' : `${audienceCount} ${audienceCount === 1 ? 'person' : 'people'}`
-    if (!window.confirm(`Send "${subject.trim()}" to ${who}? This cannot be unsent.`)) return
-
+    if (!window.confirm(`Send "${subject.trim()}" to ${audienceCount} ${audienceCount === 1 ? 'person' : 'people'}? This cannot be unsent.`)) return
     setBusy(true); setResult(null)
     try {
       const id = await save()
@@ -387,10 +457,12 @@ export default function NewsletterStudio({ org, session }) {
       setResult({
         ok: payload.failed === 0,
         text: payload.failed
-          ? `Sent to ${payload.sent}, ${payload.failed} failed. Open it from Sent to retry.`
+          ? `Sent to ${payload.sent}, ${payload.failed} failed. Open it from Sent & drafts to retry.`
           : `Sent to ${payload.sent} ${payload.sent === 1 ? 'person' : 'people'}.`,
       })
-      if (payload.failed === 0) { setSubject(''); setPreheader(''); setBlocks([]); setDraftId(null) }
+      if (payload.failed === 0) {
+        setSubject(''); setPreheader(''); setBlocks([]); setDraftId(null); setStage('write')
+      }
       load()
     } catch (err) { setResult({ ok: false, text: err.message }) }
     setBusy(false)
@@ -407,43 +479,63 @@ export default function NewsletterStudio({ org, session }) {
     setExcludedEmails(n.excluded_emails || [])
     setDraftId(n.status === 'draft' ? n.id : null)
     setResult(n.status === 'draft' ? null : { ok: true, text: 'Opened as a copy — sending will create a new one.' })
-    setTab('write')
+    setView('compose'); setStage('write')
   }
 
-  // On a wide screen the preview is always on screen, so a Preview tab would
-  // just be a tab that does nothing.
-  const TABS = wide
-    ? [['write', 'Write'], ['past', `Sent & drafts (${past.length})`]]
-    : [['write', 'Write'], ['preview', 'Preview'], ['past', `Sent & drafts (${past.length})`]]
+  const startNew = () => {
+    setSubject(''); setPreheader(''); setBlocks([]); setDraftId(null)
+    setRoles(['parent']); setGroupNames([]); setProjectIds([])
+    setManualEmails([]); setExcludedEmails([])
+    setResult(null); setSavedAt(null); setView('compose'); setStage('write')
+  }
 
-  const composer = (
+  // ------------------------------------------------------------- stages
+  const stageIssues = {
+    write: !subject.trim() ? 'Needs a subject' : blocks.length === 0 ? 'Needs some content' : null,
+    audience: roles.length === 0 ? 'Nobody chosen' : audienceCount === 0 ? 'Nobody can be emailed' : null,
+    review: null,
+  }
+
+  const Stepper = () => (
+    <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
+      {STAGES.map(st => {
+        const active = stage === st.key
+        const issue = stageIssues[st.key]
+        return (
+          <button key={st.key} onClick={() => setStage(st.key)} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '9px 15px',
+            borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
+            border: `1.5px solid ${active ? primary : 'var(--border)'}`,
+            background: active ? `${primary}14` : 'transparent',
+            transition: 'all 0.15s',
+          }}>
+            <span aria-hidden="true" style={{
+              width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', fontSize: 10.5, fontWeight: 900,
+              background: active ? primary : 'var(--border)',
+              color: active ? '#fff' : 'var(--text3)',
+            }}>{st.n}</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: active ? primary : 'var(--text3)' }}>{st.label}</span>
+            {issue && <span title={issue} aria-label={issue} style={{ fontSize: 11, color: '#B45309' }}>•</span>}
+          </button>
+        )
+      })}
+    </div>
+  )
+
+  const writeStage = (
     <>
       <div style={card}>
         <label style={miniLabel} htmlFor="nl-subject">Subject</label>
         <input id="nl-subject" style={{ ...inp, marginBottom: 14, fontSize: 15, fontWeight: 600 }} value={subject}
           onChange={e => setSubject(e.target.value)} placeholder="What's this newsletter about?" />
-
         <label style={miniLabel} htmlFor="nl-pre">Inbox preview line <span style={{ fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}>· optional</span></label>
         <input id="nl-pre" style={inp} value={preheader}
           onChange={e => setPreheader(e.target.value)} placeholder="The grey line shown after the subject" />
       </div>
 
       <div style={card}>
-        <AudienceBuilder
-          org={org}
-          primary={primary}
-          roles={roles} setRoles={setRoles}
-          groupNames={groupNames} setGroupNames={setGroupNames}
-          projectIds={projectIds} setProjectIds={setProjectIds}
-          manualEmails={manualEmails} setManualEmails={setManualEmails}
-          excludedEmails={excludedEmails} setExcludedEmails={setExcludedEmails}
-          onResolved={setResolved}
-        />
-      </div>
-
-      <div style={card}>
         <label style={miniLabel}>Content</label>
-
         {blocks.length === 0 && (
           <div style={{
             border: '1.5px dashed var(--border)', borderRadius: 12, padding: '26px 18px',
@@ -452,62 +544,128 @@ export default function NewsletterStudio({ org, session }) {
             Nothing in here yet.<br />Start with a heading or a paragraph.
           </div>
         )}
-
         {blocks.map((b, i) => (
           <BlockEditor
             key={b.id}
             block={b}
             orgId={org?.id}
             primary={primary}
+            open={openBlock === b.id}
+            onOpen={() => setOpenBlock(k => (k === b.id ? null : b.id))}
             onChange={next => updateBlock(i, next)}
             onRemove={() => removeBlock(i)}
+            onDuplicate={() => duplicateBlock(i)}
             onMove={dir => moveBlock(i, dir)}
             isFirst={i === 0}
             isLast={i === blocks.length - 1}
           />
         ))}
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(96px, 1fr))', gap: 8, marginTop: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(96px, 1fr))', gap: 8, marginTop: 10 }}>
           {BLOCK_TYPES.map(t => (
-            <button key={t.type} type="button" onClick={() => addBlock(t.type)} title={t.hint}
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                padding: '11px 6px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
-                border: '1.5px solid var(--border)', background: 'transparent',
-                color: 'var(--text3)', fontSize: 11.5, fontWeight: 700,
-              }}>
+            <button key={t.type} type="button" onClick={() => addBlock(t.type)} style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+              padding: '11px 6px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
+              border: '1.5px solid var(--border)', background: 'transparent',
+              color: 'var(--text3)', fontSize: 11.5, fontWeight: 700,
+            }}>
               <span aria-hidden="true" style={{ fontSize: 14, color: primary }}>{t.icon}</span>
               {t.label}
             </button>
           ))}
         </div>
       </div>
+    </>
+  )
+
+  const audienceStage = (
+    <div style={card}>
+      <AudienceBuilder
+        org={org}
+        primary={primary}
+        roles={roles} setRoles={setRoles}
+        groupNames={groupNames} setGroupNames={setGroupNames}
+        projectIds={projectIds} setProjectIds={setProjectIds}
+        manualEmails={manualEmails} setManualEmails={setManualEmails}
+        excludedEmails={excludedEmails} setExcludedEmails={setExcludedEmails}
+        onResolved={setResolved}
+      />
+    </div>
+  )
+
+  const checkRow = (ok, label, detail) => (
+    <div style={{ display: 'flex', gap: 10, padding: '9px 0', borderBottom: '1px solid var(--border)' }}>
+      <span aria-hidden="true" style={{ fontSize: 13, color: ok ? '#15803D' : '#B45309', flexShrink: 0 }}>{ok ? '✓' : '!'}</span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{label}</span>
+        {detail && <span style={{ display: 'block', fontSize: 12, color: 'var(--text3)', marginTop: 2, lineHeight: 1.5 }}>{detail}</span>}
+      </span>
+    </div>
+  )
+
+  const reviewStage = (
+    <div style={card}>
+      <label style={miniLabel}>Before you send</label>
+      {checkRow(!!subject.trim(), subject.trim() || 'No subject yet',
+        preheader.trim() ? `Preview line: ${preheader.trim()}` : 'No inbox preview line — the first words of the newsletter will show instead.')}
+      {checkRow(blocks.length > 0, `${blocks.length} ${blocks.length === 1 ? 'block' : 'blocks'} of content`,
+        blocks.map(b => BLOCK_TYPES.find(t => t.type === b.type)?.label).join(' · ') || null)}
+      {checkRow(audienceCount > 0, `${audienceCount} ${audienceCount === 1 ? 'recipient' : 'recipients'}`,
+        suppressedCount > 0
+          ? `${suppressedCount} unsubscribed and will be skipped.`
+          : 'Someone in two groups still only gets one email.')}
+      {checkRow(true, 'Every recipient gets an unsubscribe link',
+        'Suppressed for this organisation only, and applied to every future newsletter.')}
+
+      <div style={{ marginTop: 18, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <button onClick={sendTest} disabled={!hasContent || testing} style={{
+          padding: '12px 18px', borderRadius: 11, border: '1.5px solid var(--border)',
+          background: 'transparent', color: 'var(--text)', fontSize: 13.5, fontWeight: 700,
+          cursor: !hasContent || testing ? 'default' : 'pointer', fontFamily: 'inherit',
+          opacity: !hasContent || testing ? 0.5 : 1,
+        }}>{testing ? 'Sending test…' : 'Send a test to me'}</button>
+      </div>
+      <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 8, lineHeight: 1.5 }}>
+        A test goes only to your own address, changes nothing, and carries no unsubscribe link — clicking one in a test would opt you out for real.
+      </div>
+    </div>
+  )
+
+  const composer = (
+    <>
+      <Stepper />
+      {stage === 'write' && writeStage}
+      {stage === 'audience' && audienceStage}
+      {stage === 'review' && reviewStage}
 
       <div style={{
         position: 'sticky', bottom: 0, zIndex: 5,
         background: 'var(--bg, var(--surface))', paddingTop: 10, paddingBottom: 14,
         borderTop: '1px solid var(--border)',
       }}>
-        {blocker && (
-          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 9 }}>{blocker}</div>
-        )}
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button onClick={saveDraft} disabled={busy || !subject.trim()} style={{
-            padding: '12px 20px', borderRadius: 11, border: '1.5px solid var(--border)',
-            background: 'transparent', color: 'var(--text)', fontSize: 14, fontWeight: 700,
-            cursor: busy || !subject.trim() ? 'default' : 'pointer', fontFamily: 'inherit',
-            opacity: busy || !subject.trim() ? 0.5 : 1,
-          }}>Save draft</button>
-          <button onClick={send} disabled={!canSend} style={{
-            flex: 1, minWidth: 190,
-            padding: '12px 24px', borderRadius: 11, border: 'none', background: primary,
-            color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
-            cursor: canSend ? 'pointer' : 'default', opacity: canSend ? 1 : 0.45,
-          }}>
-            {busy ? 'Sending…' : audienceCount
-              ? `Send to ${audienceCount} ${audienceCount === 1 ? 'person' : 'people'}`
-              : 'Send newsletter'}
-          </button>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          {stage !== 'review' ? (
+            <button onClick={() => setStage(stage === 'write' ? 'audience' : 'review')} style={{
+              flex: 1, minWidth: 190, padding: '12px 24px', borderRadius: 11, border: 'none',
+              background: primary, color: '#fff', fontSize: 14, fontWeight: 800,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>
+              {stage === 'write' ? 'Next — choose who gets it' : 'Next — review'}
+            </button>
+          ) : (
+            <button onClick={send} disabled={!canSend} style={{
+              flex: 1, minWidth: 190, padding: '12px 24px', borderRadius: 11, border: 'none',
+              background: primary, color: '#fff', fontSize: 14, fontWeight: 800,
+              cursor: canSend ? 'pointer' : 'default', fontFamily: 'inherit',
+              opacity: canSend ? 1 : 0.45,
+            }}>
+              {busy ? 'Sending…' : audienceCount
+                ? `Send to ${audienceCount} ${audienceCount === 1 ? 'person' : 'people'}`
+                : 'Send newsletter'}
+            </button>
+          )}
+          <span style={{ fontSize: 11.5, color: 'var(--text3)' }}>
+            {savedAt ? `Draft saved ${savedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : 'Not saved yet'}
+          </span>
         </div>
       </div>
     </>
@@ -515,23 +673,27 @@ export default function NewsletterStudio({ org, session }) {
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px 32px' }}>
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 23, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5 }}>Newsletter Studio</div>
-        <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 3 }}>
-          Build it in blocks, watch it come together, send it to your people.
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap', marginBottom: 16 }}>
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <div style={{ fontSize: 23, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5 }}>Newsletter Studio</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 3 }}>
+            Write it, choose who gets it, send it.
+          </div>
         </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: 7, marginBottom: 16, flexWrap: 'wrap' }}>
-        {TABS.map(([k, label]) => (
-          <button key={k} onClick={() => setTab(k)} style={{
-            padding: '8px 15px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
-            border: `1.5px solid ${tab === k ? primary : 'var(--border)'}`,
-            background: tab === k ? primary : 'transparent',
-            color: tab === k ? '#fff' : 'var(--text3)',
-            fontSize: 12.5, fontWeight: 800,
-          }}>{label}</button>
-        ))}
+        <div style={{ display: 'flex', gap: 7 }}>
+          <button onClick={startNew} style={{
+            padding: '8px 14px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
+            border: `1.5px solid ${view === 'compose' ? primary : 'var(--border)'}`,
+            background: view === 'compose' ? primary : 'transparent',
+            color: view === 'compose' ? '#fff' : 'var(--text3)', fontSize: 12.5, fontWeight: 800,
+          }}>New newsletter</button>
+          <button onClick={() => setView('past')} style={{
+            padding: '8px 14px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
+            border: `1.5px solid ${view === 'past' ? primary : 'var(--border)'}`,
+            background: view === 'past' ? primary : 'transparent',
+            color: view === 'past' ? '#fff' : 'var(--text3)', fontSize: 12.5, fontWeight: 800,
+          }}>Sent &amp; drafts ({past.length})</button>
+        </div>
       </div>
 
       {result && (
@@ -542,7 +704,7 @@ export default function NewsletterStudio({ org, session }) {
         }}>{result.text}</div>
       )}
 
-      {tab === 'write' && (
+      {view === 'compose' ? (
         wide ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 22, alignItems: 'start' }}>
             <div>{composer}</div>
@@ -551,13 +713,14 @@ export default function NewsletterStudio({ org, session }) {
             </div>
           </div>
         ) : (
-          <div style={{ maxWidth: 640 }}>{composer}</div>
+          <div style={{ maxWidth: 640 }}>
+            {composer}
+            <div style={{ marginTop: 18 }}>
+              <Preview subject={subject} preheader={preheader} blocks={blocks} org={org} />
+            </div>
+          </div>
         )
-      )}
-
-      {tab === 'preview' && <Preview subject={subject} preheader={preheader} blocks={blocks} org={org} />}
-
-      {tab === 'past' && (
+      ) : (
         <div style={{ maxWidth: 640 }}>
           {past.length === 0 && (
             <div style={{ ...card, textAlign: 'center', color: 'var(--text3)', fontSize: 13.5, padding: '30px 18px' }}>

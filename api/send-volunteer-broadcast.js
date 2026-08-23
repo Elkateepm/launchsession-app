@@ -52,7 +52,7 @@ function renderBlocks(blocks, primary) {
 }
 
 async function handleNewsletter(req, res, { adminClient, user, profile }) {
-  const { newsletterId } = req.body || {}
+  const { newsletterId, testTo } = req.body || {}
 
   const { data: nl, error: nlErr } = await adminClient
     .from('newsletters').select('*').eq('id', newsletterId).single()
@@ -60,9 +60,46 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
   if (nl.org_id !== profile.org_id) return res.status(403).json({ error: 'You do not have access to this newsletter' })
   if (nl.status === 'sent') return res.status(400).json({ error: 'This newsletter has already been sent' })
 
-  const roles = nl.audience_roles || []
   const { data: org } = await adminClient
     .from('organisations').select('name, primary_color, logo_url').eq('id', nl.org_id).single()
+
+  // Test send. Deliberately touches nothing: no recipient rows, no status
+  // change, no claim. It exists so you can look at the real thing in a real
+  // inbox before committing, and a test that mutated the newsletter's state
+  // would defeat that.
+  if (testTo) {
+    // Only ever to the person asking. Accepting an arbitrary address here
+    // would turn the app into a way to send branded mail to strangers.
+    if (String(testTo).toLowerCase() !== String(profile.email || '').toLowerCase()) {
+      return res.status(403).json({ error: 'Test emails can only be sent to your own address.' })
+    }
+    const primaryT = org?.primary_color || '#3B82F6'
+    try {
+      const { data: r, error: e } = await adminClient.functions.invoke('send-volunteer-broadcast', {
+        body: {
+          // No id, so no unsubscribe link -- clicking it in a test would
+          // genuinely suppress your own address.
+          recipients: [{ email: testTo, first_name: profile.first_name || 'there' }],
+          subject: `[Test] ${nl.subject}`,
+          preheader: nl.preheader || '',
+          body_html: renderBlocks(nl.blocks, primaryT),
+          prerendered: true,
+          org_name: org?.name || 'Your organisation',
+          org_color: primaryT,
+          org_logo: org?.logo_url,
+          sender_name: profile.full_name,
+        },
+      })
+      if (e) throw e
+      const ok = (r?.results || [])[0]?.ok
+      if (!ok) return res.status(502).json({ error: (r?.results || [])[0]?.error || 'The mail service rejected it.' })
+      return res.status(200).json({ success: true, test: true, to: testTo })
+    } catch (err) {
+      return res.status(502).json({ error: 'Could not reach the mail service.' })
+    }
+  }
+
+  const roles = nl.audience_roles || []
 
   // One resolver, shared with the composer. Assembling the audience here by
   // hand is what previously let the confirmation dialog promise one number
@@ -209,7 +246,7 @@ export default async function handler(req, res) {
     const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
 
     const { data: profile, error: profileErr } = await adminClient
-      .from('user_profiles').select('org_id, role, full_name').eq('id', user.id).single()
+      .from('user_profiles').select('org_id, role, full_name, email, first_name').eq('id', user.id).single()
     if (profileErr || !profile) return res.status(403).json({ error: 'No profile found for this user' })
     if (!['admin', 'staff'].includes(profile.role)) return res.status(403).json({ error: 'Only staff or admins can send broadcasts' })
 
