@@ -1,5 +1,5 @@
 // AUTH FLOW LOCK: org lookup must save selected org then route to /login?org=slug.
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import SpaceBackground from './SpaceBackground'
 import RocketIllustration from './RocketIllustration'
@@ -19,6 +19,91 @@ export default function OrgLookup() {
   const [org, setOrg] = useState(null)
   const [inputFocused, setInputFocused] = useState(false)
   const [rememberOrg, setRememberOrg] = useState(false)
+  const [allOrgs, setAllOrgs] = useState(null)
+  const [suggestions, setSuggestions] = useState([])
+  const [highlight, setHighlight] = useState(-1)
+  const [dismissed, setDismissed] = useState(false)
+  const blurTimer = useRef(null)
+
+  // The org list was already being pulled in full on every search and filtered
+  // in the browser, so fetching it once up front costs nothing extra and makes
+  // suggestions instant -- no per-keystroke query, no debounce, no rate limit
+  // to think about.
+  useEffect(() => {
+    let cancelled = false
+    supabase.from('organisations_public').select('*').then(({ data }) => {
+      if (!cancelled) setAllOrgs(data || [])
+    })
+    return () => { cancelled = true; if (blurTimer.current) clearTimeout(blurTimer.current) }
+  }, [])
+
+  const norm = (v) => (v || '').toLowerCase().replace(/-/g, ' ').trim()
+
+  // Two characters minimum. A single letter would list most of the tenant
+  // directory to anyone idly typing, which is a different thing from helping
+  // somebody who knows their own organisation's name.
+  const computeSuggestions = (raw) => {
+    const q = norm(raw)
+    if (q.length < 2 || !allOrgs) return []
+
+    const scored = []
+    for (const o of allOrgs) {
+      const name = norm(o.name)
+      const slug = norm(o.slug)
+      // Prefix beats substring, so typing "sol" puts Solidarity Sports at the
+      // top rather than something that merely contains the letters.
+      if (name.startsWith(q) || slug.startsWith(q)) scored.push([0, o])
+      else if (name.includes(q) || slug.includes(q)) scored.push([1, o])
+    }
+    scored.sort((a, b) => a[0] - b[0] || norm(a[1].name).localeCompare(norm(b[1].name)))
+    return scored.slice(0, 6).map(x => x[1])
+  }
+
+  // autoFocus means somebody can be mid-word before the list arrives. Without
+  // this, their suggestions would stay empty until the next keystroke.
+  useEffect(() => {
+    if (allOrgs && step === 'org' && !dismissed) setSuggestions(computeSuggestions(orgName))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allOrgs])
+
+  const handleOrgNameChange = (value) => {
+    setOrgName(value)
+    setDismissed(false)
+    setHighlight(-1)
+    setSuggestions(computeSuggestions(value))
+    if (error) setError('')
+  }
+
+  // Picking a suggestion lands on the confirmation step rather than jumping
+  // straight to /login, so the logo, the verified badge and the "remember this
+  // organisation" checkbox all still get their turn.
+  const handlePick = (selected) => {
+    setSuggestions([])
+    setDismissed(true)
+    setOrgName(selected.name || selected.slug)
+    setOrg(selected)
+    setStep('found')
+  }
+
+  const handleKeyDown = (e) => {
+    const open = suggestions.length > 0 && !dismissed
+    if (!open) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setHighlight(h => (h + 1) % suggestions.length)
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlight(h => (h <= 0 ? suggestions.length - 1 : h - 1))
+    } else if (e.key === 'Enter' && highlight >= 0) {
+      // Only swallow Enter when something is actually highlighted, so the form
+      // still submits normally for anyone typing the name out in full.
+      e.preventDefault()
+      handlePick(suggestions[highlight])
+    } else if (e.key === 'Escape') {
+      setDismissed(true)
+      setHighlight(-1)
+    }
+  }
 
   const handleOrgSearch = async e => {
     e.preventDefault()
@@ -26,23 +111,23 @@ export default function OrgLookup() {
     setLoading(true)
     setError('')
 
-    const query = orgName.trim().toLowerCase()
-    const normalizedQuery = query.replace(/-/g, ' ')
+    const normalizedQuery = norm(orgName)
 
     // Exact match only (hyphens treated as spaces). Uses the public-safe
     // view (name/slug/logo/colours only) instead of the base table --
     // status filtering (active/trial) is already baked into the view.
-    const { data: orgs } = await supabase
-      .from('organisations_public')
-      .select('*')
+    // Prefetched on mount; re-read here only if that hasn't landed yet.
+    let orgs = allOrgs
+    if (!orgs) {
+      const { data } = await supabase.from('organisations_public').select('*')
+      orgs = data || []
+      setAllOrgs(orgs)
+    }
 
     setLoading(false)
+    setSuggestions([])
 
-    const matches = (orgs || []).filter(o => {
-      const normalizedName = (o.name || '').toLowerCase().replace(/-/g, ' ')
-      const normalizedSlug = (o.slug || '').toLowerCase().replace(/-/g, ' ')
-      return normalizedName === normalizedQuery || normalizedSlug === normalizedQuery
-    })
+    const matches = orgs.filter(o => norm(o.name) === normalizedQuery || norm(o.slug) === normalizedQuery)
 
     if (matches.length === 1) {
       setOrg(matches[0])
@@ -161,11 +246,20 @@ export default function OrgLookup() {
                   <input
                     type="text"
                     value={orgName}
-                    onChange={e => setOrgName(e.target.value)}
-                    onFocus={() => setInputFocused(true)}
-                    onBlur={() => setInputFocused(false)}
+                    onChange={e => handleOrgNameChange(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => { setInputFocused(true); setDismissed(false); setSuggestions(computeSuggestions(orgName)) }}
+                    // Delayed so a click on a suggestion registers before the
+                    // list is torn down by the blur.
+                    onBlur={() => { setInputFocused(false); blurTimer.current = setTimeout(() => setDismissed(true), 150) }}
                     required
                     autoFocus
+                    autoComplete="off"
+                    role="combobox"
+                    aria-expanded={suggestions.length > 0 && !dismissed}
+                    aria-controls="org-suggestions"
+                    aria-autocomplete="list"
+                    aria-activedescendant={highlight >= 0 ? `org-suggestion-${highlight}` : undefined}
                     placeholder="e.g. Solidarity Sports"
                     style={{
                       width: '100%', padding: '13px 16px 13px 42px', borderRadius: 12,
@@ -176,6 +270,45 @@ export default function OrgLookup() {
                       transition: 'all 0.2s',
                     }}
                   />
+
+                  {suggestions.length > 0 && !dismissed && (
+                    <ul
+                      id="org-suggestions"
+                      role="listbox"
+                      style={{
+                        position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 20,
+                        margin: 0, padding: 6, listStyle: 'none', maxHeight: 268, overflowY: 'auto',
+                        background: 'rgba(11,15,39,0.97)', backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12,
+                        boxShadow: '0 18px 40px rgba(0,0,0,0.5)',
+                      }}
+                    >
+                      {suggestions.map((o, i) => (
+                        <li key={o.id} id={`org-suggestion-${i}`} role="option" aria-selected={i === highlight}>
+                          <button
+                            type="button"
+                            onMouseDown={e => e.preventDefault()}
+                            onClick={() => handlePick(o)}
+                            onMouseEnter={() => setHighlight(i)}
+                            style={{
+                              width: '100%', display: 'flex', alignItems: 'center', gap: 11,
+                              padding: '9px 10px', borderRadius: 9, border: 'none', textAlign: 'left',
+                              background: i === highlight ? 'rgba(139,92,246,0.18)' : 'transparent',
+                              cursor: 'pointer', fontFamily: font,
+                            }}
+                          >
+                            <div style={{ width: 30, height: 30, borderRadius: 8, background: '#fff', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px solid ${o.primary_color || '#3B82F6'}30` }}>
+                              <img src={o.logo_url || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.name}</div>
+                              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{o.slug}</div>
+                            </div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                 <button type="submit" disabled={loading || !orgName.trim()} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading || !orgName.trim() ? 'default' : 'pointer', opacity: loading || !orgName.trim() ? 0.6 : 1, fontFamily: font, boxShadow: '0 8px 24px rgba(59,130,246,0.3)' }}>
                   {loading ? 'Searching...' : 'Find my workspace →'}
@@ -240,7 +373,7 @@ export default function OrgLookup() {
                   </button>
                 ))}
               </div>
-              <button onClick={() => { setStep('org'); setError(''); setOrgName('') }} style={{ marginTop: 16, background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer', fontFamily: font }}>← Try a different name</button>
+              <button onClick={() => { setStep('org'); setError(''); setOrgName(''); setSuggestions([]); setHighlight(-1) }} style={{ marginTop: 16, background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer', fontFamily: font }}>← Try a different name</button>
             </div>
           )}
         </div>
@@ -253,7 +386,7 @@ export default function OrgLookup() {
               <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
             </div>
 
-            <button onClick={() => { localStorage.removeItem('launchsession_remembered_org_slug'); setStep('org'); setError(''); setOrgName(''); setRememberOrg(false) }} style={{
+            <button onClick={() => { localStorage.removeItem('launchsession_remembered_org_slug'); setStep('org'); setError(''); setOrgName(''); setSuggestions([]); setHighlight(-1); setRememberOrg(false) }} style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 16px', borderRadius: 12,
               border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.7)',
               fontSize: 14.5, fontWeight: 600, cursor: 'pointer', fontFamily: font,
