@@ -10,6 +10,7 @@ import VPMessages from './VPMessages'
 import VPProfile from './VPProfile'
 import VPQuickActionMenu from './VPQuickActionMenu'
 import { signOne } from '../../lib/storageUrl'
+import shrinkImage from '../../lib/shrinkImage'
 
 const SLUG = window.location.pathname.split('/volunteer/')[1]?.split('/')[0]
 
@@ -103,7 +104,8 @@ function OnboardingWizard({ user, org, onComplete }) {
     // Flat `<user id>.<ext>`, matching every existing object and the upload
     // policy. The previous `<user id>/avatar.<ext>` form matched neither.
     const path = `${user.id}.${ext}`
-    await supabase.storage.from('staff-photos').upload(path, file, { upsert:true })
+    const up = await shrinkImage(file, { maxDimension: 900 })
+    await supabase.storage.from('staff-photos').upload(path, up, { upsert: true, contentType: up.type })
     // Keep the path for the profile row and the signed URL only for the
     // preview: writing the signed URL to photo_url would persist something
     // that expires in ten minutes.

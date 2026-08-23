@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import SignedImg from '../shared/SignedImg'
 import { forgetSignedUrl } from '../../lib/storageUrl'
+import shrinkImage from '../../lib/shrinkImage'
 
 const ROLE_CONFIG = {
   admin:     { label: 'Administrator', badge: 'Admin',     color: '#4F6EF7', light: '#EEF2FF' },
@@ -97,7 +98,8 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
     setPhotoUploading(true)
     const ext = file.name.split('.').pop()
     const filePath = `${userId}.${ext}`
-    const { error: uploadError } = await supabase.storage.from('staff-photos').upload(filePath, file, { upsert: true })
+    const up = await shrinkImage(file, { maxDimension: 900 })
+    const { error: uploadError } = await supabase.storage.from('staff-photos').upload(filePath, up, { upsert: true, contentType: up.type })
     if (!uploadError) {
       // Store the object path: the bucket is private, so signed URLs are
       // minted at read time and a stored URL would only go stale.

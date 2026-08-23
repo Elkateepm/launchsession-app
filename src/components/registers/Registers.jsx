@@ -11,6 +11,7 @@ import { TemplatePicker } from './TemplateCreator'
 import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
+import shrinkImage from '../../lib/shrinkImage'
 
 const DEFAULT_BUBBLES = [
   { key: 'red',    label: 'Red',    color: '#E53935', dark: '#B71C1C' },
@@ -530,7 +531,8 @@ function PhotosTab({ child, org }) {
     setUploading(true)
     const ext = file.name.split('.').pop()
     const path = `${org?.id}/children/${child.id}/attachments/${Date.now()}.${ext}`
-    const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
+    const up = await shrinkImage(file)
+    const { error: upErr } = await supabase.storage.from('gallery').upload(path, up, { contentType: up.type })
     if (!upErr) {
       await supabase.from('child_attachments').insert({
         org_id: org?.id, child_id: child.id, url: path, storage_path: path, uploaded_by: authUserId,
@@ -887,7 +889,8 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
     setUploadingPhoto(true)
     const ext = file.name.split('.').pop()
     const path = `${org?.id}/children/${child.id}/photo.${ext}`
-    const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { upsert: true, contentType: file.type })
+    const up = await shrinkImage(file, { maxDimension: 900 })
+    const { error: upErr } = await supabase.storage.from('gallery').upload(path, up, { upsert: true, contentType: up.type })
     if (!upErr) {
       // Store the object path, not a URL: the bucket is private, so the only
       // durable reference is the path and signed URLs are minted at read time.

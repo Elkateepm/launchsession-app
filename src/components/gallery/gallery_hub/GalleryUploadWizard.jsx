@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { LS, IconGlyph, CATEGORIES, CONSENT_META } from '../galleryShared'
+import shrinkImage from '../../../lib/shrinkImage'
 
 const STEPS = ['Add Media', 'Organise', 'Consent', 'Confirm']
 
@@ -43,7 +44,8 @@ export default function GalleryUploadWizard({ org, collections, onClose, onDone,
     for (const { file, type } of files) {
       const ext = file.name.split('.').pop()
       const path = `${org.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
+      const up = await shrinkImage(file)
+      const { error: upErr } = await supabase.storage.from('gallery').upload(path, up, { contentType: up.type })
       if (!upErr) {
         await supabase.from('gallery_photos').insert({
           org_id: org.id, url: path, path,

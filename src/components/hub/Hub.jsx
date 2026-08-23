@@ -17,6 +17,7 @@ import { allowedModules } from '../../lib/moduleAccess'
 import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
+import shrinkImage from '../../lib/shrinkImage'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -382,7 +383,8 @@ function PhotoCarousel({ orgId, primary, userId }) {
     setUploading(true)
     for (const file of Array.from(files)) {
       const path = `${orgId}/${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`
-      const { error } = await supabase.storage.from('gallery').upload(path, file)
+      const up = await shrinkImage(file)
+      const { error } = await supabase.storage.from('gallery').upload(path, up, { contentType: up.type })
       if (!error) {
         // Private bucket: the path is the durable reference, signed at read.
         await supabase.from('gallery_photos').insert({ org_id: orgId, url: path, path })
@@ -1913,7 +1915,8 @@ function SessionQuickActions({ session, org, orgId, authUserId, onNavigate }) {
     for (const file of files) {
       const ext = file.name.split('.').pop()
       const path = `${orgId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
+      const up = await shrinkImage(file)
+      const { error: upErr } = await supabase.storage.from('gallery').upload(path, up, { contentType: up.type })
       if (!upErr) {
         const { error: insErr } = await supabase.from('gallery_photos').insert({
           org_id: orgId, url: path, path,
