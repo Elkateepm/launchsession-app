@@ -4,6 +4,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import SignedImg from '../shared/SignedImg'
 import { forgetSignedUrl } from '../../lib/storageUrl'
 import shrinkImage from '../../lib/shrinkImage'
+import Icon from '../../lib/icons'
 
 const ROLE_CONFIG = {
   admin:     { label: 'Administrator', badge: 'Admin',     color: '#4F6EF7', light: '#EEF2FF' },
@@ -56,7 +57,7 @@ function ChangePasswordModal({ onClose }) {
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 400, padding: 24, boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#111', marginBottom: 16 }}>Change Password</div>
         {error && <div style={{ background: '#FEF2F2', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
-        {success && <div style={{ background: '#F0FDF4', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: '#15803D', fontWeight: 600 }}>✓ Password updated!</div>}
+        {success && <div style={{ background: '#F0FDF4', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: '#15803D', fontWeight: 600 }}><Icon name="✓" /> Password updated!</div>}
         <input style={inp} type="password" placeholder="New password (min. 8 chars)" value={newPw} onChange={e => setNewPw(e.target.value)} />
         <input style={{ ...inp, marginBottom: 16 }} type="password" placeholder="Confirm new password" value={confirm} onChange={e => setConfirm(e.target.value)} />
         <div style={{ display: 'flex', gap: 8 }}>
@@ -162,7 +163,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
                   ? <SignedImg bucket="staff-photos" src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : photoUploading ? '...' : initials}
               </div>
-              <div onClick={() => fileInputRef.current?.click()} style={{ position: 'absolute', bottom: 0, right: 0, width: 22, height: 22, borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px solid #fff', fontSize: 10 }}>📷</div>
+              <div onClick={() => fileInputRef.current?.click()} style={{ position: 'absolute', bottom: 0, right: 0, width: 22, height: 22, borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px solid #fff', fontSize: 10 }}><Icon name="📷" /></div>
               <div style={{ position: 'absolute', bottom: 2, left: 2, width: 12, height: 12, borderRadius: '50%', background: '#10B981', border: '2px solid #fff' }} />
               <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
             </div>
@@ -190,7 +191,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
           <div style={{ flex: 1, padding: '8px 12px', overflowY: 'auto' }}>
             {NAV.map(n => (
               <button key={n.key} onClick={() => setActiveSection(n.key)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: activeSection === n.key ? '#EEF2FF' : 'transparent', cursor: 'pointer', textAlign: 'left', marginBottom: 2, transition: 'background 0.15s' }}>
-                <span style={{ fontSize: 16, width: 24, textAlign: 'center' }}>{n.icon}</span>
+                <span style={{ fontSize: 16, width: 24, textAlign: 'center' }}><Icon name={n.icon} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: activeSection === n.key ? '#4F6EF7' : '#374151' }}>{n.label}</div>
                   <div style={{ fontSize: 11, color: '#9ca3af' }}>{n.sub}</div>
@@ -203,7 +204,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
           {/* Sign out */}
           <div style={{ padding: '12px 16px', borderTop: '1px solid #f0f0f0' }}>
             <button onClick={() => { onSignOut && onSignOut() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: '#DC2626' }}>
-              <span style={{ fontSize: 16 }}>🚪</span>
+              <span style={{ fontSize: 16 }}><Icon name="🚪" /></span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>Sign Out</div>
                 <div style={{ fontSize: 11, color: '#fca5a5' }}>Sign out of your account</div>
@@ -237,7 +238,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
                 </div>
 
                 <div style={{ background: 'linear-gradient(135deg, #EEF2FF, #F5F3FF)', border: '1px solid #E0E7FF', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: '#4F6EF7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>✅</div>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: '#4F6EF7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}><Icon name="✅" /></div>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: '#3730A3' }}>Your account is active</div>
                     <div style={{ fontSize: 12, color: '#6366F1' }}>LaunchSession · {role.badge} Account · {org?.name || ''}</div>
@@ -267,7 +268,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
               <div>
                 {dbsWarning && (
                   <div style={{ background: '#FFFBEB', border: '1.5px solid #FDE68A', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <span style={{ fontSize: 22 }}>⚠️</span>
+                    <span style={{ fontSize: 22 }}><Icon name="⚠️" /></span>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 800, color: '#92400E' }}>DBS Expiring Soon</div>
                       <div style={{ fontSize: 12, color: '#92400E' }}>Your DBS check expires in {daysUntilExpiry} days. Please renew it.</div>
@@ -294,7 +295,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
           {/* Footer */}
           <div style={{ padding: '12px 28px', borderTop: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             {saved
-              ? <span style={{ fontSize: 13, fontWeight: 700, color: '#10B981' }}>✓ Saved!</span>
+              ? <span style={{ fontSize: 13, fontWeight: 700, color: '#10B981' }}><Icon name="✓" /> Saved!</span>
               : <div style={{ fontSize: 11, color: '#d1d5db' }}>LaunchSession · {role.badge} Account · {org?.name || ''}</div>}
             <button onClick={onClose} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#374151' }}>Close</button>
           </div>

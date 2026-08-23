@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { LS, IconGlyph } from '../galleryShared'
+import Icon from '../../../lib/icons'
 
 export default function CollectionsPanel({ collections, onOpen, onCreate, onViewAll }) {
   const [showNew, setShowNew] = useState(false)
@@ -19,7 +20,7 @@ export default function CollectionsPanel({ collections, onOpen, onCreate, onView
     <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px', marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: LS.text }}>Collections</div>
-        {collections.length > 0 && <button onClick={onViewAll} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View all →</button>}
+        {collections.length > 0 && <button onClick={onViewAll} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View all <Icon name="→" /></button>}
       </div>
       <div style={{ fontSize: 11.5, color: LS.muted, marginBottom: 12 }}>Organised memories</div>
 

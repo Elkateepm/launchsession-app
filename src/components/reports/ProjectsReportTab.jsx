@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 const PURPLE = '#6D5DF6'
 
@@ -147,7 +148,7 @@ export default function ProjectsReportTab({ org }) {
   if (projects.length === 0) {
     return (
       <div style={{ ...card({ padding: 40 }), textAlign: 'center' }}>
-        <div style={{ fontSize: 28, marginBottom: 10 }}>🚀</div>
+        <div style={{ fontSize: 28, marginBottom: 10 }}><Icon name="🚀" /></div>
         <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>No projects yet</div>
         <div style={{ fontSize: 13, color: 'var(--text3)' }}>Once you run a multi-day project, its funder report will appear here.</div>
       </div>

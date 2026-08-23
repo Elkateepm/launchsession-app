@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
+import Icon from '../../lib/icons'
 
 const DAY_MS = 1000 * 60 * 60 * 24
 const RECENT_KEY = 'ls_grant_recent_searches'
@@ -266,11 +267,11 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
       {!tipDismissed && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
           style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: '#FDF6E8', border: '1px solid #F3E3BC', borderRadius: 12, padding: '10px 14px', marginBottom: 16 }}>
-          <span style={{ fontSize: 13 }}>💡</span>
+          <span style={{ fontSize: 13 }}><Icon name="💡" /></span>
           <span style={{ fontSize: 12.5, color: '#8A6A2E', lineHeight: 1.5, flex: 1 }}>
             This is a manually researched directory, not a live-matched feed — always confirm current criteria on the funder's own site before applying.
           </span>
-          <button onClick={dismissTip} style={{ background: 'none', border: 'none', color: '#B08B3F', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>✕</button>
+          <button onClick={dismissTip} style={{ background: 'none', border: 'none', color: '#B08B3F', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}><Icon name="✕" /></button>
         </motion.div>
       )}
 

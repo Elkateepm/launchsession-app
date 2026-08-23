@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 // Full set of fields available on the children table — the template creator lets
 // orgs pick which of these to include in their import, in what order, and whether
@@ -146,7 +147,7 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
           </div>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Template name (e.g. Standard Register, Trip Sign-up)"
             style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: 12, border: `1.5px solid ${primary}30`, fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit' }} />
-          {error && <div style={{ marginTop: 10, background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>}
+          {error && <div style={{ marginTop: 10, background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>}
         </div>
 
         {/* Field list */}
@@ -164,7 +165,7 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
                   style={{ width: 22, height: 22, borderRadius: 7, border: `2px solid ${included ? primary : '#D1D5DB'}`, background: included ? primary : '#fff', cursor: locked ? 'default' : 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 900 }}>
                   {included ? '✓' : ''}
                 </button>
-                <span style={{ fontSize: 15, flexShrink: 0 }}>{fieldDef.icon}</span>
+                <span style={{ fontSize: 15, flexShrink: 0 }}><Icon name={fieldDef.icon} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{fieldDef.label}</div>
                   {locked && <div style={{ fontSize: 10, color: '#9CA3AF' }}>Always required</div>}
@@ -186,7 +187,7 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
           })}
 
           <div style={{ marginTop: 14, background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: 12, padding: '12px 14px', fontSize: 12, color: '#6B7280', lineHeight: 1.5 }}>
-            💡 <strong>Group</strong> stays flexible — this template only reserves a "Group" column. The actual group names and colours your org uses (Red, Blue, etc.) are managed in <strong>Settings → Branding</strong>, so this template works no matter how your groups change.
+            💡 <strong>Group</strong> stays flexible — this template only reserves a "Group" column. The actual group names and colours your org uses (Red, Blue, etc.) are managed in <strong>Settings <Icon name="→" /> Branding</strong>, so this template works no matter how your groups change.
           </div>
         </div>
 
@@ -233,7 +234,7 @@ export function TemplatePicker({ org, onUseTemplate }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}>🧩 Import Templates</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}><Icon name="🧩" /> Import Templates</div>
         <button onClick={() => { setEditing(null); setShowCreator(true) }}
           style={{ fontSize: 11, fontWeight: 800, color: primary, background: primary + '10', border: `1px solid ${primary}30`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}>
           + New
@@ -253,13 +254,13 @@ export function TemplatePicker({ org, onUseTemplate }) {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}>{t.name}</div>
                 <div style={{ display: 'flex', gap: 4 }}>
-                  <button onClick={() => { setEditing(t); setShowCreator(true) }} title="Edit" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, padding: 2 }}>✏️</button>
-                  <button onClick={() => handleDelete(t)} title="Delete" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, padding: 2 }}>🗑️</button>
+                  <button onClick={() => { setEditing(t); setShowCreator(true) }} title="Edit" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, padding: 2 }}><Icon name="✏️" /></button>
+                  <button onClick={() => handleDelete(t)} title="Delete" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, padding: 2 }}><Icon name="🗑️" /></button>
                 </div>
               </div>
               <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 8 }}>{t.fields.length} field{t.fields.length !== 1 ? 's' : ''}</div>
               <div style={{ display: 'flex', gap: 6 }}>
-                <button onClick={() => downloadTemplateCSV(t)} style={{ flex: 1, fontSize: 11, fontWeight: 700, color: '#6B7280', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '6px', cursor: 'pointer' }}>⬇ CSV</button>
+                <button onClick={() => downloadTemplateCSV(t)} style={{ flex: 1, fontSize: 11, fontWeight: 700, color: '#6B7280', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '6px', cursor: 'pointer' }}><Icon name="⬇" /> CSV</button>
                 <button onClick={() => onUseTemplate(t)} style={{ flex: 1, fontSize: 11, fontWeight: 800, color: '#fff', background: primary, border: 'none', borderRadius: 8, padding: '6px', cursor: 'pointer' }}>Use to Import</button>
               </div>
             </div>

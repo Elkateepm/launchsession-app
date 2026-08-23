@@ -8,6 +8,7 @@ import RegisterPaymentBadge from '../payments/RegisterPaymentBadge'
 import AttendanceCorrectionModal from './AttendanceCorrectionModal'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -337,7 +338,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
         </div>
         {ratioBreached && (
           <div style={{ marginTop: 12, background: 'linear-gradient(135deg,#FEF2F2,#FEF7F7)', border: '1px solid #FECACA', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: '#B91C1C', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 14 }}>⚠</span> Staff-to-child ratio is currently 1:{currentRatio.toFixed(1)}. Required ratio: 1:{requiredRatio}.
+            <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> Staff-to-child ratio is currently 1:{currentRatio.toFixed(1)}. Required ratio: 1:{requiredRatio}.
           </div>
         )}
         {totalExpected > 0 && (
@@ -383,7 +384,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
       {/* SEARCH + QUICK ACTIONS */}
       <div style={{ padding: '0 14px 12px', background: '#fff', borderBottom: '1px solid #F1F5F9', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 160px' }}>
-          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94A3B8', pointerEvents: 'none' }}>🔍</span>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94A3B8', pointerEvents: 'none' }}><Icon name="🔍" /></span>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${terms.people}...`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, background: '#FAFBFC', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
         </div>
         <button onClick={() => setShowWalkIn(true)} style={ghostBtn}>+ Walk-in</button>
@@ -399,7 +400,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
       <div style={{ flex: 1, overflowY: 'auto', padding: 14, background: '#FAFBFD' }}>
         {activeList.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px', color: '#94A3B8', fontSize: 13 }}>
-            <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}>✓</div>
+            <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}><Icon name="✓" /></div>
             Nobody in this list{search ? ' matching your search' : ''}.
           </div>
         ) : (
@@ -415,7 +416,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
         {/* STAFF PANEL */}
         <div style={{ marginTop: 20, background: '#fff', border: '1px solid #EDEFF3', borderRadius: 16, padding: 16, boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 22, height: 22, borderRadius: 7, background: '#F5F3FF', color: '#7C3AED', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>👤</span>
+            <span style={{ width: 22, height: 22, borderRadius: 7, background: '#F5F3FF', color: '#7C3AED', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}><Icon name="👤" /></span>
             Session team
           </div>
           {staffRows.length === 0 ? (
@@ -463,7 +464,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
           canCloseRegister ? (
             <button onClick={() => setShowClosure(true)} style={{ padding: '11px 22px', borderRadius: 11, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px -3px rgba(124,58,237,0.5)' }}>Close register</button>
           ) : (
-            <span title="Only a staff member can close this register" style={{ fontSize: 12, fontWeight: 700, color: '#94A3B8' }}>🔒 Staff only to close</span>
+            <span title="Only a staff member can close this register" style={{ fontSize: 12, fontWeight: 700, color: '#94A3B8' }}><Icon name="🔒" /> Staff only to close</span>
           )
         )}
       </div>
@@ -560,8 +561,8 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
           {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.has_medication || child.medical_notes) && (
             <span style={alertPill('#DC2626', '#FEE2E2')}>⚕ Medical</span>
           )}
-          {child.allergies && <span style={alertPill('#D97706', '#FEF3C7')}>⚠ Allergy</span>}
-          {child.collection_restricted && <span style={alertPill('#D97706', '#FEF3C7')}>⚠ Collection restriction</span>}
+          {child.allergies && <span style={alertPill('#D97706', '#FEF3C7')}><Icon name="⚠" /> Allergy</span>}
+          {child.collection_restricted && <span style={alertPill('#D97706', '#FEF3C7')}><Icon name="⚠" /> Collection restriction</span>}
         </div>
       </div>
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -799,7 +800,7 @@ function ClosureFlow({ session, grouped, onClose, org, authUserId, canCloseRegis
           {canCloseRegister ? (
             <button onClick={handleClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Close and Lock Register</button>
           ) : (
-            <span title="Only a staff member can close this register" style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px dashed #E5E7EB', background: '#F9FAFB', fontSize: 13, fontWeight: 700, color: '#9CA3AF', textAlign: 'center' }}>🔒 Staff only to close</span>
+            <span title="Only a staff member can close this register" style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px dashed #E5E7EB', background: '#F9FAFB', fontSize: 13, fontWeight: 700, color: '#9CA3AF', textAlign: 'center' }}><Icon name="🔒" /> Staff only to close</span>
           )}
         </div>
       </div>

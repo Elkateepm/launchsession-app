@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { categoryMeta, statusMeta, fmtTime } from '../../lib/resourceHelpers'
+import Icon from '../../lib/icons'
 
 export default function ResourceCard({ resource, nextBooking, onBook, onOpen, onQuickAction, view = 'grid' }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -37,7 +38,7 @@ export default function ResourceCard({ resource, nextBooking, onBook, onOpen, on
           </div>
         </div>
         <div style={{ fontSize: 11.5, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-          <span>{cat.icon}</span> {cat.label}
+          <span><Icon name={cat.icon} /></span> {cat.label}
         </div>
 
         <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -47,8 +48,8 @@ export default function ResourceCard({ resource, nextBooking, onBook, onOpen, on
         </div>
 
         <div style={{ marginTop: 8, fontSize: 11.5, color: '#6B7280', display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {resource.location && <div>📍 {resource.location}</div>}
-          {resource.capacity && <div>👥 Capacity {resource.capacity}</div>}
+          {resource.location && <div><Icon name="📍" /> {resource.location}</div>}
+          {resource.capacity && <div><Icon name="👥" /> Capacity {resource.capacity}</div>}
           {isMulti && <div>{resource.quantity_available} available{resource.quantity_total > resource.quantity_available ? ` · ${resource.quantity_total - resource.quantity_available} in use` : ''}</div>}
           {nextBooking && <div>Next: {fmtTime(nextBooking.start_time)}–{fmtTime(nextBooking.end_time)}</div>}
         </div>

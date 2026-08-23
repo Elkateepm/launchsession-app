@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { PB, PAYMENT_METHODS, fmtMoney, inputStyle } from './paymentsShared'
+import Icon from '../../lib/icons'
 
 // Drawer for recording a payment against a charge. Can be opened two ways:
 //   - with a specific `charge` (balance row from payment_charge_balances) already known
@@ -80,13 +81,13 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
       >
         <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Record payment</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
           {done ? (
             <div style={{ textAlign: 'center', padding: '40px 10px' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, margin: '0 auto 14px' }}>✓</div>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, margin: '0 auto 14px' }}><Icon name="✓" /></div>
               <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Payment recorded</div>
             </div>
           ) : (

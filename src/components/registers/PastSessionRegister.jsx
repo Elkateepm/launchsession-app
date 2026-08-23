@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import AttendanceCorrectionModal from './AttendanceCorrectionModal'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
 
 function fmtTime(d) {
   if (!d) return ''
@@ -113,7 +114,7 @@ export default function PastSessionRegister({
 
       {/* HEADER */}
       <div className="no-print" style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '14px 18px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 13, fontWeight: 700, color: '#6B7280', cursor: 'pointer', marginBottom: 10 }}>← Back to sessions</button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 13, fontWeight: 700, color: '#6B7280', cursor: 'pointer', marginBottom: 10 }}><Icon name="←" /> Back to sessions</button>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
@@ -127,7 +128,7 @@ export default function PastSessionRegister({
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#6B7280', background: '#F3F4F6', borderRadius: 99, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5 }}>🔒 Attendance closed</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#6B7280', background: '#F3F4F6', borderRadius: 99, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="🔒" /> Attendance closed</span>
             {session.closed_at && (
               <div style={{ textAlign: 'right', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: 10, padding: '8px 12px' }}>
                 <div style={{ fontSize: 10.5, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase' }}>Final outcome</div>
@@ -168,7 +169,7 @@ export default function PastSessionRegister({
             <div style={{ height: '100%', width: `${completionPct}%`, background: `linear-gradient(90deg, ${primary}, ${secondary})` }} />
           </div>
           {hasUnresolved && (
-            <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: '#B91C1C' }}>⚠ Register was closed with {grouped.expected.length} unresolved young people.</div>
+            <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: '#B91C1C' }}><Icon name="⚠" /> Register was closed with {grouped.expected.length} unresolved young people.</div>
           )}
         </div>
       </div>
@@ -185,7 +186,7 @@ export default function PastSessionRegister({
       {/* SEARCH */}
       <div className="no-print" style={{ padding: '10px 14px', background: '#fff', borderBottom: '1px solid #F1F5F9', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search young people..." style={{ flex: '1 1 160px', padding: '9px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13 }} />
-        <button onClick={onOpenNotes} style={ghostBtn}>📝 Notes ({notes.length})</button>
+        <button onClick={onOpenNotes} style={ghostBtn}><Icon name="📝" /> Notes ({notes.length})</button>
         {canCorrect && <button onClick={() => setShowCorrection(true)} style={ghostBtn}>Correct attendance</button>}
       </div>
 
@@ -290,7 +291,7 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
         {recordedBy && <div style={{ fontSize: 10.5, color: '#9CA3AF', marginTop: 2 }}>Recorded by {recordedBy}</div>}
         <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
           {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.medical_notes) && <span style={alertPill('#DC2626', '#FEE2E2')}>⚕ Medical</span>}
-          {child.allergies && <span style={alertPill('#D97706', '#FEF3C7')}>⚠ Allergy</span>}
+          {child.allergies && <span style={alertPill('#D97706', '#FEF3C7')}><Icon name="⚠" /> Allergy</span>}
           {isCorrected && (
             <span onClick={onViewAudit} style={{ ...alertPill('#B45309', '#FEF3C7'), cursor: 'pointer', textDecoration: 'underline' }}>Corrected — view audit history</span>
           )}

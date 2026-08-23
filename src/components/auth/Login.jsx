@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useBreakpoint } from '../../hooks/useIsMobile'
 import { isNativeApp } from '../../lib/nativeEnv'
 import { isPasskeyCapable, hasPlatformAuthenticator, passkeyUsedHere, signInWithPasskey, supportsAutofill } from '../../lib/passkey'
+import Icon from '../../lib/icons'
 
 const STEPS = { ROLE: 'role', EMAIL: 'email', PASSWORD: 'password', MAGIC: 'magic', FORGOT: 'forgot' }
 
@@ -357,7 +358,7 @@ export default function Login({ org }) {
 
           {step === STEPS.PASSWORD && (
             <div>
-              <button onClick={() => { setStep(STEPS.EMAIL); setError('') }} style={backLink}>← Back</button>
+              <button onClick={() => { setStep(STEPS.EMAIL); setError('') }} style={backLink}><Icon name="←" /> Back</button>
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 24, fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: -0.5 }}>Enter your password</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
@@ -386,13 +387,13 @@ export default function Login({ org }) {
               {isDesktop ? (
                 <label style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 16, cursor: 'pointer', userSelect: 'none' }}>
                   <span onClick={() => setRememberMe(r => !r)} style={{ width: 18, height: 18, borderRadius: 5, border: '1.5px solid ' + (rememberMe ? primary : 'rgba(255,255,255,0.25)'), background: rememberMe ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
-                    {rememberMe ? <span style={{ color: '#fff', fontSize: 12, fontWeight: 900, lineHeight: 1 }}>✓</span> : null}
+                    {rememberMe ? <span style={{ color: '#fff', fontSize: 12, fontWeight: 900, lineHeight: 1 }}><Icon name="✓" /></span> : null}
                   </span>
                   <span onClick={() => setRememberMe(r => !r)} style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>Keep me logged in</span>
                 </label>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 16 }}>
-                  <span style={{ fontSize: 13 }}>🔒</span>
+                  <span style={{ fontSize: 13 }}><Icon name="🔒" /></span>
                   <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>You'll stay signed in on this device</span>
                 </div>
               )}
@@ -404,10 +405,10 @@ export default function Login({ org }) {
 
           {step === STEPS.FORGOT && (
             <div>
-              <button onClick={() => { setStep(STEPS.EMAIL); setError(''); setForgotSent(false) }} style={backLink}>← Back</button>
+              <button onClick={() => { setStep(STEPS.EMAIL); setError(''); setForgotSent(false) }} style={backLink}><Icon name="←" /> Back</button>
               {forgotSent ? (
                 <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                  <div style={{ fontSize: 40, marginBottom: 16 }}>📬</div>
+                  <div style={{ fontSize: 40, marginBottom: 16 }}><Icon name="📬" /></div>
                   <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Reset link sent</div>
                   <div style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>Check your email at <strong style={{ color: '#fff' }}>{email}</strong> for a password reset link.</div>
                 </div>

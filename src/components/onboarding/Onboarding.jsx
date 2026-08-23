@@ -6,6 +6,7 @@ import OnboardingLayout, { useReducedMotion } from '../auth/onboarding/Onboardin
 import ProgressHeader from '../auth/onboarding/ProgressHeader'
 import SelectionCard from '../auth/onboarding/SelectionCard'
 import AnimatedInput from '../auth/onboarding/AnimatedInput'
+import Icon from '../../lib/icons'
 
 // Same 12-option list and icon keys as the sign-up flow, for a consistent
 // vocabulary across both onboarding surfaces. Values are free text on
@@ -120,10 +121,10 @@ export default function Onboarding({ session, org, onComplete }) {
   if (step === 0) return (
     <OnboardingLayout wide={false}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 18 }}>🚀</div>
+        <div style={{ fontSize: 48, marginBottom: 18 }}><Icon name="🚀" /></div>
         <h2 style={cardTitle}>Welcome to {org.name}!</h2>
         <p style={cardSub}>Let's take a couple of minutes to set up your LaunchSession workspace. We'll ask a few quick questions to personalise it.</p>
-        <button className="ls-primary-btn" style={primaryBtn} onClick={next}>Let's go <span className="ls-btn-arrow">→</span></button>
+        <button className="ls-primary-btn" style={primaryBtn} onClick={next}>Let's go <span className="ls-btn-arrow"><Icon name="→" /></span></button>
       </div>
     </OnboardingLayout>
   )
@@ -241,7 +242,7 @@ export default function Onboarding({ session, org, onComplete }) {
                       <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                         <div style={{ width: 12, height: 12, borderRadius: '50%', background: g.color, flexShrink: 0 }} />
                         <span style={{ flex: 1, fontSize: 14, color: '#fff' }}>{g.label}</span>
-                        <button onClick={() => setCustomGroups(prev => prev.filter(x => x.id !== g.id))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                        <button onClick={() => setCustomGroups(prev => prev.filter(x => x.id !== g.id))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 16 }}><Icon name="✕" /></button>
                       </div>
                     ))}
                   </div>
@@ -253,7 +254,7 @@ export default function Onboarding({ session, org, onComplete }) {
                   </div>
                   <label title="Pick a colour" style={{ position: 'relative', width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: newGroupColor, border: '2px solid rgba(255,255,255,0.25)', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <input type="color" value={newGroupColor} onChange={e => setNewGroupColor(e.target.value)} style={{ position: 'absolute', inset: -4, width: 'calc(100% + 8px)', height: 'calc(100% + 8px)', border: 'none', padding: 0, cursor: 'pointer', opacity: 0 }} />
-                    <span style={{ fontSize: 16, pointerEvents: 'none' }}>🎨</span>
+                    <span style={{ fontSize: 16, pointerEvents: 'none' }}><Icon name="🎨" /></span>
                   </label>
                 </div>
                 <button onClick={addGroup} style={{ width: '100%', padding: '13px 16px', borderRadius: 12, border: 'none', background: '#4F6EF7', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ Add Group</button>
@@ -276,15 +277,15 @@ export default function Onboarding({ session, org, onComplete }) {
 
       <div style={isMobile ? mobileStickyNav : { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, maxWidth: stepWide ? 460 : 'none' }}>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button type="button" onClick={back} style={ghostBtn}>← Back</button>
+          <button type="button" onClick={back} style={ghostBtn}><Icon name="←" /> Back</button>
           {step === 5 ? (
-            <button type="button" onClick={next} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1 }}>Continue <span className="ls-btn-arrow">→</span></button>
+            <button type="button" onClick={next} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1 }}>Continue <span className="ls-btn-arrow"><Icon name="→" /></span></button>
           ) : step === 6 ? (
             <button type="button" onClick={handleComplete} disabled={!canContinue || saving} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, opacity: !canContinue || saving ? 0.6 : 1 }}>
-              {saving ? 'Setting up…' : <>Launch My Workspace <span className="ls-btn-arrow">🚀</span></>}
+              {saving ? 'Setting up…' : <>Launch My Workspace <span className="ls-btn-arrow"><Icon name="🚀" /></span></>}
             </button>
           ) : (
-            <button type="button" onClick={next} disabled={!canContinue} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, opacity: canContinue ? 1 : 0.4 }}>Continue <span className="ls-btn-arrow">→</span></button>
+            <button type="button" onClick={next} disabled={!canContinue} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, opacity: canContinue ? 1 : 0.4 }}>Continue <span className="ls-btn-arrow"><Icon name="→" /></span></button>
           )}
         </div>
         {!canContinue && disabledReason && <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{disabledReason}</div>}

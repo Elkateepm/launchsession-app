@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import PageHeader from '../shared/PageHeader'
 import { Avatar, inputStyle, btnGhost, btnPrimary } from '../volunteers/vh_shared'
+import Icon from '../../lib/icons'
 
 const REVIEW_INTERVAL_DAYS = 180 // re-confirm medical info roughly every 6 months
 
@@ -138,7 +139,7 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
           </button>
         ))}
         <div style={{ flex: '1 1 160px', minWidth: 160, position: 'relative' }}>
-          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9CA3AF' }}>🔍</span>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9CA3AF' }}><Icon name="🔍" /></span>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..."
             style={{ ...inputStyle, paddingLeft: 32 }} />
         </div>

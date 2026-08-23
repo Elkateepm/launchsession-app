@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { inputStyle, btnPrimary, btnGhost, Avatar } from '../volunteers/vh_shared'
+import Icon from '../../lib/icons'
 
 const PRIORITY_COLOR = { low: '#64748B', medium: '#F59E0B', high: '#EF4444' }
 
@@ -87,7 +88,7 @@ export default function CaseTasks({ caseId, org, session: authSession, staff = [
                 {task.owner_id && (() => { const o = staff.find(s => s.id === task.owner_id); return o ? <span style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 4 }}><Avatar name={o.full_name} size={16} />{o.full_name}</span> : null })()}
               </div>
             </div>
-            <button onClick={() => deleteTask(task.id)} style={{ background: 'none', border: 'none', color: '#CBD5E1', cursor: 'pointer', fontSize: 15, flexShrink: 0 }}>✕</button>
+            <button onClick={() => deleteTask(task.id)} style={{ background: 'none', border: 'none', color: '#CBD5E1', cursor: 'pointer', fontSize: 15, flexShrink: 0 }}><Icon name="✕" /></button>
           </motion.div>
         ))}
       </AnimatePresence>

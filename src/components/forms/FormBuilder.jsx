@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import FormQuestionRenderer, { QUESTION_TYPES, SMART_FIELDS, typeLabel } from './FormQuestionRenderer'
+import Icon from '../../lib/icons'
 
 // Form builder.
 //
@@ -282,7 +283,7 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
           padding: '7px 13px', borderRadius: 9, border: '1px solid #E2E8F0',
           background: '#fff', color: '#64748B', fontSize: 12.5, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
-        }}>← Forms</button>
+        }}><Icon name="←" /> Forms</button>
         <div style={{ flex: 1 }} />
         <SaveBadge />
         <button onClick={publish} style={{
@@ -870,7 +871,7 @@ function MobileEditorSheet(props) {
         <button onClick={props.onClose} style={{
           border: 'none', background: 'transparent', color: '#64748B',
           fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', padding: 0,
-        }}>← Question</button>
+        }}><Icon name="←" /> Question</button>
         <div style={{ flex: 1 }} />
         <button onClick={props.onClose} style={{
           padding: '8px 16px', borderRadius: 10, border: 'none',

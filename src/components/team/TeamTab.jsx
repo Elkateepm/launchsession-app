@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import PageHeader from '../shared/PageHeader'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 const ROLES = ['admin', 'staff', 'volunteer']
 
@@ -203,23 +204,23 @@ export default function TeamTab({ org, session }) {
         {/* Invite card */}
         <div style={{ position: 'relative', overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: isMobile ? '22px 18px' : 24, marginBottom: 24, borderTop: `3px solid ${primary}` }}>
           {/* Decorative flourish */}
-          <div style={{ position: 'absolute', top: -10, right: -10, fontSize: 64, opacity: 0.08, transform: 'rotate(12deg)', pointerEvents: 'none' }}>✉️</div>
+          <div style={{ position: 'absolute', top: -10, right: -10, fontSize: 64, opacity: 0.08, transform: 'rotate(12deg)', pointerEvents: 'none' }}><Icon name="✉️" /></div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6, position: 'relative' }}>
-            <div style={{ width: 42, height: 42, borderRadius: '50%', background: `${primary}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}>📨</div>
+            <div style={{ width: 42, height: 42, borderRadius: '50%', background: `${primary}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}><Icon name="📨" /></div>
             <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text, #111)' }}>Invite Staff</div>
           </div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20, lineHeight: 1.5, position: 'relative' }}>Send a branded email invite — they'll set their own password and be added to {org?.name} automatically.</div>
 
           {error && <div style={{ background: '#FFF0F0', border: '1px solid #FFD0D0', color: '#C00', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>{error}</div>}
-          {inviteSuccess && <div style={{ background: '#F0FFF4', border: '1px solid #B0E8C0', color: '#1A5C1A', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>✓ {inviteSuccess}</div>}
+          {inviteSuccess && <div style={{ background: '#F0FFF4', border: '1px solid #B0E8C0', color: '#1A5C1A', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}><Icon name="✓" /> {inviteSuccess}</div>}
 
           <form onSubmit={handleInvite}>
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1.5fr auto auto', gap: 14, alignItems: 'flex-end' }}>
               <div>
                 <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2, #374151)', display: 'block', marginBottom: 6 }}>First name</label>
                 <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>👤</span>
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}><Icon name="👤" /></span>
                   <input value={inviteFirstName} onChange={e => setInviteFirstName(e.target.value)} placeholder="First name"
                     style={{ width: '100%', padding: '12px 14px 12px 36px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 14.5, outline: 'none', boxSizing: 'border-box' }} />
                 </div>
@@ -227,7 +228,7 @@ export default function TeamTab({ org, session }) {
               <div>
                 <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2, #374151)', display: 'block', marginBottom: 6 }}>Last name</label>
                 <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>👤</span>
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}><Icon name="👤" /></span>
                   <input value={inviteLastName} onChange={e => setInviteLastName(e.target.value)} placeholder="Last name"
                     style={{ width: '100%', padding: '12px 14px 12px 36px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 14.5, outline: 'none', boxSizing: 'border-box' }} />
                 </div>
@@ -235,7 +236,7 @@ export default function TeamTab({ org, session }) {
               <div>
                 <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2, #374151)', display: 'block', marginBottom: 6 }}>Email address</label>
                 <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}>✉️</span>
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#9CA3AF' }}><Icon name="✉️" /></span>
                   <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} required placeholder="staff@organisation.com"
                     style={{ width: '100%', padding: '12px 14px 12px 36px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 14.5, outline: 'none', boxSizing: 'border-box' }} />
                 </div>
@@ -243,7 +244,7 @@ export default function TeamTab({ org, session }) {
               <div>
                 <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2, #374151)', display: 'block', marginBottom: 6 }}>Role</label>
                 <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: primary, zIndex: 1 }}>🛡️</span>
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: primary, zIndex: 1 }}><Icon name="🛡️" /></span>
                   <select value={inviteRole} onChange={e => setInviteRole(e.target.value)}
                     style={{ width: isMobile ? '100%' : 'auto', padding: '12px 14px 12px 36px', borderRadius: 12, border: '1.5px solid var(--border)', fontSize: 14.5, outline: 'none', background: 'var(--surface)', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box' }}>
                     {ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
@@ -271,7 +272,7 @@ export default function TeamTab({ org, session }) {
 
           {pendingMembers.length === 0 ? (
             <div style={{ padding: 30, textAlign: 'center', color: 'var(--text3)' }}>
-              <div style={{ fontSize: 30, marginBottom: 8 }}>✉️</div>
+              <div style={{ fontSize: 30, marginBottom: 8 }}><Icon name="✉️" /></div>
               <div style={{ fontSize: 14, fontWeight: 800 }}>No invites yet</div>
               <div style={{ fontSize: 13, marginTop: 4 }}>Invite staff and volunteers using the form above.</div>
             </div>
@@ -311,7 +312,7 @@ export default function TeamTab({ org, session }) {
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 16 }}>👥</span>
+              <span style={{ fontSize: 16 }}><Icon name="👥" /></span>
               <div style={{ fontSize: 15, fontWeight: 800 }}>Team Members</div>
             </div>
             <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>{activeMembers.length} {activeMembers.length === 1 ? 'person' : 'people'}</div>
@@ -320,7 +321,7 @@ export default function TeamTab({ org, session }) {
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading...</div>
           ) : activeMembers.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>
-              <div style={{ fontSize: 32, marginBottom: 10 }}>👥</div>
+              <div style={{ fontSize: 32, marginBottom: 10 }}><Icon name="👥" /></div>
               <div style={{ fontSize: 14, fontWeight: 700 }}>No team members yet</div>
               <div style={{ fontSize: 13, marginTop: 4 }}>Invite your first staff member above</div>
             </div>

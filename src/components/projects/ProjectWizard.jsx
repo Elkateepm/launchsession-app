@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import Icon from '../../lib/icons'
 
 export const PROJECT_TYPES = [
   { key: 'holiday_project', label: 'Holiday Project' },
@@ -168,7 +169,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
         <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>New Project</div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {STEPS.map((s, i) => (
@@ -289,7 +290,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                   {form.custom.map(c => (
                     <span key={c} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 99, background: '#EFF6FF', color: '#1D4ED8', fontSize: 11.5, fontWeight: 700 }}>
                       {fmtNice(c)}
-                      <button onClick={() => set('custom', form.custom.filter(x => x !== c))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1D4ED8', fontSize: 13 }}>✕</button>
+                      <button onClick={() => set('custom', form.custom.filter(x => x !== c))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1D4ED8', fontSize: 13 }}><Icon name="✕" /></button>
                     </span>
                   ))}
                 </div>

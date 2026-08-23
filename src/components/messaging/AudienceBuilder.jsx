@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 // Audience builder.
 //
@@ -165,7 +166,7 @@ export default function AudienceBuilder({
                   padding: '7px 9px', borderRadius: '0 99px 99px 0', cursor: 'pointer',
                   border: '1.5px solid var(--border)', background: 'transparent',
                   color: 'var(--text3)', fontSize: 11, fontFamily: 'inherit',
-                }}>✕</button>
+                }}><Icon name="✕" /></button>
               </span>
             ))}
           </div>
@@ -224,7 +225,7 @@ export default function AudienceBuilder({
               {e}
               <button type="button" onClick={() => setManualEmails(manualEmails.filter(x => x !== e))}
                 aria-label={`Remove ${e}`}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 11, padding: 0 }}>✕</button>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 11, padding: 0 }}><Icon name="✕" /></button>
             </span>
           ))}
         </div>

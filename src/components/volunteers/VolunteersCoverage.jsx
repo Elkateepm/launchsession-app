@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Card, SectionTitle, Badge, PURPLE } from './vh_shared'
+import Icon from '../../lib/icons'
 
 function coverageStatus(assigned, required) {
   const pct = required > 0 ? Math.min(Math.round((assigned / required) * 100), 100) : 100
@@ -19,7 +20,7 @@ export default function VolunteersCoverage({ org, sessions, sessionStaff, volunt
       <SectionTitle icon="🗓️" title="Coverage Centre" subtitle="Every upcoming session and how well it's staffed" />
       {upcoming.length === 0 ? (
         <Card style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}>🗓️</div>
+          <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="🗓️" /></div>
           <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>No upcoming sessions</div>
           <div style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>Coverage will appear here once sessions are scheduled.</div>
         </Card>

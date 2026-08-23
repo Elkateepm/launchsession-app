@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { Avatar, btnPrimary } from '../volunteers/vh_shared'
 import { EVENT_META, timeAgo } from './cm_shared'
+import Icon from '../../lib/icons'
 
 const COMPOSER_TYPES = [
   { key: 'note', label: '📝 Note' },
@@ -87,7 +88,7 @@ export default function CaseTimeline({ caseId, org, session: authSession, staff 
               return (
                 <motion.div key={item.id} layout initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: Math.min(i * 0.03, 0.2) }} style={{ display: 'flex', gap: 12, marginBottom: 16, position: 'relative' }}>
                   <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#fff', border: '1.5px solid rgba(15,23,42,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0, zIndex: 1 }}>
-                    {meta.icon}
+                    <Icon name={meta.icon} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0, background: '#fff', border: '1.5px solid rgba(15,23,42,0.06)', borderRadius: 12, padding: '10px 14px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, gap: 8 }}>

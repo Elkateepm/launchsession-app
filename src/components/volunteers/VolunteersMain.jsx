@@ -9,6 +9,7 @@ import VolunteersTraining from './VolunteersTraining'
 import VolunteersRecognition from './VolunteersRecognition'
 import VolunteersReports from './VolunteersReports'
 import QRShareSheet from '../shared/QRShareSheet'
+import Icon from '../../lib/icons'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one yet
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -257,17 +258,17 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 10 }}>❤️ Volunteers</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="❤️" /> Volunteers</div>
             <div style={{ fontSize: 14, color: '#334155', marginTop: 6 }}>Manage your volunteer workforce, communication and availability.</div>
             <div style={{ fontSize: 12.5, color: '#94A3B8', marginTop: 2 }}>Keep every volunteer informed, engaged and ready for every session.</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
               <button onClick={() => { setInviteMsg(''); setShowInviteModal(true) }} style={btnPrimary(primary)}>+ Invite Volunteer</button>
-              <button onClick={() => setShowBroadcastModal(true)} style={btnGhost}>📢 Send Broadcast</button>
-              <button onClick={() => setTab('coverage')} style={btnGhost}>📅 View Coverage</button>
+              <button onClick={() => setShowBroadcastModal(true)} style={btnGhost}><Icon name="📢" /> Send Broadcast</button>
+              <button onClick={() => setTab('coverage')} style={btnGhost}><Icon name="📅" /> View Coverage</button>
               <button onClick={() => setShowQR(true)} style={btnGhost}>📲 QR Portal</button>
               <button onClick={() => setShowSignUpQR(true)} style={btnGhost}>🆕 Sign-Up QR</button>
               <button onClick={copyLink} style={btnGhost}>{copied ? '✓ Copied' : '🔗 Copy Portal Link'}</button>
-              <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...btnGhost, textDecoration: 'none', display: 'inline-block' }}>Open Portal ↗</a>
+              <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...btnGhost, textDecoration: 'none', display: 'inline-block' }}>Open Portal <Icon name="↗" /></a>
             </div>
           </div>
           <motion.div
@@ -312,7 +313,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                 {kpis.map((k, i) => (
                   <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
                     whileHover={{ y: -3 }} style={{ ...cardStyle, padding: 16, background: `linear-gradient(160deg, ${k.bg}, rgba(255,255,255,0.7))` }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 10, background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 8 }}>{k.icon}</div>
+                    <div style={{ width: 34, height: 34, borderRadius: 10, background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 8 }}><Icon name={k.icon} /></div>
                     <div style={{ fontSize: 24, fontWeight: 900, color: k.color }}>
                       {typeof k.value === 'number' ? <CountUp value={k.value} /> : k.value}
                     </div>
@@ -332,7 +333,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {activityFeed.map(a => (
                           <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 4px', borderRadius: 10, transition: 'background 0.15s' }}>
-                            <div style={{ width: 30, height: 30, borderRadius: 9, background: `${a.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>{a.icon}</div>
+                            <div style={{ width: 30, height: 30, borderRadius: 9, background: `${a.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name={a.icon} /></div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{a.title}</div>
                               <div style={{ fontSize: 11.5, color: '#94A3B8' }}>{a.sub}</div>
@@ -347,7 +348,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                   </Card>
 
                   <Card>
-                    <SectionTitle icon="📅" title="Upcoming Sessions" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View calendar →</button>} />
+                    <SectionTitle icon="📅" title="Upcoming Sessions" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View calendar <Icon name="→" /></button>} />
                     {upcomingSessionsList.length === 0 ? (
                       <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No upcoming sessions scheduled.</div>
                     ) : (
@@ -386,7 +387,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                 {/* RIGHT: Today's Coverage + Training Due + New Applications */}
                 <div>
                   <Card style={{ marginBottom: 20 }}>
-                    <SectionTitle icon="📍" title="Today's Coverage" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all →</button>} />
+                    <SectionTitle icon="📍" title="Today's Coverage" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all <Icon name="→" /></button>} />
                     {todaySessionsWithCoverage.length === 0 ? (
                       <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No sessions running today.</div>
                     ) : (
@@ -416,7 +417,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
 
                   {trainingDueSoon.length > 0 && (
                     <Card style={{ marginBottom: 20 }}>
-                      <SectionTitle icon="🎓" title="Training Due Soon" right={<button onClick={() => setTab('training')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all →</button>} />
+                      <SectionTitle icon="🎓" title="Training Due Soon" right={<button onClick={() => setTab('training')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all <Icon name="→" /></button>} />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {trainingDueSoon.slice(0, 4).map(t => {
                           const v = volunteers.find(vv => vv.id === t.volunteer_id)
@@ -456,11 +457,11 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                               <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{a.full_name}</div>
                               <div style={{ fontSize: 10.5, color: '#94A3B8' }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                             </div>
-                            <button onClick={() => setTab('applications')} style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: '#fff', fontSize: 11, fontWeight: 700, color: primary, cursor: 'pointer', whiteSpace: 'nowrap' }}>Review →</button>
+                            <button onClick={() => setTab('applications')} style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: '#fff', fontSize: 11, fontWeight: 700, color: primary, cursor: 'pointer', whiteSpace: 'nowrap' }}>Review <Icon name="→" /></button>
                           </div>
                         ))}
                         {applicants.length === 0 && publicApplications.length > 0 && (
-                          <button onClick={() => setTab('applications')} style={{ padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: '#fff', fontSize: 12, fontWeight: 700, color: primary, cursor: 'pointer' }}>Review sign-ups →</button>
+                          <button onClick={() => setTab('applications')} style={{ padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: '#fff', fontSize: 12, fontWeight: 700, color: primary, cursor: 'pointer' }}>Review sign-ups <Icon name="→" /></button>
                         )}
                       </div>
                     )}
@@ -471,7 +472,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
               {/* RECENT VOLUNTEERS */}
               {volunteers.length > 0 && (
                 <Card style={{ marginTop: 20 }}>
-                  <SectionTitle icon="👥" title="Recent Volunteers" right={<button onClick={() => setTab('directory')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all →</button>} />
+                  <SectionTitle icon="👥" title="Recent Volunteers" right={<button onClick={() => setTab('directory')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all <Icon name="→" /></button>} />
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
                     {volunteers.slice(0, 5).map(v => (
                       <div key={v.id} style={{ padding: 14, borderRadius: 16, background: '#F8FAFC', border: '1px solid #F1F5F9', textAlign: 'center' }}>
@@ -482,9 +483,9 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                         <div style={{ fontSize: 11, color: '#94A3B8', marginBottom: 6 }}>{v.role_title || 'Volunteer'}</div>
                         <Badge bg={statusStyle(v.status || 'active').bg} color={statusStyle(v.status || 'active').color}>{statusStyle(v.status || 'active').label}</Badge>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginTop: 10 }}>
-                          <button onClick={() => openComposerFor(v)} title="Message" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}>💬</button>
-                          <button onClick={() => setTab('directory')} title="Availability" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}>📅</button>
-                          <button onClick={() => setTab('directory')} title="Edit" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}>✏️</button>
+                          <button onClick={() => openComposerFor(v)} title="Message" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}><Icon name="💬" /></button>
+                          <button onClick={() => setTab('directory')} title="Availability" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}><Icon name="📅" /></button>
+                          <button onClick={() => setTab('directory')} title="Edit" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}><Icon name="✏️" /></button>
                         </div>
                       </div>
                     ))}
@@ -586,7 +587,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
               style={{ background: '#fff', borderRadius: 22, padding: 26, width: '100%', maxWidth: 520, maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>💬 Volunteer Communications</div>
+                  <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}><Icon name="💬" /> Volunteer Communications</div>
                   <div style={{ fontSize: 12, color: '#94A3B8' }}>Keep your team informed and engaged</div>
                 </div>
                 <button onClick={() => setShowBroadcastModal(false)} style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: 30, height: 30, fontSize: 18, cursor: 'pointer', color: '#64748B' }}>×</button>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import Icon from '../../lib/icons'
 
 // Overview and response inbox.
 //
@@ -131,7 +132,7 @@ export function FormsOverview({ org, forms = [], submissions = [], primary, onOp
         </div>
       ) : (
         <div style={{ ...CARD, padding: '26px 20px', marginBottom: 16, textAlign: 'center' }}>
-          <div style={{ fontSize: 26, marginBottom: 6 }}>✅</div>
+          <div style={{ fontSize: 26, marginBottom: 6 }}><Icon name="✅" /></div>
           <div style={{ fontSize: 15.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
             You're all caught up
           </div>
@@ -200,7 +201,7 @@ export function FormsOverview({ org, forms = [], submissions = [], primary, onOp
 
       {forms.length === 0 && (
         <div style={{ ...CARD, padding: '44px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>📝</div>
+          <div style={{ fontSize: 32, marginBottom: 12 }}><Icon name="📝" /></div>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
             Collect what you need without chasing paperwork
           </div>
@@ -275,7 +276,7 @@ export function ResponseInbox({ org, forms = [], primary, initialFilter = 'all',
           padding: '7px 13px', borderRadius: 9, border: '1px solid #ECE9F5',
           background: '#fff', color: '#64748B', fontSize: 12.5, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14,
-        }}>← Responses</button>
+        }}><Icon name="←" /> Responses</button>
 
         <div style={{ ...CARD, padding: isMobile ? 18 : 24 }}>
           <div style={{ fontSize: 21, fontWeight: 900, color: '#0F172A' }}>
@@ -295,7 +296,7 @@ export function ResponseInbox({ org, forms = [], primary, initialFilter = 'all',
                   <span key={fl} style={{
                     padding: '5px 12px', borderRadius: 99, fontSize: 12.5, fontWeight: 700,
                     background: meta.bg, color: meta.tone,
-                  }}>⚠ {meta.label}</span>
+                  }}><Icon name="⚠" /> {meta.label}</span>
                 )
               })}
             </div>

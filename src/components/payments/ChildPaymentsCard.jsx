@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import RecordPaymentDrawer from './RecordPaymentDrawer'
 import { PB, fmtMoney, fmtDateShort, chargeTypeLabel, methodLabel, chipStyle, btnPrimary, btnGhost } from './paymentsShared'
+import Icon from '../../lib/icons'
 
 // Compact "Payments" card for the child profile grid, plus the full-history modal
 // opened by "View payments".
@@ -30,7 +31,7 @@ export default function ChildPaymentsCard({ org, session, child }) {
 
   return (
     <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-      <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>💳 Payments</div>
+      <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}><Icon name="💳" /> Payments</div>
 
       {charges.length === 0 ? (
         <div style={{ fontSize: 11.5, color: '#94A3B8', marginBottom: 10 }}>No charges recorded yet.</div>
@@ -106,7 +107,7 @@ function ChildPaymentHistoryModal({ org, session, child, charges, onClose, onCha
           <div>
             <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>{child.first_name} {child.last_name} — Payments</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>

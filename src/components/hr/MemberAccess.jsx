@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { ACCESS_MODULES, LEVEL_OPTIONS, allowedModules, UNGOVERNED_ROLES } from '../../lib/moduleAccess'
+import Icon from '../../lib/icons'
 
 // Per-member module access, shown in the staff drawer.
 //
@@ -98,7 +99,7 @@ export default function MemberAccess({ member, org, viewerRole }) {
           return (
             <div key={m.key} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '11px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <span style={{ fontSize: 17 }}>{m.icon}</span>
+                <span style={{ fontSize: 17 }}><Icon name={m.icon} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 800 }}>{m.label}</div>
                   {m.hint && <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>{m.hint}</div>}
@@ -139,7 +140,7 @@ export default function MemberAccess({ member, org, viewerRole }) {
       <div style={{ fontSize: 11.5, color: '#9CA3AF', marginTop: 12, lineHeight: 1.6 }}>
         “Inherit” follows whatever the role template says, and changes with it. Setting a level here pins this
         person to it regardless.{' '}
-        <span style={{ color: '#6B7280' }}>Set the role template in Settings → Access.</span>
+        <span style={{ color: '#6B7280' }}>Set the role template in Settings <Icon name="→" /> Access.</span>
       </div>
     </div>
   )

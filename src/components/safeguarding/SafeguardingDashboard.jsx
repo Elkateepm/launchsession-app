@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import SignedImg from '../shared/SignedImg'
 import { signOne } from '../../lib/storageUrl'
+import Icon from '../../lib/icons'
 
 const PRIMARY = '#DC2626' // safeguarding stays red-branded regardless of org colour — deliberate, signals seriousness
 
@@ -199,7 +200,7 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22 }}>
           <div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-              <span style={{ fontSize: 20 }}>🚨</span>
+              <span style={{ fontSize: 20 }}><Icon name="🚨" /></span>
               <span style={{ fontSize: 10, fontWeight: 900, color: sc.color, background: sc.bg, padding: '3px 10px', borderRadius: 999 }}>{sc.label}</span>
               {c.priority && (
                 <span style={{ fontSize: 10, fontWeight: 900, color: (PRIORITY_COLORS[c.priority] || PRIORITY_COLORS.medium).color, background: (PRIORITY_COLORS[c.priority] || PRIORITY_COLORS.medium).bg, padding: '3px 10px', borderRadius: 999 }}>
@@ -358,7 +359,7 @@ function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading cases...</div>
       ) : filtered.length === 0 ? (
         <div style={{ padding: '60px 24px', textAlign: 'center', ...card, borderStyle: 'dashed' }}>
-          <div style={{ fontSize: 44, marginBottom: 12 }}>🛡️</div>
+          <div style={{ fontSize: 44, marginBottom: 12 }}><Icon name="🛡️" /></div>
           <div style={{ fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 6 }}>Everything looks good today.</div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>No safeguarding concerns are currently open.</div>
         </div>
@@ -373,7 +374,7 @@ function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 8px 20px -12px rgba(0,0,0,0.18)' }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
               >
-                <span style={{ width: 34, height: 34, borderRadius: 10, background: sc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>👧</span>
+                <span style={{ width: 34, height: 34, borderRadius: 10, background: sc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}><Icon name="👧" /></span>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {c.child_name} <span style={{ fontWeight: 600, color: 'var(--text3)' }}>· {c.concern_type || 'Concern'}</span>
@@ -385,7 +386,7 @@ function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
                     <span style={{ fontSize: 10.5, color: 'var(--text3)' }}>· {new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                   </div>
                 </div>
-                <span style={{ fontSize: 11.5, fontWeight: 800, color: PRIMARY, flexShrink: 0, whiteSpace: 'nowrap' }}>View →</span>
+                <span style={{ fontSize: 11.5, fontWeight: 800, color: PRIMARY, flexShrink: 0, whiteSpace: 'nowrap' }}>View <Icon name="→" /></span>
               </button>
             )
           })}
@@ -497,7 +498,7 @@ function ChildrenTab({ org, cases, isMobile }) {
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading...</div>
       ) : filtered.length === 0 ? (
         <div style={{ padding: '60px 24px', textAlign: 'center', ...card, borderStyle: 'dashed' }}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}>🧒</div>
+          <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="🧒" /></div>
           <div style={{ fontWeight: 800, color: 'var(--text)' }}>No children found</div>
         </div>
       ) : (
@@ -521,11 +522,11 @@ function ChildrenTab({ org, cases, isMobile }) {
                 </div>
 
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {c.allergies && <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}>⚠️ Allergies</span>}
-                  {c.has_epipen && <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}>💉 EpiPen</span>}
+                  {c.allergies && <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="⚠️" /> Allergies</span>}
+                  {c.has_epipen && <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💉" /> EpiPen</span>}
                   {c.has_asthma && <span style={{ fontSize: 10, fontWeight: 700, color: '#2563EB', background: 'rgba(37,99,235,0.1)', padding: '2px 8px', borderRadius: 999 }}>🫁 Asthma</span>}
-                  {c.has_diabetes && <span style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.1)', padding: '2px 8px', borderRadius: 999 }}>💊 Diabetes</span>}
-                  {c.has_behaviour_plan && <span style={{ fontSize: 10, fontWeight: 700, color: '#D97706', background: 'rgba(217,119,6,0.1)', padding: '2px 8px', borderRadius: 999 }}>📋 Behaviour Plan</span>}
+                  {c.has_diabetes && <span style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💊" /> Diabetes</span>}
+                  {c.has_behaviour_plan && <span style={{ fontSize: 10, fontWeight: 700, color: '#D97706', background: 'rgba(217,119,6,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="📋" /> Behaviour Plan</span>}
                   {c.sen && <span style={{ fontSize: 10, fontWeight: 700, color: '#059669', background: 'rgba(5,150,105,0.1)', padding: '2px 8px', borderRadius: 999 }}>SEN</span>}
                 </div>
 
@@ -588,7 +589,7 @@ function MedicalTab({ org, isMobile }) {
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading...</div>
       ) : (filterFlag === 'all' ? withMedical : filtered).length === 0 ? (
         <div style={{ padding: '60px 24px', textAlign: 'center', ...card, borderStyle: 'dashed' }}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}>❤️</div>
+          <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="❤️" /></div>
           <div style={{ fontWeight: 800, color: 'var(--text)' }}>No medical records match this filter</div>
         </div>
       ) : (
@@ -601,10 +602,10 @@ function MedicalTab({ org, isMobile }) {
               <div style={{ flex: 1, minWidth: 200 }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>{c.first_name} {c.last_name}</div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                  {c.has_epipen && <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}>💉 EpiPen</span>}
+                  {c.has_epipen && <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💉" /> EpiPen</span>}
                   {c.has_asthma && <span style={{ fontSize: 10, fontWeight: 700, color: '#2563EB', background: 'rgba(37,99,235,0.1)', padding: '2px 8px', borderRadius: 999 }}>🫁 Asthma</span>}
-                  {c.has_diabetes && <span style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.1)', padding: '2px 8px', borderRadius: 999 }}>💊 Diabetes</span>}
-                  {c.has_medication && <span style={{ fontSize: 10, fontWeight: 700, color: '#D97706', background: 'rgba(217,119,6,0.1)', padding: '2px 8px', borderRadius: 999 }}>💊 Medication</span>}
+                  {c.has_diabetes && <span style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💊" /> Diabetes</span>}
+                  {c.has_medication && <span style={{ fontSize: 10, fontWeight: 700, color: '#D97706', background: 'rgba(217,119,6,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💊" /> Medication</span>}
                 </div>
                 {c.allergies && <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 4 }}><b>Allergies:</b> {c.allergies}</div>}
                 {c.medical_notes && <div style={{ fontSize: 12, color: 'var(--text2)' }}><b>Notes:</b> {c.medical_notes}</div>}
@@ -670,7 +671,7 @@ function DocumentsTab({ org, userId, isMobile }) {
         onDragLeave={() => setDragOver(false)}
         onDrop={e => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files) }}
         style={{ border: `2px dashed ${dragOver ? PRIMARY : 'var(--border)'}`, borderRadius: 20, padding: isMobile ? '32px 16px' : '48px 24px', textAlign: 'center', marginBottom: 24, background: dragOver ? PRIMARY + '08' : 'var(--surface)', transition: 'all 0.15s' }}>
-        <div style={{ fontSize: 40, marginBottom: 10 }}>📤</div>
+        <div style={{ fontSize: 40, marginBottom: 10 }}><Icon name="📤" /></div>
         <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>Drop files here, or</div>
         <label style={{ display: 'inline-block', padding: '10px 20px', borderRadius: 10, background: PRIMARY, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
           {uploading ? 'Uploading...' : 'Browse files'}
@@ -725,7 +726,7 @@ function AuditLogTab({ org }) {
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading...</div>
   if (entries.length === 0) return (
     <div style={{ padding: '60px 24px', textAlign: 'center', ...card, borderStyle: 'dashed' }}>
-      <div style={{ fontSize: 36, marginBottom: 10 }}>🕐</div>
+      <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="🕐" /></div>
       <div style={{ fontWeight: 800, color: 'var(--text)' }}>No activity recorded yet</div>
     </div>
   )
@@ -754,7 +755,7 @@ function Sidebar({ org, cases }) {
       <div style={{ ...card, padding: 16 }}>
         <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>🟠 Today's Follow-Ups</div>
         {followUps.length === 0 ? (
-          <div style={{ fontSize: 12, color: 'var(--text3)' }}>Nothing pending 🎉</div>
+          <div style={{ fontSize: 12, color: 'var(--text3)' }}>Nothing pending <Icon name="🎉" /></div>
         ) : followUps.slice(0, 5).map(c => (
           <div key={c.id} style={{ fontSize: 12, color: 'var(--text)', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
             {c.child_name} — <span style={{ color: '#F59E0B', fontWeight: 700 }}>{c.follow_up_details ? c.follow_up_details.slice(0, 40) : 'Follow-up due'}</span>
@@ -763,7 +764,7 @@ function Sidebar({ org, cases }) {
       </div>
 
       <div style={{ ...card, padding: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>🛡️ DSL Contact</div>
+        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="🛡️" /> DSL Contact</div>
         {org.dsl_name ? (
           <>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{org.dsl_name}</div>
@@ -776,7 +777,7 @@ function Sidebar({ org, cases }) {
       </div>
 
       <div style={{ ...card, padding: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>🚨 Emergency Contacts</div>
+        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="🚨" /> Emergency Contacts</div>
         <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 6 }}><b>Emergency:</b> 999</div>
         <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 6 }}><b>NSPCC Helpline:</b> 0808 800 5000</div>
         <div style={{ fontSize: 12, color: 'var(--text)' }}><b>Police (non-emergency):</b> 101</div>
@@ -791,7 +792,7 @@ function EmergencyGuidanceModal({ onClose }) {
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99, backdropFilter: 'blur(4px)' }} />
       <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(480px,92vw)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 22, padding: 26, zIndex: 100, boxShadow: '0 32px 80px rgba(0,0,0,0.4)' }}>
-        <div style={{ fontSize: 32, marginBottom: 10 }}>🚨</div>
+        <div style={{ fontSize: 32, marginBottom: 10 }}><Icon name="🚨" /></div>
         <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginBottom: 14 }}>Emergency Guidance</div>
         <div style={{ background: 'rgba(220,38,38,0.06)', borderRadius: 14, padding: '16px 18px', border: '1px solid rgba(220,38,38,0.15)', marginBottom: 16 }}>
           <ul style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.9, paddingLeft: 18, margin: 0 }}>
@@ -881,7 +882,7 @@ function NeedsAttentionCard({ items, onSelect }) {
   if (items.length === 0) {
     return (
       <div style={{ ...card, padding: 16, display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(34,197,94,0.06)', borderColor: 'rgba(34,197,94,0.2)' }}>
-        <span style={{ fontSize: 22 }}>✅</span>
+        <span style={{ fontSize: 22 }}><Icon name="✅" /></span>
         <div>
           <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>Nothing requires your attention today</div>
           <div style={{ fontSize: 12, color: 'var(--text3)' }}>All safeguarding actions are up to date.</div>
@@ -897,12 +898,12 @@ function NeedsAttentionCard({ items, onSelect }) {
         return (
           <button key={item.id} onClick={() => onSelect(item.c)}
             style={{ ...card, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer', textAlign: 'left', background: tone.bg, borderColor: tone.border }}>
-            <span style={{ fontSize: 19, flexShrink: 0 }} aria-hidden="true">{tone.icon}</span>
+            <span style={{ fontSize: 19, flexShrink: 0 }} aria-hidden="true"><Icon name={tone.icon} /></span>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{item.title}</div>
               <div style={{ fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.detail}</div>
             </div>
-            <span style={{ fontSize: 11.5, fontWeight: 800, color: tone.color, flexShrink: 0 }}>Open →</span>
+            <span style={{ fontSize: 11.5, fontWeight: 800, color: tone.color, flexShrink: 0 }}>Open <Icon name="→" /></span>
           </button>
         )
       })}
@@ -932,7 +933,7 @@ function OverviewTab({ cases, attention, quickActions, onSelect, isMobile }) {
           {quickActions.map(qa => (
             <button key={qa.label} onClick={qa.onClick}
               style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 14, border: 'none', background: `linear-gradient(135deg, ${qa.color}, ${qa.color}CC)`, color: '#fff', cursor: 'pointer', textAlign: 'left', boxShadow: `0 6px 16px -10px ${qa.color}80` }}>
-              <span style={{ width: 28, height: 28, borderRadius: 9, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>{qa.icon}</span>
+              <span style={{ width: 28, height: 28, borderRadius: 9, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name={qa.icon} /></span>
               <span style={{ fontSize: 12.5, fontWeight: 800, lineHeight: 1.2 }}>{qa.label}</span>
             </button>
           ))}
@@ -950,7 +951,7 @@ function OverviewTab({ cases, attention, quickActions, onSelect, isMobile }) {
               return (
                 <button key={c.id} onClick={() => onSelect(c)}
                   style={{ ...card, display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', cursor: 'pointer', textAlign: 'left' }}>
-                  <span style={{ fontSize: 15 }}>👧</span>
+                  <span style={{ fontSize: 15 }}><Icon name="👧" /></span>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.child_name} · {c.concern_type || 'Concern'}</div>
                     <div style={{ fontSize: 11, color: 'var(--text3)' }}>{timeAgo(c.created_at)}</div>
@@ -1029,15 +1030,15 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${PRIMARY}, ${PRIMARY}66, transparent)` }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🛡️</div>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name="🛡️" /></div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)', lineHeight: 1.2 }}>Safeguarding</div>
               <div style={{ fontSize: 11.5, color: 'var(--text3, #6B7280)', fontWeight: 600 }}>Protect children and manage concerns · {org?.name}</div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <button onClick={() => onReportConcern && onReportConcern()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}CC)`, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>🛡️ Report Concern</button>
-            <button onClick={() => setShowEmergency(true)} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', color: 'var(--text, #111)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>🚨 Emergency</button>
+            <button onClick={() => onReportConcern && onReportConcern()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}CC)`, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}><Icon name="🛡️" /> Report Concern</button>
+            <button onClick={() => setShowEmergency(true)} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', color: 'var(--text, #111)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🚨" /> Emergency</button>
           </div>
         </div>
         <div style={{ marginTop: 12 }}>

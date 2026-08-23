@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { timeAgo } from './vp_shared'
 import SignedImg from '../shared/SignedImg'
 import { signOne } from '../../lib/storageUrl'
+import Icon from '../../lib/icons'
 
 const REACTIONS = ['👍', '❤️', '😊', '🎉']
 
@@ -67,7 +68,7 @@ export default function VPMessages({ org, user, primary }) {
         <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>Loading…</div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '50px 20px' }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>💬</div>
+          <div style={{ fontSize: 40, marginBottom: 10 }}><Icon name="💬" /></div>
           <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>No conversations yet</div>
           <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>Announcements and messages will show up here</div>
         </div>
@@ -75,7 +76,7 @@ export default function VPMessages({ org, user, primary }) {
         <>
           {pinned.length > 0 && (
             <>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 8 }}>📌 Pinned</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 8 }}><Icon name="📌" /> Pinned</div>
               {pinned.map(t => <ThreadRow key={t.id} t={t} user={user} onOpen={() => setActive(t)} onPin={e => togglePin(t.id, e)} pinned />)}
               <div style={{ height: 8 }} />
             </>
@@ -99,7 +100,7 @@ function ThreadRow({ t, user, onOpen, onPin, pinned }) {
         <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject || (isDM ? 'Message to Staff' : 'Announcement')}</div>
         <div style={{ fontSize: 11, color: '#94A3B8' }}>{count} message{count !== 1 ? 's' : ''} · {timeAgo(t.updated_at || t.created_at)}</div>
       </div>
-      <button onClick={onPin} style={{ background: 'none', border: 'none', fontSize: 15, cursor: 'pointer', opacity: pinned ? 1 : 0.3 }}>📌</button>
+      <button onClick={onPin} style={{ background: 'none', border: 'none', fontSize: 15, cursor: 'pointer', opacity: pinned ? 1 : 0.3 }}><Icon name="📌" /></button>
     </motion.div>
   )
 }
@@ -158,7 +159,7 @@ function VPThread({ thread, org, user, primary, onBack }) {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: '#fff' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: 18, color: '#334155', cursor: 'pointer' }}>←</button>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: 18, color: '#334155', cursor: 'pointer' }}><Icon name="←" /></button>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{thread.subject}</div>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', background: '#F8FAFC' }}>
@@ -172,7 +173,7 @@ function VPThread({ thread, org, user, primary, onBack }) {
                 <div style={{ background: mine ? primary : '#fff', color: mine ? '#fff' : '#0F172A', borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16, borderBottomLeftRadius: mine ? 16 : 4, padding: '10px 13px', fontSize: 13.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                   {m.attachment_url && (m.attachment_type?.startsWith('image/')
                     ? <SignedImg bucket="safeguarding-docs" src={m.attachment_url} alt="" style={{ maxWidth: '100%', borderRadius: 10, marginBottom: m.body ? 6 : 0 }} />
-                    : <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', m.attachment_url, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ color: 'inherit', background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer' }}>📎 Attachment</button>)}
+                    : <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', m.attachment_url, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ color: 'inherit', background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer' }}><Icon name="📎" /> Attachment</button>)}
                   {m.body}
                 </div>
                 <div style={{ display: 'flex', gap: 4, marginTop: 4, justifyContent: mine ? 'flex-end' : 'flex-start', alignItems: 'center' }}>
@@ -195,7 +196,7 @@ function VPThread({ thread, org, user, primary, onBack }) {
         <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => uploadPhoto(e.target.files?.[0])} />
         <input value={body} onChange={e => setBody(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} placeholder="Type a message…"
           style={{ flex: 1, padding: '10px 14px', borderRadius: 99, border: '1.5px solid rgba(15,23,42,0.1)', fontSize: 13.5, outline: 'none' }} />
-        <button onClick={send} disabled={sending || !body.trim()} style={{ width: 38, height: 38, borderRadius: '50%', border: 'none', background: primary, color: '#fff', fontSize: 16, cursor: 'pointer', flexShrink: 0 }}>↑</button>
+        <button onClick={send} disabled={sending || !body.trim()} style={{ width: 38, height: 38, borderRadius: '50%', border: 'none', background: primary, color: '#fff', fontSize: 16, cursor: 'pointer', flexShrink: 0 }}><Icon name="↑" /></button>
       </div>
     </div>
   )

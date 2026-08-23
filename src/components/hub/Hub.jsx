@@ -18,6 +18,7 @@ import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, WeatherStrip, hu
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
 import shrinkImage from '../../lib/shrinkImage'
+import Icon from '../../lib/icons'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -176,7 +177,7 @@ function TimeRing({ kind, target, totalSeconds, isClosed, onClick }) {
           <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
           <circle cx="27" cy="27" r={RING_R} fill="none" stroke="#94A3B8" strokeWidth="5" strokeLinecap="round" strokeDasharray={RING_C} strokeDashoffset={0} />
         </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#4ADE80' }}>✓</div>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#4ADE80' }}><Icon name="✓" /></div>
       </div>
     )
   }
@@ -420,7 +421,7 @@ function PhotoCarousel({ orgId, primary, userId }) {
 
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)' }}>📸 Photos</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)' }}><Icon name="📸" /> Photos</div>
         <div style={{ display: 'flex', gap: 8 }}>
           {photos.length > 0 && (
             <button onClick={() => setManaging(m => !m)}
@@ -439,7 +440,7 @@ function PhotoCarousel({ orgId, primary, userId }) {
       {photos.length === 0 ? (
         <div onClick={() => inputRef.current?.click()}
           style={{ height: 110, borderRadius: 16, border: '2px dashed #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
-          <span style={{ fontSize: 22 }}>📷</span> Add your first photo
+          <span style={{ fontSize: 22 }}><Icon name="📷" /></span> Add your first photo
         </div>
       ) : (
         <>
@@ -559,7 +560,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}>📣 Announcements</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}><Icon name="📣" /> Announcements</h3>
         <button onClick={() => setComposing(c => !c)} style={sectionLinkBtn(primary)}>
           {composing ? 'Cancel' : '+ Post announcement'}
         </button>
@@ -606,7 +607,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
 
       {announcements.length === 0 && !composing ? (
         <div style={{ background: `linear-gradient(135deg, ${primary}10, ${primary}05)`, border: `1.5px dashed ${primary}30`, borderRadius: 20, padding: '28px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 8 }}>📣</div>
+          <div style={{ fontSize: 32, marginBottom: 8 }}><Icon name="📣" /></div>
           <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 4 }}>No announcements yet</div>
           <div style={{ fontSize: 12, color: '#9CA3AF' }}>Share news, shout-outs, or reminders with your team</div>
         </div>
@@ -615,7 +616,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
           {visible.map(a => (
             <div key={a.id} style={{ background: '#fff', border: '1.5px solid #F1F5F9', borderRadius: 16, padding: '14px 16px', position: 'relative' }}>
               {a.pinned && (
-                <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 11 }}>📌</div>
+                <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 11 }}><Icon name="📌" /></div>
               )}
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <div style={{ fontSize: 22, flexShrink: 0, lineHeight: 1 }}>{a.emoji || '📣'}</div>
@@ -1286,13 +1287,13 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             <button onClick={() => onNavigate('planner', { reflectSessionId: activeSession?.id })}
               style={{ marginTop: 14, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.12)', cursor: 'pointer', textAlign: 'left' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 18 }}>⭐</span>
+                <span style={{ fontSize: 18 }}><Icon name="⭐" /></span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: '#FCD34D' }}>Complete Reflection</div>
                   <div style={{ fontSize: 11, color: 'rgba(252,211,77,0.75)', marginTop: 1 }}>This session has ended — capture what went well while it's fresh</div>
                 </div>
               </div>
-              <span style={{ color: '#FCD34D', fontSize: 16 }}>→</span>
+              <span style={{ color: '#FCD34D', fontSize: 16 }}><Icon name="→" /></span>
             </button>
           )}
         </div>
@@ -1491,7 +1492,7 @@ function RegisterAndStaffContent({
             ].map((s, i) => (
               <button key={s.key} onClick={() => setRegTab(s.key)}
                 style={{ background: regTab === s.key ? 'rgba(255,255,255,0.12)' : 'transparent', border: 'none', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.12)' : 'none', boxShadow: regTab === s.key ? `inset 0 -2px 0 ${s.color}` : 'none', padding: isMobile ? '10px 4px' : '12px 8px', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 8 }}>
-                <span style={{ fontSize: 12, color: s.color }}>{s.icon}</span>
+                <span style={{ fontSize: 12, color: s.color }}><Icon name={s.icon} /></span>
                 <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: s.color, letterSpacing: -0.3, fontFamily: 'var(--font-display, sans-serif)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>{s.value}</span>
                 <span style={{ fontSize: isMobile ? 9 : 10, color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.label}</span>
               </button>
@@ -1585,12 +1586,12 @@ function RegisterAndStaffContent({
         )}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-          <button onClick={onOpenNotes} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>📝 Notes ({sessionNotes.length})</button>
+          <button onClick={onOpenNotes} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="📝" /> Notes ({sessionNotes.length})</button>
           {!activeSession?.closed_at && (
             canCloseRegister ? (
               <button onClick={onOpenClosure} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #2563EB, #7C3AED)', color: '#fff', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>Close register</button>
             ) : (
-              <span title="Only a staff member can close this register" style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}>🔒 Staff only to close</span>
+              <span title="Only a staff member can close this register" style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}><Icon name="🔒" /> Staff only to close</span>
             )
           )}
         </div>
@@ -1669,7 +1670,7 @@ function ClosedSessionSummary({ session, stats, sessionStaff, hasReflection, act
             </div>
           )}
           {activeReflection.safeguarding_flag && (
-            <div style={{ marginTop: 8, fontSize: 11, color: '#FCA5A5', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>🛡️ Safeguarding note flagged</div>
+            <div style={{ marginTop: 8, fontSize: 11, color: '#FCA5A5', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="🛡️" /> Safeguarding note flagged</div>
           )}
         </div>
       )}
@@ -1990,8 +1991,8 @@ function HubRAPicker({ options, search, onSearchChange, busy, onAttach, onCreate
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, width: '100%', maxWidth: 420, padding: 20, boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>🛡️ Attach Risk Assessment</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>✕</button>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}><Icon name="🛡️" /> Attach Risk Assessment</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <button onClick={onCreate} disabled={busy} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 14, opacity: busy ? 0.6 : 1 }}>
           {busy ? 'Working…' : '+ Create new for this session'}
@@ -2005,7 +2006,7 @@ function HubRAPicker({ options, search, onSearchChange, busy, onAttach, onCreate
           ) : filtered.map(a => (
             <button key={a.id} onClick={() => onAttach(a)} disabled={busy}
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', cursor: busy ? 'default' : 'pointer', textAlign: 'left' }}>
-              <span style={{ fontSize: 13 }}>🛡️</span>
+              <span style={{ fontSize: 13 }}><Icon name="🛡️" /></span>
               <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</span>
               {a.risk_rating && (
                 <span style={{
@@ -2060,10 +2061,10 @@ function HubRAPreviewModal({ assessmentId, onClose, onNavigate }) {
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
               <div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', marginBottom: 4 }}>🛡️ {ra.name}</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', marginBottom: 4 }}><Icon name="🛡️" /> {ra.name}</div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{ra.activity_type || 'Session'}{ra.location ? ` · ${ra.location}` : ''}</div>
               </div>
-              <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', flexShrink: 0 }}>✕</button>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', flexShrink: 0 }}><Icon name="✕" /></button>
             </div>
 
             <div style={{ display: 'flex', gap: 8, margin: '14px 0' }}>
@@ -2242,7 +2243,7 @@ function SessionInfoModal({ session, attendance, allChildren, primary, secondary
             width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.18)',
             background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 16, fontWeight: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>✕</button>
+          }}><Icon name="✕" /></button>
 
           <div style={{ paddingRight: 42 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8, marginBottom: 9 }}>
@@ -2485,7 +2486,7 @@ function HubClosureFlow({ grouped, onClose, onMarkAllAbsent, onCloseRegister, pr
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
             {issues.map((iss, i) => (
               <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5, fontWeight: 600, color: '#FCD34D' }}>
-                <span>⚠</span><span>{iss}</span>
+                <span><Icon name="⚠" /></span><span>{iss}</span>
               </div>
             ))}
           </div>
@@ -2758,7 +2759,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                       <span style={{ fontSize: isMobile ? 12 : 10.5, fontWeight: 800, color: primary, background: primary + '14', borderRadius: 99, padding: isMobile ? '3px 9px' : '2px 8px' }}>{total} new</span>
                     )}
                   </div>
-                  <button onClick={() => setOpen(false)} style={{ width: isMobile ? 34 : 26, height: isMobile ? 34 : 26, borderRadius: isMobile ? 11 : 8, border: 'none', background: '#F1F5F9', color: '#64748B', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-label="Close">✕</button>
+                  <button onClick={() => setOpen(false)} style={{ width: isMobile ? 34 : 26, height: isMobile ? 34 : 26, borderRadius: isMobile ? 11 : 8, border: 'none', background: '#F1F5F9', color: '#64748B', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-label="Close"><Icon name="✕" /></button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <div style={{ display: 'flex', gap: 4, background: '#F1F5F9', borderRadius: 10, padding: 3 }}>
@@ -3364,7 +3365,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {!isMobile && (
             <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'center' }}>
               <div style={{ width: '100%', maxWidth: 440, position: 'relative' }}>
-                <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}>🔍</span>
+                <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}><Icon name="🔍" /></span>
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -3401,7 +3402,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           {searchResults.sessions.map(s => (
                             <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
                               onMouseEnter={e => e.currentTarget.style.background = primary + '08'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                              <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
+                              <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name="📅" /></div>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
                                 <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time ? s.start_time.slice(0, 5) : 'No time'}</div>
@@ -3486,7 +3487,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   transition={{ duration: 0.24, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
                   style={{ position: 'relative' }}
                 >
-                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}>🔍</span>
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}><Icon name="🔍" /></span>
                   <input
                     autoFocus
                     value={search}
@@ -3531,7 +3532,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                               <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
                               {searchResults.sessions.map(s => (
                                 <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch(''); setShowMobileSearch(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                                  <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
+                                  <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name="📅" /></div>
                                   <div>
                                     <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
                                     <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time ? s.start_time.slice(0, 5) : 'No time'}</div>
@@ -3570,7 +3571,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           }}>
             <div style={{ minWidth: 0, width: isMobile ? '100%' : 'auto' }}>
               <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 26, fontWeight: 900, lineHeight: 1.12, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.4px', color: '#fff' }}>
-                {getGreeting()}, {hubUserName.split(' ')[0]} <span style={{ display: 'inline-block', animation: 'lsWave 2.6s ease-in-out infinite', transformOrigin: '70% 70%' }}>👋</span>
+                {getGreeting()}, {hubUserName.split(' ')[0]} <span style={{ display: 'inline-block', animation: 'lsWave 2.6s ease-in-out infinite', transformOrigin: '70% 70%' }}><Icon name="👋" /></span>
               </h1>
               <p style={{ margin: '7px 0 0', fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.62)' }}>{heroSummary}</p>
             </div>
@@ -3584,9 +3585,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               width: isMobile ? '100%' : 'auto',
               gap: isMobile ? 8 : 9, flexWrap: 'wrap', flexShrink: 0,
             }}>
-              <button onClick={() => setShowInviteChild(true)} style={heroGlassBtn}>🧒 Invite child</button>
+              <button onClick={() => setShowInviteChild(true)} style={heroGlassBtn}><Icon name="🧒" /> Invite child</button>
               {hasModule('volunteers') && (
-                <button onClick={() => go('volunteers', { autoOpenInvite: true })} style={heroGlassBtn}>🤝 Invite volunteer</button>
+                <button onClick={() => go('volunteers', { autoOpenInvite: true })} style={heroGlassBtn}><Icon name="🤝" /> Invite volunteer</button>
               )}
               {todaySessions.length > 0 && (
                 <button onClick={() => go('registers')} style={{
@@ -3618,7 +3619,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             background: `linear-gradient(135deg, ${primary}12, ${secondary}0A)`, border: `1.5px solid ${primary}30`,
             borderRadius: 18, padding: '14px 18px',
           }}>
-            <span style={{ fontSize: 24, flexShrink: 0 }}>🔔</span>
+            <span style={{ fontSize: 24, flexShrink: 0 }}><Icon name="🔔" /></span>
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)' }}>Enable notifications</div>
               <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>Stay updated when something important needs your attention — sessions, registers, messages and urgent alerts.</div>
@@ -3791,7 +3792,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                             )}
                             {s.location && (
                               <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
-                                <span>📍</span> {s.location.split(',')[0]}
+                                <span><Icon name="📍" /></span> {s.location.split(',')[0]}
                               </span>
                             )}
                           </div>
@@ -3901,7 +3902,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         </button>
                       )}
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 900, color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '6px 12px 6px 13px' }}>
-                        {ctaLabel} <span className="ls-card-arrow" style={{ display: 'inline-block' }}>→</span>
+                        {ctaLabel} <span className="ls-card-arrow" style={{ display: 'inline-block' }}><Icon name="→" /></span>
                       </span>
                     </div>
                   </div>
@@ -3926,7 +3927,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
                           background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 18, fontWeight: 700,
                           display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                        }}>✕</button>
+                        }}><Icon name="✕" /></button>
                       </div>
                       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '10px 14px 24px' : '10px 20px 24px', background: '#0B1023' }}>
                         {panel}
@@ -4039,12 +4040,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         })()
       ) : (
         <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, ${secondary})`, boxShadow: `0 16px 34px ${primary}40` }}>
-          <div style={styles.trophy}>🏆</div>
+          <div style={styles.trophy}><Icon name="🏆" /></div>
           <div>
-            <h2 style={styles.encouragementTitle}>Keep making an impact, {orgName}! ⭐</h2>
+            <h2 style={styles.encouragementTitle}>Keep making an impact, {orgName}! <Icon name="⭐" /></h2>
             <p style={styles.encouragementText}>Supporting {children.length} young people across {sessions.length} planned sessions.</p>
           </div>
-          <div style={styles.confetti}>✨</div>
+          <div style={styles.confetti}><Icon name="✨" /></div>
         </section>
       )}
       </div>
@@ -4101,7 +4102,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               today/month toggle plus the two GlanceCards below it, which
               between them showed the same counts in three card styles. */}
           <Panel title="🧭 This month at a glance" right={
-            <button onClick={() => go('reports')} style={{ background: `${primary}14`, color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>Full report →</button>
+            <button onClick={() => go('reports')} style={{ background: `${primary}14`, color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>Full report <Icon name="→" /></button>
           }>
             {/* Tints derive from the org's own primary/secondary rather than a
                 fixed four-colour set, so these sit in the same palette as the
@@ -4173,21 +4174,21 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 16, padding: '14px 16px', cursor: 'pointer' }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 12, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🔒</div>
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><Icon name="🔒" /></div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13.5, fontWeight: 800, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                         <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>{formatDate(s.session_date)} · Closed {new Date(s.closed_at).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}</div>
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 800, color: '#6B7280', background: '#E5E7EB', borderRadius: 99, padding: '4px 10px', flexShrink: 0 }}>CLOSED</span>
                       {hasReflection ? (
-                        <span style={{ fontSize: 10, fontWeight: 800, color: '#16A34A', background: '#DCFCE7', border: '1px solid #BBF7D0', borderRadius: 99, padding: '4px 10px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>✓ Reflected</span>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: '#16A34A', background: '#DCFCE7', border: '1px solid #BBF7D0', borderRadius: 99, padding: '4px 10px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}><Icon name="✓" /> Reflected</span>
                       ) : (
                         <button onClick={e => { e.stopPropagation(); go('planner', { reflectSessionId: s.id }) }}
                           style={{ fontSize: 10.5, fontWeight: 800, color: '#B45309', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 99, padding: '5px 11px', flexShrink: 0, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                           ⭐ Write reflection
                         </button>
                       )}
-                      <span style={{ fontSize: 16, color: '#CBD5E1', flexShrink: 0 }}>→</span>
+                      <span style={{ fontSize: 16, color: '#CBD5E1', flexShrink: 0 }}><Icon name="→" /></span>
                     </div>
                     )
                   })}
@@ -4195,10 +4196,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               )
             ) : upcomingSessions.length === 0 ? (
               <div style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', background: `linear-gradient(135deg, ${primary}10, ${primary}05)`, border: `1.5px dashed ${primary}30`, borderRadius: 20, padding: '36px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
+                <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="🚀" /></div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 6, maxWidth: 320 }}>Nothing running or planned in the next 7 days</div>
                 <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20, maxWidth: 320 }}>Create a session and it'll appear here instantly</div>
-                <button onClick={() => go('planner')} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 16px ${primary}40` }}>Plan a Session →</button>
+                <button onClick={() => go('planner')} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 16px ${primary}40` }}>Plan a Session <Icon name="→" /></button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -4238,7 +4239,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                         {/* Icon */}
                         <div style={{ width: 46, height: 46, borderRadius: 13, background: isToday ? 'rgba(255,255,255,0.2)' : tc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, border: isToday ? '1px solid rgba(255,255,255,0.3)' : 'none' }}>
-                          {tc.icon}
+                          <Icon name={tc.icon} />
                         </div>
 
                         <div style={{ flex: 1, minWidth: 0, paddingRight: 30 }}>
@@ -4253,7 +4254,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
                           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                             <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <span>📅</span> {formatDate(s.session_date)}
+                              <span><Icon name="📅" /></span> {formatDate(s.session_date)}
                             </span>
                             {s.start_time && (
                               <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -4262,13 +4263,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                             )}
                             {s.location && (
                               <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <span>📍</span> {s.location.split(',')[0]}
+                                <span><Icon name="📍" /></span> {s.location.split(',')[0]}
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div style={{ fontSize: 18, color: isToday ? 'rgba(255,255,255,0.7)' : '#CBD5E1', flexShrink: 0 }}>→</div>
+                        <div style={{ fontSize: 18, color: isToday ? 'rgba(255,255,255,0.7)' : '#CBD5E1', flexShrink: 0 }}><Icon name="→" /></div>
                       </div>
 
                       {/* Bottom action bar for today's session */}
@@ -4304,10 +4305,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           <div style={{ marginTop: 22 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>📜 Recent Registers</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}><Icon name="📜" /> Recent Registers</div>
                 <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 1 }}>Last 7 days</div>
               </div>
-              <button onClick={() => go('registers')} style={sectionLinkBtn(primary)}>View all registers →</button>
+              <button onClick={() => go('registers')} style={sectionLinkBtn(primary)}>View all registers <Icon name="→" /></button>
             </div>
             {endedSessions.length === 0 ? (
               <div style={{ boxSizing: 'border-box', width: '100%', background: '#F8FAFC', border: '1.5px dashed #E5E7EB', borderRadius: 20, padding: '28px 24px', textAlign: 'center', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
@@ -4331,9 +4332,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                     }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = '#EEF1F6' }}>
-                      <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🔒</span>
+                      <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name="🔒" /></span>
                       <span style={{ fontSize: 12.5, fontWeight: 800, color: '#374151', maxWidth: isMobile ? 'none' : 140, flex: isMobile ? 1 : 'none', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', flexShrink: 0 }}>🧒 {attended}/{attendedTotal}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', flexShrink: 0 }}><Icon name="🧒" /> {attended}/{attendedTotal}</span>
                       <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', flexShrink: 0 }}>· {formatDate(s.session_date)}</span>
                     </button>
                   )
@@ -4497,7 +4498,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 460, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 70px rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid #F1F5F9' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ width: 36, height: 36, borderRadius: 11, background: `${primary}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>⭐</span>
+                <span style={{ width: 36, height: 36, borderRadius: 11, background: `${primary}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}><Icon name="⭐" /></span>
                 <div>
                   <div style={{ fontSize: 15.5, fontWeight: 900, color: 'var(--text, #111)' }}>Outstanding reflections</div>
                   <div style={{ fontSize: 12, color: '#9CA3AF' }}>{completedWithoutReflection.length} session{completedWithoutReflection.length > 1 ? 's' : ''} to write up</div>
@@ -4508,19 +4509,19 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             <div style={{ overflowY: 'auto', padding: 14, flex: 1 }}>
               {completedWithoutReflection.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px 16px', color: '#9CA3AF', fontSize: 13 }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}><Icon name="✅" /></div>
                   All caught up — no reflections outstanding.
                 </div>
               ) : (
                 completedWithoutReflection.map(s => (
                   <button key={s.id} onClick={() => { setShowReflectionsModal(false); go('planner', { reflectSessionId: s.id }) }}
                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', border: '1px solid #F1F5F9', background: '#FFFBEB', borderRadius: 14, padding: '12px 14px', marginBottom: 8, cursor: 'pointer' }}>
-                    <span style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #FBBF24, #D97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, color: '#fff' }}>📝</span>
+                    <span style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #FBBF24, #D97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, color: '#fff' }}><Icon name="📝" /></span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.title || 'Untitled session'}</div>
                       <div style={{ fontSize: 11.5, color: '#92400E', marginTop: 1 }}>{formatDate(s.session_date)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}` : ''}</div>
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: '#B45309', flexShrink: 0 }}>Write →</span>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: '#B45309', flexShrink: 0 }}>Write <Icon name="→" /></span>
                   </button>
                 ))
               )}

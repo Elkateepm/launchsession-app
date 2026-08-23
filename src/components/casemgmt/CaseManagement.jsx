@@ -9,6 +9,7 @@ import CaseTasks from './CaseTasks'
 import CaseDocuments from './CaseDocuments'
 import CaseCreationWizard from './CaseCreationWizard'
 import CaseReportModal, { exportCasesToCSV } from './CaseReports'
+import Icon from '../../lib/icons'
 
 const RISK_SCORE = { low: 1, medium: 2, high: 3, critical: 4 }
 
@@ -169,12 +170,12 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
         {criticalActive.some(c => !c.risk_ack_at) && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             style={{ background: 'linear-gradient(135deg,#EF4444,#B91C1C)', color: '#fff', borderRadius: 16, padding: '12px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 24px rgba(239,68,68,0.35)' }}>
-            <motion.span animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 1, repeat: Infinity }} style={{ fontSize: 20 }}>🚨</motion.span>
+            <motion.span animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 1, repeat: Infinity }} style={{ fontSize: 20 }}><Icon name="🚨" /></motion.span>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 900, fontSize: 13.5 }}>Critical risk case{criticalActive.filter(c => !c.risk_ack_at).length > 1 ? 's' : ''} requiring immediate manager acknowledgement</div>
               <div style={{ fontSize: 12, opacity: 0.9 }}>{criticalActive.filter(c => !c.risk_ack_at).map(c => c.child_name).join(', ')}</div>
             </div>
-            <button onClick={() => { const c = criticalActive.find(c => !c.risk_ack_at); setSelectedCase(c); setTab('timeline') }} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontWeight: 800, fontSize: 12.5, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', whiteSpace: 'nowrap' }}>Review Now →</button>
+            <button onClick={() => { const c = criticalActive.find(c => !c.risk_ack_at); setSelectedCase(c); setTab('timeline') }} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontWeight: 800, fontSize: 12.5, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', whiteSpace: 'nowrap' }}>Review Now <Icon name="→" /></button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -182,7 +183,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
       {/* HEADER */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 18 }}>
         <div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 10 }}>🛡️ Case Management</div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="🛡️" /> Case Management</div>
           <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>Track, investigate and resolve safeguarding concerns.</div>
         </div>
         <div style={{ display: 'flex', gap: 8, position: 'relative' }}>
@@ -220,7 +221,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
         ].map((k, i) => (
           <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
             whileHover={{ y: -2 }} style={{ ...glass({ padding: '16px 16px' }) }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: `${k.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}>{k.icon}</div>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: `${k.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={k.icon} /></div>
             <div style={{ fontSize: 24, fontWeight: 900, color: k.color, lineHeight: 1 }}><CountUp value={k.value} /></div>
             <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
             {typeof k.trend === 'number' && (
@@ -233,7 +234,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
       {/* SEARCH + FILTERS */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 260px' }}>
-          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}>🔍</span>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}><Icon name="🔍" /></span>
           <input style={{ ...inputStyle, paddingLeft: 32 }} placeholder="Search cases by child, case ID, keyword…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select style={{ ...inputStyle, width: 150 }} value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}>
@@ -300,7 +301,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
             <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>Cases ({filteredCases.length})</div>
             {filteredCases.length === 0 ? (
               <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-                <div style={{ fontSize: 36, marginBottom: 10 }}>✅</div>
+                <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="✅" /></div>
                 <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{cases.length === 0 ? 'No cases yet' : 'No matching cases'}</div>
                 <div style={{ fontSize: 12.5, color: '#94A3B8' }}>{cases.length === 0 ? 'Cases are opened when concerns are raised about a young person' : 'Try adjusting your search or filters'}</div>
               </div>
@@ -318,7 +319,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                       <Avatar name={cas.child_name} size={34} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          {cas.pinned && <span style={{ fontSize: 10 }}>📌</span>}
+                          {cas.pinned && <span style={{ fontSize: 10 }}><Icon name="📌" /></span>}
                           <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cas.child_name}</div>
                         </div>
                         <div style={{ fontSize: 11, color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cas.category || cas.case_type} · {assignedStaff?.full_name || 'Unassigned'}</div>
@@ -356,11 +357,11 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
         {/* CENTER: case workspace */}
         {(!isMobile || selectedCase) && selectedCase && (
           <div style={glass({ padding: 20 })}>
-            <button onClick={() => setSelectedCase(null)} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}>← Back to cases</button>
+            <button onClick={() => setSelectedCase(null)} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}><Icon name="←" /> Back to cases</button>
 
             {selectedCase.source_concern_id && (
               <div style={{ background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 12, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                <div style={{ fontSize: 12.5, color: '#5B21B6', fontWeight: 600 }}>🛡️ Escalated from a safeguarding concern</div>
+                <div style={{ fontSize: 12.5, color: '#5B21B6', fontWeight: 600 }}><Icon name="🛡️" /> Escalated from a safeguarding concern</div>
                 <button onClick={() => onNavigate && onNavigate('safeguarding', { openConcernId: selectedCase.source_concern_id })}
                   style={{ background: 'none', border: 'none', color: '#6D28D9', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>
                   View original concern →
@@ -371,14 +372,14 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
             {/* Risk banner */}
             {(selectedCase.risk_level === 'high' || selectedCase.priority === 'high') && (
               <div style={{ background: '#FEF2F2', border: '1.5px solid #FCA5A5', borderRadius: 12, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 16 }}>⚠️</span>
+                <span style={{ fontSize: 16 }}><Icon name="⚠️" /></span>
                 <div style={{ flex: 1, fontSize: 12.5, color: '#B91C1C', fontWeight: 700 }}>High risk — requires review within 24 hours.</div>
               </div>
             )}
             {(selectedCase.risk_level === 'critical' || selectedCase.priority === 'critical') && (
               <div style={{ background: 'linear-gradient(135deg,#EF4444,#B91C1C)', color: '#fff', borderRadius: 12, padding: '12px 14px', marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: selectedCase.risk_ack_at ? 0 : 8 }}>
-                  <span style={{ fontSize: 16 }}>🚨</span>
+                  <span style={{ fontSize: 16 }}><Icon name="🚨" /></span>
                   <div style={{ fontWeight: 800, fontSize: 13 }}>Critical risk — immediate safeguarding response required</div>
                 </div>
                 {selectedCase.risk_ack_at ? (
@@ -400,7 +401,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                 </div>
                 {linkedChild && (linkedChild.has_epipen || linkedChild.has_asthma || linkedChild.has_diabetes || linkedChild.takes_medication) && (
                   <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {linkedChild.has_epipen && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#FEF2F2', color: '#B91C1C', borderRadius: 99, padding: '2px 8px' }}>⚠ EpiPen</span>}
+                    {linkedChild.has_epipen && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#FEF2F2', color: '#B91C1C', borderRadius: 99, padding: '2px 8px' }}><Icon name="⚠" /> EpiPen</span>}
                     {linkedChild.has_asthma && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#FEF9C3', color: '#92400E', borderRadius: 99, padding: '2px 8px' }}>Asthma</span>}
                     {linkedChild.has_diabetes && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#FEF9C3', color: '#92400E', borderRadius: 99, padding: '2px 8px' }}>Diabetes</span>}
                     {linkedChild.takes_medication && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#F1F5F9', color: '#475569', borderRadius: 99, padding: '2px 8px' }}>Medication</span>}
@@ -527,8 +528,8 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                 )}
                 <div style={glass({ padding: 18 })}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Quick Links</div>
-                  <button onClick={() => setReportFor(selectedCase)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 0', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: primary, cursor: 'pointer' }}>📄 Generate Report</button>
-                  <button onClick={() => setTab('documents')} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 0', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: primary, cursor: 'pointer' }}>📎 View Documents</button>
+                  <button onClick={() => setReportFor(selectedCase)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 0', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: primary, cursor: 'pointer' }}><Icon name="📄" /> Generate Report</button>
+                  <button onClick={() => setTab('documents')} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 0', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: primary, cursor: 'pointer' }}><Icon name="📎" /> View Documents</button>
                 </div>
               </>
             )}

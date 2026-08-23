@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Safeguarding from './Safeguarding'
 import CaseManagement from '../casemgmt/CaseManagement'
+import Icon from '../../lib/icons'
 
 // Safeguarding and Case Management used to be two sidebar tabs governed by two
 // module keys. They are one tab now, because they were always one workflow: a
@@ -70,7 +71,7 @@ export default function SafeguardingHub({
                 transition: 'all 0.15s',
               }}
             >
-              <span aria-hidden="true">{t.icon}</span>
+              <span aria-hidden="true"><Icon name={t.icon} /></span>
               {t.label}
             </button>
           )

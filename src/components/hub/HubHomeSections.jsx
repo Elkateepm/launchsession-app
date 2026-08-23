@@ -1,4 +1,5 @@
 import React from 'react'
+import Icon from '../../lib/icons'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Home page building blocks.
@@ -279,12 +280,12 @@ export function ActionRow({ items, isMobile }) {
               minWidth: 0, outline: 'none',
             }}
           >
-            <div style={{ width: 38, height: 38, borderRadius: 12, display: 'grid', placeItems: 'center', fontSize: 17, flexShrink: 0, background: tone.bg }}>{item.icon}</div>
+            <div style={{ width: 38, height: 38, borderRadius: 12, display: 'grid', placeItems: 'center', fontSize: 17, flexShrink: 0, background: tone.bg }}><Icon name={item.icon} /></div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #141A2E)' }}>{item.title}</div>
               <div style={{ fontSize: 11.5, color: 'var(--text3, #5A6484)', marginTop: 2 }}>{item.detail}</div>
             </div>
-            <span className="ls-act-go" style={{ marginLeft: 'auto', fontSize: 15, color: '#98A1BC', transition: 'transform .18s ease', flexShrink: 0 }}>→</span>
+            <span className="ls-act-go" style={{ marginLeft: 'auto', fontSize: 15, color: '#98A1BC', transition: 'transform .18s ease', flexShrink: 0 }}><Icon name="→" /></span>
           </div>
         )
       })}
@@ -295,7 +296,7 @@ export function ActionRow({ items, isMobile }) {
 export function AllClear({ label }) {
   return (
     <div className="ls-rise" style={{ background: '#DFF8EF', border: '1px solid #B8EBD8', borderRadius: 18, padding: '13px 18px', display: 'flex', alignItems: 'center', gap: 11, fontSize: 13, fontWeight: 700, color: '#06614A' }}>
-      <span style={{ fontSize: 17 }}>🎉</span>{label}
+      <span style={{ fontSize: 17 }}><Icon name="🎉" /></span>{label}
     </div>
   )
 }
@@ -377,7 +378,7 @@ export function QuickJump({ actions, isMobile, primary }) {
           onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border, #E6EAF4)'; e.currentTarget.style.background = 'var(--surface, #fff)' }}
           style={{ border: '1px solid var(--border, #E6EAF4)', borderRadius: 14, padding: '15px 11px', textAlign: 'center', cursor: 'pointer', transition: 'transform .2s ease, border-color .2s ease, background .2s ease', background: 'var(--surface, #fff)', minWidth: 0, outline: 'none' }}
         >
-          <span className="ls-q-ico" style={{ fontSize: 21, display: 'block', marginBottom: 7, transition: 'transform .2s ease' }}>{a.icon}</span>
+          <span className="ls-q-ico" style={{ fontSize: 21, display: 'block', marginBottom: 7, transition: 'transform .2s ease' }}><Icon name={a.icon} /></span>
           <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text, #141A2E)' }}>{a.label}</span>
         </div>
       ))}

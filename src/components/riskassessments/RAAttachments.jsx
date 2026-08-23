@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { btnGhost } from '../volunteers/vh_shared'
+import Icon from '../../lib/icons'
 
 const FILE_ICON = (type) => {
   if (!type) return '📄'
@@ -69,7 +70,7 @@ export default function RAAttachments({ assessment, org, session: authSession })
         onClick={() => fileRef.current?.click()}
         style={{ border: `2px dashed ${dragOver ? primary : 'rgba(15,23,42,0.15)'}`, borderRadius: 14, padding: '22px 16px', textAlign: 'center', cursor: 'pointer', background: dragOver ? `${primary}0a` : '#F8FAFC', marginBottom: 14 }}
       >
-        <div style={{ fontSize: 24, marginBottom: 6 }}>📎</div>
+        <div style={{ fontSize: 24, marginBottom: 6 }}><Icon name="📎" /></div>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{uploading ? 'Uploading…' : 'Drop files or click to upload'}</div>
         <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>Venue plans, maps, insurance, permits, method statements</div>
         <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={e => upload(e.target.files)} />
@@ -84,7 +85,7 @@ export default function RAAttachments({ assessment, org, session: authSession })
               <motion.div key={doc.id} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} whileHover={{ y: -2 }}
                 onClick={() => openPreview(doc)}
                 style={{ borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.08)', background: '#fff', padding: 12, cursor: 'pointer', position: 'relative' }}>
-                <button onClick={e => { e.stopPropagation(); del(doc) }} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 11, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+                <button onClick={e => { e.stopPropagation(); del(doc) }} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 11, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
                 <div style={{ fontSize: 28, marginBottom: 8 }}>{FILE_ICON(doc.file_type)}</div>
                 <div style={{ fontSize: 11.5, fontWeight: 700, color: '#0F172A', wordBreak: 'break-word', lineHeight: 1.3, marginBottom: 4 }}>{doc.file_name}</div>
                 <div style={{ fontSize: 10, color: '#94A3B8' }}>{fmtSize(doc.file_size)}</div>
@@ -102,8 +103,8 @@ export default function RAAttachments({ assessment, org, session: authSession })
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <div style={{ fontSize: 13, fontWeight: 800 }}>{preview.doc.file_name}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <a href={preview.url} target="_blank" rel="noreferrer" style={{ ...btnGhost, textDecoration: 'none', padding: '6px 12px', fontSize: 12 }}>Open ↗</a>
-                  <button onClick={() => setPreview(null)} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#64748B' }}>✕</button>
+                  <a href={preview.url} target="_blank" rel="noreferrer" style={{ ...btnGhost, textDecoration: 'none', padding: '6px 12px', fontSize: 12 }}>Open <Icon name="↗" /></a>
+                  <button onClick={() => setPreview(null)} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#64748B' }}><Icon name="✕" /></button>
                 </div>
               </div>
               {preview.doc.file_type?.startsWith('image/') ? (

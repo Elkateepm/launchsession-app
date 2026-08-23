@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import MemberAccess from './MemberAccess'
 import * as XLSX from 'xlsx'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import Icon from '../../lib/icons'
 
 const ROLES = ['Programme Lead', 'Coach', 'Coordinator', 'Administrator', 'Volunteer Lead', 'Safeguarding Lead', 'Finance Manager', 'Outreach Worker', 'Youth Worker', 'Other']
 const CONTRACT_TYPES = ['Permanent', 'Fixed Term', 'Part Time', 'Zero Hours', 'Freelance', 'Volunteer']
@@ -214,7 +215,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
           background: '#fff', zIndex: 61, overflowY: 'auto', boxShadow: '-8px 0 30px rgba(0,0,0,0.15)',
           padding: isMobile ? '18px 16px 40px' : '26px 28px 40px',
         }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#6B7280', fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}>✕ Close</button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#6B7280', fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}><Icon name="✕" /> Close</button>
 
         <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}06)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 22px', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
@@ -226,7 +227,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
                 <div style={{ fontSize: 19, fontWeight: 900 }}>{staff.full_name}</div>
                 <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{staff.role} · {staff.contract_type}</div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                  <span style={{ background: dbs.bg, color: dbs.color, borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>🔍 DBS: {dbs.label}</span>
+                  <span style={{ background: dbs.bg, color: dbs.color, borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}><Icon name="🔍" /> DBS: {dbs.label}</span>
                   {staff.is_active === false && <span style={{ background: '#FEF2F2', color: '#DC2626', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>Inactive</span>}
                   <AccountBadge status={accountStatus} />
                 </div>
@@ -298,7 +299,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
             </div>
             {staff.notes && (
               <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, padding: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#92400E', marginBottom: 6 }}>📝 Notes</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#92400E', marginBottom: 6 }}><Icon name="📝" /> Notes</div>
                 <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>{staff.notes}</div>
               </div>
             )}
@@ -336,7 +337,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
                   const typeCfg = LEAVE_TYPES.find(t => t.key === leave.type) || LEAVE_TYPES[5]
                   return (
                     <div key={leave.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontSize: 18 }}>{typeCfg.icon}</span>
+                      <span style={{ fontSize: 18 }}><Icon name={typeCfg.icon} /></span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700 }}>{typeCfg.label}</div>
                         <div style={{ fontSize: 12, color: '#6B7280' }}>{format(new Date(leave.start_date), 'd MMM')} – {format(new Date(leave.end_date), 'd MMM yyyy')} · {leave.days} day{leave.days !== 1 ? 's' : ''}</div>
@@ -406,7 +407,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
 
             {accountStatus === 'active' && accountProfile && (
               <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 14, padding: 18 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#991B1B', marginBottom: 6 }}>⚠️ Danger Zone</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#991B1B', marginBottom: 6 }}><Icon name="⚠️" /> Danger Zone</div>
                 <div style={{ fontSize: 12, color: '#B91C1C', lineHeight: 1.6, marginBottom: 14 }}>
                   Permanently deletes {staff.full_name}'s LaunchSession login — completely removing their account row from the database. This cannot be undone. Their HR record (DBS, leave history, notes) is kept.
                 </div>
@@ -473,8 +474,8 @@ function AddStaffModal({ org, onClose, onAdded, showToast }) {
           maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
         }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-          <div style={{ fontSize: 17, fontWeight: 900 }}>🧑‍💼 Add Staff Member</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#6B7280' }}>✕</button>
+          <div style={{ fontSize: 17, fontWeight: 900 }}><Icon name="🧑‍💼" /> Add Staff Member</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#6B7280' }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 16 }}>
@@ -491,7 +492,7 @@ function AddStaffModal({ org, onClose, onAdded, showToast }) {
         <div style={{ background: '#F5F3FF', border: '1.5px solid #DDD6FE', borderRadius: 14, padding: 16, marginBottom: 18 }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: sendInvite ? 12 : 0 }}>
             <input type="checkbox" checked={sendInvite} onChange={e => setSendInvite(e.target.checked)} style={{ width: 16, height: 16 }} />
-            <span style={{ fontSize: 13, fontWeight: 800 }}>✉️ Send them a LaunchSession login invite</span>
+            <span style={{ fontSize: 13, fontWeight: 800 }}><Icon name="✉️" /> Send them a LaunchSession login invite</span>
           </label>
           {sendInvite && (
             <div>
@@ -680,12 +681,12 @@ export default function HR({ org, session, userProfile }) {
       <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}06)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14, marginBottom: 4 }}>
           <div>
-            <div style={{ fontSize: 24, fontWeight: 900 }}>🧑‍💼 HR Centre</div>
+            <div style={{ fontSize: 24, fontWeight: 900 }}><Icon name="🧑‍💼" /> HR Centre</div>
             <div style={{ fontSize: 13, color: '#6B7280', marginTop: 4 }}>Manage your staff, compliance and leave — all in one place.</div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <motion.button whileHover={{ y: -2 }} onClick={() => setShowAdd(true)} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>+ Add Staff Member</motion.button>
-            <motion.button whileHover={{ y: -2 }} onClick={exportCsv} style={{ padding: '10px 18px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>⬇️ Export</motion.button>
+            <motion.button whileHover={{ y: -2 }} onClick={exportCsv} style={{ padding: '10px 18px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}><Icon name="⬇️" /> Export</motion.button>
           </div>
         </div>
       </div>
@@ -730,7 +731,7 @@ export default function HR({ org, session, userProfile }) {
         </div>
 
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 18 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2 }}>⚡ Quick Actions</div>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2 }}><Icon name="⚡" /> Quick Actions</div>
           <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>Common HR tasks</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[
@@ -741,7 +742,7 @@ export default function HR({ org, session, userProfile }) {
             ].map(a => (
               <motion.button key={a.label} whileHover={{ y: -2, backgroundColor: '#F9FAFB' }} onClick={a.onClick}
                 style={{ textAlign: 'left', padding: '12px 12px', borderRadius: 12, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer' }}>
-                <div style={{ fontSize: 18, marginBottom: 4 }}>{a.icon}</div>
+                <div style={{ fontSize: 18, marginBottom: 4 }}><Icon name={a.icon} /></div>
                 <div style={{ fontSize: 12, fontWeight: 800 }}>{a.label}</div>
                 <div style={{ fontSize: 10, color: '#9CA3AF' }}>{a.sub}</div>
               </motion.button>
@@ -750,7 +751,7 @@ export default function HR({ org, session, userProfile }) {
         </div>
 
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 18 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2 }}>📅 Upcoming</div>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2 }}><Icon name="📅" /> Upcoming</div>
           <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>DBS renewals &amp; leave, next 90 days</div>
           {upcoming.length === 0 ? (
             <div style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Nothing coming up</div>
@@ -781,7 +782,7 @@ export default function HR({ org, session, userProfile }) {
         <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>Loading staff...</div>
       ) : filtered.length === 0 ? (
         <div style={{ padding: 60, textAlign: 'center', background: '#F9FAFB', borderRadius: 16, border: '1.5px dashed #e5e7eb' }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🚀</div>
+          <div style={{ fontSize: 48, marginBottom: 12 }}><Icon name="🚀" /></div>
           <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>{staff.length === 0 ? 'Build your dream team' : 'No matching staff'}</div>
           <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 20 }}>{staff.length === 0 ? 'Invite your first staff member to begin managing your workforce.' : 'Try a different filter or search term.'}</div>
           {staff.length === 0 && <button onClick={() => setShowAdd(true)} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>+ Add First Staff Member</button>}
@@ -797,7 +798,7 @@ export default function HR({ org, session, userProfile }) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800 }}>{member.full_name}</div>
                   <div style={{ fontSize: 11, color: '#6B7280' }}>{member.role}</div>
-                  <span style={{ background: dbs.bg, color: dbs.color, borderRadius: 7, padding: '2px 7px', fontSize: 10, fontWeight: 800, display: 'inline-block', marginTop: 4 }}>🔍 {dbs.label}</span>
+                  <span style={{ background: dbs.bg, color: dbs.color, borderRadius: 7, padding: '2px 7px', fontSize: 10, fontWeight: 800, display: 'inline-block', marginTop: 4 }}><Icon name="🔍" /> {dbs.label}</span>
                 </div>
                 <AccountBadge status={getAccountStatus(member)} />
               </div>
@@ -827,7 +828,7 @@ export default function HR({ org, session, userProfile }) {
                 <div style={{ fontSize: 12.5, color: '#374151' }}>{member.contract_type}</div>
                 <div>
                   <span style={{ background: dbs.bg, color: dbs.color, borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' }}>{dbs.label}</span>
-                  {dbsExpiring && <div style={{ fontSize: 10, color: '#DC2626', fontWeight: 700, marginTop: 2 }}>⚠️ Expiring</div>}
+                  {dbsExpiring && <div style={{ fontSize: 10, color: '#DC2626', fontWeight: 700, marginTop: 2 }}><Icon name="⚠️" /> Expiring</div>}
                 </div>
                 <div>
                   {member.is_active === false

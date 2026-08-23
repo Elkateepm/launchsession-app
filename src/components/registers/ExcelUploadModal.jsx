@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 const TEMPLATE_DATA = [
   { first_name: 'Jane', last_name: 'Smith', date_of_birth: '2012-05-14', group_name: 'Blue', allergies: 'Nut allergy', medical_notes: '', emergency_contact_name: 'Sarah Smith', emergency_contact_phone: '07700900123' },
@@ -83,7 +84,7 @@ export default function ExcelUploadModal({ orgId, bubbles, onClose, onImported }
   if (done) return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 440, padding: 32, textAlign: 'center' }}>
-        <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>✅</div>
+        <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}><Icon name="✅" /></div>
         <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Import Complete</div>
         <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>{importCount} children added to your register successfully.</div>
         <button onClick={onClose} style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: '#1B9AAA', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Done</button>
@@ -114,7 +115,7 @@ export default function ExcelUploadModal({ orgId, bubbles, onClose, onImported }
             <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed #e5e7eb', borderRadius: 12, padding: '28px 20px', textAlign: 'center', cursor: 'pointer', background: '#FAFAFA' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#1B9AAA'}
               onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>📂</div>
+              <div style={{ fontSize: 28, marginBottom: 8 }}><Icon name="📂" /></div>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Click to choose a file</div>
               <div style={{ fontSize: 12, color: 'var(--text3)' }}>Supports .xlsx, .xls, and .csv files</div>
               <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} style={{ display: 'none' }} />

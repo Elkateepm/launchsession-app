@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { ACCESS_MODULES, TEMPLATABLE_ROLES, LEVEL_OPTIONS, allowedModules } from '../../lib/moduleAccess'
+import Icon from '../../lib/icons'
 
 // The organisation's role template: what each role can reach by default.
 // Individual people are adjusted from their profile in HR; this is the baseline
@@ -53,7 +54,7 @@ export default function AccessSection({ org, isAdmin }) {
   if (!isAdmin) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+        <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="🔒" /></div>
         <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Admins only</div>
         <div style={{ fontSize: 14, color: '#64748B' }}>
           Role access defaults apply to everyone on a role, so only an admin can change them.
@@ -97,7 +98,7 @@ export default function AccessSection({ org, isAdmin }) {
               {ACCESS_MODULES.map(m => (
                 <tr key={m.key}>
                   <td style={{ padding: '10px 16px', borderBottom: '1px solid #f3f4f6', whiteSpace: 'nowrap' }}>
-                    <span style={{ fontSize: 15, marginRight: 8 }}>{m.icon}</span>
+                    <span style={{ fontSize: 15, marginRight: 8 }}><Icon name={m.icon} /></span>
                     <span style={{ fontSize: 13, fontWeight: 700 }}>{m.label}</span>
                     {!orgModules.includes(m.key) && (
                       <span style={{ marginLeft: 8, background: '#FEF3C7', color: '#92400E', borderRadius: 6, padding: '2px 6px', fontSize: 10, fontWeight: 800 }}>Not on plan</span>

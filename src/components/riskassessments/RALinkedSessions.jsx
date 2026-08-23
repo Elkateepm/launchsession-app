@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { btnPrimary, btnGhost } from '../volunteers/vh_shared'
 import { riskScore, riskRating, LIKELIHOOD_LABELS, SEVERITY_LABELS, RA_STATUS_LABELS } from './ra_shared'
+import Icon from '../../lib/icons'
 
 // ── Session linking tab ──
 export default function RALinkedSessions({ assessment, org, session: authSession }) {
@@ -54,12 +55,12 @@ export default function RALinkedSessions({ assessment, org, session: authSession
             if (!s) return null
             return (
               <div key={link.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.08)', background: '#fff' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: `${primary}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>📅</div>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: `${primary}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><Icon name="📅" /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{s.title}</div>
                   <div style={{ fontSize: 11.5, color: '#94A3B8' }}>{s.session_date ? new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''}{s.start_time ? ` · ${s.start_time}` : ''}{s.location ? ` · ${s.location}` : ''}</div>
                 </div>
-                <button onClick={() => detach(link)} style={{ background: 'none', border: 'none', color: '#CBD5E1', cursor: 'pointer', fontSize: 15 }}>✕</button>
+                <button onClick={() => detach(link)} style={{ background: 'none', border: 'none', color: '#CBD5E1', cursor: 'pointer', fontSize: 15 }}><Icon name="✕" /></button>
               </div>
             )
           })}
@@ -74,7 +75,7 @@ export default function RALinkedSessions({ assessment, org, session: authSession
               <div style={{ textAlign: 'center', padding: 14, color: '#94A3B8', fontSize: 12.5 }}>No matching upcoming sessions.</div>
             ) : filtered.map(s => (
               <button key={s.id} onClick={() => attach(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 9, border: '1px solid rgba(15,23,42,0.06)', background: '#fff', cursor: 'pointer', textAlign: 'left' }}>
-                <span style={{ fontSize: 15 }}>📅</span>
+                <span style={{ fontSize: 15 }}><Icon name="📅" /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{s.title}</div>
                   <div style={{ fontSize: 11, color: '#94A3B8' }}>{s.session_date ? new Date(s.session_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}{s.location ? ` · ${s.location}` : ''}</div>

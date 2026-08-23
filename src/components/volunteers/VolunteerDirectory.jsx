@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { Card, SectionTitle, Badge, Avatar, statusStyle, daysUntil, sessionHours, inputStyle, btnPrimary, btnGhost, PURPLE } from './vh_shared'
+import Icon from '../../lib/icons'
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -82,7 +83,7 @@ export default function VolunteerDirectory({ org, volunteers, sessionStaff, sess
                   <Avatar name={v.full_name} photoUrl={v.photo_url} color={primary} />
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {v.full_name || '—'} {spotlighted && <span title="Recognised">✨</span>}
+                      {v.full_name || '—'} {spotlighted && <span title="Recognised"><Icon name="✨" /></span>}
                     </div>
                     <div style={{ fontSize: 11.5, color: '#64748B' }}>{v.email}</div>
                   </div>

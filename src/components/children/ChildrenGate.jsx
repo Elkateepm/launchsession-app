@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 export default function ChildrenGate({ org, session, children }) {
   const [status, setStatus] = useState('checking') // checking | locked | open
@@ -95,7 +96,7 @@ export default function ChildrenGate({ org, session, children }) {
           <div style={{
             width: 64, height: 64, borderRadius: 16, background: 'linear-gradient(135deg, #1e3a8a, #1d4ed8)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, margin: '0 auto 20px',
-          }}>🔒</div>
+          }}><Icon name="🔒" /></div>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 6px' }}>
             Children is locked
           </h2>

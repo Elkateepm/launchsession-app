@@ -218,7 +218,7 @@ function LiveClock() {
   }, [])
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 14, background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>
-      <span style={{ fontSize: 14 }}>📅</span>
+      <span style={{ fontSize: 14 }}><Icon name="📅" /></span>
       <span style={{ fontSize: 12.5, fontWeight: 700, color: '#334155' }}>{now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
       <span style={{ width: 1, height: 12, background: 'rgba(51,65,85,0.2)' }} />
       <span style={{ fontSize: 12.5, fontWeight: 700, color: '#6D5DF6', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
@@ -302,7 +302,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
           <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{orgName}</div>
           {isTrial ? (
             <motion.div whileHover={{ scale: 1.05 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 2, background: `${primary}14`, borderRadius: 99, padding: '1.5px 8px', border: `1px solid ${primary}25` }}>
-              <span style={{ fontSize: 10 }}>🚀</span>
+              <span style={{ fontSize: 10 }}><Icon name="🚀" /></span>
               <span style={{ fontSize: 10.5, fontWeight: 700, color: primary }}>Trial · {daysLeft}d left</span>
             </motion.div>
           ) : (
@@ -326,7 +326,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
           transition={{ type: 'spring', stiffness: 300, damping: 28 }}
           style={{ position: 'relative', maxWidth: '100%' }}
         >
-          <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8' }}>🔍</span>
+          <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8' }}><Icon name="🔍" /></span>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -372,7 +372,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
                           style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 10, border: 'none', background: '#F8FAFC', textAlign: 'left', cursor: 'pointer' }}
                           onMouseEnter={e => e.currentTarget.style.background = '#F1F5F9'}
                           onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}>
-                          <span style={{ fontSize: 14, flexShrink: 0 }}>📬</span>
+                          <span style={{ fontSize: 14, flexShrink: 0 }}><Icon name="📬" /></span>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               New submission — {sub.org_forms?.name || 'Form'}
@@ -921,7 +921,7 @@ export default function Dashboard({ session, org }) {
                       {daysLeft === 0 ? 'Your trial expires today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left on your free trial`}
                     </span>
                   </div>
-                  <a href="mailto:hello@launchsession.co.uk?subject=Upgrade LaunchSession" style={{ fontSize: 12, fontWeight: 700, color: urgent ? '#DC2626' : '#3B82F6', textDecoration: 'none' }}>Upgrade →</a>
+                  <a href="mailto:hello@launchsession.co.uk?subject=Upgrade LaunchSession" style={{ fontSize: 12, fontWeight: 700, color: urgent ? '#DC2626' : '#3B82F6', textDecoration: 'none' }}>Upgrade <Icon name="→" /></a>
                 </div>
               </div>
             )

@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { OUTCOME_AREAS, areaByKey, scoreColor } from './impact_shared'
+import Icon from '../../lib/icons'
 
 // ---------------------------------------------------------------------------
 // Export — download all outcome data as an .xlsx workbook
@@ -177,7 +178,7 @@ export default function DataToolsModal({ mode, org, children, scores, goals, onC
         style={{ background: '#fff', borderRadius: 22, width: 480, maxWidth: '100%', maxHeight: '85vh', overflowY: 'auto', padding: 24, boxShadow: '0 30px 80px rgba(0,0,0,0.25)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div style={{ fontSize: 15, fontWeight: 900 }}>{TITLES[mode]}</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#9CA3AF' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#9CA3AF' }}><Icon name="✕" /></button>
         </div>
 
         {mode === 'export' && (

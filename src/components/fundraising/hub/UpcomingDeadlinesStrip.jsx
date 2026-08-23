@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import { LS, daysLeftNumber } from '../fundraisingShared'
 import FundraisingEmptyState from './FundraisingEmptyState'
 import { useIsMobile } from '../../../hooks/useIsMobile'
+import Icon from '../../../lib/icons'
 
 function priorityOf(days) {
   if (days <= 7) return { label: 'High priority', color: '#B91C1C', bg: '#FCEAEA' }
@@ -17,7 +18,7 @@ export default function UpcomingDeadlinesStrip({ events, loading, onViewCalendar
     <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: LS.text }}>Upcoming Deadlines</div>
-        {items.length > 0 && <button onClick={onViewCalendar} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View calendar →</button>}
+        {items.length > 0 && <button onClick={onViewCalendar} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View calendar <Icon name="→" /></button>}
       </div>
 
       {loading ? (

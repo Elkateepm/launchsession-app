@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 // Public unsubscribe page, reached from the link in a newsletter.
 //
@@ -47,7 +48,7 @@ export default function Unsubscribe() {
   if (state === 'error') return (
     <div style={wrap}>
       <div style={card}>
-        <div style={{ fontSize: 42, marginBottom: 14 }}>🔗</div>
+        <div style={{ fontSize: 42, marginBottom: 14 }}><Icon name="🔗" /></div>
         <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>We couldn't use that link</div>
         <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6 }}>{message}</div>
       </div>
@@ -57,7 +58,7 @@ export default function Unsubscribe() {
   if (state === 'done') return (
     <div style={wrap}>
       <div style={card}>
-        <div style={{ fontSize: 42, marginBottom: 14 }}>✅</div>
+        <div style={{ fontSize: 42, marginBottom: 14 }}><Icon name="✅" /></div>
         <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>
           {info?.already ? "You're already unsubscribed" : "You've been unsubscribed"}
         </div>
@@ -76,7 +77,7 @@ export default function Unsubscribe() {
   return (
     <div style={wrap}>
       <div style={card}>
-        <div style={{ fontSize: 42, marginBottom: 14 }}>✉️</div>
+        <div style={{ fontSize: 42, marginBottom: 14 }}><Icon name="✉️" /></div>
         <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 10 }}>Unsubscribe from this newsletter?</div>
         <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6, marginBottom: 22 }}>
           You'll stop receiving newsletters. Essential messages about your place on sessions will still reach you.

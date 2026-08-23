@@ -26,6 +26,7 @@ import FundingPipelinePanel from './hub/FundingPipelinePanel'
 import UpcomingDeadlinesStrip from './hub/UpcomingDeadlinesStrip'
 import ImpactSnapshotPanel from './hub/ImpactSnapshotPanel'
 import FundraisingAssistantCard from './hub/FundraisingAssistantCard'
+import Icon from '../../lib/icons'
 
 const CAMPAIGN_TYPES = [
   { key: 'general',    label: 'General fundraiser' },
@@ -170,7 +171,7 @@ function InsightsPanel({ bullets: heuristicBullets, org, primary }) {
     <div style={{ background: 'linear-gradient(135deg, #FDF6E8, #ffffff)', border: '1px solid #F3E3BC', borderRadius: 20, padding: '16px 18px', marginBottom: 28 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <motion.span animate={{ rotate: [0, -12, 12, -8, 0] }} transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 3 }} style={{ fontSize: 15, display: 'inline-block' }}>✨</motion.span>
+          <motion.span animate={{ rotate: [0, -12, 12, -8, 0] }} transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 3 }} style={{ fontSize: 15, display: 'inline-block' }}><Icon name="✨" /></motion.span>
           <span style={{ fontSize: 13, fontWeight: 700, color: '#92640C' }}>Fundraising Insights</span>
           <AnimatePresence mode="wait">
             {aiLoading ? (
@@ -193,7 +194,7 @@ function InsightsPanel({ bullets: heuristicBullets, org, primary }) {
           <motion.button onClick={() => fetchAI(true)} disabled={aiLoading} whileTap={{ scale: 0.85, rotate: 20 }}
             title="Refresh insights" style={{ background: 'none', border: 'none', cursor: aiLoading ? 'default' : 'pointer', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <motion.span animate={aiLoading ? { rotate: 360 } : { rotate: 0 }} transition={aiLoading ? { duration: 1, repeat: Infinity, ease: 'linear' } : { duration: 0.2 }}
-              style={{ fontSize: 14, color: '#B08B3F', display: 'inline-block' }}>↻</motion.span>
+              style={{ fontSize: 14, color: '#B08B3F', display: 'inline-block' }}><Icon name="↻" /></motion.span>
           </motion.button>
         </div>
       </div>
@@ -310,7 +311,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 24, padding: 0 }}>← Back to fundraising</button>
+      <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 24, padding: 0 }}><Icon name="←" /> Back to fundraising</button>
 
       {/* Header */}
       <div style={{ paddingBottom: 20, borderBottom: '0.5px solid #e5e7eb', marginBottom: 20 }}>
@@ -783,7 +784,7 @@ export default function Fundraising({ org, isAdmin }) {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12.5, color: '#6B7280' }}>Real, researched UK funders for {org?.name} — search, save and track applications</div>
             </div>
-            <span style={{ fontSize: 12, color: primary, flexShrink: 0, fontWeight: 600 }}>View all →</span>
+            <span style={{ fontSize: 12, color: primary, flexShrink: 0, fontWeight: 600 }}>View all <Icon name="→" /></span>
           </button>
         </>
       )}

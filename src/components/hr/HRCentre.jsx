@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import MemberAccess from './MemberAccess'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import Icon from '../../lib/icons'
 
 // HR Centre — the single place staff are managed.
 //
@@ -252,7 +253,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
             </div>
           ) : (
             <div style={{ ...CARD, padding: '26px 20px', marginBottom: 16, textAlign: 'center' }}>
-              <div style={{ fontSize: 26, marginBottom: 6 }}>✓</div>
+              <div style={{ fontSize: 26, marginBottom: 6 }}><Icon name="✓" /></div>
               <div style={{ fontSize: 15.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
                 Everything is up to date
               </div>
@@ -269,7 +270,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
             <button onClick={() => setTab('staff')} style={{
               marginTop: 12, padding: 0, border: 'none', background: 'transparent',
               color: primary, fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-            }}>View staff →</button>
+            }}>View staff <Icon name="→" /></button>
           </div>
 
           {leave.length > 0 && (
@@ -606,7 +607,7 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
         padding: '7px 13px', borderRadius: 9, border: '1px solid #E2E8F0',
         background: '#fff', color: '#64748B', fontSize: 12.5, fontWeight: 700,
         cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14,
-      }}>← Staff</button>
+      }}><Icon name="←" /> Staff</button>
 
       <div style={{ ...CARD, padding: isMobile ? 18 : 22, marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
@@ -829,7 +830,7 @@ function InviteStaffModal({ org, primary, onClose, onSent }) {
       }}>
         {sent ? (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 30, marginBottom: 10 }}>✓</div>
+            <div style={{ fontSize: 30, marginBottom: 10 }}><Icon name="✓" /></div>
             <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Invite sent</div>
             <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.55, marginBottom: 18 }}>
               {existingUser

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FormsOverview, ResponseInbox } from './FormsOverview'
 import { mergeTemplates } from './formTemplates'
 import NewFormBuilder from './FormBuilder'
+import Icon from '../../lib/icons'
 
 function CountUp({ value, duration = 0.6 }) {
   const [display, setDisplay] = React.useState(value)
@@ -335,7 +336,7 @@ function SubmissionsView({ form, org, onBack }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 800, fontSize: 13, cursor: 'pointer', padding: 0 }}>← Back</button>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 800, fontSize: 13, cursor: 'pointer', padding: 0 }}><Icon name="←" /> Back</button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 17, fontWeight: 900 }}>{form.name}</div>
           <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{submissions.length} submission{submissions.length !== 1 ? 's' : ''}</div>
@@ -351,7 +352,7 @@ function SubmissionsView({ form, org, onBack }) {
         </div>
       ) : selected ? (
         <div>
-          <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}>← All Submissions</button>
+          <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}><Icon name="←" /> All Submissions</button>
           <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: 20 }}>
             <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>Submitted {format(new Date(selected.created_at), 'd MMM yyyy HH:mm')}</div>
             {form.fields.map((field, i) => (
@@ -374,7 +375,7 @@ function SubmissionsView({ form, org, onBack }) {
                 <div style={{ fontWeight: 700, fontSize: 14 }}>Submission #{submissions.length - i}</div>
                 <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{format(new Date(sub.created_at), 'd MMM yyyy · HH:mm')}</div>
               </div>
-              <div style={{ fontSize: 13, color: '#9CA3AF' }}>View →</div>
+              <div style={{ fontSize: 13, color: '#9CA3AF' }}>View <Icon name="→" /></div>
             </div>
           ))}
         </div>
@@ -415,7 +416,7 @@ export function EmailFormModal({ form, primary, onClose, recipients }) {
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 440, boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>✉️ Email this form</div>
+          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}><Icon name="✉️" /> Email this form</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
         </div>
         <div style={{ fontSize: 13, color: '#64748B', marginBottom: 16 }}>{form.name}</div>
@@ -482,7 +483,7 @@ function AccessModal({ form, staff, currentUserId, primary, onClose, onSave }) {
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 460, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>🔒 Who can view submissions</div>
+          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}><Icon name="🔒" /> Who can view submissions</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
         </div>
         <div style={{ fontSize: 13, color: '#64748B', marginBottom: 18 }}>{form.name}</div>
@@ -609,7 +610,7 @@ function ImportFormModal({ onClose, onImport }) {
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 480, boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>📥 Import a form</div>
+          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}><Icon name="📥" /> Import a form</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
         </div>
         <div style={{ fontSize: 13, color: '#64748B', marginBottom: 14 }}>Paste form JSON — <code style={{ fontSize: 11, background: '#F1F5F9', padding: '1px 5px', borderRadius: 4 }}>{'{ name, description, fields: [{ type, label, required }] }'}</code></div>
@@ -634,7 +635,7 @@ function DuplicatePickerModal({ forms, onClose, onDuplicate }) {
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 22, width: '100%', maxWidth: 440, maxHeight: '70vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>📋 Duplicate a form</div>
+          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}><Icon name="📋" /> Duplicate a form</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
         </div>
         <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -887,7 +888,7 @@ export default function Forms({ org, session, isAdmin }) {
       {/* HEADER */}
       <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'flex-start', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-          <div style={{ width: 44, height: 44, borderRadius: 13, background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 8px 20px -8px rgba(109,93,246,0.5)' }}>📝</div>
+          <div style={{ width: 44, height: 44, borderRadius: 13, background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 8px 20px -8px rgba(109,93,246,0.5)' }}><Icon name="📝" /></div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: isMobile ? 21 : 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>Forms</span>
@@ -905,7 +906,7 @@ export default function Forms({ org, session, isAdmin }) {
             <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '13px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(109,93,246,0.4)', width: '100%' }}>+ Create Form</button>
           ) : (
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { setSection('templates'); setTab('templates') }} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>📋 Browse Templates</button>
+              <button onClick={() => { setSection('templates'); setTab('templates') }} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="📋" /> Browse Templates</button>
               <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '11px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(109,93,246,0.4)', whiteSpace: 'nowrap' }}>+ Create Form</button>
             </div>
           )
@@ -957,7 +958,7 @@ export default function Forms({ org, session, isAdmin }) {
         {statCards.map((s, i) => (
           <motion.div key={s.key} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: i * 0.05 }}
             style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '18px' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${s.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}>{s.icon}</div>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${s.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={s.icon} /></div>
             <div style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5, lineHeight: 1 }}><CountUp value={s.value} /></div>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginTop: 4 }}>{s.label}</div>
             <div style={{ fontSize: 11, fontWeight: 700, color: s.subColor || '#94A3B8', marginTop: 6 }}>{s.sub}</div>
@@ -969,7 +970,7 @@ export default function Forms({ org, session, isAdmin }) {
         <div>
           {/* SEARCH + FILTERS */}
           <div style={{ position: 'relative', marginBottom: 8 }}>
-            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}>🔍</span>
+            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}><Icon name="🔍" /></span>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search forms..."
               style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1px solid #E2E8F0', fontSize: 13, outline: 'none' }} />
           </div>
@@ -991,7 +992,7 @@ export default function Forms({ org, session, isAdmin }) {
               <option value="newest">Sort: Newest</option>
             </select>
             <div style={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: 10, overflow: 'hidden', gridColumn: isMobile ? '1 / -1' : undefined }}>
-              <button onClick={() => setListMode('list')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'list' ? '#6D5DF6' : '#fff', color: listMode === 'list' ? '#fff' : '#64748B', cursor: 'pointer' }}>☰ List</button>
+              <button onClick={() => setListMode('list')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'list' ? '#6D5DF6' : '#fff', color: listMode === 'list' ? '#fff' : '#64748B', cursor: 'pointer' }}><Icon name="☰" /> List</button>
               <button onClick={() => setListMode('grid')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'grid' ? '#6D5DF6' : '#fff', color: listMode === 'grid' ? '#fff' : '#64748B', cursor: 'pointer' }}>▦ Grid</button>
             </div>
           </div>
@@ -1012,7 +1013,7 @@ export default function Forms({ org, session, isAdmin }) {
           {tab === 'templates' ? (
             <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: isMobile ? 16 : 20 }}>
               <div style={{ position: 'relative', marginBottom: 14 }}>
-                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8' }}>🔍</span>
+                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8' }}><Icon name="🔍" /></span>
                 <input value={templateSearch} onChange={e => setTemplateSearch(e.target.value)} placeholder="Search templates..."
                   style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px 11px 38px', borderRadius: 12, border: '1px solid #E2E8F0', fontSize: 13.5, outline: 'none' }} />
               </div>
@@ -1033,7 +1034,7 @@ export default function Forms({ org, session, isAdmin }) {
                     return (
                       <button key={t.name} onClick={() => applyTemplate(t)}
                         style={{ padding: 16, borderRadius: 16, border: `1px solid ${color}25`, background: `${color}08`, cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}>{t.icon}</div>
+                        <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={t.icon} /></div>
                         <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{t.name}</div>
                         <div style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.4, marginBottom: 10 }}>{t.desc}</div>
                         <div style={{ fontSize: 10.5, fontWeight: 700, color, background: color + '14', borderRadius: 99, padding: '3px 9px', display: 'inline-block' }}>{t.fields.length} fields</div>
@@ -1047,7 +1048,7 @@ export default function Forms({ org, session, isAdmin }) {
             <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>Loading forms...</div>
           ) : filteredForms.length === 0 ? (
             <div style={{ padding: '48px 20px', textAlign: 'center', background: '#fff', borderRadius: 16, border: '1px solid #EEF1F6' }}>
-              <div style={{ fontSize: 38, marginBottom: 12 }}>📝</div>
+              <div style={{ fontSize: 38, marginBottom: 12 }}><Icon name="📝" /></div>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{forms.length === 0 ? 'No forms yet' : 'No matching forms'}</div>
               <div style={{ fontSize: 13, color: '#64748B' }}>{forms.length === 0 ? (isAdmin ? 'Create your first form or start from a template.' : "An admin hasn't built any forms yet.") : 'Try adjusting your search or filters.'}</div>
             </div>
@@ -1061,25 +1062,25 @@ export default function Forms({ org, session, isAdmin }) {
                   <div key={form.id} onClick={() => isAdmin ? openForEdit(form) : (canView && openForSubmissions(form))}
                     style={{ cursor: 'pointer', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 16 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TAG_COLOR[form.tag] || accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📝</div>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TAG_COLOR[form.tag] || accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}><Icon name="📝" /></div>
                       <span style={{ fontSize: 10.5, fontWeight: 800, padding: '3px 9px', borderRadius: 99, background: STATUS_STYLE[form.status]?.bg, color: STATUS_STYLE[form.status]?.color }}>● {STATUS_STYLE[form.status]?.label}</span>
                     </div>
                     <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{form.name}</div>
                     <div style={{ fontSize: 12, color: '#64748B', marginBottom: 10, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{form.description || 'No description'}</div>
                     <div style={{ display: 'flex', gap: 10, fontSize: 11.5, fontWeight: 700, color: '#475569', marginBottom: isAdmin ? 10 : 0 }}>
-                      <span>📋 {(form.fields || []).length} fields</span>
-                      <span>📬 {subCount} submissions</span>
+                      <span><Icon name="📋" /> {(form.fields || []).length} fields</span>
+                      <span><Icon name="📬" /> {subCount} submissions</span>
                     </div>
                     {isAdmin && (
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={(e) => { e.stopPropagation(); openForSubmissions(form) }} style={{ flex: 1, padding: '8px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>📬 View submissions</button>
+                        <button onClick={(e) => { e.stopPropagation(); openForSubmissions(form) }} style={{ flex: 1, padding: '8px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}><Icon name="📬" /> View submissions</button>
                         <button onClick={(e) => { e.stopPropagation(); setAccessModalFor(form) }} title="Choose who can view submissions" style={{ padding: '8px 10px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                           {form.submission_view_mode === 'custom' ? `🔓 ${(form.submission_viewer_ids || []).length}` : '🔒'}
                         </button>
                       </div>
                     )}
                     {!isAdmin && !canView && (
-                      <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700 }}>🔒 Only admins can view responses</div>
+                      <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700 }}><Icon name="🔒" /> Only admins can view responses</div>
                     )}
                   </div>
                 )
@@ -1097,7 +1098,7 @@ export default function Forms({ org, session, isAdmin }) {
                 const rowClick = () => { if (isAdmin) openForEdit(form); else if (canView) openForSubmissions(form) }
                 return (
                   <div key={form.id} style={{ position: 'relative', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                    <div onClick={rowClick} style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, cursor: 'pointer' }}>📝</div>
+                    <div onClick={rowClick} style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, cursor: 'pointer' }}><Icon name="📝" /></div>
 
                     <div onClick={rowClick} style={{ flex: '1 1 220px', minWidth: 180, cursor: 'pointer' }}>
                       <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 2 }}>{form.name}</div>
@@ -1139,18 +1140,18 @@ export default function Forms({ org, session, isAdmin }) {
                         <button onClick={() => openForSubmissions(form)} title="View submissions" style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>📬{subCount ? ` ${subCount}` : ''}</button>
                       )}
                       {isAdmin ? (
-                        <button onClick={() => openForEdit(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>✏️ Edit</button>
+                        <button onClick={() => openForEdit(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="✏️" /> Edit</button>
                       ) : canView ? (
-                        <button onClick={() => openForSubmissions(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>📬 View</button>
+                        <button onClick={() => openForSubmissions(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="📬" /> View</button>
                       ) : (
-                        <span style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 700, padding: '9px 4px', whiteSpace: 'nowrap' }}>🔒 Admins only</span>
+                        <span style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 700, padding: '9px 4px', whiteSpace: 'nowrap' }}><Icon name="🔒" /> Admins only</span>
                       )}
-                      <button onClick={() => window.open(`/forms/${org?.slug}/${form.id}`, '_blank')} title="Preview" style={iconBtn}>👁</button>
+                      <button onClick={() => window.open(`/forms/${org?.slug}/${form.id}`, '_blank')} title="Preview" style={iconBtn}><Icon name="👁" /></button>
                       <button onClick={() => copyFormLink(form)} disabled={!form.is_active} title={form.is_active ? 'Copy public link' : 'Activate to get a link'}
                         style={{ ...iconBtn, color: !form.is_active ? '#D1D5DB' : copiedId === form.id ? '#16A34A' : '#64748B', borderColor: copiedId === form.id ? '#16A34A40' : '#E2E8F0', cursor: form.is_active ? 'pointer' : 'default' }}>
                         {copiedId === form.id ? '✅' : '🔗'}
                       </button>
-                      <button onClick={() => setEmailModalFor(form)} disabled={!form.is_active} title={form.is_active ? 'Email this form' : 'Activate to email it'} style={{ ...iconBtn, color: !form.is_active ? '#D1D5DB' : '#64748B', cursor: form.is_active ? 'pointer' : 'default' }}>✉️</button>
+                      <button onClick={() => setEmailModalFor(form)} disabled={!form.is_active} title={form.is_active ? 'Email this form' : 'Activate to email it'} style={{ ...iconBtn, color: !form.is_active ? '#D1D5DB' : '#64748B', cursor: form.is_active ? 'pointer' : 'default' }}><Icon name="✉️" /></button>
                       {isAdmin && (
                         <div style={{ position: 'relative' }}>
                           <button onClick={() => setRowMenuFor(id => id === form.id ? null : form.id)} style={iconBtn}>⋯</button>
@@ -1159,9 +1160,9 @@ export default function Forms({ org, session, isAdmin }) {
                               <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                                 style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 12px 32px -12px rgba(0,0,0,0.2)', zIndex: 30, minWidth: 170, overflow: 'hidden' }}>
                                 {form.status !== 'active' && <button onClick={() => setFormStatus(form, 'active')} style={menuItemStyle}>● Set Active</button>}
-                                {form.status !== 'draft' && <button onClick={() => setFormStatus(form, 'draft')} style={menuItemStyle}>📄 Move to Draft</button>}
+                                {form.status !== 'draft' && <button onClick={() => setFormStatus(form, 'draft')} style={menuItemStyle}><Icon name="📄" /> Move to Draft</button>}
                                 {form.status !== 'archived' && <button onClick={() => setFormStatus(form, 'archived')} style={menuItemStyle}>🗄 Archive</button>}
-                                <button onClick={() => { setRowMenuFor(null); deleteForm(form) }} style={{ ...menuItemStyle, color: '#DC2626' }}>🗑️ Delete</button>
+                                <button onClick={() => { setRowMenuFor(null); deleteForm(form) }} style={{ ...menuItemStyle, color: '#DC2626' }}><Icon name="🗑️" /> Delete</button>
                               </motion.div>
                             )}
                           </AnimatePresence>

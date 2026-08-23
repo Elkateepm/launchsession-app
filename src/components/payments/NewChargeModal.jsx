@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { PB, CHARGE_TYPES, inputStyle } from './paymentsShared'
+import Icon from '../../lib/icons'
 
 export default function NewChargeModal({ org, session, children, sessions, onClose, onCreated }) {
   const isMobile = useIsMobile()
@@ -91,7 +92,7 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
       }}>
         <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>+ New Charge</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
@@ -149,7 +150,7 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
                       background: selected ? '#EFF6FF' : '#fff', fontSize: 13, color: '#0F172A', fontWeight: selected ? 700 : 500,
                     }}>
                       {c.first_name} {c.last_name}
-                      {selected && <span style={{ color: PB.blue }}>✓</span>}
+                      {selected && <span style={{ color: PB.blue }}><Icon name="✓" /></span>}
                     </button>
                   )
                 })}

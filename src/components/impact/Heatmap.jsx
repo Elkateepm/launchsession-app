@@ -1,5 +1,6 @@
 import React from 'react'
 import { OUTCOME_AREAS } from './impact_shared'
+import Icon from '../../lib/icons'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const HEATMAP_AREAS = ['confidence', 'wellbeing', 'attendance', 'education', 'social', 'resilience']
@@ -36,7 +37,7 @@ export default function Heatmap({ scores }) {
 
   return (
     <div style={{ background: '#fff', border: '1px solid #EEF0F2', borderRadius: 20, padding: '20px 22px', marginBottom: 20 }}>
-      <div style={{ fontSize: 13, fontWeight: 900, marginBottom: 4 }}>🗓️ Weekly Heatmap</div>
+      <div style={{ fontSize: 13, fontWeight: 900, marginBottom: 4 }}><Icon name="🗓️" /> Weekly Heatmap</div>
       <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 16 }}>Which days tend to produce the strongest outcomes</div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'separate', borderSpacing: 4, width: '100%' }}>

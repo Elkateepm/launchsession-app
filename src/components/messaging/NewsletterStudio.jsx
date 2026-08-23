@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import shrinkImage from '../../lib/shrinkImage'
 import AudienceBuilder from './AudienceBuilder'
+import Icon from '../../lib/icons'
 
 // Newsletter Studio.
 //
@@ -158,10 +159,10 @@ function BlockEditor({ block, orgId, primary, open, onOpen, onChange, onRemove, 
             }}>{summarise(block)}</span>
           </span>
         </button>
-        <button onClick={() => onMove(-1)} disabled={isFirst} aria-label="Move up" style={iconBtn(isFirst)}>↑</button>
-        <button onClick={() => onMove(1)} disabled={isLast} aria-label="Move down" style={iconBtn(isLast)}>↓</button>
+        <button onClick={() => onMove(-1)} disabled={isFirst} aria-label="Move up" style={iconBtn(isFirst)}><Icon name="↑" /></button>
+        <button onClick={() => onMove(1)} disabled={isLast} aria-label="Move down" style={iconBtn(isLast)}><Icon name="↓" /></button>
         <button onClick={onDuplicate} aria-label="Duplicate" style={iconBtn(false)}>⧉</button>
-        <button onClick={onRemove} aria-label={`Remove ${meta?.label || 'block'}`} style={iconBtn(false)}>✕</button>
+        <button onClick={onRemove} aria-label={`Remove ${meta?.label || 'block'}`} style={iconBtn(false)}><Icon name="✕" /></button>
       </div>
 
       {open && block.type !== 'divider' && (
@@ -568,7 +569,7 @@ export default function NewsletterStudio({ org, session }) {
               border: '1.5px solid var(--border)', background: 'transparent',
               color: 'var(--text3)', fontSize: 11.5, fontWeight: 700,
             }}>
-              <span aria-hidden="true" style={{ fontSize: 14, color: primary }}>{t.icon}</span>
+              <span aria-hidden="true" style={{ fontSize: 14, color: primary }}><Icon name={t.icon} /></span>
               {t.label}
             </button>
           ))}
@@ -750,7 +751,7 @@ export default function NewsletterStudio({ org, session }) {
                   {' · '}{new Date(n.created_at).toLocaleDateString('en-GB')}
                 </span>
               </span>
-              <span style={{ color: 'var(--text3)', fontSize: 13 }}>→</span>
+              <span style={{ color: 'var(--text3)', fontSize: 13 }}><Icon name="→" /></span>
             </button>
           ))}
         </div>

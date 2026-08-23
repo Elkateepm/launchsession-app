@@ -11,6 +11,7 @@ import VPProfile from './VPProfile'
 import VPQuickActionMenu from './VPQuickActionMenu'
 import { signOne } from '../../lib/storageUrl'
 import shrinkImage from '../../lib/shrinkImage'
+import Icon from '../../lib/icons'
 
 const SLUG = window.location.pathname.split('/volunteer/')[1]?.split('/')[0]
 
@@ -143,7 +144,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 0: Welcome
     <div key={0} style={s.body}>
       <div style={{ textAlign:'center', padding:'20px 0' }}>
-        <div style={{ fontSize:56, marginBottom:16 }}>👋</div>
+        <div style={{ fontSize:56, marginBottom:16 }}><Icon name="👋" /></div>
         <div style={{ fontSize:24, fontWeight:900, color:'#111', marginBottom:10 }}>Welcome to {org?.name}!</div>
         <div style={{ fontSize:15, color:'#6B7280', lineHeight:1.6, marginBottom:28 }}>Thanks for joining. Let's get you set up so we can match you with the right sessions.<br/><br/>This takes about 2–3 minutes.</div>
         <button onClick={()=>setStep(1)} style={s.btn(primary)}>Let's get started →</button>
@@ -167,12 +168,12 @@ function OnboardingWizard({ user, org, onComplete }) {
       <label style={s.label}>Profile photo (optional)</label>
       <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:14 }}>
         <div style={{ width:56, height:56, borderRadius:16, background:primary+'22', border:`2px solid ${primary}44`, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-          {photoUrl ? <img src={photoUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:22 }}>📷</span>}
+          {photoUrl ? <img src={photoUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:22 }}><Icon name="📷" /></span>}
         </div>
         <button onClick={()=>photoRef.current?.click()} style={{ padding:'8px 16px', borderRadius:10, border:`1.5px solid ${primary}`, background:'transparent', color:primary, fontSize:13, fontWeight:700, cursor:'pointer' }}>{photoUploading?'Uploading...':'Upload photo'}</button>
         <input ref={photoRef} type="file" accept="image/*" style={{ display:'none' }} onChange={uploadPhoto} />
       </div>
-      <button onClick={()=>setStep(2)} disabled={!f.first_name.trim()||!f.last_name.trim()||!f.phone.trim()} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(2)} disabled={!f.first_name.trim()||!f.last_name.trim()||!f.phone.trim()} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 2: Emergency Contact
@@ -185,7 +186,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <input style={s.inp} value={f.emergency_contact_relationship} onChange={e=>set('emergency_contact_relationship',e.target.value)} placeholder="e.g. Partner, Parent, Sibling" />
       <label style={s.label}>Phone number *</label>
       <input style={s.inp} value={f.emergency_contact_phone} onChange={e=>set('emergency_contact_phone',e.target.value)} placeholder="07700900000" type="tel" />
-      <button onClick={()=>setStep(3)} disabled={!f.emergency_contact_name.trim()||!f.emergency_contact_phone.trim()} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(3)} disabled={!f.emergency_contact_name.trim()||!f.emergency_contact_phone.trim()} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 3: Address
@@ -198,7 +199,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <input style={s.inp} value={f.address} onChange={e=>set('address',e.target.value)} placeholder="123 High Street" />
       <label style={s.label}>City</label>
       <input style={s.inp} value={f.city} onChange={e=>set('city',e.target.value)} placeholder="London" />
-      <button onClick={()=>setStep(4)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(4)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 4: Availability
@@ -213,7 +214,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <div style={{ display:'flex', gap:8, marginBottom:18 }}>
         {TIMES.map(t=><button key={t} onClick={()=>togAvail('times',t)} style={s.chip(f.availability.times.includes(t),primary)}>{t}</button>)}
       </div>
-      <button onClick={()=>setStep(5)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(5)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 5: Interests
@@ -223,7 +224,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:18 }}>
         {INTERESTS.map(i=><button key={i} onClick={()=>tog('interests',i)} style={s.chip(f.interests.includes(i),primary)}>{i}</button>)}
       </div>
-      <button onClick={()=>setStep(6)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(6)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 6: Experience
@@ -237,7 +238,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:18 }}>
         {EXPERIENCE_OPTS.map(e=><button key={e} onClick={()=>tog('experience',e)} style={s.chip(f.experience.includes(e),primary)}>{e}</button>)}
       </div>
-      <button onClick={()=>setStep(7)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(7)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 7: Qualifications
@@ -252,7 +253,7 @@ function OnboardingWizard({ user, org, onComplete }) {
           </label>
         ))}
       </div>
-      <button onClick={()=>setStep(8)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(8)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 8: Working Preferences
@@ -269,7 +270,7 @@ function OnboardingWizard({ user, org, onComplete }) {
           <button key={g} onClick={()=>set('group_size',g)} style={{ ...s.chip(f.group_size===g,primary), textAlign:'left' }}>{g}</button>
         ))}
       </div>
-      <button onClick={()=>setStep(9)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(9)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 9: Health & Accessibility
@@ -284,7 +285,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <input style={s.inp} value={f.dietary_requirements} onChange={e=>set('dietary_requirements',e.target.value)} placeholder="e.g. Vegetarian, halal..." />
       <label style={s.label}>Languages spoken</label>
       <input style={s.inp} value={f.languages} onChange={e=>set('languages',e.target.value)} placeholder="e.g. English, Urdu, French" />
-      <button onClick={()=>setStep(10)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(10)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 10: Communication
@@ -304,7 +305,7 @@ function OnboardingWizard({ user, org, onComplete }) {
           </label>
         ))}
       </div>
-      <button onClick={()=>setStep(11)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(11)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 11: Agreements
@@ -349,7 +350,7 @@ function OnboardingWizard({ user, org, onComplete }) {
             )}
             <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.55)' }}>{step === 0 ? 'Volunteer Setup' : `Step ${step} of ${TOTAL - 1}`}</span>
           </div>
-          {step > 0 && <motion.button whileTap={{ scale:0.95 }} onClick={()=>setStep(s=>s-1)} style={s.back}>← Back</motion.button>}
+          {step > 0 && <motion.button whileTap={{ scale:0.95 }} onClick={()=>setStep(s=>s-1)} style={s.back}><Icon name="←" /> Back</motion.button>}
           <div style={{ fontSize:20, fontWeight:900, position:'relative', zIndex:1 }}>
             {['Welcome','About You','Emergency Contact','Your Address','Availability','Interests','Experience','Qualifications','Preferences','Health','Communication','Agreements'][step]}
           </div>
@@ -446,7 +447,7 @@ export default function VolunteerPortal() {
     <div style={s.wrap}>
       <AmbientOrbs color="#EF4444" />
       <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35 }} style={{ ...s.card, textAlign:'center' }}>
-        <div style={s.head('#EF4444')}><div style={{ fontSize:32 }}>❌</div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Application Unsuccessful</div></div>
+        <div style={s.head('#EF4444')}><div style={{ fontSize:32 }}><Icon name="❌" /></div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Application Unsuccessful</div></div>
         <div style={s.body}>
           <p style={{ color:'#6B7280', lineHeight:1.6, marginBottom:20 }}>Unfortunately your volunteer application was not approved. Please contact {org?.name} for more information.</p>
           <motion.button whileTap={{ scale:0.97 }} onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('#6B7280'), marginTop:0 }}>Sign out</motion.button>
@@ -630,7 +631,7 @@ function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
               <button key={t.key} onClick={() => setTab(t.key)}
                 style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '9px 4px', border: 'none', background: 'none', cursor: 'pointer' }}>
                 {active && <motion.div layoutId="vpNavPill" style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.1)', borderRadius: 16 }} />}
-                <span style={{ position: 'relative', fontSize: 18 }}>{t.icon}</span>
+                <span style={{ position: 'relative', fontSize: 18 }}><Icon name={t.icon} /></span>
                 <span style={{ position: 'relative', fontSize: 9, fontWeight: 800, color: active ? '#fff' : 'rgba(255,255,255,0.45)' }}>{t.label}</span>
               </button>
             )

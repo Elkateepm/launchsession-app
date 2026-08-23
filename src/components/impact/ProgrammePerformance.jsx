@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { scoreColor, ProgressRing } from './impact_shared'
+import Icon from '../../lib/icons'
 
 const PROGRAMME_ICONS = ['⚽', '🎨', '🎵', '🏀', '🏊', '🧗', '🎭', '📖', '🧑‍🏫', '🏕️']
 const iconFor = (name) => PROGRAMME_ICONS[[...name].reduce((s, c) => s + c.charCodeAt(0), 0) % PROGRAMME_ICONS.length]
@@ -41,13 +42,13 @@ export default function ProgrammePerformance({ children, scores, org, primary })
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ fontSize: 13, fontWeight: 900, marginBottom: 12 }}>🏅 Programme Performance</div>
+      <div style={{ fontSize: 13, fontWeight: 900, marginBottom: 12 }}><Icon name="🏅" /> Programme Performance</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
         {cards.map((c, i) => (
           <motion.div key={c.name} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             style={{ background: '#fff', border: '1px solid #EEF0F2', borderRadius: 16, padding: '16px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ fontSize: 22 }}>{c.icon}</div>
+              <div style={{ fontSize: 22 }}><Icon name={c.icon} /></div>
               <div>
                 <div style={{ fontSize: 13.5, fontWeight: 800 }}>{c.name}</div>
                 <div style={{ fontSize: 11, color: '#9CA3AF' }}>{c.count} young {c.count === 1 ? 'person' : 'people'}</div>

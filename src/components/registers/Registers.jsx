@@ -12,6 +12,7 @@ import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
 import shrinkImage from '../../lib/shrinkImage'
+import Icon from '../../lib/icons'
 
 const DEFAULT_BUBBLES = [
   { key: 'red',    label: 'Red',    color: '#E53935', dark: '#B71C1C' },
@@ -100,7 +101,7 @@ export function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) 
           Add the groups your participants are organised into — like "Under 10s" or "Beginners".
         </div>
 
-        {error && <div style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12 }}>⚠️ {error}</div>}
+        {error && <div style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12 }}><Icon name="⚠️" /> {error}</div>}
 
         {/* Presets */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 20 }}>
@@ -119,7 +120,7 @@ export function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) 
               <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <div style={{ width: 12, height: 12, borderRadius: '50%', background: g.color, flexShrink: 0 }} />
                 <span style={{ flex: 1, fontSize: 14, color: '#fff' }}>{g.label}</span>
-                <button onClick={() => removeGroup(g.id)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                <button onClick={() => removeGroup(g.id)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 16 }}><Icon name="✕" /></button>
               </div>
             ))}
           </div>
@@ -134,7 +135,7 @@ export function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) 
             <label title="Pick a colour" style={{ position: 'relative', width: 54, height: 54, borderRadius: 14, flexShrink: 0, background: newColor, border: '2px solid rgba(255,255,255,0.25)', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)}
                 style={{ position: 'absolute', inset: -4, width: 'calc(100% + 8px)', height: 'calc(100% + 8px)', border: 'none', padding: 0, cursor: 'pointer', opacity: 0 }} />
-              <span style={{ fontSize: 16, pointerEvents: 'none', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>🎨</span>
+              <span style={{ fontSize: 16, pointerEvents: 'none', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}><Icon name="🎨" /></span>
             </label>
           </div>
           <button onClick={addCustom} style={{ width: '100%', padding: '13px 16px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ Add Group</button>
@@ -381,7 +382,7 @@ function InlineChildImport({ org, template, onImported }) {
   if (step === 'preview') return (
     <div>
       {errors.length > 0 && <div style={{ background: '#FFF0F0', border: '1px solid #FFB3B3', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
-        {errors.map((e,i) => <div key={i} style={{ fontSize: 11, color: '#C00' }}>⚠ {e}</div>)}
+        {errors.map((e,i) => <div key={i} style={{ fontSize: 11, color: '#C00' }}><Icon name="⚠" /> {e}</div>)}
       </div>}
       <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8, fontWeight: 600 }}>{rows.length} records ready</div>
       <div style={{ background: '#F9FAFB', borderRadius: 8, border: '1px solid #e5e7eb', maxHeight: 140, overflowY: 'auto', marginBottom: 10 }}>
@@ -394,7 +395,7 @@ function InlineChildImport({ org, template, onImported }) {
         {rows.length > 8 && <div style={{ padding: '5px 10px', fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>+{rows.length - 8} more</div>}
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
-        <button onClick={() => setStep('upload')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: '#6B7280' }}>← Back</button>
+        <button onClick={() => setStep('upload')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: '#6B7280' }}><Icon name="←" /> Back</button>
         <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ flex: 2, padding: '8px', borderRadius: 8, border: 'none', background: errors.length > 0 ? '#9CA3AF' : primary, color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
           {importing ? 'Importing...' : `Import ${rows.filter(r=>r.first_name&&r.last_name).length}`}
         </button>
@@ -407,14 +408,14 @@ function InlineChildImport({ org, template, onImported }) {
       <div onClick={() => inputRef.current?.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }}
         style={{ border: `2px dashed ${primary}50`, borderRadius: 10, padding: '14px 10px', textAlign: 'center', cursor: 'pointer', background: primary + '06', marginBottom: 8 }}>
         <input ref={inputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
-        <div style={{ fontSize: 20, marginBottom: 4 }}>📂</div>
+        <div style={{ fontSize: 20, marginBottom: 4 }}><Icon name="📂" /></div>
         <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>Drop CSV or click to browse</div>
       </div>
       <textarea value={csvText} onChange={e => setCsvText(e.target.value)} placeholder="or paste CSV here..." rows={3} style={fi} />
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: `1px solid ${primary}40`, background: primary + '10', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>⬇ Template</button>
+        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: `1px solid ${primary}40`, background: primary + '10', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
         <button onClick={() => { const { rows: p, errs } = parseCSV(csvText); setRows(p); setErrors(errs); setStep('preview') }} disabled={!csvText.trim()}
-          style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: csvText.trim() ? primary : '#9CA3AF', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Preview →</button>
+          style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: csvText.trim() ? primary : '#9CA3AF', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Preview <Icon name="→" /></button>
       </div>
     </div>
   )
@@ -1040,7 +1041,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                 )}
               </div>
               <button onClick={() => photoInputRef.current?.click()} aria-label="Change profile photo" title="Change profile photo"
-                style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: '50%', background: '#fff', border: '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, boxShadow: '0 2px 6px rgba(15,23,42,0.12)' }}>📷</button>
+                style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: '50%', background: '#fff', border: '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, boxShadow: '0 2px 6px rgba(15,23,42,0.12)' }}><Icon name="📷" /></button>
               <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
             </div>
 
@@ -1058,7 +1059,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
             {hasMedical ? (
               <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, padding: '13px 15px' }}>
                 <div style={{ fontSize: 12.5, fontWeight: 800, color: '#92400E', display: 'flex', alignItems: 'center', gap: 6, marginBottom: medicalTags.length ? 9 : 4 }}>
-                  <span aria-hidden="true">⚠</span> Medical information
+                  <span aria-hidden="true"><Icon name="⚠" /></span> Medical information
                 </div>
                 {medicalTags.length > 0 && (
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: child.medical_notes ? 9 : 0 }}>
@@ -1073,7 +1074,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
               </div>
             ) : (
               <div style={{ fontSize: 12.5, color: '#64748B', display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span style={{ color: '#16A34A' }} aria-hidden="true">✓</span> No recorded medical alerts
+                <span style={{ color: '#16A34A' }} aria-hidden="true"><Icon name="✓" /></span> No recorded medical alerts
               </div>
             )}
           </div>
@@ -1148,7 +1149,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                       {child.school && <InfoRow label="School">{child.school}</InfoRow>}
                       <InfoRow label="Travel home alone" last={!child.sen && !child.has_behaviour_plan}>
                         {child.travel_consent
-                          ? <span style={{ color: '#15803D' }}>✓ Consent given</span>
+                          ? <span style={{ color: '#15803D' }}><Icon name="✓" /> Consent given</span>
                           : <span style={{ color: '#64748B', fontWeight: 500 }}>Not given</span>}
                       </InfoRow>
                       {child.sen && <InfoRow label="SEN needs" last={!child.has_behaviour_plan}>{child.sen}</InfoRow>}
@@ -1219,10 +1220,10 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         {hasSession && (signedInTime || signedOutTime) && (
           <div style={{ borderTop: '1px solid #F1F5F9', background: '#FCFCFD', padding: '13px 24px calc(13px + env(safe-area-inset-bottom))', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700 }}>
             {signedOutTime ? (
-              <><span style={{ color: '#2563EB' }} aria-hidden="true">✓</span><span style={{ color: '#1D4ED8' }}>Signed out at {signedOutTime}</span>
+              <><span style={{ color: '#2563EB' }} aria-hidden="true"><Icon name="✓" /></span><span style={{ color: '#1D4ED8' }}>Signed out at {signedOutTime}</span>
                 <span style={{ color: '#64748B', fontWeight: 500, marginLeft: 'auto' }}>In at {signedInTime}</span></>
             ) : (
-              <><span style={{ color: '#16A34A' }} aria-hidden="true">✓</span><span style={{ color: '#15803D' }}>Signed in at {signedInTime}</span></>
+              <><span style={{ color: '#16A34A' }} aria-hidden="true"><Icon name="✓" /></span><span style={{ color: '#15803D' }}>Signed in at {signedInTime}</span></>
             )}
           </div>
         )}
@@ -1310,10 +1311,10 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
               {bubble?.label || 'Ungrouped'}
             </span>
             {child.allergies && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#FBBF24' : '#D97706', background: dark ? 'rgba(251,191,36,0.14)' : 'linear-gradient(135deg,#FEF3C7,#FDE68A)', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#FBBF24' : '#D97706', background: dark ? 'rgba(251,191,36,0.14)' : 'linear-gradient(135deg,#FEF3C7,#FDE68A)', borderRadius: 6, padding: '1px 6px' }}><Icon name="⚠" /> ALLERGY</span>
             )}
             {child.medical_notes && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#F87171' : '#DC2626', background: dark ? 'rgba(248,113,113,0.14)' : 'linear-gradient(135deg,#FEE2E2,#FECACA)', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#F87171' : '#DC2626', background: dark ? 'rgba(248,113,113,0.14)' : 'linear-gradient(135deg,#FEE2E2,#FECACA)', borderRadius: 6, padding: '1px 6px' }}><Icon name="✚" /> MEDICAL</span>
             )}
           </div>
         </div>
@@ -1664,7 +1665,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       {/* TOAST */}
       {toast && (
         <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', borderRadius: 12, padding: '11px 20px', fontSize: 13, fontWeight: 700, zIndex: 10900, boxShadow: '0 8px 24px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
-          <span style={{ color: '#4ADE80' }}>✓</span> {toast}
+          <span style={{ color: '#4ADE80' }}><Icon name="✓" /></span> {toast}
         </div>
       )}
 
@@ -1785,7 +1786,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                       {a.icon.startsWith('/') ? (
                         <img src={a.icon} alt="" style={{ width: 30, height: 30, objectFit: 'contain', flexShrink: 0 }} />
                       ) : (
-                        <span style={{ fontSize: 22, lineHeight: 1 }}>{a.icon}</span>
+                        <span style={{ fontSize: 22, lineHeight: 1 }}><Icon name={a.icon} /></span>
                       )}
                     </button>
                   )
@@ -1824,7 +1825,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                     width: isMobile ? 32 : 38, height: isMobile ? 32 : 38, borderRadius: 11, flexShrink: 0,
                     background: `linear-gradient(135deg, ${s.color}, ${s.color}CC)`, boxShadow: `0 4px 10px -3px ${s.color}70`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 14 : 16,
-                  }}>{s.icon}</span>
+                  }}><Icon name={s.icon} /></span>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: 900, color: t.text, lineHeight: 1.1 }}>{s.value}</div>
                     <div style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 700, color: s.live ? (darkMode ? '#4ADE80' : '#15803D') : t.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -1833,14 +1834,14 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                     </div>
                   </div>
                   {s.onClick && (
-                    <span style={{ marginLeft: 'auto', fontSize: 12, color: s.color, opacity: 0.6, flexShrink: 0 }}>→</span>
+                    <span style={{ marginLeft: 'auto', fontSize: 12, color: s.color, opacity: 0.6, flexShrink: 0 }}><Icon name="→" /></span>
                   )}
                 </motion.button>
               ))}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 8 : 12 }}>
               <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: t.textMuted }}>🔍</span>
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: t.textMuted }}><Icon name="🔍" /></span>
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -1872,7 +1873,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
         {/* OFFLINE BANNER */}
         {showOfflineBanner && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: darkMode ? 'rgba(217,119,6,0.16)' : '#FFFBEB', borderBottom: `1px solid ${darkMode ? 'rgba(217,119,6,0.3)' : '#FDE68A'}`, flexShrink: 0 }}>
-            <span style={{ fontSize: 13 }}>📡</span>
+            <span style={{ fontSize: 13 }}><Icon name="📡" /></span>
             <span style={{ fontSize: 11.5, fontWeight: 700, color: darkMode ? '#FBBF24' : '#92400E' }}>
               {isOnline ? 'Reconnecting…' : "You're offline"} — showing the last saved register{isOnline ? '' : '. Changes made elsewhere won\'t appear until you\'re back online'}.
             </span>
@@ -1925,7 +1926,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
                 background: `linear-gradient(135deg, ${primary}, ${primary}CC)`,
                 boxShadow: `0 4px 12px -4px ${primary}80`,
-              }}>📋</span>
+              }}><Icon name="📋" /></span>
               <div style={{ flex: 1, minWidth: 180 }}>
                 <div style={{ fontSize: 14.5, fontWeight: 800, color: t.text }}>No session is open</div>
                 <div style={{ fontSize: 12.5, color: t.textSub, marginTop: 2, lineHeight: 1.5 }}>
@@ -1953,11 +1954,11 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             <div style={{ padding: 40, textAlign: 'center', color: t.textMuted, fontWeight: 600 }}>Loading register...</div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: 60, textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>👧</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="👧" /></div>
               <div style={{ fontSize: 16, fontWeight: 800, color: t.text, marginBottom: 6 }}>{children.length === 0 ? 'No children yet' : 'No matches'}</div>
               <div style={{ fontSize: 13, color: t.textMuted, marginBottom: 16 }}>{children.length === 0 ? 'Add or import children to get started' : 'Try a different search or filter'}</div>
               {children.length === 0 && (
-                <button onClick={() => setShowImport(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>📥 Import Children</button>
+                <button onClick={() => setShowImport(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}><Icon name="📥" /> Import Children</button>
               )}
             </div>
           ) : (
@@ -2066,7 +2067,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   const badge = e.currentTarget.querySelector('.tool-icon')
                   if (badge) { badge.style.transform = 'none'; badge.style.background = '#F3F4F6' }
                 }}>
-                <div className="tool-icon" style={{ width: 32, height: 32, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, transition: 'transform 0.18s ease, background 0.18s ease' }}>{t.icon}</div>
+                <div className="tool-icon" style={{ width: 32, height: 32, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, transition: 'transform 0.18s ease, background 0.18s ease' }}><Icon name={t.icon} /></div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{t.label}</div>
                   <div style={{ fontSize: 10, color: '#9CA3AF' }}>{t.sub}</div>
@@ -2117,7 +2118,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
           {/* Safeguarding */}
           <div style={{ padding: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}>🛡 Safeguarding</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}><Icon name="🛡" /> Safeguarding</div>
             <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, padding: '10px 12px' }}>
               {/* Counts children, not alerts, and says which -- this panel and
                   the Medical Alerts stat chip both read "medical alerts" while
@@ -2166,7 +2167,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             ].map(t => (
               <button key={t.label} onClick={t.action}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{t.icon}</div>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name={t.icon} /></div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{t.label}</div>
                   <div style={{ fontSize: 11, color: '#9CA3AF' }}>{t.sub}</div>
@@ -2404,7 +2405,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
             color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>✕</button>
+          }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
             <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</div>
             <div>
@@ -2442,7 +2443,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
                     </div>
                     <div style={{ fontSize: 12, color, fontWeight: 600, marginTop: 3, lineHeight: 1.4 }}>{getFieldText(c)}</div>
                   </div>
-                  <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0, marginTop: 4 }}>→</span>
+                  <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0, marginTop: 4 }}><Icon name="→" /></span>
                 </button>
               ))}
             </div>
@@ -2501,7 +2502,7 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
             color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>✕</button>
+          }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
             <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}><img src="/icons/past-registers-icon.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} /></div>
             <div>
@@ -2533,14 +2534,14 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
                         background: '#fff', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
                         cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
                       }}>
-                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🔒</span>
+                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name="🔒" /></span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 800, color: '#0B1220', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                           <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, marginTop: 1 }}>
                             {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}{s.location ? ` · ${s.location}` : ''}
                           </div>
                         </div>
-                        <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0 }}>→</span>
+                        <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0 }}><Icon name="→" /></span>
                       </button>
                     ))}
                   </div>
@@ -2618,7 +2619,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
             color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>✕</button>
+          }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
             <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🗄️</div>
             <div>
@@ -2664,7 +2665,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
                               {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}
                             </div>
                             {delInfo && (
-                              <div style={{ fontSize: 10.5, color: '#B91C1C', fontWeight: 700, marginTop: 3 }}>⚠ {delInfo}</div>
+                              <div style={{ fontSize: 10.5, color: '#B91C1C', fontWeight: 700, marginTop: 3 }}><Icon name="⚠" /> {delInfo}</div>
                             )}
                           </div>
                           <button onClick={(e) => { e.stopPropagation(); onRestore(s) }} style={{

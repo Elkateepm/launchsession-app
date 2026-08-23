@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 // Public form experience.
 //
@@ -291,7 +292,7 @@ export default function PublicForm() {
         display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh',
         background: '#F7F8FC', flexDirection: 'column', gap: 10, padding: 24, textAlign: 'center',
       }}>
-        <div style={{ fontSize: 34 }}>🔍</div>
+        <div style={{ fontSize: 34 }}><Icon name="🔍" /></div>
         <div style={{ fontSize: 19, fontWeight: 800, color: '#0F172A' }}>This form isn't available</div>
         <div style={{ fontSize: 14.5, color: '#64748B', maxWidth: 340, lineHeight: 1.6 }}>
           It may have closed, or the link may be out of date. If someone sent it to you,
@@ -310,7 +311,7 @@ export default function PublicForm() {
               width: 62, height: 62, borderRadius: '50%', margin: '0 auto 16px',
               background: '#E7F8ED', color: '#04713C',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30,
-            }}>✓</div>
+            }}><Icon name="✓" /></div>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Thank you</div>
             <div style={{ fontSize: 15, color: '#64748B', lineHeight: 1.6, marginBottom: 18 }}>
               {form.confirmation_message || `Your response has been sent to ${org?.name}.`}

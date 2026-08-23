@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import SpaceBackground from './SpaceBackground'
 import RocketIllustration from './RocketIllustration'
 import { isNativeApp } from '../../lib/nativeEnv'
+import Icon from '../../lib/icons'
 
 // Shown wherever an org logo would go, whenever the org hasn't set one yet
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -373,7 +374,7 @@ export default function OrgLookup() {
                   </button>
                 ))}
               </div>
-              <button onClick={() => { setStep('org'); setError(''); setOrgName(''); setSuggestions([]); setHighlight(-1) }} style={{ marginTop: 16, background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer', fontFamily: font }}>← Try a different name</button>
+              <button onClick={() => { setStep('org'); setError(''); setOrgName(''); setSuggestions([]); setHighlight(-1) }} style={{ marginTop: 16, background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer', fontFamily: font }}><Icon name="←" /> Try a different name</button>
             </div>
           )}
         </div>
@@ -395,7 +396,7 @@ export default function OrgLookup() {
                 <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
               </svg>
               <span style={{ flex: 1, textAlign: 'left' }}>Sign in to a different organisation</span>
-              <span style={{ color: 'rgba(255,255,255,0.3)' }}>→</span>
+              <span style={{ color: 'rgba(255,255,255,0.3)' }}><Icon name="→" /></span>
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 20, fontSize: 12.5, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
@@ -458,7 +459,7 @@ export default function OrgLookup() {
           borderRadius: 14, padding: '13px 16px', color: 'rgba(255,255,255,0.55)', fontSize: 13.5, fontWeight: 600,
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: font,
         }}>
-          <span style={{ fontSize: 15 }}>←</span> Back to launchsession.co.uk
+          <span style={{ fontSize: 15 }}><Icon name="←" /></span> Back to launchsession.co.uk
         </button>
         )}
 

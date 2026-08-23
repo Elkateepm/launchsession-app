@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { btnGhost, btnPrimary } from '../volunteers/vh_shared'
 import { EVENT_META, STATUS_LABELS } from './cm_shared'
+import Icon from '../../lib/icons'
 
 function downloadBlob(content, filename, type) {
   const blob = new Blob([content], { type })
@@ -95,10 +96,10 @@ export default function CaseReportModal({ cas, org, staff = [], onClose }) {
         style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 640, maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.35)' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>📄 Case Report — {cas.child_name}</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}><Icon name="📄" /> Case Report — {cas.child_name}</div>
             <div style={{ fontSize: 12, color: '#94A3B8' }}>Chronology &amp; summary, ready to print or export</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: 22, overflowY: 'auto', flex: 1, background: '#F8FAFC' }}>
           {loading ? (
@@ -108,8 +109,8 @@ export default function CaseReportModal({ cas, org, staff = [], onClose }) {
           )}
         </div>
         <div style={{ padding: '14px 22px', borderTop: '1px solid rgba(15,23,42,0.06)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-          <button onClick={download} style={btnGhost}>⬇ Download .txt</button>
-          <button onClick={printView} style={btnPrimary(org?.primary_color || '#7C5CFC')}>🖨 Print</button>
+          <button onClick={download} style={btnGhost}><Icon name="⬇" /> Download .txt</button>
+          <button onClick={printView} style={btnPrimary(org?.primary_color || '#7C5CFC')}><Icon name="🖨" /> Print</button>
         </div>
       </motion.div>
     </motion.div>

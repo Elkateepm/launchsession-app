@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { LS, DAY_MS } from '../fundraisingShared'
 import FundraisingEmptyState from './FundraisingEmptyState'
+import Icon from '../../../lib/icons'
 
 // Real stages tracked by grant_applications.stage (see ApplicationTracker.jsx).
 // The spec's "Ideas / Searching / Application / Submitted / Awarded / Reporting"
@@ -48,7 +49,7 @@ export default function FundingPipelinePanel({ org, onViewPipeline }) {
     <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: LS.text }}>Funding Pipeline</div>
-        {apps.length > 0 && <button onClick={onViewPipeline} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View pipeline →</button>}
+        {apps.length > 0 && <button onClick={onViewPipeline} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View pipeline <Icon name="→" /></button>}
       </div>
 
       {loading ? (

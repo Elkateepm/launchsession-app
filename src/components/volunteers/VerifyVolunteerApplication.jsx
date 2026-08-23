@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 // Landing page for the link in the volunteer confirmation email.
 //
@@ -67,7 +68,7 @@ export default function VerifyVolunteerApplication() {
     return (
       <div style={wrap}>
         <div style={card}>
-          <div style={{ fontSize: 46, marginBottom: 14 }}>🔗</div>
+          <div style={{ fontSize: 46, marginBottom: 14 }}><Icon name="🔗" /></div>
           <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>We couldn&rsquo;t confirm that link</div>
           <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6 }}>{message}</div>
         </div>
@@ -78,7 +79,7 @@ export default function VerifyVolunteerApplication() {
   return (
     <div style={wrap}>
       <div style={card}>
-        <div style={{ fontSize: 46, marginBottom: 14 }}>✅</div>
+        <div style={{ fontSize: 46, marginBottom: 14 }}><Icon name="✅" /></div>
         <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>
           {name ? `Thanks ${name}, you're all set` : "You're all set"}
         </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 const font = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
@@ -95,7 +96,7 @@ export default function ResetPassword() {
 
           {!checking && !validLink && !done && (
             <div style={{ textAlign: 'center', padding: '10px 0' }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
+              <div style={{ fontSize: 40, marginBottom: 16 }}><Icon name="⚠️" /></div>
               <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Link expired or invalid</div>
               <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: 24 }}>
                 This password reset link is no longer valid. Request a new one from the sign in page.
@@ -108,7 +109,7 @@ export default function ResetPassword() {
 
           {!checking && validLink && done && (
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>🚀</div>
+              <div style={{ fontSize: 40, marginBottom: 16 }}><Icon name="🚀" /></div>
               <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Password updated</div>
               <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)' }}>Taking you to your workspace...</div>
             </div>
@@ -147,7 +148,7 @@ export default function ResetPassword() {
                   <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password"
                     style={{ ...inputStyle, border: `1.5px solid ${confirm && confirm !== password ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.12)'}` }} />
                   {confirm && confirm !== password && <div style={{ fontSize: 11, color: '#FCA5A5', marginTop: 6, fontWeight: 600 }}>Passwords don't match</div>}
-                  {confirm && confirm === password && <div style={{ fontSize: 11, color: '#4ADE80', marginTop: 6, fontWeight: 600 }}>✓ Passwords match</div>}
+                  {confirm && confirm === password && <div style={{ fontSize: 11, color: '#4ADE80', marginTop: 6, fontWeight: 600 }}><Icon name="✓" /> Passwords match</div>}
                 </div>
 
                 <button type="submit" disabled={saving || !password || !confirm} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving || !password || !confirm ? 'default' : 'pointer', opacity: saving || !password || !confirm ? 0.6 : 1, fontFamily: font }}>

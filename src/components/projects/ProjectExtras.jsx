@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
 
 const PURPLE = '#6D5DF6'
 const card = (extra = {}) => ({
@@ -160,7 +161,7 @@ export function ProjectReflectionModal({ org, session, project, summary, existin
             <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Project reflection</div>
             <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{project.name}</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
@@ -279,7 +280,7 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
       }}>
         <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Add young people</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name…" autoFocus
@@ -374,7 +375,7 @@ export function AddTeamModal({ org, projectId, existingUserIds, onClose, onAdded
       }}>
         <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Add team member</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name…" autoFocus
@@ -457,7 +458,7 @@ export function EditProjectModal({ project, onClose, onSaved }) {
       }}>
         <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Edit project</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
           <Field label="Project name">
@@ -556,7 +557,7 @@ export function DuplicateProjectModal({ project, onClose, onDuplicated }) {
       }}>
         <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Duplicate project</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
@@ -577,7 +578,7 @@ export function DuplicateProjectModal({ project, onClose, onDuplicated }) {
           <label style={lbl}>What to copy</label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 12px', borderRadius: 10, background: '#F8FAFC', fontSize: 13, fontWeight: 600, color: '#334155' }}>
-              <span style={{ color: '#16A34A' }}>✓</span> Project structure, defaults and settings
+              <span style={{ color: '#16A34A' }}><Icon name="✓" /></span> Project structure, defaults and settings
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#334155' }}>
               <input type="checkbox" checked={copyTeam} onChange={e => setCopyTeam(e.target.checked)} /> Project team

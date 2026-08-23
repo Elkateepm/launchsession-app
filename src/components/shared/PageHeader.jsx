@@ -1,5 +1,6 @@
 import React from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import Icon from '../../lib/icons'
 
 /**
  * PageHeader — premium animated header for every module page
@@ -80,7 +81,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                     : { border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -1px 0 rgba(0,0,0,0.12) inset, 0 6px 16px -8px ${primary}55` }
                   )
                 }}>
-                  {a.icon && <span>{a.icon}</span>}
+                  {a.icon && <span><Icon name={a.icon} /></span>}
                   {a.label}
                 </button>
               ))}
@@ -111,7 +112,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                       width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, flexShrink: 0,
                       background: `linear-gradient(135deg, ${c}, ${c}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: isMobile ? 12 : 13.5, boxShadow: `0 3px 8px -3px ${c}70, inset 0 1px 0 rgba(255,255,255,0.35)`,
-                    }}>{s.icon}</span>
+                    }}><Icon name={s.icon} /></span>
                   )}
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 900, color: c, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>

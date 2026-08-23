@@ -11,6 +11,7 @@ import {
   initials, summarise,
 } from './paymentsShared'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
 
 const TABS = [
   { key: 'overview', label: 'Overview', shortLabel: 'Overview' },
@@ -199,11 +200,11 @@ function PickChildThenPay({ children, onClose, onPick, isMobile }) {
             <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Who's paying?</div>
             <div style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600, marginTop: 2 }}>Select a child to record their payment</div>
           </div>
-          <button onClick={onClose} style={{ background: '#F1F5F9', border: 'none', width: 30, height: 30, borderRadius: '50%', fontSize: 15, color: '#64748B', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <button onClick={onClose} style={{ background: '#F1F5F9', border: 'none', width: 30, height: 30, borderRadius: '50%', fontSize: 15, color: '#64748B', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: '14px 20px 10px' }}>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8', pointerEvents: 'none' }}>🔍</span>
+            <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8', pointerEvents: 'none' }}><Icon name="🔍" /></span>
             <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search children…" autoFocus
               style={{ ...inputStyle, padding: '11px 14px 11px 36px', borderRadius: 12, fontSize: 14.5 }} />
           </div>
@@ -211,7 +212,7 @@ function PickChildThenPay({ children, onClose, onPick, isMobile }) {
         <div style={{ flex: 1, overflowY: 'auto', padding: '4px 16px', paddingBottom: `calc(${isMobile ? '96px' : '16px'} + env(safe-area-inset-bottom, 0px))` }}>
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '36px 20px', color: '#94A3B8' }}>
-              <div style={{ fontSize: 26, marginBottom: 8 }}>🔍</div>
+              <div style={{ fontSize: 26, marginBottom: 8 }}><Icon name="🔍" /></div>
               <div style={{ fontSize: 13, fontWeight: 700 }}>No children match "{q}"</div>
             </div>
           ) : filtered.slice(0, 100).map(c => (
@@ -273,7 +274,7 @@ function OverviewTab({ charges, summary, childMap, isMobile, onRecordPayment, on
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
         {cards.map(c => (
           <div key={c.label} style={card({ padding: 16 })}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: c.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}>{c.icon}</div>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: c.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={c.icon} /></div>
             <div style={{ fontSize: isMobile ? 18 : 21, fontWeight: 900, color: '#0F172A' }}>{fmtMoney(c.value)}</div>
             <div style={{ fontSize: 11.5, color: '#64748B', fontWeight: 600, marginTop: 2 }}>{c.label}</div>
           </div>
@@ -305,7 +306,7 @@ function OverviewTab({ charges, summary, childMap, isMobile, onRecordPayment, on
         </div>
 
         {outstanding.length === 0 ? (
-          <div style={{ padding: '30px 10px', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>Nothing outstanding matches those filters. 🎉</div>
+          <div style={{ padding: '30px 10px', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>Nothing outstanding matches those filters. <Icon name="🎉" /></div>
         ) : isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {outstanding.map(c => <ChargeCardMobile key={c.id} charge={c} child={childMap[c.child_id]} onRecordPayment={() => onRecordPayment(c)} />)}
@@ -321,7 +322,7 @@ function OverviewTab({ charges, summary, childMap, isMobile, onRecordPayment, on
 function EmptyState({ onCreateCharge }) {
   return (
     <div style={{ ...card({ padding: 40 }), textAlign: 'center', maxWidth: 460, margin: '40px auto' }}>
-      <div style={{ fontSize: 40, marginBottom: 12 }}>💳</div>
+      <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="💳" /></div>
       <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No payments yet</div>
       <div style={{ fontSize: 13, color: '#64748B', marginBottom: 20, lineHeight: 1.6 }}>Create a charge to start tracking payments for your children.</div>
       <button onClick={onCreateCharge} style={{ ...btnPrimary(PB.blue), margin: '0 auto' }}>+ Create first charge</button>
@@ -535,7 +536,7 @@ function TransactionsTab({ transactions, charges, childMap, staffMap, isMobile, 
   if (transactions.length === 0) {
     return (
       <div style={{ ...card({ padding: 40 }), textAlign: 'center', maxWidth: 460, margin: '40px auto' }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>💰</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="💰" /></div>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No payments recorded yet</div>
         <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.6 }}>Payments recorded against charges will show up here.</div>
       </div>
@@ -681,7 +682,7 @@ function ReconciliationTab({ transactions, childMap, staffMap, isMobile, onRecon
   if (cashTx.length === 0) {
     return (
       <div style={{ ...card({ padding: 40 }), textAlign: 'center', maxWidth: 460, margin: '40px auto' }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>🧾</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="🧾" /></div>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No cash payments yet</div>
         <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.6 }}>Cash payments will show up here for reconciliation once recorded.</div>
       </div>
@@ -715,7 +716,7 @@ function ReconciliationTab({ transactions, childMap, staffMap, isMobile, onRecon
                   </div>
                 </div>
                 {t.reconciled ? (
-                  <span style={chipStyle('paid', 'sm')}>✓ Reconciled</span>
+                  <span style={chipStyle('paid', 'sm')}><Icon name="✓" /> Reconciled</span>
                 ) : (
                   <>
                     <span style={chipStyle('unpaid', 'sm')}>Awaiting reconciliation</span>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 // Reached only via the invite email link. Supabase's invite flow establishes
 // a session automatically from the access token in the URL hash before this
@@ -112,7 +113,7 @@ export default function VolunteerAcceptInvite() {
   if (error) return (
     <div style={{ minHeight: '100vh', background: '#0D1B2A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 440, padding: '36px 28px', textAlign: 'center', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="⚠️" /></div>
         <div style={{ fontSize: 18, fontWeight: 900, color: '#111827', marginBottom: 8 }}>Invite link problem</div>
         <div style={{ fontSize: 14, color: '#6B7280', lineHeight: 1.6 }}>{error}</div>
       </div>
@@ -125,7 +126,7 @@ export default function VolunteerAcceptInvite() {
 
         {done ? (
           <div style={{ padding: '48px 28px', textAlign: 'center' }}>
-            <div style={{ fontSize: 56, marginBottom: 12 }}>🎉</div>
+            <div style={{ fontSize: 56, marginBottom: 12 }}><Icon name="🎉" /></div>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#111827', marginBottom: 6 }}>You're all set!</div>
             <div style={{ fontSize: 14, color: '#6B7280' }}>Taking you to {org?.name}'s volunteer portal...</div>
           </div>
@@ -204,7 +205,7 @@ export default function VolunteerAcceptInvite() {
                 style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${confirm && confirm !== password ? '#FCA5A5' : '#E5E7EB'}`, fontSize: 15, outline: 'none', marginBottom: 6, fontFamily: 'Inter,sans-serif' }}
               />
               {confirm && confirm !== password && <div style={{ fontSize: 11, color: '#DC2626', marginBottom: 14, fontWeight: 600 }}>Passwords don't match</div>}
-              {confirm && confirm === password && <div style={{ fontSize: 11, color: '#16A34A', marginBottom: 14, fontWeight: 600 }}>✓ Passwords match</div>}
+              {confirm && confirm === password && <div style={{ fontSize: 11, color: '#16A34A', marginBottom: 14, fontWeight: 600 }}><Icon name="✓" /> Passwords match</div>}
 
               <button
                 type="submit"

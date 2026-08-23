@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { categoryMeta, statusMeta } from '../../lib/resourceHelpers'
+import Icon from '../../lib/icons'
 
 export default function InventoryTable({ org, resources, staff, authUserId, onChanged, onOpen }) {
   const [selected, setSelected] = useState([])
@@ -117,8 +118,8 @@ export default function InventoryTable({ org, resources, staff, authUserId, onCh
                     {adjustingId === r.id ? (
                       <div style={{ display: 'flex', gap: 4 }}>
                         <input type="number" value={adjustQty} onChange={e => setAdjustQty(e.target.value)} style={{ width: 50, padding: 3, borderRadius: 6, border: '1px solid #E5E7EB', fontSize: 11 }} autoFocus />
-                        <button onClick={() => handleAdjust(r)} style={{ fontSize: 10, color: '#16A34A', background: 'none', border: 'none', cursor: 'pointer' }}>✓</button>
-                        <button onClick={() => setAdjustingId(null)} style={{ fontSize: 10, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                        <button onClick={() => handleAdjust(r)} style={{ fontSize: 10, color: '#16A34A', background: 'none', border: 'none', cursor: 'pointer' }}><Icon name="✓" /></button>
+                        <button onClick={() => setAdjustingId(null)} style={{ fontSize: 10, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer' }}><Icon name="✕" /></button>
                       </div>
                     ) : (
                       <button onClick={() => { setAdjustingId(r.id); setAdjustQty(String(r.quantity_available)) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, color: '#111827', padding: 0 }}>{r.quantity_available}</button>

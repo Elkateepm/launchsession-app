@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { RatingBadge, RAStatusChip } from './ra_shared'
 import { safetyStateOf, SAFETY_META } from './ra_safety'
 import { DynamicUpdateDrawer, EmergencyView } from './RALiveSafety'
+import Icon from '../../lib/icons'
 
 // Embeds inside the Session Planner form (Details step). Two modes:
 //  - sessionId present (editing an existing session): reads/writes risk_assessment_sessions directly.
@@ -112,7 +113,7 @@ export default function RASessionCard({ sessionId, sessionTitle, org, session: a
         ) : linked ? (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span style={{ fontSize: 16 }}>🛡️</span>
+              <span style={{ fontSize: 16 }}><Icon name="🛡️" /></span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{linked.name}</div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 2, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -135,11 +136,11 @@ export default function RASessionCard({ sessionId, sessionTitle, org, session: a
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button onClick={() => onNavigate && onNavigate('risk_assessments')} style={{ fontSize: 11.5, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View Assessment →</button>
+              <button onClick={() => onNavigate && onNavigate('risk_assessments')} style={{ fontSize: 11.5, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View Assessment <Icon name="→" /></button>
               {sessionId && full && (
                 <>
                   <button onClick={() => setDynamicOpen(true)} style={{ fontSize: 11.5, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Dynamic Update</button>
-                  <button onClick={() => setEmergencyOpen(true)} style={{ fontSize: 11.5, fontWeight: 700, color: '#B42318', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>🚨 Emergency</button>
+                  <button onClick={() => setEmergencyOpen(true)} style={{ fontSize: 11.5, fontWeight: 700, color: '#B42318', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Icon name="🚨" /> Emergency</button>
                 </>
               )}
               <button onClick={detach} style={{ fontSize: 11.5, fontWeight: 700, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: 'auto' }}>Detach</button>
@@ -148,7 +149,7 @@ export default function RASessionCard({ sessionId, sessionTitle, org, session: a
         ) : (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 16 }}>⚠️</span>
+              <span style={{ fontSize: 16 }}><Icon name="⚠️" /></span>
               <div style={{ fontSize: 12.5, fontWeight: 700, color: '#9A3412' }}>No risk assessment attached to this session</div>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -186,7 +187,7 @@ export default function RASessionCard({ sessionId, sessionTitle, org, session: a
                   <div style={{ textAlign: 'center', padding: 10, color: '#94A3B8', fontSize: 12 }}>No assessments found.</div>
                 ) : filteredOptions.map(a => (
                   <button key={a.id} onClick={() => attach(a)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 9px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)', background: '#fff', cursor: 'pointer', textAlign: 'left' }}>
-                    <span style={{ fontSize: 13 }}>🛡️</span>
+                    <span style={{ fontSize: 13 }}><Icon name="🛡️" /></span>
                     <span style={{ flex: 1, fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</span>
                     {a.risk_rating && <RatingBadge rating={a.risk_rating} size="sm" />}
                   </button>

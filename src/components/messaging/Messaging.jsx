@@ -4,6 +4,7 @@ import { format, formatDistanceToNow } from 'date-fns'
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { notifyEvent } from '../../services/notifyEvent'
+import Icon from '../../lib/icons'
 
 // Maps a thread's audience key to the user_profiles role(s) who should be
 // notified. Event-scoped threads (event_staff/event_volunteers) fall back to
@@ -88,11 +89,11 @@ function ThreadView({ thread, org, session: authSession, onBack }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '70vh', minHeight: 400 }}>
       {/* Thread header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid #e5e7eb' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 800, fontSize: 13, cursor: 'pointer', padding: 0 }}>← Back</button>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 800, fontSize: 13, cursor: 'pointer', padding: 0 }}><Icon name="←" /> Back</button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 16, fontWeight: 900 }}>{thread.subject}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-            <span style={{ fontSize: 11 }}>{audienceCfg.icon}</span>
+            <span style={{ fontSize: 11 }}><Icon name={audienceCfg.icon} /></span>
             <span style={{ fontSize: 11, color: audienceCfg.color, fontWeight: 700 }}>{audienceCfg.label}</span>
             <span style={{ fontSize: 11, color: '#9CA3AF' }}>· {messages.length} message{messages.length !== 1 ? 's' : ''}</span>
           </div>
@@ -105,7 +106,7 @@ function ThreadView({ thread, org, session: authSession, onBack }) {
           <div style={{ textAlign: 'center', color: '#9CA3AF', padding: 30 }}>Loading messages...</div>
         ) : messages.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 40 }}>
-            <div style={{ fontSize: 36, marginBottom: 10 }}>💬</div>
+            <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="💬" /></div>
             <div style={{ fontWeight: 700, color: '#374151' }}>Start the conversation</div>
             <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Be the first to post in this thread</div>
           </div>
@@ -206,7 +207,7 @@ export default function Messaging({ org, session: authSession, initialThreadId }
       <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 900 }}>💬 Team Messaging</div>
+            <div style={{ fontSize: 22, fontWeight: 900 }}><Icon name="💬" /> Team Messaging</div>
             <div style={{ fontSize: 13, color: '#6B7280', marginTop: 3 }}>{threads.length} thread{threads.length !== 1 ? 's' : ''} · {totalMessages} messages total</div>
           </div>
           <button onClick={() => setShowNew(true)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
@@ -226,7 +227,7 @@ export default function Messaging({ org, session: authSession, initialThreadId }
       {/* New thread form */}
       {showNew && (
         <div style={{ background: '#F0F9FF', border: '1.5px solid #BAE6FD', borderRadius: 16, padding: 20, marginBottom: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>💬 Start a New Thread</div>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}><Icon name="💬" /> Start a New Thread</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, marginBottom: 12 }}>
             <input value={newThread.subject} onChange={e => setNewThread(n => ({ ...n, subject: e.target.value }))} placeholder="Thread subject e.g. 'Schedule change for Tuesday'" style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }} onKeyDown={e => e.key === 'Enter' && createThread()} />
             <select value={newThread.audience} onChange={e => setNewThread(n => ({ ...n, audience: e.target.value }))} style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit' }}>
@@ -254,7 +255,7 @@ export default function Messaging({ org, session: authSession, initialThreadId }
         <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>Loading messages...</div>
       ) : filtered.length === 0 ? (
         <div style={{ padding: 60, textAlign: 'center', background: '#F9FAFB', borderRadius: 16, border: '1.5px dashed #e5e7eb' }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>💬</div>
+          <div style={{ fontSize: 48, marginBottom: 12 }}><Icon name="💬" /></div>
           <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>No threads yet</div>
           <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 20 }}>Start a conversation with your team</div>
           <button onClick={() => setShowNew(true)} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>+ Start First Thread</button>
@@ -269,7 +270,7 @@ export default function Messaging({ org, session: authSession, initialThreadId }
                 onMouseEnter={e => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 4px 12px ${primary}15` }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = 'none' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: aud.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
-                  {aud.icon}
+                  <Icon name={aud.icon} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>{thread.subject}</div>
@@ -284,7 +285,7 @@ export default function Messaging({ org, session: authSession, initialThreadId }
                     <span>Updated {formatDistanceToNow(new Date(thread.updated_at), { addSuffix: true })}</span>
                   </div>
                 </div>
-                <div style={{ fontSize: 13, color: '#9CA3AF', flexShrink: 0 }}>→</div>
+                <div style={{ fontSize: 13, color: '#9CA3AF', flexShrink: 0 }}><Icon name="→" /></div>
               </div>
             )
           })}

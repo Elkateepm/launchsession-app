@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { notifyEvent } from '../../services/notifyEvent'
+import Icon from '../../lib/icons'
 
 const iStyle = { width: '100%', padding: '11px 13px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface2)', color: 'var(--text)', boxSizing: 'border-box' }
 const taStyle = { ...iStyle, resize: 'vertical', minHeight: 90, lineHeight: 1.5 }
@@ -142,7 +143,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
 
   if (step === 'done') return (
     <div style={{ padding: '40px 24px', textAlign: 'center' }}>
-      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 30 }}>🛡️</div>
+      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 30 }}><Icon name="🛡️" /></div>
       <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Concern Submitted</div>
       <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
         Your concern has been recorded and will be reviewed by the DSL. Do not discuss this with others.
@@ -154,7 +155,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
   if (step === 'warning') return (
     <div style={{ padding: '24px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🚨</div>
+        <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}><Icon name="🚨" /></div>
         <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)' }}>Cause for Concern</div>
       </div>
       <div style={{ background: 'rgba(220,38,38,0.06)', borderRadius: 12, padding: 16, border: '1.5px solid rgba(220,38,38,0.2)', marginBottom: 24 }}>
@@ -176,7 +177,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
   return (
     <div style={{ padding: '20px', overflowY: 'auto', maxHeight: '80vh' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🚨</div>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}><Icon name="🚨" /></div>
         <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Cause for Concern Form</div>
       </div>
 
@@ -203,7 +204,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
                       {c.group_name && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{c.group_name}</div>}
                     </div>
                     {(c.allergies || c.has_epipen || c.has_asthma || c.has_diabetes || c.has_behaviour_plan) && (
-                      <span title="Has medical or behaviour flags" style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999, flexShrink: 0 }}>⚠️ Flags</span>
+                      <span title="Has medical or behaviour flags" style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999, flexShrink: 0 }}><Icon name="⚠️" /> Flags</span>
                     )}
                   </button>
                 ))}
@@ -235,7 +236,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
         <label style={lStyle}>5. Attach to a session (optional)</label>
         {selectedSession ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(37,99,235,0.06)', borderRadius: 10, padding: '10px 13px', border: '1.5px solid rgba(37,99,235,0.2)' }}>
-            <span style={{ fontSize: 16 }}>📅</span>
+            <span style={{ fontSize: 16 }}><Icon name="📅" /></span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{selectedSession.title}</div>
               <div style={{ fontSize: 11, color: 'var(--text3)' }}>{selectedSession.session_date}</div>

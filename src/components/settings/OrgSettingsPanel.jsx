@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useOrgSettings } from '../../hooks/useOrgSettings';
+import Icon from '../../lib/icons'
 
 const PRESET_GROUPS = [
   { label: 'Under 7s', color: '#4F6EF7' },
@@ -187,7 +188,7 @@ export default function OrgSettingsPanel({ orgId }) {
                     />
                   ))}
                 </div>
-                <button onClick={() => removeGroup(group.id)} style={styles.removeBtn}>✕</button>
+                <button onClick={() => removeGroup(group.id)} style={styles.removeBtn}><Icon name="✕" /></button>
               </div>
             ))}
           </div>
@@ -254,13 +255,13 @@ export default function OrgSettingsPanel({ orgId }) {
             )}
             {workingLocations.map(loc => (
               <div key={loc.id} style={styles.row}>
-                <span style={styles.locationIcon}>📍</span>
+                <span style={styles.locationIcon}><Icon name="📍" /></span>
                 <input
                   value={loc.label}
                   onChange={e => updateLocationLabel(loc.id, e.target.value)}
                   style={styles.labelInput}
                 />
-                <button onClick={() => removeLocation(loc.id)} style={styles.removeBtn}>✕</button>
+                <button onClick={() => removeLocation(loc.id)} style={styles.removeBtn}><Icon name="✕" /></button>
               </div>
             ))}
           </div>

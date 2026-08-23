@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 import { fmtDate, fmtTime } from '../../lib/resourceHelpers'
+import Icon from '../../lib/icons'
 
 export default function InventoryAlerts({ resources, checkouts, bookings, onViewStock, onViewBooking, onViewAll }) {
   const alerts = useMemo(() => {
@@ -40,7 +41,7 @@ export default function InventoryAlerts({ resources, checkouts, bookings, onView
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {alerts.map(a => (
             <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#F8FAFC', borderRadius: 10 }}>
-              <div style={{ fontSize: 16, flexShrink: 0 }}>{a.icon}</div>
+              <div style={{ fontSize: 16, flexShrink: 0 }}><Icon name={a.icon} /></div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 12.5, fontWeight: 700, color: '#111827' }}>{a.text}</div>
                 <div style={{ fontSize: 11, color: '#6B7280' }}>{a.sub}</div>

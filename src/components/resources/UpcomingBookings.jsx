@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { fmtDate, fmtTime, BOOKING_STATUS_CONFIG } from '../../lib/resourceHelpers'
 import ResourceEmptyState from './ResourceEmptyState'
+import Icon from '../../lib/icons'
 
 export default function UpcomingBookings({ bookings, resources, sessions, staff, onChanged, onViewCalendar, onViewAll }) {
   const [menuOpenId, setMenuOpenId] = useState(null)
@@ -44,7 +45,7 @@ export default function UpcomingBookings({ bookings, resources, sessions, staff,
     <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 18, padding: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#111827' }}>Upcoming Bookings <span style={{ fontWeight: 500, color: '#9CA3AF', fontSize: 12 }}>(This Week)</span></div>
-        <button onClick={onViewCalendar} style={{ background: 'none', border: '1px solid #E5E7EB', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }}>📅 View calendar</button>
+        <button onClick={onViewCalendar} style={{ background: 'none', border: '1px solid #E5E7EB', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }}><Icon name="📅" /> View calendar</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -80,7 +81,7 @@ export default function UpcomingBookings({ bookings, resources, sessions, staff,
         })}
       </div>
 
-      <button onClick={onViewAll} style={{ width: '100%', marginTop: 14, background: 'none', border: 'none', color: '#7C3AED', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>View all bookings →</button>
+      <button onClick={onViewAll} style={{ width: '100%', marginTop: 14, background: 'none', border: 'none', color: '#7C3AED', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>View all bookings <Icon name="→" /></button>
     </div>
   )
 }

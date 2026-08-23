@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { OUTCOME_AREAS, scoreColor, scoreEmoji, scoreLabel } from './impact_shared'
+import Icon from '../../lib/icons'
 
 const STEPS = ['Young Person', 'Outcome Area', 'Rate', 'Comments', 'Goal', 'Review']
 
@@ -64,8 +65,8 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
         {/* Header + progress */}
         <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #F3F4F6' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 16, fontWeight: 900 }}>📊 Record Outcome</div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#9CA3AF' }}>✕</button>
+            <div style={{ fontSize: 16, fontWeight: 900 }}><Icon name="📊" /> Record Outcome</div>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#9CA3AF' }}><Icon name="✕" /></button>
           </div>
           <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
             {STEPS.map((s, i) => (
@@ -93,7 +94,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                           {c.first_name?.[0]}{c.last_name?.[0]}
                         </div>
                         <div style={{ fontSize: 13.5, fontWeight: 700 }}>{c.first_name} {c.last_name}</div>
-                        {form.child?.id === c.id && <div style={{ marginLeft: 'auto', color: primary, fontWeight: 900 }}>✓</div>}
+                        {form.child?.id === c.id && <div style={{ marginLeft: 'auto', color: primary, fontWeight: 900 }}><Icon name="✓" /></div>}
                       </div>
                     ))}
                     {filteredChildren.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: '#9CA3AF', fontSize: 13 }}>No young people found</div>}
@@ -106,7 +107,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                   {OUTCOME_AREAS.map(a => (
                     <div key={a.key} onClick={() => set({ area: a.key })}
                       style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', border: `1.5px solid ${form.area === a.key ? a.color : '#F3F4F6'}`, background: form.area === a.key ? a.color + '12' : '#fff' }}>
-                      <span style={{ fontSize: 17 }}>{a.icon}</span>
+                      <span style={{ fontSize: 17 }}><Icon name={a.icon} /></span>
                       <span style={{ fontSize: 12.5, fontWeight: 700 }}>{a.label}</span>
                     </div>
                   ))}
@@ -163,7 +164,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                       <span style={{ fontWeight: 900, color: scoreColor(form.score) }}>{form.score}/10</span>
                     </div>
                     {form.notes && <div style={{ fontSize: 12.5, color: '#6B7280', marginTop: 8, lineHeight: 1.5, borderTop: '1px solid #E5E7EB', paddingTop: 8 }}>{form.notes}</div>}
-                    {form.addGoal && form.goalTitle && <div style={{ fontSize: 12.5, color: primary, marginTop: 8, fontWeight: 700 }}>🎯 Goal: {form.goalTitle}</div>}
+                    {form.addGoal && form.goalTitle && <div style={{ fontSize: 12.5, color: primary, marginTop: 8, fontWeight: 700 }}><Icon name="🎯" /> Goal: {form.goalTitle}</div>}
                   </div>
                 </div>
               )}
@@ -175,11 +176,11 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
         {/* Footer nav */}
         <div style={{ padding: '16px 24px', borderTop: '1px solid #F3F4F6', display: 'flex', gap: 10 }}>
           {step > 0 && (
-            <button onClick={() => setStep(s => s - 1)} style={{ padding: '10px 18px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>← Back</button>
+            <button onClick={() => setStep(s => s - 1)} style={{ padding: '10px 18px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}><Icon name="←" /> Back</button>
           )}
           <div style={{ flex: 1 }} />
           {step < STEPS.length - 1 ? (
-            <button disabled={!canNext[step]} onClick={() => setStep(s => s + 1)} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: canNext[step] ? primary : '#E5E7EB', color: '#fff', fontWeight: 800, cursor: canNext[step] ? 'pointer' : 'not-allowed', fontSize: 13 }}>Continue →</button>
+            <button disabled={!canNext[step]} onClick={() => setStep(s => s + 1)} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: canNext[step] ? primary : '#E5E7EB', color: '#fff', fontWeight: 800, cursor: canNext[step] ? 'pointer' : 'not-allowed', fontSize: 13 }}>Continue <Icon name="→" /></button>
           ) : (
             <button disabled={saving} onClick={save} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>{saving ? 'Saving...' : '📊 Save Outcome'}</button>
           )}
