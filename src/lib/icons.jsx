@@ -19,7 +19,7 @@ import {
   Camera, Image as ImageIcon, Images,
   Download, Upload, Printer, Share2,
   GraduationCap, Sprout, Dumbbell, CloudRain, Sun,
-  Smile, Meh, Frown, Hand, Lightbulb, Info, CircleHelp, LogOut, LogIn,
+  Smile, Meh, Hand, Lightbulb, Info, CircleHelp, LogOut, LogIn,
 } from 'lucide-react'
 
 // One place that decides what an icon means, so a glyph is not redefined in

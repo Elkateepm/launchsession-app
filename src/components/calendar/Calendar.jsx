@@ -138,7 +138,8 @@ function ConfettiBurst({ color, secondary }) {
 }
 
 function PlanPickerModal({ date, org, onClose, onNavigate }) {
-  const primary = org?.primary_color || '#1B9AAA'
+  // The brand colour is read from CSS variables here now, so this no longer
+  // needs the org's colour in JS.
   const activeModules = allowedModules(org)
   const hasModule = (key) => activeModules.includes(key)
   const dateLabel = date ? format(parseISO(date), 'EEEE, d MMMM yyyy') : ''
