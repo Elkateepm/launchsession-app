@@ -3787,7 +3787,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 10px' }}>
                             {s.start_time && (
                               <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <span>⏰</span> {s.start_time.slice(0, 5)}{s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}
+                                <span><Icon name="⏰" /></span> {s.start_time.slice(0, 5)}{s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}
                               </span>
                             )}
                             {s.location && (
@@ -4204,6 +4204,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {upcomingSessions.map((s, idx) => {
+                  const { series, part } = splitSeries(s.title)
+                  const prev = idx > 0 ? upcomingSessions[idx - 1] : null
+                  const sameSeriesAsPrev = !!series && !!prev && splitSeries(prev.title).series === series
                   const isToday = s.session_date === today
                   const now = new Date()
                   const startDateTime = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
@@ -4222,8 +4225,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   const tc = typeColors[s.session_type] || { bg: primary + '10', accent: primary, icon: '📅' }
                   return (
                     <div key={s.id}
-                      style={{ width: '100%', background: isToday ? `linear-gradient(135deg, ${primary}, var(--org-a85))` : '#fff', border: isToday ? 'none' : '1.5px solid #F1F5F9', borderRadius: 18, padding: '18px 18px', cursor: 'pointer', textAlign: 'left', boxShadow: isToday ? `0 8px 32px var(--org-a20)` : '0 2px 12px rgba(0,0,0,0.06)', transition: 'all 0.2s', position: 'relative', overflow: 'hidden' }}
-                      onClick={() => go('planner')}
+                      style={{ width: '100%', background: isToday ? `linear-gradient(135deg, ${primary}, var(--org-a85))` : '#fff', border: isToday ? 'none' : '1.5px solid #F1F5F9', borderRadius: 18, padding: sameSeriesAsPrev && !isToday ? '13px 18px' : '18px 18px', cursor: 'pointer', textAlign: 'left', boxShadow: isToday ? `0 8px 32px var(--org-a20)` : '0 2px 12px rgba(0,0,0,0.06)', transition: 'all 0.2s', position: 'relative', overflow: 'hidden',
+                        // A continuation of the run it belongs to: indented,
+                        // with the series colour running down the edge, so five
+                        // days of one residential read as one thing.
+                        ...(sameSeriesAsPrev && !isToday ? { marginLeft: 22, marginTop: -6, borderLeft: `3px solid var(--org-a35)`, borderTopLeftRadius: 6, borderBottomLeftRadius: 6 } : null) }}
+                      // Was go('planner') for every card, so clicking the fourth
+                      // session in the list opened the same screen as clicking
+                      // the first and told you nothing about the one you picked.
+                      onClick={() => setInfoModalSession(s)}
                       onMouseEnter={e => { if (!isToday) { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 4px 20px var(--org-a10)`; e.currentTarget.style.transform = 'translateY(-2px)' }}}
                       onMouseLeave={e => { if (!isToday) { e.currentTarget.style.borderColor = '#F1F5F9'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; e.currentTarget.style.transform = 'none' }}}>
 
@@ -4232,8 +4242,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
                       {/* Calendar jump icon */}
                       <button onClick={e => { e.stopPropagation(); go('calendar') }} title="View in Calendar"
-                        style={{ position: 'absolute', top: 14, right: 14, width: 30, height: 30, borderRadius: 9, border: 'none', background: isToday ? 'rgba(255,255,255,0.2)' : '#F8FAFC', color: isToday ? '#fff' : '#6B7280', fontSize: 13, cursor: 'pointer', zIndex: 2 }}>
-                        📆
+                        style={{ position: 'absolute', top: 14, right: 14, width: 30, height: 30, borderRadius: 9, border: 'none', background: isToday ? 'rgba(255,255,255,0.2)' : '#F8FAFC', color: isToday ? '#fff' : '#6B7280', fontSize: 13, cursor: 'pointer', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon name="🗓️" size={15} />
                       </button>
 
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
@@ -4244,7 +4254,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
                         <div style={{ flex: 1, minWidth: 0, paddingRight: 30 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                            <div style={{ fontSize: 15, fontWeight: 900, color: isToday ? '#fff' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                            <div style={{ fontSize: 15, fontWeight: 900, color: isToday ? '#fff' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {sameSeriesAsPrev ? part : s.title}
+                            </div>
                             {isLiveNow && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', animation: 'pulse-live 1.5s infinite' }} />LIVE NOW</span>}
                             {isToday && hasEnded && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>{s.closed_at ? 'Closed' : 'Overrun'}</span>}
                             {isToday && notStartedYet && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>NOT STARTED</span>}
@@ -4254,11 +4266,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
                           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                             <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <span><Icon name="📅" /></span> {formatDate(s.session_date)}
+                              <span><Icon name="📅" /></span> {relativeDay(s.session_date, today)}
                             </span>
                             {s.start_time && (
                               <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <span>⏰</span> {s.start_time.slice(0, 5)}{s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}
+                                <span><Icon name="⏰" /></span> {s.start_time.slice(0, 5)}{s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}
                               </span>
                             )}
                             {s.location && (
@@ -4277,18 +4289,18 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.2)', display: 'flex', gap: 8 }}>
                           <button onClick={e => { e.stopPropagation(); setInfoModalSession(s) }}
                             style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                            ℹ️ Session info
+                            <Icon name="ℹ️" /> Session info
                           </button>
                           {hasEnded && !s.closed_at && (
                             <button onClick={e => { e.stopPropagation(); openRegisterForSession(s.id) }}
                               style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                              📋 Open register
+                              <Icon name="📋" /> Open register
                             </button>
                           )}
                           {hasEnded && userProfile && ['admin', 'owner', 'staff'].includes(userProfile.role) && (
                             <button onClick={e => { e.stopPropagation(); setClosingSession(s) }}
                               style={{ flex: 1, background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                              🔒 Close session
+                              <Icon name="🔒" /> Close session
                             </button>
                           )}
                         </div>
@@ -4334,8 +4346,23 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       onMouseLeave={e => { e.currentTarget.style.borderColor = '#EEF1F6' }}>
                       <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name="🔒" /></span>
                       <span style={{ fontSize: 12.5, fontWeight: 800, color: '#374151', maxWidth: isMobile ? 'none' : 140, flex: isMobile ? 1 : 'none', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', flexShrink: 0 }}><Icon name="🧒" /> {attended}/{attendedTotal}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', flexShrink: 0 }}>· {formatDate(s.session_date)}</span>
+                      {/* The attendance fraction was the most useful number on
+                          this half of the screen and the smallest thing on it.
+                          A bar makes 7/12 and 0/39 tell their story at a glance,
+                          and colours the ones worth looking at: a closed
+                          register nobody was marked on is usually a register
+                          somebody forgot, not a session nobody came to. */}
+                      {attendedTotal > 0 && (
+                        <span style={{ width: 46, height: 5, borderRadius: 99, background: '#EEF1F6', flexShrink: 0, overflow: 'hidden' }}>
+                          <span style={{
+                            display: 'block', height: '100%', borderRadius: 99,
+                            width: `${Math.round((attended / attendedTotal) * 100)}%`,
+                            background: attended === 0 ? '#F59E0B' : 'var(--org-primary)',
+                          }} />
+                        </span>
+                      )}
+                      <span style={{ fontSize: 11, fontWeight: 800, color: attended === 0 && attendedTotal > 0 ? '#B45309' : '#6B7280', flexShrink: 0 }}>{attended}/{attendedTotal}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', flexShrink: 0 }}>· {relativeDay(s.session_date, today)}</span>
                     </button>
                   )
                 })}
@@ -4592,6 +4619,29 @@ function weatherFromCode(code) {
 function formatDate(date) {
   if (!date) return "No date";
   return new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+// "24 Aug" tells you the date. It does not tell you that the session is
+// tomorrow, which is the thing you actually want off a home screen. Within the
+// week the weekday is more use than the number; beyond it, the date is.
+function relativeDay(dateStr, todayStr) {
+  if (!dateStr) return "No date";
+  const d = new Date(`${dateStr}T00:00:00`);
+  const t = new Date(`${todayStr}T00:00:00`);
+  const days = Math.round((d - t) / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days === -1) return "Yesterday";
+  if (days > 1 && days < 7) return d.toLocaleDateString("en-GB", { weekday: "long" });
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+// Sessions in a run share a title prefix -- "PGL Summer Residential — Day 1",
+// "... — Day 2". Repeating the first 24 characters on every row costs the width
+// that would otherwise show what makes each one different.
+function splitSeries(title) {
+  const m = String(title || '').match(/^(.*?)\s+[—–-]\s+(.+)$/);
+  return m ? { series: m[1].trim(), part: m[2].trim() } : { series: null, part: title };
 }
 
 const styles = {
