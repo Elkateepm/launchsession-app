@@ -105,13 +105,13 @@ export default function VolunteerAcceptInvite() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0D1B2A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100dvh', background: '#0D1B2A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>Loading your invite...</div>
     </div>
   )
 
   if (error) return (
-    <div style={{ minHeight: '100vh', background: '#0D1B2A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div style={{ minHeight: '100dvh', background: '#0D1B2A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 440, padding: '36px 28px', textAlign: 'center', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="⚠️" /></div>
         <div style={{ fontSize: 18, fontWeight: 900, color: '#111827', marginBottom: 8 }}>Invite link problem</div>
@@ -121,7 +121,7 @@ export default function VolunteerAcceptInvite() {
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0D1B2A 0%,#1B2A3B 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'Inter,sans-serif' }}>
+    <div style={{ minHeight: '100dvh', background: 'linear-gradient(135deg,#0D1B2A 0%,#1B2A3B 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'Inter,sans-serif' }}>
       <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
 
         {done ? (

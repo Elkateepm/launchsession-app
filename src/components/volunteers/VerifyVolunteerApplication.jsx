@@ -46,7 +46,7 @@ export default function VerifyVolunteerApplication() {
   }, [])
 
   const wrap = {
-    minHeight: '100vh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif',
+    minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif',
     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
   }
   const card = {

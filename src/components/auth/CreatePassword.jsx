@@ -260,13 +260,13 @@ export default function CreatePassword() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#050510', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100dvh', background: '#050510', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>Loading your invite...</div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050510', display: 'flex', position: 'relative', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    <div style={{ minHeight: '100dvh', background: '#050510', display: 'flex', position: 'relative', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       {/* Ambient stars across whole page */}
       {[...Array(40)].map((_, i) => (
         <div key={i} style={{

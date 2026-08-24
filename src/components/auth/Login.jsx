@@ -216,7 +216,7 @@ export default function Login({ org }) {
 
   return (
     <div style={{
-      minHeight: '100vh', background: '#050914', fontFamily: font,
+      minHeight: '100dvh', background: '#050914', fontFamily: font,
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       padding: '0 20px calc(28px + env(safe-area-inset-bottom, 0px))',
       position: 'relative', overflow: 'hidden',

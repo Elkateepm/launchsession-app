@@ -118,7 +118,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
 
 function Shell({ org, primary, secondary, children }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FC', paddingBottom: 48 }}>
+    <div style={{ minHeight: '100dvh', background: '#F7F8FC', paddingBottom: 48 }}>
       <div style={{
         background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`,
         padding: '26px 20px 34px',
@@ -279,7 +279,7 @@ export default function PublicForm() {
 
   if (status === 'loading') {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#F7F8FC' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', background: '#F7F8FC' }}>
         <div style={{ width: 40, height: 40, border: '3px solid #E2E8F0', borderTop: '3px solid #7C5CFC', borderRadius: '50%', animation: 'ls-spin 0.8s linear infinite' }} />
         <style>{'@keyframes ls-spin { to { transform: rotate(360deg); } }'}</style>
       </div>
@@ -289,7 +289,7 @@ export default function PublicForm() {
   if (status === 'notfound') {
     return (
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh',
         background: '#F7F8FC', flexDirection: 'column', gap: 10, padding: 24, textAlign: 'center',
       }}>
         <div style={{ fontSize: 34 }}><Icon name="🔍" /></div>

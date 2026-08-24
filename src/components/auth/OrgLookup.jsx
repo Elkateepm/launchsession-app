@@ -152,7 +152,7 @@ export default function OrgLookup() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#060B18', display: 'flex', justifyContent: 'center', padding: '48px 20px 32px', position: 'relative', overflow: 'hidden', fontFamily: font }}>
+    <div style={{ minHeight: '100dvh', background: '#060B18', display: 'flex', justifyContent: 'center', padding: '48px 20px 32px', position: 'relative', overflow: 'hidden', fontFamily: font }}>
 
       <SpaceBackground height={620} />
 

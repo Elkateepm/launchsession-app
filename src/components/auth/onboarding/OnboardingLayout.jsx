@@ -95,7 +95,7 @@ function Dot() {
 }
 
 const page = {
-  minHeight: '100vh',
+  minHeight: '100dvh',
   background: 'radial-gradient(circle at top left, #1a0b3b 0%, #07111f 42%, #020711 100%)',
   color: '#fff',
   padding: '32px 16px 48px',

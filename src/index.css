@@ -289,3 +289,48 @@ input, select, textarea { font-family: var(--font); }
 
 .ls-hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .ls-hide-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ───────────────────────── mobile foundations ─────────────────────────
+   Cross-cutting rules that fix behaviour on every screen at once, rather
+   than being re-solved per component. */
+
+@media (max-width: 767px) {
+  /* iOS Safari zooms the entire page when a text field with a font-size
+     under 16px receives focus, then leaves it zoomed. The app has 38 input
+     styles set between 11px and 15.5px, so nearly every form in the app
+     lurched sideways on first tap. !important is needed because these
+     sizes are set inline. */
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* A tap target under ~44px is hard to hit accurately on a phone. This
+     floors the interactive elements without changing their visual box. */
+  button, [role='button'], a[role='button'] {
+    touch-action: manipulation;
+  }
+
+  /* Stops a double-tap being interpreted as zoom, which delays every tap
+     by ~300ms on older iOS and makes the whole app feel sluggish. */
+  html {
+    touch-action: manipulation;
+  }
+}
+
+/* Anything pinned to the bottom of the screen has to clear the home
+   indicator on notched devices. */
+.ls-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.ls-safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Momentum scrolling inside panels, and no rubber-banding the whole page
+   behind a modal. */
+.ls-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}

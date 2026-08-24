@@ -99,7 +99,7 @@ export default function LaunchActionMenu({ open, onClose, actions, reducedMotion
               position: 'fixed',
               left: 10, right: 10,
               bottom: 'calc(78px + env(safe-area-inset-bottom, 0px))',
-              maxHeight: 'calc(100vh - 190px)',
+              maxHeight: 'calc(100dvh - 190px)',
               overflowY: 'auto',
               WebkitOverflowScrolling: 'touch',
               zIndex: 10002,
