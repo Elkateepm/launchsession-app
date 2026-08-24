@@ -37,7 +37,7 @@ export default function VolunteersRecognition({ org, volunteers, sessionStaff, s
       <SectionTitle icon="🏆" title="Recognition" subtitle="Celebrate the people who show up for your organisation" />
 
       {spotlightVolunteer && (
-        <Card style={{ background: `linear-gradient(135deg, ${primary}14, ${PURPLE}0c)`, border: `1px solid ${primary}30`, marginBottom: 16 }}>
+        <Card style={{ background: `linear-gradient(135deg, var(--org-a10), ${PURPLE}0c)`, border: `1px solid var(--org-a20)`, marginBottom: 16 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: primary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}><Icon name="✨" /> Volunteer Spotlight</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <Avatar name={spotlightVolunteer.full_name} photoUrl={spotlightVolunteer.photo_url} size={56} color={primary} />

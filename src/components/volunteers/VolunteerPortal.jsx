@@ -167,7 +167,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <input style={s.inp} value={f.date_of_birth} onChange={e=>set('date_of_birth',e.target.value)} type="date" />
       <label style={s.label}>Profile photo (optional)</label>
       <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:14 }}>
-        <div style={{ width:56, height:56, borderRadius:16, background:primary+'22', border:`2px solid ${primary}44`, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+        <div style={{ width:56, height:56, borderRadius:16, background:primary+'22', border:`2px solid var(--org-a20)`, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
           {photoUrl ? <img src={photoUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:22 }}><Icon name="📷" /></span>}
         </div>
         <button onClick={()=>photoRef.current?.click()} style={{ padding:'8px 16px', borderRadius:10, border:`1.5px solid ${primary}`, background:'transparent', color:primary, fontSize:13, fontWeight:700, cursor:'pointer' }}>{photoUploading?'Uploading...':'Upload photo'}</button>
@@ -460,7 +460,7 @@ export default function VolunteerPortal() {
     <div style={s.wrap}>
       <AmbientOrbs color={primary} />
       <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35, ease:'easeOut' }} style={s.card}>
-        <div style={{ background: `linear-gradient(135deg, ${primary}, ${primary}dd)`, padding:'28px 28px 22px', color:'#fff', position:'relative', overflow:'hidden' }}>
+        <div style={{ background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, padding:'28px 28px 22px', color:'#fff', position:'relative', overflow:'hidden' }}>
           {/* subtle background glow */}
           <div style={{ position:'absolute', top:-40, right:-40, width:140, height:140, borderRadius:'50%', background:'rgba(255,255,255,0.08)', pointerEvents:'none' }} />
           <div style={{ position:'absolute', bottom:-30, left:-20, width:100, height:100, borderRadius:'50%', background:'rgba(0,0,0,0.08)', pointerEvents:'none' }} />
@@ -623,7 +623,7 @@ function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
             if (t.key === '__plus') {
               return (
                 <button key="plus" onClick={() => { setForceModal(null); setQuickMenuOpen(true) }}
-                  style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontSize: 22, cursor: 'pointer', marginTop: -20, boxShadow: `0 8px 20px ${primary}66`, flexShrink: 0 }}>+</button>
+                  style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, color: '#fff', fontSize: 22, cursor: 'pointer', marginTop: -20, boxShadow: `0 8px 20px var(--org-a35)`, flexShrink: 0 }}>+</button>
               )
             }
             const active = tab === t.key

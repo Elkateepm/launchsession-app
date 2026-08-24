@@ -287,7 +287,7 @@ function AISummaryCard({ children, scores, goals, org, primary, onRecord, onRepo
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-      style={{ background: `linear-gradient(135deg, ${primary}18, #fff)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 22px', marginBottom: 20 }}>
+      style={{ background: `linear-gradient(135deg, var(--org-a10), #fff)`, border: `1px solid var(--org-a20)`, borderRadius: 20, padding: '20px 22px', marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 16 }}><Icon name="✨" /></span>
@@ -300,7 +300,7 @@ function AISummaryCard({ children, scores, goals, org, primary, onRecord, onRepo
               </motion.span>
             ) : isAI ? (
               <motion.span key="refined" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                style={{ fontSize: 10, fontWeight: 700, color: primary, background: `${primary}18`, borderRadius: 20, padding: '2px 8px' }}>
+                style={{ fontSize: 10, fontWeight: 700, color: primary, background: 'var(--org-a10)', borderRadius: 20, padding: '2px 8px' }}>
                 AI-refined
               </motion.span>
             ) : null}
@@ -596,7 +596,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
                     return (
                       <motion.div key={child.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 10) * 0.02 }}
                         onClick={() => setActiveChild(child)}
-                        whileHover={{ y: -2, boxShadow: `0 8px 24px ${primary}18` }}
+                        whileHover={{ y: -2, boxShadow: `0 8px 24px var(--org-a10)` }}
                         style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '16px 18px', cursor: 'pointer' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: avg ? 12 : 0 }}>
                           <div style={{ width: 40, height: 40, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: primary }}>

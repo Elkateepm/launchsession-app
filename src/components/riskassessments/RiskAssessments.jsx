@@ -401,10 +401,10 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                   const reviewDays = daysUntil(a.next_review_date)
                   return (
                     <motion.div key={a.id} layout onClick={() => { setSelected(a); setTab('overview'); logAudit(a.id, 'viewed', null) }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSel ? `${primary}0c` : 'transparent', borderLeft: `3px solid ${isSel ? primary : 'transparent'}` }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSel ? 'var(--org-a05)' : 'transparent', borderLeft: `3px solid ${isSel ? primary : 'transparent'}` }}
                       onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = '#F8FAFC' }}
                       onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent' }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 11, background: `${primary}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</div>
+                      <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--org-a05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
                         <div style={{ fontSize: 11, color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.activity_type || '—'}{a.location ? ` · ${a.location}` : ''}</div>
@@ -455,7 +455,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
             <button onClick={() => setSelected(null)} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}><Icon name="←" /> Back to library</button>
 
             <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap' }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: `${primary}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>{ACTIVITY_ICON[selected.activity_type] || '📋'}</div>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>{ACTIVITY_ICON[selected.activity_type] || '📋'}</div>
               <div style={{ flex: 1, minWidth: 180 }}>
                 <input value={selected.name || ''} onChange={e => setSelected(s => ({ ...s, name: e.target.value }))} onBlur={e => update(selected.id, { name: e.target.value }, 'edited', 'Renamed')}
                   style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', border: 'none', outline: 'none', width: '100%', background: 'transparent' }} />

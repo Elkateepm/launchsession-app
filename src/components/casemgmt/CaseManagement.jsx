@@ -282,7 +282,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
       <AnimatePresence>
         {selectedIds.size > 0 && (
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${primary}10`, border: `1.5px solid ${primary}30`, borderRadius: 12, padding: '8px 14px', marginBottom: 12 }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--org-a05)', border: `1.5px solid var(--org-a20)`, borderRadius: 12, padding: '8px 14px', marginBottom: 12 }}>
             <span style={{ fontSize: 12.5, fontWeight: 800, color: primary }}>{selectedIds.size} selected</span>
             <button onClick={bulkArchive} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12 }}>Archive</button>
             <button onClick={bulkClose} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12 }}>Close</button>
@@ -312,7 +312,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                   const isSelected = selectedCase?.id === cas.id
                   return (
                     <motion.div key={cas.id} layout onClick={() => { setSelectedCase(cas); setTab('timeline') }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSelected ? `${primary}0c` : 'transparent', borderLeft: `3px solid ${isSelected ? primary : 'transparent'}` }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSelected ? 'var(--org-a05)' : 'transparent', borderLeft: `3px solid ${isSelected ? primary : 'transparent'}` }}
                       onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#F8FAFC' }}
                       onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent' }}>
                       <input type="checkbox" checked={selectedIds.has(cas.id)} onClick={e => e.stopPropagation()} onChange={() => toggleSelect(cas.id)} style={{ flexShrink: 0 }} />

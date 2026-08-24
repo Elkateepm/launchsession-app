@@ -55,7 +55,7 @@ export default function RALinkedSessions({ assessment, org, session: authSession
             if (!s) return null
             return (
               <div key={link.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.08)', background: '#fff' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: `${primary}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><Icon name="📅" /></div>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><Icon name="📅" /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{s.title}</div>
                   <div style={{ fontSize: 11.5, color: '#94A3B8' }}>{s.session_date ? new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''}{s.start_time ? ` · ${s.start_time}` : ''}{s.location ? ` · ${s.location}` : ''}</div>

@@ -44,7 +44,7 @@ function QRCard({ icon, title, subtitle, url, primary }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, marginBottom: 10, boxShadow: `0 3px 10px -4px ${primary}90` }}>
+      <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, marginBottom: 10, boxShadow: `0 3px 10px -4px var(--org-a60)` }}>
         {icon}
       </div>
       <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', textAlign: 'center' }}>{title}</div>

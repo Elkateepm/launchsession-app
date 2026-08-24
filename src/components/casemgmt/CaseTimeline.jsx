@@ -60,7 +60,7 @@ export default function CaseTimeline({ caseId, org, session: authSession, staff 
         <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
           {COMPOSER_TYPES.map(t => (
             <button key={t.key} onClick={() => setComposerType(t.key)}
-              style={{ padding: '6px 12px', borderRadius: 99, border: `1.5px solid ${composerType === t.key ? primary : 'rgba(15,23,42,0.1)'}`, background: composerType === t.key ? `${primary}12` : '#fff', color: composerType === t.key ? primary : '#64748B', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              style={{ padding: '6px 12px', borderRadius: 99, border: `1.5px solid ${composerType === t.key ? primary : 'rgba(15,23,42,0.1)'}`, background: composerType === t.key ? 'var(--org-a05)' : '#fff', color: composerType === t.key ? primary : '#64748B', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
               {t.label}
             </button>
           ))}

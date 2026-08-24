@@ -76,7 +76,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
   return (
     <div style={{ padding: '0 0 100px' }}>
       {/* HERO */}
-      <div style={{ background: `linear-gradient(150deg, ${primary}, ${primary}CC)`, padding: '20px 18px 26px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: `linear-gradient(150deg, ${primary}, var(--org-a85))`, padding: '20px 18px 26px', position: 'relative', overflow: 'hidden' }}>
         <motion.div animate={{ y: [0, -14, 0] }} transition={{ duration: 8, repeat: Infinity }} style={{ position: 'absolute', top: -50, right: -50, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
           <div style={{ width: 50, height: 50, borderRadius: '50%', background: profile?.photo_url ? 'transparent' : 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.3)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

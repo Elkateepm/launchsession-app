@@ -68,7 +68,7 @@ export default function RAAttachments({ assessment, org, session: authSession })
         onDragLeave={() => setDragOver(false)}
         onDrop={e => { e.preventDefault(); setDragOver(false); upload(e.dataTransfer.files) }}
         onClick={() => fileRef.current?.click()}
-        style={{ border: `2px dashed ${dragOver ? primary : 'rgba(15,23,42,0.15)'}`, borderRadius: 14, padding: '22px 16px', textAlign: 'center', cursor: 'pointer', background: dragOver ? `${primary}0a` : '#F8FAFC', marginBottom: 14 }}
+        style={{ border: `2px dashed ${dragOver ? primary : 'rgba(15,23,42,0.15)'}`, borderRadius: 14, padding: '22px 16px', textAlign: 'center', cursor: 'pointer', background: dragOver ? 'var(--org-a05)' : '#F8FAFC', marginBottom: 14 }}
       >
         <div style={{ fontSize: 24, marginBottom: 6 }}><Icon name="📎" /></div>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{uploading ? 'Uploading…' : 'Drop files or click to upload'}</div>

@@ -351,7 +351,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                     <div style={{
                       width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                      background: `${primary}18`, color: primary,
+                      background: 'var(--org-a10)', color: primary,
                       display: 'grid', placeItems: 'center', fontSize: 14.5, fontWeight: 800,
                     }}>{(p.full_name || '?').slice(0, 1).toUpperCase()}</div>
 
@@ -613,7 +613,7 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
           <div style={{
             width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
-            background: `${primary}18`, color: primary,
+            background: 'var(--org-a10)', color: primary,
             display: 'grid', placeItems: 'center', fontSize: 19, fontWeight: 800,
           }}>{(person.full_name || '?').slice(0, 1).toUpperCase()}</div>
           <div style={{ flex: 1, minWidth: 0 }}>

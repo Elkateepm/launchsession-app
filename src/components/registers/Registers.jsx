@@ -406,14 +406,14 @@ function InlineChildImport({ org, template, onImported }) {
   return (
     <div>
       <div onClick={() => inputRef.current?.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }}
-        style={{ border: `2px dashed ${primary}50`, borderRadius: 10, padding: '14px 10px', textAlign: 'center', cursor: 'pointer', background: primary + '06', marginBottom: 8 }}>
+        style={{ border: `2px dashed var(--org-a35)`, borderRadius: 10, padding: '14px 10px', textAlign: 'center', cursor: 'pointer', background: primary + '06', marginBottom: 8 }}>
         <input ref={inputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
         <div style={{ fontSize: 20, marginBottom: 4 }}><Icon name="📂" /></div>
         <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>Drop CSV or click to browse</div>
       </div>
       <textarea value={csvText} onChange={e => setCsvText(e.target.value)} placeholder="or paste CSV here..." rows={3} style={fi} />
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: `1px solid ${primary}40`, background: primary + '10', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
+        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: `1px solid var(--org-a20)`, background: primary + '10', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
         <button onClick={() => { const { rows: p, errs } = parseCSV(csvText); setRows(p); setErrors(errs); setStep('preview') }} disabled={!csvText.trim()}
           style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: csvText.trim() ? primary : '#9CA3AF', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Preview <Icon name="→" /></button>
       </div>
@@ -1273,8 +1273,8 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
         padding: '10px 14px 10px 18px',
         overflow: 'hidden',
         background: dark
-          ? (selected ? `${primary}22` : hovered ? 'rgba(255,255,255,0.06)' : '#161A30')
-          : (selected ? `${primary}14` : hovered ? `${bColor}14` : `${bColor}08`),
+          ? (selected ? 'var(--org-a10)' : hovered ? 'rgba(255,255,255,0.06)' : '#161A30')
+          : (selected ? 'var(--org-a10)' : hovered ? `${bColor}14` : `${bColor}08`),
         border: dark
           ? `1px solid ${selected ? primary + '55' : 'rgba(255,255,255,0.08)'}`
           : `1.5px solid ${selected ? primary + '45' : hovered ? bColor + '38' : bColor + '20'}`,
@@ -1380,7 +1380,7 @@ function EncouragementPanel({ org, primary }) {
 
   return (
     <div style={{ padding: '12px 14px', borderTop: '1px solid #F3F4F6', marginTop: 'auto' }}>
-      <div style={{ background: `linear-gradient(135deg, ${primary}10, ${primary}06)`, border: `1px solid ${primary}20`, borderRadius: 12, padding: '12px 14px' }}>
+      <div style={{ background: `linear-gradient(135deg, var(--org-a05), var(--org-a05))`, border: `1px solid var(--org-a10)`, borderRadius: 12, padding: '12px 14px' }}>
         <div style={{ fontSize: 20, marginBottom: 8 }}>{quote.emoji}</div>
         <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', lineHeight: 1.6, fontStyle: 'italic' }}>
           "{quote.text}"
@@ -1639,7 +1639,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   // only apply when the Dark Mode toggle (in Register Options) is switched on.
   const t = {
     pageBg: darkMode ? 'linear-gradient(180deg, #0A0D1C 0%, #12152A 100%)' : '#F8FAFC',
-    headerBg: darkMode ? 'linear-gradient(165deg, #171B33 0%, rgba(16,19,36,0) 60%)' : `linear-gradient(165deg, ${primary}0A 0%, #fff 55%)`,
+    headerBg: darkMode ? 'linear-gradient(165deg, #171B33 0%, rgba(16,19,36,0) 60%)' : `linear-gradient(165deg, var(--org-a05) 0%, #fff 55%)`,
     headerBorder: darkMode ? 'rgba(255,255,255,0.08)' : '#EEF1F6',
     text: darkMode ? '#F1F5F9' : '#0B1220',
     textSub: darkMode ? '#94A3B8' : '#64748B',
@@ -1683,7 +1683,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           padding: isMobile ? '12px 16px 8px' : '18px 20px 12px', flexShrink: 0, position: 'relative',
           transition: 'background 0.4s ease',
         }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: isLiveSession ? 'linear-gradient(90deg, #16A34A, #4ADE80 45%, transparent)' : `linear-gradient(90deg, ${primary}, ${primary}44, transparent)` }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: isLiveSession ? 'linear-gradient(90deg, #16A34A, #4ADE80 45%, transparent)' : `linear-gradient(90deg, ${primary}, var(--org-a20), transparent)` }} />
           {isLiveSession && (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '35%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)', animation: 'reg-live-sweep 2.6s ease-in-out infinite' }} />
@@ -1700,7 +1700,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: isMobile ? 8 : 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 9 : 12, minWidth: 0 }}>
-              <div style={{ width: isMobile ? 32 : 42, height: isMobile ? 32 : 42, borderRadius: isMobile ? 10 : 13, background: isLiveSession ? 'linear-gradient(135deg, #16A34A, #22C55E)' : `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 15 : 19, flexShrink: 0, boxShadow: isLiveSession ? '0 4px 16px -4px rgba(22,163,74,0.65)' : `0 4px 14px -5px ${primary}90`, position: 'relative' }}>
+              <div style={{ width: isMobile ? 32 : 42, height: isMobile ? 32 : 42, borderRadius: isMobile ? 10 : 13, background: isLiveSession ? 'linear-gradient(135deg, #16A34A, #22C55E)' : `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 15 : 19, flexShrink: 0, boxShadow: isLiveSession ? '0 4px 16px -4px rgba(22,163,74,0.65)' : `0 4px 14px -5px var(--org-a60)`, position: 'relative' }}>
                 <img src="/icons/registers-icon.png" alt="" style={{ width: isMobile ? 22 : 28, height: isMobile ? 22 : 28, objectFit: 'contain' }} />
                 {isLiveSession && (
                   <span data-reg-live-anim style={{ position: 'absolute', inset: -2, borderRadius: 'inherit', border: '2px solid #22C55E', animation: 'reg-live-ping 2.4s ease-out infinite', pointerEvents: 'none' }} />
@@ -1917,15 +1917,15 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
               padding: isMobile ? '14px 15px' : '16px 18px', borderRadius: 16,
               background: darkMode
-                ? `linear-gradient(160deg, ${primary}26, ${primary}0D)`
-                : `linear-gradient(160deg, ${primary}14, #fff)`,
+                ? `linear-gradient(160deg, var(--org-a10), var(--org-a05))`
+                : `linear-gradient(160deg, var(--org-a10), #fff)`,
               border: `1.5px solid ${primary}${darkMode ? '3A' : '2E'}`,
             }}>
               <span aria-hidden="true" style={{
                 width: 40, height: 40, borderRadius: 13, flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
-                background: `linear-gradient(135deg, ${primary}, ${primary}CC)`,
-                boxShadow: `0 4px 12px -4px ${primary}80`,
+                background: `linear-gradient(135deg, ${primary}, var(--org-a85))`,
+                boxShadow: `0 4px 12px -4px var(--org-a60)`,
               }}><Icon name="📋" /></span>
               <div style={{ flex: 1, minWidth: 180 }}>
                 <div style={{ fontSize: 14.5, fontWeight: 800, color: t.text }}>No session is open</div>
@@ -2096,7 +2096,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           {showImport && (
             <div style={{ padding: 14, borderBottom: '1px solid #F3F4F6' }}>
               {activeImportTemplate && (
-                <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid ${primary}25`, borderRadius: 8, padding: '6px 10px' }}>
+                <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
                   🧩 Using "{activeImportTemplate.name}" template
                 </div>
               )}
@@ -2194,7 +2194,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               <button onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ width: 28, height: 28, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16 }}>×</button>
             </div>
             {activeImportTemplate && (
-              <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid ${primary}25`, borderRadius: 8, padding: '6px 10px' }}>
+              <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
                 🧩 Using "{activeImportTemplate.name}" template
               </div>
             )}
@@ -2497,14 +2497,14 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, ${primary}0F 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
             color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
           }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}><img src="/icons/past-registers-icon.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} /></div>
+            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}><img src="/icons/past-registers-icon.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} /></div>
             <div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>Past Registers</div>
               <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{sessions.length} closed session{sessions.length !== 1 ? 's' : ''}</div>
@@ -2614,14 +2614,14 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, ${primary}0F 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
             color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
           }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🗄️</div>
+            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🗄️</div>
             <div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>Archive</div>
               <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{sessions.length} archived session{sessions.length !== 1 ? 's' : ''}</div>
@@ -2669,8 +2669,8 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
                             )}
                           </div>
                           <button onClick={(e) => { e.stopPropagation(); onRestore(s) }} style={{
-                            flexShrink: 0, fontSize: 10.5, fontWeight: 800, color: primary, background: `${primary}12`,
-                            border: `1px solid ${primary}30`, borderRadius: 99, padding: '6px 11px', cursor: 'pointer', whiteSpace: 'nowrap',
+                            flexShrink: 0, fontSize: 10.5, fontWeight: 800, color: primary, background: 'var(--org-a05)',
+                            border: `1px solid var(--org-a20)`, borderRadius: 99, padding: '6px 11px', cursor: 'pointer', whiteSpace: 'nowrap',
                           }}>↩ Restore</button>
                         </div>
                       )

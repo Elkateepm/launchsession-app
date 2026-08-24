@@ -233,7 +233,7 @@ function HeaderIconButton({ icon, label, onClick, badge, primary, isMobile }) {
     <motion.button
       onClick={onClick}
       title={label}
-      whileHover={{ y: -3, scale: 1.05, boxShadow: `0 8px 20px -6px ${primary}50` }}
+      whileHover={{ y: -3, scale: 1.05, boxShadow: `0 8px 20px -6px var(--org-a35)` }}
       whileTap={{ scale: 0.94 }}
       style={{ position: 'relative', width: isMobile ? 38 : 44, height: isMobile ? 38 : 44, borderRadius: isMobile ? 12 : 14, border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: isMobile ? 15 : 17, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
     >
@@ -296,12 +296,12 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
       {/* LEFT — org card */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flexShrink: 0 }}>
         <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }} style={{ flexShrink: 0 }}>
-          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 3, border: `1.5px solid ${primary}30` }} />
+          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 3, border: `1.5px solid var(--org-a20)` }} />
         </motion.div>
         <div style={{ minWidth: 0, display: 'none' }} className="ls-header-org-text">
           <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{orgName}</div>
           {isTrial ? (
-            <motion.div whileHover={{ scale: 1.05 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 2, background: `${primary}14`, borderRadius: 99, padding: '1.5px 8px', border: `1px solid ${primary}25` }}>
+            <motion.div whileHover={{ scale: 1.05 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 2, background: 'var(--org-a10)', borderRadius: 99, padding: '1.5px 8px', border: `1px solid var(--org-a10)` }}>
               <span style={{ fontSize: 10 }}><Icon name="🚀" /></span>
               <span style={{ fontSize: 10.5, fontWeight: 700, color: primary }}>Trial · {daysLeft}d left</span>
             </motion.div>
@@ -336,7 +336,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
             style={{
               width: '100%', padding: '10px 40px', borderRadius: 18, border: '1px solid rgba(255,255,255,0.6)',
               background: 'rgba(255,255,255,0.55)', fontSize: 13.5, color: '#0F172A', outline: 'none', boxSizing: 'border-box',
-              boxShadow: searchFocused ? `0 0 0 3px ${primary}25` : 'none', transition: 'box-shadow 0.2s',
+              boxShadow: searchFocused ? `0 0 0 3px var(--org-a10)` : 'none', transition: 'box-shadow 0.2s',
             }}
           />
           <AnimatePresence>
@@ -699,7 +699,7 @@ export default function Dashboard({ session, org }) {
         boxShadow: isTablet && tabletNavOpen ? '0 0 60px rgba(0,0,0,0.45)' : 'none',
       }}>
         <style>{`@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.4)}}.sb-nav::-webkit-scrollbar{width:3px}.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:99px}`}</style>
-        <div style={{ position:'absolute',top:-60,left:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle, ${primary}20, transparent 70%)`,pointerEvents:'none',zIndex:0 }} />
+        <div style={{ position:'absolute',top:-60,left:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle, var(--org-a10), transparent 70%)`,pointerEvents:'none',zIndex:0 }} />
         <div style={{ position:'absolute',bottom:80,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%)',pointerEvents:'none',zIndex:0 }} />
 
         {/* COLLAPSE BUTTON — desktop only; tablet uses the burger to open/close instead */}
@@ -716,15 +716,15 @@ export default function Dashboard({ session, org }) {
         )}
 
         {/* ORG HEADER */}
-        <div style={{ padding: '16px 12px 14px', borderBottom: `1px solid ${primary}22`, background: `linear-gradient(180deg, ${primary}14, transparent)`, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}, ${primary}44)` }} />
+        <div style={{ padding: '16px 12px 14px', borderBottom: `1px solid var(--org-a10)`, background: `linear-gradient(180deg, var(--org-a10), transparent)`, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}, var(--org-a20))` }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain', flexShrink: 0, background: 'rgba(255,255,255,0.95)', padding: 3, border: `1.5px solid ${primary}40` }} />
+            <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain', flexShrink: 0, background: 'rgba(255,255,255,0.95)', padding: 3, border: `1.5px solid var(--org-a20)` }} />
             {!sidebarCollapsed && <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-display, sans-serif)' }}>{orgName}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', flexShrink: 0, boxShadow: '0 0 4px #22C55E' }} />
-                <span style={{ background: primary + '25', color: primary, borderRadius: 6, padding: '1px 7px', fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8, border: `1px solid ${primary}35` }}>{plan}</span>
+                <span style={{ background: primary + '25', color: primary, borderRadius: 6, padding: '1px 7px', fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8, border: `1px solid var(--org-a20)` }}>{plan}</span>
               </div>
             </div>}
           </div>

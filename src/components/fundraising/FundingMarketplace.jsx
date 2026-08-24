@@ -301,7 +301,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {CATEGORIES.map(c => (
             <button key={c.key} onClick={() => setCategory(c.key)}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 20, border: category === c.key ? `1.5px solid ${primary}` : '1.5px solid #E5E3DC', background: category === c.key ? `${primary}10` : '#fff', color: category === c.key ? primary : '#6B7280', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 20, border: category === c.key ? `1.5px solid ${primary}` : '1.5px solid #E5E3DC', background: category === c.key ? 'var(--org-a05)' : '#fff', color: category === c.key ? primary : '#6B7280', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s' }}>
               {c.icon && <CategoryIcon category={c.icon} color={category === c.key ? primary : '#9CA3AF'} />}
               {c.label}
               <span style={{ opacity: 0.55, fontWeight: 500 }}>({categoryCounts[c.key] || 0})</span>
@@ -337,7 +337,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                   }}
                   onMouseEnter={e => e.currentTarget.style.setProperty('--sO', '1')}
                   onMouseLeave={e => e.currentTarget.style.setProperty('--sO', '0')}
-                  whileHover={{ y: -6, boxShadow: `0 18px 40px ${primary}20, 0 4px 14px rgba(28,35,51,0.08)` }}
+                  whileHover={{ y: -6, boxShadow: `0 18px 40px var(--org-a10), 0 4px 14px rgba(28,35,51,0.08)` }}
                   style={{
                     position: 'relative', overflow: 'hidden',
                     background: `linear-gradient(135deg, ${meta.color}1f, rgba(255,255,255,0.62))`,
@@ -405,7 +405,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                       {shareFeedback === g.id ? <CheckIcon color="#16A34A" /> : <ShareIcon color="#6B7280" />}
                     </button>
                   </div>
-                  <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at var(--mx, 50%) var(--my, 50%), ${primary}55, transparent 55%)`, opacity: 'var(--sO, 0)', transition: 'opacity 0.3s', mixBlendMode: 'overlay', pointerEvents: 'none' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at var(--mx, 50%) var(--my, 50%), var(--org-a35), transparent 55%)`, opacity: 'var(--sO, 0)', transition: 'opacity 0.3s', mixBlendMode: 'overlay', pointerEvents: 'none' }} />
                 </motion.div>
               )
             })}

@@ -146,7 +146,7 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
             <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', fontSize: 16, color: '#6B7280' }}>×</button>
           </div>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Template name (e.g. Standard Register, Trip Sign-up)"
-            style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: 12, border: `1.5px solid ${primary}30`, fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit' }} />
+            style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: 12, border: `1.5px solid var(--org-a20)`, fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit' }} />
           {error && <div style={{ marginTop: 10, background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>}
         </div>
 
@@ -236,7 +236,7 @@ export function TemplatePicker({ org, onUseTemplate }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}><Icon name="🧩" /> Import Templates</div>
         <button onClick={() => { setEditing(null); setShowCreator(true) }}
-          style={{ fontSize: 11, fontWeight: 800, color: primary, background: primary + '10', border: `1px solid ${primary}30`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}>
+          style={{ fontSize: 11, fontWeight: 800, color: primary, background: primary + '10', border: `1px solid var(--org-a20)`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}>
           + New
         </button>
       </div>

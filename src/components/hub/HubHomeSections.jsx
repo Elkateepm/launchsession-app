@@ -374,7 +374,7 @@ export function QuickJump({ actions, isMobile, primary }) {
           tabIndex={0}
           onClick={a.onClick}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); a.onClick() } }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.background = `${primary}0F` }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.background = 'var(--org-a05)' }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border, #E6EAF4)'; e.currentTarget.style.background = 'var(--surface, #fff)' }}
           style={{ border: '1px solid var(--border, #E6EAF4)', borderRadius: 14, padding: '15px 11px', textAlign: 'center', cursor: 'pointer', transition: 'transform .2s ease, border-color .2s ease, background .2s ease', background: 'var(--surface, #fff)', minWidth: 0, outline: 'none' }}
         >
@@ -421,7 +421,7 @@ export function WeatherStrip({ weather, weatherError, icon, label, primary }) {
   const caution = wet || cold || windy
   const tone = caution
     ? { bg: '#FFF4DE', fg: '#7A4D00', bd: '#F5DCB0' }
-    : { bg: `${primary}14`, fg: primary, bd: `${primary}33` }
+    : { bg: 'var(--org-a10)', fg: primary, bd: 'var(--org-a20)' }
 
   return (
     <div style={shell}>

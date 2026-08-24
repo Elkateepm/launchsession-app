@@ -18,13 +18,13 @@ import Icon from '../../lib/icons'
  */
 export default function PageHeader({ icon, iconImg, title, subtitle, primary = '#1B9AAA', orgName, stats = [], actions = [], badge, gradient, illustration }) {
   const isMobile = useIsMobile()
-  const grad = gradient || `linear-gradient(135deg, ${primary}18 0%, ${primary}08 60%, transparent 100%)`
+  const grad = gradient || `linear-gradient(135deg, var(--org-a10) 0%, var(--org-a05) 60%, transparent 100%)`
 
   return (
-    <div className="ls-page-header" style={{ background: 'var(--surface, #fff)', borderBottom: `2px solid ${primary}18`, padding: '0', position: 'relative', overflow: 'hidden', flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 12px 28px -20px ${primary}45` }}>
+    <div className="ls-page-header" style={{ background: 'var(--surface, #fff)', borderBottom: `2px solid var(--org-a10)`, padding: '0', position: 'relative', overflow: 'hidden', flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 12px 28px -20px var(--org-a20)` }}>
 
       {/* Brand colour strip at top */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${primary}66, transparent)` }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, var(--org-a35), transparent)` }} />
 
       {/* Background decorations */}
       <div style={{ position: 'absolute', inset: 0, background: grad, pointerEvents: 'none' }} />
@@ -42,9 +42,9 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
             {/* Icon */}
             {iconImg ? (
-              <img src={iconImg} alt="" className="ls-page-header-icon" style={{ width: isMobile ? 44 : 52, height: isMobile ? 44 : 52, borderRadius: 14, objectFit: 'cover', flexShrink: 0, boxShadow: `0 6px 14px -6px ${primary}55` }} />
+              <img src={iconImg} alt="" className="ls-page-header-icon" style={{ width: isMobile ? 44 : 52, height: isMobile ? 44 : 52, borderRadius: 14, objectFit: 'cover', flexShrink: 0, boxShadow: `0 6px 14px -6px var(--org-a35)` }} />
             ) : (
-              <div className="ls-page-header-icon" style={{ width: isMobile ? 38 : 42, height: isMobile ? 38 : 42, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${primary}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 6px 14px -6px ${primary}55` }}>
+              <div className="ls-page-header-icon" style={{ width: isMobile ? 38 : 42, height: isMobile ? 38 : 42, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.1) inset, 0 6px 14px -6px var(--org-a35)` }}>
                 {icon}
               </div>
             )}
@@ -78,7 +78,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                   ...(isMobile ? { flex: '1 1 0', minWidth: 0 } : {}),
                   ...(a.variant === 'ghost'
                     ? { border: `1.5px solid var(--border, #e5e7eb)`, background: 'var(--surface, #fff)', color: 'var(--text, #111)', boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -2px rgba(15,23,42,0.08)' }
-                    : { border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -1px 0 rgba(0,0,0,0.12) inset, 0 6px 16px -8px ${primary}55` }
+                    : { border: 'none', background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -1px 0 rgba(0,0,0,0.12) inset, 0 6px 16px -8px var(--org-a35)` }
                   )
                 }}>
                   {a.icon && <span><Icon name={a.icon} /></span>}

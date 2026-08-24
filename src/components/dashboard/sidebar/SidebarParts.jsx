@@ -36,12 +36,12 @@ export function SidebarItem({
         // so nothing shifts horizontally when the active item changes.
         borderLeft: active ? `3px solid ${primary}` : '3px solid transparent',
         background: active
-          ? `${primary}1F`
+          ? 'var(--org-a10)'
           : highlight ? 'rgba(255,255,255,0.045)' : 'transparent',
         color: active ? '#fff' : highlight ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.5)',
         fontSize: 13, fontWeight: active ? 650 : 500,
         marginBottom: 1, cursor: 'pointer', textAlign: 'left',
-        outline: focused ? `2px solid ${primary}88` : 'none',
+        outline: focused ? `2px solid var(--org-a60)` : 'none',
         outlineOffset: -2,
         position: 'relative',
         transition: 'background 180ms ease, color 180ms ease',
@@ -257,13 +257,13 @@ export function CreateMenu({ actions, onSelect, primary, collapsed }) {
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: 7, padding: collapsed ? '9px 0' : '9px 12px', borderRadius: 10,
-          border: `1px solid ${primary}55`, background: `${primary}22`,
+          border: `1px solid var(--org-a35)`, background: 'var(--org-a10)',
           color: '#fff', fontSize: 13, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
           transition: 'background 180ms ease',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = `${primary}33` }}
-        onMouseLeave={e => { e.currentTarget.style.background = `${primary}22` }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--org-a20)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'var(--org-a10)' }}
       >
         <span style={{ fontSize: 15, lineHeight: 1 }}>+</span>
         {!collapsed && <span>Create</span>}
@@ -343,10 +343,10 @@ export function ProfileMenu({
       >
         <span style={{
           width: 32, height: 32, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
-          background: `linear-gradient(135deg, ${primary}99, #6366F199)`,
+          background: `linear-gradient(135deg, var(--org-a60), #6366F199)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 13, fontWeight: 800, color: '#fff',
-          border: `1.5px solid ${primary}55`,
+          border: `1.5px solid var(--org-a35)`,
         }}>
           {photoUrl
             ? <SignedImg src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

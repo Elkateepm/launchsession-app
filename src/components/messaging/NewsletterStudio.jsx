@@ -148,7 +148,7 @@ function BlockEditor({ block, orgId, primary, open, onOpen, onChange, onRemove, 
           <span aria-hidden="true" style={{
             width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: 'flex',
             alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800,
-            background: `${primary}18`, color: primary,
+            background: 'var(--org-a10)', color: primary,
           }}>{meta?.icon}</span>
           <span style={{ minWidth: 0, flex: 1 }}>
             <span style={{
@@ -207,7 +207,7 @@ function BlockEditor({ block, orgId, primary, open, onOpen, onChange, onRemove, 
                           flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
                           fontSize: 11.5, fontWeight: 800,
                           border: `1.5px solid ${active ? primary : 'var(--border)'}`,
-                          background: active ? `${primary}18` : 'transparent',
+                          background: active ? 'var(--org-a10)' : 'transparent',
                           color: active ? primary : 'var(--text3)',
                         }}>{sz.label}</button>
                       )
@@ -300,7 +300,7 @@ function Preview({ subject, preheader, blocks, org, compact }) {
               </div>
             )
             if (b.type === 'callout' && (b.title || b.text)) return (
-              <div key={b.id} style={{ background: `${primary}12`, borderLeft: `4px solid ${primary}`, padding: '14px 16px', marginBottom: 18 }}>
+              <div key={b.id} style={{ background: 'var(--org-a05)', borderLeft: `4px solid ${primary}`, padding: '14px 16px', marginBottom: 18 }}>
                 {b.title && <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{b.title}</div>}
                 <div style={{ fontSize: 14.5, color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{fill(b.text)}</div>
               </div>
@@ -507,7 +507,7 @@ export default function NewsletterStudio({ org, session }) {
             display: 'flex', alignItems: 'center', gap: 8, padding: '9px 15px',
             borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
             border: `1.5px solid ${active ? primary : 'var(--border)'}`,
-            background: active ? `${primary}14` : 'transparent',
+            background: active ? 'var(--org-a10)' : 'transparent',
             transition: 'all 0.15s',
           }}>
             <span aria-hidden="true" style={{

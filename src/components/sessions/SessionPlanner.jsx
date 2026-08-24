@@ -631,7 +631,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   const ta = (key) => ({
     width: '100%', boxSizing: 'border-box', padding: '13px 14px', borderRadius: 13,
     border: `1.5px solid ${focused === key ? primary : 'var(--border, #E5E7EB)'}`,
-    boxShadow: focused === key ? `0 0 0 4px ${primary}1A` : 'none',
+    boxShadow: focused === key ? `0 0 0 4px var(--org-a10)` : 'none',
     fontSize: 14, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 90,
     transition: 'border-color 0.15s, box-shadow 0.15s', background: 'var(--surface, #fff)', color: 'var(--text, #111)',
   })
@@ -658,7 +658,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
       >
         {saved ? (
           /* ── CELEBRATION SCREEN ── */
-          <div style={{ padding: '56px 32px', textAlign: 'center', background: `linear-gradient(160deg, ${primary}10, ${secondary}08)` }}>
+          <div style={{ padding: '56px 32px', textAlign: 'center', background: `linear-gradient(160deg, var(--org-a05), ${secondary}08)` }}>
             <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 14 }} style={{ fontSize: 56, marginBottom: 8 }}>
               {RATING_REACTIONS[form.overall_rating]?.emoji || '🎉'}
             </motion.div>
@@ -669,12 +669,12 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
         ) : (
           <>
             {/* Header — branded */}
-            <div style={{ padding: '20px 22px 16px', background: `linear-gradient(135deg, ${primary}14, ${secondary}08)`, borderBottom: '1px solid var(--border, #F3F4F6)', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 22px 16px', background: `linear-gradient(135deg, var(--org-a10), ${secondary}08)`, borderBottom: '1px solid var(--border, #F3F4F6)', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
               <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, borderRadius: '50%', background: `${secondary}18`, filter: 'blur(20px)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1, marginBottom: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
                   {org?.logo_url ? (
-                    <img src={org.logo_url} alt={org?.name || ''} style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'contain', background: '#fff', border: `1px solid ${primary}25`, padding: 3 }} />
+                    <img src={org.logo_url} alt={org?.name || ''} style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'contain', background: '#fff', border: `1px solid var(--org-a10)`, padding: 3 }} />
                   ) : (
                     <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><Icon name="⭐" /></div>
                   )}
@@ -816,7 +816,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
                         <textarea style={ta('free')} onFocus={() => setFocused('free')} onBlur={() => setFocused(null)} value={form.reflection} onChange={e => set('reflection', e.target.value)} placeholder="Any other thoughts for next time..." />
                       </ReflectionField>
                       <ReflectionField i={2}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, background: `linear-gradient(135deg, ${primary}0C, ${secondary}08)`, border: `1px dashed ${primary}30` }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, background: `linear-gradient(135deg, var(--org-a05), ${secondary}08)`, border: `1px dashed var(--org-a20)` }}>
                           <span style={{ fontSize: 24 }}>{RATING_REACTIONS[form.overall_rating]?.emoji}</span>
                           <div style={{ fontSize: 12, color: 'var(--text3, #6B7280)' }}>You rated this session <strong style={{ color: 'var(--text, #111)' }}>{form.overall_rating}/5</strong>. Ready to save?</div>
                         </div>
@@ -834,11 +834,11 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
                 <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}><Icon name="←" /> Back</motion.button>
               )}
               {!isLast ? (
-                <motion.button whileTap={{ scale: 0.97 }} disabled={!canAdvance} onClick={goNext} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: canAdvance ? `linear-gradient(135deg, ${primary}, ${secondary})` : '#D1D5DB', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canAdvance ? 'pointer' : 'default', boxShadow: canAdvance ? `0 8px 20px ${primary}44` : 'none' }}>
+                <motion.button whileTap={{ scale: 0.97 }} disabled={!canAdvance} onClick={goNext} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: canAdvance ? `linear-gradient(135deg, ${primary}, ${secondary})` : '#D1D5DB', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canAdvance ? 'pointer' : 'default', boxShadow: canAdvance ? `0 8px 20px var(--org-a20)` : 'none' }}>
                   Next →
                 </motion.button>
               ) : (
-                <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 20px ${primary}44` }}>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 20px var(--org-a20)` }}>
                   {saving ? 'Saving...' : existing ? '💾 Update Reflection' : '✅ Complete Reflection'}
                 </motion.button>
               )}

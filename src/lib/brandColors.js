@@ -89,6 +89,32 @@ export function brandPalette(primary) {
   }
 }
 
+// A deliberate alpha scale.
+//
+// The codebase had roughly thirty different alpha suffixes on the brand colour
+// -- 08, 12, 14, 18, 22, 25, 30, 35, 40, 55, 80, CC -- each chosen in the
+// moment. Neighbouring values that differ by two points are indistinguishable
+// on screen but guarantee that two panels meant to match never quite do.
+//
+// Six steps, each visibly different from the next. Expressed as rgba rather
+// than a lightened opaque colour on purpose: these sit over cards, over the
+// page, and over dark mode, and a lightened tint that looks right on white
+// turns into a pale smear on a dark surface.
+export const ALPHA_SCALE = {
+  a05: 0.05,  // barely-there wash, zebra striping
+  a10: 0.10,  // hovered row, subtle fill
+  a20: 0.20,  // selected chip, active tab
+  a35: 0.35,  // borders on brand-tinted cards
+  a60: 0.60,  // muted brand text, gradient midpoint
+  a85: 0.85,  // near-solid, gradient end
+}
+
+export function rgba(hex, alpha) {
+  const c = hexToRgb(hex)
+  if (!c) return `rgba(27, 154, 170, ${alpha})`
+  return `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})`
+}
+
 /**
  * Publishes the palette as CSS variables on :root.
  *
@@ -108,5 +134,8 @@ export function applyBrandPalette(primary) {
   root.setProperty('--org-strong', p.strong)
   // Kept for the existing declaration in index.css.
   root.setProperty('--org-primary-lt', p.tint)
+  Object.entries(ALPHA_SCALE).forEach(([k, v]) => {
+    root.setProperty(`--org-${k}`, rgba(p.primary, v))
+  })
   return p
 }

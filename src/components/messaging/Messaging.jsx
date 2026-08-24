@@ -134,7 +134,7 @@ function ThreadView({ thread, org, session: authSession, onBack }) {
       {/* Quick message suggestions */}
       <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 8, paddingBottom: 4 }}>
         {QUICK_MESSAGES.map((qm, i) => (
-          <button key={i} onClick={() => send(qm)} style={{ padding: '5px 12px', borderRadius: 99, border: `1px solid ${primary}40`, background: primary + '08', color: primary, fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          <button key={i} onClick={() => send(qm)} style={{ padding: '5px 12px', borderRadius: 99, border: `1px solid var(--org-a20)`, background: primary + '08', color: primary, fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
             {qm}
           </button>
         ))}
@@ -204,7 +204,7 @@ export default function Messaging({ org, session: authSession, initialThreadId }
   return (
     <div>
       {/* Header */}
-      <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
+      <div style={{ background: `linear-gradient(135deg, var(--org-a10), var(--org-a05))`, border: `1px solid var(--org-a20)`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 900 }}><Icon name="💬" /> Team Messaging</div>
@@ -267,7 +267,7 @@ export default function Messaging({ org, session: authSession, initialThreadId }
             const msgCount = thread.message_thread_messages?.[0]?.count || 0
             return (
               <div key={thread.id} onClick={() => setActiveThread(thread)} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '14px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 4px 12px ${primary}15` }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 4px 12px var(--org-a10)` }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = 'none' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: aud.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
                   <Icon name={aud.icon} />

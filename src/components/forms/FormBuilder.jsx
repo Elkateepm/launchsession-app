@@ -609,7 +609,7 @@ function QuestionCard({
       style={{
         position: 'relative', padding: '16px 18px', borderRadius: 14, cursor: 'pointer',
         border: `1.5px solid ${selected ? primary : hover ? '#DDD6FE' : '#F1F5F9'}`,
-        background: selected ? `${primary}08` : '#fff',
+        background: selected ? 'var(--org-a05)' : '#fff',
         transition: 'border-color 170ms ease, background 170ms ease',
         marginBottom: 4,
       }}
@@ -758,7 +758,7 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
           display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px',
           borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
           border: `1.5px solid ${field.required ? primary : '#E2E8F0'}`,
-          background: field.required ? `${primary}0D` : '#fff',
+          background: field.required ? 'var(--org-a05)' : '#fff',
         }}
       >
         <span style={{
@@ -936,7 +936,7 @@ function SettingsPanel({ form, setForm, primary }) {
           display: 'flex', alignItems: 'center', gap: 11, padding: '13px 14px',
           borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
           border: `1.5px solid ${form.multi_step ? primary : '#E2E8F0'}`,
-          background: form.multi_step ? `${primary}0D` : '#fff',
+          background: form.multi_step ? 'var(--org-a05)' : '#fff',
         }}
       >
         <span style={{
@@ -1178,7 +1178,7 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
                     display: 'flex', alignItems: 'center', gap: 10, padding: '9px 11px',
                     borderRadius: 10, textAlign: 'left', fontFamily: 'inherit',
                     border: `1px solid ${sel ? primary : '#F1F5F9'}`,
-                    background: added ? '#F8FAFC' : sel ? `${primary}0D` : '#fff',
+                    background: added ? '#F8FAFC' : sel ? 'var(--org-a05)' : '#fff',
                     cursor: added ? 'not-allowed' : 'pointer', opacity: added ? 0.55 : 1,
                   }}
                 >

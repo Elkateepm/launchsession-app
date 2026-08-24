@@ -207,7 +207,7 @@ export default function TeamTab({ org, session }) {
           <div style={{ position: 'absolute', top: -10, right: -10, fontSize: 64, opacity: 0.08, transform: 'rotate(12deg)', pointerEvents: 'none' }}><Icon name="✉️" /></div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6, position: 'relative' }}>
-            <div style={{ width: 42, height: 42, borderRadius: '50%', background: `${primary}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}><Icon name="📨" /></div>
+            <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}><Icon name="📨" /></div>
             <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text, #111)' }}>Invite Staff</div>
           </div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20, lineHeight: 1.5, position: 'relative' }}>Send a branded email invite — they'll set their own password and be added to {org?.name} automatically.</div>

@@ -61,7 +61,7 @@ function ChildCard({ child, index, total, primary, open, onToggle, onChange, onR
           <span style={{
             width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center',
             justifyContent: 'center', fontSize: 12, fontWeight: 800,
-            background: incomplete ? '#F1F5F9' : `${primary}1A`, color: incomplete ? '#94A3B8' : primary,
+            background: incomplete ? '#F1F5F9' : 'var(--org-a10)', color: incomplete ? '#94A3B8' : primary,
           }}>{index + 1}</span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>

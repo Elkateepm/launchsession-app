@@ -280,7 +280,7 @@ export default function CreatePassword() {
       {/* Left: brand / marketing panel (desktop only) */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px 64px', position: 'relative', zIndex: 2, minWidth: 0 }} className="cp-left">
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 44 }}>
-          <img src="/launchsession-badge.png" alt="LaunchSession" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: `0 6px 18px -4px ${primary}80` }} />
+          <img src="/launchsession-badge.png" alt="LaunchSession" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: `0 6px 18px -4px var(--org-a60)` }} />
           <div>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>LaunchSession</div>
             <div style={{ fontSize: 11, fontWeight: 700, color: primary, letterSpacing: 1 }}>EMPOWERING YOUTH. EVERY SESSION.</div>
@@ -331,7 +331,7 @@ export default function CreatePassword() {
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 32, backdropFilter: 'blur(18px)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
 
                 <div style={{ textAlign: 'center', marginBottom: 26 }}>
-                  <div style={{ width: 76, height: 76, borderRadius: '50%', background: '#fff', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0 0 0 3px ${primary}55` }}>
+                  <div style={{ width: 76, height: 76, borderRadius: '50%', background: '#fff', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0 0 0 3px var(--org-a35)` }}>
                     {orgLogo ? (
                       <img src={orgLogo} alt={orgName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
@@ -396,7 +396,7 @@ export default function CreatePassword() {
                       background: saving || !password || !confirm ? 'rgba(255,255,255,0.1)' : `linear-gradient(135deg, ${primary}, #6366F1)`,
                       color: saving || !password || !confirm ? 'rgba(255,255,255,0.3)' : '#fff', fontWeight: 800, fontSize: 15,
                       cursor: saving || !password || !confirm ? 'default' : 'pointer',
-                      boxShadow: saving || !password || !confirm ? 'none' : `0 10px 30px -8px ${primary}80`,
+                      boxShadow: saving || !password || !confirm ? 'none' : `0 10px 30px -8px var(--org-a60)`,
                     }}>
                     {saving ? 'Creating your account...' : 'Create Account →'}
                   </motion.button>
@@ -408,7 +408,7 @@ export default function CreatePassword() {
                   </div>
 
                   <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: 9, background: `${primary}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name="💬" /></div>
+                    <div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name="💬" /></div>
                     <div>
                       <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>Problem with your invite?</div>
                       <a href="mailto:support@launchsession.co.uk" style={{ fontSize: 12, color: '#C4B5FD', fontWeight: 700, textDecoration: 'none' }}>Contact support@launchsession.co.uk</a>
@@ -447,7 +447,7 @@ export default function CreatePassword() {
                   <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="07..." style={plainInputStyle} />
                 </div>
 
-                <button onClick={saveProfileStep} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: `0 10px 30px -8px ${primary}80` }}>
+                <button onClick={saveProfileStep} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: `0 10px 30px -8px var(--org-a60)` }}>
                   Continue →
                 </button>
               </motion.div>
@@ -466,12 +466,12 @@ export default function CreatePassword() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                   {SUPERPOWERS.map(s => (
                     <button key={s.label} onClick={() => setFunFact(s.label)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${funFact === s.label ? primary : 'rgba(255,255,255,0.1)'}`, background: funFact === s.label ? `${primary}20` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${funFact === s.label ? primary : 'rgba(255,255,255,0.1)'}`, background: funFact === s.label ? 'var(--org-a10)' : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
                       <span style={{ fontSize: 18 }}><Icon name={s.icon} /></span> {s.label}
                     </button>
                   ))}
                   <button onClick={() => setFunFact('custom')}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${funFact === 'custom' ? primary : 'rgba(255,255,255,0.1)'}`, background: funFact === 'custom' ? `${primary}20` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${funFact === 'custom' ? primary : 'rgba(255,255,255,0.1)'}`, background: funFact === 'custom' ? 'var(--org-a10)' : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
                     <span style={{ fontSize: 18 }}>✍️</span> Let me write my own
                   </button>
                   {funFact === 'custom' && (
@@ -479,7 +479,7 @@ export default function CreatePassword() {
                   )}
                 </div>
 
-                <button onClick={finishFunStep} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: `0 10px 30px -8px ${primary}80`, marginBottom: 10 }}>
+                <button onClick={finishFunStep} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: `0 10px 30px -8px var(--org-a60)`, marginBottom: 10 }}>
                   Finish & Launch 🚀
                 </button>
                 <button onClick={finishFunStep} style={{ width: '100%', padding: 8, borderRadius: 10, border: 'none', background: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>

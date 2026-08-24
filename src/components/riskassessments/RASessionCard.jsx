@@ -107,7 +107,7 @@ export default function RASessionCard({ sessionId, sessionTitle, org, session: a
   return (
     <div style={{ marginBottom: 16 }}>
       <label style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, display: 'block' }}>Risk Assessment</label>
-      <div style={{ background: linked ? `${primary}0a` : '#FFF7ED', border: `1.5px solid ${linked ? `${primary}30` : '#FDBA74'}`, borderRadius: 14, padding: 14 }}>
+      <div style={{ background: linked ? 'var(--org-a05)' : '#FFF7ED', border: `1.5px solid ${linked ? 'var(--org-a20)' : '#FDBA74'}`, borderRadius: 14, padding: 14 }}>
         {loading ? (
           <div style={{ fontSize: 12.5, color: '#94A3B8' }}>Checking…</div>
         ) : linked ? (

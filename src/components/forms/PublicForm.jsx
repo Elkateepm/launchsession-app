@@ -341,7 +341,7 @@ export default function PublicForm() {
             </p>
           )}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>
-            <span style={{ padding: '6px 12px', borderRadius: 99, background: `${primary}12`, color: primary, fontSize: 12.5, fontWeight: 700 }}>
+            <span style={{ padding: '6px 12px', borderRadius: 99, background: 'var(--org-a05)', color: primary, fontSize: 12.5, fontWeight: 700 }}>
               {fields.length} question{fields.length === 1 ? '' : 's'}
             </span>
             <span style={{ padding: '6px 12px', borderRadius: 99, background: '#F1F5F9', color: '#475569', fontSize: 12.5, fontWeight: 700 }}>

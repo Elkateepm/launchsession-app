@@ -330,15 +330,15 @@ function ChildImportTool({ org, showToast, onNavigate }) {
       {tab === 'template' && (
         <div>
           {/* Hero */}
-          <div style={{ background: `linear-gradient(135deg, ${primary}18, ${primary}08)`, border: `1.5px solid ${primary}30`, borderRadius: 18, padding: '22px 24px', marginBottom: 20 }}>
+          <div style={{ background: `linear-gradient(135deg, var(--org-a10), var(--org-a05))`, border: `1.5px solid var(--org-a20)`, borderRadius: 18, padding: '22px 24px', marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, ${primary}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}><Icon name="📥" /></div>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, var(--org-a60))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}><Icon name="📥" /></div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>Children Import Template</div>
                 <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 14 }}>
                   Download the CSV template, fill it in with your young people's details in Excel, Numbers or Google Sheets, then upload or paste it on the Import tab.
                 </div>
-                <button onClick={downloadTemplate} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <button onClick={downloadTemplate} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   ⬇️ Download Template CSV
                 </button>
               </div>
@@ -456,7 +456,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
                       <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Preview — {preview.length} record{preview.length !== 1 ? 's' : ''}</div>
                       <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Showing first 5 rows · {errors.length > 0 ? `${errors.length} error${errors.length > 1 ? 's' : ''} found` : '✓ All clear'}</div>
                     </div>
-                    <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: errors.length > 0 ? '#9ca3af' : `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontWeight: 800, fontSize: 13, cursor: errors.length > 0 ? 'default' : 'pointer' }}>
+                    <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: errors.length > 0 ? '#9ca3af' : `linear-gradient(135deg, ${primary}, var(--org-a85))`, color: '#fff', fontWeight: 800, fontSize: 13, cursor: errors.length > 0 ? 'default' : 'pointer' }}>
                       {importing ? 'Importing...' : `✓ Import ${preview.length} records`}
                     </button>
                   </div>

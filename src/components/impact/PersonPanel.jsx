@@ -76,7 +76,7 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
         style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 'min(480px, 100vw)', background: '#fff', zIndex: 901, boxShadow: '-20px 0 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column' }}
       >
         {/* Header */}
-        <div style={{ background: `linear-gradient(135deg, ${primary}20, ${primary}06)`, padding: '22px 22px 0' }}>
+        <div style={{ background: `linear-gradient(135deg, var(--org-a10), var(--org-a05))`, padding: '22px 22px 0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{ width: 52, height: 52, borderRadius: 14, background: primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#fff', fontWeight: 900 }}>
@@ -259,7 +259,7 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 18 }}>
                     {unlocked.map((a, i) => (
                       <motion.div key={a.key} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06, type: 'spring', stiffness: 200 }}
-                        style={{ background: `linear-gradient(135deg, ${primary}18, #fff)`, border: `1.5px solid ${primary}40`, borderRadius: 14, padding: '14px 12px', textAlign: 'center' }}>
+                        style={{ background: `linear-gradient(135deg, var(--org-a10), #fff)`, border: `1.5px solid var(--org-a20)`, borderRadius: 14, padding: '14px 12px', textAlign: 'center' }}>
                         <div style={{ fontSize: 28 }}><Icon name={a.icon} /></div>
                         <div style={{ fontSize: 11.5, fontWeight: 800, marginTop: 6 }}>{a.label}</div>
                       </motion.div>

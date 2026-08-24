@@ -79,7 +79,7 @@ export default function CaseDocuments({ caseId, org, session: authSession }) {
         onClick={() => fileRef.current?.click()}
         style={{
           border: `2px dashed ${dragOver ? primary : 'rgba(15,23,42,0.15)'}`, borderRadius: 14, padding: '22px 16px',
-          textAlign: 'center', cursor: 'pointer', background: dragOver ? `${primary}0a` : '#F8FAFC', marginBottom: 14,
+          textAlign: 'center', cursor: 'pointer', background: dragOver ? 'var(--org-a05)' : '#F8FAFC', marginBottom: 14,
           transition: 'border-color 0.15s, background 0.15s',
         }}
       >

@@ -42,7 +42,7 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                     {(a.skills || []).length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
                         {a.skills.map(s => (
-                          <span key={s} style={{ fontSize: 10, fontWeight: 700, color: primary, background: `${primary}12`, borderRadius: 6, padding: '2px 7px' }}>{s}</span>
+                          <span key={s} style={{ fontSize: 10, fontWeight: 700, color: primary, background: 'var(--org-a05)', borderRadius: 6, padding: '2px 7px' }}>{s}</span>
                         ))}
                       </div>
                     )}

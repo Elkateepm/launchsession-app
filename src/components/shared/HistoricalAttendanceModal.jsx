@@ -65,7 +65,7 @@ export default function HistoricalAttendanceModal({ session, attendance, allChil
           position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 480, maxHeight: isMobile ? 'none' : '88vh',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
           borderRadius: isMobile ? 0 : 26, flex: isMobile ? 1 : undefined,
-          background: `linear-gradient(160deg, ${primary}33 0%, ${(secondary || primary)}22 40%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
+          background: `linear-gradient(160deg, var(--org-a20) 0%, ${(secondary || primary)}22 40%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
           boxShadow: isMobile ? 'none' : '0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)',
         }}
         onClick={e => e.stopPropagation()}

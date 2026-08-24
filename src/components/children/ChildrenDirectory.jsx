@@ -212,7 +212,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
             ['incomplete', 'Profiles incomplete'],
           ].map(([key, label]) => (
             <button key={label} onClick={() => setQuickFilter(key)}
-              style={{ padding: '7px 14px', borderRadius: 99, border: quickFilter === key ? `2px solid ${primary}` : '1px solid rgba(15,23,42,0.1)', background: quickFilter === key ? `${primary}14` : '#fff', color: quickFilter === key ? primary : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', borderRadius: 99, border: quickFilter === key ? `2px solid ${primary}` : '1px solid rgba(15,23,42,0.1)', background: quickFilter === key ? 'var(--org-a10)' : '#fff', color: quickFilter === key ? primary : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
               {label}
             </button>
           ))}
@@ -251,7 +251,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
                     const chips = medicalAlerts(c)
                     return (
                       <div key={c.id} onClick={() => setSelectedId(c.id)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSelected ? `${primary}0c` : 'transparent', borderLeft: `3px solid ${isSelected ? primary : 'transparent'}` }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSelected ? 'var(--org-a05)' : 'transparent', borderLeft: `3px solid ${isSelected ? primary : 'transparent'}` }}>
                         <Avatar name={`${c.first_name} ${c.last_name}`} photoUrl={c.photo_url} size={38} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.first_name} {c.last_name}</div>
@@ -455,7 +455,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
               <Row label="Emergency phone" value={child.emergency_contact_phone} />
               {!child.parent_email && <div style={{ fontSize: 11, color: '#B45309', marginTop: 4 }}><Icon name="⚠" /> No email on file — add one to enable emailing this parent.</div>}
               {child.parent_phone && (
-                <a href={`tel:${child.parent_phone}`} style={{ display: 'inline-block', marginTop: 8, padding: '7px 14px', borderRadius: 9, border: `1px solid ${primary}40`, color: primary, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}><Icon name="📞" /> Call parent</a>
+                <a href={`tel:${child.parent_phone}`} style={{ display: 'inline-block', marginTop: 8, padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, color: primary, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}><Icon name="📞" /> Call parent</a>
               )}
             </>
           )}
@@ -586,7 +586,7 @@ function OnSiteTab({ children, latestAttByChild, groupLabel, primary, org, authU
               <div style={{ fontSize: 11, color: '#94A3B8' }}>{groupLabel(c.group_name) || 'Ungrouped'} · Signed in {att?.signed_in_at ? new Date(att.signed_in_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
             </div>
             {hasMedicalAlert(c) && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#B91C1C', background: '#FEE2E2', borderRadius: 99, padding: '2px 8px' }}><Icon name="❤️" /> Alert</span>}
-            <button onClick={() => signOut(c.id)} style={{ padding: '7px 14px', borderRadius: 9, border: `1px solid ${primary}40`, background: '#fff', color: primary, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Sign out</button>
+            <button onClick={() => signOut(c.id)} style={{ padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, background: '#fff', color: primary, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Sign out</button>
           </div>
         )
       })}
@@ -751,7 +751,7 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
         {pending.length === 0 ? (
           <div style={{ padding: 30, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>No pending registrations.</div>
         ) : pending.map(r => (
-          <div key={r.id} onClick={() => setOpenId(r.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: openId === r.id ? `${primary}0c` : '#FFFBFA', borderLeft: '3px solid #FCA5A5' }}>
+          <div key={r.id} onClick={() => setOpenId(r.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: openId === r.id ? 'var(--org-a05)' : '#FFFBFA', borderLeft: '3px solid #FCA5A5' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{r.first_name} {r.last_name}</div>
               <div style={{ fontSize: 11, color: '#94A3B8' }}>Submitted {new Date(r.submitted_at).toLocaleDateString('en-GB')} · {r.parent_name}</div>

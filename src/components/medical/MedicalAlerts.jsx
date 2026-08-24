@@ -131,7 +131,7 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             padding: '7px 14px', borderRadius: 99, border: `1.5px solid ${tab === t.key ? primary : '#E5E7EB'}`,
-            background: tab === t.key ? `linear-gradient(135deg, ${primary}, ${primary}CC)` : '#fff',
+            background: tab === t.key ? `linear-gradient(135deg, ${primary}, var(--org-a85))` : '#fff',
             color: tab === t.key ? '#fff' : '#6B7280',
             fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
           }}>

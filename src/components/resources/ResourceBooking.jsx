@@ -127,7 +127,7 @@ export default function ResourceBooking({ org, session: authSession }) {
   return (
     <div>
       {/* Header */}
-      <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
+      <div style={{ background: `linear-gradient(135deg, var(--org-a10), var(--org-a05))`, border: `1px solid var(--org-a20)`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 900 }}><Icon name="🗓️" /> Resource Booking</div>

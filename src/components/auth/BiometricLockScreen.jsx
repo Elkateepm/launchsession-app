@@ -44,7 +44,7 @@ export default function BiometricLockScreen({ org, userName, onUnlocked, onSignO
       {org?.logo_url ? (
         <img src={org.logo_url} alt="" style={{ width: 62, height: 62, borderRadius: 16, objectFit: 'cover', marginBottom: 22 }} />
       ) : (
-        <div style={{ width: 62, height: 62, borderRadius: 16, marginBottom: 22, background: `linear-gradient(135deg, ${primary}, ${primary}AA)` }} />
+        <div style={{ width: 62, height: 62, borderRadius: 16, marginBottom: 22, background: `linear-gradient(135deg, ${primary}, var(--org-a60))` }} />
       )}
 
       <div
@@ -70,7 +70,7 @@ export default function BiometricLockScreen({ org, userName, onUnlocked, onSignO
       <button onClick={attempt} disabled={status === 'prompting'}
         style={{
           width: '100%', maxWidth: 300, padding: '14px 20px', borderRadius: 13, border: 'none',
-          background: status === 'prompting' ? 'rgba(255,255,255,0.15)' : `linear-gradient(135deg, ${primary}, ${primary}CC)`,
+          background: status === 'prompting' ? 'rgba(255,255,255,0.15)' : `linear-gradient(135deg, ${primary}, var(--org-a85))`,
           color: '#fff', fontSize: 15, fontWeight: 800, cursor: status === 'prompting' ? 'default' : 'pointer',
           boxShadow: status === 'prompting' ? 'none' : `0 10px 26px -10px ${primary}`,
         }}>

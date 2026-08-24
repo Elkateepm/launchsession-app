@@ -489,14 +489,14 @@ function AccessModal({ form, staff, currentUserId, primary, onClose, onSave }) {
         <div style={{ fontSize: 13, color: '#64748B', marginBottom: 18 }}>{form.name}</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'admins' ? primary : '#E2E8F0'}`, cursor: 'pointer', background: mode === 'admins' ? `${primary}0D` : '#fff' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'admins' ? primary : '#E2E8F0'}`, cursor: 'pointer', background: mode === 'admins' ? 'var(--org-a05)' : '#fff' }}>
             <input type="radio" checked={mode === 'admins'} onChange={() => setMode('admins')} style={{ marginTop: 3 }} />
             <div>
               <div style={{ fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>Admins only</div>
               <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>The safest default. Only people with the Admin role can see who filled this in.</div>
             </div>
           </label>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'custom' ? primary : '#E2E8F0'}`, cursor: 'pointer', background: mode === 'custom' ? `${primary}0D` : '#fff' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'custom' ? primary : '#E2E8F0'}`, cursor: 'pointer', background: mode === 'custom' ? 'var(--org-a05)' : '#fff' }}>
             <input type="radio" checked={mode === 'custom'} onChange={() => setMode('custom')} style={{ marginTop: 3 }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>Admins + specific people</div>

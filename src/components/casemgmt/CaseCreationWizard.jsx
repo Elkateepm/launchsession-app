@@ -140,7 +140,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {CATEGORIES.map(c => (
                       <button key={c} onClick={() => set('category', c)}
-                        style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${form.category === c ? primary : 'rgba(15,23,42,0.1)'}`, background: form.category === c ? `${primary}14` : '#fff', color: form.category === c ? primary : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                        style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${form.category === c ? primary : 'rgba(15,23,42,0.1)'}`, background: form.category === c ? 'var(--org-a10)' : '#fff', color: form.category === c ? primary : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                         {c}
                       </button>
                     ))}
@@ -154,7 +154,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
                     {RISK_LEVELS.map(r => (
                       <button key={r} onClick={() => set('risk_level', r)}
-                        style={{ padding: '14px 10px', borderRadius: 14, border: `2px solid ${form.risk_level === r ? primary : 'rgba(15,23,42,0.08)'}`, background: form.risk_level === r ? `${primary}0c` : '#fff', cursor: 'pointer', textAlign: 'left' }}>
+                        style={{ padding: '14px 10px', borderRadius: 14, border: `2px solid ${form.risk_level === r ? primary : 'rgba(15,23,42,0.08)'}`, background: form.risk_level === r ? 'var(--org-a05)' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
                         <RiskBadge level={r} />
                         <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 6 }}>
                           {r === 'low' && 'Monitor, no immediate action'}
@@ -188,7 +188,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                   <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: '#0F172A' }}>Assign to a staff member</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {staff.map(s => (
-                      <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, border: `1.5px solid ${form.assigned_to_user_id === s.id ? primary : 'rgba(15,23,42,0.08)'}`, background: form.assigned_to_user_id === s.id ? `${primary}0c` : '#fff', cursor: 'pointer' }}>
+                      <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, border: `1.5px solid ${form.assigned_to_user_id === s.id ? primary : 'rgba(15,23,42,0.08)'}`, background: form.assigned_to_user_id === s.id ? 'var(--org-a05)' : '#fff', cursor: 'pointer' }}>
                         <input type="radio" name="assignee" checked={form.assigned_to_user_id === s.id} onChange={() => set('assigned_to_user_id', s.id)} style={{ width: 15, height: 15 }} />
                         <Avatar name={s.full_name} photoUrl={s.photo_url} size={26} />
                         <div>

@@ -254,7 +254,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{
         ...glass({ padding: '28px 32px', marginBottom: 20 }),
         position: 'relative', overflow: 'hidden',
-        background: `linear-gradient(135deg, rgba(255,255,255,0.85), ${primary}0a)`,
+        background: `linear-gradient(135deg, rgba(255,255,255,0.85), var(--org-a05))`,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
           <div>
@@ -277,12 +277,12 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
             style={{ position: 'relative', width: 120, height: 120, flexShrink: 0 }}
           >
             {/* ambient glow, tinted with the org's own brand colour */}
-            <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', background: `radial-gradient(circle, ${primary}30, transparent 70%)`, filter: 'blur(14px)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', background: `radial-gradient(circle, var(--org-a20), transparent 70%)`, filter: 'blur(14px)', pointerEvents: 'none' }} />
             {/* the org's own logo — falls back to the LaunchSession badge only if they haven't set one */}
             <div style={{
               position: 'relative', width: 130, height: 130, borderRadius: '50%', background: '#fff',
               display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-              border: `2px solid ${primary}30`, boxShadow: `0 8px 20px ${primary}30`,
+              border: `2px solid var(--org-a20)`, boxShadow: `0 8px 20px var(--org-a20)`,
             }}>
               <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={org?.name || 'Organisation'} style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
             </div>
@@ -299,7 +299,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             flex: '1 0 auto', padding: '9px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
             background: tab === t.key ? primary : 'transparent', color: tab === t.key ? '#fff' : '#64748B',
-            boxShadow: tab === t.key ? `0 4px 14px -4px ${primary}80` : 'none', whiteSpace: 'nowrap',
+            boxShadow: tab === t.key ? `0 4px 14px -4px var(--org-a60)` : 'none', whiteSpace: 'nowrap',
           }}>{t.icon} {t.label}</button>
         ))}
       </div>

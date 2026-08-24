@@ -217,7 +217,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
         }}>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#6B7280', fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}><Icon name="✕" /> Close</button>
 
-        <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}06)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 22px', marginBottom: 20 }}>
+        <div style={{ background: `linear-gradient(135deg, var(--org-a10), var(--org-a05))`, border: `1px solid var(--org-a20)`, borderRadius: 20, padding: '20px 22px', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{ width: 56, height: 56, borderRadius: 16, background: primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#fff', fontWeight: 900, flexShrink: 0 }}>
@@ -678,7 +678,7 @@ export default function HR({ org, session, userProfile }) {
       </AnimatePresence>
 
       {/* Hero */}
-      <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}06)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
+      <div style={{ background: `linear-gradient(135deg, var(--org-a10), var(--org-a05))`, border: `1px solid var(--org-a20)`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14, marginBottom: 4 }}>
           <div>
             <div style={{ fontSize: 24, fontWeight: 900 }}><Icon name="🧑‍💼" /> HR Centre</div>
