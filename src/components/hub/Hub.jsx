@@ -416,22 +416,31 @@ function PhotoCarousel({ orgId, primary, userId }) {
   }
 
   return (
-    <div style={{ marginBottom: 18 }}>
+    <div>
       <input ref={inputRef} type="file" multiple accept="image/*" hidden onChange={e => handleUpload(e.target.files)} />
 
       {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)' }}><Icon name="📸" /> Photos</div>
-        <div style={{ display: 'flex', gap: 8 }}>
+      {/* Two 40px pill buttons next to a 13px label made the header heavier
+          than the photos underneath it. The label leads, the actions are
+          quiet, and Add Photo is the only one that carries the brand. */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+          <Icon name="📸" size={14} tone="brand" />
+          <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.7 }}>Photos</span>
+          {photos.length > 0 && (
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3, #9CA3AF)' }}>{photos.length}</span>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
           {photos.length > 0 && (
             <button onClick={() => setManaging(m => !m)}
-              style={{ minHeight: 40, padding: '0 16px', borderRadius: 99, border: '1.5px solid #E5E7EB', background: managing ? '#F1F5F9' : '#fff', color: managing ? '#374151' : '#6B7280', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              style={{ minHeight: 32, padding: '0 11px', borderRadius: 9, border: '1px solid var(--border, #E5E7EB)', background: managing ? 'var(--org-a10)' : 'transparent', color: managing ? 'var(--org-ink)' : '#6B7280', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>
               {managing ? 'Done' : 'Manage'}
             </button>
           )}
           <button onClick={() => inputRef.current?.click()} disabled={uploading}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 40, padding: '0 16px', borderRadius: 99, border: `1.5px solid ${primary}`, background: uploading ? '#F3F4F6' : '#fff', color: primary, fontSize: 12, fontWeight: 800, cursor: uploading ? 'default' : 'pointer' }}>
-            📷 {uploading ? 'Uploading...' : 'Add Photo'}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, minHeight: 32, padding: '0 12px', borderRadius: 9, border: 'none', background: uploading ? 'var(--border, #F3F4F6)' : 'var(--org-primary)', color: uploading ? '#9CA3AF' : 'var(--org-on-primary)', fontSize: 11.5, fontWeight: 800, cursor: uploading ? 'default' : 'pointer' }}>
+            <Icon name="📷" size={13} /> {uploading ? 'Uploading…' : 'Add'}
           </button>
         </div>
       </div>
@@ -3585,10 +3594,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               width: isMobile ? '100%' : 'auto',
               gap: isMobile ? 8 : 9, flexWrap: 'wrap', flexShrink: 0,
             }}>
-              <button onClick={() => setShowInviteChild(true)} style={heroGlassBtn}><Icon name="🧒" /> Invite child</button>
-              {hasModule('volunteers') && (
-                <button onClick={() => go('volunteers', { autoOpenInvite: true })} style={heroGlassBtn}><Icon name="🤝" /> Invite volunteer</button>
-              )}
+              {/* Invite child / Invite volunteer removed. Both are occasional
+                  admin jobs that already live on their own screens, and sitting
+                  them beside the register competed with the one thing this
+                  header exists to get you to. */}
               {todaySessions.length > 0 && (
                 <button onClick={() => go('registers')} style={{
                   ...heroGlassBtn, background: '#fff', color: primary, fontWeight: 800,
@@ -4430,13 +4439,23 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             return <ActionRow items={items} isMobile={isMobile} />
           })()}
 
-          {/* PHOTO CAROUSEL — community content, kept below operational items */}
-          <PhotoCarousel orgId={orgId} primary={primary} userId={session?.user?.id} />
+          {/* PHOTO CAROUSEL — community content, kept below operational items.
+              Wrapped in the same panel as everything else in this column: it
+              was the one block with no container, so the rail read as two
+              cards and some loose content rather than one column. */}
+          <div style={railPanel}>
+            <PhotoCarousel orgId={orgId} primary={primary} userId={session?.user?.id} />
+          </div>
 
           {/* ANNOUNCEMENTS — staff/admin only */}
           {['admin', 'owner', 'staff'].includes(userProfile?.role) && (
             <AnnouncementsPanel orgId={orgId} primary={primary} userId={session?.user?.id} />
           )}
+
+          {/* The Report a Cause for Concern button is position: fixed at the
+              bottom right, which is exactly where this column ends. Without
+              this the last panel sits underneath it. */}
+          <div aria-hidden="true" style={{ height: isMobile ? 0 : 72 }} />
         </div>
       </section>
 
@@ -4642,6 +4661,16 @@ function relativeDay(dateStr, todayStr) {
 function splitSeries(title) {
   const m = String(title || '').match(/^(.*?)\s+[—–-]\s+(.+)$/);
   return m ? { series: m[1].trim(), part: m[2].trim() } : { series: null, part: title };
+}
+
+// The side column's panel. One radius, one border, one shadow, so the rail
+// reads as a single column rather than a stack of differently-built boxes.
+const railPanel = {
+  background: 'var(--surface, #fff)',
+  border: '1px solid var(--border, #E6EAF4)',
+  borderRadius: 18,
+  padding: 16,
+  boxShadow: '0 1px 2px rgba(20,26,46,.04), 0 8px 24px -12px rgba(20,26,46,.18)',
 }
 
 const styles = {

@@ -260,7 +260,7 @@ const TONES = {
 export function ActionRow({ items, isMobile }) {
   if (!items || items.length === 0) return null
   return (
-    <div className="ls-rise" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12 }}>
+    <div className="ls-rise" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(230px, 1fr))', gap: 10 }}>
       {items.map(item => {
         const tone = TONES[item.tone] || TONES.amber
         return (
@@ -272,18 +272,22 @@ export function ActionRow({ items, isMobile }) {
             onClick={item.onClick}
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.onClick() } }}
             style={{
-              background: 'var(--surface, #fff)', borderRadius: 18, padding: '15px 17px',
-              display: 'flex', alignItems: 'center', gap: 13, cursor: 'pointer',
-              border: '1px solid var(--border, #E6EAF4)', borderLeft: `4px solid ${tone.line}`,
-              transition: 'transform .18s ease, box-shadow .18s ease',
+              // Same radius, border and shadow as every other panel in this
+              // column. Urgency is carried by the icon tile, not by a coloured
+              // bar down the edge -- three cards each with a different coloured
+              // stripe read as decoration rather than as a priority order.
+              background: 'var(--surface, #fff)', borderRadius: 18, padding: '13px 15px',
+              display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
+              border: '1px solid var(--border, #E6EAF4)',
+              transition: 'transform .18s ease, box-shadow .18s ease, border-color .18s ease',
               boxShadow: '0 1px 2px rgba(20,26,46,.04), 0 8px 24px -12px rgba(20,26,46,.18)',
               minWidth: 0, outline: 'none',
             }}
           >
-            <div style={{ width: 38, height: 38, borderRadius: 12, display: 'grid', placeItems: 'center', fontSize: 17, flexShrink: 0, background: tone.bg }}><Icon name={item.icon} /></div>
+            <div style={{ width: 34, height: 34, borderRadius: 11, display: 'grid', placeItems: 'center', fontSize: 15, flexShrink: 0, background: tone.bg, color: tone.line }}><Icon name={item.icon} size={16} /></div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #141A2E)' }}>{item.title}</div>
-              <div style={{ fontSize: 11.5, color: 'var(--text3, #5A6484)', marginTop: 2 }}>{item.detail}</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #141A2E)', lineHeight: 1.35 }}>{item.title}</div>
+              <div style={{ fontSize: 11.5, color: 'var(--text3, #5A6484)', marginTop: 2, lineHeight: 1.4 }}>{item.detail}</div>
             </div>
             <span className="ls-act-go" style={{ marginLeft: 'auto', fontSize: 15, color: '#98A1BC', transition: 'transform .18s ease', flexShrink: 0 }}><Icon name="→" /></span>
           </div>
@@ -295,8 +299,8 @@ export function ActionRow({ items, isMobile }) {
 
 export function AllClear({ label }) {
   return (
-    <div className="ls-rise" style={{ background: '#DFF8EF', border: '1px solid #B8EBD8', borderRadius: 18, padding: '13px 18px', display: 'flex', alignItems: 'center', gap: 11, fontSize: 13, fontWeight: 700, color: '#06614A' }}>
-      <span style={{ fontSize: 17 }}><Icon name="🎉" /></span>{label}
+    <div className="ls-rise" style={{ background: '#DFF8EF', border: '1px solid #B8EBD8', borderRadius: 18, padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, fontWeight: 700, color: '#06614A', lineHeight: 1.4 }}>
+      <Icon name="✅" size={16} />{label}
     </div>
   )
 }
