@@ -69,12 +69,12 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
     const [groups, sessions, projects] = await Promise.all([
       // Only the group name is needed, so this reads one column rather than
       // pulling child records the builder has no use for.
-      supabase.from('children').select('bubble').eq('org_id', org.id).not('bubble', 'is', null),
+      supabase.from('children').select('group_name').eq('org_id', org.id).not('group_name', 'is', null),
       supabase.from('sessions').select('title').eq('org_id', org.id).order('session_date', { ascending: false }).limit(40),
       supabase.from('projects').select('name').eq('org_id', org.id).limit(40),
     ])
     setSmartOptions({
-      groups: [...new Set((groups.data || []).map(r => r.bubble).filter(Boolean))].sort(),
+      groups: [...new Set((groups.data || []).map(r => r.group_name).filter(Boolean))].sort(),
       sessions: [...new Set((sessions.data || []).map(r => r.title).filter(Boolean))],
       projects: [...new Set((projects.data || []).map(r => r.name).filter(Boolean))],
     })
@@ -1056,7 +1056,7 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
   const [children, setChildren] = useState([])
   const [picking, setPicking] = useState(false)
   const [chosen, setChosen] = useState([])
-  const [bubble, setBubble] = useState('all')
+  const [group, setGroup] = useState('all')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -1066,8 +1066,8 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
     setLoading(true)
     const [{ data: recs }, { data: kids }] = await Promise.all([
       supabase.from('form_recipients').select('*').eq('form_id', formId).order('recipient_name'),
-      supabase.from('children').select('id, first_name, surname, bubble, parent_name, parent_email')
-        .eq('org_id', org.id).order('surname'),
+      supabase.from('children').select('id, first_name, last_name, group_name, parent_name, parent_email')
+        .eq('org_id', org.id).order('last_name'),
     ])
     setRecipients(recs || [])
     setChildren(kids || [])
@@ -1076,8 +1076,8 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
 
   useEffect(() => { load() }, [load])
 
-  const bubbles = [...new Set(children.map(c => c.bubble).filter(Boolean))]
-  const visible = bubble === 'all' ? children : children.filter(c => c.bubble === bubble)
+  const groupNames = [...new Set(children.map(c => c.group_name).filter(Boolean))]
+  const visible = group === 'all' ? children : children.filter(c => c.group_name === group)
   const already = new Set(recipients.map(r => r.child_id).filter(Boolean))
 
   const completed = recipients.filter(r => r.status === 'completed')
@@ -1154,12 +1154,12 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
       {picking && (
         <div style={card}>
           <div style={{ display: 'flex', gap: 7, marginBottom: 12, flexWrap: 'wrap' }}>
-            {['all', ...bubbles].map(b => (
-              <button key={b} onClick={() => setBubble(b)} style={{
+            {['all', ...groupNames].map(b => (
+              <button key={b} onClick={() => setGroup(b)} style={{
                 padding: '6px 12px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
-                border: `1px solid ${bubble === b ? 'transparent' : '#E2E8F0'}`,
-                background: bubble === b ? primary : '#fff',
-                color: bubble === b ? '#fff' : '#64748B',
+                border: `1px solid ${group === b ? 'transparent' : '#E2E8F0'}`,
+                background: group === b ? primary : '#fff',
+                color: group === b ? '#fff' : '#64748B',
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>{b === 'all' ? 'Everyone' : b}</button>
             ))}
@@ -1190,7 +1190,7 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
                   }}>{sel ? '\u2713' : ''}</span>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>
-                      {c.first_name} {c.surname}
+                      {c.first_name} {c.last_name}
                     </span>
                     <span style={{ display: 'block', fontSize: 11.5, color: '#94A3B8' }}>
                       {/* No parent email means the form can be shared but this
