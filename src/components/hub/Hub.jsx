@@ -4048,6 +4048,63 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
       <section className="ls-hub-outer-grid" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) 320px', gap: 18, padding: pad }}>
         <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* NEEDS ATTENTION — only genuine outstanding work, colour-coded by
+              urgency. The old version padded this list with rows like
+              "Registers: no activity yet" and "Mentoring: view active matches",
+              which weren't actions at all — they made a quiet day look as busy
+              as a bad one, and buried the items that did need doing. When
+              there's nothing outstanding, one green line says so. */}
+          {(() => {
+            const items = []
+            if (hasModule('safeguarding') && concerns.length > 0) {
+              items.push({
+                key: 'safeguarding', icon: '🛡️', tone: 'punch',
+                title: `${concerns.length} open safeguarding concern${concerns.length > 1 ? 's' : ''}`,
+                detail: 'Review and record next steps',
+                onClick: () => go('safeguarding'),
+              })
+            }
+            if (pendingRegistrations > 0) {
+              items.push({
+                key: 'registrations', icon: '🧒', tone: 'punch',
+                title: `${pendingRegistrations} registration${pendingRegistrations > 1 ? 's' : ''} to authorise`,
+                detail: 'Submitted by parents, awaiting approval',
+                onClick: () => go('children', { openRegistrationRequests: true }),
+              })
+            }
+            if (completedWithoutReflection.length > 0) {
+              const oldest = completedWithoutReflection[completedWithoutReflection.length - 1]
+              const days = oldest ? Math.floor((Date.now() - new Date(oldest.session_date).getTime()) / 86400000) : 0
+              items.push({
+                key: 'reflections', icon: '✍️', tone: 'amber',
+                title: `${completedWithoutReflection.length} reflection${completedWithoutReflection.length > 1 ? 's' : ''} to write up`,
+                detail: days > 0 ? `Oldest is ${days} day${days > 1 ? 's' : ''} old` : 'From sessions that have ended',
+                onClick: () => setShowReflectionsModal(true),
+              })
+            }
+            if (medicalAlertsNeedingReview > 0) {
+              items.push({
+                key: 'medical', icon: '💊', tone: 'amber',
+                title: `${medicalAlertsNeedingReview} medical record${medicalAlertsNeedingReview > 1 ? 's' : ''} to review`,
+                detail: 'Not confirmed in the last six months',
+                onClick: () => go('medical_alerts'),
+              })
+            }
+            if (hasModule('resource_booking') && checkedOutCount > 0) {
+              items.push({
+                key: 'resources', icon: '📦', tone: 'sky',
+                title: `${checkedOutCount} item${checkedOutCount > 1 ? 's' : ''} still checked out`,
+                detail: 'Chase or mark as returned',
+                onClick: () => go('resource_booking'),
+              })
+            }
+
+            if (items.length === 0) {
+              return <AllClear label="Nothing needs your attention right now" />
+            }
+            return <ActionRow items={items} isMobile={isMobile} />
+          })()}
+
           {/* ACTIVE PROJECT — only shown while a project is genuinely running */}
           {activeProject && (
             <div style={{
@@ -4093,25 +4150,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             primary={primary}
           />
 
-          {/* AT A GLANCE — four real numbers that count up on mount, each with a
-              six-week sparkline so the figure has context. Replaces the
-              today/month toggle plus the two GlanceCards below it, which
-              between them showed the same counts in three card styles. */}
-          <Panel title="🧭 This month at a glance" right={
-            <button onClick={() => go('reports')} style={{ background: `${primary}14`, color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>Full report →</button>
-          }>
-            {/* Tints derive from the org's own primary/secondary rather than a
-                fixed four-colour set, so these sit in the same palette as the
-                hero and the rest of the module pages. Attendance is the one
-                exception: it grades itself, the same rule Reports already uses,
-                because a rate is a judgement and shouldn't read as brand. */}
-            <GlanceStats isMobile={isMobile} stats={[
-              { key: 'children', value: children.length, label: terms.People, bg: `${primary}14`, colour: primary, trend: trends.children, onClick: () => go('children') },
-              { key: 'sessions', value: sessionsRunThisMonth, label: `${terms.Sessions} run`, bg: `${secondary}14`, colour: secondary, trend: trends.sessions, onClick: () => go('planner') },
-              { key: 'attendance', value: attendanceRate, suffix: '%', label: 'Attendance rate', bg: attendanceTone.bg, colour: attendanceTone.fg, trend: trends.attendance, onClick: () => go('reports') },
-              { key: 'volunteers', value: volunteersCount, label: 'Volunteers active', bg: `${primary}0D`, colour: primary, trend: trends.volunteers, onClick: () => go('volunteers') },
-            ]} />
-          </Panel>
 
           {/* JUMP STRAIGHT IN — the handful of things people actually start from
               Home, as one tappable grid rather than buried in the nav rail. */}
@@ -4339,66 +4377,32 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             )}
           </div>
 
+          {/* AT A GLANCE — four real numbers that count up on mount, each with a
+              six-week sparkline so the figure has context. Replaces the
+              today/month toggle plus the two GlanceCards below it, which
+              between them showed the same counts in three card styles. */}
+          <Panel title="🧭 This month at a glance" right={
+            <button onClick={() => go('reports')} style={{ background: `${primary}14`, color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>Full report →</button>
+          }>
+            {/* Tints derive from the org's own primary/secondary rather than a
+                fixed four-colour set, so these sit in the same palette as the
+                hero and the rest of the module pages. Attendance is the one
+                exception: it grades itself, the same rule Reports already uses,
+                because a rate is a judgement and shouldn't read as brand. */}
+            <GlanceStats isMobile={isMobile} stats={[
+              { key: 'children', value: children.length, label: terms.People, bg: `${primary}14`, colour: primary, trend: trends.children, onClick: () => go('children') },
+              { key: 'sessions', value: sessionsRunThisMonth, label: `${terms.Sessions} run`, bg: `${secondary}14`, colour: secondary, trend: trends.sessions, onClick: () => go('planner') },
+              { key: 'attendance', value: attendanceRate, suffix: '%', label: 'Attendance rate', bg: attendanceTone.bg, colour: attendanceTone.fg, trend: trends.attendance, onClick: () => go('reports') },
+              { key: 'volunteers', value: volunteersCount, label: 'Volunteers active', bg: `${primary}0D`, colour: primary, trend: trends.volunteers, onClick: () => go('volunteers') },
+            ]} />
+          </Panel>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {/* NEEDS ATTENTION — only genuine outstanding work, colour-coded by
-              urgency. The old version padded this list with rows like
-              "Registers: no activity yet" and "Mentoring: view active matches",
-              which weren't actions at all — they made a quiet day look as busy
-              as a bad one, and buried the items that did need doing. When
-              there's nothing outstanding, one green line says so. */}
-          {(() => {
-            const items = []
-            if (hasModule('safeguarding') && concerns.length > 0) {
-              items.push({
-                key: 'safeguarding', icon: '🛡️', tone: 'punch',
-                title: `${concerns.length} open safeguarding concern${concerns.length > 1 ? 's' : ''}`,
-                detail: 'Review and record next steps',
-                onClick: () => go('safeguarding'),
-              })
-            }
-            if (pendingRegistrations > 0) {
-              items.push({
-                key: 'registrations', icon: '🧒', tone: 'punch',
-                title: `${pendingRegistrations} registration${pendingRegistrations > 1 ? 's' : ''} to authorise`,
-                detail: 'Submitted by parents, awaiting approval',
-                onClick: () => go('children', { openRegistrationRequests: true }),
-              })
-            }
-            if (completedWithoutReflection.length > 0) {
-              const oldest = completedWithoutReflection[completedWithoutReflection.length - 1]
-              const days = oldest ? Math.floor((Date.now() - new Date(oldest.session_date).getTime()) / 86400000) : 0
-              items.push({
-                key: 'reflections', icon: '✍️', tone: 'amber',
-                title: `${completedWithoutReflection.length} reflection${completedWithoutReflection.length > 1 ? 's' : ''} to write up`,
-                detail: days > 0 ? `Oldest is ${days} day${days > 1 ? 's' : ''} old` : 'From sessions that have ended',
-                onClick: () => setShowReflectionsModal(true),
-              })
-            }
-            if (medicalAlertsNeedingReview > 0) {
-              items.push({
-                key: 'medical', icon: '💊', tone: 'amber',
-                title: `${medicalAlertsNeedingReview} medical record${medicalAlertsNeedingReview > 1 ? 's' : ''} to review`,
-                detail: 'Not confirmed in the last six months',
-                onClick: () => go('medical_alerts'),
-              })
-            }
-            if (hasModule('resource_booking') && checkedOutCount > 0) {
-              items.push({
-                key: 'resources', icon: '📦', tone: 'sky',
-                title: `${checkedOutCount} item${checkedOutCount > 1 ? 's' : ''} still checked out`,
-                detail: 'Chase or mark as returned',
-                onClick: () => go('resource_booking'),
-              })
-            }
 
-            if (items.length === 0) {
-              return <AllClear label="Nothing needs your attention right now" />
-            }
-            return <ActionRow items={items} isMobile={isMobile} />
-          })()}
-
+          {/* Sidebar is ambient content only. Anything needing a decision
+              belongs in the main column, where it is not 320px wide on a
+              laptop and does not sit below the session lists on a phone. */}
           {/* PHOTO CAROUSEL — community content, kept below operational items */}
           <PhotoCarousel orgId={orgId} primary={primary} userId={session?.user?.id} />
 

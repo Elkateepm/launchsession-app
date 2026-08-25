@@ -2503,10 +2503,26 @@ function VenueDefaultHazardsEditor({ hazards, onChange }) {
 }
 
 const ROLE_CONFIG = {
+  owner:     { label: 'Owner',     color: '#B45309', bg: '#FEF3C7' },
   admin:     { label: 'Admin',     color: '#7C3AED', bg: '#F3E8FF' },
+  manager:   { label: 'Manager',   color: '#0891B2', bg: '#CFFAFE' },
   staff:     { label: 'Staff',     color: '#2563EB', bg: '#DBEAFE' },
   volunteer: { label: 'Volunteer', color: '#059669', bg: '#D1FAE5' },
 }
+// A role we do not recognise reads as exactly that. Falling back to Volunteer
+// understated someone's access on the one screen that exists to show it.
+const ROLE_UNKNOWN = { label: 'Unknown role', color: '#64748B', bg: '#F1F5F9' }
+
+// Access tiers, most privileged first. `always` keeps a card on screen when it
+// is empty, because "no admins" is information; an empty Managers card is not.
+const ACCESS_TIERS = [
+  { key: 'leadership', title: 'Owners & admins', roles: ['owner', 'admin'], always: true,
+    description: 'Full access to organisation settings, branding, billing and user management' },
+  { key: 'managers', title: 'Managers', roles: ['manager'],
+    description: 'Run delivery and approve work, without organisation-level settings' },
+  { key: 'team', title: 'Staff & volunteers', roles: ['staff', 'volunteer'], always: true,
+    description: 'Day-to-day access, without organisation-level settings' },
+]
 
 function UsersSection({ org, session, isAdmin, currentUserId }) {
   const [users, setUsers] = useState([])
@@ -2544,6 +2560,9 @@ function UsersSection({ org, session, isAdmin, currentUserId }) {
 
   const handleRemove = async (user) => {
     if (user.id === currentUserId) { setError("You can't remove your own account."); return }
+    // Guarded here too: the button is disabled, but losing the owner would
+    // leave the organisation with nobody holding it.
+    if (user.role === 'owner') { setError("The owner can't be removed here. Transfer ownership first."); return }
     if (!window.confirm(`Remove ${user.full_name || user.email} from ${org?.name}? They will lose access immediately.`)) return
     setBusyId(user.id)
     try {
@@ -2556,8 +2575,14 @@ function UsersSection({ org, session, isAdmin, currentUserId }) {
     setBusyId(null)
   }
 
-  const admins = users.filter(u => u.role === 'admin')
-  const others = users.filter(u => u.role !== 'admin')
+  const tiers = ACCESS_TIERS
+    .map(t => ({ ...t, members: users.filter(u => t.roles.includes(u.role)) }))
+    .filter(t => t.always || t.members.length > 0)
+
+  // Anyone whose role is not in the model still has access, so they are shown
+  // rather than quietly dropped from the list of who can get in.
+  const known = new Set(ACCESS_TIERS.flatMap(t => t.roles))
+  const unplaced = users.filter(u => !known.has(u.role))
 
   return (
     <div>
@@ -2577,37 +2602,25 @@ function UsersSection({ org, session, isAdmin, currentUserId }) {
         <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>
       )}
 
-      {/* Admins */}
-      <SettingCard title={`Admin accounts (${admins.length})`} description="Full access to organisation settings, branding, billing, and user management">
-        {loading ? (
-          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Loading...</div>
-        ) : admins.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--text3)' }}>No admin accounts yet.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {admins.map(u => (
-              <UserRow key={u.id} user={u} isAdmin={isAdmin} isSelf={u.id === currentUserId} busy={busyId === u.id}
-                onRoleChange={handleRoleChange} onRemove={handleRemove} />
-            ))}
-          </div>
-        )}
-      </SettingCard>
-
-      {/* Everyone else */}
-      <SettingCard title={`Staff & Volunteers (${others.length})`} description="Day-to-day access without organisation-level settings">
-        {loading ? (
-          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Loading...</div>
-        ) : others.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--text3)' }}>No other accounts yet.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {others.map(u => (
-              <UserRow key={u.id} user={u} isAdmin={isAdmin} isSelf={u.id === currentUserId} busy={busyId === u.id}
-                onRoleChange={handleRoleChange} onRemove={handleRemove} />
-            ))}
-          </div>
-        )}
-      </SettingCard>
+      {[...tiers, ...(unplaced.length > 0
+        ? [{ key: 'unplaced', title: 'Other accounts', members: unplaced,
+             description: 'These roles are not part of the access model — check them' }]
+        : [])].map(tier => (
+        <SettingCard key={tier.key} title={`${tier.title} (${tier.members.length})`} description={tier.description}>
+          {loading ? (
+            <div style={{ fontSize: 13, color: 'var(--text3)' }}>Loading...</div>
+          ) : tier.members.length === 0 ? (
+            <div style={{ fontSize: 13, color: 'var(--text3)' }}>Nobody has this level of access yet.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {tier.members.map(u => (
+                <UserRow key={u.id} user={u} isAdmin={isAdmin} isSelf={u.id === currentUserId} busy={busyId === u.id}
+                  onRoleChange={handleRoleChange} onRemove={handleRemove} />
+              ))}
+            </div>
+          )}
+        </SettingCard>
+      ))}
 
       {showInvite && (
         <InviteUserModal org={org} session={session} onClose={() => setShowInvite(false)}
@@ -2618,7 +2631,8 @@ function UsersSection({ org, session, isAdmin, currentUserId }) {
 }
 
 function UserRow({ user, isAdmin, isSelf, busy, onRoleChange, onRemove }) {
-  const rc = ROLE_CONFIG[user.role] || ROLE_CONFIG.volunteer
+  const rc = ROLE_CONFIG[user.role] || ROLE_UNKNOWN
+  const isOwner = user.role === 'owner'
   const initials = (user.full_name || user.email || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)' }}>
@@ -2633,19 +2647,25 @@ function UserRow({ user, isAdmin, isSelf, busy, onRoleChange, onRemove }) {
         </div>
         <div style={{ fontSize: 11, color: 'var(--text3)' }}>{user.email}</div>
       </div>
-      {isAdmin ? (
+      {isAdmin && !isOwner ? (
         <select value={user.role} disabled={busy || isSelf} onChange={e => onRoleChange(user.id, e.target.value)}
           style={{ fontSize: 12, fontWeight: 700, padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', cursor: isSelf ? 'default' : 'pointer' }}>
+          {/* Owner is absent deliberately: handing over ownership is not a
+              dropdown change. An unrecognised role keeps its own option so
+              selecting it is a choice rather than a silent reassignment. */}
           <option value="admin">Admin</option>
+          <option value="manager">Manager</option>
           <option value="staff">Staff</option>
           <option value="volunteer">Volunteer</option>
+          {!ROLE_CONFIG[user.role] && <option value={user.role}>{user.role || 'Unknown'}</option>}
         </select>
       ) : (
         <span style={{ fontSize: 11, fontWeight: 800, color: rc.color, background: rc.bg, borderRadius: 99, padding: '4px 10px' }}>{rc.label}</span>
       )}
       {isAdmin && (
-        <button onClick={() => onRemove(user)} disabled={busy || isSelf} title={isSelf ? "You can't remove yourself" : 'Remove'}
-          style={{ border: 'none', background: 'none', cursor: isSelf ? 'default' : 'pointer', fontSize: 14, opacity: isSelf ? 0.3 : 0.7, padding: 4 }}>
+        <button onClick={() => onRemove(user)} disabled={busy || isSelf || isOwner}
+          title={isSelf ? "You can't remove yourself" : isOwner ? "The owner can't be removed here" : 'Remove'}
+          style={{ border: 'none', background: 'none', cursor: (isSelf || isOwner) ? 'default' : 'pointer', fontSize: 14, opacity: (isSelf || isOwner) ? 0.3 : 0.7, padding: 4 }}>
           🗑️
         </button>
       )}
