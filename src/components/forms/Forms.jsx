@@ -5,7 +5,7 @@ import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FormsOverview, ResponseInbox } from './FormsOverview'
 import { mergeTemplates } from './formTemplates'
-import NewFormBuilder from './FormBuilder'
+import NewFormBuilder, { CHILD_TAG } from './FormBuilder'
 
 function CountUp({ value, duration = 0.6 }) {
   const [display, setDisplay] = React.useState(value)
@@ -50,10 +50,32 @@ const FORM_ACCENTS = ['#6D5DF6', '#2563EB', '#059669', '#D97706', '#DB2777', '#0
 
 // "Type" tag shown on each form row/card — distinct from the audience CATEGORIES
 // above (which classify templates), this is the purpose of the form itself.
-const TAG_OPTIONS = ['Registration', 'Consent', 'Application', 'Survey', 'Report', 'Request', 'Other']
+// Forms that maintain the child record are what staff come here to chase, so
+// their section sorts above every other. CHILD_TAG is defined in FormBuilder,
+// which is what assigns it.
+const TAG_OPTIONS = [CHILD_TAG, 'Registration', 'Consent', 'Application', 'Survey', 'Report', 'Request', 'Other']
 const TAG_COLOR = {
+  [CHILD_TAG]: '#6D5DF6',
   Registration: '#2563EB', Consent: '#0EA5E9', Application: '#D97706',
   Survey: '#7C3AED', Report: '#DC2626', Request: '#059669', Other: '#64748B',
+}
+
+// Section order. A tag we do not recognise -- an imported form, or one left
+// over from an older tag set -- sorts after the known ones rather than
+// disappearing from a list that is meant to show everything.
+const TAG_RANK = Object.fromEntries(TAG_OPTIONS.map((t, i) => [t, i]))
+const tagOf = f => f.tag || 'Other'
+const tagRank = t => (t in TAG_RANK ? TAG_RANK[t] : TAG_OPTIONS.length)
+
+function GroupHeading({ tag, count }) {
+  return (
+    // gridColumn spans the card grid; it is simply ignored in the flex list.
+    <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 9, padding: '8px 2px 0' }}>
+      <span style={{ width: 7, height: 7, borderRadius: '50%', background: TAG_COLOR[tag] || '#64748B', flexShrink: 0 }} />
+      <span style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A' }}>{tag}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8' }}>{count}</span>
+    </div>
+  )
 }
 const STATUS_STYLE = {
   active:   { label: 'Active',   bg: '#F0FDF4', color: '#16A34A', dot: '#16A34A' },
@@ -848,8 +870,23 @@ export default function Forms({ org, session, isAdmin }) {
       submissions: (a, b) => (submissionsByForm[b.id]?.length || 0) - (submissionsByForm[a.id]?.length || 0),
       newest: (a, b) => new Date(b.created_at) - new Date(a.created_at),
     }
-    return [...list].sort(sorters[sortBy] || sorters.updated)
+    const within = sorters[sortBy] || sorters.updated
+    return [...list].sort((a, b) => {
+      const ra = tagRank(tagOf(a)), rb = tagRank(tagOf(b))
+      if (ra !== rb) return ra - rb
+      // Unranked tags share a rank, so order them by name to keep their
+      // sections stable rather than interleaved.
+      if (ra === TAG_OPTIONS.length) {
+        const byName = tagOf(a).localeCompare(tagOf(b))
+        if (byName !== 0) return byName
+      }
+      return within(a, b)
+    })
   }, [forms, tab, typeFilter, search, sortBy, submissionsByForm])
+
+  const groupCounts = React.useMemo(() => filteredForms.reduce((acc, f) => {
+    const t = tagOf(f); acc[t] = (acc[t] || 0) + 1; return acc
+  }, {}), [filteredForms])
 
   const filteredTemplates = TEMPLATES.filter(t => {
     const matchCategory = templateCategory === 'all' || t.category === templateCategory
@@ -1057,8 +1094,12 @@ export default function Forms({ org, session, isAdmin }) {
                 const accent = FORM_ACCENTS[i % FORM_ACCENTS.length]
                 const subCount = submissionsByForm[form.id]?.length || 0
                 const canView = canViewSubmissions(form)
+                const tg = tagOf(form)
+                const startsGroup = i === 0 || tagOf(filteredForms[i - 1]) !== tg
                 return (
-                  <div key={form.id} onClick={() => isAdmin ? openForEdit(form) : (canView && openForSubmissions(form))}
+                  <React.Fragment key={form.id}>
+                  {startsGroup && <GroupHeading tag={tg} count={groupCounts[tg]} />}
+                  <div onClick={() => isAdmin ? openForEdit(form) : (canView && openForSubmissions(form))}
                     style={{ cursor: 'pointer', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 16 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                       <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TAG_COLOR[form.tag] || accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📝</div>
@@ -1081,7 +1122,8 @@ export default function Forms({ org, session, isAdmin }) {
                     {!isAdmin && !canView && (
                       <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700 }}>🔒 Only admins can view responses</div>
                     )}
-                  </div>
+                    </div>
+                  </React.Fragment>
                 )
               })}
             </div>
@@ -1095,8 +1137,12 @@ export default function Forms({ org, session, isAdmin }) {
                 const updaterName = staffName(form.updated_by)
                 const canView = canViewSubmissions(form)
                 const rowClick = () => { if (isAdmin) openForEdit(form); else if (canView) openForSubmissions(form) }
+                const tg = tagOf(form)
+                const startsGroup = i === 0 || tagOf(filteredForms[i - 1]) !== tg
                 return (
-                  <div key={form.id} style={{ position: 'relative', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                  <React.Fragment key={form.id}>
+                  {startsGroup && <GroupHeading tag={tg} count={groupCounts[tg]} />}
+                  <div style={{ position: 'relative', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                     <div onClick={rowClick} style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, cursor: 'pointer' }}>📝</div>
 
                     <div onClick={rowClick} style={{ flex: '1 1 220px', minWidth: 180, cursor: 'pointer' }}>
@@ -1169,6 +1215,7 @@ export default function Forms({ org, session, isAdmin }) {
                       )}
                     </div>
                   </div>
+                  </React.Fragment>
                 )
               })}
             </div>

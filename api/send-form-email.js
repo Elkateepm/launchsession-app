@@ -1058,7 +1058,30 @@ export default async function handler(req, res) {
     const { data: org, error: orgErr } = await adminClient.from('organisations').select('name, slug, primary_color, secondary_color, logo_url, email_logo_url, email_footer_text, email_sender_name, contact_email').eq('id', profile.org_id).maybeSingle()
     if (orgErr || !org?.slug) return res.status(404).json({ error: 'Organisation not found' })
 
-    const formUrl = `https://app.launchsession.co.uk/forms/${org.slug}/${form.id}`
+    const baseFormUrl = `https://app.launchsession.co.uk/forms/${org.slug}/${form.id}`
+
+    // Each link carries the recipient row it was sent to, so a response ticks
+    // off the right invite instead of being matched back by whichever
+    // email-shaped value turned up in the payload -- which cannot distinguish
+    // siblings sharing one parent address, and so left both outstanding.
+    // Anyone not on the recipient list still gets a plain link and can still
+    // respond; the recipient list is for chasing, not for admission.
+    const { data: recipientRows, error: recipErr } = await adminClient.from('form_recipients')
+      .select('id, recipient_email')
+      .eq('form_id', form.id)
+      .eq('org_id', profile.org_id)
+    if (recipErr) console.error('send-form-email: recipient lookup failed', recipErr.message)
+
+    const recipientIdByEmail = new Map(
+      (recipientRows || [])
+        .filter(r => r.recipient_email)
+        .map(r => [String(r.recipient_email).trim().toLowerCase(), r.id])
+    )
+    // cleanEmails are already trimmed and lowercased, so this matches directly.
+    const formUrlFor = email => {
+      const recipientId = recipientIdByEmail.get(email)
+      return recipientId ? `${baseFormUrl}?r=${encodeURIComponent(recipientId)}` : baseFormUrl
+    }
 
     const results = await Promise.allSettled(cleanEmails.map(email =>
       adminClient.functions.invoke('send-form-email', {
@@ -1073,7 +1096,7 @@ export default async function handler(req, res) {
           org_reply_to: org.contact_email,
           form_name: form.name,
           form_description: form.description,
-          form_url: formUrl,
+          form_url: formUrlFor(email),
           sender_name: profile.full_name,
         },
       })

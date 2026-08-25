@@ -12,6 +12,20 @@ const PARTS = window.location.pathname.split('/forms/')[1]?.split('/').filter(Bo
 const ORG_SLUG = PARTS[0]
 const FORM_ID = PARTS[1]
 
+// Invite links carry ?r=<recipient_id>, which ties the response to the invite
+// that produced it. The shape is checked here rather than left to the database:
+// a mangled value would fail the uuid cast and take the whole submission down
+// with it, and losing a parent's consent to a truncated link is not acceptable.
+// A well-formed but wrong id is harmless -- the RPC ignores any recipient that
+// does not belong to this form.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const RECIPIENT_ID = (() => {
+  try {
+    const r = new URLSearchParams(window.location.search).get('r')
+    return UUID_RE.test(r || '') ? r : null
+  } catch { return null }
+})()
+
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
 
 function isLightHex(hex) {
@@ -264,7 +278,7 @@ export default function PublicForm() {
     if (!validateSection()) return
     setStatus('submitting')
     const { error: e } = await supabase.rpc('submit_public_form', {
-      p_form_id: form.id, p_data: data, p_name: nameFrom(data),
+      p_form_id: form.id, p_data: data, p_name: nameFrom(data), p_recipient_id: RECIPIENT_ID,
     })
     if (e) {
       // The answers are still in state. Saying so is the difference between
