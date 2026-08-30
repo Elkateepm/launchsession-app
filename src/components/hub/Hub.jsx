@@ -7,6 +7,7 @@ import { useIsMobile } from "../../hooks/useIsMobile";
 import { useRealtimeTable } from "../../lib/useRealtimeTable";
 import { useOrgSettings } from "../../hooks/useOrgSettings";
 import CauseForConcernForm from "../safeguarding/CauseForConcernForm";
+import ReportChips from "../incidents/ReportChips";
 import LiveRegister from "../registers/LiveRegister";
 import { InviteParentModal } from "../children/ChildrenDirectory";
 import AddVolunteersToSessionModal from "../volunteers/AddVolunteersToSessionModal";
@@ -3620,6 +3621,23 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           />
         </div>
       </header>
+
+      {/* REPORT CHIPS — reachable the moment Home opens, rather than after
+          scrolling past the day's sessions. Directly under the hero because the
+          greeting itself sits on a dark gradient here, where a neutral white
+          chip would need a second treatment to stay legible. */}
+      <div style={{ padding: `14px ${pad}px 0` }}>
+        <ReportChips
+          org={org}
+          session={session}
+          userProfile={userProfile}
+          people={children}
+          todaySession={strictlyTodaySessions?.[0] || null}
+          canRaiseConcern={hasModule('safeguarding')}
+          onRaiseConcern={() => setShowConcernForm(true)}
+          isMobile={isMobile}
+        />
+      </div>
 
       {showPushPrompt && (
         <div style={{ padding: `${pad}px ${pad}px 0` }}>

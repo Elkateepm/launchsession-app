@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Safeguarding from './Safeguarding'
 import CaseManagement from '../casemgmt/CaseManagement'
+import InjuryLog from '../incidents/InjuryLog'
 import Icon from '../../lib/icons'
 
 // Safeguarding and Case Management used to be two sidebar tabs governed by two
@@ -17,6 +18,10 @@ import Icon from '../../lib/icons'
 const SUB_TABS = [
   { key: 'concerns', label: 'Concerns', icon: '🛡' },
   { key: 'cases', label: 'Cases', icon: '📁' },
+  // The accident book reads here rather than getting a sidebar row of its own:
+  // an injury and a concern are raised by the same person in the same moment,
+  // and an accident book nobody can find is one nobody produces when asked.
+  { key: 'injuries', label: 'Accident book', icon: '🩹' },
 ]
 
 export default function SafeguardingHub({
@@ -86,6 +91,11 @@ export default function SafeguardingHub({
             onNavigate={handleInnerNavigate}
             initialOpenConcernId={initialOpenConcernId}
           />
+        )}
+        {subTab === 'injuries' && (
+          <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 24px' }}>
+            <InjuryLog org={org} />
+          </div>
         )}
         {subTab === 'cases' && (
           <CaseManagement
