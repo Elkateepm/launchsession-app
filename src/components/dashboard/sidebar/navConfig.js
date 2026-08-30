@@ -123,8 +123,13 @@ export const CREATE_ACTIONS = [
  * screen and its routes still exist, so upgrade prompts elsewhere and any
  * existing deep link continue to work.
  */
-export function isItemVisible(item, { hasModule, isAdmin, moduleLevel }) {
+export function isItemVisible(item, { hasModule, isAdmin, moduleLevel, hiddenItems }) {
   if (item.adminOnly && !isAdmin) return false
+  // Switched off by the organisation in Settings > Display. Deliberately the
+  // first check after the admin gate and entirely separate from modules: this
+  // says "we don't use this", not "we can't". The route still resolves, so a
+  // bookmark or a deep link into a hidden tab keeps working.
+  if (hiddenItems && item.id && hiddenItems.includes(item.id)) return false
   if (item.moduleKey && !hasModule(item.moduleKey)) return false
   // Per-member access. Some items have no moduleKey because they are core
   // rather than purchasable (Young People, Projects); accessKey names the
@@ -137,6 +142,22 @@ export function isItemVisible(item, { hasModule, isAdmin, moduleLevel }) {
 export function visibleItems(items, ctx) {
   return items.filter(i => isItemVisible(i, ctx))
 }
+
+/**
+ * Every entry an organisation may switch off, in the order Settings lists them.
+ *
+ * Built from the nav itself so the two cannot drift: an item added to a section
+ * above becomes hideable without a second edit here, which is the mistake that
+ * left Mentoring reachable only by deep link before the nav became data.
+ *
+ * Home and the Organisation items (Settings, Branding) are not in NAV_SECTIONS
+ * or NAV_GROUPS and so are not hideable. That is what stops an organisation
+ * switching off the screen it would need to switch anything back on.
+ */
+export const HIDEABLE_ITEMS = [
+  ...NAV_SECTIONS.map(s => ({ group: s.label, items: s.items })),
+  ...NAV_GROUPS.map(g => ({ group: g.label, items: g.items })),
+]
 
 /** Which collapsible group, if any, contains the active tab. */
 export function groupContainingTab(tab) {
