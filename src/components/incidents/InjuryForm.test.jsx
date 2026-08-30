@@ -83,6 +83,29 @@ describe('what it writes', () => {
     expect(rows[0].what_happened).toBe('Tripped on the step.')
   })
 
+  it('files the injury against the session it was reported from', async () => {
+    // The whole point of moving the chips onto the live card: the session goes
+    // down with the report rather than depending on somebody remembering.
+    setup({ initialChildId: 'c1', session: { id: 's1', title: 'Tuesday Club', location: 'Main hall' } })
+    fireEvent.change(screen.getByPlaceholderText(/In your own words/), { target: { value: 'Slipped.' } })
+    fireEvent.click(screen.getByText('Save to accident book'))
+    await waitFor(() => expect(mockInsert).toHaveBeenCalled())
+    expect(mockInsert.mock.calls[0][1][0].session_id).toBe('s1')
+  })
+
+  it('defaults the place to where the session is happening', () => {
+    setup({ initialChildId: 'c1', session: { id: 's1', title: 'Tuesday Club', location: 'Main hall' } })
+    expect(screen.getByDisplayValue('Main hall')).toBeInTheDocument()
+  })
+
+  it('files it against nothing when it was not reported from a session', async () => {
+    setup({ initialChildId: 'c1' })
+    fireEvent.change(screen.getByPlaceholderText(/In your own words/), { target: { value: 'Slipped.' } })
+    fireEvent.click(screen.getByText('Save to accident book'))
+    await waitFor(() => expect(mockInsert).toHaveBeenCalled())
+    expect(mockInsert.mock.calls[0][1][0].session_id).toBeNull()
+  })
+
   it('records that the parent has not been told, rather than leaving it blank', async () => {
     setup({ initialChildId: 'c1' })
     fireEvent.change(screen.getByPlaceholderText(/In your own words/), { target: { value: 'Bumped head.' } })

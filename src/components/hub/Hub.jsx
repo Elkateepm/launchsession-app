@@ -2854,6 +2854,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     return next
   })
   const [showConcernForm, setShowConcernForm] = React.useState(false)
+  // Which delivery session a concern was raised from, so one opened off a live
+  // session card arrives with that session already attached.
+  const [concernSession, setConcernSession] = React.useState(null)
+  const raiseConcern = React.useCallback((linked = null) => {
+    setConcernSession(linked)
+    setShowConcernForm(true)
+  }, [])
   const [showInviteChild, setShowInviteChild] = React.useState(false)
   const [showReflectionsModal, setShowReflectionsModal] = React.useState(false)
   const [sessionsView, setSessionsView] = React.useState('upcoming') // 'upcoming' | 'ended' — merged sessions toggle
@@ -3251,7 +3258,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     list.push({ key: 'child', icon: '🧒', label: `Add ${terms.person}`, onClick: () => setShowInviteChild(true) })
     if (hasModule('gallery')) list.push({ key: 'photos', icon: '📷', label: 'Upload photos', onClick: () => go('gallery') })
     if (hasModule('forms')) list.push({ key: 'forms', icon: '📋', label: 'Send a form', onClick: () => go('forms') })
-    if (hasModule('safeguarding')) list.push({ key: 'concern', icon: '🚨', label: 'Report a concern', onClick: () => setShowConcernForm(true) })
+    if (hasModule('safeguarding')) list.push({ key: 'concern', icon: '🚨', label: 'Report a concern', onClick: () => raiseConcern(null) })
     return list
   })();
 
@@ -3610,6 +3617,25 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           </div>
 
+          {/* Nothing is running, so there is no session to attribute a report
+              to. The chips sit on the hero and whatever is reported arrives
+              unattached unless the reporter attaches it themselves. The moment
+              something goes live they move onto that session's card instead. */}
+          {!todayHasLiveSession && (
+            <div style={{ position: 'relative', zIndex: 2, marginTop: 14 }}>
+              <ReportChips
+                org={org}
+                userProfile={userProfile}
+                people={children}
+                linkedSession={null}
+                canRaiseConcern={hasModule('safeguarding')}
+                onRaiseConcern={raiseConcern}
+                isMobile={isMobile}
+                variant="onDark"
+              />
+            </div>
+          )}
+
           <DaySpine
             sessions={strictlyTodaySessions}
             statsFor={getLiveSessionStats}
@@ -3621,23 +3647,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           />
         </div>
       </header>
-
-      {/* REPORT CHIPS — reachable the moment Home opens, rather than after
-          scrolling past the day's sessions. Directly under the hero because the
-          greeting itself sits on a dark gradient here, where a neutral white
-          chip would need a second treatment to stay legible. */}
-      <div style={{ padding: `14px ${pad}px 0` }}>
-        <ReportChips
-          org={org}
-          session={session}
-          userProfile={userProfile}
-          people={children}
-          todaySession={strictlyTodaySessions?.[0] || null}
-          canRaiseConcern={hasModule('safeguarding')}
-          onRaiseConcern={() => setShowConcernForm(true)}
-          isMobile={isMobile}
-        />
-      </div>
 
       {showPushPrompt && (
         <div style={{ padding: `${pad}px ${pad}px 0` }}>
@@ -3927,6 +3936,26 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           }}>
                           🔒 Close register
                         </button>
+                      )}
+                      {/* While the session is running, reporting starts here.
+                          The session goes down with the report, so an injury or
+                          a concern raised from this card is filed against the
+                          session it happened in rather than depending on
+                          somebody remembering to attach it afterwards. The
+                          chips stop their own clicks: the whole card is a
+                          button that opens the register. */}
+                      {isLiveNow && (
+                        <ReportChips
+                          org={org}
+                          userProfile={userProfile}
+                          people={children}
+                          linkedSession={s}
+                          canRaiseConcern={hasModule('safeguarding')}
+                          onRaiseConcern={raiseConcern}
+                          isMobile={isMobile}
+                          variant="onDark"
+                          compact
+                        />
                       )}
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 900, color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '6px 12px 6px 13px' }}>
                         {ctaLabel} <span className="ls-card-arrow" style={{ display: 'inline-block' }}><Icon name="→" /></span>
@@ -4483,7 +4512,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
       {/* Floating Report a Cause for Concern button — always accessible from Home, no password needed */}
       <button
-        onClick={() => setShowConcernForm(true)}
+        onClick={() => raiseConcern(null)}
         title="Report a Cause for Concern"
         style={{
           position: 'fixed', bottom: 24, right: 24, zIndex: 60,
@@ -4498,12 +4527,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
       {showConcernForm && (
         <>
-          <div onClick={() => setShowConcernForm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99, backdropFilter: 'blur(4px)' }} />
+          <div onClick={() => { setShowConcernForm(false); setConcernSession(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99, backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(620px,96vw)', maxHeight: '92dvh', overflowY: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 24, zIndex: 100, boxShadow: '0 32px 80px rgba(0,0,0,0.4)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
             <CauseForConcernForm
               org={org}
               session={session}
-              onClose={() => setShowConcernForm(false)}
+              initialSession={concernSession}
+              onClose={() => { setShowConcernForm(false); setConcernSession(null) }}
               onSubmitted={() => {}}
             />
           </div>

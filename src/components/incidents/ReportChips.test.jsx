@@ -4,6 +4,7 @@ import ReportChips from './ReportChips'
 
 const org = { id: 'o1', name: 'Solidarity Sports', primary_color: '#6D5DF6' }
 const people = [{ id: 'c1', first_name: 'Ada', last_name: 'Lovelace', group_name: 'Tigers', active: true }]
+const liveSession = { id: 's1', title: 'Tuesday Club', session_date: '2026-08-31', location: 'Main hall' }
 
 const setup = (props = {}) => render(
   <ReportChips org={org} people={people} userProfile={{ id: 'u1', role: 'staff' }}
@@ -39,26 +40,88 @@ describe('who sees which chip', () => {
   })
 })
 
-describe('behaviour', () => {
-  it('raising a concern reuses the modal Home already owns', () => {
+describe('following the session', () => {
+  it('hands the session up when a concern is raised from a live card', () => {
+    const onRaiseConcern = jest.fn()
+    setup({ linkedSession: liveSession, onRaiseConcern, compact: true })
+    fireEvent.click(screen.getByText('Concern'))
+    expect(onRaiseConcern).toHaveBeenCalledWith(liveSession)
+  })
+
+  it('raises an unattached concern when nothing is running', () => {
     const onRaiseConcern = jest.fn()
     setup({ onRaiseConcern })
     fireEvent.click(screen.getByText('Raise a concern'))
-    expect(onRaiseConcern).toHaveBeenCalledTimes(1)
-    // And does not open an injury form by mistake.
-    expect(screen.queryByText('Log an injury', { selector: 'div' })).not.toBeInTheDocument()
+    expect(onRaiseConcern).toHaveBeenCalledWith(null)
   })
 
-  it('opens the injury form in place', () => {
+  it('opens the injury form already attached to the live session', () => {
+    setup({ linkedSession: liveSession, compact: true })
+    fireEvent.click(screen.getByText('Injury'))
+    // The form says what it will file the injury against.
+    expect(screen.getByText(/Recorded against Tuesday Club/)).toBeInTheDocument()
+  })
+
+  it('opens an unattached injury form when nothing is running', () => {
     setup()
     fireEvent.click(screen.getByText('Log an injury'))
+    expect(screen.queryByText(/Recorded against/)).not.toBeInTheDocument()
+  })
+
+  it('shortens its labels on a session card, where space is tight', () => {
+    setup({ linkedSession: liveSession, compact: true })
+    expect(screen.getByText('Concern')).toBeInTheDocument()
+    expect(screen.getByText('Injury')).toBeInTheDocument()
+    expect(screen.queryByText('Raise a concern')).not.toBeInTheDocument()
+  })
+})
+
+describe('living inside a card that is itself a button', () => {
+  it('does not open the register when a chip is clicked', () => {
+    // The session card is role="button" and opens the live register. Without
+    // stopPropagation, reporting an injury would open it behind the form.
+    const cardClick = jest.fn()
+    render(
+      <div onClick={cardClick} role="button">
+        <ReportChips org={org} people={people} userProfile={{ id: 'u1', role: 'staff' }}
+          linkedSession={liveSession} onRaiseConcern={() => {}} isMobile={false} compact />
+      </div>)
+    fireEvent.click(screen.getByText('Injury'))
+    expect(cardClick).not.toHaveBeenCalled()
     expect(screen.getByText('Save to accident book')).toBeInTheDocument()
   })
 
+  it('does not open the register when the concern chip is clicked', () => {
+    const cardClick = jest.fn()
+    const onRaiseConcern = jest.fn()
+    render(
+      <div onClick={cardClick} role="button">
+        <ReportChips org={org} people={people} userProfile={{ id: 'u1', role: 'staff' }}
+          linkedSession={liveSession} onRaiseConcern={onRaiseConcern} isMobile={false} compact />
+      </div>)
+    fireEvent.click(screen.getByText('Concern'))
+    expect(cardClick).not.toHaveBeenCalled()
+    expect(onRaiseConcern).toHaveBeenCalledWith(liveSession)
+  })
+
+  it('does not open the register when the open form is interacted with', () => {
+    const cardClick = jest.fn()
+    render(
+      <div onClick={cardClick} role="button">
+        <ReportChips org={org} people={people} userProfile={{ id: 'u1', role: 'staff' }}
+          linkedSession={liveSession} onRaiseConcern={() => {}} isMobile={false} compact />
+      </div>)
+    fireEvent.click(screen.getByText('Injury'))
+    cardClick.mockClear()
+    fireEvent.click(screen.getByPlaceholderText(/In your own words/))
+    expect(cardClick).not.toHaveBeenCalled()
+  })
+
   it('does not close the half-written form on a backdrop tap', () => {
-    // A stray tap must not lose an account of an incident.
-    const { container } = setup()
-    fireEvent.click(screen.getByText('Log an injury'))
+    const { container } = setup({ linkedSession: liveSession, compact: true })
+    fireEvent.click(screen.getByText('Injury'))
+    // jsdom drops backdrop-filter from the style attribute, so the backdrop is
+    // found by its positioning instead.
     const backdrop = container.querySelector('div[style*="position: fixed"]')
     fireEvent.click(backdrop)
     expect(screen.getByText('Save to accident book')).toBeInTheDocument()

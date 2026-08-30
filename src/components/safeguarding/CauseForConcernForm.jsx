@@ -31,14 +31,20 @@ function SectionDivider({ label }) {
   )
 }
 
-export default function CauseForConcernForm({ org, session: authSession, onClose, onSubmitted }) {
+// `initialSession` pre-attaches the delivery session this was raised from --
+// the live session card passes the session the reporter was standing in. It is
+// still shown in the picker and still removable: pre-filling a field is a
+// convenience, and a report that attaches itself to the wrong session without
+// the reporter being able to see or change it would be worse than no
+// pre-filling at all.
+export default function CauseForConcernForm({ org, session: authSession, initialSession = null, onClose, onSubmitted }) {
   const [step, setStep] = useState('warning')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [sessions, setSessions] = useState([])
   const [sessionSearch, setSessionSearch] = useState('')
   const [showSessionPicker, setShowSessionPicker] = useState(false)
-  const [selectedSession, setSelectedSession] = useState(null)
+  const [selectedSession, setSelectedSession] = useState(initialSession)
   const [children, setChildren] = useState([])
   const [childSearch, setChildSearch] = useState('')
   const [showChildPicker, setShowChildPicker] = useState(false)
