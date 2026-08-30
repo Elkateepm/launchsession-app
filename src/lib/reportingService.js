@@ -194,8 +194,12 @@ export const REPORT_LIBRARY = [
     desc: 'Staff and volunteers involved, sessions worked and delivery hours.' },
   { key: 'project', category: 'Delivery', icon: '🚀', name: 'Project Report',
     desc: 'Full summary of a multi-day project, ready for funders.' },
+  // Not built from getOverviewMetrics like the rest of this list. It has its own
+  // aggregate (report_funder_metrics) and its own document, because the
+  // questions a grant report answers -- who did you reach, how much did they
+  // actually get, did anything change -- are not answerable from the overview.
   { key: 'funding', category: 'Funding', icon: '💷', name: 'Funder / Grant Report',
-    desc: 'A funder-friendly impact summary for grants and trustees.' },
+    desc: 'Reach and age profile, how often people came, delivery volume, distance travelled and goals met. Printable.' },
   { key: 'safeguarding', category: 'Safeguarding', icon: '🛡️', name: 'Safeguarding Report',
     desc: 'Aggregate concern volumes, status and response times. Restricted access.',
     restricted: true },

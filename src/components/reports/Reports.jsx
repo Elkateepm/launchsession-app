@@ -6,6 +6,7 @@ import {
   REPORT_LIBRARY, REPORT_CATEGORIES, canAccessReport,
 } from '../../lib/reportingService'
 import ReportBuilder from './ReportBuilder'
+import FunderReport from './FunderReport'
 import Icon from '../../lib/icons'
 
 const VIEWS = [
@@ -56,6 +57,7 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
   const [error, setError] = useState('')
   const [savedReports, setSavedReports] = useState([])
   const [builderType, setBuilderType] = useState(null)
+  const [showFunder, setShowFunder] = useState(false)
 
   const range = useMemo(() => rangeFor(rangeKey, customRange), [rangeKey, customRange])
 
@@ -108,11 +110,21 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
               Understand your delivery and turn your data into useful reports.
             </p>
           </div>
-          <button onClick={() => setBuilderType('delivery')} style={{
-            padding: '12px 20px', borderRadius: 11, border: 'none', color: '#3730A3', background: '#fff',
-            fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
-            boxShadow: '0 8px 20px -8px rgba(0,0,0,0.4)',
-          }}>{isMobile ? '+ Create' : '+ Create Report'}</button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {/* Given its own button rather than left as one tile of nine in the
+                library: for most organisations here this is the report the page
+                exists for, and it was the one the library served worst. */}
+            <button onClick={() => setShowFunder(true)} style={{
+              padding: '12px 20px', borderRadius: 11, border: 'none', color: '#3730A3', background: '#fff',
+              fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
+              boxShadow: '0 8px 20px -8px rgba(0,0,0,0.4)',
+            }}>Funder report</button>
+            <button onClick={() => setBuilderType('delivery')} style={{
+              padding: '12px 20px', borderRadius: 11, cursor: 'pointer', whiteSpace: 'nowrap',
+              border: '1.5px solid rgba(255,255,255,0.45)', background: 'transparent', color: '#fff',
+              fontSize: 13, fontWeight: 800,
+            }}>{isMobile ? '+ Create' : '+ Create report'}</button>
+          </div>
         </div>
       </div>
 
@@ -163,7 +175,12 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
       )}
 
       {view === 'library' && (
-        <LibraryView role={role} isMobile={isMobile} onRun={(key) => setBuilderType(key)} />
+        <LibraryView role={role} isMobile={isMobile} onRun={(key) => {
+          // The funder report is a document with its own data behind it, not a
+          // section-picker over the overview metrics like the rest of the library.
+          if (key === 'funding') setShowFunder(true)
+          else setBuilderType(key)
+        }} />
       )}
 
       {view === 'saved' && (
@@ -171,6 +188,10 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
           reports={savedReports} orgId={orgId} session={session}
           onChanged={loadSaved} onCreate={() => setBuilderType('delivery')} range={range}
         />
+      )}
+
+      {showFunder && (
+        <FunderReport org={org} range={range} onClose={() => setShowFunder(false)} />
       )}
 
       {builderType && (
