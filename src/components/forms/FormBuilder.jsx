@@ -23,6 +23,51 @@ const PURPOSES = [
 
 const newId = () => `f_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
 
+// Ticking "updates the child record" files a form under this tag, which is the
+// section of the Forms list staff go to when chasing outstanding details.
+export const CHILD_TAG = 'Child Onboarding & Maintenance'
+
+// Columns on `children` a question may maintain, grouped the way the child
+// profile is laid out so the list reads like the record it writes to.
+// `has_medication` is deliberately absent: it duplicates `takes_medication`,
+// and offering both invites a question being mapped to the one nothing reads.
+const CHILD_TARGETS = [
+  ['Child', [
+    ['first_name', 'First name'],
+    ['last_name', 'Last name'],
+    ['date_of_birth', 'Date of birth'],
+    ['school', 'School'],
+    ['group_name', 'Group'],
+  ]],
+  ['Parent / carer', [
+    ['parent_name', 'Parent / carer name'],
+    ['parent_email', 'Parent email'],
+    ['parent_phone', 'Parent phone'],
+    ['emergency_contact_name', 'Emergency contact name'],
+    ['emergency_contact_phone', 'Emergency contact phone'],
+  ]],
+  ['Health', [
+    ['allergies', 'Allergies'],
+    ['medical_notes', 'Medical notes'],
+    ['medication_details', 'Medication details'],
+    ['takes_medication', 'Takes medication (yes / no)'],
+    ['has_epipen', 'Has an EpiPen (yes / no)'],
+    ['has_asthma', 'Has asthma (yes / no)'],
+    ['has_diabetes', 'Has diabetes (yes / no)'],
+  ]],
+  ['Support', [
+    ['sen', 'SEN / additional needs'],
+    ['has_behaviour_plan', 'Has a behaviour plan (yes / no)'],
+    ['behaviour_plan_notes', 'Behaviour plan notes'],
+    ['notes', 'General notes'],
+  ]],
+  ['Consent', [
+    ['travel_consent', 'Travel consent (yes / no)'],
+    ['collection_restricted', 'Collection restricted (yes / no)'],
+    ['sms_opt_out', 'SMS opt-out (yes / no)'],
+  ]],
+]
+
 export default function FormBuilder({ org, initial, onSave, onCancel, onSaved }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#6D5DF6'
@@ -33,6 +78,8 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
       ...base,
       tag: base.tag || 'Other',
       visibility: base.visibility || 'public',
+      updates_child: !!base.updates_child,
+      update_mode: base.update_mode || 'review',
       // Ids may be missing on older forms, and stable ids are what selection,
       // reordering and duplication all depend on.
       fields: (base.fields || []).map((f, i) => ({ ...f, id: f.id || `${newId()}_${i}` })),
@@ -108,6 +155,8 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
       confirmation_message: snapshot.confirmation_message || null,
       closing_date: snapshot.closing_date || null,
       multi_step: !!snapshot.multi_step,
+      updates_child: !!snapshot.updates_child,
+      update_mode: snapshot.update_mode === 'auto' ? 'auto' : 'review',
       status: snapshot.status || 'draft',
       is_active: (snapshot.status || 'draft') === 'active',
       updated_at: new Date().toISOString(),
@@ -337,6 +386,7 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
               onDelete={() => removeField(selected.id)}
               onClose={() => setSelectedId(null)}
               hasResponses={!!initial?.id}
+              updatesChild={!!form.updates_child}
             />
           )}
         </div>
@@ -351,6 +401,7 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
           onDelete={() => removeField(selected.id)}
           onClose={() => setSelectedId(null)}
           hasResponses={!!initial?.id}
+          updatesChild={!!form.updates_child}
         />
       )}
 
@@ -658,7 +709,7 @@ function QuestionCard({
 
 // ----------------------------------------------------------- editor panel
 
-function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasResponses }) {
+function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasResponses, updatesChild }) {
   const [showMore, setShowMore] = useState(!!field.description)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -749,6 +800,28 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
             placeholder="Yes, I confirm"
             style={input}
           />
+        </div>
+      )}
+
+      {updatesChild && (
+        <div>
+          <label style={label}>SAVES TO</label>
+          <select
+            value={field.saves_to || ''}
+            onChange={e => onChange({ saves_to: e.target.value || null })}
+            style={input}
+          >
+            <option value="">Response only — don't touch the record</option>
+            {CHILD_TARGETS.map(([group, items]) => (
+              <optgroup key={group} label={group}>
+                {items.map(([key, lbl]) => <option key={key} value={key}>{lbl}</option>)}
+              </optgroup>
+            ))}
+          </select>
+          <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 6, lineHeight: 1.45 }}>
+            The answer maintains this field on the child's record. Leave it unset for
+            questions that are only ever read on the response itself.
+          </div>
         </div>
       )}
 
@@ -918,6 +991,78 @@ function SettingsPanel({ form, setForm, primary }) {
         {form.visibility === 'public' && (
           <div style={{ fontSize: 12, color: '#64748B', marginTop: 6 }}>
             Anyone with the link can respond. No sign-in required.
+          </div>
+        )}
+      </div>
+
+      <div>
+        <label style={label}>WHAT HAPPENS TO THE ANSWERS</label>
+        <button
+          onClick={() => setForm(f => {
+            const on = !f.updates_child
+            return {
+              ...f,
+              updates_child: on,
+              // Turning this on files the form where staff look for it. Turning
+              // it off only undoes that if nothing else has claimed the tag since.
+              tag: on ? CHILD_TAG : (f.tag === CHILD_TAG ? 'Other' : f.tag),
+            }
+          })}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 11, padding: '13px 14px',
+            borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+            border: `1.5px solid ${form.updates_child ? primary : '#E2E8F0'}`,
+            background: form.updates_child ? `${primary}0D` : '#fff',
+          }}
+        >
+          <span style={{
+            width: 19, height: 19, borderRadius: 6, flexShrink: 0,
+            display: 'grid', placeItems: 'center', fontSize: 12, color: '#fff',
+            border: `1.5px solid ${form.updates_child ? primary : '#CBD5E1'}`,
+            background: form.updates_child ? primary : '#fff',
+          }}>{form.updates_child ? '✓' : ''}</span>
+          <span>
+            <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+              Answers update the child's record
+            </span>
+            <span style={{ display: 'block', fontSize: 12, color: '#64748B', marginTop: 2 }}>
+              Map individual questions to record fields under Saves to, on each question.
+            </span>
+          </span>
+        </button>
+
+        {form.updates_child && (
+          <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+            {[
+              ['review', 'Hold for review', 'Changes wait in the response until an admin approves them. Nothing on the record moves on its own.'],
+              ['auto', 'Apply on submission', 'Mapped answers write straight to the record as soon as the form is submitted.'],
+            ].map(([key, title, hint]) => {
+              const on = (form.update_mode || 'review') === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => set({ update_mode: key })}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'flex-start', gap: 11, padding: '12px 13px',
+                    borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                    border: `1.5px solid ${on ? primary : '#E2E8F0'}`,
+                    background: on ? `${primary}0D` : '#fff',
+                  }}
+                >
+                  <span style={{
+                    width: 17, height: 17, borderRadius: '50%', flexShrink: 0, marginTop: 1,
+                    display: 'grid', placeItems: 'center',
+                    border: `1.5px solid ${on ? primary : '#CBD5E1'}`, background: '#fff',
+                  }}>
+                    <span style={{ width: 9, height: 9, borderRadius: '50%', background: on ? primary : 'transparent' }} />
+                  </span>
+                  <span>
+                    <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{title}</span>
+                    <span style={{ display: 'block', fontSize: 12, color: '#64748B', marginTop: 2, lineHeight: 1.45 }}>{hint}</span>
+                  </span>
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
