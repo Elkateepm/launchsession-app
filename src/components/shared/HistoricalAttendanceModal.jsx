@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
 
 function fmtTime(d) { if (!d) return ''; return new Date(d).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' }) }
 function fmtDate(dateStr) {
@@ -64,7 +65,7 @@ export default function HistoricalAttendanceModal({ session, attendance, allChil
           position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 480, maxHeight: isMobile ? 'none' : '88vh',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
           borderRadius: isMobile ? 0 : 26, flex: isMobile ? 1 : undefined,
-          background: `linear-gradient(160deg, ${primary}33 0%, ${(secondary || primary)}22 40%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
+          background: `linear-gradient(160deg, var(--org-a20) 0%, ${(secondary || primary)}22 40%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
           boxShadow: isMobile ? 'none' : '0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)',
         }}
         onClick={e => e.stopPropagation()}
@@ -76,7 +77,7 @@ export default function HistoricalAttendanceModal({ session, attendance, allChil
             width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.18)',
             background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 16, fontWeight: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>✕</button>
+          }}><Icon name="✕" /></button>
 
           <div style={{ paddingRight: 42 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#CBD5E1', letterSpacing: 0.8, marginBottom: 9 }}>

@@ -4,6 +4,7 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, ad
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { allowedModules } from '../../lib/moduleAccess'
+import Icon from '../../lib/icons'
 
 // Postgres returns time columns as HH:MM:SS. Trim to HH:MM everywhere the
 // calendar shows a time -- the raw value was leaking into the month cells,
@@ -137,7 +138,8 @@ function ConfettiBurst({ color, secondary }) {
 }
 
 function PlanPickerModal({ date, org, onClose, onNavigate }) {
-  const primary = org?.primary_color || '#1B9AAA'
+  // The brand colour is read from CSS variables here now, so this no longer
+  // needs the org's colour in JS.
   const activeModules = allowedModules(org)
   const hasModule = (key) => activeModules.includes(key)
   const dateLabel = date ? format(parseISO(date), 'EEEE, d MMMM yyyy') : ''
@@ -151,7 +153,7 @@ function PlanPickerModal({ date, org, onClose, onNavigate }) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'cal-fade-in 0.2s ease' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 420, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)', animation: 'cal-bounce-in 0.3s cubic-bezier(0.22, 1, 0.36, 1)' }}>
-        <div style={{ padding: '22px 24px 16px', borderBottom: `1px solid ${primary}15`, position: 'relative' }}>
+        <div style={{ padding: '22px 24px 16px', borderBottom: `1px solid var(--org-a10)`, position: 'relative' }}>
           <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}>×</button>
           <div style={{ fontSize: 17, fontWeight: 900, color: '#111' }}>What would you like to plan?</div>
           {dateLabel && <div style={{ fontSize: 12.5, color: '#9CA3AF', fontWeight: 600, marginTop: 4 }}>{dateLabel}</div>}
@@ -162,7 +164,7 @@ function PlanPickerModal({ date, org, onClose, onNavigate }) {
               style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${o.colour}25`, background: o.colour + '08', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', animation: `cal-pop-in 0.25s ease ${i * 0.05}s both` }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = o.colour + '60'; e.currentTarget.style.background = o.colour + '14'; e.currentTarget.style.transform = 'translateX(2px)' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = o.colour + '25'; e.currentTarget.style.background = o.colour + '08'; e.currentTarget.style.transform = 'none' }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: o.colour + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{o.icon}</div>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: o.colour + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}><Icon name={o.icon} /></div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{o.title}</div>
                 <div style={{ fontSize: 12, color: '#6B7280', marginTop: 1, lineHeight: 1.3 }}>{o.desc}</div>
@@ -194,7 +196,7 @@ function SessionModal({ session, org, onClose, onDelete, project, onOpenProject 
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)', animation: 'cal-bounce-in 0.35s cubic-bezier(0.22, 1, 0.36, 1)' }}>
         <div style={{ background: `linear-gradient(135deg, ${cfg.color}22, ${cfg.color}08)`, borderBottom: `3px solid ${cfg.color}`, padding: '24px 24px 20px', position: 'relative' }}>
           <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.08)', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-          <div style={{ fontSize: 36, marginBottom: 8 }}>{cfg.icon}</div>
+          <div style={{ fontSize: 36, marginBottom: 8 }}><Icon name={cfg.icon} /></div>
           <div style={{ fontSize: 20, fontWeight: 900, color: '#111', marginBottom: 4 }}>{session.title}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
             <span style={{ background: cfg.color, color: '#fff', borderRadius: 99, padding: '3px 12px', fontSize: 11, fontWeight: 800 }}>{cfg.label}</span>
@@ -440,10 +442,10 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
       <style>{KEYFRAMES}</style>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
-        <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 24px', marginBottom: 16, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 -1px 0 ${primary}14 inset, 0 18px 40px -18px ${primary}35` }}>
+        <div style={{ background: `linear-gradient(135deg, var(--org-a10), var(--org-a05))`, border: `1px solid var(--org-a20)`, borderRadius: 20, padding: '20px 24px', marginBottom: 16, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 -1px 0 var(--org-a10) inset, 0 18px 40px -18px var(--org-a20)` }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <div style={{ fontSize: 22, fontWeight: 900 }}>📅 Calendar</div>
+              <div style={{ fontSize: 22, fontWeight: 900 }}><Icon name="📅" /> Calendar</div>
               <div style={{ fontSize: 13, color: '#6B7280', marginTop: 3 }}>{thisMonthCount} session{thisMonthCount !== 1 ? 's' : ''} this month · {sessions.length} total</div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -458,7 +460,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
                 onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>Today</button>
               <div style={{ position: 'relative', display: 'flex' }}>
-                <button onClick={() => handlePlanForDate(format(new Date(), 'yyyy-MM-dd'))} style={{ padding: '9px 16px', borderRadius: '10px 0 0 10px', border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px ${primary}40` }}>+ New Session</button>
+                <button onClick={() => handlePlanForDate(format(new Date(), 'yyyy-MM-dd'))} style={{ padding: '9px 16px', borderRadius: '10px 0 0 10px', border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px var(--org-a20)` }}>+ New Session</button>
                 <button onClick={() => setShowNewMenu(s => !s)} style={{ padding: '9px 10px', borderRadius: '0 10px 10px 0', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.3)', background: primary, color: '#fff', fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>▾</button>
                 {showNewMenu && (
                   <div onMouseLeave={() => setShowNewMenu(false)} style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', borderRadius: 14, boxShadow: '0 20px 50px rgba(0,0,0,0.18)', border: '1px solid #F3F4F6', padding: 6, width: 200, zIndex: 60 }}>
@@ -488,7 +490,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
             {venues.length > 0 && (
               <select value={filterVenue} onChange={e => setFilterVenue(e.target.value)}
                 style={{ padding: '4px 10px', borderRadius: 99, border: `1.5px solid ${filterVenue !== 'all' ? primary : '#e5e7eb'}`, background: filterVenue !== 'all' ? primary + '15' : '#fff', color: filterVenue !== 'all' ? primary : '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                <option value="all">📍 All venues</option>
+                <option value="all"><Icon name="📍" /> All venues</option>
                 {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
               </select>
             )}
@@ -529,7 +531,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
 
           {loading ? (
             <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF' }}>
-              <div style={{ width: 32, height: 32, border: `3px solid ${primary}30`, borderTopColor: primary, borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 0.7s linear infinite' }} />
+              <div style={{ width: 32, height: 32, border: `3px solid var(--org-a20)`, borderTopColor: primary, borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 0.7s linear infinite' }} />
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
               Loading sessions...
             </div>
@@ -545,12 +547,12 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const bankHoliday = bankHolidays[key]
                 const schoolHoliday = getSchoolHoliday(key)
                 const novelty = getNoveltyDay(key)
-                const specialBg = bankHoliday ? '#FEF3C799' : schoolHoliday ? `${primary}08` : 'transparent'
+                const specialBg = bankHoliday ? '#FEF3C799' : schoolHoliday ? 'var(--org-a05)' : 'transparent'
                 return (
                   <div key={key} onClick={() => daySessions.length === 0 && inMonth && !isPastEmpty ? handlePlanForDate(key) : null}
-                    style={{ minHeight: 110, minWidth: 0, overflow: 'hidden', borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
-                    onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? `${primary}14` : '#FAFBFC' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = today ? `${primary}0A` : inMonth ? '#fff' : '#FAFAFA' }}>
+                    style={{ minHeight: 110, minWidth: 0, overflow: 'hidden', borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? 'var(--org-a05)' : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
+                    onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? 'var(--org-a10)' : '#FAFBFC' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = today ? 'var(--org-a05)' : inMonth ? '#fff' : '#FAFAFA' }}>
                     {inMonth && specialBg !== 'transparent' && (
                       <div style={{ position: 'absolute', inset: 0, background: specialBg, pointerEvents: 'none' }} />
                     )}
@@ -564,7 +566,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                           <span title={novelty.title} style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', opacity: 0.65, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{novelty.title}</span>
                         )}
                       </div>
-                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? '#374151' : '#D1D5DB', boxShadow: today ? `0 2px 8px ${primary}50` : 'none', flexShrink: 0 }}>
+                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? '#374151' : '#D1D5DB', boxShadow: today ? `0 2px 8px var(--org-a35)` : 'none', flexShrink: 0 }}>
                         {format(day, 'd')}
                       </div>
                     </div>
@@ -576,7 +578,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                             style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 6, border: `1px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', width: '100%', minWidth: 0, boxSizing: 'border-box', overflow: 'hidden', textAlign: 'left', fontSize: 11, fontWeight: 700, color: cfg.color, transition: 'all 0.1s', lineHeight: 1.3, animation: `cal-pop-in 0.25s ease ${si * 0.04}s both` }}
                             onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.95)'; e.currentTarget.style.transform = 'translateX(1px)' }}
                             onMouseLeave={e => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'none' }}>
-                            <span style={{ flexShrink: 0 }}>{cfg.icon}</span>
+                            <span style={{ flexShrink: 0 }}><Icon name={cfg.icon} /></span>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>{s.title}</span>
                           </button>
                         )
@@ -601,9 +603,9 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const daySessions = sessionsByDate[key] || []
                 const today = isToday(day)
                 return (
-                  <div key={key} style={{ minHeight: 300, minWidth: 0, overflow: 'hidden', borderRight: '1px solid #F3F4F6', padding: '10px 8px', background: today ? `${primary}08` : '#fff', position: 'relative' }}>
+                  <div key={key} style={{ minHeight: 300, minWidth: 0, overflow: 'hidden', borderRight: '1px solid #F3F4F6', padding: '10px 8px', background: today ? 'var(--org-a05)' : '#fff', position: 'relative' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: today ? 900 : 700, color: today ? '#fff' : '#374151', boxShadow: today ? `0 2px 8px ${primary}50` : 'none' }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: today ? 900 : 700, color: today ? '#fff' : '#374151', boxShadow: today ? `0 2px 8px var(--org-a35)` : 'none' }}>
                         {format(day, 'd')}
                       </div>
                     </div>
@@ -615,7 +617,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                             style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 9px', borderRadius: 9, border: `1.5px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.1s', animation: `cal-pop-in 0.25s ease ${si * 0.05}s both` }}
                             onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.95)'; e.currentTarget.style.transform = 'scale(1.02)' }}
                             onMouseLeave={e => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'scale(1)' }}>
-                            <div style={{ fontSize: 13 }}>{cfg.icon}</div>
+                            <div style={{ fontSize: 13 }}><Icon name={cfg.icon} /></div>
                             <div style={{ fontSize: 11, fontWeight: 800, color: cfg.color, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{s.title}</div>
                             {s.start_time && <div style={{ fontSize: 10, color: cfg.color, opacity: 0.8, fontWeight: 600 }}>{timeRange(s.start_time, s.end_time)}</div>}
                           </button>
@@ -644,7 +646,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                   <div style={{ fontSize: 48, marginBottom: 12, animation: 'cal-bounce-in 0.4s ease' }}>🌤️</div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#374151', marginBottom: 6 }}>Nothing planned for this day</div>
                   <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20 }}>A free day — or the perfect time to plan something new.</div>
-                  <button onClick={() => handlePlanForDate(dayKey)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px ${primary}40` }}>
+                  <button onClick={() => handlePlanForDate(dayKey)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px var(--org-a20)` }}>
                     + Plan a Session
                   </button>
                   {showConfettiFor === dayKey && <ConfettiBurst color={primary} secondary={org?.secondary_color} />}
@@ -661,13 +663,13 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                           style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', borderRadius: 16, border: `1.5px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', animation: `cal-pop-in 0.3s ease ${si * 0.06}s both` }}
                           onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(3px)'; e.currentTarget.style.boxShadow = `0 8px 20px ${cfg.color}25` }}
                           onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}>
-                          <div style={{ width: 52, height: 52, borderRadius: 14, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>{cfg.icon}</div>
+                          <div style={{ width: 52, height: 52, borderRadius: 14, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}><Icon name={cfg.icon} /></div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>{s.title}</div>
                             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4, fontSize: 12, color: cfg.color, fontWeight: 700 }}>
                               {s.start_time && <span>⏰ {timeRange(s.start_time, s.end_time)}</span>}
-                              {s.location && <span>📍 {s.location}</span>}
-                              {s.max_capacity && <span>👥 {s.max_capacity} max</span>}
+                              {s.location && <span><Icon name="📍" /> {s.location}</span>}
+                              {s.max_capacity && <span><Icon name="👥" /> {s.max_capacity} max</span>}
                             </div>
                           </div>
                           <span style={{ background: cfg.color, color: '#fff', borderRadius: 99, padding: '4px 12px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{cfg.label}</span>
@@ -685,10 +687,10 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 if (agenda.length === 0) {
                   return (
                     <div style={{ textAlign: 'center', padding: '50px 20px' }}>
-                      <div style={{ fontSize: 48, marginBottom: 12 }}>🚀</div>
+                      <div style={{ fontSize: 48, marginBottom: 12 }}><Icon name="🚀" /></div>
                       <div style={{ fontSize: 16, fontWeight: 800, color: '#374151', marginBottom: 6 }}>No sessions planned yet</div>
                       <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20 }}>Nothing coming up matching this filter.</div>
-                      <button onClick={() => handlePlanForDate(today)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px ${primary}40` }}>+ Create Session</button>
+                      <button onClick={() => handlePlanForDate(today)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px var(--org-a20)` }}>+ Create Session</button>
                     </div>
                   )
                 }
@@ -711,13 +713,13 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                             style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 16px', borderRadius: 14, border: `1.5px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s' }}
                             onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(3px)' }}
                             onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}>
-                            <div style={{ width: 42, height: 42, borderRadius: 12, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}>{cfg.icon}</div>
+                            <div style={{ width: 42, height: 42, borderRadius: 12, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}><Icon name={cfg.icon} /></div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{s.title}</div>
                               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 3, fontSize: 11.5, color: cfg.color, fontWeight: 700 }}>
                                 {s.start_time && <span>⏰ {timeRange(s.start_time, s.end_time)}</span>}
-                                {s.location && <span>📍 {s.location}</span>}
-                                {s.max_capacity && <span>👥 {s.max_capacity}</span>}
+                                {s.location && <span><Icon name="📍" /> {s.location}</span>}
+                                {s.max_capacity && <span><Icon name="👥" /> {s.max_capacity}</span>}
                               </div>
                             </div>
                             <span style={{ background: cfg.color, color: '#fff', borderRadius: 99, padding: '4px 10px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{cfg.label}</span>
@@ -753,11 +755,11 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
         <div style={{ background: '#fff', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, flex: 1, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: '#374151' }}>Upcoming Sessions</div>
-            <button onClick={() => { setNavDirection('right'); gridKey.current += 1; setViewMode('list') }} style={{ background: 'none', border: 'none', color: primary, fontSize: 11, fontWeight: 800, cursor: 'pointer', padding: 0 }}>View all →</button>
+            <button onClick={() => { setNavDirection('right'); gridKey.current += 1; setViewMode('list') }} style={{ background: 'none', border: 'none', color: primary, fontSize: 11, fontWeight: 800, cursor: 'pointer', padding: 0 }}>View all <Icon name="→" /></button>
           </div>
           {upcomingSessions.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '20px 0', color: '#9CA3AF', fontSize: 12 }}>
-              <div style={{ fontSize: 28, marginBottom: 6 }}>📅</div>
+              <div style={{ fontSize: 28, marginBottom: 6 }}><Icon name="📅" /></div>
               No upcoming sessions.<br />Plan one in the Session Planner.
             </div>
           ) : (
@@ -771,12 +773,12 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                     style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${isSessionToday ? cfg.color + '50' : '#F3F4F6'}`, background: isSessionToday ? cfg.bg : '#FAFAFA', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = cfg.color; e.currentTarget.style.background = cfg.bg }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = isSessionToday ? cfg.color + '50' : '#F3F4F6'; e.currentTarget.style.background = isSessionToday ? cfg.bg : '#FAFAFA' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{cfg.icon}</div>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name={cfg.icon} /></div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 800, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                       <div style={{ fontSize: 11, color: cfg.color, fontWeight: 700, marginTop: 2 }}>{dateStr}</div>
                       {s.start_time && <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 1 }}>{timeRange(s.start_time, s.end_time)}</div>}
-                      {isSessionToday && <div style={{ fontSize: 10, fontWeight: 800, color: cfg.color, marginTop: 2 }}>🔴 TODAY</div>}
+                      {isSessionToday && <div style={{ fontSize: 10, fontWeight: 800, color: cfg.color, marginTop: 2 }}><Icon name="🔴" /> TODAY</div>}
                     </div>
                   </button>
                 )
@@ -806,7 +808,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
               <span style={{ color: '#9CA3AF' }}>🏵️ UK Bank Holiday</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>
-              <div style={{ width: 10, height: 10, borderRadius: 3, background: primary + '10', border: `1px solid ${primary}30`, flexShrink: 0 }} />
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: primary + '10', border: `1px solid var(--org-a20)`, flexShrink: 0 }} />
               <span style={{ color: '#9CA3AF' }}>School Holiday (approx.)</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { tierFor, computeAchievements, glassCard, DAYS, SLOTS } from './vp_shared'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
 
 const SEGMENTS = [
   { key: 'overview', label: 'Overview' },
@@ -24,7 +25,7 @@ export default function VPProfile({ org, user, profile, attendance, primary, ini
 
   return (
     <div style={{ padding: '0 0 100px' }}>
-      <div style={{ background: `linear-gradient(150deg, ${primary}, ${primary}CC)`, padding: '20px 18px 24px', color: '#fff', textAlign: 'center' }}>
+      <div style={{ background: `linear-gradient(150deg, ${primary}, var(--org-a85))`, padding: '20px 18px 24px', color: '#fff', textAlign: 'center' }}>
         <div style={{ width: 72, height: 72, borderRadius: '50%', background: profile?.photo_url ? 'transparent' : 'rgba(255,255,255,0.2)', border: '3px solid rgba(255,255,255,0.35)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
           {profile?.photo_url ? <SignedImg bucket="staff-photos" src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 24, fontWeight: 900 }}>{initials}</span>}
         </div>
@@ -155,7 +156,7 @@ function Training({ org, user, primary }) {
         <div style={{ fontSize: 12.5, color: '#94A3B8', textAlign: 'center', padding: 20 }}>No certificates uploaded yet. Use the + menu to upload one.</div>
       ) : records.map(r => (
         <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.06)', marginBottom: 8 }}>
-          <span style={{ fontSize: 18 }}>📜</span>
+          <span style={{ fontSize: 18 }}><Icon name="📜" /></span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.training_type}</div>
             <div style={{ fontSize: 10.5, color: '#94A3B8' }}>{r.expiry_date ? `Expires ${new Date(r.expiry_date).toLocaleDateString('en-GB')}` : r.completed_at ? `Completed ${new Date(r.completed_at).toLocaleDateString('en-GB')}` : ''}</div>
@@ -180,7 +181,7 @@ function Documents({ org, profile, primary }) {
 
   return docs.length === 0 ? (
     <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-      <div style={{ fontSize: 34, marginBottom: 10 }}>📄</div>
+      <div style={{ fontSize: 34, marginBottom: 10 }}><Icon name="📄" /></div>
       <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>No documents yet</div>
       <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>Policies, the handbook, and risk assessments will appear here once your organisation adds them.</div>
     </div>
@@ -204,7 +205,7 @@ function Badges({ attendance, profile, primary }) {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
       {achievements.map(a => (
         <motion.div key={a.key} whileTap={{ scale: 0.95 }} style={{ ...glassCard({ padding: '16px 8px' }), textAlign: 'center', opacity: a.earned ? 1 : 0.4 }}>
-          <div style={{ fontSize: 28, marginBottom: 6, filter: a.earned ? 'none' : 'grayscale(1)' }}>{a.icon}</div>
+          <div style={{ fontSize: 28, marginBottom: 6, filter: a.earned ? 'none' : 'grayscale(1)' }}><Icon name={a.icon} /></div>
           <div style={{ fontSize: 10.5, fontWeight: 800, color: '#334155', lineHeight: 1.2, marginBottom: 3 }}>{a.label}</div>
           <div style={{ fontSize: 9, color: '#94A3B8', lineHeight: 1.2 }}>{a.desc}</div>
         </motion.div>

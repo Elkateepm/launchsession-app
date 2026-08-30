@@ -29,6 +29,32 @@ const CRED_KEY = 'ls_biometric_cred'   // { credentialId, userId, enrolledAt }
 const LOCKED_KEY = 'ls_biometric_locked'
 const LOCK_AFTER_KEY = 'ls_biometric_lock_after'
 
+/**
+ * Whether the app lock applies on this device at all.
+ *
+ * The lock exists for the case it was designed around: a phone or tablet put
+ * down mid-session, unattended, with a charity's records open on it. A desktop
+ * has the OS screen lock for that, and the machine is not being carried around
+ * a sports hall, so re-scanning every time the app is reopened or left for
+ * three minutes is friction bought for very little.
+ *
+ * Deliberately a device test, not a viewport test: useIsMobile() keys off
+ * window width, so a narrowed desktop browser would start demanding Face ID
+ * and a MacBook with Touch ID would qualify on capability alone. Coarse
+ * pointer plus touch points is the closest thing to "this is a handheld".
+ * An iPad passes, which is correct -- it is the device most likely to be
+ * carried around a session.
+ */
+export function isAppLockPlatform() {
+  if (isNativeShell()) return true
+  if (typeof window === 'undefined') return false
+  try {
+    return window.matchMedia('(pointer: coarse)').matches && (navigator.maxTouchPoints || 0) > 0
+  } catch (e) {
+    return false
+  }
+}
+
 // Lock once the app has been in the background / unused for this long.
 // Short enough to matter if a phone is put down mid-session, long enough that
 // glancing at another app doesn't force a re-scan.

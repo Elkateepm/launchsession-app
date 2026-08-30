@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { LS, IconGlyph, ConsentBadge, categoryColor } from '../galleryShared'
+import Icon from '../../../lib/icons'
 
 const MENU_ITEMS = [
   { key: 'add', label: 'Add photos', icon: 'plus' },
@@ -85,7 +86,7 @@ export default function MemoryTimelineCard({ group, onView, onToggleFavourite, o
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 5, flexWrap: 'wrap' }}>
-          {group.location && <span style={{ fontSize: 12, color: LS.muted, fontWeight: 600 }}>📍 {group.location}</span>}
+          {group.location && <span style={{ fontSize: 12, color: LS.muted, fontWeight: 600 }}><Icon name="📍" /> {group.location}</span>}
           <ConsentBadge status={group.consentStatus} />
         </div>
 

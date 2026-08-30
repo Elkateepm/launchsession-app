@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import RASessionCard from '../riskassessments/RASessionCard'
 import SessionWizard from './SessionWizard'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
 
 const SESSION_TYPES = [
   { key: 'activity',  label: 'Activity',  icon: '🏃', color: '#1B9AAA' },
@@ -146,13 +147,13 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
       <div style={{ background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, padding: compact ? '16px 18px 14px' : '20px 24px 16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{type.icon}</div>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}><Icon name={type.icon} /></div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>{isEditing ? 'Edit Session' : 'New Session'}</div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{form.title || 'Untitled session'}</div>
             </div>
           </div>
-          <motion.button onClick={onCancel} whileTap={{ scale: 0.9 }} style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}>✕</motion.button>
+          <motion.button onClick={onCancel} whileTap={{ scale: 0.9 }} style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}><Icon name="✕" /></motion.button>
         </div>
 
         {/* Step dots */}
@@ -199,7 +200,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
                   return (
                     <motion.button key={t.key} onClick={() => set('session_type', t.key)} whileTap={{ scale: 0.97 }}
                       style={{ padding: compact ? '16px 12px' : '14px 12px', borderRadius: 14, border: `2px solid ${active ? t.color : 'var(--border, #e5e7eb)'}`, background: active ? t.color + '15' : 'var(--surface, #fff)', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s, background 0.15s' }}>
-                      <div style={{ fontSize: 24, marginBottom: 4 }}>{t.icon}</div>
+                      <div style={{ fontSize: 24, marginBottom: 4 }}><Icon name={t.icon} /></div>
                       <div style={{ fontSize: 13, fontWeight: 800, color: active ? t.color : 'var(--text, #111)' }}>{t.label}</div>
                     </motion.button>
                   )
@@ -277,7 +278,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
                   return (
                     <motion.button key={b.key} onClick={() => toggleBubble(b.label)} whileTap={{ scale: 0.95 }}
                       style={{ padding: compact ? '11px 18px' : '10px 18px', borderRadius: 99, border: `2px solid ${active ? b.color : 'var(--border, #e5e7eb)'}`, background: active ? b.color : 'var(--surface, #fff)', color: active ? '#fff' : 'var(--text, #111)', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {active && <span>✓</span>} {b.label}
+                      {active && <span><Icon name="✓" /></span>} {b.label}
                     </motion.button>
                   )
                 })}
@@ -331,8 +332,8 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
                   ].map(opt => (
                     <motion.button key={opt.key} onClick={() => set(opt.key, !form[opt.key])} whileTap={{ scale: 0.97 }}
                       style={{ padding: compact ? '15px 14px' : '14px', borderRadius: 12, border: `2px solid ${form[opt.key] ? '#1B9AAA' : 'var(--border, #e5e7eb)'}`, background: form[opt.key] ? '#E8F7F9' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 13, fontWeight: 800, color: form[opt.key] ? '#1B9AAA' : 'var(--text3, #6B7280)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 20 }}>{opt.icon}</span> {opt.label}
-                      {form[opt.key] && <span style={{ marginLeft: 'auto', fontSize: 16 }}>✓</span>}
+                      <span style={{ fontSize: 20 }}><Icon name={opt.icon} /></span> {opt.label}
+                      {form[opt.key] && <span style={{ marginLeft: 'auto', fontSize: 16 }}><Icon name="✓" /></span>}
                     </motion.button>
                   ))}
                 </div>
@@ -364,7 +365,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
                   { icon: '🔢', label: `${form.max_capacity || '—'} young people · ${form.volunteer_limit || '—'} volunteers` },
                 ].map((row, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
-                    <span style={{ fontSize: 16, flexShrink: 0 }}>{row.icon}</span>
+                    <span style={{ fontSize: 16, flexShrink: 0 }}><Icon name={row.icon} /></span>
                     <span style={{ color: 'var(--text, #111)', fontWeight: 600 }}>{row.label}</span>
                   </div>
                 ))}
@@ -468,7 +469,7 @@ function VolunteerPanel({ session, org, onClose }) {
         <div style={{ background: `linear-gradient(135deg, ${primary}, #6366F1)`, padding: '20px 20px 16px', color: '#fff', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.8 }}>Volunteer Coverage</div>
-            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: '#fff', fontSize: 16 }}>✕</button>
+            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: '#fff', fontSize: 16 }}><Icon name="✕" /></button>
           </div>
           <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 4 }}>{session.title}</div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
@@ -630,7 +631,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   const ta = (key) => ({
     width: '100%', boxSizing: 'border-box', padding: '13px 14px', borderRadius: 13,
     border: `1.5px solid ${focused === key ? primary : 'var(--border, #E5E7EB)'}`,
-    boxShadow: focused === key ? `0 0 0 4px ${primary}1A` : 'none',
+    boxShadow: focused === key ? `0 0 0 4px var(--org-a10)` : 'none',
     fontSize: 14, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 90,
     transition: 'border-color 0.15s, box-shadow 0.15s', background: 'var(--surface, #fff)', color: 'var(--text, #111)',
   })
@@ -657,7 +658,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
       >
         {saved ? (
           /* ── CELEBRATION SCREEN ── */
-          <div style={{ padding: '56px 32px', textAlign: 'center', background: `linear-gradient(160deg, ${primary}10, ${secondary}08)` }}>
+          <div style={{ padding: '56px 32px', textAlign: 'center', background: `linear-gradient(160deg, var(--org-a05), ${secondary}08)` }}>
             <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 14 }} style={{ fontSize: 56, marginBottom: 8 }}>
               {RATING_REACTIONS[form.overall_rating]?.emoji || '🎉'}
             </motion.div>
@@ -668,14 +669,14 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
         ) : (
           <>
             {/* Header — branded */}
-            <div style={{ padding: '20px 22px 16px', background: `linear-gradient(135deg, ${primary}14, ${secondary}08)`, borderBottom: '1px solid var(--border, #F3F4F6)', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 22px 16px', background: `linear-gradient(135deg, var(--org-a10), ${secondary}08)`, borderBottom: '1px solid var(--border, #F3F4F6)', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
               <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, borderRadius: '50%', background: `${secondary}18`, filter: 'blur(20px)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1, marginBottom: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
                   {org?.logo_url ? (
-                    <img src={org.logo_url} alt={org?.name || ''} style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'contain', background: '#fff', border: `1px solid ${primary}25`, padding: 3 }} />
+                    <img src={org.logo_url} alt={org?.name || ''} style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'contain', background: '#fff', border: `1px solid var(--org-a10)`, padding: 3 }} />
                   ) : (
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>⭐</div>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><Icon name="⭐" /></div>
                   )}
                   <div>
                     <div style={{ fontSize: 15.5, fontWeight: 900, color: 'var(--text, #111)', fontFamily: 'var(--font-display, sans-serif)' }}>Session Reflection</div>
@@ -699,7 +700,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
 
             {/* Scrollable step content */}
             <div style={{ overflowY: 'auto', flex: 1, minHeight: isMobile ? 320 : 360, padding: 24, WebkitOverflowScrolling: 'touch', position: 'relative' }}>
-              {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 16, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>}
+              {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 16, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>}
 
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.div key={step} custom={direction} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.22, ease: 'easeOut' }}>
@@ -805,7 +806,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
                         >
                           <input type="checkbox" checked={form.safeguarding_flag} onChange={e => set('safeguarding_flag', e.target.checked)} style={{ width: 16, height: 16, accentColor: '#DC2626' }} />
                           <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: form.safeguarding_flag ? '#DC2626' : 'var(--text, #111)' }}>🛡️ Flag for safeguarding follow-up</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: form.safeguarding_flag ? '#DC2626' : 'var(--text, #111)' }}><Icon name="🛡️" /> Flag for safeguarding follow-up</div>
                             <div style={{ fontSize: 11, color: 'var(--text3, #9CA3AF)' }}>Tick if anything here needs a safeguarding lead's attention — log the actual concern separately.</div>
                           </div>
                         </motion.label>
@@ -815,7 +816,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
                         <textarea style={ta('free')} onFocus={() => setFocused('free')} onBlur={() => setFocused(null)} value={form.reflection} onChange={e => set('reflection', e.target.value)} placeholder="Any other thoughts for next time..." />
                       </ReflectionField>
                       <ReflectionField i={2}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, background: `linear-gradient(135deg, ${primary}0C, ${secondary}08)`, border: `1px dashed ${primary}30` }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, background: `linear-gradient(135deg, var(--org-a05), ${secondary}08)`, border: `1px dashed var(--org-a20)` }}>
                           <span style={{ fontSize: 24 }}>{RATING_REACTIONS[form.overall_rating]?.emoji}</span>
                           <div style={{ fontSize: 12, color: 'var(--text3, #6B7280)' }}>You rated this session <strong style={{ color: 'var(--text, #111)' }}>{form.overall_rating}/5</strong>. Ready to save?</div>
                         </div>
@@ -830,14 +831,14 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
             {/* Footer */}
             <div style={{ padding: '16px 22px', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 10, flexShrink: 0, background: 'var(--surface, #fff)' }}>
               {step > 0 && (
-                <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}>← Back</motion.button>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}><Icon name="←" /> Back</motion.button>
               )}
               {!isLast ? (
-                <motion.button whileTap={{ scale: 0.97 }} disabled={!canAdvance} onClick={goNext} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: canAdvance ? `linear-gradient(135deg, ${primary}, ${secondary})` : '#D1D5DB', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canAdvance ? 'pointer' : 'default', boxShadow: canAdvance ? `0 8px 20px ${primary}44` : 'none' }}>
+                <motion.button whileTap={{ scale: 0.97 }} disabled={!canAdvance} onClick={goNext} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: canAdvance ? `linear-gradient(135deg, ${primary}, ${secondary})` : '#D1D5DB', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canAdvance ? 'pointer' : 'default', boxShadow: canAdvance ? `0 8px 20px var(--org-a20)` : 'none' }}>
                   Next →
                 </motion.button>
               ) : (
-                <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 20px ${primary}44` }}>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 20px var(--org-a20)` }}>
                   {saving ? 'Saving...' : existing ? '💾 Update Reflection' : '✅ Complete Reflection'}
                 </motion.button>
               )}
@@ -920,8 +921,8 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
 
         {/* Colour banner header */}
         <div style={{ background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, padding: '22px 22px 18px', flexShrink: 0, position: 'relative' }}>
-          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}>✕</button>
-          <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 12 }}>{type.icon}</div>
+          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}><Icon name="✕" /></button>
+          <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 12 }}><Icon name={type.icon} /></div>
           <div style={{ fontSize: 19, fontWeight: 900, color: '#fff', marginBottom: 8, paddingRight: 40, lineHeight: 1.2 }}>{session.title}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
             {/* Translucent chip -- the old pastel background was invisible against the banner */}
@@ -1048,9 +1049,9 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
         {/* Footer */}
         <div style={{ padding: '16px 22px', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 8, flexShrink: 0, background: 'var(--surface, #fff)' }}>
           {onVolunteers && (
-            <button onClick={() => { onVolunteers(session); onClose() }} style={{ padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>❤️ Volunteers</button>
+            <button onClick={() => { onVolunteers(session); onClose() }} style={{ padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}><Icon name="❤️" /> Volunteers</button>
           )}
-          <button onClick={() => { onEdit(session); onClose() }} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${type.color}, ${type.color}cc)`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: `0 8px 20px ${type.color}44` }}>✏️ Edit Session</button>
+          <button onClick={() => { onEdit(session); onClose() }} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${type.color}, ${type.color}cc)`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: `0 8px 20px ${type.color}44` }}><Icon name="✏️" /> Edit Session</button>
         </div>
       </motion.div>
     </motion.div>
@@ -1068,15 +1069,15 @@ function TemplateCard({ t, primary, onUse, onEdit, onDelete }) {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
         <div style={{ width: 44, height: 44, borderRadius: 13, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{t.icon || '📋'}</div>
         <div style={{ display: 'flex', gap: 4 }}>
-          <button onClick={() => onEdit(t)} title="Edit template" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#F1F5F9', cursor: 'pointer', fontSize: 12 }}>✏️</button>
-          <button onClick={() => onDelete(t.id)} title="Delete template" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#FFF0F0', cursor: 'pointer', fontSize: 12 }}>🗑</button>
+          <button onClick={() => onEdit(t)} title="Edit template" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#F1F5F9', cursor: 'pointer', fontSize: 12 }}><Icon name="✏️" /></button>
+          <button onClick={() => onDelete(t.id)} title="Delete template" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#FFF0F0', cursor: 'pointer', fontSize: 12 }}><Icon name="🗑" /></button>
         </div>
       </div>
       <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{t.name}</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 11.5, fontWeight: 600, color: '#64748B', marginBottom: 12 }}>
         <span>{type.icon} {type.label}</span>
-        {t.start_time && t.end_time && <span>🕐 {t.start_time}–{t.end_time}</span>}
-        {t.max_capacity && <span>👥 {t.max_capacity}</span>}
+        {t.start_time && t.end_time && <span><Icon name="🕐" /> {t.start_time}–{t.end_time}</span>}
+        {t.max_capacity && <span><Icon name="👥" /> {t.max_capacity}</span>}
         {t.location && <span>📍 {t.location.split(',')[0]}</span>}
       </div>
       {t.use_count > 0 && (
@@ -1095,7 +1096,7 @@ function TemplatesView({ templates, loading, primary, onBack, onUse, onEdit, onD
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 22, flexWrap: 'wrap' }}>
           <div>
-            <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#64748B', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 6, padding: 0 }}>← Back to sessions</button>
+            <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#64748B', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 6, padding: 0 }}><Icon name="←" /> Back to sessions</button>
             <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>🗂️ Session Templates</div>
             <div style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>Reusable presets for sessions you run again and again.</div>
           </div>
@@ -1161,7 +1162,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
       <div style={{ position: 'relative', width: '100%', maxWidth: 560, maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: 24, boxShadow: '0 32px 80px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid #EEF1F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>{isEditing ? 'Edit Template' : 'New Template'}</div>
-          <button onClick={onCancel} style={{ width: 30, height: 30, borderRadius: 8, background: '#F1F5F9', border: 'none', fontSize: 16, cursor: 'pointer' }}>✕</button>
+          <button onClick={onCancel} style={{ width: 30, height: 30, borderRadius: 8, background: '#F1F5F9', border: 'none', fontSize: 16, cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 22 }}>
@@ -1192,7 +1193,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
                 return (
                   <button key={t.key} onClick={() => set('session_type', t.key)}
                     style={{ padding: '12px 10px', borderRadius: 12, border: `2px solid ${active ? t.color : '#E5E7EB'}`, background: active ? t.color + '15' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
-                    <div style={{ fontSize: 18, marginBottom: 2 }}>{t.icon}</div>
+                    <div style={{ fontSize: 18, marginBottom: 2 }}><Icon name={t.icon} /></div>
                     <div style={{ fontSize: 12.5, fontWeight: 800, color: active ? t.color : '#111' }}>{t.label}</div>
                   </button>
                 )
@@ -1269,7 +1270,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
                 const active = !!form[opt.key]
                 return (
                   <button key={opt.key} onClick={() => set(opt.key, !active)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 99, border: `1.5px solid ${active ? '#6D5DF6' : '#E5E7EB'}`, background: active ? '#6D5DF614' : '#fff', color: active ? '#6D5DF6' : '#64748B', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                    <span>{opt.icon}</span>{opt.label}
+                    <span><Icon name={opt.icon} /></span>{opt.label}
                   </button>
                 )
               })}
@@ -1468,7 +1469,7 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
         <div style={{
           width: 40, height: 40, borderRadius: 11, background: type.color + '18', border: `1.5px solid ${type.color}30`,
           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0,
-        }}>{type.icon}</div>
+        }}><Icon name={type.icon} /></div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
@@ -1478,7 +1479,7 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
                 LIVE
               </span>
             )}
-            {status === 'completed' && <StatusPill ok>✓ Completed</StatusPill>}
+            {status === 'completed' && <StatusPill ok><Icon name="✓" /> Completed</StatusPill>}
             <span style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{s.title}</span>
             {project && (
               <button
@@ -1544,8 +1545,8 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
               )
             })}
             {status === 'upcoming' && needsVols && <StatusPill tone="amber">⚠ {s.volunteer_limit - volCount} volunteer{s.volunteer_limit - volCount === 1 ? '' : 's'} needed</StatusPill>}
-            {status === 'upcoming' && s.risk_assessment_required && <StatusPill tone="amber">⚠ Risk assessment required</StatusPill>}
-            {status === 'completed' && (hasReflection ? <StatusPill ok>✓ Reflection complete</StatusPill> : <StatusPill tone="amber">⚠ Reflection due</StatusPill>)}
+            {status === 'upcoming' && s.risk_assessment_required && <StatusPill tone="amber"><Icon name="⚠" /> Risk assessment required</StatusPill>}
+            {status === 'completed' && (hasReflection ? <StatusPill ok><Icon name="✓" /> Reflection complete</StatusPill> : <StatusPill tone="amber"><Icon name="⚠" /> Reflection due</StatusPill>)}
           </div>
         </div>
 
@@ -2219,7 +2220,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
               background: 'linear-gradient(135deg, #F5F3FF, #EEF2FF)',
               border: '1px solid #DDD6FE', boxSizing: 'border-box',
             }}>
-            <span style={{ fontSize: 18, flexShrink: 0 }}>🚀</span>
+            <span style={{ fontSize: 18, flexShrink: 0 }}><Icon name="🚀" /></span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>
                 {runningProject.proj.name}
@@ -2229,7 +2230,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                 {runningProject.todays ? ` · Today: ${runningProject.todays.title}` : ' · No session today'}
               </span>
             </span>
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#6D5DF6', whiteSpace: 'nowrap' }}>Open project →</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#6D5DF6', whiteSpace: 'nowrap' }}>Open project <Icon name="→" /></span>
           </button>
         )}
 
@@ -2248,7 +2249,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         {/* ═══ SEARCH + FILTERS ═══ */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', flex: '1 1 220px', minWidth: 0 }}>
-            <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94A3B8' }}>🔍</span>
+            <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94A3B8' }}><Icon name="🔍" /></span>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -2282,7 +2283,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
           )}
           <div style={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: 11, overflow: 'hidden' }}>
             {[{ key: 'list', icon: '☰' }, { key: 'week', icon: '📅' }].map(v => (
-              <button key={v.key} onClick={() => setView(v.key)} style={{ padding: '9px 13px', border: 'none', background: view === v.key ? '#6D5DF6' : '#fff', color: view === v.key ? '#fff' : '#64748B', fontSize: 13, cursor: 'pointer' }}>{v.icon}</button>
+              <button key={v.key} onClick={() => setView(v.key)} style={{ padding: '9px 13px', border: 'none', background: view === v.key ? '#6D5DF6' : '#fff', color: view === v.key ? '#fff' : '#64748B', fontSize: 13, cursor: 'pointer' }}><Icon name={v.icon} /></button>
             ))}
           </div>
         </div>
@@ -2321,7 +2322,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
           <div style={{ textAlign: 'center', padding: '52px 20px', background: '#fff', borderRadius: 20, border: '1px solid #EEF1F6' }}>
             <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
               {EMPTY_COPY.icon
-                ? <span style={{ fontSize: 40 }}>{EMPTY_COPY.icon}</span>
+                ? <span style={{ fontSize: 40 }}><Icon name={EMPTY_COPY.icon} /></span>
                 : <img src="/assets/rockets/rocket-hero.png" alt="" style={{ height: 84, width: 'auto' }} />}
             </div>
             <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>{EMPTY_COPY.title}</div>
@@ -2407,9 +2408,9 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                             </div>
                           )}
                           <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
-                            <button onClick={e => { e.stopPropagation(); setSelectedSession(s) }} style={{ flex: 1, border: 'none', background: type.color + '20', borderRadius: 7, padding: '4px 0', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: type.color }}>❤️ Vols</button>
-                            <button onClick={e => { e.stopPropagation(); setEditing(s); setView('wizard') }} style={{ border: 'none', background: '#F9FAFB', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>✏️</button>
-                            <button onClick={e => { e.stopPropagation(); handleDelete(s.id) }} style={{ border: 'none', background: '#FFF0F0', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}>🗑</button>
+                            <button onClick={e => { e.stopPropagation(); setSelectedSession(s) }} style={{ flex: 1, border: 'none', background: type.color + '20', borderRadius: 7, padding: '4px 0', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: type.color }}><Icon name="❤️" /> Vols</button>
+                            <button onClick={e => { e.stopPropagation(); setEditing(s); setView('wizard') }} style={{ border: 'none', background: '#F9FAFB', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}><Icon name="✏️" /></button>
+                            <button onClick={e => { e.stopPropagation(); handleDelete(s.id) }} style={{ border: 'none', background: '#FFF0F0', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}><Icon name="🗑" /></button>
                           </div>
                         </div>
                       )
@@ -2480,7 +2481,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
           }}>
             <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>Filters</div>
-              <button onClick={() => setShowFilters(false)} style={{ border: 'none', background: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setShowFilters(false)} style={{ border: 'none', background: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
               <div style={{ marginBottom: 18 }}>
@@ -2549,7 +2550,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
           }}>
             <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>Duplicate a previous session</div>
-              <button onClick={() => setShowDuplicatePicker(false)} style={{ border: 'none', background: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setShowDuplicatePicker(false)} style={{ border: 'none', background: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
               {completedSessions.length === 0 ? (
@@ -2559,7 +2560,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                 return (
                   <button key={s.id} onClick={() => { setShowDuplicatePicker(false); handleDuplicateSession(s) }}
                     style={{ display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left', padding: '11px 12px', borderRadius: 11, border: '1px solid #F1F5F9', background: '#fff', marginBottom: 7, cursor: 'pointer' }}>
-                    <span style={{ fontSize: 18 }}>{type.icon}</span>
+                    <span style={{ fontSize: 18 }}><Icon name={type.icon} /></span>
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ display: 'block', fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{s.title}</span>
                       <span style={{ display: 'block', fontSize: 11.5, color: '#94A3B8' }}>

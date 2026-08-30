@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format, parseISO, isSameDay, startOfWeek, addDays, isToday } from 'date-fns'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import Icon from '../../lib/icons'
 
 const RESOURCE_TYPES = [
   { key: 'room',       label: 'Room',          icon: '🚪' },
@@ -126,10 +127,10 @@ export default function ResourceBooking({ org, session: authSession }) {
   return (
     <div>
       {/* Header */}
-      <div style={{ background: `linear-gradient(135deg, ${primary}22, ${primary}08)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
+      <div style={{ background: `linear-gradient(135deg, var(--org-a10), var(--org-a05))`, border: `1px solid var(--org-a20)`, borderRadius: 20, padding: '22px 26px', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 900 }}>🗓️ Resource Booking</div>
+            <div style={{ fontSize: 22, fontWeight: 900 }}><Icon name="🗓️" /> Resource Booking</div>
             <div style={{ fontSize: 13, color: '#6B7280', marginTop: 3 }}>{resources.length} resource{resources.length !== 1 ? 's' : ''} · {totalBookingsThisWeek} booking{totalBookingsThisWeek !== 1 ? 's' : ''} this week</div>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -154,7 +155,7 @@ export default function ResourceBooking({ org, session: authSession }) {
       {/* Add resource */}
       {showAddResource && (
         <div style={{ background: '#F0F9FF', border: '1.5px solid #BAE6FD', borderRadius: 16, padding: 18, marginBottom: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}>📦 Add Resource</div>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}><Icon name="📦" /> Add Resource</div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>NAME *</label><input value={newResource.name} onChange={e => setNewResource(n => ({ ...n, name: e.target.value }))} placeholder="e.g. Main Hall, Blue Minibus" style={inp} /></div>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>TYPE</label>
@@ -177,7 +178,7 @@ export default function ResourceBooking({ org, session: authSession }) {
         <div onClick={() => setShowBook(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 460, padding: 24, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <div style={{ fontSize: 17, fontWeight: 800 }}>📅 Make a Booking</div>
+              <div style={{ fontSize: 17, fontWeight: 800 }}><Icon name="📅" /> Make a Booking</div>
               <button onClick={() => setShowBook(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: '#9CA3AF', cursor: 'pointer' }}>×</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -214,17 +215,17 @@ export default function ResourceBooking({ org, session: authSession }) {
 
       {/* Week nav */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <button onClick={() => setCurrentWeek(d => addDays(d, -7))} style={{ padding: '7px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', fontWeight: 700, cursor: 'pointer' }}>← Prev</button>
+        <button onClick={() => setCurrentWeek(d => addDays(d, -7))} style={{ padding: '7px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', fontWeight: 700, cursor: 'pointer' }}><Icon name="←" /> Prev</button>
         <div style={{ flex: 1, textAlign: 'center', fontWeight: 800, fontSize: 15 }}>
           {format(startOfWeek(currentWeek, { weekStartsOn: 1 }), 'd MMM')} – {format(addDays(startOfWeek(currentWeek, { weekStartsOn: 1 }), 6), 'd MMM yyyy')}
         </div>
         <button onClick={() => setCurrentWeek(new Date())} style={{ padding: '7px 14px', borderRadius: 10, border: `1.5px solid ${primary}`, background: primary + '10', color: primary, fontWeight: 700, cursor: 'pointer' }}>Today</button>
-        <button onClick={() => setCurrentWeek(d => addDays(d, 7))} style={{ padding: '7px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', fontWeight: 700, cursor: 'pointer' }}>Next →</button>
+        <button onClick={() => setCurrentWeek(d => addDays(d, 7))} style={{ padding: '7px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', fontWeight: 700, cursor: 'pointer' }}>Next <Icon name="→" /></button>
       </div>
 
       {resources.length === 0 ? (
         <div style={{ padding: 60, textAlign: 'center', background: '#F9FAFB', borderRadius: 16, border: '1.5px dashed #e5e7eb' }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🗓️</div>
+          <div style={{ fontSize: 48, marginBottom: 12 }}><Icon name="🗓️" /></div>
           <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>No resources yet</div>
           <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 20 }}>Add rooms, vehicles, equipment and more to start booking</div>
           <button onClick={() => setShowAddResource(true)} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>+ Add First Resource</button>

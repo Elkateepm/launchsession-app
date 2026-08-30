@@ -10,6 +10,7 @@ import InventoryTable from './InventoryTable'
 import BookingRequests from './BookingRequests'
 import ResourceCheckout from './ResourceCheckout'
 import InventoryAlerts from './InventoryAlerts'
+import Icon from '../../lib/icons'
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
@@ -98,12 +99,12 @@ export default function ResourceCentre({ org, session: authSession }) {
     <div style={{ padding: isMobile ? 14 : 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 14, marginBottom: 20 }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: '#111827', display: 'flex', alignItems: 'center', gap: 8 }}>📅 Resource Centre</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: '#111827', display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="📅" /> Resource Centre</div>
           <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>Book rooms, vehicles, equipment and manage inventory from one place.</div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={() => { setPresetBookingResourceId(null); document.getElementById('quick-booking-panel')?.scrollIntoView({ behavior: 'smooth' }) }}
-            style={{ padding: '11px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>⚡ Quick Book</button>
+            style={{ padding: '11px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}><Icon name="⚡" /> Quick Book</button>
           <button onClick={() => setShowAddModal(true)} style={{ padding: '11px 18px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Resource</button>
         </div>
       </div>

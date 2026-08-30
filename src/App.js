@@ -3,8 +3,10 @@ import { supabase } from './lib/supabase'
 import { OrgProvider, useOrg } from './context/OrgContext'
 import SplashScreen from './components/common/SplashScreen'
 import { useBreakpoint } from './hooks/useIsMobile'
-import { isEnrolledFor, isLocked, setLocked, getLockAfterMs } from './lib/biometricLock'
+import { isEnrolledFor, isLocked, setLocked, getLockAfterMs, isAppLockPlatform } from './lib/biometricLock'
 import BiometricLockScreen from './components/auth/BiometricLockScreen'
+import { redirectToSignIn } from './lib/authRedirect'
+import { ModuleAccessProvider } from './context/ModuleAccessContext'
 
 // Route-level code splitting: each of these becomes its own JS chunk, only
 // downloaded when that route is actually visited, instead of all being
@@ -24,7 +26,9 @@ const VolunteerAcceptInvite = lazy(() => import('./components/volunteers/Volunte
 const PublicForm = lazy(() => import('./components/forms/PublicForm'))
 const PublicDonationPage = lazy(() => import('./components/fundraising/PublicDonationPage'))
 const PublicChildRegistration = lazy(() => import('./components/children/PublicChildRegistration'))
+const Unsubscribe = lazy(() => import('./components/messaging/Unsubscribe'))
 const PublicVolunteerRegistration = lazy(() => import('./components/volunteers/PublicVolunteerRegistration'))
+const VerifyVolunteerApplication = lazy(() => import('./components/volunteers/VerifyVolunteerApplication'))
 
 // Minimal fallback shown while a lazy chunk downloads. Kept intentionally
 // tiny/inline (no imports) since it needs to render before other chunks
@@ -42,8 +46,8 @@ const IDLE_TIMEOUT_MS = 8 * 60 * 60 * 1000 // 8 hours — a full working day
 const MOBILE_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 const LAST_ACTIVITY_KEY = 'ls_last_activity'
 
-// Signs the user out and returns them to the marketing landing page after a
-// sustained period with no interaction. Only active while `enabled` (a live
+// Signs the user out and returns them to their organisation's sign-in screen
+// after a sustained period with no interaction. Only active while `enabled` (a live
 // session) is true AND on desktop widths - mobile/iPad users stay signed in
 // until they explicitly log out, since idle timeouts on personal devices
 // mostly just cause unwanted logouts (app backgrounded, phone locked, etc.)
@@ -73,7 +77,7 @@ function useIdleLogout(enabled) {
       loggingOut = true
       try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
       try { localStorage.removeItem(LAST_ACTIVITY_KEY) } catch (e) { /* ignore */ }
-      window.location.replace('/landing.html')
+      redirectToSignIn()
     }
 
     // The session is shared across tabs, so a background tab reaching its
@@ -170,7 +174,7 @@ function useMobileInactivityLogout(enabled) {
       loggingOut = true
       try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
       try { localStorage.removeItem(LAST_ACTIVITY_KEY) } catch (e) { /* ignore */ }
-      window.location.replace('/landing.html')
+      redirectToSignIn()
     }
 
     const markActivity = () => {
@@ -224,10 +228,21 @@ function useMobileInactivityLogout(enabled) {
 // freely, so an in-memory timer would silently stop locking after the first
 // time iOS reclaimed the tab.
 function useBiometricLock(userId) {
-  const [locked, setLockedState] = React.useState(() => isEnrolledFor(userId) && isLocked())
+  const [locked, setLockedState] = React.useState(() => isAppLockPlatform() && isEnrolledFor(userId) && isLocked())
   const backgroundedAt = React.useRef(null)
 
   React.useEffect(() => {
+    // Phones and tablets only. On a desktop the lock was firing on every cold
+    // start and after three minutes in another window, for a machine that is
+    // sitting on a desk behind an OS screen lock -- all of the interruption,
+    // almost none of the benefit it was designed for.
+    if (!isAppLockPlatform()) {
+      // Clear any flag left by the previous behaviour, or this desktop stays
+      // stuck behind a lock screen it can no longer be asked to lift.
+      if (isLocked()) setLocked(false)
+      setLockedState(false)
+      return
+    }
     if (!isEnrolledFor(userId)) { setLockedState(false); return }
 
     // Cold start with an enrolment present always locks. We can't know how long
@@ -301,7 +316,7 @@ function AuthedApp({ session, org, onReady }) {
         onSignOut={async () => {
           setLocked(false)
           try { await supabase.auth.signOut() } catch (e) { /* best effort */ }
-          window.location.replace('/landing.html')
+          redirectToSignIn()
         }}
       />
     )
@@ -324,7 +339,11 @@ function AuthedApp({ session, org, onReady }) {
   }
 
   if (!onboardingDone) return <Onboarding session={session} org={org} onComplete={() => setOnboardingDone(true)} />
-  return <Dashboard session={session} org={org} />
+  return (
+    <ModuleAccessProvider userId={session.user.id}>
+      <Dashboard session={session} org={org} />
+    </ModuleAccessProvider>
+  )
 }
 
 // True when running as an installed home-screen app (iOS Safari's
@@ -357,7 +376,7 @@ function shouldGoToLanding() {
   const hostname = window.location.hostname
   const hasOrg = new URLSearchParams(window.location.search).get('org')
   const isDashboard = pathname === '/dashboard'
-  const isSpecialRoute = ['/login', '/signup', '/create-password', '/org-search', '/reset-password'].includes(pathname) || pathname.startsWith('/volunteer') || pathname.startsWith('/forms/') || pathname.startsWith('/pay/')
+  const isSpecialRoute = ['/login', '/signup', '/create-password', '/org-search', '/reset-password'].includes(pathname) || pathname.startsWith('/volunteer') || pathname.startsWith('/forms/') || pathname.startsWith('/pay/') || pathname === '/verify-volunteer' || pathname.startsWith('/register-volunteer/') || pathname.startsWith('/unsubscribe/')
   // The app subdomain is the application itself — never redirect it to the
   // marketing landing page, regardless of path or org context.
   const isAppSubdomain = hostname.startsWith('app.')
@@ -486,8 +505,10 @@ export default function App() {
   if (pathname.startsWith('/volunteer')) return <Suspense fallback={<RouteLoading />}><VolunteerPortal /></Suspense>
   if (pathname.startsWith('/forms/')) return <Suspense fallback={<RouteLoading />}><PublicForm /></Suspense>
   if (pathname.startsWith('/pay/')) return <Suspense fallback={<RouteLoading />}><PublicDonationPage /></Suspense>
+  if (pathname.startsWith('/unsubscribe/')) return <Suspense fallback={<RouteLoading />}><Unsubscribe /></Suspense>
   if (pathname.startsWith('/register-child/')) return <Suspense fallback={<RouteLoading />}><PublicChildRegistration /></Suspense>
   if (pathname.startsWith('/register-volunteer/')) return <Suspense fallback={<RouteLoading />}><PublicVolunteerRegistration /></Suspense>
+  if (pathname === '/verify-volunteer') return <Suspense fallback={<RouteLoading />}><VerifyVolunteerApplication /></Suspense>
   if (pathname === '/signup') return <Suspense fallback={<RouteLoading />}><Signup /></Suspense>
   if (pathname === '/create-password') return <Suspense fallback={<RouteLoading />}><CreatePassword /></Suspense>
   return (

@@ -2,6 +2,7 @@ import DOMPurify from 'dompurify'
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import Icon from '../../lib/icons'
 
 const TYPES = [
   { key: 'session_plan', label: 'Session Plans',      icon: '📋', color: '#3B82F6', desc: 'Pre-built agendas and activity plans' },
@@ -58,7 +59,7 @@ function ViewModal({ template, onClose, onUse, onEdit, isOwn, using }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 22 }}>{typeMeta.icon}</span>
+              <span style={{ fontSize: 22 }}><Icon name={typeMeta.icon} /></span>
               {template.is_global && !isOwn && <span style={{ fontSize: 10, fontWeight: 900, color: '#38BDF8', background: 'rgba(56,189,248,0.12)', padding: '3px 8px', borderRadius: 999 }}>GLOBAL TEMPLATE</span>}
               {isOwn && <span style={{ fontSize: 10, fontWeight: 900, color: '#86EFAC', background: 'rgba(34,197,94,0.12)', padding: '3px 8px', borderRadius: 999 }}>YOUR TEMPLATE</span>}
               {template.category && <span style={{ fontSize: 10, fontWeight: 900, color: '#A78BFA', background: 'rgba(124,58,237,0.12)', padding: '3px 8px', borderRadius: 999 }}>{template.category}</span>}
@@ -164,7 +165,7 @@ function FileDropZone({ primary, onLoad, showToast }) {
       style={{ border: `2px dashed ${dragging ? primary : 'var(--border)'}`, borderRadius: 16, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', background: dragging ? primary + '08' : 'var(--surface)', transition: 'all 0.2s' }}
     >
       <input ref={inputRef} type="file" accept=".csv,.txt" style={{ display: 'none' }} onChange={e => readFile(e.target.files[0])} />
-      <div style={{ fontSize: 36, marginBottom: 10 }}>📂</div>
+      <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="📂" /></div>
       <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
         {dragging ? 'Drop it!' : 'Drop your CSV file here'}
       </div>
@@ -329,15 +330,15 @@ function ChildImportTool({ org, showToast, onNavigate }) {
       {tab === 'template' && (
         <div>
           {/* Hero */}
-          <div style={{ background: `linear-gradient(135deg, ${primary}18, ${primary}08)`, border: `1.5px solid ${primary}30`, borderRadius: 18, padding: '22px 24px', marginBottom: 20 }}>
+          <div style={{ background: `linear-gradient(135deg, var(--org-a10), var(--org-a05))`, border: `1.5px solid var(--org-a20)`, borderRadius: 18, padding: '22px 24px', marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, ${primary}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>📥</div>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: `linear-gradient(135deg, ${primary}, var(--org-a60))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}><Icon name="📥" /></div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>Children Import Template</div>
                 <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 14 }}>
                   Download the CSV template, fill it in with your young people's details in Excel, Numbers or Google Sheets, then upload or paste it on the Import tab.
                 </div>
-                <button onClick={downloadTemplate} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <button onClick={downloadTemplate} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   ⬇️ Download Template CSV
                 </button>
               </div>
@@ -388,7 +389,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
               { icon: '👥', title: 'Group names', desc: 'Must exactly match your group names in Settings.' },
             ].map(t => (
               <div key={t.title} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px' }}>
-                <div style={{ fontSize: 22, marginBottom: 6 }}>{t.icon}</div>
+                <div style={{ fontSize: 22, marginBottom: 6 }}><Icon name={t.icon} /></div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 3 }}>{t.title}</div>
                 <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5 }}>{t.desc}</div>
               </div>
@@ -410,7 +411,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
               {importResult.error && <div style={{ fontSize: 12, color: '#C00', marginBottom: 12 }}>{importResult.error}</div>}
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => setImportResult(null)} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'transparent', color: primary, fontWeight: 700, cursor: 'pointer' }}>Import more</button>
-                {onNavigate && <button onClick={() => onNavigate('registers')} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>View in Registers →</button>}
+                {onNavigate && <button onClick={() => onNavigate('registers')} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>View in Registers <Icon name="→" /></button>}
                 <button onClick={() => setTab('history')} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid var(--border)`, background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>View history</button>
               </div>
             </div>
@@ -455,7 +456,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
                       <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Preview — {preview.length} record{preview.length !== 1 ? 's' : ''}</div>
                       <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Showing first 5 rows · {errors.length > 0 ? `${errors.length} error${errors.length > 1 ? 's' : ''} found` : '✓ All clear'}</div>
                     </div>
-                    <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: errors.length > 0 ? '#9ca3af' : `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontWeight: 800, fontSize: 13, cursor: errors.length > 0 ? 'default' : 'pointer' }}>
+                    <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: errors.length > 0 ? '#9ca3af' : `linear-gradient(135deg, ${primary}, var(--org-a85))`, color: '#fff', fontWeight: 800, fontSize: 13, cursor: errors.length > 0 ? 'default' : 'pointer' }}>
                       {importing ? 'Importing...' : `✓ Import ${preview.length} records`}
                     </button>
                   </div>
@@ -499,7 +500,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
           <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Recently added young people (last 20)</div>
           {history.length === 0 ? (
             <div style={{ padding: '40px', textAlign: 'center', background: 'var(--surface)', borderRadius: 16, border: '1px dashed var(--border)' }}>
-              <div style={{ fontSize: 32, marginBottom: 10 }}>📋</div>
+              <div style={{ fontSize: 32, marginBottom: 10 }}><Icon name="📋" /></div>
               <div style={{ fontWeight: 700, color: 'var(--text)' }}>No records yet</div>
               <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>Import some young people to see them here.</div>
             </div>
@@ -614,7 +615,7 @@ export default function Templates({ org, onNavigate }) {
           <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{t.title}</div>
           {t.description && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3 }}>{t.description}</div>}
         </div>
-        <div style={{ fontSize: 24, marginLeft: 10, flexShrink: 0 }}>{typeMeta.icon}</div>
+        <div style={{ fontSize: 24, marginLeft: 10, flexShrink: 0 }}><Icon name={typeMeta.icon} /></div>
       </div>
       {t.content?.body && (
         <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5, maxHeight: 52, overflow: 'hidden', maskImage: 'linear-gradient(to bottom,black 50%,transparent 100%)' }}
@@ -646,7 +647,7 @@ export default function Templates({ org, onNavigate }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 22 }}>
         {TYPES.map(t => (
           <button key={t.key} onClick={() => setActiveType(t.key)} style={{ padding: '14px 12px', borderRadius: 14, border: activeType === t.key ? '1px solid ' + t.color + '55' : '1px solid var(--border)', background: activeType === t.key ? t.color + '14' : 'var(--surface)', color: activeType === t.key ? 'var(--text)' : 'var(--text3)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
-            <div style={{ fontSize: 18, marginBottom: 5 }}>{t.icon}</div>
+            <div style={{ fontSize: 18, marginBottom: 5 }}><Icon name={t.icon} /></div>
             <div style={{ fontWeight: 800, fontSize: 13 }}>{t.label}</div>
             <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>{t.desc}</div>
           </button>
@@ -675,7 +676,7 @@ export default function Templates({ org, onNavigate }) {
             <div style={{ fontSize: 11, fontWeight: 900, color: '#38BDF8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Global Library ({filteredGlobal.length})</div>
             {filteredGlobal.length === 0 ? (
               <div style={{ padding: '40px 24px', textAlign: 'center', background: 'var(--surface)', borderRadius: 16, border: '1px dashed var(--border)' }}>
-                <div style={{ fontSize: 32, marginBottom: 10 }}>{typeMeta.icon}</div>
+                <div style={{ fontSize: 32, marginBottom: 10 }}><Icon name={typeMeta.icon} /></div>
                 <div style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>No {typeMeta.label} yet</div>
                 <div style={{ fontSize: 13, color: 'var(--text3)' }}>Your platform admin is adding templates soon.</div>
               </div>

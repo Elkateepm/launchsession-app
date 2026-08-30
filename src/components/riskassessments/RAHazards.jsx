@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { btnPrimary, btnGhost } from '../volunteers/vh_shared'
 import { riskScore, riskRating, RatingBadge, RiskMatrix, LIKELIHOOD_LABELS, SEVERITY_LABELS } from './ra_shared'
+import Icon from '../../lib/icons'
 
 export default function RAHazards({ assessment, org, session: authSession, venues, onHazardsChanged }) {
   const primary = org?.primary_color || '#7C5CFC'
@@ -162,7 +163,7 @@ export default function RAHazards({ assessment, org, session: authSession, venue
       )}
       {availableDefaults.length > 0 && (
         <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: 12, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: '#166534', fontWeight: 700, flex: 1 }}>📍 {venue.name} has {availableDefaults.length} default hazard(s) not yet on this assessment</span>
+          <span style={{ fontSize: 12, color: '#166534', fontWeight: 700, flex: 1 }}><Icon name="📍" /> {venue.name} has {availableDefaults.length} default hazard(s) not yet on this assessment</span>
           <button onClick={addVenueDefaults} disabled={addingDefaults} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
             {addingDefaults ? 'Adding…' : `+ Add ${availableDefaults.length} from venue`}
           </button>

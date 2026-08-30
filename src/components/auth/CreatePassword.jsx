@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 const ROLE_CONTENT = {
   admin: {
@@ -259,13 +260,13 @@ export default function CreatePassword() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#050510', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100dvh', background: '#050510', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>Loading your invite...</div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050510', display: 'flex', position: 'relative', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    <div style={{ minHeight: '100dvh', background: '#050510', display: 'flex', position: 'relative', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       {/* Ambient stars across whole page */}
       {[...Array(40)].map((_, i) => (
         <div key={i} style={{
@@ -279,7 +280,7 @@ export default function CreatePassword() {
       {/* Left: brand / marketing panel (desktop only) */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px 64px', position: 'relative', zIndex: 2, minWidth: 0 }} className="cp-left">
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 44 }}>
-          <img src="/launchsession-badge.png" alt="LaunchSession" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: `0 6px 18px -4px ${primary}80` }} />
+          <img src="/launchsession-badge.png" alt="LaunchSession" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: `0 6px 18px -4px var(--org-a60)` }} />
           <div>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>LaunchSession</div>
             <div style={{ fontSize: 11, fontWeight: 700, color: primary, letterSpacing: 1 }}>EMPOWERING YOUTH. EVERY SESSION.</div>
@@ -297,7 +298,7 @@ export default function CreatePassword() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 48 }}>
           {content.features.map(f => (
             <div key={f.title} style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{f.icon}</div>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><Icon name={f.icon} /></div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 2 }}>{f.title}</div>
                 <div style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{f.body}</div>
@@ -316,7 +317,7 @@ export default function CreatePassword() {
 
             {step === 'done' && (
               <motion.div key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center', padding: '40px 28px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, backdropFilter: 'blur(18px)' }}>
-                <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
+                <div style={{ fontSize: 56, marginBottom: 16 }}><Icon name="🎉" /></div>
                 <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', marginBottom: 8 }}>You're officially part of the crew!</div>
                 <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>Taking you to your workspace...</div>
                 <div style={{ marginTop: 22, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 99, overflow: 'hidden' }}>
@@ -330,7 +331,7 @@ export default function CreatePassword() {
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 32, backdropFilter: 'blur(18px)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
 
                 <div style={{ textAlign: 'center', marginBottom: 26 }}>
-                  <div style={{ width: 76, height: 76, borderRadius: '50%', background: '#fff', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0 0 0 3px ${primary}55` }}>
+                  <div style={{ width: 76, height: 76, borderRadius: '50%', background: '#fff', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0 0 0 3px var(--org-a35)` }}>
                     {orgLogo ? (
                       <img src={orgLogo} alt={orgName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
@@ -359,7 +360,7 @@ export default function CreatePassword() {
                   <div style={{ marginBottom: 14 }}>
                     <label style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 8 }}>Password</label>
                     <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)', fontSize: 15, opacity: 0.5 }}>🔒</span>
+                      <span style={{ position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)', fontSize: 15, opacity: 0.5 }}><Icon name="🔒" /></span>
                       <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 8 characters"
                         style={inputStyle(false)} />
                       <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: 15 }}>
@@ -381,12 +382,12 @@ export default function CreatePassword() {
                   <div style={{ marginBottom: 22 }}>
                     <label style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 8 }}>Confirm Password</label>
                     <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)', fontSize: 15, opacity: 0.5 }}>🔒</span>
+                      <span style={{ position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)', fontSize: 15, opacity: 0.5 }}><Icon name="🔒" /></span>
                       <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password"
                         style={{ ...inputStyle(false), border: `1.5px solid ${confirm && confirm !== password ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.12)'}`, paddingRight: 16 }} />
                     </div>
                     {confirm && confirm !== password && <div style={{ fontSize: 11, color: '#FCA5A5', marginTop: 6, fontWeight: 600 }}>Passwords don't match</div>}
-                    {confirm && confirm === password && <div style={{ fontSize: 11, color: '#4ADE80', marginTop: 6, fontWeight: 600 }}>✓ Passwords match</div>}
+                    {confirm && confirm === password && <div style={{ fontSize: 11, color: '#4ADE80', marginTop: 6, fontWeight: 600 }}><Icon name="✓" /> Passwords match</div>}
                   </div>
 
                   <motion.button whileHover={{ y: saving || !password || !confirm ? 0 : -2 }} type="submit" disabled={saving || !password || !confirm}
@@ -395,7 +396,7 @@ export default function CreatePassword() {
                       background: saving || !password || !confirm ? 'rgba(255,255,255,0.1)' : `linear-gradient(135deg, ${primary}, #6366F1)`,
                       color: saving || !password || !confirm ? 'rgba(255,255,255,0.3)' : '#fff', fontWeight: 800, fontSize: 15,
                       cursor: saving || !password || !confirm ? 'default' : 'pointer',
-                      boxShadow: saving || !password || !confirm ? 'none' : `0 10px 30px -8px ${primary}80`,
+                      boxShadow: saving || !password || !confirm ? 'none' : `0 10px 30px -8px var(--org-a60)`,
                     }}>
                     {saving ? 'Creating your account...' : 'Create Account →'}
                   </motion.button>
@@ -407,7 +408,7 @@ export default function CreatePassword() {
                   </div>
 
                   <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: 9, background: `${primary}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>💬</div>
+                    <div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name="💬" /></div>
                     <div>
                       <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>Problem with your invite?</div>
                       <a href="mailto:support@launchsession.co.uk" style={{ fontSize: 12, color: '#C4B5FD', fontWeight: 700, textDecoration: 'none' }}>Contact support@launchsession.co.uk</a>
@@ -422,7 +423,7 @@ export default function CreatePassword() {
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 32, backdropFilter: 'blur(18px)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
                 <StepDots step={1} total={3} />
                 <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                  <div style={{ fontSize: 40, marginBottom: 8 }}>📸</div>
+                  <div style={{ fontSize: 40, marginBottom: 8 }}><Icon name="📸" /></div>
                   <h1 style={{ fontSize: 21, fontWeight: 900, color: '#fff', margin: '0 0 6px' }}>Say cheese!</h1>
                   <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: 0 }}>A friendly face helps your team recognise you. Totally optional.</p>
                 </div>
@@ -446,7 +447,7 @@ export default function CreatePassword() {
                   <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="07..." style={plainInputStyle} />
                 </div>
 
-                <button onClick={saveProfileStep} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: `0 10px 30px -8px ${primary}80` }}>
+                <button onClick={saveProfileStep} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: `0 10px 30px -8px var(--org-a60)` }}>
                   Continue →
                 </button>
               </motion.div>
@@ -465,12 +466,12 @@ export default function CreatePassword() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                   {SUPERPOWERS.map(s => (
                     <button key={s.label} onClick={() => setFunFact(s.label)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${funFact === s.label ? primary : 'rgba(255,255,255,0.1)'}`, background: funFact === s.label ? `${primary}20` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
-                      <span style={{ fontSize: 18 }}>{s.icon}</span> {s.label}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${funFact === s.label ? primary : 'rgba(255,255,255,0.1)'}`, background: funFact === s.label ? 'var(--org-a10)' : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
+                      <span style={{ fontSize: 18 }}><Icon name={s.icon} /></span> {s.label}
                     </button>
                   ))}
                   <button onClick={() => setFunFact('custom')}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${funFact === 'custom' ? primary : 'rgba(255,255,255,0.1)'}`, background: funFact === 'custom' ? `${primary}20` : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${funFact === 'custom' ? primary : 'rgba(255,255,255,0.1)'}`, background: funFact === 'custom' ? 'var(--org-a10)' : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
                     <span style={{ fontSize: 18 }}>✍️</span> Let me write my own
                   </button>
                   {funFact === 'custom' && (
@@ -478,7 +479,7 @@ export default function CreatePassword() {
                   )}
                 </div>
 
-                <button onClick={finishFunStep} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: `0 10px 30px -8px ${primary}80`, marginBottom: 10 }}>
+                <button onClick={finishFunStep} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: `0 10px 30px -8px var(--org-a60)`, marginBottom: 10 }}>
                   Finish & Launch 🚀
                 </button>
                 <button onClick={finishFunStep} style={{ width: '100%', padding: 8, borderRadius: 10, border: 'none', background: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>

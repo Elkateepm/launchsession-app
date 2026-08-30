@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
+import MemberAccess from './MemberAccess'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import Icon from '../../lib/icons'
 
 // HR Centre — the single place staff are managed.
 //
@@ -161,7 +163,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
 
   if (selected) {
     return <StaffProfile person={selected} org={org} leave={leave} primary={primary}
-      isAdmin={isAdmin} hasHRModule={hasHRModule}
+      isAdmin={isAdmin} hasHRModule={hasHRModule} viewerRole={userProfile?.role}
       onBack={() => setSelected(null)} onChanged={() => { load(); setSelected(null) }} />
   }
 
@@ -251,7 +253,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
             </div>
           ) : (
             <div style={{ ...CARD, padding: '26px 20px', marginBottom: 16, textAlign: 'center' }}>
-              <div style={{ fontSize: 26, marginBottom: 6 }}>✓</div>
+              <div style={{ fontSize: 26, marginBottom: 6 }}><Icon name="✓" /></div>
               <div style={{ fontSize: 15.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
                 Everything is up to date
               </div>
@@ -268,7 +270,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
             <button onClick={() => setTab('staff')} style={{
               marginTop: 12, padding: 0, border: 'none', background: 'transparent',
               color: primary, fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-            }}>View staff →</button>
+            }}>View staff <Icon name="→" /></button>
           </div>
 
           {leave.length > 0 && (
@@ -349,7 +351,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                     <div style={{
                       width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                      background: `${primary}18`, color: primary,
+                      background: 'var(--org-a10)', color: primary,
                       display: 'grid', placeItems: 'center', fontSize: 14.5, fontWeight: 800,
                     }}>{(p.full_name || '?').slice(0, 1).toUpperCase()}</div>
 
@@ -583,7 +585,7 @@ function LeaveTab({ leave, directory }) {
 
 // ------------------------------------------------------------ staff profile
 
-function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, onBack, onChanged }) {
+function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewerRole, onBack, onChanged }) {
   const isMobile = useIsMobile()
   const [tab, setTab] = useState('overview')
   const [editing, setEditing] = useState(false)
@@ -605,13 +607,13 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, onBac
         padding: '7px 13px', borderRadius: 9, border: '1px solid #E2E8F0',
         background: '#fff', color: '#64748B', fontSize: 12.5, fontWeight: 700,
         cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14,
-      }}>← Staff</button>
+      }}><Icon name="←" /> Staff</button>
 
       <div style={{ ...CARD, padding: isMobile ? 18 : 22, marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
           <div style={{
             width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
-            background: `${primary}18`, color: primary,
+            background: 'var(--org-a10)', color: primary,
             display: 'grid', placeItems: 'center', fontSize: 19, fontWeight: 800,
           }}>{(person.full_name || '?').slice(0, 1).toUpperCase()}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -635,7 +637,7 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, onBac
         {(hasHRModule
           ? [['overview', 'Overview'], ['compliance', 'Compliance'], ['leave', 'Leave']]
           : [['overview', 'Overview']]
-        ).map(([k, l]) => (
+        ).concat(isAdmin ? [['access', 'Access']] : []).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k)} style={{
             padding: '8px 15px', borderRadius: 999, fontSize: 13, fontWeight: 700,
             whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit',
@@ -661,6 +663,23 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, onBac
             {field('Account', person.source === 'account' ? 'Has a LaunchSession login' : 'No login yet')}
           </div>
         </div>
+      )}
+
+      {tab === 'access' && (
+        person.user_id ? (
+          <div style={{ ...CARD, padding: 20 }}>
+            <MemberAccess
+              member={{ id: person.user_id, role: person.role, full_name: person.full_name }}
+              org={org}
+              viewerRole={viewerRole}
+            />
+          </div>
+        ) : (
+          <div style={{ ...CARD, padding: 22, fontSize: 13.5, color: '#64748B', lineHeight: 1.55 }}>
+            Module access applies to a LaunchSession login. {person.full_name} doesn't have one yet —
+            invite them first and their access can be set here.
+          </div>
+        )
       )}
 
       {tab === 'compliance' && !hasHRModule && (
@@ -811,7 +830,7 @@ function InviteStaffModal({ org, primary, onClose, onSent }) {
       }}>
         {sent ? (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 30, marginBottom: 10 }}>✓</div>
+            <div style={{ fontSize: 30, marginBottom: 10 }}><Icon name="✓" /></div>
             <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Invite sent</div>
             <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.55, marginBottom: 18 }}>
               {existingUser

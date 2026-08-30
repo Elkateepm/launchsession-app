@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import PageHeader from '../shared/PageHeader'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import Icon from '../../lib/icons'
 
 const OUTCOMES = [
   'Improve confidence',
@@ -519,7 +520,7 @@ function ReferralRow({ referral, primary, onClick }) {
         <strong>{name}</strong>
         <p>{referral.reason || 'Awaiting mentoring match'}</p>
       </div>
-      <span style={styles.pendingBadge}>Match →</span>
+      <span style={styles.pendingBadge}>Match <Icon name="→" /></span>
     </button>
   )
 }
@@ -551,7 +552,7 @@ function Empty({ text }) {
 function BackHeader({ title, subtitle, onBack, primary }) {
   return (
     <div style={{ ...styles.backHeader, background: `linear-gradient(135deg, ${primary}, #2D1B4E)` }}>
-      <button onClick={onBack} style={styles.backButton}>←</button>
+      <button onClick={onBack} style={styles.backButton}><Icon name="←" /></button>
       <div>
         <h1 style={styles.backTitle}>{title}</h1>
         <p style={styles.backSubtitle}>{subtitle}</p>

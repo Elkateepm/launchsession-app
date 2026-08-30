@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 function getInitials(name) {
   if (!name) return '?'
@@ -142,7 +143,7 @@ export default function AddVolunteersToSessionModal({ session, orgId, primary, s
               width: 32, height: 32, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.16)',
               background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 15, fontWeight: 700, flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-            }}>✕</button>
+            }}><Icon name="✕" /></button>
           </div>
           <input
             value={search} onChange={e => setSearch(e.target.value)} placeholder="Search volunteers…"
@@ -199,7 +200,7 @@ export default function AddVolunteersToSessionModal({ session, orgId, primary, s
           {toggleRow(sendPush, setSendPush, 'Send push notification', "Instant alert, if they've enabled push")}
 
           {error && <div style={{ fontSize: 12, fontWeight: 700, color: '#FCA5A5' }}>{error}</div>}
-          {done && <div style={{ fontSize: 12, fontWeight: 700, color: '#86EFAC' }}>✓ Added — closing…</div>}
+          {done && <div style={{ fontSize: 12, fontWeight: 700, color: '#86EFAC' }}><Icon name="✓" /> Added — closing…</div>}
 
           <button
             onClick={handleInvite}

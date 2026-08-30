@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import AttendanceCorrectionModal from './AttendanceCorrectionModal'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 function fmtTime(d) {
   if (!d) return ''
@@ -28,6 +30,10 @@ export default function PastSessionRegister({
   userRole, authUserId, groupLabel, safeguardingCount,
   onClose, onOpenNotes, onOpenChild, onReload,
 }) {
+  const isMobile = useIsMobile()
+  // Collapsed by default on a phone, where the summary was occupying the
+  // viewport ahead of the list it summarises.
+  const [summaryOpen, setSummaryOpen] = useState(false)
   const [tab, setTab] = useState('expected')
   const [search, setSearch] = useState('')
   const [showCorrection, setShowCorrection] = useState(false)
@@ -108,26 +114,42 @@ export default function PastSessionRegister({
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 10200, display: 'flex', flexDirection: 'column' }}>
+    <div style={{
+      position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 10200,
+      display: 'flex', flexDirection: 'column',
+      // Same notch problem as LiveRegister: inset 0 puts the back button under
+      // the status bar once the app is on a home screen.
+      paddingTop: 'env(safe-area-inset-top, 0px)',
+      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+    }}>
       <style>{`@media print { .no-print { display: none !important; } }`}</style>
 
       {/* HEADER */}
-      <div className="no-print" style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '14px 18px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 13, fontWeight: 700, color: '#6B7280', cursor: 'pointer', marginBottom: 10 }}>← Back to sessions</button>
+      <div className="no-print" style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: isMobile ? '10px 14px 12px' : '14px 18px' }}>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 13, fontWeight: 700, color: '#6B7280', cursor: 'pointer', marginBottom: 10 }}><Icon name="←" /> Back to sessions</button>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-              {org?.logo_url ? <img src={org.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>{(org?.name || 'L')[0]}</span>}
-            </div>
+            {/* The org logo is dropped on a phone. It is the one thing on this
+                header the reader definitely already knows, and it was costing
+                56px of width from a title that needs it. It still prints,
+                because a printed register should identify the organisation. */}
+            {!isMobile && (
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                {org?.logo_url ? <img src={org.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>{(org?.name || 'L')[0]}</span>}
+              </div>
+            )}
             <div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: '#111827' }}>{session.title}</div>
-              <div style={{ fontSize: 12.5, color: '#6B7280' }}>
-                {new Date(session.session_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} · {session.start_time}–{session.end_time} · {session.location || 'No location set'}
+              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 900, color: '#111827' }}>{session.title}</div>
+              <div style={{ fontSize: isMobile ? 11.5 : 12.5, color: '#6B7280' }}>
+                {new Date(session.session_date).toLocaleDateString('en-GB', isMobile
+                  ? { day: 'numeric', month: 'short' }
+                  : { weekday: 'long', day: 'numeric', month: 'long' })} · {session.start_time}–{session.end_time}
+                {session.location ? ` · ${session.location}` : (isMobile ? '' : ' · No location set')}
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#6B7280', background: '#F3F4F6', borderRadius: 99, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5 }}>🔒 Attendance closed</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#6B7280', background: '#F3F4F6', borderRadius: 99, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="🔒" /> Attendance closed</span>
             {session.closed_at && (
               <div style={{ textAlign: 'right', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: 10, padding: '8px 12px' }}>
                 <div style={{ fontSize: 10.5, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase' }}>Final outcome</div>
@@ -137,7 +159,10 @@ export default function PastSessionRegister({
             )}
           </div>
         </div>
-        <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 8 }}>This session has ended and the final attendance record is locked.</div>
+        {/* Says the same thing as the "Attendance closed" pill two lines up.
+            Worth the words on a desktop; not worth a row of the viewport on a
+            phone. */}
+        {!isMobile && <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 8 }}>This session has ended and the final attendance record is locked.</div>}
 
         {session.reopened_at && !session.closed_at && (
           <div style={{ marginTop: 10, background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: '#92400E', fontWeight: 700 }}>
@@ -145,8 +170,24 @@ export default function PastSessionRegister({
           </div>
         )}
 
-        {/* SUMMARY CARDS */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(90px,1fr))', gap: 8, marginTop: 14 }}>
+        {/* SUMMARY CARDS
+            Six of these plus the completion bar sit in a header that does not
+            scroll, so on a phone the whole viewport was summary and you had to
+            scroll a list you could not see to find out it existed. Collapsed
+            behind a toggle on mobile, open by default everywhere else. */}
+        {isMobile && (
+          <button onClick={() => setSummaryOpen(v => !v)} style={{
+            marginTop: 10, width: '100%', minHeight: 40, display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', padding: '0 12px', borderRadius: 10,
+            border: '1px solid #E5E7EB', background: '#F8FAFC', cursor: 'pointer',
+            fontSize: 12.5, fontWeight: 800, color: '#374151', fontFamily: 'inherit',
+          }}>
+            <span>{attendedTotal} of {totalExpected} attended · {attendanceRate}%</span>
+            <span style={{ color: '#9CA3AF' }}>{summaryOpen ? 'Hide' : 'Details'}</span>
+          </button>
+        )}
+        {(!isMobile || summaryOpen) && (
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, minmax(0,1fr))' : 'repeat(auto-fit,minmax(90px,1fr))', gap: 8, marginTop: isMobile ? 10 : 14 }}>
           <Stat label="Expected" value={totalExpected} color="#6B7280" />
           <Stat label="Attended" value={attendedTotal} color="#16A34A" />
           <Stat label="Absent" value={grouped.absent.length} color="#DC2626" />
@@ -154,11 +195,13 @@ export default function PastSessionRegister({
           <Stat label="Walk-ins" value={walkIns.length} color="#7C3AED" />
           <Stat label="Attendance rate" value={`${attendanceRate}%`} color="#111827" />
         </div>
+        )}
         {totalExpected === 0 && (
           <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: '#B45309' }}>Attendance record incomplete</div>
         )}
 
         {/* REGISTER COMPLETION */}
+        {(!isMobile || summaryOpen) && (
         <div style={{ marginTop: 12, background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: 12, padding: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 6 }}>
             <span>Final register — {processedCount} of {totalExpected} processed</span>
@@ -168,9 +211,10 @@ export default function PastSessionRegister({
             <div style={{ height: '100%', width: `${completionPct}%`, background: `linear-gradient(90deg, ${primary}, ${secondary})` }} />
           </div>
           {hasUnresolved && (
-            <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: '#B91C1C' }}>⚠ Register was closed with {grouped.expected.length} unresolved young people.</div>
+            <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: '#B91C1C' }}><Icon name="⚠" /> Register was closed with {grouped.expected.length} unresolved young people.</div>
           )}
         </div>
+        )}
       </div>
 
       {/* TABS */}
@@ -184,13 +228,15 @@ export default function PastSessionRegister({
 
       {/* SEARCH */}
       <div className="no-print" style={{ padding: '10px 14px', background: '#fff', borderBottom: '1px solid #F1F5F9', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search young people..." style={{ flex: '1 1 160px', padding: '9px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13 }} />
-        <button onClick={onOpenNotes} style={ghostBtn}>📝 Notes ({notes.length})</button>
+        {/* flex-basis 160px meant the search box and both buttons fought for
+            one row and wrapped mid-word at phone width. Search takes the row. */}
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search young people..." style={{ flex: isMobile ? '1 1 100%' : '1 1 160px', padding: isMobile ? '11px 12px' : '9px 12px', minHeight: isMobile ? 44 : undefined, borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, boxSizing: 'border-box' }} />
+        <button onClick={onOpenNotes} style={ghostBtn}><Icon name="📝" /> Notes ({notes.length})</button>
         {canCorrect && <button onClick={() => setShowCorrection(true)} style={ghostBtn}>Correct attendance</button>}
       </div>
 
       {/* LIST */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
+      <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 12 : 14 }}>
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF', fontSize: 13 }}>Nobody in this list{search ? ' matching your search' : ''}.</div>
         ) : (
@@ -290,7 +336,7 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
         {recordedBy && <div style={{ fontSize: 10.5, color: '#9CA3AF', marginTop: 2 }}>Recorded by {recordedBy}</div>}
         <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
           {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.medical_notes) && <span style={alertPill('#DC2626', '#FEE2E2')}>⚕ Medical</span>}
-          {child.allergies && <span style={alertPill('#D97706', '#FEF3C7')}>⚠ Allergy</span>}
+          {child.allergies && <span style={alertPill('#D97706', '#FEF3C7')}><Icon name="⚠" /> Allergy</span>}
           {isCorrected && (
             <span onClick={onViewAudit} style={{ ...alertPill('#B45309', '#FEF3C7'), cursor: 'pointer', textDecoration: 'underline' }}>Corrected — view audit history</span>
           )}
@@ -459,7 +505,7 @@ function RegisterAuditHistory({ childId, auditLog, peopleProfiles, rows, onClose
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Audit history</div>
         <div style={{ fontSize: 12.5, color: '#6B7280', marginBottom: 14 }}>{child ? `${child.first_name} ${child.last_name}` : ''}</div>
         {entries.length === 0 ? (

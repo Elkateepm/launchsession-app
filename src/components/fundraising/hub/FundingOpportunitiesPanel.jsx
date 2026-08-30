@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { LS, IconGlyph, matchScoreBand, computeMatchScore, daysLeftNumber } from '../fundraisingShared'
 import FundraisingEmptyState from './FundraisingEmptyState'
+import Icon from '../../../lib/icons'
 
 function formatAmount(min, max) {
   const fmt = n => `£${Number(n).toLocaleString()}`
@@ -35,7 +36,7 @@ export default function FundingOpportunitiesPanel({ org, campaigns, onOpen, onVi
     <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: LS.text }}>Funding Opportunities</div>
-        {scored.length > 0 && <button onClick={onViewAll} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View all →</button>}
+        {scored.length > 0 && <button onClick={onViewAll} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View all <Icon name="→" /></button>}
       </div>
 
       {loading ? (

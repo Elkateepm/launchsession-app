@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { activityTheme } from './vp_shared'
+import Icon from '../../lib/icons'
 
 const FILTERS = [
   { key: 'upcoming', label: 'Upcoming' },
@@ -40,7 +41,7 @@ export default function VPSessions({ sessions, myBookings, todayStr, onOpenSessi
 
       {grouped.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '50px 20px' }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>🗓️</div>
+          <div style={{ fontSize: 40, marginBottom: 10 }}><Icon name="🗓️" /></div>
           <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>Nothing here yet</div>
           <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>{filter === 'completed' ? 'Past sessions will appear here' : 'Check back soon for new sessions'}</div>
         </div>
@@ -59,7 +60,7 @@ export default function VPSessions({ sessions, myBookings, todayStr, onOpenSessi
                     onClick={() => onOpenSession(s)}
                     style={{ borderRadius: 18, overflow: 'hidden', boxShadow: '0 6px 20px -10px rgba(0,0,0,0.2)', cursor: 'pointer' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: '#fff' }}>
-                      <div style={{ width: 46, height: 46, borderRadius: 14, background: theme.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21, flexShrink: 0 }}>{theme.icon}</div>
+                      <div style={{ width: 46, height: 46, borderRadius: 14, background: theme.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21, flexShrink: 0 }}><Icon name={theme.icon} /></div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{s.title}</div>
                         <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>

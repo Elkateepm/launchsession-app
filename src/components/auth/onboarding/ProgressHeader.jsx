@@ -1,6 +1,7 @@
 import React from 'react'
 import { useReducedMotion } from './OnboardingLayout'
 import { DURATION } from './animations'
+import Icon from '../../../lib/icons'
 
 export default function ProgressHeader({ stepNumber, totalSteps, title, onBack, showBack, onSaveExit }) {
   const reducedMotion = useReducedMotion()
@@ -20,7 +21,7 @@ export default function ProgressHeader({ stepNumber, totalSteps, title, onBack, 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           {showBack && (
-            <button type="button" onClick={onBack} aria-label="Go back" style={backBtn}>←</button>
+            <button type="button" onClick={onBack} aria-label="Go back" style={backBtn}><Icon name="←" /></button>
           )}
           <div style={{ minWidth: 0, overflow: 'hidden' }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>

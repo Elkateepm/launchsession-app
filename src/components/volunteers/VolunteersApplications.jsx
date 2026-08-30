@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { Card, SectionTitle, Avatar, PURPLE } from './vh_shared'
+import Icon from '../../lib/icons'
 
 const STAGES = [
   { key: 'new', label: 'New', color: '#6366F1' },
@@ -41,7 +42,7 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                     {(a.skills || []).length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
                         {a.skills.map(s => (
-                          <span key={s} style={{ fontSize: 10, fontWeight: 700, color: primary, background: `${primary}12`, borderRadius: 6, padding: '2px 7px' }}>{s}</span>
+                          <span key={s} style={{ fontSize: 10, fontWeight: 700, color: primary, background: 'var(--org-a05)', borderRadius: 6, padding: '2px 7px' }}>{s}</span>
                         ))}
                       </div>
                     )}
@@ -53,7 +54,7 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                     <div style={{ fontSize: 10, color: '#CBD5E1', marginTop: 6 }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-                    <button onClick={() => onApprovePublic?.(a)} style={{ fontSize: 11.5, fontWeight: 800, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(34,197,94,0.12)', color: '#15803D', cursor: 'pointer', whiteSpace: 'nowrap' }}>✓ Approve & Invite</button>
+                    <button onClick={() => onApprovePublic?.(a)} style={{ fontSize: 11.5, fontWeight: 800, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(34,197,94,0.12)', color: '#15803D', cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="✓" /> Approve & Invite</button>
                     <button onClick={() => onRejectPublic?.(a.id)} style={{ fontSize: 11.5, fontWeight: 800, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.1)', color: '#B91C1C', cursor: 'pointer' }}>Decline</button>
                   </div>
                 </div>
@@ -105,10 +106,10 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                           <button onClick={() => moveTo(a.id, 'rejected')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'rgba(239,68,68,0.1)', color: '#B91C1C', cursor: 'pointer' }}>Reject</button>
                         )}
                         {stage.key === 'new' && (
-                          <button onClick={() => moveTo(a.id, 'reviewing')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: '#F1F5F9', color: '#475569', cursor: 'pointer' }}>Review →</button>
+                          <button onClick={() => moveTo(a.id, 'reviewing')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: '#F1F5F9', color: '#475569', cursor: 'pointer' }}>Review <Icon name="→" /></button>
                         )}
                         {stage.key === 'reviewing' && (
-                          <button onClick={() => moveTo(a.id, 'interview')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: '#F1F5F9', color: '#475569', cursor: 'pointer' }}>Interview →</button>
+                          <button onClick={() => moveTo(a.id, 'interview')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: '#F1F5F9', color: '#475569', cursor: 'pointer' }}>Interview <Icon name="→" /></button>
                         )}
                       </div>
                     </motion.div>

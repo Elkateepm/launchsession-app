@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { inputStyle, btnPrimary, btnGhost, Avatar } from '../volunteers/vh_shared'
 import { CATEGORIES, RISK_LEVELS, RiskBadge } from './cm_shared'
+import Icon from '../../lib/icons'
 
 const STEPS = ['Child', 'Category', 'Risk', 'Summary', 'Assign', 'First Action', 'Evidence', 'Review']
 
@@ -93,8 +94,8 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
 
         <div style={{ padding: '18px 22px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>🛡️ Open New Case</div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+            <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}><Icon name="🛡️" /> Open New Case</div>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
             {STEPS.map((s, i) => (
@@ -128,7 +129,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                       ))}
                     </div>
                   )}
-                  {form.child_id && <div style={{ marginTop: 8, fontSize: 12, color: '#15803D', fontWeight: 700 }}>✓ Linked to child record</div>}
+                  {form.child_id && <div style={{ marginTop: 8, fontSize: 12, color: '#15803D', fontWeight: 700 }}><Icon name="✓" /> Linked to child record</div>}
                   <div style={{ marginTop: 10, fontSize: 11.5, color: '#94A3B8' }}>Searches your active Registers roster. Can't find them? Just type their name — you can link the record later.</div>
                 </div>
               )}
@@ -139,7 +140,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {CATEGORIES.map(c => (
                       <button key={c} onClick={() => set('category', c)}
-                        style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${form.category === c ? primary : 'rgba(15,23,42,0.1)'}`, background: form.category === c ? `${primary}14` : '#fff', color: form.category === c ? primary : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                        style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${form.category === c ? primary : 'rgba(15,23,42,0.1)'}`, background: form.category === c ? 'var(--org-a10)' : '#fff', color: form.category === c ? primary : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                         {c}
                       </button>
                     ))}
@@ -153,7 +154,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
                     {RISK_LEVELS.map(r => (
                       <button key={r} onClick={() => set('risk_level', r)}
-                        style={{ padding: '14px 10px', borderRadius: 14, border: `2px solid ${form.risk_level === r ? primary : 'rgba(15,23,42,0.08)'}`, background: form.risk_level === r ? `${primary}0c` : '#fff', cursor: 'pointer', textAlign: 'left' }}>
+                        style={{ padding: '14px 10px', borderRadius: 14, border: `2px solid ${form.risk_level === r ? primary : 'rgba(15,23,42,0.08)'}`, background: form.risk_level === r ? 'var(--org-a05)' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
                         <RiskBadge level={r} />
                         <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 6 }}>
                           {r === 'low' && 'Monitor, no immediate action'}
@@ -187,7 +188,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                   <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: '#0F172A' }}>Assign to a staff member</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {staff.map(s => (
-                      <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, border: `1.5px solid ${form.assigned_to_user_id === s.id ? primary : 'rgba(15,23,42,0.08)'}`, background: form.assigned_to_user_id === s.id ? `${primary}0c` : '#fff', cursor: 'pointer' }}>
+                      <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, border: `1.5px solid ${form.assigned_to_user_id === s.id ? primary : 'rgba(15,23,42,0.08)'}`, background: form.assigned_to_user_id === s.id ? 'var(--org-a05)' : '#fff', cursor: 'pointer' }}>
                         <input type="radio" name="assignee" checked={form.assigned_to_user_id === s.id} onChange={() => set('assigned_to_user_id', s.id)} style={{ width: 15, height: 15 }} />
                         <Avatar name={s.full_name} photoUrl={s.photo_url} size={26} />
                         <div>
@@ -213,14 +214,14 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: '#0F172A' }}>Upload any evidence (optional)</div>
                   <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed rgba(15,23,42,0.15)', borderRadius: 14, padding: '22px 16px', textAlign: 'center', cursor: 'pointer', background: '#F8FAFC' }}>
-                    <div style={{ fontSize: 22 }}>📎</div>
+                    <div style={{ fontSize: 22 }}><Icon name="📎" /></div>
                     <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4 }}>Click to select files</div>
                     <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={e => setEvidenceFiles(f => [...f, ...Array.from(e.target.files || [])])} />
                   </div>
                   {evidenceFiles.length > 0 && (
                     <div style={{ marginTop: 10 }}>
                       {evidenceFiles.map((f, i) => (
-                        <div key={i} style={{ fontSize: 12.5, color: '#334155', padding: '4px 0' }}>📄 {f.name}</div>
+                        <div key={i} style={{ fontSize: 12.5, color: '#334155', padding: '4px 0' }}><Icon name="📄" /> {f.name}</div>
                       ))}
                     </div>
                   )}
@@ -255,10 +256,10 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
         </div>
 
         <div style={{ padding: '14px 22px', borderTop: '1px solid rgba(15,23,42,0.06)', display: 'flex', gap: 8 }}>
-          {step > 0 && <button onClick={() => setStep(s => s - 1)} style={btnGhost}>← Back</button>}
+          {step > 0 && <button onClick={() => setStep(s => s - 1)} style={btnGhost}><Icon name="←" /> Back</button>}
           <div style={{ flex: 1 }} />
           {step < STEPS.length - 1 ? (
-            <button onClick={() => setStep(s => s + 1)} disabled={!canNext()} style={btnPrimary(primary)}>Continue →</button>
+            <button onClick={() => setStep(s => s + 1)} disabled={!canNext()} style={btnPrimary(primary)}>Continue <Icon name="→" /></button>
           ) : (
             <button onClick={create} disabled={saving} style={btnPrimary(primary)}>{saving ? 'Creating…' : '✓ Create Case'}</button>
           )}

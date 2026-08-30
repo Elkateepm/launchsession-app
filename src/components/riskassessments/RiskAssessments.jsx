@@ -19,6 +19,7 @@ import { DynamicUpdateDrawer, DynamicUpdateList, EmergencyView } from './RALiveS
 import { assessmentProgress, ProgressStrip, ApprovalPanel } from './RAProgress'
 import ReuseAssessmentDrawer from './ReuseAssessmentDrawer'
 import { buildCoverage } from './ra_safety'
+import Icon from '../../lib/icons'
 
 const RATING_ORDER = { low: 1, medium: 2, high: 3, critical: 4 }
 const SESSION_WINDOW = 40
@@ -280,12 +281,12 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
       {/* HEADER */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 18 }}>
         <div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 10 }}>🛡️ Risk Assessments</div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="🛡️" /> Risk Assessments</div>
           <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>Keep activities safe, reviewed and ready to run.</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setReuseFor({})} style={btnGhost}>♻️ Use Previous</button>
-          <button onClick={() => setShowTemplates(true)} style={btnGhost}>📄 Use Template</button>
+          <button onClick={() => setShowTemplates(true)} style={btnGhost}><Icon name="📄" /> Use Template</button>
           <button onClick={() => setShowCreate(true)} style={btnPrimary(primary)}>+ New Assessment</button>
         </div>
       </div>
@@ -342,7 +343,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
           { label: 'Completion Rate', value: kpis.rate, icon: '✅', color: '#22C55E', suffix: '%' },
         ].map((k, i) => (
           <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} whileHover={{ y: -2 }} style={{ ...glass({ padding: '16px' }) }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: `${k.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}>{k.icon}</div>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: `${k.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={k.icon} /></div>
             <div style={{ fontSize: 24, fontWeight: 900, color: k.color, lineHeight: 1 }}><CountUp value={k.value} />{k.suffix}</div>
             <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
           </motion.div>
@@ -352,7 +353,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
       {/* SEARCH + FILTERS */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 240px' }}>
-          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}>🔍</span>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}><Icon name="🔍" /></span>
           <input style={{ ...inputStyle, paddingLeft: 32 }} placeholder="Search assessments…" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
         </div>
         <select style={{ ...inputStyle, width: 140 }} value={filters.status} onChange={e => { setFilters(f => ({ ...f, status: e.target.value })); setPage(1) }}>
@@ -389,7 +390,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
             <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>Assessments ({filtered.length})</div>
             {paged.length === 0 ? (
               <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-                <div style={{ fontSize: 34, marginBottom: 10 }}>🛡️</div>
+                <div style={{ fontSize: 34, marginBottom: 10 }}><Icon name="🛡️" /></div>
                 <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{assessments.length === 0 ? 'No risk assessments yet' : 'No matching assessments'}</div>
                 <div style={{ fontSize: 12.5, color: '#94A3B8' }}>{assessments.length === 0 ? 'Create one from scratch or start from a template' : 'Try adjusting your filters'}</div>
               </div>
@@ -400,10 +401,10 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                   const reviewDays = daysUntil(a.next_review_date)
                   return (
                     <motion.div key={a.id} layout onClick={() => { setSelected(a); setTab('overview'); logAudit(a.id, 'viewed', null) }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSel ? `${primary}0c` : 'transparent', borderLeft: `3px solid ${isSel ? primary : 'transparent'}` }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSel ? 'var(--org-a05)' : 'transparent', borderLeft: `3px solid ${isSel ? primary : 'transparent'}` }}
                       onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = '#F8FAFC' }}
                       onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent' }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 11, background: `${primary}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</div>
+                      <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--org-a05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
                         <div style={{ fontSize: 11, color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.activity_type || '—'}{a.location ? ` · ${a.location}` : ''}</div>
@@ -438,8 +439,8 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
                     <span style={{ fontSize: 12, color: '#94A3B8' }}>Page {page} of {pageCount}</span>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ ...btnGhost, padding: '5px 12px', fontSize: 12, opacity: page === 1 ? 0.4 : 1 }}>←</button>
-                      <button onClick={() => setPage(p => Math.min(pageCount, p + 1))} disabled={page === pageCount} style={{ ...btnGhost, padding: '5px 12px', fontSize: 12, opacity: page === pageCount ? 0.4 : 1 }}>→</button>
+                      <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ ...btnGhost, padding: '5px 12px', fontSize: 12, opacity: page === 1 ? 0.4 : 1 }}><Icon name="←" /></button>
+                      <button onClick={() => setPage(p => Math.min(pageCount, p + 1))} disabled={page === pageCount} style={{ ...btnGhost, padding: '5px 12px', fontSize: 12, opacity: page === pageCount ? 0.4 : 1 }}><Icon name="→" /></button>
                     </div>
                   </div>
                 )}
@@ -451,10 +452,10 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
         {/* CENTER: workspace */}
         {(!isMobile || selected) && selected && (
           <div style={glass({ padding: 20 })}>
-            <button onClick={() => setSelected(null)} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}>← Back to library</button>
+            <button onClick={() => setSelected(null)} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}><Icon name="←" /> Back to library</button>
 
             <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap' }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: `${primary}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>{ACTIVITY_ICON[selected.activity_type] || '📋'}</div>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>{ACTIVITY_ICON[selected.activity_type] || '📋'}</div>
               <div style={{ flex: 1, minWidth: 180 }}>
                 <input value={selected.name || ''} onChange={e => setSelected(s => ({ ...s, name: e.target.value }))} onBlur={e => update(selected.id, { name: e.target.value }, 'edited', 'Renamed')}
                   style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', border: 'none', outline: 'none', width: '100%', background: 'transparent' }} />
@@ -612,7 +613,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                   {selected.venue_id && (() => {
                     const v = venues.find(x => x.id === selected.venue_id)
                     return v ? (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Venue</span><span style={{ fontWeight: 700 }}>📍 {v.name}</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Venue</span><span style={{ fontWeight: 700 }}><Icon name="📍" /> {v.name}</span></div>
                     ) : null
                   })()}
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Created by</span><span style={{ fontWeight: 700 }}>{reviewerName(selected.created_by)}</span></div>
@@ -668,11 +669,11 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                 <div style={glass({ padding: 18 })}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>Templates</div>
-                    <button onClick={() => setShowTemplates(true)} style={{ fontSize: 11, fontWeight: 800, color: primary, background: 'none', border: 'none', cursor: 'pointer' }}>Browse →</button>
+                    <button onClick={() => setShowTemplates(true)} style={{ fontSize: 11, fontWeight: 800, color: primary, background: 'none', border: 'none', cursor: 'pointer' }}>Browse <Icon name="→" /></button>
                   </div>
                   {RA_TEMPLATES.slice(0, 4).map(t => (
                     <button key={t.key} onClick={() => setShowTemplates(true)} style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 8, padding: '8px 0', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                      <span style={{ fontSize: 15 }}>{t.icon}</span>
+                      <span style={{ fontSize: 15 }}><Icon name={t.icon} /></span>
                       <span style={{ fontSize: 12.5, fontWeight: 700, color: '#334155', flex: 1 }}>{t.name}</span>
                       <span style={{ color: '#CBD5E1' }}>›</span>
                     </button>
@@ -835,8 +836,8 @@ function CreateModal({ org, staff, venues, onClose, onCreate, primary, prefillSe
       <motion.div initial={{ y: 20, scale: 0.97, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} exit={{ y: 14, scale: 0.97, opacity: 0 }} transition={{ type: 'spring', stiffness: 340, damping: 30 }} onClick={e => e.stopPropagation()}
         style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.35)' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>🛡️ New Risk Assessment</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+          <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}><Icon name="🛡️" /> New Risk Assessment</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div>
@@ -907,15 +908,15 @@ function TemplatesModal({ onClose, onPick, primary }) {
         style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 560, maxHeight: '86vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 100px rgba(0,0,0,0.35)' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>📄 Start from a Template</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}><Icon name="📄" /> Start from a Template</div>
             <div style={{ fontSize: 12, color: '#94A3B8' }}>Pre-filled hazards you can edit after creating</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: 18, overflowY: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {RA_TEMPLATES.map(t => (
             <div key={t.key} style={{ border: '1.5px solid rgba(15,23,42,0.08)', borderRadius: 14, padding: 16, background: '#fff' }}>
-              <div style={{ fontSize: 26, marginBottom: 6 }}>{t.icon}</div>
+              <div style={{ fontSize: 26, marginBottom: 6 }}><Icon name={t.icon} /></div>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{t.name}</div>
               <div style={{ fontSize: 11.5, color: '#94A3B8', margin: '4px 0 10px', minHeight: 46 }}>{t.summary}</div>
               <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginBottom: 10 }}>{t.hazards.length} starter hazards</div>

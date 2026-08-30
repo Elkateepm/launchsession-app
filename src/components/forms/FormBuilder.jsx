@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import FormQuestionRenderer, { QUESTION_TYPES, SMART_FIELDS, typeLabel } from './FormQuestionRenderer'
+import Icon from '../../lib/icons'
 
 // Form builder.
 //
@@ -115,12 +116,12 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
     const [groups, sessions, projects] = await Promise.all([
       // Only the group name is needed, so this reads one column rather than
       // pulling child records the builder has no use for.
-      supabase.from('children').select('bubble').eq('org_id', org.id).not('bubble', 'is', null),
+      supabase.from('children').select('group_name').eq('org_id', org.id).not('group_name', 'is', null),
       supabase.from('sessions').select('title').eq('org_id', org.id).order('session_date', { ascending: false }).limit(40),
       supabase.from('projects').select('name').eq('org_id', org.id).limit(40),
     ])
     setSmartOptions({
-      groups: [...new Set((groups.data || []).map(r => r.bubble).filter(Boolean))].sort(),
+      groups: [...new Set((groups.data || []).map(r => r.group_name).filter(Boolean))].sort(),
       sessions: [...new Set((sessions.data || []).map(r => r.title).filter(Boolean))],
       projects: [...new Set((projects.data || []).map(r => r.name).filter(Boolean))],
     })
@@ -331,7 +332,7 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
           padding: '7px 13px', borderRadius: 9, border: '1px solid #E2E8F0',
           background: '#fff', color: '#64748B', fontSize: 12.5, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
-        }}>← Forms</button>
+        }}><Icon name="←" /> Forms</button>
         <div style={{ flex: 1 }} />
         <SaveBadge />
         <button onClick={publish} style={{
@@ -659,7 +660,7 @@ function QuestionCard({
       style={{
         position: 'relative', padding: '16px 18px', borderRadius: 14, cursor: 'pointer',
         border: `1.5px solid ${selected ? primary : hover ? '#DDD6FE' : '#F1F5F9'}`,
-        background: selected ? `${primary}08` : '#fff',
+        background: selected ? 'var(--org-a05)' : '#fff',
         transition: 'border-color 170ms ease, background 170ms ease',
         marginBottom: 4,
       }}
@@ -830,7 +831,7 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
           display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px',
           borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
           border: `1.5px solid ${field.required ? primary : '#E2E8F0'}`,
-          background: field.required ? `${primary}0D` : '#fff',
+          background: field.required ? 'var(--org-a05)' : '#fff',
         }}
       >
         <span style={{
@@ -943,7 +944,7 @@ function MobileEditorSheet(props) {
         <button onClick={props.onClose} style={{
           border: 'none', background: 'transparent', color: '#64748B',
           fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', padding: 0,
-        }}>← Question</button>
+        }}><Icon name="←" /> Question</button>
         <div style={{ flex: 1 }} />
         <button onClick={props.onClose} style={{
           padding: '8px 16px', borderRadius: 10, border: 'none',
@@ -1080,7 +1081,7 @@ function SettingsPanel({ form, setForm, primary }) {
           display: 'flex', alignItems: 'center', gap: 11, padding: '13px 14px',
           borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
           border: `1.5px solid ${form.multi_step ? primary : '#E2E8F0'}`,
-          background: form.multi_step ? `${primary}0D` : '#fff',
+          background: form.multi_step ? 'var(--org-a05)' : '#fff',
         }}
       >
         <span style={{
@@ -1200,7 +1201,7 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
   const [children, setChildren] = useState([])
   const [picking, setPicking] = useState(false)
   const [chosen, setChosen] = useState([])
-  const [bubble, setBubble] = useState('all')
+  const [group, setGroup] = useState('all')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -1210,8 +1211,8 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
     setLoading(true)
     const [{ data: recs }, { data: kids }] = await Promise.all([
       supabase.from('form_recipients').select('*').eq('form_id', formId).order('recipient_name'),
-      supabase.from('children').select('id, first_name, surname, bubble, parent_name, parent_email')
-        .eq('org_id', org.id).order('surname'),
+      supabase.from('children').select('id, first_name, last_name, group_name, parent_name, parent_email')
+        .eq('org_id', org.id).order('last_name'),
     ])
     setRecipients(recs || [])
     setChildren(kids || [])
@@ -1220,8 +1221,8 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
 
   useEffect(() => { load() }, [load])
 
-  const bubbles = [...new Set(children.map(c => c.bubble).filter(Boolean))]
-  const visible = bubble === 'all' ? children : children.filter(c => c.bubble === bubble)
+  const groupNames = [...new Set(children.map(c => c.group_name).filter(Boolean))]
+  const visible = group === 'all' ? children : children.filter(c => c.group_name === group)
   const already = new Set(recipients.map(r => r.child_id).filter(Boolean))
 
   const completed = recipients.filter(r => r.status === 'completed')
@@ -1298,12 +1299,12 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
       {picking && (
         <div style={card}>
           <div style={{ display: 'flex', gap: 7, marginBottom: 12, flexWrap: 'wrap' }}>
-            {['all', ...bubbles].map(b => (
-              <button key={b} onClick={() => setBubble(b)} style={{
+            {['all', ...groupNames].map(b => (
+              <button key={b} onClick={() => setGroup(b)} style={{
                 padding: '6px 12px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
-                border: `1px solid ${bubble === b ? 'transparent' : '#E2E8F0'}`,
-                background: bubble === b ? primary : '#fff',
-                color: bubble === b ? '#fff' : '#64748B',
+                border: `1px solid ${group === b ? 'transparent' : '#E2E8F0'}`,
+                background: group === b ? primary : '#fff',
+                color: group === b ? '#fff' : '#64748B',
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>{b === 'all' ? 'Everyone' : b}</button>
             ))}
@@ -1322,7 +1323,7 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
                     display: 'flex', alignItems: 'center', gap: 10, padding: '9px 11px',
                     borderRadius: 10, textAlign: 'left', fontFamily: 'inherit',
                     border: `1px solid ${sel ? primary : '#F1F5F9'}`,
-                    background: added ? '#F8FAFC' : sel ? `${primary}0D` : '#fff',
+                    background: added ? '#F8FAFC' : sel ? 'var(--org-a05)' : '#fff',
                     cursor: added ? 'not-allowed' : 'pointer', opacity: added ? 0.55 : 1,
                   }}
                 >
@@ -1334,7 +1335,7 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
                   }}>{sel ? '\u2713' : ''}</span>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>
-                      {c.first_name} {c.surname}
+                      {c.first_name} {c.last_name}
                     </span>
                     <span style={{ display: 'block', fontSize: 11.5, color: '#94A3B8' }}>
                       {/* No parent email means the form can be shared but this

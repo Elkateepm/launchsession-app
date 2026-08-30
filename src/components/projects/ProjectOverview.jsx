@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { PROJECT_TYPES } from './ProjectWizard'
 import { TripReadiness, ProjectReflectionModal, AddParticipantsModal, AddTeamModal, EditProjectModal, DuplicateProjectModal } from './ProjectExtras'
+import Icon from '../../lib/icons'
 
 const todayISO = () => {
   const d = new Date()
@@ -232,7 +233,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>Project not found</div>
-        <button onClick={onBack} style={btnGhost}>← Back to Sessions</button>
+        <button onClick={onBack} style={btnGhost}><Icon name="←" /> Back to Sessions</button>
       </div>
     )
   }
@@ -244,7 +245,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
     <div style={{ padding: isMobile ? 16 : 28, width: '100%', maxWidth: '100%', margin: 0, boxSizing: 'border-box' }}>
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <button onClick={onBack} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12 }}>← Projects</button>
+        <button onClick={onBack} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12 }}><Icon name="←" /> Projects</button>
         <div style={{ position: 'relative' }}>
           <button onClick={() => setShowMenu(m => !m)} style={{ ...btnGhost, padding: '6px 12px', fontSize: 14, lineHeight: 1 }}>⋯</button>
           {showMenu && (
@@ -432,7 +433,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
             <div style={{ fontSize: 11, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Needs attention</div>
             {attentionItems.length === 0 ? (
               <div style={{ padding: '18px 0', textAlign: 'center' }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: '#15803D' }}>✓ Everything is ready</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#15803D' }}><Icon name="✓" /> Everything is ready</div>
                 <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 3 }}>No outstanding actions for this project.</div>
               </div>
             ) : (
@@ -448,8 +449,8 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
                       background: item.tone === 'red' ? '#FEF2F2' : '#FFFBEB',
                       fontSize: 12.5, fontWeight: 700, color: item.tone === 'red' ? '#B91C1C' : '#92400E',
                     }}>
-                    <span>⚠ {item.text}</span>
-                    <span style={{ opacity: 0.6 }}>→</span>
+                    <span><Icon name="⚠" /> {item.text}</span>
+                    <span style={{ opacity: 0.6 }}><Icon name="→" /></span>
                   </button>
                 ))}
               </div>
@@ -561,7 +562,7 @@ function ScheduleTab({ days, countsFor, reflections, raLinked, isMobile, onNavig
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{d.title}</span>
                       {isTrip && <span style={{ fontSize: 10, fontWeight: 800, color: '#1D4ED8', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 99, padding: '2px 8px' }}>Trip</span>}
-                      {st === 'completed' && <span style={{ fontSize: 10, fontWeight: 800, color: '#15803D', background: '#DCFCE7', borderRadius: 99, padding: '2px 8px' }}>✓ Completed</span>}
+                      {st === 'completed' && <span style={{ fontSize: 10, fontWeight: 800, color: '#15803D', background: '#DCFCE7', borderRadius: 99, padding: '2px 8px' }}><Icon name="✓" /> Completed</span>}
                       {st === 'today' && <span style={{ fontSize: 10, fontWeight: 800, color: '#15803D', background: '#DCFCE7', borderRadius: 99, padding: '2px 8px' }}>Today</span>}
                     </div>
                     <div style={{ fontSize: 12, color: '#64748B', fontWeight: 600, marginTop: 2 }}>
@@ -570,7 +571,7 @@ function ScheduleTab({ days, countsFor, reflections, raLinked, isMobile, onNavig
                     {issues.length > 0 && (
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
                         {issues.map(i => (
-                          <span key={i} style={{ fontSize: 10.5, fontWeight: 800, color: '#92400E', background: '#FEF3C7', borderRadius: 99, padding: '2px 8px' }}>⚠ {i}</span>
+                          <span key={i} style={{ fontSize: 10.5, fontWeight: 800, color: '#92400E', background: '#FEF3C7', borderRadius: 99, padding: '2px 8px' }}><Icon name="⚠" /> {i}</span>
                         ))}
                       </div>
                     )}

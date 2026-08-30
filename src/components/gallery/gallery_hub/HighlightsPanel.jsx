@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 import { LS, IconGlyph } from '../galleryShared'
+import Icon from '../../../lib/icons'
 
 export default function HighlightsPanel({ media, onViewAll, onOpen }) {
   const highlights = useMemo(() => {
@@ -14,7 +15,7 @@ export default function HighlightsPanel({ media, onViewAll, onOpen }) {
     <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px', marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: LS.text }}>Highlights</div>
-        <button onClick={onViewAll} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View all →</button>
+        <button onClick={onViewAll} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View all <Icon name="→" /></button>
       </div>
       <div style={{ fontSize: 11.5, color: LS.muted, marginBottom: 12 }}>This week's best moments</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>

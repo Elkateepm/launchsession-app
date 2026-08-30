@@ -10,6 +10,8 @@ import VPMessages from './VPMessages'
 import VPProfile from './VPProfile'
 import VPQuickActionMenu from './VPQuickActionMenu'
 import { signOne } from '../../lib/storageUrl'
+import shrinkImage from '../../lib/shrinkImage'
+import Icon from '../../lib/icons'
 
 const SLUG = window.location.pathname.split('/volunteer/')[1]?.split('/')[0]
 
@@ -21,7 +23,7 @@ const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sun
 const TIMES = ['Morning','Afternoon','Evening']
 
 const s = {
-  wrap: { minHeight:'100vh', background:'radial-gradient(circle at 15% 10%, #16283d 0%, #0A121D 45%, #060a11 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20, fontFamily:'Inter,sans-serif', position:'relative', overflow:'hidden' },
+  wrap: { minHeight:'100dvh', background:'radial-gradient(circle at 15% 10%, #16283d 0%, #0A121D 45%, #060a11 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20, fontFamily:'Inter,sans-serif', position:'relative', overflow:'hidden' },
   card: { background:'#fff', borderRadius:28, width:'100%', maxWidth:480, overflow:'hidden', boxShadow:'0 40px 100px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06)', position:'relative', zIndex:1 },
   head: (color) => ({ background:`linear-gradient(135deg, ${color||'#1B9AAA'}, ${color||'#1B9AAA'}dd)`, padding:'28px 28px 20px', color:'#fff', position:'relative', overflow:'hidden' }),
   body: { padding:'28px 28px 24px' },
@@ -70,6 +72,7 @@ function OnboardingWizard({ user, org, onComplete }) {
   const [saving, setSaving] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoUrl, setPhotoUrl] = useState(null)
+  const [photoPath, setPhotoPath] = useState(null)
   const photoRef = useRef(null)
   const primary = (org?.logo_url || (org?.primary_color && org.primary_color !== '#1B9AAA')) ? (org?.primary_color || '#1B9AAA') : '#7C5CFC'
   const TOTAL = 12
@@ -102,7 +105,12 @@ function OnboardingWizard({ user, org, onComplete }) {
     // Flat `<user id>.<ext>`, matching every existing object and the upload
     // policy. The previous `<user id>/avatar.<ext>` form matched neither.
     const path = `${user.id}.${ext}`
-    await supabase.storage.from('staff-photos').upload(path, file, { upsert:true })
+    const up = await shrinkImage(file, { maxDimension: 900 })
+    await supabase.storage.from('staff-photos').upload(path, up, { upsert: true, contentType: up.type })
+    // Keep the path for the profile row and the signed URL only for the
+    // preview: writing the signed URL to photo_url would persist something
+    // that expires in ten minutes.
+    setPhotoPath(path)
     setPhotoUrl(await signOne('staff-photos', path))
     setPhotoUploading(false)
   }
@@ -113,7 +121,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     await supabase.from('user_profiles').update({
       first_name: f.first_name, last_name: f.last_name, full_name,
       preferred_name: f.preferred_name, phone: f.phone, date_of_birth: f.date_of_birth||null,
-      photo_url: photoUrl,
+      photo_url: photoPath || null,
       emergency_contact_name: f.emergency_contact_name,
       emergency_contact_relationship: f.emergency_contact_relationship,
       emergency_contact_phone: f.emergency_contact_phone,
@@ -136,7 +144,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 0: Welcome
     <div key={0} style={s.body}>
       <div style={{ textAlign:'center', padding:'20px 0' }}>
-        <div style={{ fontSize:56, marginBottom:16 }}>👋</div>
+        <div style={{ fontSize:56, marginBottom:16 }}><Icon name="👋" /></div>
         <div style={{ fontSize:24, fontWeight:900, color:'#111', marginBottom:10 }}>Welcome to {org?.name}!</div>
         <div style={{ fontSize:15, color:'#6B7280', lineHeight:1.6, marginBottom:28 }}>Thanks for joining. Let's get you set up so we can match you with the right sessions.<br/><br/>This takes about 2–3 minutes.</div>
         <button onClick={()=>setStep(1)} style={s.btn(primary)}>Let's get started →</button>
@@ -159,13 +167,13 @@ function OnboardingWizard({ user, org, onComplete }) {
       <input style={s.inp} value={f.date_of_birth} onChange={e=>set('date_of_birth',e.target.value)} type="date" />
       <label style={s.label}>Profile photo (optional)</label>
       <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:14 }}>
-        <div style={{ width:56, height:56, borderRadius:16, background:primary+'22', border:`2px solid ${primary}44`, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-          {photoUrl ? <img src={photoUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:22 }}>📷</span>}
+        <div style={{ width:56, height:56, borderRadius:16, background:primary+'22', border:`2px solid var(--org-a20)`, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          {photoUrl ? <img src={photoUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:22 }}><Icon name="📷" /></span>}
         </div>
         <button onClick={()=>photoRef.current?.click()} style={{ padding:'8px 16px', borderRadius:10, border:`1.5px solid ${primary}`, background:'transparent', color:primary, fontSize:13, fontWeight:700, cursor:'pointer' }}>{photoUploading?'Uploading...':'Upload photo'}</button>
         <input ref={photoRef} type="file" accept="image/*" style={{ display:'none' }} onChange={uploadPhoto} />
       </div>
-      <button onClick={()=>setStep(2)} disabled={!f.first_name.trim()||!f.last_name.trim()||!f.phone.trim()} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(2)} disabled={!f.first_name.trim()||!f.last_name.trim()||!f.phone.trim()} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 2: Emergency Contact
@@ -178,7 +186,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <input style={s.inp} value={f.emergency_contact_relationship} onChange={e=>set('emergency_contact_relationship',e.target.value)} placeholder="e.g. Partner, Parent, Sibling" />
       <label style={s.label}>Phone number *</label>
       <input style={s.inp} value={f.emergency_contact_phone} onChange={e=>set('emergency_contact_phone',e.target.value)} placeholder="07700900000" type="tel" />
-      <button onClick={()=>setStep(3)} disabled={!f.emergency_contact_name.trim()||!f.emergency_contact_phone.trim()} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(3)} disabled={!f.emergency_contact_name.trim()||!f.emergency_contact_phone.trim()} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 3: Address
@@ -191,7 +199,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <input style={s.inp} value={f.address} onChange={e=>set('address',e.target.value)} placeholder="123 High Street" />
       <label style={s.label}>City</label>
       <input style={s.inp} value={f.city} onChange={e=>set('city',e.target.value)} placeholder="London" />
-      <button onClick={()=>setStep(4)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(4)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 4: Availability
@@ -206,7 +214,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <div style={{ display:'flex', gap:8, marginBottom:18 }}>
         {TIMES.map(t=><button key={t} onClick={()=>togAvail('times',t)} style={s.chip(f.availability.times.includes(t),primary)}>{t}</button>)}
       </div>
-      <button onClick={()=>setStep(5)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(5)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 5: Interests
@@ -216,7 +224,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:18 }}>
         {INTERESTS.map(i=><button key={i} onClick={()=>tog('interests',i)} style={s.chip(f.interests.includes(i),primary)}>{i}</button>)}
       </div>
-      <button onClick={()=>setStep(6)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(6)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 6: Experience
@@ -230,7 +238,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:18 }}>
         {EXPERIENCE_OPTS.map(e=><button key={e} onClick={()=>tog('experience',e)} style={s.chip(f.experience.includes(e),primary)}>{e}</button>)}
       </div>
-      <button onClick={()=>setStep(7)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(7)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 7: Qualifications
@@ -245,7 +253,7 @@ function OnboardingWizard({ user, org, onComplete }) {
           </label>
         ))}
       </div>
-      <button onClick={()=>setStep(8)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(8)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 8: Working Preferences
@@ -262,7 +270,7 @@ function OnboardingWizard({ user, org, onComplete }) {
           <button key={g} onClick={()=>set('group_size',g)} style={{ ...s.chip(f.group_size===g,primary), textAlign:'left' }}>{g}</button>
         ))}
       </div>
-      <button onClick={()=>setStep(9)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(9)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 9: Health & Accessibility
@@ -277,7 +285,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <input style={s.inp} value={f.dietary_requirements} onChange={e=>set('dietary_requirements',e.target.value)} placeholder="e.g. Vegetarian, halal..." />
       <label style={s.label}>Languages spoken</label>
       <input style={s.inp} value={f.languages} onChange={e=>set('languages',e.target.value)} placeholder="e.g. English, Urdu, French" />
-      <button onClick={()=>setStep(10)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(10)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 10: Communication
@@ -297,7 +305,7 @@ function OnboardingWizard({ user, org, onComplete }) {
           </label>
         ))}
       </div>
-      <button onClick={()=>setStep(11)} style={s.btn(primary)}>Continue →</button>
+      <button onClick={()=>setStep(11)} style={s.btn(primary)}>Continue <Icon name="→" /></button>
     </div>,
 
     // 11: Agreements
@@ -342,7 +350,7 @@ function OnboardingWizard({ user, org, onComplete }) {
             )}
             <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.55)' }}>{step === 0 ? 'Volunteer Setup' : `Step ${step} of ${TOTAL - 1}`}</span>
           </div>
-          {step > 0 && <motion.button whileTap={{ scale:0.95 }} onClick={()=>setStep(s=>s-1)} style={s.back}>← Back</motion.button>}
+          {step > 0 && <motion.button whileTap={{ scale:0.95 }} onClick={()=>setStep(s=>s-1)} style={s.back}><Icon name="←" /> Back</motion.button>}
           <div style={{ fontSize:20, fontWeight:900, position:'relative', zIndex:1 }}>
             {['Welcome','About You','Emergency Contact','Your Address','Availability','Interests','Experience','Qualifications','Preferences','Health','Communication','Agreements'][step]}
           </div>
@@ -411,7 +419,7 @@ export default function VolunteerPortal() {
   }
 
   if(view==='loading') return (
-    <div style={{ minHeight:'100vh', background:'radial-gradient(circle at 15% 10%, #16283d 0%, #0A121D 45%, #060a11 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div style={{ minHeight:'100dvh', background:'radial-gradient(circle at 15% 10%, #16283d 0%, #0A121D 45%, #060a11 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
       <motion.div
         animate={{ rotate:360 }}
         transition={{ duration:0.8, repeat:Infinity, ease:'linear' }}
@@ -439,7 +447,7 @@ export default function VolunteerPortal() {
     <div style={s.wrap}>
       <AmbientOrbs color="#EF4444" />
       <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35 }} style={{ ...s.card, textAlign:'center' }}>
-        <div style={s.head('#EF4444')}><div style={{ fontSize:32 }}>❌</div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Application Unsuccessful</div></div>
+        <div style={s.head('#EF4444')}><div style={{ fontSize:32 }}><Icon name="❌" /></div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Application Unsuccessful</div></div>
         <div style={s.body}>
           <p style={{ color:'#6B7280', lineHeight:1.6, marginBottom:20 }}>Unfortunately your volunteer application was not approved. Please contact {org?.name} for more information.</p>
           <motion.button whileTap={{ scale:0.97 }} onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('#6B7280'), marginTop:0 }}>Sign out</motion.button>
@@ -452,7 +460,7 @@ export default function VolunteerPortal() {
     <div style={s.wrap}>
       <AmbientOrbs color={primary} />
       <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35, ease:'easeOut' }} style={s.card}>
-        <div style={{ background: `linear-gradient(135deg, ${primary}, ${primary}dd)`, padding:'28px 28px 22px', color:'#fff', position:'relative', overflow:'hidden' }}>
+        <div style={{ background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, padding:'28px 28px 22px', color:'#fff', position:'relative', overflow:'hidden' }}>
           {/* subtle background glow */}
           <div style={{ position:'absolute', top:-40, right:-40, width:140, height:140, borderRadius:'50%', background:'rgba(255,255,255,0.08)', pointerEvents:'none' }} />
           <div style={{ position:'absolute', bottom:-30, left:-20, width:100, height:100, borderRadius:'50%', background:'rgba(0,0,0,0.08)', pointerEvents:'none' }} />
@@ -587,8 +595,8 @@ function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#E7E9EE', display: 'flex', justifyContent: 'center' }}>
-    <div style={{ width: '100%', maxWidth: 480, minHeight: '100vh', background: '#F5F5F5', display: 'flex', flexDirection: 'column', fontFamily: 'Inter,sans-serif', paddingTop: 'env(safe-area-inset-top)', overflow: 'hidden', position: 'relative', boxShadow: '0 0 70px rgba(15,23,42,0.10)' }}>
+    <div style={{ minHeight: '100dvh', background: '#E7E9EE', display: 'flex', justifyContent: 'center' }}>
+    <div style={{ width: '100%', maxWidth: 480, minHeight: '100dvh', background: '#F5F5F5', display: 'flex', flexDirection: 'column', fontFamily: 'Inter,sans-serif', paddingTop: 'env(safe-area-inset-top)', overflow: 'hidden', position: 'relative', boxShadow: '0 0 70px rgba(15,23,42,0.10)' }}>
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {tab === 'today' && (
           <VPToday
@@ -615,7 +623,7 @@ function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
             if (t.key === '__plus') {
               return (
                 <button key="plus" onClick={() => { setForceModal(null); setQuickMenuOpen(true) }}
-                  style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, color: '#fff', fontSize: 22, cursor: 'pointer', marginTop: -20, boxShadow: `0 8px 20px ${primary}66`, flexShrink: 0 }}>+</button>
+                  style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, color: '#fff', fontSize: 22, cursor: 'pointer', marginTop: -20, boxShadow: `0 8px 20px var(--org-a35)`, flexShrink: 0 }}>+</button>
               )
             }
             const active = tab === t.key
@@ -623,7 +631,7 @@ function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
               <button key={t.key} onClick={() => setTab(t.key)}
                 style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '9px 4px', border: 'none', background: 'none', cursor: 'pointer' }}>
                 {active && <motion.div layoutId="vpNavPill" style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.1)', borderRadius: 16 }} />}
-                <span style={{ position: 'relative', fontSize: 18 }}>{t.icon}</span>
+                <span style={{ position: 'relative', fontSize: 18 }}><Icon name={t.icon} /></span>
                 <span style={{ position: 'relative', fontSize: 9, fontWeight: 800, color: active ? '#fff' : 'rgba(255,255,255,0.45)' }}>{t.label}</span>
               </button>
             )

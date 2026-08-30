@@ -6,6 +6,7 @@ import {
   REPORT_LIBRARY, REPORT_CATEGORIES, canAccessReport,
 } from '../../lib/reportingService'
 import ReportBuilder from './ReportBuilder'
+import Icon from '../../lib/icons'
 
 const VIEWS = [
   { key: 'overview', label: 'Overview' },
@@ -230,7 +231,7 @@ function OverviewView({ loading, metrics, insights, isMobile, savedReports, onGo
               background: t.bg, border: `1px solid ${t.bd}`, borderRadius: 14, padding: 16,
               boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset',
             }}>
-              <div style={{ fontSize: 14, marginBottom: 7, opacity: 0.9 }}>{s.icon}</div>
+              <div style={{ fontSize: 14, marginBottom: 7, opacity: 0.9 }}><Icon name={s.icon} /></div>
               <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: -0.6, color: t.fg, lineHeight: 1 }}>{s.v}</div>
               <div style={{ fontSize: 11.5, fontWeight: 600, color: '#64748B', marginTop: 5 }}>{s.l}</div>
             </div>
@@ -260,7 +261,7 @@ function OverviewView({ loading, metrics, insights, isMobile, savedReports, onGo
                   <button onClick={() => onGoto(i.target)} style={{
                     marginTop: 10, padding: 0, border: 'none', background: 'none',
                     fontSize: 12.5, fontWeight: 800, color: tone.fg, cursor: 'pointer',
-                  }}>{i.action} →</button>
+                  }}>{i.action} <Icon name="→" /></button>
                 </div>
               )
             })}
@@ -277,7 +278,7 @@ function OverviewView({ loading, metrics, insights, isMobile, savedReports, onGo
               justifyContent: 'center', fontSize: 16, marginBottom: 10,
               background: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).bg,
               border: `1px solid ${(TONES[CATEGORY_TONE[r.category]] || TONES.slate).bd}`,
-            }}>{r.icon}</div>
+            }}><Icon name={r.icon} /></div>
             <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
             <div style={{ fontSize: 12, color: '#64748B', marginTop: 4, lineHeight: 1.5 }}>{r.desc}</div>
             <button onClick={onOpenLibrary} style={{
@@ -292,7 +293,7 @@ function OverviewView({ loading, metrics, insights, isMobile, savedReports, onGo
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <SectionLabel>Recent reports</SectionLabel>
-            <button onClick={onOpenSaved} style={{ border: 'none', background: 'none', fontSize: 12, fontWeight: 800, color: '#4F46E5', cursor: 'pointer' }}>View all →</button>
+            <button onClick={onOpenSaved} style={{ border: 'none', background: 'none', fontSize: 12, fontWeight: 800, color: '#4F46E5', cursor: 'pointer' }}>View all <Icon name="→" /></button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {savedReports.slice(0, 4).map(r => (
@@ -354,7 +355,7 @@ function LibraryView({ role, isMobile, onRun }) {
                   justifyContent: 'center', fontSize: 16,
                   background: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).bg,
                   border: `1px solid ${(TONES[CATEGORY_TONE[r.category]] || TONES.slate).bd}`,
-                }}>{r.icon}</span>
+                }}><Icon name={r.icon} /></span>
                 <span style={{
                   fontSize: 10.5, fontWeight: 800, borderRadius: 99, padding: '3px 9px',
                   color: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).fg,
@@ -396,7 +397,7 @@ function SavedView({ reports, orgId, session, onChanged, onCreate, range }) {
   if (reports.length === 0) {
     return (
       <div style={{ ...card({ padding: 44 }), textAlign: 'center' }}>
-        <div style={{ fontSize: 26, marginBottom: 10 }}>📄</div>
+        <div style={{ fontSize: 26, marginBottom: 10 }}><Icon name="📄" /></div>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No saved reports yet</div>
         <div style={{ fontSize: 13, color: '#64748B', marginBottom: 18, lineHeight: 1.5 }}>
           Create a report once and save it here so you can run it again later.

@@ -1,7 +1,11 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 
-const PURPLE = '#8B5CF6'
+// The dock used a fixed violet regardless of the organisation. Everything
+// else in the app now follows the org's colour, and the primary navigation is
+// the last place that should be the exception.
+const ACTIVE = 'var(--org-primary, #8B5CF6)'
+const ACTIVE_WASH = 'var(--org-a20, rgba(139,92,246,0.15))'
 
 // A single item in the Mission Control Dock (not the desktop sidebar's NavItem —
 // this one is purpose-built for the fixed-height mobile bar: capsule active state,
@@ -36,11 +40,11 @@ export default function MobileNavItem({ icon: Icon, label, active, onClick, badg
             position: 'absolute',
             inset: '0px 4px',
             borderRadius: 16,
-            background: `${PURPLE}26`,
+            background: ACTIVE_WASH,
           }}
         />
       )}
-      <span style={{ position: 'relative', zIndex: 1, display: 'flex', color: active ? PURPLE : 'rgba(255,255,255,0.55)' }}>
+      <span style={{ position: 'relative', zIndex: 1, display: 'flex', color: active ? ACTIVE : 'rgba(255,255,255,0.55)' }}>
         <Icon width={21} height={21} strokeWidth={active ? 2.1 : 1.8} />
         {badge > 0 && (
           <span
@@ -67,7 +71,7 @@ export default function MobileNavItem({ icon: Icon, label, active, onClick, badg
         {label}
       </span>
       {active && (
-        <span style={{ position: 'absolute', bottom: 1, width: 4, height: 4, borderRadius: '50%', background: PURPLE }} />
+        <span style={{ position: 'absolute', bottom: 1, width: 4, height: 4, borderRadius: '50%', background: ACTIVE }} />
       )}
     </button>
   )

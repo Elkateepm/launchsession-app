@@ -8,6 +8,8 @@ import RegisterPaymentBadge from '../payments/RegisterPaymentBadge'
 import AttendanceCorrectionModal from './AttendanceCorrectionModal'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -58,6 +60,7 @@ function fmtTime(d) {
 }
 
 export default function LiveRegister({ session, org, authUserId, userRole, onClose, onNavigate }) {
+  const isMobile = useIsMobile()
   const { groups: orgGroups } = useOrgSettings(org?.id)
   const terms = useTerms()
   const configuredGroupLabels = useMemo(() => new Map((orgGroups || []).map(g => [(g.label || '').trim().toLowerCase(), g.label])), [orgGroups])
@@ -293,12 +296,20 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
-      style={{ position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 10200, display: 'flex', flexDirection: 'column' }}>
+      style={{
+        position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 10200,
+        display: 'flex', flexDirection: 'column',
+        // inset: 0 puts the top of this overlay behind the status bar and notch
+        // when the app is installed to the home screen, which is how staff
+        // actually run a register. The back button was under the clock.
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}>
       {/* HEADER */}
       <div style={{
         background: 'linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.85))',
         backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-        borderBottom: '1px solid rgba(226,232,240,0.8)', padding: '16px 18px 14px',
+        borderBottom: '1px solid rgba(226,232,240,0.8)', padding: isMobile ? '12px 14px 11px' : '16px 18px 14px',
         boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px -18px rgba(15,23,42,0.25)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -322,14 +333,21 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
             {STATE_LABEL[registerState]}
           </span>
         </div>
-        <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-          <span>{new Date(session.session_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+        {/* On a phone this line wrapped to three rows of grey text before you
+            could see a single child. The long weekday and the full month name
+            are the first things to go: if you are standing at the door running
+            this register, you know what day it is. */}
+        <div style={{ fontSize: isMobile ? 11.5 : 12.5, color: '#64748B', marginBottom: isMobile ? 10 : 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+          <span>{new Date(session.session_date).toLocaleDateString('en-GB', isMobile
+            ? { day: 'numeric', month: 'short' }
+            : { weekday: 'long', day: 'numeric', month: 'long' })}</span>
           <span style={{ color: '#CBD5E1' }}>•</span>
           <span>{session.start_time}–{session.end_time}</span>
-          <span style={{ color: '#CBD5E1' }}>•</span>
-          <span>{session.location || 'No location set'}</span>
+          {session.location && <><span style={{ color: '#CBD5E1' }}>•</span><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.location}</span></>}
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {/* Four pills wrapped onto two rows at phone width. A fixed four-column
+            grid keeps them on one line and keeps the numbers comparable. */}
+        <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? 'repeat(4, minmax(0,1fr))' : undefined, gap: isMobile ? 6 : 8, flexWrap: 'wrap' }}>
           <MiniStat icon="👥" label="On site" value={signedInCount} color="#16A34A" />
           <MiniStat icon="⏳" label="Expected" value={grouped.expected.length} color="#64748B" />
           <MiniStat icon="✕" label="Absent" value={grouped.absent.length} color="#DC2626" />
@@ -337,7 +355,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
         </div>
         {ratioBreached && (
           <div style={{ marginTop: 12, background: 'linear-gradient(135deg,#FEF2F2,#FEF7F7)', border: '1px solid #FECACA', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: '#B91C1C', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 14 }}>⚠</span> Staff-to-child ratio is currently 1:{currentRatio.toFixed(1)}. Required ratio: 1:{requiredRatio}.
+            <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> Staff-to-child ratio is currently 1:{currentRatio.toFixed(1)}. Required ratio: 1:{requiredRatio}.
           </div>
         )}
         {totalExpected > 0 && (
@@ -383,7 +401,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
       {/* SEARCH + QUICK ACTIONS */}
       <div style={{ padding: '0 14px 12px', background: '#fff', borderBottom: '1px solid #F1F5F9', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 160px' }}>
-          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94A3B8', pointerEvents: 'none' }}>🔍</span>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94A3B8', pointerEvents: 'none' }}><Icon name="🔍" /></span>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${terms.people}...`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, background: '#FAFBFC', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
         </div>
         <button onClick={() => setShowWalkIn(true)} style={ghostBtn}>+ Walk-in</button>
@@ -396,10 +414,12 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
       </div>
 
       {/* LIST */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 14, background: '#FAFBFD' }}>
+      {/* ls-scroll gives momentum scrolling and stops a flick at the end of the
+          list rubber-banding the page behind this overlay. */}
+      <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 12 : 14, background: '#FAFBFD' }}>
         {activeList.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px', color: '#94A3B8', fontSize: 13 }}>
-            <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}>✓</div>
+            <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}><Icon name="✓" /></div>
             Nobody in this list{search ? ' matching your search' : ''}.
           </div>
         ) : (
@@ -407,7 +427,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
             {activeList.map(({ child, att }) => (
               <RegisterRow key={child.id} child={child} att={att} onOpen={() => setSelectedChild(child)} groupLabel={groupLabel}
                 org={org} authUserId={authUserId} paymentBalance={paymentBalances[child.id]} onPaymentChanged={loadPaymentBalances}
-                onSignIn={() => handleSignIn(child)} onSignOut={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} onCorrect={() => setCorrectChildId(child.id)} />
+                onSignIn={() => handleSignIn(child)} onSignOut={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} onCorrect={() => setCorrectChildId(child.id)} isMobile={isMobile} />
             ))}
           </div>
         )}
@@ -415,7 +435,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
         {/* STAFF PANEL */}
         <div style={{ marginTop: 20, background: '#fff', border: '1px solid #EDEFF3', borderRadius: 16, padding: 16, boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 22, height: 22, borderRadius: 7, background: '#F5F3FF', color: '#7C3AED', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>👤</span>
+            <span style={{ width: 22, height: 22, borderRadius: 7, background: '#F5F3FF', color: '#7C3AED', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}><Icon name="👤" /></span>
             Session team
           </div>
           {staffRows.length === 0 ? (
@@ -463,7 +483,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
           canCloseRegister ? (
             <button onClick={() => setShowClosure(true)} style={{ padding: '11px 22px', borderRadius: 11, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px -3px rgba(124,58,237,0.5)' }}>Close register</button>
           ) : (
-            <span title="Only a staff member can close this register" style={{ fontSize: 12, fontWeight: 700, color: '#94A3B8' }}>🔒 Staff only to close</span>
+            <span title="Only a staff member can close this register" style={{ fontSize: 12, fontWeight: 700, color: '#94A3B8' }}><Icon name="🔒" /> Staff only to close</span>
           )
         )}
       </div>
@@ -522,7 +542,7 @@ function MiniStat({ icon, label, value, color }) {
   )
 }
 
-function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, onCorrect, groupLabel, org, authUserId, paymentBalance, onPaymentChanged }) {
+function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, onCorrect, groupLabel, org, authUserId, paymentBalance, onPaymentChanged, isMobile }) {
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const status = att?.status
   const [hover, setHover] = useState(false)
@@ -530,7 +550,13 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
     <div
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
-        display: 'flex', alignItems: 'center', gap: 12, background: '#fff',
+        // Actions drop below the name on a phone. Side by side, the two buttons
+        // and the avatar left about 110px for a name, so anything longer than
+        // "Hana Al-Rashid" truncated -- on the one screen where identifying the
+        // right child matters most.
+        display: 'flex', alignItems: isMobile ? 'stretch' : 'center',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? 10 : 12, background: '#fff',
         border: '1px solid #EDEFF3', borderRadius: 16, padding: 12,
         boxShadow: hover ? '0 6px 18px -10px rgba(15,23,42,0.18)' : '0 1px 2px rgba(15,23,42,0.04)',
         transform: hover ? 'translateY(-1px)' : 'none',
@@ -560,22 +586,25 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
           {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.has_medication || child.medical_notes) && (
             <span style={alertPill('#DC2626', '#FEE2E2')}>⚕ Medical</span>
           )}
-          {child.allergies && <span style={alertPill('#D97706', '#FEF3C7')}>⚠ Allergy</span>}
-          {child.collection_restricted && <span style={alertPill('#D97706', '#FEF3C7')}>⚠ Collection restriction</span>}
+          {child.allergies && <span style={alertPill('#D97706', '#FEF3C7')}><Icon name="⚠" /> Allergy</span>}
+          {child.collection_restricted && <span style={alertPill('#D97706', '#FEF3C7')}><Icon name="⚠" /> Collection restriction</span>}
         </div>
       </div>
-      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{
+        flexShrink: 0, display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 6,
+        ...(isMobile ? { borderTop: '1px solid #F1F5F9', paddingTop: 10 } : null),
+      }}>
         {status === 'signed_in' ? (
           <>
-            <button onClick={onSignOut} style={actionBtn('#2563EB')}>Sign out</button>
+            <button onClick={onSignOut} style={actionBtn('#2563EB', isMobile)}>Sign out</button>
             <button onClick={onCorrect} title="Correct this record" style={correctBtn}>Correct</button>
           </>
         ) : status === 'signed_out' || status === 'absent' ? (
           <button onClick={onCorrect} title="Correct this record" style={correctBtn}>Correct</button>
         ) : (
           <>
-            <button onClick={onSignIn} style={actionBtn('#16A34A')}>Sign in</button>
-            <button onClick={onMarkAbsent} style={{ ...actionBtn('#6B7280'), background: '#fff', color: '#64748B', border: '1.5px solid #E5E7EB', boxShadow: 'none' }}>Absent</button>
+            <button onClick={onSignIn} style={actionBtn('#16A34A', isMobile)}>Sign in</button>
+            <button onClick={onMarkAbsent} style={{ ...actionBtn('#6B7280', isMobile), background: '#fff', color: '#64748B', border: '1.5px solid #E5E7EB', boxShadow: 'none' }}>Absent</button>
           </>
         )}
       </div>
@@ -584,8 +613,19 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
 }
 
 function alertPill(color, bg) { return { fontSize: 9.5, fontWeight: 800, color, background: bg, border: `1px solid ${color}30`, borderRadius: 6, padding: '1px 6px' } }
-function actionBtn(color) { return { padding: '9px 14px', borderRadius: 10, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 3px 8px -2px ${color}55` } }
-const correctBtn = { padding: '8px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', color: '#64748B', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
+// 9px of vertical padding around 12px text is a 33px target. Anything under
+// ~44px is genuinely hard to hit on a phone, and this is the button somebody
+// presses fifty times in a row with a child waiting in front of them.
+function actionBtn(color, isMobile) {
+  return {
+    padding: isMobile ? '13px 14px' : '9px 14px', borderRadius: 10, border: 'none',
+    background: color, color: '#fff', fontSize: isMobile ? 13.5 : 12, fontWeight: 700,
+    cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 3px 8px -2px ${color}55`,
+    ...(isMobile ? { flex: 1, minHeight: 46 } : null),
+  }
+}
+// Matches actionBtn's mobile floor via the wrapper's stretch.
+const correctBtn = { padding: '12px 14px', minHeight: 44, borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', color: '#64748B', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
 const ghostBtn = { padding: '9px 13px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }
 
 function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
@@ -597,7 +637,7 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: 20, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: 20, maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 14 }}>Who is {child.first_name} leaving with?</div>
         {contacts.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
@@ -677,7 +717,7 @@ function WalkInModal({ org, session, allChildren, onClose, onDone, onSignIn }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Add Walk-in</div>
         <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 14 }}>Search existing {terms.people} first — don't create a duplicate record.</div>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..." style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, marginBottom: 10 }} />
@@ -773,7 +813,7 @@ function ClosureFlow({ session, grouped, onClose, org, authUserId, canCloseRegis
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 14 }}>Close Register</div>
 
         {stillSignedIn > 0 && (
@@ -799,7 +839,7 @@ function ClosureFlow({ session, grouped, onClose, org, authUserId, canCloseRegis
           {canCloseRegister ? (
             <button onClick={handleClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Close and Lock Register</button>
           ) : (
-            <span title="Only a staff member can close this register" style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px dashed #E5E7EB', background: '#F9FAFB', fontSize: 13, fontWeight: 700, color: '#9CA3AF', textAlign: 'center' }}>🔒 Staff only to close</span>
+            <span title="Only a staff member can close this register" style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px dashed #E5E7EB', background: '#F9FAFB', fontSize: 13, fontWeight: 700, color: '#9CA3AF', textAlign: 'center' }}><Icon name="🔒" /> Staff only to close</span>
           )}
         </div>
       </div>

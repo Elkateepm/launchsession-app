@@ -10,18 +10,20 @@ import ProjectsList from '../projects/ProjectsList'
 import Hub from '../hub/Hub'
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { redirectToSignIn } from '../../lib/authRedirect'
+import { makeModuleLevel, ACCESS_MODULES } from '../../lib/moduleAccess'
+import { useModuleAccess } from '../../context/ModuleAccessContext'
 import Registers from '../registers/Registers'
 import { useBreakpoint, useIsMobile } from '../../hooks/useIsMobile'
 import EventsTrips from '../events/EventsTrips'
 import Calendar from '../calendar/Calendar';
 import Templates from '../templates/Templates'
-import Safeguarding from '../safeguarding/Safeguarding'
-import SafeguardingGate from '../safeguarding/SafeguardingGate'
+import SafeguardingHub from '../safeguarding/SafeguardingHub'
+import NewsletterStudio from '../messaging/NewsletterStudio'
 import Reports from '../reports/Reports'
 import Gallery from '../gallery/Gallery'
 import Messaging from '../messaging/Messaging'
 import Forms from '../forms/Forms'
-import CaseManagement from '../casemgmt/CaseManagement'
 import ChildrenDirectory from '../children/ChildrenDirectory'
 import ChildrenGate from '../children/ChildrenGate'
 import MedicalAlerts from '../medical/MedicalAlerts'
@@ -46,6 +48,7 @@ import {
 } from './sidebar/SidebarParts'
 import { makeHasModule, isTrialActive } from '../../lib/moduleAccess'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -76,9 +79,9 @@ const ALL_MODULES = [
   { key: 'volunteers',      label: 'Volunteers',       icon: '❤️', group: 'delivery' },
   { key: 'messaging',       label: 'Messaging',        icon: '💬', group: 'delivery' },
   { key: 'gallery',         label: 'Gallery',          icon: '🖼️', group: 'delivery' },
-  { key: 'safeguarding',    label: 'Safeguarding',     icon: '🛡️', group: 'safeguarding' },
+  { key: 'newsletter',      label: 'Newsletter',       icon: '📨', group: 'delivery' },
+  { key: 'safeguarding',    label: 'Safeguarding Hub', icon: '🛡️', group: 'safeguarding' },
   { key: 'forms',           label: 'Forms',            icon: '📝', group: 'safeguarding' },
-  { key: 'case_management', label: 'Case Management',  icon: '📁', group: 'safeguarding' },
   { key: 'risk_assessments', label: 'Risk Assessments', icon: '🛡️', group: 'safeguarding' },
   { key: 'medical_alerts',  label: 'Medical Alerts',    icon: '💊', group: 'safeguarding' },
   { key: 'reports',         label: 'Reports',          icon: '📊', group: 'growth' },
@@ -95,7 +98,7 @@ const ALL_MODULES = [
 
 const MODULE_TO_PACK = {
   registers: 'Delivery', volunteers: 'Delivery', messaging: 'Delivery', gallery: 'Delivery',
-  safeguarding: 'Safeguarding', forms: 'Safeguarding', case_management: 'Safeguarding', risk_assessments: 'Safeguarding',
+  safeguarding: 'Safeguarding', forms: 'Safeguarding', risk_assessments: 'Safeguarding',
   reports: 'Growth', impact_outcomes: 'Growth', fundraising: 'Growth',
   hr: 'Operations', resource_booking: 'Operations', payments: 'Operations',
 }
@@ -150,6 +153,41 @@ function RestrictedModule({ label, icon, onNavigate }) {
     </div>
   )
 }
+// Shown when the ORGANISATION has the module but this person's access to it
+// has been withdrawn. Deliberately distinct from LockedModule (a plan limit,
+// with an upgrade path) and from RestrictedModule (admin-only by design):
+// here the fix is a conversation with an admin, not a purchase.
+function NoModuleAccess({ label, icon, onNavigate }) {
+  return (
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+      <div style={{ textAlign: 'center', padding: 40, maxWidth: 420 }}>
+        <div style={{ width: 80, height: 80, borderRadius: 24, background: '#94A3B815', border: '2px solid #94A3B830', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 20px' }}>{icon || '🔒'}</div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>{label}</div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#94A3B815', border: '1px solid #94A3B840', borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 16 }}>
+          🔒 No access
+        </div>
+        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 24 }}>
+          You don't have access to this area. An admin or manager at your organisation can grant it from your profile.
+        </div>
+        <button onClick={() => onNavigate && onNavigate('home')} style={{ padding: '11px 22px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+          ← Back to Home
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// View-only members can still open the module, so they need to know why the
+// save buttons will refuse them. The database is the thing actually enforcing
+// it -- this banner exists so the refusal is not a surprise.
+function ViewOnlyBanner() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1E40AF', borderRadius: 12, padding: '9px 14px', fontSize: 12.5, fontWeight: 700, margin: '0 0 14px' }}>
+      👁 View only — you can read this area but not make changes.
+    </div>
+  )
+}
+
 function ComingSoonModule({ icon, label, desc }) {
   return (
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -180,7 +218,7 @@ function LiveClock() {
   }, [])
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 14, background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>
-      <span style={{ fontSize: 14 }}>📅</span>
+      <span style={{ fontSize: 14 }}><Icon name="📅" /></span>
       <span style={{ fontSize: 12.5, fontWeight: 700, color: '#334155' }}>{now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
       <span style={{ width: 1, height: 12, background: 'rgba(51,65,85,0.2)' }} />
       <span style={{ fontSize: 12.5, fontWeight: 700, color: '#6D5DF6', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
@@ -195,7 +233,7 @@ function HeaderIconButton({ icon, label, onClick, badge, primary, isMobile }) {
     <motion.button
       onClick={onClick}
       title={label}
-      whileHover={{ y: -3, scale: 1.05, boxShadow: `0 8px 20px -6px ${primary}50` }}
+      whileHover={{ y: -3, scale: 1.05, boxShadow: `0 8px 20px -6px var(--org-a35)` }}
       whileTap={{ scale: 0.94 }}
       style={{ position: 'relative', width: isMobile ? 38 : 44, height: isMobile ? 38 : 44, borderRadius: isMobile ? 12 : 14, border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: isMobile ? 15 : 17, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
     >
@@ -258,13 +296,13 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
       {/* LEFT — org card */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flexShrink: 0 }}>
         <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }} style={{ flexShrink: 0 }}>
-          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 3, border: `1.5px solid ${primary}30` }} />
+          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 3, border: `1.5px solid var(--org-a20)` }} />
         </motion.div>
         <div style={{ minWidth: 0, display: 'none' }} className="ls-header-org-text">
           <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{orgName}</div>
           {isTrial ? (
-            <motion.div whileHover={{ scale: 1.05 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 2, background: `${primary}14`, borderRadius: 99, padding: '1.5px 8px', border: `1px solid ${primary}25` }}>
-              <span style={{ fontSize: 10 }}>🚀</span>
+            <motion.div whileHover={{ scale: 1.05 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 2, background: 'var(--org-a10)', borderRadius: 99, padding: '1.5px 8px', border: `1px solid var(--org-a10)` }}>
+              <span style={{ fontSize: 10 }}><Icon name="🚀" /></span>
               <span style={{ fontSize: 10.5, fontWeight: 700, color: primary }}>Trial · {daysLeft}d left</span>
             </motion.div>
           ) : (
@@ -288,7 +326,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
           transition={{ type: 'spring', stiffness: 300, damping: 28 }}
           style={{ position: 'relative', maxWidth: '100%' }}
         >
-          <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8' }}>🔍</span>
+          <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8' }}><Icon name="🔍" /></span>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -298,7 +336,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
             style={{
               width: '100%', padding: '10px 40px', borderRadius: 18, border: '1px solid rgba(255,255,255,0.6)',
               background: 'rgba(255,255,255,0.55)', fontSize: 13.5, color: '#0F172A', outline: 'none', boxSizing: 'border-box',
-              boxShadow: searchFocused ? `0 0 0 3px ${primary}25` : 'none', transition: 'box-shadow 0.2s',
+              boxShadow: searchFocused ? `0 0 0 3px var(--org-a10)` : 'none', transition: 'box-shadow 0.2s',
             }}
           />
           <AnimatePresence>
@@ -334,7 +372,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
                           style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 10, border: 'none', background: '#F8FAFC', textAlign: 'left', cursor: 'pointer' }}
                           onMouseEnter={e => e.currentTarget.style.background = '#F1F5F9'}
                           onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}>
-                          <span style={{ fontSize: 14, flexShrink: 0 }}>📬</span>
+                          <span style={{ fontSize: 14, flexShrink: 0 }}><Icon name="📬" /></span>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               New submission — {sub.org_forms?.name || 'Form'}
@@ -485,7 +523,24 @@ export default function Dashboard({ session, org }) {
   // 'team' was the Staff & Volunteers module, now consolidated into HR. The
   // route is kept and redirected rather than removed, so existing bookmarks and
   // ?tab=team links still land somewhere sensible.
-  const TAB_ALIASES = { team: 'hr' }
+  // case_management was merged into the Safeguarding Hub. The alias keeps
+  // persisted tabs, push notification payloads and any bookmarked deep link
+  // working rather than dropping the user on a blank screen.
+  const TAB_ALIASES = { team: 'hr', case_management: 'safeguarding' }
+
+  // Which module governs each tab, for the per-member access layer. Tabs
+  // absent from this map are ungoverned (Home, Today, Settings, Branding,
+  // Templates), either because they are not module-owned or because they are
+  // already admin-only.
+  const TAB_ACCESS_MODULE = {
+    children: 'people', planner: 'planner', projects: 'planner', projects_list: 'planner',
+    calendar: 'calendar', registers: 'registers', volunteers: 'volunteers',
+    messaging: 'messaging', newsletter: 'messaging', gallery: 'gallery', safeguarding: 'safeguarding',
+    forms: 'forms', risk_assessments: 'risk_assessments',
+    medical_alerts: 'medical_alerts', reports: 'reports', impact_outcomes: 'impact_outcomes',
+    fundraising: 'fundraising', payments: 'payments', resource_booking: 'resource_booking',
+    events_trips: 'events_trips', mentoring: 'mentoring',
+  }
 
   const handleSetTab = (t, payload) => {
     t = TAB_ALIASES[t] || t
@@ -494,7 +549,9 @@ export default function Dashboard({ session, org }) {
     if (t === 'registers') setRegistersKey(k => k + 1)
     setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
     setOpenAssessmentId(t === 'risk_assessments' && payload?.openAssessmentId ? payload.openAssessmentId : null)
-    setOpenCaseId(t === 'case_management' && payload?.openCaseId ? payload.openCaseId : null)
+    // t has already been aliased to 'safeguarding' by this point, so the
+    // payload is what identifies a case deep link.
+    setOpenCaseId(t === 'safeguarding' && payload?.openCaseId ? payload.openCaseId : null)
     setOpenConcernId(t === 'safeguarding' && payload?.openConcernId ? payload.openConcernId : null)
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
@@ -546,12 +603,29 @@ export default function Dashboard({ session, org }) {
   // Module access is resolved centrally (see lib/moduleAccess) so the sidebar,
   // Hub and Calendar can't disagree, and so an active trial grants everything.
   const hasModule = makeHasModule(org)
+  const { levels: accessLevels } = useModuleAccess()
+  const moduleLevel = makeModuleLevel(org, accessLevels)
+
+  // Hiding the nav item is not enough: a bookmark or a shared ?tab= link
+  // reaches the tab directly. Resolving a denied tab to a sentinel means every
+  // `tab === '...'` branch below is false and the explanation renders instead,
+  // without having to wrap twenty-five render lines in a conditional.
+  const rawTab = tab
+  const tabAccessKey = TAB_ACCESS_MODULE[rawTab]
+  const tabLevel = tabAccessKey ? moduleLevel(tabAccessKey) : 'edit'
+  const effectiveTab = tabLevel === 'none' ? '__no_access' : rawTab
 
   const onTrial = isTrialActive(org)
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
 
-  const handleSignOut = () => supabase.auth.signOut()
+  // Await the sign-out before navigating: replacing the location mid-flight can
+  // tear the page down before Supabase has cleared the persisted session, which
+  // leaves a stale token behind for the next load to pick up.
+  const handleSignOut = async () => {
+    try { await supabase.auth.signOut() } catch (e) { /* sign out best-effort */ }
+    redirectToSignIn()
+  }
   const userEmail = session?.user?.email || ''
   const [userProfile, setUserProfile] = useState(null)
   const [showProfile, setShowProfile] = useState(false)
@@ -582,10 +656,10 @@ export default function Dashboard({ session, org }) {
   // user may create. An action that opens a locked screen is worse than no
   // action at all.
   const createActions = React.useMemo(
-    () => visibleItems(CREATE_ACTIONS, { hasModule, isAdmin })
+    () => visibleItems(CREATE_ACTIONS, { hasModule, isAdmin, moduleLevel })
       .map(a => ({ ...a, label: a.label || `${a.labelPrefix || ''}${terms[a.termKey] || ''}`.trim() })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [org?.id, org?.modules, isAdmin, terms]
+    [org?.id, org?.modules, isAdmin, terms, accessLevels]
   )
 
   const [unreadSubs, setUnreadSubs] = useState([])
@@ -625,7 +699,7 @@ export default function Dashboard({ session, org }) {
         boxShadow: isTablet && tabletNavOpen ? '0 0 60px rgba(0,0,0,0.45)' : 'none',
       }}>
         <style>{`@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.4)}}.sb-nav::-webkit-scrollbar{width:3px}.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:99px}`}</style>
-        <div style={{ position:'absolute',top:-60,left:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle, ${primary}20, transparent 70%)`,pointerEvents:'none',zIndex:0 }} />
+        <div style={{ position:'absolute',top:-60,left:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle, var(--org-a10), transparent 70%)`,pointerEvents:'none',zIndex:0 }} />
         <div style={{ position:'absolute',bottom:80,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%)',pointerEvents:'none',zIndex:0 }} />
 
         {/* COLLAPSE BUTTON — desktop only; tablet uses the burger to open/close instead */}
@@ -642,15 +716,15 @@ export default function Dashboard({ session, org }) {
         )}
 
         {/* ORG HEADER */}
-        <div style={{ padding: '16px 12px 14px', borderBottom: `1px solid ${primary}22`, background: `linear-gradient(180deg, ${primary}14, transparent)`, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}, ${primary}44)` }} />
+        <div style={{ padding: '16px 12px 14px', borderBottom: `1px solid var(--org-a10)`, background: `linear-gradient(180deg, var(--org-a10), transparent)`, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}, var(--org-a20))` }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain', flexShrink: 0, background: 'rgba(255,255,255,0.95)', padding: 3, border: `1.5px solid ${primary}40` }} />
+            <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain', flexShrink: 0, background: 'rgba(255,255,255,0.95)', padding: 3, border: `1.5px solid var(--org-a20)` }} />
             {!sidebarCollapsed && <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-display, sans-serif)' }}>{orgName}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', flexShrink: 0, boxShadow: '0 0 4px #22C55E' }} />
-                <span style={{ background: primary + '25', color: primary, borderRadius: 6, padding: '1px 7px', fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8, border: `1px solid ${primary}35` }}>{plan}</span>
+                <span style={{ background: primary + '25', color: primary, borderRadius: 6, padding: '1px 7px', fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8, border: `1px solid var(--org-a20)` }}>{plan}</span>
               </div>
             </div>}
           </div>
@@ -681,7 +755,7 @@ export default function Dashboard({ session, org }) {
         <div className="sb-nav" style={{ flex: 1, padding: '0 8px 8px', overflowY: 'auto' }}>
 
           {NAV_SECTIONS.map(section => {
-            const items = visibleItems(section.items, { hasModule, isAdmin })
+            const items = visibleItems(section.items, { hasModule, isAdmin, moduleLevel })
             if (!items.length) return null
             return (
               <SidebarSection key={section.id} title={section.label} collapsed={sidebarCollapsed}>
@@ -704,7 +778,7 @@ export default function Dashboard({ session, org }) {
           <div style={{ height: 1, margin: '4px 12px 12px', background: 'rgba(255,255,255,0.06)' }} />
 
           {NAV_GROUPS.map(group => {
-            const items = visibleItems(group.items, { hasModule, isAdmin })
+            const items = visibleItems(group.items, { hasModule, isAdmin, moduleLevel })
             if (!items.length) return null
             const active = activeGroup === group.id
             return (
@@ -822,7 +896,7 @@ export default function Dashboard({ session, org }) {
       )}
 
       {/* MAIN CONTENT */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingTop: isMobileBottomNav ? 'env(safe-area-inset-top, 0px)' : 0, paddingBottom: isMobileBottomNav ? 'calc(64px + env(safe-area-inset-bottom, 0px))' : 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, paddingTop: isMobileBottomNav ? 'env(safe-area-inset-top, 0px)' : 0, paddingBottom: isMobileBottomNav ? 'calc(76px + env(safe-area-inset-bottom, 0px))' : 0 }}>
         <div id="ls-main-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', WebkitOverflowScrolling: 'touch' }}>
           {tab !== 'registers' && tab !== 'home' && (
             <FloatingHeader
@@ -847,55 +921,64 @@ export default function Dashboard({ session, org }) {
                       {daysLeft === 0 ? 'Your trial expires today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left on your free trial`}
                     </span>
                   </div>
-                  <a href="mailto:hello@launchsession.co.uk?subject=Upgrade LaunchSession" style={{ fontSize: 12, fontWeight: 700, color: urgent ? '#DC2626' : '#3B82F6', textDecoration: 'none' }}>Upgrade →</a>
+                  <a href="mailto:hello@launchsession.co.uk?subject=Upgrade LaunchSession" style={{ fontSize: 12, fontWeight: 700, color: urgent ? '#DC2626' : '#3B82F6', textDecoration: 'none' }}>Upgrade <Icon name="→" /></a>
                 </div>
               </div>
             )
           })()}
+          {effectiveTab === '__no_access' && (
+            <NoModuleAccess
+              label={(ACCESS_MODULES.find(m => m.key === tabAccessKey) || {}).label || 'This area'}
+              icon={(ACCESS_MODULES.find(m => m.key === tabAccessKey) || {}).icon}
+              onNavigate={handleSetTab}
+            />
+          )}
+          {tabLevel === 'view' && <ViewOnlyBanner />}
+
           {/* ── BASE MODULES — always free ── */}
-          {tab === 'today'      && (isAdmin
+          {effectiveTab === 'today'      && (isAdmin
             ? <Today org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />
             : <RestrictedModule label="Today" icon="⚡" onNavigate={handleSetTab} />)}
-          {tab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
-          {tab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
-          {tab === 'projects'   && <ProjectOverview org={org} session={session} projectId={openProjectId} onNavigate={handleSetTab} onBack={() => handleSetTab('projects_list')} />}
-          {tab === 'projects_list' && <ProjectsList org={org} session={session} onNavigate={handleSetTab} />}
-          {tab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
-          {tab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
-          {tab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} initialOpenRequestsTab={openRegRequestsTab} /></ChildrenGate>}
-          {tab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
-          {tab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'settings'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
+          {effectiveTab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
+          {effectiveTab === 'projects'   && <ProjectOverview org={org} session={session} projectId={openProjectId} onNavigate={handleSetTab} onBack={() => handleSetTab('projects_list')} />}
+          {effectiveTab === 'projects_list' && <ProjectsList org={org} session={session} onNavigate={handleSetTab} />}
+          {effectiveTab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
+          {effectiveTab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
+          {effectiveTab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} initialOpenRequestsTab={openRegRequestsTab} /></ChildrenGate>}
+          {effectiveTab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
+          {effectiveTab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'settings'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── DELIVERY PACK ── */}
-          {tab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'newsletter' && (hasModule('messaging')  ? <NewsletterStudio org={org} session={session} />            : <LockedModule moduleKey="messaging"  label="Newsletter" icon="📨" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── SAFEGUARDING PACK ── */}
-          {tab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingGate org={org} session={session}><Safeguarding org={org} session={session} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} /></SafeguardingGate>                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'case_management' && (hasModule('case_management') ? <CaseManagement org={org} session={session} initialOpenCaseId={openCaseId} />                        : <LockedModule moduleKey="case_management" label="Case Management" icon="📁" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} userProfile={userProfile} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingHub org={org} session={session} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} initialOpenCaseId={openCaseId} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding Hub"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} userProfile={userProfile} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── GROWTH PACK ── */}
-          {tab === 'reports'         && (hasModule('reports')         ? <Reports org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />                                : <LockedModule moduleKey="reports"         label="Reports"           icon="📊" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'impact_outcomes' && (hasModule('impact_outcomes') ? <ImpactOutcomes org={org} session={session} isAdmin={isAdmin} />                        : <LockedModule moduleKey="impact_outcomes" label="Impact & Outcomes" icon="🌱" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'fundraising'     && (hasModule('fundraising')     ? <FundraisingGate org={org} session={session}><Fundraising org={org} session={session} isAdmin={isAdmin} /></FundraisingGate>                           : <LockedModule moduleKey="fundraising"     label="Fundraising"       icon="💷" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'reports'         && (hasModule('reports')         ? <Reports org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />                                : <LockedModule moduleKey="reports"         label="Reports"           icon="📊" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'impact_outcomes' && (hasModule('impact_outcomes') ? <ImpactOutcomes org={org} session={session} isAdmin={isAdmin} />                        : <LockedModule moduleKey="impact_outcomes" label="Impact & Outcomes" icon="🌱" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'fundraising'     && (hasModule('fundraising')     ? <FundraisingGate org={org} session={session}><Fundraising org={org} session={session} isAdmin={isAdmin} /></FundraisingGate>                           : <LockedModule moduleKey="fundraising"     label="Fundraising"       icon="💷" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── OPERATIONS PACK ── */}
-          {tab === 'hr'               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : <HR org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} hasHRModule={hasModule('hr')} />)}
-          {tab === 'payments'         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'hr'               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : <HR org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} hasHRModule={hasModule('hr')} />)}
+          {effectiveTab === 'payments'         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── LEGACY / COMING SOON ── */}
-          {tab === 'mentoring'    && (hasModule('mentoring') ? <Mentoring org={org} session={session} /> : <LockedModule moduleKey="mentoring" label="Mentoring" icon="🤝" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {tab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
+          {effectiveTab === 'mentoring'    && (hasModule('mentoring') ? <Mentoring org={org} session={session} /> : <LockedModule moduleKey="mentoring" label="Mentoring" icon="🤝" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','gallery','safeguarding','forms','case_management','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today'].includes(tab) && (
+          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','newsletter','gallery','safeguarding','forms','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','__no_access'].includes(effectiveTab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
@@ -952,7 +1035,7 @@ export default function Dashboard({ session, org }) {
                   { key: 'calendar', label: 'Calendar', icon: '📅' },
                   { key: 'team', label: 'Team & Staff', icon: '👥' },
                   { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
-                  { key: 'safeguarding', label: 'Safeguarding', icon: '🛡️' },
+                  { key: 'safeguarding', label: 'Safeguarding Hub', icon: '🛡️' },
                   { key: 'reports', label: 'Reports', icon: '📊' },
                   { key: 'settings', label: 'Settings', icon: '⚙️' }
                 ].filter(item => !ADMIN_ONLY_TABS.includes(item.key) || isAdmin).map(item => (
@@ -972,7 +1055,7 @@ export default function Dashboard({ session, org }) {
                       cursor: 'pointer'
                     }}
                   >
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
+                    <div style={{ fontSize: 24, marginBottom: 8, color: 'var(--text)' }}><Icon name={item.icon} size={24} /></div>
                     <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)' }}>{item.label}</div>
                     {item.badge > 0 && (
                       <span style={{ position: 'absolute', top: 10, right: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, borderRadius: 99, minWidth: 17, height: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
@@ -1022,7 +1105,7 @@ export default function Dashboard({ session, org }) {
           session={session}
           org={org}
           onClose={() => setShowProfile(false)}
-          onSignOut={() => { setShowProfile(false); supabase.auth.signOut() }}
+          onSignOut={() => { setShowProfile(false); handleSignOut() }}
           onProfileUpdate={refreshUserProfile}
         />
       )}

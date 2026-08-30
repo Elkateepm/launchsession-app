@@ -7,6 +7,7 @@ import QRShareSheet from '../shared/QRShareSheet'
 import { Avatar, glass, inputStyle, btnGhost, btnPrimary } from '../volunteers/vh_shared'
 import ChildPaymentsCard from '../payments/ChildPaymentsCard'
 import { useTerms } from '../../context/OrgContext'
+import Icon from '../../lib/icons'
 
 const CONSENT_TYPES = [
   { key: 'photo', label: 'Photo consent' },
@@ -211,7 +212,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
             ['incomplete', 'Profiles incomplete'],
           ].map(([key, label]) => (
             <button key={label} onClick={() => setQuickFilter(key)}
-              style={{ padding: '7px 14px', borderRadius: 99, border: quickFilter === key ? `2px solid ${primary}` : '1px solid rgba(15,23,42,0.1)', background: quickFilter === key ? `${primary}14` : '#fff', color: quickFilter === key ? primary : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', borderRadius: 99, border: quickFilter === key ? `2px solid ${primary}` : '1px solid rgba(15,23,42,0.1)', background: quickFilter === key ? 'var(--org-a10)' : '#fff', color: quickFilter === key ? primary : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
               {label}
             </button>
           ))}
@@ -220,7 +221,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
         {/* Search + group filter */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', flex: '1 1 260px' }}>
-            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}>🔍</span>
+            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}><Icon name="🔍" /></span>
             <input style={{ ...inputStyle, paddingLeft: 32 }} placeholder="Search by name, parent, school, group…" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <select style={{ ...inputStyle, width: 170 }} value={groupFilter} onChange={e => setGroupFilter(e.target.value)}>
@@ -238,7 +239,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
               </div>
               {filtered.length === 0 && !loading ? (
                 <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 36, marginBottom: 10 }}>🧒</div>
+                  <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="🧒" /></div>
                   <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>No {terms.people} found</div>
                   <div style={{ fontSize: 12.5, color: '#94A3B8' }}>Try adjusting your search or filters.</div>
                 </div>
@@ -250,7 +251,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
                     const chips = medicalAlerts(c)
                     return (
                       <div key={c.id} onClick={() => setSelectedId(c.id)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSelected ? `${primary}0c` : 'transparent', borderLeft: `3px solid ${isSelected ? primary : 'transparent'}` }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSelected ? 'var(--org-a05)' : 'transparent', borderLeft: `3px solid ${isSelected ? primary : 'transparent'}` }}>
                         <Avatar name={`${c.first_name} ${c.last_name}`} photoUrl={c.photo_url} size={38} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.first_name} {c.last_name}</div>
@@ -370,7 +371,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
 
   return (
     <div style={glass({ padding: 20 })}>
-      {isMobile && <button onClick={onBack} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}>← Back to directory</button>}
+      {isMobile && <button onClick={onBack} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}><Icon name="←" /> Back to directory</button>}
 
       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap' }}>
         <Avatar name={`${child.first_name} ${child.last_name}`} photoUrl={child.photo_url} size={56} />
@@ -391,7 +392,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
       {/* Alert banners */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 10, marginBottom: 18 }}>
         <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 12, padding: 12 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 800, color: '#B91C1C', marginBottom: 6 }}>❤️ Medical alerts</div>
+          <div style={{ fontSize: 11.5, fontWeight: 800, color: '#B91C1C', marginBottom: 6 }}><Icon name="❤️" /> Medical alerts</div>
           {medicalAlerts(child).length === 0 ? <div style={{ fontSize: 11.5, color: '#94A3B8' }}>None recorded</div> : (
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
               {medicalAlerts(child).map(ch => <span key={ch.label} style={{ fontSize: 10.5, fontWeight: 800, color: ch.color, background: ch.bg, borderRadius: 99, padding: '2px 8px' }}>{ch.label}</span>)}
@@ -400,12 +401,12 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
           {child.medication_details && <div style={{ fontSize: 11, color: '#7F1D1D' }}>{child.medication_details}</div>}
         </div>
         <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: 12 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 800, color: '#B45309', marginBottom: 6 }}>🛡️ Safeguarding / Support</div>
+          <div style={{ fontSize: 11.5, fontWeight: 800, color: '#B45309', marginBottom: 6 }}><Icon name="🛡️" /> Safeguarding / Support</div>
           <div style={{ fontSize: 11.5, color: child.has_behaviour_plan ? '#92400E' : '#94A3B8' }}>{child.has_behaviour_plan ? 'Support plan in place' : 'None recorded'}</div>
           {child.behaviour_plan_notes && <div style={{ fontSize: 11, color: '#92400E', marginTop: 4 }}>{child.behaviour_plan_notes}</div>}
         </div>
         <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: 12 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 800, color: '#15803D', marginBottom: 6 }}>🚗 Collection / Travel</div>
+          <div style={{ fontSize: 11.5, fontWeight: 800, color: '#15803D', marginBottom: 6 }}><Icon name="🚗" /> Collection / Travel</div>
           <div style={{ fontSize: 11.5, color: '#166534' }}>{child.travel_consent ? 'Can travel home' : 'Must be collected'}</div>
           {child.collection_restricted && <div style={{ fontSize: 11, color: '#B91C1C', marginTop: 4, fontWeight: 700 }}>⚠ Collection restricted{child.collection_restriction_note ? `: ${child.collection_restriction_note}` : ''}</div>}
         </div>
@@ -414,7 +415,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
         {/* About */}
         <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>👤 About</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}><Icon name="👤" /> About</div>
           <Row label="School / Setting" value={child.school} />
           <Row label="SEN" value={child.sen} />
           <Row label="Membership" value={child.is_walk_in ? 'Walk-in' : 'Standard'} />
@@ -424,9 +425,9 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
         {/* Contacts */}
         <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A' }}>📞 Contacts</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A' }}><Icon name="📞" /> Contacts</div>
             {!editingContact && (
-              <button onClick={() => setEditingContact(true)} style={{ background: 'none', border: 'none', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>✏️ Edit</button>
+              <button onClick={() => setEditingContact(true)} style={{ background: 'none', border: 'none', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="✏️" /> Edit</button>
             )}
           </div>
           {editingContact ? (
@@ -452,9 +453,9 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
               <Row label="Email" value={child.parent_email} />
               <Row label="Emergency contact" value={child.emergency_contact_name} />
               <Row label="Emergency phone" value={child.emergency_contact_phone} />
-              {!child.parent_email && <div style={{ fontSize: 11, color: '#B45309', marginTop: 4 }}>⚠ No email on file — add one to enable emailing this parent.</div>}
+              {!child.parent_email && <div style={{ fontSize: 11, color: '#B45309', marginTop: 4 }}><Icon name="⚠" /> No email on file — add one to enable emailing this parent.</div>}
               {child.parent_phone && (
-                <a href={`tel:${child.parent_phone}`} style={{ display: 'inline-block', marginTop: 8, padding: '7px 14px', borderRadius: 9, border: `1px solid ${primary}40`, color: primary, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>📞 Call parent</a>
+                <a href={`tel:${child.parent_phone}`} style={{ display: 'inline-block', marginTop: 8, padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, color: primary, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}><Icon name="📞" /> Call parent</a>
               )}
             </>
           )}
@@ -462,7 +463,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
 
         {/* Consents */}
         <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>✅ Permissions & Consents</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}><Icon name="✅" /> Permissions & Consents</div>
           {CONSENT_TYPES.map(t => {
             const rec = consentRec[t.key]
             const granted = rec?.status === 'granted'
@@ -480,7 +481,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
 
         {/* Medical & Safety */}
         <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>🩹 Medical & Safety</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}><Icon name="🩹" /> Medical & Safety</div>
           <Row label="Allergies" value={child.allergies} />
           <Row label="Medical notes" value={child.medical_notes} />
           <Row label="Medication" value={child.medication_details} />
@@ -488,7 +489,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
 
         {/* Session Notes */}
         <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>📝 Session Notes</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}><Icon name="📝" /> Session Notes</div>
           {notes.length === 0 ? <div style={{ fontSize: 12, color: '#94A3B8' }}>No notes recorded yet.</div> : notes.map(n => (
             <div key={n.id} style={{ padding: '7px 0', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
               <div style={{ fontSize: 11.5, color: '#334155' }}>{n.content}</div>
@@ -499,7 +500,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
 
         {/* Session Summary */}
         <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>📊 Session Summary</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}><Icon name="📊" /> Session Summary</div>
           <Row label="Total attended" value={signedInCount} />
           <Row label="Absences" value={absenceCount} />
           {latestAtt && <Row label="Last activity" value={new Date(latestAtt.created_at).toLocaleDateString('en-GB')} />}
@@ -510,7 +511,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
       </div>
 
       {child.parent_phone && (
-        <a href={`sms:${child.parent_phone}`} style={{ display: 'inline-block', marginTop: 16, padding: '10px 18px', borderRadius: 10, textDecoration: 'none', ...btnPrimary(primary) }}>✉️ Message parent</a>
+        <a href={`sms:${child.parent_phone}`} style={{ display: 'inline-block', marginTop: 16, padding: '10px 18px', borderRadius: 10, textDecoration: 'none', ...btnPrimary(primary) }}><Icon name="✉️" /> Message parent</a>
       )}
     </div>
   )
@@ -584,8 +585,8 @@ function OnSiteTab({ children, latestAttByChild, groupLabel, primary, org, authU
               <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>
               <div style={{ fontSize: 11, color: '#94A3B8' }}>{groupLabel(c.group_name) || 'Ungrouped'} · Signed in {att?.signed_in_at ? new Date(att.signed_in_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
             </div>
-            {hasMedicalAlert(c) && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#B91C1C', background: '#FEE2E2', borderRadius: 99, padding: '2px 8px' }}>❤️ Alert</span>}
-            <button onClick={() => signOut(c.id)} style={{ padding: '7px 14px', borderRadius: 9, border: `1px solid ${primary}40`, background: '#fff', color: primary, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Sign out</button>
+            {hasMedicalAlert(c) && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#B91C1C', background: '#FEE2E2', borderRadius: 99, padding: '2px 8px' }}><Icon name="❤️" /> Alert</span>}
+            <button onClick={() => signOut(c.id)} style={{ padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, background: '#fff', color: primary, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Sign out</button>
           </div>
         )
       })}
@@ -634,7 +635,7 @@ function ConsentsTab({ children, consentsByChild, groupLabel, primary, onOpenChi
         {children.length} {children.length === 1 ? 'record needs' : 'records need'} consent follow-up
       </div>
       {children.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>✅ All consents are up to date.</div>
+        <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}><Icon name="✅" /> All consents are up to date.</div>
       ) : children.map(c => {
         const rec = consentsByChild[c.id] || {}
         const missing = CONSENT_TYPES.filter(t => rec[t.key]?.status !== 'granted')
@@ -648,7 +649,7 @@ function ConsentsTab({ children, consentsByChild, groupLabel, primary, onOpenChi
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 220 }}>
               {missing.map(t => <span key={t.key} style={{ fontSize: 9.5, fontWeight: 800, color: '#7C3AED', background: '#EDE9FE', borderRadius: 99, padding: '2px 8px' }}>{t.label}</span>)}
             </div>
-            <span style={{ color: primary, fontSize: 12, fontWeight: 700 }}>View →</span>
+            <span style={{ color: primary, fontSize: 12, fontWeight: 700 }}>View <Icon name="→" /></span>
           </div>
         )
       })}
@@ -674,7 +675,7 @@ function MedicalTab({ children, groupLabel, primary, onOpenChild }) {
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 220 }}>
             {medicalAlerts(c).map(ch => <span key={ch.label} style={{ fontSize: 9.5, fontWeight: 800, color: ch.color, background: ch.bg, borderRadius: 99, padding: '2px 8px' }}>{ch.label}</span>)}
           </div>
-          <span style={{ color: primary, fontSize: 12, fontWeight: 700 }}>View →</span>
+          <span style={{ color: primary, fontSize: 12, fontWeight: 700 }}>View <Icon name="→" /></span>
         </div>
       ))}
     </div>
@@ -750,7 +751,7 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
         {pending.length === 0 ? (
           <div style={{ padding: 30, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>No pending registrations.</div>
         ) : pending.map(r => (
-          <div key={r.id} onClick={() => setOpenId(r.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: openId === r.id ? `${primary}0c` : '#FFFBFA', borderLeft: '3px solid #FCA5A5' }}>
+          <div key={r.id} onClick={() => setOpenId(r.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: openId === r.id ? 'var(--org-a05)' : '#FFFBFA', borderLeft: '3px solid #FCA5A5' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{r.first_name} {r.last_name}</div>
               <div style={{ fontSize: 11, color: '#94A3B8' }}>Submitted {new Date(r.submitted_at).toLocaleDateString('en-GB')} · {r.parent_name}</div>
@@ -873,7 +874,7 @@ export function InviteParentModal({ org, onClose }) {
             {sending ? 'Sending…' : 'Send'}
           </button>
         </div>
-        {sendResult?.ok && <div style={{ fontSize: 12, color: '#15803D', fontWeight: 700, marginBottom: 14 }}>✓ Invite sent.</div>}
+        {sendResult?.ok && <div style={{ fontSize: 12, color: '#15803D', fontWeight: 700, marginBottom: 14 }}><Icon name="✓" /> Invite sent.</div>}
         {sendResult?.error && <div style={{ fontSize: 12, color: '#DC2626', fontWeight: 700, marginBottom: 14 }}>{sendResult.error}</div>}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 16px' }}>

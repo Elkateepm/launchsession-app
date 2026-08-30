@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { CATEGORIES } from '../../lib/resourceHelpers'
 import ResourceCard from './ResourceCard'
 import ResourceEmptyState from './ResourceEmptyState'
+import Icon from '../../lib/icons'
 
 export default function ResourceInventory({ resources, bookings, venues, onBook, onOpen, onQuickAction, onAddResource }) {
   const [search, setSearch] = useState('')
@@ -62,7 +63,7 @@ export default function ResourceInventory({ resources, bookings, venues, onBook,
         {venueOptions.length > 0 && (
           <select value={venueId} onChange={e => setVenueId(e.target.value)} style={selStyle}>
             <option value="all">All venues</option>
-            {venueOptions.map(v => <option key={v.id} value={v.id}>📍 {v.name}</option>)}
+            {venueOptions.map(v => <option key={v.id} value={v.id}><Icon name="📍" /> {v.name}</option>)}
           </select>
         )}
         {locations.length > 0 && (
@@ -78,7 +79,7 @@ export default function ResourceInventory({ resources, bookings, venues, onBook,
         </select>
         <div style={{ display: 'flex', border: '1.5px solid #E5E7EB', borderRadius: 9, overflow: 'hidden' }}>
           <button onClick={() => setView('grid')} style={{ padding: '8px 12px', border: 'none', background: view === 'grid' ? '#7C3AED' : '#fff', color: view === 'grid' ? '#fff' : '#6B7280', cursor: 'pointer' }}>▦</button>
-          <button onClick={() => setView('list')} style={{ padding: '8px 12px', border: 'none', background: view === 'list' ? '#7C3AED' : '#fff', color: view === 'list' ? '#fff' : '#6B7280', cursor: 'pointer' }}>☰</button>
+          <button onClick={() => setView('list')} style={{ padding: '8px 12px', border: 'none', background: view === 'list' ? '#7C3AED' : '#fff', color: view === 'list' ? '#fff' : '#6B7280', cursor: 'pointer' }}><Icon name="☰" /></button>
         </div>
       </div>
 

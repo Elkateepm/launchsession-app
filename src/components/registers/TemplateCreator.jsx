@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 // Full set of fields available on the children table — the template creator lets
 // orgs pick which of these to include in their import, in what order, and whether
@@ -7,16 +8,59 @@ import { supabase } from '../../lib/supabase'
 // Blue, etc.) are managed separately in Branding/Settings — the template only
 // ever references the generic "group_name" column, never specific group values.
 export const AVAILABLE_FIELDS = [
-  { key: 'first_name',              label: 'First Name',              icon: '👤', alwaysRequired: true },
-  { key: 'last_name',               label: 'Last Name',               icon: '👤', alwaysRequired: true },
-  { key: 'date_of_birth',           label: 'Date of Birth',           icon: '🎂' },
-  { key: 'group_name',              label: 'Group',                   icon: '🏷️' },
-  { key: 'allergies',               label: 'Allergies',                icon: '⚠️' },
-  { key: 'medical_notes',           label: 'Medical Notes',           icon: '⚕️' },
-  { key: 'sen',                     label: 'SEN / Additional Needs',  icon: '💜' },
-  { key: 'emergency_contact_name',  label: 'Emergency Contact Name',  icon: '📞' },
-  { key: 'emergency_contact_phone', label: 'Emergency Contact Phone', icon: '📱' },
+  // Identity
+  { key: 'first_name',              label: 'First Name',              icon: '👤', section: 'About them', alwaysRequired: true },
+  { key: 'last_name',               label: 'Last Name',               icon: '👤', section: 'About them', alwaysRequired: true },
+  { key: 'date_of_birth',           label: 'Date of Birth',           icon: '🎂', section: 'About them', hint: 'YYYY-MM-DD' },
+  { key: 'group_name',              label: 'Group',                   icon: '🏷️', section: 'About them' },
+  { key: 'school',                  label: 'School',                  icon: '🎓', section: 'About them' },
+
+  // Parent / carer. parent_email is what the newsletter's Parents audience
+  // reads, so leaving it out of an import leaves that mailing list empty.
+  { key: 'parent_name',             label: 'Parent / Carer Name',     icon: '👪', section: 'Parent / carer' },
+  { key: 'parent_phone',            label: 'Parent / Carer Phone',    icon: '📞', section: 'Parent / carer' },
+  { key: 'parent_email',            label: 'Parent / Carer Email',    icon: '✉️', section: 'Parent / carer', hint: 'Used for newsletters and form invites' },
+  { key: 'emergency_contact_name',  label: 'Emergency Contact Name',  icon: '🚨', section: 'Parent / carer' },
+  { key: 'emergency_contact_phone', label: 'Emergency Contact Phone', icon: '📱', section: 'Parent / carer' },
+
+  // Health
+  { key: 'allergies',               label: 'Allergies',               icon: '⚠️', section: 'Health & support' },
+  { key: 'medical_notes',           label: 'Medical Notes',           icon: '⚕️', section: 'Health & support' },
+  { key: 'has_asthma',              label: 'Has Asthma',              icon: '🫁', section: 'Health & support', bool: true },
+  { key: 'has_diabetes',            label: 'Has Diabetes',            icon: '🩸', section: 'Health & support', bool: true },
+  { key: 'has_epipen',              label: 'Carries an EpiPen',       icon: '💉', section: 'Health & support', bool: true },
+  { key: 'takes_medication',        label: 'Takes Medication',        icon: '💊', section: 'Health & support', bool: true },
+  { key: 'medication_details',      label: 'Medication Details',      icon: '💊', section: 'Health & support' },
+  { key: 'sen',                     label: 'SEN / Additional Needs',  icon: '💜', section: 'Health & support' },
+  { key: 'has_behaviour_plan',      label: 'Has a Support Plan',      icon: '🧭', section: 'Health & support', bool: true },
+  { key: 'behaviour_plan_notes',    label: 'Support Plan Notes',      icon: '🧭', section: 'Health & support' },
+
+  // Permissions and free text
+  { key: 'travel_consent',          label: 'Can Travel Home Alone',   icon: '🚶', section: 'Other', bool: true },
+  { key: 'notes',                   label: 'Other Notes',             icon: '📝', section: 'Other' },
 ]
+
+// Yes/no columns. A spreadsheet will have "Yes", "y", "TRUE" or "1" in these
+// and the importer coerces all of them; anything else counts as no.
+export const BOOLEAN_KEYS = new Set(AVAILABLE_FIELDS.filter(f => f.bool).map(f => f.key))
+
+// Sections, in the order the creator should show them.
+export const FIELD_SECTIONS = ['About them', 'Parent / carer', 'Health & support', 'Other']
+
+// A realistic sample row for the downloadable CSV. Blank is worse than wrong
+// here: someone filling this in needs to see the date format and how a yes/no
+// column is meant to look.
+export const SAMPLE_ROW = {
+  first_name: 'Sarah', last_name: 'Jones', date_of_birth: '2015-06-14',
+  group_name: 'Tigers', school: 'Central Primary',
+  parent_name: 'Jane Jones', parent_phone: '07700900000', parent_email: 'jane.jones@example.com',
+  emergency_contact_name: 'Mark Jones', emergency_contact_phone: '07700900001',
+  allergies: 'Peanuts', medical_notes: 'Mild asthma, inhaler in bag',
+  has_asthma: 'Yes', has_diabetes: 'No', has_epipen: 'Yes',
+  takes_medication: 'Yes', medication_details: 'Blue inhaler as needed',
+  sen: 'EHCP in place', has_behaviour_plan: 'No', behaviour_plan_notes: '',
+  travel_consent: 'No', notes: '',
+}
 
 export function useImportTemplates(orgId) {
   const [templates, setTemplates] = useState([])
@@ -102,8 +146,8 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
             <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', fontSize: 16, color: '#6B7280' }}>×</button>
           </div>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Template name (e.g. Standard Register, Trip Sign-up)"
-            style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: 12, border: `1.5px solid ${primary}30`, fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit' }} />
-          {error && <div style={{ marginTop: 10, background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: 12, border: `1.5px solid var(--org-a20)`, fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit' }} />
+          {error && <div style={{ marginTop: 10, background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>}
         </div>
 
         {/* Field list */}
@@ -121,7 +165,7 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
                   style={{ width: 22, height: 22, borderRadius: 7, border: `2px solid ${included ? primary : '#D1D5DB'}`, background: included ? primary : '#fff', cursor: locked ? 'default' : 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 900 }}>
                   {included ? '✓' : ''}
                 </button>
-                <span style={{ fontSize: 15, flexShrink: 0 }}>{fieldDef.icon}</span>
+                <span style={{ fontSize: 15, flexShrink: 0 }}><Icon name={fieldDef.icon} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{fieldDef.label}</div>
                   {locked && <div style={{ fontSize: 10, color: '#9CA3AF' }}>Always required</div>}
@@ -143,7 +187,7 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
           })}
 
           <div style={{ marginTop: 14, background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: 12, padding: '12px 14px', fontSize: 12, color: '#6B7280', lineHeight: 1.5 }}>
-            💡 <strong>Group</strong> stays flexible — this template only reserves a "Group" column. The actual group names and colours your org uses (Red, Blue, etc.) are managed in <strong>Settings → Branding</strong>, so this template works no matter how your groups change.
+            💡 <strong>Group</strong> stays flexible — this template only reserves a "Group" column. The actual group names and colours your org uses (Red, Blue, etc.) are managed in <strong>Settings <Icon name="→" /> Branding</strong>, so this template works no matter how your groups change.
           </div>
         </div>
 
@@ -190,9 +234,9 @@ export function TemplatePicker({ org, onUseTemplate }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}>🧩 Import Templates</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}><Icon name="🧩" /> Import Templates</div>
         <button onClick={() => { setEditing(null); setShowCreator(true) }}
-          style={{ fontSize: 11, fontWeight: 800, color: primary, background: primary + '10', border: `1px solid ${primary}30`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}>
+          style={{ fontSize: 11, fontWeight: 800, color: primary, background: primary + '10', border: `1px solid var(--org-a20)`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}>
           + New
         </button>
       </div>
@@ -210,13 +254,13 @@ export function TemplatePicker({ org, onUseTemplate }) {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}>{t.name}</div>
                 <div style={{ display: 'flex', gap: 4 }}>
-                  <button onClick={() => { setEditing(t); setShowCreator(true) }} title="Edit" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, padding: 2 }}>✏️</button>
-                  <button onClick={() => handleDelete(t)} title="Delete" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, padding: 2 }}>🗑️</button>
+                  <button onClick={() => { setEditing(t); setShowCreator(true) }} title="Edit" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, padding: 2 }}><Icon name="✏️" /></button>
+                  <button onClick={() => handleDelete(t)} title="Delete" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, padding: 2 }}><Icon name="🗑️" /></button>
                 </div>
               </div>
               <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 8 }}>{t.fields.length} field{t.fields.length !== 1 ? 's' : ''}</div>
               <div style={{ display: 'flex', gap: 6 }}>
-                <button onClick={() => downloadTemplateCSV(t)} style={{ flex: 1, fontSize: 11, fontWeight: 700, color: '#6B7280', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '6px', cursor: 'pointer' }}>⬇ CSV</button>
+                <button onClick={() => downloadTemplateCSV(t)} style={{ flex: 1, fontSize: 11, fontWeight: 700, color: '#6B7280', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '6px', cursor: 'pointer' }}><Icon name="⬇" /> CSV</button>
                 <button onClick={() => onUseTemplate(t)} style={{ flex: 1, fontSize: 11, fontWeight: 800, color: '#fff', background: primary, border: 'none', borderRadius: 8, padding: '6px', cursor: 'pointer' }}>Use to Import</button>
               </div>
             </div>

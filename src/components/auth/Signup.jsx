@@ -7,6 +7,9 @@ import ProgressHeader from './onboarding/ProgressHeader'
 import SelectionCard from './onboarding/SelectionCard'
 import AnimatedInput from './onboarding/AnimatedInput'
 import { Icon } from './onboarding/icons'
+// Aliased: this file already imports an Icon from ./onboarding/icons,
+// and that one takes a `name` prop too, so the names genuinely collide.
+import LSIcon from '../../lib/icons'
 
 const DRAFT_KEY = 'ls_signup_draft_v2'
 
@@ -214,7 +217,7 @@ export default function Signup() {
   if (done) return (
     <OnboardingLayout wide={false}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 60, marginBottom: 16, lineHeight: 1 }}>🎉</div>
+        <div style={{ fontSize: 60, marginBottom: 16, lineHeight: 1 }}><LSIcon name="🎉" /></div>
         <h2 style={{ ...cardTitle, textAlign: 'center', marginBottom: 12 }}>You're all set!</h2>
         <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>We've sent a login link to</p>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#60A5FA', marginBottom: 20, wordBreak: 'break-all' }}>{email}</div>
@@ -238,7 +241,7 @@ export default function Signup() {
     <OnboardingLayout wide onBackHome={saveAndExit} panelStyle={launching ? { transition: 'opacity 0.5s ease', opacity: 0.3 } : undefined}>
       {/* Rocket-accent launch beat on final completion */}
       {launching && !reducedMotion && (
-        <div aria-hidden="true" style={{ position: 'fixed', left: '50%', bottom: '30%', fontSize: 28, animation: 'ls-rocket-up 700ms ease-out forwards', pointerEvents: 'none', zIndex: 300 }}>🚀</div>
+        <div aria-hidden="true" style={{ position: 'fixed', left: '50%', bottom: '30%', fontSize: 28, animation: 'ls-rocket-up 700ms ease-out forwards', pointerEvents: 'none', zIndex: 300 }}><LSIcon name="🚀" /></div>
       )}
 
       <ProgressHeader
@@ -354,7 +357,7 @@ export default function Signup() {
                     onKeyDown: e => e.key === 'Enter' && canContinue && goNext(),
                   }}
                 />
-                <Teach>⚡ Your login link arrives within seconds — no waiting on manual approval, no card required.</Teach>
+                <Teach><LSIcon name="⚡" /> Your login link arrives within seconds — no waiting on manual approval, no card required.</Teach>
               </div>
             )}
 
@@ -439,15 +442,15 @@ export default function Signup() {
       <div style={isMobile ? mobileStickyNav : { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, maxWidth: stepWide ? 460 : 'none', margin: !isMobile && stepWide ? '24px auto 0' : '24px 0 0' }}>
         <div style={{ display: 'flex', gap: 10 }}>
           {stepIndex > 0 && (
-            <button type="button" onClick={goBack} disabled={loading || navLocked} style={ghostBtn}>← Back</button>
+            <button type="button" onClick={goBack} disabled={loading || navLocked} style={ghostBtn}><LSIcon name="←" /> Back</button>
           )}
           {currentKey === 'review' ? (
             <button type="button" onClick={handleSubmit} disabled={loading || !canContinue} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, opacity: loading || !canContinue ? 0.6 : 1 }}>
-              {loading ? 'Saving…' : <>Create My Workspace <span className="ls-btn-arrow">→</span></>}
+              {loading ? 'Saving…' : <>Create My Workspace <span className="ls-btn-arrow"><LSIcon name="→" /></span></>}
             </button>
           ) : (
             <button type="button" onClick={goNext} disabled={!canContinue || navLocked} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, opacity: canContinue ? 1 : 0.4, cursor: canContinue ? 'pointer' : 'default' }}>
-              Continue <span className="ls-btn-arrow">→</span>
+              Continue <span className="ls-btn-arrow"><LSIcon name="→" /></span>
             </button>
           )}
         </div>
@@ -476,12 +479,12 @@ function LegalModal({ doc, onClose, onAgree }) {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
           <span style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{title}</span>
-          <button type="button" onClick={onClose} aria-label="Close" style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: 'rgba(255,255,255,0.6)', width: 30, height: 30, borderRadius: 9, cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>✕</button>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: 'rgba(255,255,255,0.6)', width: 30, height: 30, borderRadius: 9, cursor: 'pointer', fontSize: 16, lineHeight: 1 }}><LSIcon name="✕" /></button>
         </div>
         <iframe title={title} src={src} style={{ flex: 1, width: '100%', border: 'none', background: '#06091A' }} />
         <div style={{ display: 'flex', gap: 10, padding: '14px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
           <button type="button" onClick={onClose} style={{ ...ghostBtn, flex: 1, padding: '12px' }}>Close</button>
-          <button type="button" onClick={onAgree} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, padding: '12px' }}>I agree →</button>
+          <button type="button" onClick={onAgree} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, padding: '12px' }}>I agree <LSIcon name="→" /></button>
         </div>
       </div>
     </div>
@@ -509,7 +512,7 @@ function Teach({ children, security }) {
       backgroundRepeat: 'no-repeat',
       animation: reducedMotion ? 'ls-fade-in 200ms ease' : (security ? 'ls-fade-in 300ms ease, ls-border-sweep 1.1s 250ms ease-out 1' : 'ls-fade-in 300ms ease'),
     }}>
-      {security && <span aria-hidden="true" style={{ display: 'inline-block', marginRight: 2, animation: reducedMotion ? 'none' : 'ls-lock-pulse 500ms 350ms ease' }}>🔒</span>}
+      {security && <span aria-hidden="true" style={{ display: 'inline-block', marginRight: 2, animation: reducedMotion ? 'none' : 'ls-lock-pulse 500ms 350ms ease' }}><LSIcon name="🔒" /></span>}
       {children}
     </div>
   )

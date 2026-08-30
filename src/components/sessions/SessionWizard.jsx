@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { EmailFormModal } from '../forms/Forms'
 import FormBuilder from '../forms/FormBuilder'
 import { GroupsQuickSetupModal } from '../registers/Registers'
+import Icon from '../../lib/icons'
 
 // ─── CONSTANTS ──────────────────────────────────────────────────
 
@@ -147,7 +148,7 @@ function StepDot({ n, active, done, label: text, onClick, compact, color = ACCEN
         }}>
         <AnimatePresence mode="wait" initial={false}>
           {done && !active ? (
-            <motion.span key="check" initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 20 }}>✓</motion.span>
+            <motion.span key="check" initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 20 }}><Icon name="✓" /></motion.span>
           ) : (
             <motion.span key="num" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}>{n}</motion.span>
           )}
@@ -177,15 +178,15 @@ function LiveSummary({ form, leadName, expectedCount }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text2)' }}>
-          <span style={{ width: 16, textAlign: 'center' }}>📅</span>
+          <span style={{ width: 16, textAlign: 'center' }}><Icon name="📅" /></span>
           {form.session_date ? format(new Date(form.session_date), 'EEEE d MMMM') : '—'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text2)' }}>
-          <span style={{ width: 16, textAlign: 'center' }}>🕐</span>
+          <span style={{ width: 16, textAlign: 'center' }}><Icon name="🕐" /></span>
           {form.start_time || '--:--'} – {form.end_time || '--:--'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text2)' }}>
-          <span style={{ width: 16, textAlign: 'center' }}>📍</span>
+          <span style={{ width: 16, textAlign: 'center' }}><Icon name="📍" /></span>
           {form.location || 'No location set'}
         </div>
       </div>
@@ -244,7 +245,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
                   <AnimatePresence>
                     {active && (
                       <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                        style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: '50%', background: ACCENT, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${ACCENT}66` }}>✓</motion.div>
+                        style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: '50%', background: ACCENT, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${ACCENT}66` }}><Icon name="✓" /></motion.div>
                     )}
                   </AnimatePresence>
                   <div style={{ fontSize: 20, marginBottom: 6 }}>{t.icon || '📋'}</div>
@@ -282,10 +283,10 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
               <AnimatePresence>
                 {active && (
                   <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                    style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: t.color, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${t.color}66` }}>✓</motion.div>
+                    style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: t.color, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${t.color}66` }}><Icon name="✓" /></motion.div>
                 )}
               </AnimatePresence>
-              <motion.div animate={{ scale: active ? 1.08 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }} style={{ fontSize: isMobile ? 22 : 28, marginBottom: isMobile ? 6 : 8 }}>{t.icon}</motion.div>
+              <motion.div animate={{ scale: active ? 1.08 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }} style={{ fontSize: isMobile ? 22 : 28, marginBottom: isMobile ? 6 : 8 }}><Icon name={t.icon} /></motion.div>
               <div style={{ fontSize: isMobile ? 11.5 : 13, fontWeight: 700, color: active ? t.color : 'var(--text)', lineHeight: 1.25, transition: 'color 0.18s' }}>{t.label}</div>
             </motion.button>
           )
@@ -403,7 +404,7 @@ function StepDetails({ form, setForm, staff, org }) {
             <label style={label}>Capacity *</label>
             <div style={{ position: 'relative' }}>
               <input type="number" style={{ ...inp, paddingRight: 34 }} value={form.max_capacity} onChange={e => set('max_capacity', e.target.value)} placeholder="e.g. 24" />
-              <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, opacity: 0.4, pointerEvents: 'none' }}>👥</span>
+              <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, opacity: 0.4, pointerEvents: 'none' }}><Icon name="👥" /></span>
             </div>
           </div>
         </div>
@@ -614,7 +615,7 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
 
       {form.risk_assessment_required && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: '1.5px solid #FDE68A', background: '#FFFBEB', marginBottom: 16, fontSize: 12.5, color: '#92400E', fontWeight: 600 }}>
-          <span style={{ fontSize: 15 }}>🛡️</span>
+          <span style={{ fontSize: 15 }}><Icon name="🛡️" /></span>
           <span>The next step lets you attach an existing risk assessment or create one for this session.</span>
         </div>
       )}
@@ -753,7 +754,7 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
       border: '1px solid rgba(220,38,38,0.22)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: 'linear-gradient(135deg,#DC2626,#EF4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 4px 14px -4px rgba(220,38,38,0.6)' }}>🛡️</div>
+        <div style={{ width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: 'linear-gradient(135deg,#DC2626,#EF4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 4px 14px -4px rgba(220,38,38,0.6)' }}><Icon name="🛡️" /></div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.3 }}>Risk assessment</div>
           <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
@@ -813,7 +814,7 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
 
       {attached ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, border: '1.5px solid #BBF7D0', background: '#F0FDF4' }}>
-          <span style={{ fontSize: 18 }}>✅</span>
+          <span style={{ fontSize: 18 }}><Icon name="✅" /></span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{attached.name}</div>
             <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>
@@ -911,7 +912,7 @@ function ReadinessRow({ ok, label: text, severity = 'warn' }) {
       : { icon: '!', color: '#B45309', bg: '#FFFBEB', border: '#FDE68A' }
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid var(--border)' }}>
-      <span style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, background: tone.bg, border: `1px solid ${tone.border}`, color: tone.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>{tone.icon}</span>
+      <span style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, background: tone.bg, border: `1px solid ${tone.border}`, color: tone.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}><Icon name={tone.icon} /></span>
       <span style={{ fontSize: 13, color: ok ? 'var(--text2)' : tone.color, fontWeight: ok ? 500 : 700 }}>{text}</span>
     </div>
   )
@@ -1012,7 +1013,7 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
             {form.session_date && format(new Date(form.session_date), 'EEEE d MMMM yyyy')}
             {form.start_time ? ` · ${form.start_time}–${form.end_time}` : ''}
           </div>
-          {form.location && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>📍 {form.location}</div>}
+          {form.location && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}><Icon name="📍" /> {form.location}</div>}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
             {[
@@ -1048,7 +1049,7 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
           <SectionHeader icon="📎" title="Attached" color="#7C3AED" />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
             {attachedRa && (
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#B91C1C', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 99, padding: '5px 12px' }}>🛡️ {attachedRa.name}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#B91C1C', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 99, padding: '5px 12px' }}><Icon name="🛡️" /> {attachedRa.name}</span>
             )}
             {form.form_ids.length > 0 && (
               <span style={{ fontSize: 12, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 99, padding: '5px 12px' }}>
@@ -1056,7 +1057,7 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
               </span>
             )}
             {form.outcome_areas.map(a => (
-              <span key={a} style={{ fontSize: 12, fontWeight: 700, color: '#059669', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 99, padding: '5px 12px' }}>🎯 {a}</span>
+              <span key={a} style={{ fontSize: 12, fontWeight: 700, color: '#059669', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 99, padding: '5px 12px' }}><Icon name="🎯" /> {a}</span>
             ))}
           </div>
         </div>
@@ -1514,7 +1515,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
             initial={{ scale: 0, rotate: -20 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.05 }}
-            style={{ width: 80, height: 80, borderRadius: '50%', background: `radial-gradient(circle, ${doneType.color}22, transparent 70%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, position: 'relative' }}>🚀</motion.div>
+            style={{ width: 80, height: 80, borderRadius: '50%', background: `radial-gradient(circle, ${doneType.color}22, transparent 70%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, position: 'relative' }}><Icon name="🚀" /></motion.div>
         </div>
         <motion.h2 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.3 }} style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Your session is ready for launch</motion.h2>
         <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.3 }} style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 14 }}>
@@ -1522,7 +1523,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
         </motion.p>
         <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.26, duration: 0.25 }}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${doneType.color}15`, color: doneType.color, fontSize: 12, fontWeight: 800, borderRadius: 99, padding: '5px 14px', marginBottom: 28 }}>
-          <span>{doneType.icon}</span>{doneType.label}
+          <span><Icon name={doneType.icon} /></span>{doneType.label}
         </motion.div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
           {actions.map((a, i) => (

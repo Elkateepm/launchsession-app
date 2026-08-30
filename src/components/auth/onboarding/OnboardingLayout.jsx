@@ -2,6 +2,7 @@ import React from 'react'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import OnboardingStyles from './OnboardingStyles'
 import { STAGGER, DURATION } from './animations'
+import Icon from '../../../lib/icons'
 
 export function useReducedMotion() {
   const [reduced, setReduced] = React.useState(false)
@@ -74,9 +75,9 @@ export default function OnboardingLayout({ children, wide = true, panelStyle, on
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 22, flexWrap: 'wrap', textAlign: 'center', ...enterStyle(STAGGER.footer, 'ls-fade-in') }}>
-          <button onClick={onBackHome || (() => { window.location.href = '/landing.html' })} className="ls-footlink" style={footLink}>← Back to LaunchSession</button>
+          <button onClick={onBackHome || (() => { window.location.href = '/landing.html' })} className="ls-footlink" style={footLink}><Icon name="←" /> Back to LaunchSession</button>
           <Dot />
-          <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.35)' }}>🔒 Secure &amp; never shared</span>
+          <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.35)' }}><Icon name="🔒" /> Secure &amp; never shared</span>
           <Dot />
           <a href="/privacy.html" className="ls-footlink" style={footLink}>Privacy Policy</a>
           <Dot />
@@ -94,7 +95,7 @@ function Dot() {
 }
 
 const page = {
-  minHeight: '100vh',
+  minHeight: '100dvh',
   background: 'radial-gradient(circle at top left, #1a0b3b 0%, #07111f 42%, #020711 100%)',
   color: '#fff',
   padding: '32px 16px 48px',

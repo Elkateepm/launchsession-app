@@ -17,6 +17,8 @@ import { allowedModules } from '../../lib/moduleAccess'
 import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
+import shrinkImage from '../../lib/shrinkImage'
+import Icon from '../../lib/icons'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -175,7 +177,7 @@ function TimeRing({ kind, target, totalSeconds, isClosed, onClick }) {
           <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
           <circle cx="27" cy="27" r={RING_R} fill="none" stroke="#94A3B8" strokeWidth="5" strokeLinecap="round" strokeDasharray={RING_C} strokeDashoffset={0} />
         </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#4ADE80' }}>✓</div>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#4ADE80' }}><Icon name="✓" /></div>
       </div>
     )
   }
@@ -382,7 +384,8 @@ function PhotoCarousel({ orgId, primary, userId }) {
     setUploading(true)
     for (const file of Array.from(files)) {
       const path = `${orgId}/${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`
-      const { error } = await supabase.storage.from('gallery').upload(path, file)
+      const up = await shrinkImage(file)
+      const { error } = await supabase.storage.from('gallery').upload(path, up, { contentType: up.type })
       if (!error) {
         // Private bucket: the path is the durable reference, signed at read.
         await supabase.from('gallery_photos').insert({ org_id: orgId, url: path, path })
@@ -413,22 +416,31 @@ function PhotoCarousel({ orgId, primary, userId }) {
   }
 
   return (
-    <div style={{ marginBottom: 18 }}>
+    <div>
       <input ref={inputRef} type="file" multiple accept="image/*" hidden onChange={e => handleUpload(e.target.files)} />
 
       {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)' }}>📸 Photos</div>
-        <div style={{ display: 'flex', gap: 8 }}>
+      {/* Two 40px pill buttons next to a 13px label made the header heavier
+          than the photos underneath it. The label leads, the actions are
+          quiet, and Add Photo is the only one that carries the brand. */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+          <Icon name="📸" size={14} tone="brand" />
+          <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.7 }}>Photos</span>
+          {photos.length > 0 && (
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3, #9CA3AF)' }}>{photos.length}</span>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
           {photos.length > 0 && (
             <button onClick={() => setManaging(m => !m)}
-              style={{ minHeight: 40, padding: '0 16px', borderRadius: 99, border: '1.5px solid #E5E7EB', background: managing ? '#F1F5F9' : '#fff', color: managing ? '#374151' : '#6B7280', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              style={{ minHeight: 32, padding: '0 11px', borderRadius: 9, border: '1px solid var(--border, #E5E7EB)', background: managing ? 'var(--org-a10)' : 'transparent', color: managing ? 'var(--org-ink)' : '#6B7280', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>
               {managing ? 'Done' : 'Manage'}
             </button>
           )}
           <button onClick={() => inputRef.current?.click()} disabled={uploading}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 40, padding: '0 16px', borderRadius: 99, border: `1.5px solid ${primary}`, background: uploading ? '#F3F4F6' : '#fff', color: primary, fontSize: 12, fontWeight: 800, cursor: uploading ? 'default' : 'pointer' }}>
-            📷 {uploading ? 'Uploading...' : 'Add Photo'}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, minHeight: 32, padding: '0 12px', borderRadius: 9, border: 'none', background: uploading ? 'var(--border, #F3F4F6)' : 'var(--org-primary)', color: uploading ? '#9CA3AF' : 'var(--org-on-primary)', fontSize: 11.5, fontWeight: 800, cursor: uploading ? 'default' : 'pointer' }}>
+            <Icon name="📷" size={13} /> {uploading ? 'Uploading…' : 'Add'}
           </button>
         </div>
       </div>
@@ -437,7 +449,7 @@ function PhotoCarousel({ orgId, primary, userId }) {
       {photos.length === 0 ? (
         <div onClick={() => inputRef.current?.click()}
           style={{ height: 110, borderRadius: 16, border: '2px dashed #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
-          <span style={{ fontSize: 22 }}>📷</span> Add your first photo
+          <span style={{ fontSize: 22 }}><Icon name="📷" /></span> Add your first photo
         </div>
       ) : (
         <>
@@ -557,7 +569,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}>📣 Announcements</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}><Icon name="📣" /> Announcements</h3>
         <button onClick={() => setComposing(c => !c)} style={sectionLinkBtn(primary)}>
           {composing ? 'Cancel' : '+ Post announcement'}
         </button>
@@ -603,8 +615,8 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
       )}
 
       {announcements.length === 0 && !composing ? (
-        <div style={{ background: `linear-gradient(135deg, ${primary}10, ${primary}05)`, border: `1.5px dashed ${primary}30`, borderRadius: 20, padding: '28px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 8 }}>📣</div>
+        <div style={{ background: `linear-gradient(135deg, var(--org-a05), var(--org-a05))`, border: `1.5px dashed var(--org-a20)`, borderRadius: 20, padding: '28px 24px', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}><Icon name="📣" /></div>
           <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 4 }}>No announcements yet</div>
           <div style={{ fontSize: 12, color: '#9CA3AF' }}>Share news, shout-outs, or reminders with your team</div>
         </div>
@@ -613,7 +625,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
           {visible.map(a => (
             <div key={a.id} style={{ background: '#fff', border: '1.5px solid #F1F5F9', borderRadius: 16, padding: '14px 16px', position: 'relative' }}>
               {a.pinned && (
-                <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 11 }}>📌</div>
+                <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 11 }}><Icon name="📌" /></div>
               )}
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <div style={{ fontSize: 22, flexShrink: 0, lineHeight: 1 }}>{a.emoji || '📣'}</div>
@@ -1094,10 +1106,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   return (
     <div ref={kioskContainerRef} style={{ position: 'relative' }}>
-    <div style={{ background: `linear-gradient(160deg, ${primary}4D 0%, ${secondary}33 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: sessionPhase === 'ending' ? '22px 22px 0 0' : 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
+    <div style={{ background: `linear-gradient(160deg, var(--org-a35) 0%, ${secondary}33 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: sessionPhase === 'ending' ? '22px 22px 0 0' : 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
 
       {/* Ambient brand glow */}
-      <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 200, borderRadius: '50%', background: `radial-gradient(circle, ${primary}22, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 200, borderRadius: '50%', background: `radial-gradient(circle, var(--org-a10), transparent 70%)`, pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: -50, left: -30, width: 220, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}18, transparent 70%)`, pointerEvents: 'none' }} />
 
       {/* ═══ HEADER — same shape in every state: logo, actions, title, time/location, status chip ═══ */}
@@ -1284,13 +1296,13 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             <button onClick={() => onNavigate('planner', { reflectSessionId: activeSession?.id })}
               style={{ marginTop: 14, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.12)', cursor: 'pointer', textAlign: 'left' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 18 }}>⭐</span>
+                <span style={{ fontSize: 18 }}><Icon name="⭐" /></span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: '#FCD34D' }}>Complete Reflection</div>
                   <div style={{ fontSize: 11, color: 'rgba(252,211,77,0.75)', marginTop: 1 }}>This session has ended — capture what went well while it's fresh</div>
                 </div>
               </div>
-              <span style={{ color: '#FCD34D', fontSize: 16 }}>→</span>
+              <span style={{ color: '#FCD34D', fontSize: 16 }}><Icon name="→" /></span>
             </button>
           )}
         </div>
@@ -1489,7 +1501,7 @@ function RegisterAndStaffContent({
             ].map((s, i) => (
               <button key={s.key} onClick={() => setRegTab(s.key)}
                 style={{ background: regTab === s.key ? 'rgba(255,255,255,0.12)' : 'transparent', border: 'none', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.12)' : 'none', boxShadow: regTab === s.key ? `inset 0 -2px 0 ${s.color}` : 'none', padding: isMobile ? '10px 4px' : '12px 8px', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 8 }}>
-                <span style={{ fontSize: 12, color: s.color }}>{s.icon}</span>
+                <span style={{ fontSize: 12, color: s.color }}><Icon name={s.icon} /></span>
                 <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: s.color, letterSpacing: -0.3, fontFamily: 'var(--font-display, sans-serif)', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>{s.value}</span>
                 <span style={{ fontSize: isMobile ? 9 : 10, color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.label}</span>
               </button>
@@ -1583,12 +1595,12 @@ function RegisterAndStaffContent({
         )}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-          <button onClick={onOpenNotes} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>📝 Notes ({sessionNotes.length})</button>
+          <button onClick={onOpenNotes} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="📝" /> Notes ({sessionNotes.length})</button>
           {!activeSession?.closed_at && (
             canCloseRegister ? (
               <button onClick={onOpenClosure} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #2563EB, #7C3AED)', color: '#fff', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>Close register</button>
             ) : (
-              <span title="Only a staff member can close this register" style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}>🔒 Staff only to close</span>
+              <span title="Only a staff member can close this register" style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}><Icon name="🔒" /> Staff only to close</span>
             )
           )}
         </div>
@@ -1667,7 +1679,7 @@ function ClosedSessionSummary({ session, stats, sessionStaff, hasReflection, act
             </div>
           )}
           {activeReflection.safeguarding_flag && (
-            <div style={{ marginTop: 8, fontSize: 11, color: '#FCA5A5', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>🛡️ Safeguarding note flagged</div>
+            <div style={{ marginTop: 8, fontSize: 11, color: '#FCA5A5', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="🛡️" /> Safeguarding note flagged</div>
           )}
         </div>
       )}
@@ -1686,7 +1698,7 @@ function KioskModeOverlay({ session, org, primary, secondary, regTab, setRegTab,
     { key: 'absent', label: 'Absent', count: regGrouped.absent.length },
   ]
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 10500, background: `linear-gradient(160deg, ${primary}33 0%, ${secondary}22 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, display: 'flex', flexDirection: 'column', WebkitUserSelect: 'none', userSelect: 'none' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 10500, background: `linear-gradient(160deg, var(--org-a20) 0%, ${secondary}22 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, display: 'flex', flexDirection: 'column', WebkitUserSelect: 'none', userSelect: 'none' }}>
       {/* Discreet staff-only exit — small, corner-placed, not obviously a button to a child */}
       <button onClick={onRequestExit} title="Staff exit (PIN required)"
         style={{ position: 'absolute', top: 14, right: 14, width: 38, height: 38, borderRadius: 12, border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)', fontSize: 15, cursor: 'pointer', zIndex: 2 }}>
@@ -1913,7 +1925,8 @@ function SessionQuickActions({ session, org, orgId, authUserId, onNavigate }) {
     for (const file of files) {
       const ext = file.name.split('.').pop()
       const path = `${orgId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
+      const up = await shrinkImage(file)
+      const { error: upErr } = await supabase.storage.from('gallery').upload(path, up, { contentType: up.type })
       if (!upErr) {
         const { error: insErr } = await supabase.from('gallery_photos').insert({
           org_id: orgId, url: path, path,
@@ -1987,8 +2000,8 @@ function HubRAPicker({ options, search, onSearchChange, busy, onAttach, onCreate
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, width: '100%', maxWidth: 420, padding: 20, boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>🛡️ Attach Risk Assessment</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>✕</button>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}><Icon name="🛡️" /> Attach Risk Assessment</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <button onClick={onCreate} disabled={busy} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 14, opacity: busy ? 0.6 : 1 }}>
           {busy ? 'Working…' : '+ Create new for this session'}
@@ -2002,7 +2015,7 @@ function HubRAPicker({ options, search, onSearchChange, busy, onAttach, onCreate
           ) : filtered.map(a => (
             <button key={a.id} onClick={() => onAttach(a)} disabled={busy}
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', cursor: busy ? 'default' : 'pointer', textAlign: 'left' }}>
-              <span style={{ fontSize: 13 }}>🛡️</span>
+              <span style={{ fontSize: 13 }}><Icon name="🛡️" /></span>
               <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</span>
               {a.risk_rating && (
                 <span style={{
@@ -2057,10 +2070,10 @@ function HubRAPreviewModal({ assessmentId, onClose, onNavigate }) {
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
               <div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', marginBottom: 4 }}>🛡️ {ra.name}</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', marginBottom: 4 }}><Icon name="🛡️" /> {ra.name}</div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{ra.activity_type || 'Session'}{ra.location ? ` · ${ra.location}` : ''}</div>
               </div>
-              <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', flexShrink: 0 }}>✕</button>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', flexShrink: 0 }}><Icon name="✕" /></button>
             </div>
 
             <div style={{ display: 'flex', gap: 8, margin: '14px 0' }}>
@@ -2225,12 +2238,12 @@ function SessionInfoModal({ session, attendance, allChildren, primary, secondary
           position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 480, maxHeight: isMobile ? 'none' : '88vh',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
           borderRadius: isMobile ? 0 : 26, flex: isMobile ? 1 : undefined,
-          background: `linear-gradient(160deg, ${primary}33 0%, ${(secondary || primary)}22 40%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
+          background: `linear-gradient(160deg, var(--org-a20) 0%, ${(secondary || primary)}22 40%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
           boxShadow: isMobile ? 'none' : '0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)',
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 200, borderRadius: '50%', background: `radial-gradient(circle, ${primary}22, transparent 70%)`, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 200, borderRadius: '50%', background: `radial-gradient(circle, var(--org-a10), transparent 70%)`, pointerEvents: 'none' }} />
 
         {/* Header */}
         <div style={{ padding: isMobile ? '18px 18px 16px' : '22px 24px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'relative', flexShrink: 0 }}>
@@ -2239,7 +2252,7 @@ function SessionInfoModal({ session, attendance, allChildren, primary, secondary
             width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.18)',
             background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 16, fontWeight: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>✕</button>
+          }}><Icon name="✕" /></button>
 
           <div style={{ paddingRight: 42 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#4ADE80', letterSpacing: 0.8, marginBottom: 9 }}>
@@ -2308,7 +2321,7 @@ function SessionInfoModal({ session, attendance, allChildren, primary, secondary
         {/* Sticky footer action */}
         <div style={{ padding: isMobile ? '12px 18px calc(14px + env(safe-area-inset-bottom))' : '14px 24px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
           <button onClick={() => setShowAddChild(true)}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '13px 16px', borderRadius: 13, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary || primary})`, color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', boxShadow: `0 8px 22px -8px ${primary}90` }}>
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '13px 16px', borderRadius: 13, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary || primary})`, color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', boxShadow: `0 8px 22px -8px var(--org-a60)` }}>
             + Add child to this session
           </button>
         </div>
@@ -2482,7 +2495,7 @@ function HubClosureFlow({ grouped, onClose, onMarkAllAbsent, onCloseRegister, pr
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
             {issues.map((iss, i) => (
               <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5, fontWeight: 600, color: '#FCD34D' }}>
-                <span>⚠</span><span>{iss}</span>
+                <span><Icon name="⚠" /></span><span>{iss}</span>
               </div>
             ))}
           </div>
@@ -2710,9 +2723,9 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
     <div ref={ref} style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(o => !o)}
-        style={{ position: 'relative', width: 40, height: 40, borderRadius: 12, border: `1.5px solid ${primary}22`, background: open ? primary + '10' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, transition: 'all 0.2s', boxShadow: open ? `0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 12px -4px ${primary}35` : `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` }}
-        onMouseEnter={e => { if (!open) { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px ${primary}45` } }}
-        onMouseLeave={e => { if (!open) { e.currentTarget.style.borderColor = primary + '22'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` } }}
+        style={{ position: 'relative', width: 40, height: 40, borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: open ? primary + '10' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, transition: 'all 0.2s', boxShadow: open ? `0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 12px -4px var(--org-a20)` : `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}
+        onMouseEnter={e => { if (!open) { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px var(--org-a20)` } }}
+        onMouseLeave={e => { if (!open) { e.currentTarget.style.borderColor = primary + '22'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` } }}
         aria-label="Notifications"
       >
         🔔
@@ -2755,7 +2768,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                       <span style={{ fontSize: isMobile ? 12 : 10.5, fontWeight: 800, color: primary, background: primary + '14', borderRadius: 99, padding: isMobile ? '3px 9px' : '2px 8px' }}>{total} new</span>
                     )}
                   </div>
-                  <button onClick={() => setOpen(false)} style={{ width: isMobile ? 34 : 26, height: isMobile ? 34 : 26, borderRadius: isMobile ? 11 : 8, border: 'none', background: '#F1F5F9', color: '#64748B', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-label="Close">✕</button>
+                  <button onClick={() => setOpen(false)} style={{ width: isMobile ? 34 : 26, height: isMobile ? 34 : 26, borderRadius: isMobile ? 11 : 8, border: 'none', background: '#F1F5F9', color: '#64748B', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-label="Close"><Icon name="✕" /></button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <div style={{ display: 'flex', gap: 4, background: '#F1F5F9', borderRadius: 10, padding: 3 }}>
@@ -3310,21 +3323,21 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
 
       {/* ── HEADER ── */}
-      <header style={{ background: `linear-gradient(120deg, ${primary}14 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid ${primary}22`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px ${primary}50` }}>
+      <header style={{ background: `linear-gradient(120deg, var(--org-a10) 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid var(--org-a10)`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px var(--org-a35)` }}>
 
         {/* Brand gradient top strip — two-tone */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${secondary}, ${primary}22, transparent)` }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${secondary}, var(--org-a10), transparent)` }} />
 
         {/* Ambient brand glow */}
         <div style={{ position: 'absolute', top: -40, right: '15%', width: 260, height: 140, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}14, transparent 70%)`, pointerEvents: 'none' }} />
 
         {/* Top bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: isMobile ? '12px 0 10px' : '18px 0 14px', borderBottom: `1px solid ${primary}18`, position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: isMobile ? '12px 0 10px' : '18px 0 14px', borderBottom: `1px solid var(--org-a10)`, position: 'relative' }}>
 
           {/* Org identity */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, padding: '4px 0' }}>
             <div style={{ position: 'relative' }}>
-              <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 48, height: 48, borderRadius: 13, objectFit: 'contain', border: `1.5px solid ${primary}30`, background: '#fff', padding: 3, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -6px ${primary}45` }} />
+              <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 48, height: 48, borderRadius: 13, objectFit: 'contain', border: `1.5px solid var(--org-a20)`, background: '#fff', padding: 3, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -6px var(--org-a20)` }} />
               <div style={{ position: 'absolute', bottom: -2, right: -2, width: 12, height: 12, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />
             </div>
             {!isMobile ? (
@@ -3336,7 +3349,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   </div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', background: `linear-gradient(90deg, ${primary}, ${secondary})`, borderRadius: 5, padding: '3px 9px', boxShadow: `0 2px 8px ${primary}35` }}>{org?.plan || 'Starter'} Plan</span>
+                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', background: `linear-gradient(90deg, ${primary}, ${secondary})`, borderRadius: 5, padding: '3px 9px', boxShadow: `0 2px 8px var(--org-a20)` }}>{org?.plan || 'Starter'} Plan</span>
                   {org?.status === 'trial' && trialDaysLeft !== null && (
                     <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', color: trialDaysLeft <= 2 ? '#DC2626' : '#B45309', background: trialDaysLeft <= 2 ? '#FEE2E2' : '#FEF3C7', borderRadius: 5, padding: '3px 8px', border: `1px solid ${trialDaysLeft <= 2 ? '#FCA5A5' : '#FDE68A'}` }}>
                       ⭐ {trialDaysLeft}d left
@@ -3361,15 +3374,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {!isMobile && (
             <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'center' }}>
               <div style={{ width: '100%', maxWidth: 440, position: 'relative' }}>
-                <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}>🔍</span>
+                <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}><Icon name="🔍" /></span>
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   onKeyDown={e => e.key === 'Escape' && setSearch('')}
                   placeholder="Search young people, sessions..."
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid ${primary}22`, background: '#fff', fontSize: 13, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px ${primary}25` }}
-                  onFocus={e => { e.target.style.borderColor = primary; e.target.style.boxShadow = `0 0 0 3px ${primary}18, 0 2px 10px -4px ${primary}35` }}
-                  onBlur={e => { e.target.style.borderColor = primary + '22'; e.target.style.boxShadow = `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px ${primary}25` }}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: '#fff', fontSize: 13, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px var(--org-a10)` }}
+                  onFocus={e => { e.target.style.borderColor = primary; e.target.style.boxShadow = `0 0 0 3px var(--org-a10), 0 2px 10px -4px var(--org-a20)` }}
+                  onBlur={e => { e.target.style.borderColor = primary + '22'; e.target.style.boxShadow = `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px var(--org-a10)` }}
                 />
                 {searchResults && (
                 <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 16px 40px -8px rgba(0,0,0,0.18)', zIndex: 100, marginTop: 6, overflow: 'hidden' }}>
@@ -3398,7 +3411,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           {searchResults.sessions.map(s => (
                             <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
                               onMouseEnter={e => e.currentTarget.style.background = primary + '08'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                              <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
+                              <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name="📅" /></div>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
                                 <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time ? s.start_time.slice(0, 5) : 'No time'}</div>
@@ -3409,7 +3422,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       )}
                     </>
                   )}
-                  <div style={{ padding: '8px 14px', borderTop: `1px solid ${primary}15` }}>
+                  <div style={{ padding: '8px 14px', borderTop: `1px solid var(--org-a10)` }}>
                     <button onClick={() => setSearch('')} style={{ fontSize: 11, color: primary, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Press Esc to close</button>
                   </div>
                 </div>
@@ -3424,7 +3437,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               <button
                 onClick={() => setShowMobileSearch(v => !v)}
                 aria-label={showMobileSearch ? 'Close search' : 'Search'}
-                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${primary}${showMobileSearch ? '55' : '22'}`, background: showMobileSearch ? `${primary}12` : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: primary, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset`, position: 'relative', overflow: 'hidden', transition: 'background 0.2s, border-color 0.2s' }}>
+                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${primary}${showMobileSearch ? '55' : '22'}`, background: showMobileSearch ? 'var(--org-a05)' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: primary, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset`, position: 'relative', overflow: 'hidden', transition: 'background 0.2s, border-color 0.2s' }}>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
                     key={showMobileSearch ? 'close' : 'search'}
@@ -3445,11 +3458,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               onNavigate={go}
             />
             {!isMobile && <DateTimeInline primary={primary} />}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '5px 10px 5px 5px', borderRadius: 12, border: `1.5px solid ${primary}22`, background: '#fff', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` }}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '5px 10px 5px 5px', borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: '#fff', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}
               onClick={onAvatarClick}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px ${primary}45` }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = primary + '22'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px ${primary}25` }}>
-              <div style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 3px 10px -2px ${primary}50` }}>
+              onMouseEnter={e => { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px var(--org-a20)` }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = primary + '22'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}>
+              <div style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 3px 10px -2px var(--org-a35)` }}>
                 {userProfile?.photo_url ? <SignedImg bucket="staff-photos" src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : hubUserName[0]?.toUpperCase() || '?'}
               </div>
               {!isMobile && (
@@ -3483,16 +3496,16 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   transition={{ duration: 0.24, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
                   style={{ position: 'relative' }}
                 >
-                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}>🔍</span>
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}><Icon name="🔍" /></span>
                   <input
                     autoFocus
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     onKeyDown={e => e.key === 'Escape' && (setSearch(''), setShowMobileSearch(false))}
                     placeholder="Search young people, sessions..."
-                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid ${primary}30`, background: '#fff', fontSize: 14, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px ${primary}25`, transition: 'box-shadow 0.2s, border-color 0.2s' }}
-                    onFocus={e => { e.target.style.borderColor = primary; e.target.style.boxShadow = `0 0 0 3px ${primary}18, 0 2px 10px -4px ${primary}35` }}
-                    onBlur={e => { e.target.style.borderColor = primary + '30'; e.target.style.boxShadow = `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px ${primary}25` }}
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid var(--org-a20)`, background: '#fff', fontSize: 14, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px var(--org-a10)`, transition: 'box-shadow 0.2s, border-color 0.2s' }}
+                    onFocus={e => { e.target.style.borderColor = primary; e.target.style.boxShadow = `0 0 0 3px var(--org-a10), 0 2px 10px -4px var(--org-a20)` }}
+                    onBlur={e => { e.target.style.borderColor = primary + '30'; e.target.style.boxShadow = `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px var(--org-a10)` }}
                   />
                 </motion.div>
                 <AnimatePresence>
@@ -3528,7 +3541,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                               <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
                               {searchResults.sessions.map(s => (
                                 <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch(''); setShowMobileSearch(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                                  <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>📅</div>
+                                  <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name="📅" /></div>
                                   <div>
                                     <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
                                     <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time ? s.start_time.slice(0, 5) : 'No time'}</div>
@@ -3550,10 +3563,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             block. Replaces the old greeting row plus the "N sessions today" and
             "Next session" tiles, which all pointed at the same session. ── */}
         <div className="ls-rise" style={{
-          background: `linear-gradient(135deg, ${primary} 0%, ${primary}D9 42%, ${secondary}E6 100%)`,
+          background: `linear-gradient(135deg, ${primary} 0%, var(--org-a85) 42%, ${secondary}E6 100%)`,
           borderRadius: isMobile ? 18 : 22, padding: isMobile ? '18px 18px 16px' : '24px 28px 18px',
           color: '#fff', position: 'relative', overflow: 'hidden', margin: '10px 0 4px',
-          boxShadow: `0 1px 0 rgba(255,255,255,0.14) inset, 0 18px 40px -24px ${primary}B3`,
+          boxShadow: `0 1px 0 rgba(255,255,255,0.14) inset, 0 18px 40px -24px var(--org-a60)`,
         }}>
           {/* Same two soft blooms as the Projects hero, so the block doesn't
               read as a flat slab and Home matches the rest of the product. */}
@@ -3567,7 +3580,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           }}>
             <div style={{ minWidth: 0, width: isMobile ? '100%' : 'auto' }}>
               <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 26, fontWeight: 900, lineHeight: 1.12, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.4px', color: '#fff' }}>
-                {getGreeting()}, {hubUserName.split(' ')[0]} <span style={{ display: 'inline-block', animation: 'lsWave 2.6s ease-in-out infinite', transformOrigin: '70% 70%' }}>👋</span>
+                {getGreeting()}, {hubUserName.split(' ')[0]} <span style={{ display: 'inline-block', animation: 'lsWave 2.6s ease-in-out infinite', transformOrigin: '70% 70%' }}><Icon name="👋" /></span>
               </h1>
               <p style={{ margin: '7px 0 0', fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.62)' }}>{heroSummary}</p>
             </div>
@@ -3581,10 +3594,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               width: isMobile ? '100%' : 'auto',
               gap: isMobile ? 8 : 9, flexWrap: 'wrap', flexShrink: 0,
             }}>
-              <button onClick={() => setShowInviteChild(true)} style={heroGlassBtn}>🧒 Invite child</button>
-              {hasModule('volunteers') && (
-                <button onClick={() => go('volunteers', { autoOpenInvite: true })} style={heroGlassBtn}>🤝 Invite volunteer</button>
-              )}
+              {/* Invite child / Invite volunteer removed. Both are occasional
+                  admin jobs that already live on their own screens, and sitting
+                  them beside the register competed with the one thing this
+                  header exists to get you to. */}
               {todaySessions.length > 0 && (
                 <button onClick={() => go('registers')} style={{
                   ...heroGlassBtn, background: '#fff', color: primary, fontWeight: 800,
@@ -3612,10 +3625,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <div style={{ padding: `${pad}px ${pad}px 0` }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-            background: `linear-gradient(135deg, ${primary}12, ${secondary}0A)`, border: `1.5px solid ${primary}30`,
+            background: `linear-gradient(135deg, var(--org-a05), ${secondary}0A)`, border: `1.5px solid var(--org-a20)`,
             borderRadius: 18, padding: '14px 18px',
           }}>
-            <span style={{ fontSize: 24, flexShrink: 0 }}>🔔</span>
+            <span style={{ fontSize: 24, flexShrink: 0 }}><Icon name="🔔" /></span>
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)' }}>Enable notifications</div>
               <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>Stay updated when something important needs your attention — sessions, registers, messages and urgent alerts.</div>
@@ -3783,12 +3796,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 10px' }}>
                             {s.start_time && (
                               <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <span>⏰</span> {s.start_time.slice(0, 5)}{s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}
+                                <span><Icon name="⏰" /></span> {s.start_time.slice(0, 5)}{s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}
                               </span>
                             )}
                             {s.location && (
                               <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
-                                <span>📍</span> {s.location.split(',')[0]}
+                                <span><Icon name="📍" /></span> {s.location.split(',')[0]}
                               </span>
                             )}
                           </div>
@@ -3898,7 +3911,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         </button>
                       )}
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 900, color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '6px 12px 6px 13px' }}>
-                        {ctaLabel} <span className="ls-card-arrow" style={{ display: 'inline-block' }}>→</span>
+                        {ctaLabel} <span className="ls-card-arrow" style={{ display: 'inline-block' }}><Icon name="→" /></span>
                       </span>
                     </div>
                   </div>
@@ -3923,7 +3936,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
                           background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 18, fontWeight: 700,
                           display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                        }}>✕</button>
+                        }}><Icon name="✕" /></button>
                       </div>
                       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '10px 14px 24px' : '10px 20px 24px', background: '#0B1023' }}>
                         {panel}
@@ -3979,7 +3992,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           border: 'none', borderRadius: 10, padding: '7px 14px', fontSize: 12.5, fontWeight: 800,
                           background: isSel ? `linear-gradient(135deg, ${primary}, ${secondary || primary})` : 'transparent',
                           color: isSel ? '#fff' : 'var(--text2, #64748B)',
-                          boxShadow: isSel ? `0 1px 0 rgba(255,255,255,0.25) inset, 0 6px 16px -6px ${primary}80` : 'none',
+                          boxShadow: isSel ? `0 1px 0 rgba(255,255,255,0.25) inset, 0 6px 16px -6px var(--org-a60)` : 'none',
                           transition: 'background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease',
                           letterSpacing: 0.1,
                         }}>
@@ -4035,13 +4048,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           )
         })()
       ) : (
-        <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, ${secondary})`, boxShadow: `0 16px 34px ${primary}40` }}>
-          <div style={styles.trophy}>🏆</div>
+        <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, ${secondary})`, boxShadow: `0 16px 34px var(--org-a20)` }}>
+          <div style={styles.trophy}><Icon name="🏆" /></div>
           <div>
-            <h2 style={styles.encouragementTitle}>Keep making an impact, {orgName}! ⭐</h2>
+            <h2 style={styles.encouragementTitle}>Keep making an impact, {orgName}! <Icon name="⭐" /></h2>
             <p style={styles.encouragementText}>Supporting {children.length} young people across {sessions.length} planned sessions.</p>
           </div>
-          <div style={styles.confetti}>✨</div>
+          <div style={styles.confetti}><Icon name="✨" /></div>
         </section>
       )}
       </div>
@@ -4208,36 +4221,39 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 16, padding: '14px 16px', cursor: 'pointer' }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 12, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🔒</div>
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><Icon name="🔒" /></div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13.5, fontWeight: 800, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                         <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>{formatDate(s.session_date)} · Closed {new Date(s.closed_at).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}</div>
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 800, color: '#6B7280', background: '#E5E7EB', borderRadius: 99, padding: '4px 10px', flexShrink: 0 }}>CLOSED</span>
                       {hasReflection ? (
-                        <span style={{ fontSize: 10, fontWeight: 800, color: '#16A34A', background: '#DCFCE7', border: '1px solid #BBF7D0', borderRadius: 99, padding: '4px 10px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>✓ Reflected</span>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: '#16A34A', background: '#DCFCE7', border: '1px solid #BBF7D0', borderRadius: 99, padding: '4px 10px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}><Icon name="✓" /> Reflected</span>
                       ) : (
                         <button onClick={e => { e.stopPropagation(); go('planner', { reflectSessionId: s.id }) }}
                           style={{ fontSize: 10.5, fontWeight: 800, color: '#B45309', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 99, padding: '5px 11px', flexShrink: 0, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                           ⭐ Write reflection
                         </button>
                       )}
-                      <span style={{ fontSize: 16, color: '#CBD5E1', flexShrink: 0 }}>→</span>
+                      <span style={{ fontSize: 16, color: '#CBD5E1', flexShrink: 0 }}><Icon name="→" /></span>
                     </div>
                     )
                   })}
                 </div>
               )
             ) : upcomingSessions.length === 0 ? (
-              <div style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', background: `linear-gradient(135deg, ${primary}10, ${primary}05)`, border: `1.5px dashed ${primary}30`, borderRadius: 20, padding: '36px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
+              <div style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', background: `linear-gradient(135deg, var(--org-a05), var(--org-a05))`, border: `1.5px dashed var(--org-a20)`, borderRadius: 20, padding: '36px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="🚀" /></div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 6, maxWidth: 320 }}>Nothing running or planned in the next 7 days</div>
                 <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20, maxWidth: 320 }}>Create a session and it'll appear here instantly</div>
-                <button onClick={() => go('planner')} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 16px ${primary}40` }}>Plan a Session →</button>
+                <button onClick={() => go('planner')} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 16px var(--org-a20)` }}>Plan a Session <Icon name="→" /></button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {upcomingSessions.map((s, idx) => {
+                  const { series, part } = splitSeries(s.title)
+                  const prev = idx > 0 ? upcomingSessions[idx - 1] : null
+                  const sameSeriesAsPrev = !!series && !!prev && splitSeries(prev.title).series === series
                   const isToday = s.session_date === today
                   const now = new Date()
                   const startDateTime = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
@@ -4256,9 +4272,16 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   const tc = typeColors[s.session_type] || { bg: primary + '10', accent: primary, icon: '📅' }
                   return (
                     <div key={s.id}
-                      style={{ width: '100%', background: isToday ? `linear-gradient(135deg, ${primary}, ${primary}CC)` : '#fff', border: isToday ? 'none' : '1.5px solid #F1F5F9', borderRadius: 18, padding: '18px 18px', cursor: 'pointer', textAlign: 'left', boxShadow: isToday ? `0 8px 32px ${primary}35` : '0 2px 12px rgba(0,0,0,0.06)', transition: 'all 0.2s', position: 'relative', overflow: 'hidden' }}
-                      onClick={() => go('planner')}
-                      onMouseEnter={e => { if (!isToday) { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 4px 20px ${primary}20`; e.currentTarget.style.transform = 'translateY(-2px)' }}}
+                      style={{ width: '100%', background: isToday ? `linear-gradient(135deg, ${primary}, var(--org-a85))` : '#fff', border: isToday ? 'none' : '1.5px solid #F1F5F9', borderRadius: 18, padding: sameSeriesAsPrev && !isToday ? '13px 18px' : '18px 18px', cursor: 'pointer', textAlign: 'left', boxShadow: isToday ? `0 8px 32px var(--org-a20)` : '0 2px 12px rgba(0,0,0,0.06)', transition: 'all 0.2s', position: 'relative', overflow: 'hidden',
+                        // A continuation of the run it belongs to: indented,
+                        // with the series colour running down the edge, so five
+                        // days of one residential read as one thing.
+                        ...(sameSeriesAsPrev && !isToday ? { marginLeft: 22, marginTop: -6, borderLeft: `3px solid var(--org-a35)`, borderTopLeftRadius: 6, borderBottomLeftRadius: 6 } : null) }}
+                      // Was go('planner') for every card, so clicking the fourth
+                      // session in the list opened the same screen as clicking
+                      // the first and told you nothing about the one you picked.
+                      onClick={() => setInfoModalSession(s)}
+                      onMouseEnter={e => { if (!isToday) { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 4px 20px var(--org-a10)`; e.currentTarget.style.transform = 'translateY(-2px)' }}}
                       onMouseLeave={e => { if (!isToday) { e.currentTarget.style.borderColor = '#F1F5F9'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; e.currentTarget.style.transform = 'none' }}}>
 
                       {/* Background decoration */}
@@ -4266,19 +4289,21 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
                       {/* Calendar jump icon */}
                       <button onClick={e => { e.stopPropagation(); go('calendar') }} title="View in Calendar"
-                        style={{ position: 'absolute', top: 14, right: 14, width: 30, height: 30, borderRadius: 9, border: 'none', background: isToday ? 'rgba(255,255,255,0.2)' : '#F8FAFC', color: isToday ? '#fff' : '#6B7280', fontSize: 13, cursor: 'pointer', zIndex: 2 }}>
-                        📆
+                        style={{ position: 'absolute', top: 14, right: 14, width: 30, height: 30, borderRadius: 9, border: 'none', background: isToday ? 'rgba(255,255,255,0.2)' : '#F8FAFC', color: isToday ? '#fff' : '#6B7280', fontSize: 13, cursor: 'pointer', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon name="🗓️" size={15} />
                       </button>
 
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                         {/* Icon */}
                         <div style={{ width: 46, height: 46, borderRadius: 13, background: isToday ? 'rgba(255,255,255,0.2)' : tc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, border: isToday ? '1px solid rgba(255,255,255,0.3)' : 'none' }}>
-                          {tc.icon}
+                          <Icon name={tc.icon} />
                         </div>
 
                         <div style={{ flex: 1, minWidth: 0, paddingRight: 30 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                            <div style={{ fontSize: 15, fontWeight: 900, color: isToday ? '#fff' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                            <div style={{ fontSize: 15, fontWeight: 900, color: isToday ? '#fff' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {sameSeriesAsPrev ? part : s.title}
+                            </div>
                             {isLiveNow && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', animation: 'pulse-live 1.5s infinite' }} />LIVE NOW</span>}
                             {isToday && hasEnded && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>{s.closed_at ? 'Closed' : 'Overrun'}</span>}
                             {isToday && notStartedYet && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>NOT STARTED</span>}
@@ -4288,22 +4313,22 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
                           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                             <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <span>📅</span> {formatDate(s.session_date)}
+                              <span><Icon name="📅" /></span> {relativeDay(s.session_date, today)}
                             </span>
                             {s.start_time && (
                               <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <span>⏰</span> {s.start_time.slice(0, 5)}{s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}
+                                <span><Icon name="⏰" /></span> {s.start_time.slice(0, 5)}{s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}
                               </span>
                             )}
                             {s.location && (
                               <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <span>📍</span> {s.location.split(',')[0]}
+                                <span><Icon name="📍" /></span> {s.location.split(',')[0]}
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div style={{ fontSize: 18, color: isToday ? 'rgba(255,255,255,0.7)' : '#CBD5E1', flexShrink: 0 }}>→</div>
+                        <div style={{ fontSize: 18, color: isToday ? 'rgba(255,255,255,0.7)' : '#CBD5E1', flexShrink: 0 }}><Icon name="→" /></div>
                       </div>
 
                       {/* Bottom action bar for today's session */}
@@ -4311,18 +4336,18 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.2)', display: 'flex', gap: 8 }}>
                           <button onClick={e => { e.stopPropagation(); setInfoModalSession(s) }}
                             style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                            ℹ️ Session info
+                            <Icon name="ℹ️" /> Session info
                           </button>
                           {hasEnded && !s.closed_at && (
                             <button onClick={e => { e.stopPropagation(); openRegisterForSession(s.id) }}
                               style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                              📋 Open register
+                              <Icon name="📋" /> Open register
                             </button>
                           )}
                           {hasEnded && userProfile && ['admin', 'owner', 'staff'].includes(userProfile.role) && (
                             <button onClick={e => { e.stopPropagation(); setClosingSession(s) }}
                               style={{ flex: 1, background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                              🔒 Close session
+                              <Icon name="🔒" /> Close session
                             </button>
                           )}
                         </div>
@@ -4339,10 +4364,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           <div style={{ marginTop: 22 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}>📜 Recent Registers</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}><Icon name="📜" /> Recent Registers</div>
                 <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 1 }}>Last 7 days</div>
               </div>
-              <button onClick={() => go('registers')} style={sectionLinkBtn(primary)}>View all registers →</button>
+              <button onClick={() => go('registers')} style={sectionLinkBtn(primary)}>View all registers <Icon name="→" /></button>
             </div>
             {endedSessions.length === 0 ? (
               <div style={{ boxSizing: 'border-box', width: '100%', background: '#F8FAFC', border: '1.5px dashed #E5E7EB', borderRadius: 20, padding: '28px 24px', textAlign: 'center', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
@@ -4366,10 +4391,25 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                     }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = '#EEF1F6' }}>
-                      <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🔒</span>
+                      <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name="🔒" /></span>
                       <span style={{ fontSize: 12.5, fontWeight: 800, color: '#374151', maxWidth: isMobile ? 'none' : 140, flex: isMobile ? 1 : 'none', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', flexShrink: 0 }}>🧒 {attended}/{attendedTotal}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', flexShrink: 0 }}>· {formatDate(s.session_date)}</span>
+                      {/* The attendance fraction was the most useful number on
+                          this half of the screen and the smallest thing on it.
+                          A bar makes 7/12 and 0/39 tell their story at a glance,
+                          and colours the ones worth looking at: a closed
+                          register nobody was marked on is usually a register
+                          somebody forgot, not a session nobody came to. */}
+                      {attendedTotal > 0 && (
+                        <span style={{ width: 46, height: 5, borderRadius: 99, background: '#EEF1F6', flexShrink: 0, overflow: 'hidden' }}>
+                          <span style={{
+                            display: 'block', height: '100%', borderRadius: 99,
+                            width: `${Math.round((attended / attendedTotal) * 100)}%`,
+                            background: attended === 0 ? '#F59E0B' : 'var(--org-primary)',
+                          }} />
+                        </span>
+                      )}
+                      <span style={{ fontSize: 11, fontWeight: 800, color: attended === 0 && attendedTotal > 0 ? '#B45309' : '#6B7280', flexShrink: 0 }}>{attended}/{attendedTotal}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', flexShrink: 0 }}>· {relativeDay(s.session_date, today)}</span>
                     </button>
                   )
                 })}
@@ -4382,7 +4422,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               today/month toggle plus the two GlanceCards below it, which
               between them showed the same counts in three card styles. */}
           <Panel title="🧭 This month at a glance" right={
-            <button onClick={() => go('reports')} style={{ background: `${primary}14`, color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>Full report →</button>
+            <button onClick={() => go('reports')} style={{ background: 'var(--org-a10)', color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>Full report <Icon name="→" /></button>
           }>
             {/* Tints derive from the org's own primary/secondary rather than a
                 fixed four-colour set, so these sit in the same palette as the
@@ -4390,10 +4430,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 exception: it grades itself, the same rule Reports already uses,
                 because a rate is a judgement and shouldn't read as brand. */}
             <GlanceStats isMobile={isMobile} stats={[
-              { key: 'children', value: children.length, label: terms.People, bg: `${primary}14`, colour: primary, trend: trends.children, onClick: () => go('children') },
+              { key: 'children', value: children.length, label: terms.People, bg: 'var(--org-a10)', colour: primary, trend: trends.children, onClick: () => go('children') },
               { key: 'sessions', value: sessionsRunThisMonth, label: `${terms.Sessions} run`, bg: `${secondary}14`, colour: secondary, trend: trends.sessions, onClick: () => go('planner') },
               { key: 'attendance', value: attendanceRate, suffix: '%', label: 'Attendance rate', bg: attendanceTone.bg, colour: attendanceTone.fg, trend: trends.attendance, onClick: () => go('reports') },
-              { key: 'volunteers', value: volunteersCount, label: 'Volunteers active', bg: `${primary}0D`, colour: primary, trend: trends.volunteers, onClick: () => go('volunteers') },
+              { key: 'volunteers', value: volunteersCount, label: 'Volunteers active', bg: 'var(--org-a05)', colour: primary, trend: trends.volunteers, onClick: () => go('volunteers') },
             ]} />
           </Panel>
         </div>
@@ -4403,13 +4443,23 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {/* Sidebar is ambient content only. Anything needing a decision
               belongs in the main column, where it is not 320px wide on a
               laptop and does not sit below the session lists on a phone. */}
-          {/* PHOTO CAROUSEL — community content, kept below operational items */}
-          <PhotoCarousel orgId={orgId} primary={primary} userId={session?.user?.id} />
+          {/* PHOTO CAROUSEL — community content, kept below operational items.
+              Wrapped in the same panel as everything else in this column: it
+              was the one block with no container, so the rail read as two
+              cards and some loose content rather than one column. */}
+          <div style={railPanel}>
+            <PhotoCarousel orgId={orgId} primary={primary} userId={session?.user?.id} />
+          </div>
 
           {/* ANNOUNCEMENTS — staff/admin only */}
           {['admin', 'owner', 'staff'].includes(userProfile?.role) && (
             <AnnouncementsPanel orgId={orgId} primary={primary} userId={session?.user?.id} />
           )}
+
+          {/* The Report a Cause for Concern button is position: fixed at the
+              bottom right, which is exactly where this column ends. Without
+              this the last panel sits underneath it. */}
+          <div aria-hidden="true" style={{ height: isMobile ? 0 : 72 }} />
         </div>
       </section>
 
@@ -4498,7 +4548,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 460, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 70px rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid #F1F5F9' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ width: 36, height: 36, borderRadius: 11, background: `${primary}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>⭐</span>
+                <span style={{ width: 36, height: 36, borderRadius: 11, background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}><Icon name="⭐" /></span>
                 <div>
                   <div style={{ fontSize: 15.5, fontWeight: 900, color: 'var(--text, #111)' }}>Outstanding reflections</div>
                   <div style={{ fontSize: 12, color: '#9CA3AF' }}>{completedWithoutReflection.length} session{completedWithoutReflection.length > 1 ? 's' : ''} to write up</div>
@@ -4509,19 +4559,19 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             <div style={{ overflowY: 'auto', padding: 14, flex: 1 }}>
               {completedWithoutReflection.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px 16px', color: '#9CA3AF', fontSize: 13 }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}><Icon name="✅" /></div>
                   All caught up — no reflections outstanding.
                 </div>
               ) : (
                 completedWithoutReflection.map(s => (
                   <button key={s.id} onClick={() => { setShowReflectionsModal(false); go('planner', { reflectSessionId: s.id }) }}
                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', border: '1px solid #F1F5F9', background: '#FFFBEB', borderRadius: 14, padding: '12px 14px', marginBottom: 8, cursor: 'pointer' }}>
-                    <span style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #FBBF24, #D97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, color: '#fff' }}>📝</span>
+                    <span style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #FBBF24, #D97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, color: '#fff' }}><Icon name="📝" /></span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.title || 'Untitled session'}</div>
                       <div style={{ fontSize: 11.5, color: '#92400E', marginTop: 1 }}>{formatDate(s.session_date)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}` : ''}</div>
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: '#B45309', flexShrink: 0 }}>Write →</span>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: '#B45309', flexShrink: 0 }}>Write <Icon name="→" /></span>
                   </button>
                 ))
               )}
@@ -4592,6 +4642,39 @@ function weatherFromCode(code) {
 function formatDate(date) {
   if (!date) return "No date";
   return new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+// "24 Aug" tells you the date. It does not tell you that the session is
+// tomorrow, which is the thing you actually want off a home screen. Within the
+// week the weekday is more use than the number; beyond it, the date is.
+function relativeDay(dateStr, todayStr) {
+  if (!dateStr) return "No date";
+  const d = new Date(`${dateStr}T00:00:00`);
+  const t = new Date(`${todayStr}T00:00:00`);
+  const days = Math.round((d - t) / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days === -1) return "Yesterday";
+  if (days > 1 && days < 7) return d.toLocaleDateString("en-GB", { weekday: "long" });
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+// Sessions in a run share a title prefix -- "PGL Summer Residential — Day 1",
+// "... — Day 2". Repeating the first 24 characters on every row costs the width
+// that would otherwise show what makes each one different.
+function splitSeries(title) {
+  const m = String(title || '').match(/^(.*?)\s+[—–-]\s+(.+)$/);
+  return m ? { series: m[1].trim(), part: m[2].trim() } : { series: null, part: title };
+}
+
+// The side column's panel. One radius, one border, one shadow, so the rail
+// reads as a single column rather than a stack of differently-built boxes.
+const railPanel = {
+  background: 'var(--surface, #fff)',
+  border: '1px solid var(--border, #E6EAF4)',
+  borderRadius: 18,
+  padding: 16,
+  boxShadow: '0 1px 2px rgba(20,26,46,.04), 0 8px 24px -12px rgba(20,26,46,.18)',
 }
 
 const styles = {

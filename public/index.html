@@ -2,7 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, viewport-fit=cover" />
+    <!-- maximum-scale/minimum-scale removed: they disable pinch-zoom, which
+         fails WCAG 1.4.4 and is exactly the thing a parent needs when a
+         medical note is set in 11px. iOS ignores them in Safari anyway;
+         they only ever bit users who genuinely needed to zoom. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#06091A" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />

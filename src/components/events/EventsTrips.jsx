@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import SessionWizard, { EVENT_TYPE_KEYS, EVENT_TYPE_META } from '../sessions/SessionWizard'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
+import Icon from '../../lib/icons'
 
 const STATUS_META = {
   planning:  { label: 'Planning',  bg: '#FEF3C7', color: '#B45309', dotColor: '#F59E0B' },
@@ -195,13 +196,13 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
         <div style={{ padding: '22px 24px 16px', borderBottom: '1px solid #F1F5F9' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 13, background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{typeMeta.icon}</div>
+              <div style={{ width: 44, height: 44, borderRadius: 13, background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}><Icon name={typeMeta.icon} /></div>
               <div>
                 <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>{event.title}</div>
                 <div style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600 }}>{typeMeta.label}</div>
               </div>
             </div>
-            <button onClick={onClose} style={{ border: 'none', background: '#F1F5F9', borderRadius: 10, width: 32, height: 32, cursor: 'pointer', fontSize: 15, color: '#64748B' }}>✕</button>
+            <button onClick={onClose} style={{ border: 'none', background: '#F1F5F9', borderRadius: 10, width: 32, height: 32, cursor: 'pointer', fontSize: 15, color: '#64748B' }}><Icon name="✕" /></button>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button onClick={() => onNavigate && onNavigate('registers')} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Open Register</button>
@@ -264,7 +265,7 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
                 ['emergency_contact_sheet_required', 'Emergency contact sheet required'],
               ].filter(([k]) => event[k]).map(([k, label]) => (
                 <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid #F8FAFC', fontSize: 13.5, color: '#334155' }}>
-                  <span style={{ color: '#22C55E' }}>✓</span> {label}
+                  <span style={{ color: '#22C55E' }}><Icon name="✓" /></span> {label}
                 </div>
               ))}
             </div>
@@ -402,7 +403,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
         style={{ ...cardStyle, background: 'linear-gradient(135deg,#FAF5FF,#EFF6FF)', padding: isMobile ? 20 : '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20, marginBottom: 20 }}>
         <div style={{ maxWidth: 380 }}>
-          <div style={{ fontSize: isMobile ? 22 : 27, fontWeight: 900, color: '#1E1B4B', marginBottom: 6 }}>Plan amazing adventures! 🚀</div>
+          <div style={{ fontSize: isMobile ? 22 : 27, fontWeight: 900, color: '#1E1B4B', marginBottom: 6 }}>Plan amazing adventures! <Icon name="🚀" /></div>
           <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 18, lineHeight: 1.5 }}>Create events and trips that inspire, engage and make a difference.</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setShowWizard(true)}
@@ -471,7 +472,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
                       <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8' }}>{dateObj ? dateObj.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase() : monthName}</div>
                       <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A' }}>{dateObj ? dateObj.getDate() : '–'}</div>
                     </div>
-                    <div style={{ width: 40, height: 40, borderRadius: 12, background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{typeMeta.icon}</div>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><Icon name={typeMeta.icon} /></div>
                     <div style={{ minWidth: 160, flex: '1 1 200px' }}>
                       <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 2 }}>{e.title}</div>
                       <div style={{ fontSize: 12, color: '#94A3B8' }}>{dateObj?.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} • {e.start_time?.slice(0, 5)}–{e.end_time?.slice(0, 5)}</div>
@@ -508,9 +509,9 @@ export default function EventsTrips({ org, session, onNavigate }) {
           {totalPages > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 16 }}>
               <span style={{ fontSize: 12, color: '#94A3B8' }}>Showing {(page - 1) * PER_PAGE + 1} to {Math.min(page * PER_PAGE, filtered.length)} of {filtered.length} events</span>
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ width: 30, height: 30, borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1 }}>←</button>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ width: 30, height: 30, borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1 }}><Icon name="←" /></button>
               <span style={{ width: 30, height: 30, borderRadius: 8, background: primary, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 700 }}>{page}</span>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ width: 30, height: 30, borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1 }}>→</button>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ width: 30, height: 30, borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1 }}><Icon name="→" /></button>
             </div>
           )}
 
@@ -537,7 +538,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ ...cardStyle, padding: 18 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>🧭 Today at a glance</div>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}><Icon name="🧭" /> Today at a glance</div>
               <button onClick={() => onNavigate && onNavigate('calendar')} style={{ border: 'none', background: 'none', color: primary, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>View Calendar</button>
             </div>
             {[
@@ -546,7 +547,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
               { icon: '📋', bg: '#FEF3C7', title: 'Tasks due today', sub: `${tasksDueToday} task${tasksDueToday === 1 ? '' : 's'} need attention` },
             ].map((row, i) => (
               <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '9px 0', borderBottom: i < 2 ? '1px solid #F8FAFC' : 'none' }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: row.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>{row.icon}</div>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: row.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name={row.icon} /></div>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{row.title}</div>
                   <div style={{ fontSize: 11, color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.sub}</div>
@@ -556,7 +557,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
           </div>
 
           <div style={{ ...cardStyle, padding: 18 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>⚡ Quick Actions</div>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}><Icon name="⚡" /> Quick Actions</div>
             {[
               { icon: '🚀', bg: '#F5F3FF', title: 'Create New Event / Trip', sub: 'Start planning something amazing', onClick: () => setShowWizard(true) },
               { icon: '📄', bg: '#EFF6FF', title: 'Copy from Template', sub: 'Coming soon', onClick: () => alert('Templates are coming soon!') },
@@ -564,14 +565,14 @@ export default function EventsTrips({ org, session, onNavigate }) {
               { icon: '📅', bg: '#FDF2F8', title: 'Import from Calendar', sub: 'Coming soon', onClick: () => alert('Calendar import is coming soon!') },
             ].map((row, i) => (
               <button key={i} onClick={row.onClick} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '9px 0', width: '100%', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer' }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: row.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>{row.icon}</div>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: row.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name={row.icon} /></div>
                 <div><div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{row.title}</div><div style={{ fontSize: 11, color: '#94A3B8' }}>{row.sub}</div></div>
               </button>
             ))}
           </div>
 
           <div style={{ ...cardStyle, padding: 18, background: 'linear-gradient(135deg,#FFFBEB,#FEF3C7)' }}>
-            <div style={{ fontSize: 13.5, fontWeight: 800, color: '#78350F', marginBottom: 12 }}>🌟 Need help?</div>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: '#78350F', marginBottom: 12 }}><Icon name="🌟" /> Need help?</div>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: '#78350F', marginBottom: 2 }}>Events & Trips Help Centre</div>
             <div style={{ fontSize: 11, color: '#92400E', marginBottom: 10 }}>Step-by-step guides and tips</div>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: '#78350F', marginBottom: 2 }}>Contact Support</div>

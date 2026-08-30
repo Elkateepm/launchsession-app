@@ -14,6 +14,7 @@ import ImpactWheel from './ImpactWheel'
 import ProgrammePerformance from './ProgrammePerformance'
 import Heatmap from './Heatmap'
 import DataToolsModal from './DataToolsModal'
+import Icon from '../../lib/icons'
 
 // ---------------------------------------------------------------------------
 // TimelineChart — inline SVG line chart, Week/Month/Quarter/Year toggle
@@ -66,7 +67,7 @@ function TimelineChart({ scores, primary }) {
   return (
     <div style={{ background: '#fff', border: '1px solid #EEF0F2', borderRadius: 20, padding: '20px 22px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
-        <div style={{ fontSize: 14, fontWeight: 900 }}>📈 Outcome Timeline</div>
+        <div style={{ fontSize: 14, fontWeight: 900 }}><Icon name="📈" /> Outcome Timeline</div>
         <div style={{ display: 'flex', gap: 4, background: '#F9FAFB', borderRadius: 10, padding: 3 }}>
           {RANGES.map(r => (
             <button key={r.key} onClick={() => setRange(r.key)}
@@ -286,10 +287,10 @@ function AISummaryCard({ children, scores, goals, org, primary, onRecord, onRepo
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-      style={{ background: `linear-gradient(135deg, ${primary}18, #fff)`, border: `1px solid ${primary}30`, borderRadius: 20, padding: '20px 22px', marginBottom: 20 }}>
+      style={{ background: `linear-gradient(135deg, var(--org-a10), #fff)`, border: `1px solid var(--org-a20)`, borderRadius: 20, padding: '20px 22px', marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 16 }}>✨</span>
+          <span style={{ fontSize: 16 }}><Icon name="✨" /></span>
           <span style={{ fontSize: 13, fontWeight: 900, color: primary }}>Launch AI Summary</span>
           <AnimatePresence mode="wait">
             {aiLoading ? (
@@ -299,7 +300,7 @@ function AISummaryCard({ children, scores, goals, org, primary, onRecord, onRepo
               </motion.span>
             ) : isAI ? (
               <motion.span key="refined" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                style={{ fontSize: 10, fontWeight: 700, color: primary, background: `${primary}18`, borderRadius: 20, padding: '2px 8px' }}>
+                style={{ fontSize: 10, fontWeight: 700, color: primary, background: 'var(--org-a10)', borderRadius: 20, padding: '2px 8px' }}>
                 AI-refined
               </motion.span>
             ) : null}
@@ -462,7 +463,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
       {/* Header */}
       <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div style={{ fontSize: 24, fontWeight: 900 }}>📈 Impact & Outcomes</div>
+          <div style={{ fontSize: 24, fontWeight: 900 }}><Icon name="📈" /> Impact & Outcomes</div>
           <div style={{ fontSize: 13, color: '#6B7280', marginTop: 4 }}>Measure confidence, wellbeing and personal development across every young person</div>
         </div>
         <div style={{ display: 'flex', gap: 8, position: 'relative' }}>
@@ -521,7 +522,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
               {/* Org Health hero + Impact Wheel + timeline */}
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: 16, marginBottom: 16 }}>
                 <div style={{ background: '#fff', border: '1px solid #EEF0F2', borderRadius: 20, padding: '22px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ fontSize: 13, fontWeight: 900, alignSelf: 'flex-start', marginBottom: 14 }}>🎯 Organisation Health</div>
+                  <div style={{ fontSize: 13, fontWeight: 900, alignSelf: 'flex-start', marginBottom: 14 }}><Icon name="🎯" /> Organisation Health</div>
                   <CircularGauge value={overallImpactScore} color={primary} label="Overall Impact" sublabel="out of 100" />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%', marginTop: 18 }}>
                     {HEALTH_AREAS.map(a => {
@@ -595,7 +596,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
                     return (
                       <motion.div key={child.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 10) * 0.02 }}
                         onClick={() => setActiveChild(child)}
-                        whileHover={{ y: -2, boxShadow: `0 8px 24px ${primary}18` }}
+                        whileHover={{ y: -2, boxShadow: `0 8px 24px var(--org-a10)` }}
                         style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '16px 18px', cursor: 'pointer' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: avg ? 12 : 0 }}>
                           <div style={{ width: 40, height: 40, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: primary }}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { activityTheme, tierFor, computeAchievements, glassCard, timeAgo } from './vp_shared'
 import SignedImg from '../shared/SignedImg'
+import Icon from '../../lib/icons'
 
 function useCountdown(target) {
   const [now, setNow] = useState(Date.now())
@@ -75,14 +76,14 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
   return (
     <div style={{ padding: '0 0 100px' }}>
       {/* HERO */}
-      <div style={{ background: `linear-gradient(150deg, ${primary}, ${primary}CC)`, padding: '20px 18px 26px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: `linear-gradient(150deg, ${primary}, var(--org-a85))`, padding: '20px 18px 26px', position: 'relative', overflow: 'hidden' }}>
         <motion.div animate={{ y: [0, -14, 0] }} transition={{ duration: 8, repeat: Infinity }} style={{ position: 'absolute', top: -50, right: -50, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
           <div style={{ width: 50, height: 50, borderRadius: '50%', background: profile?.photo_url ? 'transparent' : 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.3)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             {profile?.photo_url ? <SignedImg bucket="staff-photos" src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>{firstName[0]}</span>}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 19, fontWeight: 900, color: '#fff' }}>{greeting}, {firstName} 👋</div>
+            <div style={{ fontSize: 19, fontWeight: 900, color: '#fff' }}>{greeting}, {firstName} <Icon name="👋" /></div>
             <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>{org?.name}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -117,13 +118,13 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />LIVE NOW
                 </motion.div>
               )}
-              <div style={{ fontSize: 34, marginBottom: 6 }}>{theme.icon}</div>
+              <div style={{ fontSize: 34, marginBottom: 6 }}><Icon name={theme.icon} /></div>
               <div style={{ fontSize: 18, fontWeight: 900 }}>{nextSession.title}</div>
               <div style={{ fontSize: 12.5, opacity: 0.9, marginTop: 4 }}>
                 {nextSession.session_date === new Date().toLocaleDateString('en-CA') ? 'Today' : new Date(nextSession.session_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}
                 {' · '}{nextSession.start_time}{nextSession.end_time ? ` – ${nextSession.end_time}` : ''}
               </div>
-              {nextSession.location && <div style={{ fontSize: 12, opacity: 0.85, marginTop: 2 }}>📍 {nextSession.location}</div>}
+              {nextSession.location && <div style={{ fontSize: 12, opacity: 0.85, marginTop: 2 }}><Icon name="📍" /> {nextSession.location}</div>}
               {countdown && (
                 <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
                   {[['h', countdown.h], ['m', countdown.m], ['s', countdown.s]].map(([label, val]) => (
@@ -138,12 +139,12 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
             <div style={{ background: '#fff', padding: '12px 16px', display: 'flex', gap: 8 }}>
               {isLiveNow ? (
                 <>
-                  <button onClick={e => { e.stopPropagation(); onOpenRegister(nextSession) }} style={{ flex: 1, padding: '10px', borderRadius: 12, border: 'none', background: theme.gradient, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>📖 Open Register</button>
-                  <button onClick={e => { e.stopPropagation(); onNavigate('messages') }} style={{ flex: 1, padding: '10px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.1)', background: '#fff', color: '#334155', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>💬 Message Staff</button>
+                  <button onClick={e => { e.stopPropagation(); onOpenRegister(nextSession) }} style={{ flex: 1, padding: '10px', borderRadius: 12, border: 'none', background: theme.gradient, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}><Icon name="📖" /> Open Register</button>
+                  <button onClick={e => { e.stopPropagation(); onNavigate('messages') }} style={{ flex: 1, padding: '10px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.1)', background: '#fff', color: '#334155', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}><Icon name="💬" /> Message Staff</button>
                 </>
               ) : (
                 <>
-                  {nextSession.location && <a onClick={e => e.stopPropagation()} href={`https://maps.google.com/?q=${encodeURIComponent(nextSession.location)}`} target="_blank" rel="noreferrer" style={{ flex: 1, padding: '10px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.1)', background: '#fff', color: '#334155', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', textAlign: 'center', textDecoration: 'none' }}>🧭 Navigate</a>}
+                  {nextSession.location && <a onClick={e => e.stopPropagation()} href={`https://maps.google.com/?q=${encodeURIComponent(nextSession.location)}`} target="_blank" rel="noreferrer" style={{ flex: 1, padding: '10px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.1)', background: '#fff', color: '#334155', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', textAlign: 'center', textDecoration: 'none' }}><Icon name="🧭" /> Navigate</a>}
                   <button onClick={e => { e.stopPropagation(); onOpenSession(nextSession) }} style={{ flex: 1, padding: '10px', borderRadius: 12, border: 'none', background: theme.gradient, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>View Details</button>
                 </>
               )}
@@ -160,7 +161,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
         {/* SAFEGUARDING BANNER */}
         <motion.button onClick={onRaiseConcern} whileTap={{ scale: 0.98 }}
           style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 16, padding: '13px 14px', marginBottom: 14, cursor: 'pointer', textAlign: 'left' }}>
-          <div style={{ width: 38, height: 38, borderRadius: 12, background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🛡️</div>
+          <div style={{ width: 38, height: 38, borderRadius: 12, background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><Icon name="🛡️" /></div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: '#B91C1C' }}>Safeguarding</div>
             <div style={{ fontSize: 11.5, color: '#7F1D1D' }}>Report any concerns to the DSL immediately</div>
@@ -177,7 +178,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
             { icon: '⏱️', value: todayHours.toFixed(1), label: 'Hours scheduled', bg: '#FFFBEB' },
           ].map(k => (
             <div key={k.label} style={{ ...glassCard({ padding: '13px 8px', background: k.bg }) }}>
-              <div style={{ fontSize: 18, marginBottom: 4 }}>{k.icon}</div>
+              <div style={{ fontSize: 18, marginBottom: 4 }}><Icon name={k.icon} /></div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>{k.value}</div>
               <div style={{ fontSize: 9.5, color: '#64748B', fontWeight: 700, lineHeight: 1.25, marginTop: 2 }}>{k.label}</div>
             </div>
@@ -193,7 +194,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
                 style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', cursor: 'pointer' }}>
                 <motion.div animate={checked[item.key] || item.done ? { scale: [1, 1.3, 1] } : {}}
                   style={{ width: 22, height: 22, borderRadius: 7, border: `2px solid ${checked[item.key] || item.done ? primary : '#CBD5E1'}`, background: checked[item.key] || item.done ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {(checked[item.key] || item.done) && <span style={{ color: '#fff', fontSize: 12, fontWeight: 900 }}>✓</span>}
+                  {(checked[item.key] || item.done) && <span style={{ color: '#fff', fontSize: 12, fontWeight: 900 }}><Icon name="✓" /></span>}
                 </motion.div>
                 <span style={{ fontSize: 13, color: checked[item.key] || item.done ? '#94A3B8' : '#334155', fontWeight: 600, textDecoration: (checked[item.key] || item.done) ? 'line-through' : 'none' }}>{item.label}</span>
               </label>
@@ -214,7 +215,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
           ].map(a => (
             <button key={a.key} onClick={() => onNavigate(a.tab, a.sub)}
               style={{ ...glassCard({ padding: '16px 8px' }), display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', border: 'none' }}>
-              <div style={{ fontSize: 22 }}>{a.icon}</div>
+              <div style={{ fontSize: 22 }}><Icon name={a.icon} /></div>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#334155', textAlign: 'center' }}>{a.label}</span>
             </button>
           ))}
@@ -223,12 +224,12 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
         {/* ACHIEVEMENTS */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>My Badges</div>
-          <button onClick={() => onNavigate('profile', 'badges')} style={{ fontSize: 11, fontWeight: 800, color: primary, background: 'none', border: 'none', cursor: 'pointer' }}>View all →</button>
+          <button onClick={() => onNavigate('profile', 'badges')} style={{ fontSize: 11, fontWeight: 800, color: primary, background: 'none', border: 'none', cursor: 'pointer' }}>View all <Icon name="→" /></button>
         </div>
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, marginBottom: 18 }}>
           {achievements.map(a => (
             <button key={a.key} onClick={() => setViewingBadge(a)} style={{ ...glassCard({ padding: '14px 12px' }), flexShrink: 0, width: 84, textAlign: 'center', opacity: a.earned ? 1 : 0.35, border: 'none', cursor: 'pointer' }}>
-              <div style={{ fontSize: 26, marginBottom: 4, filter: a.earned ? 'none' : 'grayscale(1)' }}>{a.icon}</div>
+              <div style={{ fontSize: 26, marginBottom: 4, filter: a.earned ? 'none' : 'grayscale(1)' }}><Icon name={a.icon} /></div>
               <div style={{ fontSize: 9.5, fontWeight: 700, color: '#334155', lineHeight: 1.2 }}>{a.label}</div>
             </button>
           ))}
@@ -258,7 +259,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
             style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
             <motion.div initial={{ scale: 0.9, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
               onClick={e => e.stopPropagation()} style={{ ...glassCard({ padding: 26, maxWidth: 280, width: '100%', textAlign: 'center', background: '#fff' }) }}>
-              <div style={{ fontSize: 52, marginBottom: 12, filter: viewingBadge.earned ? 'none' : 'grayscale(1)', opacity: viewingBadge.earned ? 1 : 0.5 }}>{viewingBadge.icon}</div>
+              <div style={{ fontSize: 52, marginBottom: 12, filter: viewingBadge.earned ? 'none' : 'grayscale(1)', opacity: viewingBadge.earned ? 1 : 0.5 }}><Icon name={viewingBadge.icon} /></div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>{viewingBadge.label}</div>
               <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5, marginBottom: 14 }}>{viewingBadge.desc}</div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: viewingBadge.earned ? '#F0FDF4' : '#F1F5F9', color: viewingBadge.earned ? '#16A34A' : '#94A3B8', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800 }}>

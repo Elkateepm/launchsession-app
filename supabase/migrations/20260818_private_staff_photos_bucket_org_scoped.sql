@@ -6,8 +6,11 @@
 -- Objects are flat, named `<user id>.<ext>`. Reads are scoped to users who
 -- share the caller's organisation.
 --
--- The existing INSERT/UPDATE/DELETE policies are left as they were: they match
--- on `name like auth.uid() || '.%'`, so a user can only write their own photo.
+-- The existing INSERT/UPDATE/DELETE policies are left as they were. INSERT is
+-- the strict form `name = auth.uid()::text || '.' || split_part(name, '.', 2)`;
+-- UPDATE and DELETE use `name like auth.uid()::text || '.%'`. Either way a
+-- user can only write their own photo, and the literal dot before the wildcard
+-- stops one UUID prefixing another.
 -- VolunteerPortal previously uploaded to `<user id>/avatar.<ext>`, which
 -- matched neither those policies nor any existing object; it was changed to
 -- the flat form in the same commit.

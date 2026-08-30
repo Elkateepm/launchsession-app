@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import Icon from '../../lib/icons'
 
 const ORG_SLUG = window.location.pathname.split('/register-volunteer/')[1]?.split('/').filter(Boolean)[0]
 
@@ -24,6 +25,7 @@ export default function PublicVolunteerRegistration() {
   const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  const [needsVerification, setNeedsVerification] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     first_name: '', last_name: '', date_of_birth: '', email: '', phone: '',
@@ -51,7 +53,7 @@ export default function PublicVolunteerRegistration() {
   const submit = async () => {
     setSubmitting(true)
     setError('')
-    const { error: err } = await supabase.rpc('submit_volunteer_application', {
+    const { data: applicationId, error: err } = await supabase.rpc('submit_volunteer_application', {
       p_org_slug: org.slug,
       p_first_name: form.first_name.trim(), p_last_name: form.last_name.trim() || null,
       p_email: form.email || null, p_phone: form.phone || null, p_dob: form.date_of_birth || null,
@@ -60,32 +62,57 @@ export default function PublicVolunteerRegistration() {
       p_dbs_number: form.dbs_number || null, p_dbs_expiry: form.dbs_expiry || null,
       p_notes: form.notes || null,
     })
+    if (err) {
+      setSubmitting(false)
+      setError("Something went wrong submitting this — please try again, or contact the organisation directly.")
+      return
+    }
+
+    // With an email address the application lands as 'unverified' and stays
+    // invisible to the organisation until the applicant confirms the address
+    // is theirs. Without one there is nothing to confirm, so it goes straight
+    // through and the confirmation screen says so.
+    const wantsVerification = !!form.email.trim()
+    if (wantsVerification && applicationId) {
+      const { error: sendErr } = await supabase.functions.invoke('send-volunteer-verification', {
+        body: { application_id: applicationId },
+      })
+      // The row exists either way; failing to send is worth telling them about
+      // so they can retry rather than waiting on an email that never arrives.
+      if (sendErr) {
+        setSubmitting(false)
+        setError("We saved your application but couldn't send the confirmation email. Please try again, or contact the organisation directly.")
+        return
+      }
+    }
+    setNeedsVerification(wantsVerification)
     setSubmitting(false)
-    if (err) { setError("Something went wrong submitting this — please try again, or contact the organisation directly."); return }
     setDone(true)
   }
 
-  if (org === undefined) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8', fontFamily: 'system-ui' }}>Loading…</div>
+  if (org === undefined) return <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8', fontFamily: 'system-ui' }}>Loading…</div>
   if (org === null) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui', textAlign: 'center', padding: 20 }}>
-      <div><div style={{ fontSize: 40, marginBottom: 10 }}>🔍</div><div style={{ fontSize: 16, fontWeight: 700, color: '#334155' }}>We couldn't find that organisation's volunteer sign-up page.</div></div>
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui', textAlign: 'center', padding: 20 }}>
+      <div><div style={{ fontSize: 40, marginBottom: 10 }}><Icon name="🔍" /></div><div style={{ fontSize: 16, fontWeight: 700, color: '#334155' }}>We couldn't find that organisation's volunteer sign-up page.</div></div>
     </div>
   )
 
   if (done) return (
-    <div style={{ minHeight: '100vh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div style={{ minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ background: '#fff', borderRadius: 20, padding: 40, maxWidth: 460, textAlign: 'center', boxShadow: '0 20px 60px rgba(15,23,42,0.08)' }}>
-        <div style={{ fontSize: 46, marginBottom: 14 }}>✅</div>
+        <div style={{ fontSize: 46, marginBottom: 14 }}><Icon name="✅" /></div>
         <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Application received</div>
         <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5 }}>
-          Thanks {form.first_name} — your volunteer application has been sent to {org.name} for review. They'll be in touch soon.
+          {needsVerification
+            ? <>Thanks {form.first_name} — one last step. We've emailed <strong style={{ color: '#0F172A' }}>{form.email.trim()}</strong> with a link to confirm it's yours. Your application reaches {org.name} once you've clicked it.</>
+            : <>Thanks {form.first_name} — your volunteer application has been sent to {org.name} for review. They'll be in touch soon.</>}
         </div>
       </div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`, padding: '28px 20px', color: '#fff', textAlign: 'center' }}>
         {org.logo_url && <img src={org.logo_url} alt="" style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'cover', marginBottom: 10 }} />}
         <div style={{ fontSize: 20, fontWeight: 900 }}>{org.name}</div>
@@ -183,7 +210,7 @@ export default function PublicVolunteerRegistration() {
         )}
 
         <div style={{ display: 'flex', gap: 10 }}>
-          {step > 1 && <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '13px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>← Back</button>}
+          {step > 1 && <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '13px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}><Icon name="←" /> Back</button>}
           {step < 5 ? (
             <button onClick={() => canContinue() && setStep(s => s + 1)} disabled={!canContinue()}
               style={{ flex: 2, padding: '13px', borderRadius: 10, border: 'none', background: canContinue() ? primary : '#CBD5E1', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canContinue() ? 'pointer' : 'default' }}>
@@ -196,7 +223,7 @@ export default function PublicVolunteerRegistration() {
             </button>
           )}
         </div>
-        <div style={{ textAlign: 'center', fontSize: 11, color: '#94A3B8', marginTop: 16 }}>🔒 Your information is sent securely and only visible to {org.name}.</div>
+        <div style={{ textAlign: 'center', fontSize: 11, color: '#94A3B8', marginTop: 16 }}><Icon name="🔒" /> Your information is sent securely and only visible to {org.name}.</div>
       </div>
     </div>
   )

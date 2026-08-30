@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react'
 import { LS, IconGlyph, AnimatedNumber, PurpleProgress } from '../fundraisingShared'
 import { useIsMobile } from '../../../hooks/useIsMobile'
+import Icon from '../../../lib/icons'
 
 const PERIODS = [
   { key: 'year', label: 'This Year' },
@@ -106,7 +107,7 @@ export default function FundraisingHero({ campaigns, donationHistory, totalTarge
 
         {focusItems.length === 0 ? (
           <div style={{ position: 'relative' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: LS.text, marginBottom: 4 }}>Everything is on track ✓</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: LS.text, marginBottom: 4 }}>Everything is on track <Icon name="✓" /></div>
             <div style={{ fontSize: 12.5, color: LS.muted, marginBottom: 16, lineHeight: 1.5 }}>No urgent items right now — a great time to check in on Discover Funding for new opportunities.</div>
           </div>
         ) : (

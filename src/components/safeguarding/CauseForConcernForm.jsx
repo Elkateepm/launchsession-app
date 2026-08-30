@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { notifyEvent } from '../../services/notifyEvent'
+import Icon from '../../lib/icons'
 
 const iStyle = { width: '100%', padding: '11px 13px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface2)', color: 'var(--text)', boxSizing: 'border-box' }
 const taStyle = { ...iStyle, resize: 'vertical', minHeight: 90, lineHeight: 1.5 }
@@ -41,6 +42,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
   const [children, setChildren] = useState([])
   const [childSearch, setChildSearch] = useState('')
   const [showChildPicker, setShowChildPicker] = useState(false)
+  const [linkedChildId, setLinkedChildId] = useState(null)
   const [form, setForm] = useState({
     submitter_name: authSession?.user?.email?.split('@')[0] || '',
     child_name: '',
@@ -90,6 +92,12 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
     const already = current.split(',').map(n => n.trim().toLowerCase()).includes(fullName.toLowerCase())
     const next = !current ? fullName : already ? current : `${current}, ${fullName}`
     set('child_name', next)
+    // Record the link to the actual record, not just the typed name, so the
+    // concern shows up in that child's history. The field can name several
+    // people -- staff, a sibling, a member of the public -- so only the first
+    // child picked from the register becomes the linked subject; the rest stay
+    // in the text where they belong.
+    setLinkedChildId(prev => prev || child.id)
     setChildSearch('')
     setShowChildPicker(false)
   }
@@ -106,6 +114,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
       submitted_by: authSession?.user?.id,
       submitter_name: form.submitter_name,
       child_name: form.child_name,
+      child_id: linkedChildId,
       concern_type: 'general',
       description: form.description,
       date_of_incident: form.date_of_incident,
@@ -134,7 +143,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
 
   if (step === 'done') return (
     <div style={{ padding: '40px 24px', textAlign: 'center' }}>
-      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 30 }}>🛡️</div>
+      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 30 }}><Icon name="🛡️" /></div>
       <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Concern Submitted</div>
       <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
         Your concern has been recorded and will be reviewed by the DSL. Do not discuss this with others.
@@ -146,7 +155,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
   if (step === 'warning') return (
     <div style={{ padding: '24px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🚨</div>
+        <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}><Icon name="🚨" /></div>
         <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)' }}>Cause for Concern</div>
       </div>
       <div style={{ background: 'rgba(220,38,38,0.06)', borderRadius: 12, padding: 16, border: '1.5px solid rgba(220,38,38,0.2)', marginBottom: 24 }}>
@@ -168,7 +177,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
   return (
     <div style={{ padding: '20px', overflowY: 'auto', maxHeight: '80vh' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🚨</div>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}><Icon name="🚨" /></div>
         <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Cause for Concern Form</div>
       </div>
 
@@ -195,7 +204,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
                       {c.group_name && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{c.group_name}</div>}
                     </div>
                     {(c.allergies || c.has_epipen || c.has_asthma || c.has_diabetes || c.has_behaviour_plan) && (
-                      <span title="Has medical or behaviour flags" style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999, flexShrink: 0 }}>⚠️ Flags</span>
+                      <span title="Has medical or behaviour flags" style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999, flexShrink: 0 }}><Icon name="⚠️" /> Flags</span>
                     )}
                   </button>
                 ))}
@@ -203,6 +212,16 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
           )}
         </div>
         <textarea style={taStyle} value={form.child_name} onChange={e => set('child_name', e.target.value)} placeholder="Names of children, staff, volunteers or members of the public involved" />
+        {/* Whether this concern joins a child's history depends on it being
+            picked from the register, and that is not obvious from a text box.
+            Say which it is instead of leaving it to chance. */}
+        {form.child_name.trim() !== '' && (
+          <div style={{ fontSize: 11.5, marginTop: 6, color: linkedChildId ? '#15803D' : '#B45309', fontWeight: 600 }}>
+            {linkedChildId
+              ? '✓ Linked to a child on the register — this will show in their safeguarding history.'
+              : 'Not linked to anyone on the register. Search above to link it, so it appears in that child\'s history.'}
+          </div>
+        )}
       </div>
       <div style={{ marginBottom: 14 }}>
         <label style={lStyle}>3. Location of the incident *</label>
@@ -217,7 +236,7 @@ export default function CauseForConcernForm({ org, session: authSession, onClose
         <label style={lStyle}>5. Attach to a session (optional)</label>
         {selectedSession ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(37,99,235,0.06)', borderRadius: 10, padding: '10px 13px', border: '1.5px solid rgba(37,99,235,0.2)' }}>
-            <span style={{ fontSize: 16 }}>📅</span>
+            <span style={{ fontSize: 16 }}><Icon name="📅" /></span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{selectedSession.title}</div>
               <div style={{ fontSize: 11, color: 'var(--text3)' }}>{selectedSession.session_date}</div>

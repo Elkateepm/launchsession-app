@@ -3,6 +3,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import {
   REPORT_LIBRARY, canAccessReport, getOverviewMetrics, saveReport,
 } from '../../lib/reportingService'
+import Icon from '../../lib/icons'
 
 // Sections offered per report type. Only sections the underlying data can
 // actually populate are listed -- nothing here renders an empty promise.
@@ -109,7 +110,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
         <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Create report</div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}>✕</button>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {STEPS.map((s, i) => (
@@ -132,7 +133,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
                     border: type === r.key ? '2px solid #4F46E5' : '1px solid #E2E8F0',
                     background: type === r.key ? '#EEF2FF' : '#fff',
                   }}>
-                    <div style={{ fontSize: 16, marginBottom: 6 }}>{r.icon}</div>
+                    <div style={{ fontSize: 16, marginBottom: 6 }}><Icon name={r.icon} /></div>
                     <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
                     <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 3, lineHeight: 1.45 }}>{r.desc}</div>
                   </button>

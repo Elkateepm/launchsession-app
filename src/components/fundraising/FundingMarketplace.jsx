@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
+import Icon from '../../lib/icons'
 
 const DAY_MS = 1000 * 60 * 60 * 24
 const RECENT_KEY = 'ls_grant_recent_searches'
@@ -266,11 +267,11 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
       {!tipDismissed && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
           style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: '#FDF6E8', border: '1px solid #F3E3BC', borderRadius: 12, padding: '10px 14px', marginBottom: 16 }}>
-          <span style={{ fontSize: 13 }}>💡</span>
+          <span style={{ fontSize: 13 }}><Icon name="💡" /></span>
           <span style={{ fontSize: 12.5, color: '#8A6A2E', lineHeight: 1.5, flex: 1 }}>
             This is a manually researched directory, not a live-matched feed — always confirm current criteria on the funder's own site before applying.
           </span>
-          <button onClick={dismissTip} style={{ background: 'none', border: 'none', color: '#B08B3F', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>✕</button>
+          <button onClick={dismissTip} style={{ background: 'none', border: 'none', color: '#B08B3F', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}><Icon name="✕" /></button>
         </motion.div>
       )}
 
@@ -300,7 +301,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {CATEGORIES.map(c => (
             <button key={c.key} onClick={() => setCategory(c.key)}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 20, border: category === c.key ? `1.5px solid ${primary}` : '1.5px solid #E5E3DC', background: category === c.key ? `${primary}10` : '#fff', color: category === c.key ? primary : '#6B7280', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 20, border: category === c.key ? `1.5px solid ${primary}` : '1.5px solid #E5E3DC', background: category === c.key ? 'var(--org-a05)' : '#fff', color: category === c.key ? primary : '#6B7280', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s' }}>
               {c.icon && <CategoryIcon category={c.icon} color={category === c.key ? primary : '#9CA3AF'} />}
               {c.label}
               <span style={{ opacity: 0.55, fontWeight: 500 }}>({categoryCounts[c.key] || 0})</span>
@@ -336,7 +337,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                   }}
                   onMouseEnter={e => e.currentTarget.style.setProperty('--sO', '1')}
                   onMouseLeave={e => e.currentTarget.style.setProperty('--sO', '0')}
-                  whileHover={{ y: -6, boxShadow: `0 18px 40px ${primary}20, 0 4px 14px rgba(28,35,51,0.08)` }}
+                  whileHover={{ y: -6, boxShadow: `0 18px 40px var(--org-a10), 0 4px 14px rgba(28,35,51,0.08)` }}
                   style={{
                     position: 'relative', overflow: 'hidden',
                     background: `linear-gradient(135deg, ${meta.color}1f, rgba(255,255,255,0.62))`,
@@ -404,7 +405,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                       {shareFeedback === g.id ? <CheckIcon color="#16A34A" /> : <ShareIcon color="#6B7280" />}
                     </button>
                   </div>
-                  <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at var(--mx, 50%) var(--my, 50%), ${primary}55, transparent 55%)`, opacity: 'var(--sO, 0)', transition: 'opacity 0.3s', mixBlendMode: 'overlay', pointerEvents: 'none' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at var(--mx, 50%) var(--my, 50%), var(--org-a35), transparent 55%)`, opacity: 'var(--sO, 0)', transition: 'opacity 0.3s', mixBlendMode: 'overlay', pointerEvents: 'none' }} />
                 </motion.div>
               )
             })}

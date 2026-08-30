@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import SignedImg from '../../shared/SignedImg'
+import Icon from '../../../lib/icons'
 
 // Sidebar primitives. Kept deliberately small: the previous nav repeated the
 // same 25-line button ten times, so a change to hover, focus or active styling
@@ -35,22 +36,26 @@ export function SidebarItem({
         // so nothing shifts horizontally when the active item changes.
         borderLeft: active ? `3px solid ${primary}` : '3px solid transparent',
         background: active
-          ? `${primary}1F`
+          ? 'var(--org-a10)'
           : highlight ? 'rgba(255,255,255,0.045)' : 'transparent',
         color: active ? '#fff' : highlight ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.5)',
         fontSize: 13, fontWeight: active ? 650 : 500,
         marginBottom: 1, cursor: 'pointer', textAlign: 'left',
-        outline: focused ? `2px solid ${primary}88` : 'none',
+        outline: focused ? `2px solid var(--org-a60)` : 'none',
         outlineOffset: -2,
         position: 'relative',
         transition: 'background 180ms ease, color 180ms ease',
       }}
     >
+      {/* grayscale() was there to mute emoji. A Lucide icon inherits
+          currentColor, so opacity alone does the same job without the
+          filter, and Icon falls back to the raw glyph for anything not
+          converted yet. */}
       <span style={{
-        fontSize: 15, width: 20, textAlign: 'center', flexShrink: 0,
-        opacity: active ? 1 : muted ? 0.7 : 0.9,
-        filter: active ? 'none' : 'grayscale(0.25)',
-      }}>{icon}</span>
+        fontSize: 15, width: 20, display: 'flex', alignItems: 'center',
+        justifyContent: 'center', flexShrink: 0,
+        opacity: active ? 1 : muted ? 0.75 : 0.85,
+      }}><Icon name={icon} size={17} tone={active ? 'brand' : 'inherit'} /></span>
 
       {!collapsed && (
         <span style={{
@@ -200,7 +205,7 @@ export function SidebarCollapsibleGroup({
           transition: 'background 180ms ease, color 180ms ease',
         }}
       >
-        <span style={{ fontSize: 15, width: 20, textAlign: 'center', flexShrink: 0, filter: 'grayscale(0.25)' }}>{icon}</span>
+        <span style={{ fontSize: 15, width: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: 0.85 }}><Icon name={icon} size={17} tone={hasActiveChild ? 'brand' : 'inherit'} /></span>
         <span style={{ flex: 1 }}>{label}</span>
         <span style={{
           fontSize: 11, color: 'rgba(255,255,255,0.3)',
@@ -252,13 +257,13 @@ export function CreateMenu({ actions, onSelect, primary, collapsed }) {
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: 7, padding: collapsed ? '9px 0' : '9px 12px', borderRadius: 10,
-          border: `1px solid ${primary}55`, background: `${primary}22`,
+          border: `1px solid var(--org-a35)`, background: 'var(--org-a10)',
           color: '#fff', fontSize: 13, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
           transition: 'background 180ms ease',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = `${primary}33` }}
-        onMouseLeave={e => { e.currentTarget.style.background = `${primary}22` }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--org-a20)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'var(--org-a10)' }}
       >
         <span style={{ fontSize: 15, lineHeight: 1 }}>+</span>
         {!collapsed && <span>Create</span>}
@@ -338,10 +343,10 @@ export function ProfileMenu({
       >
         <span style={{
           width: 32, height: 32, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
-          background: `linear-gradient(135deg, ${primary}99, #6366F199)`,
+          background: `linear-gradient(135deg, var(--org-a60), #6366F199)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 13, fontWeight: 800, color: '#fff',
-          border: `1.5px solid ${primary}55`,
+          border: `1.5px solid var(--org-a35)`,
         }}>
           {photoUrl
             ? <SignedImg src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

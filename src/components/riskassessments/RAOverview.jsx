@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { ACTIVITY_ICON, RatingBadge, timeAgo, daysUntil } from './ra_shared'
 import { SAFETY, SAFETY_META, safetyStateOf, summariseSafety, buildAttentionItems, activeOnly } from './ra_safety'
+import Icon from '../../lib/icons'
 
 // The operational overview. Ordered by urgency rather than by data model: what
 // needs doing, what is coming up, then the library. A manager should be able to
@@ -81,7 +82,7 @@ function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated 
   if (!items.length) {
     return (
       <div style={{ ...CARD, padding: '26px 20px', marginBottom: 14, textAlign: 'center' }}>
-        <div style={{ fontSize: 26, marginBottom: 6 }}>✅</div>
+        <div style={{ fontSize: 26, marginBottom: 6 }}><Icon name="✅" /></div>
         <div style={{ fontSize: 15.5, fontWeight: 800, color: '#1C1B2E', marginBottom: 4 }}>
           Everything is ready
         </div>
@@ -186,7 +187,7 @@ function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, 
               </div>
               <div style={{ fontSize: 12.5, color: '#8B87A3' }}>{fmtSessionWhen(s)}</div>
               {s.location && (
-                <div style={{ fontSize: 12, color: '#8B87A3', marginTop: 2 }}>📍 {s.location}</div>
+                <div style={{ fontSize: 12, color: '#8B87A3', marginTop: 2 }}><Icon name="📍" /> {s.location}</div>
               )}
 
               <div style={{

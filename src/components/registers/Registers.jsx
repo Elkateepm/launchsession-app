@@ -7,10 +7,12 @@ import { signRows, signOne } from '../../lib/storageUrl'
 import { useTodaySession, useAttendance, useChildren, useOnlineStatus } from '../../lib/hooks'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { TemplatePicker } from './TemplateCreator'
+import { TemplatePicker, AVAILABLE_FIELDS, SAMPLE_ROW } from './TemplateCreator'
 import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
+import shrinkImage from '../../lib/shrinkImage'
+import Icon from '../../lib/icons'
 
 const DEFAULT_BUBBLES = [
   { key: 'red',    label: 'Red',    color: '#E53935', dark: '#B71C1C' },
@@ -99,7 +101,7 @@ export function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) 
           Add the groups your participants are organised into — like "Under 10s" or "Beginners".
         </div>
 
-        {error && <div style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12 }}>⚠️ {error}</div>}
+        {error && <div style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12 }}><Icon name="⚠️" /> {error}</div>}
 
         {/* Presets */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 20 }}>
@@ -118,7 +120,7 @@ export function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) 
               <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <div style={{ width: 12, height: 12, borderRadius: '50%', background: g.color, flexShrink: 0 }} />
                 <span style={{ flex: 1, fontSize: 14, color: '#fff' }}>{g.label}</span>
-                <button onClick={() => removeGroup(g.id)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                <button onClick={() => removeGroup(g.id)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 16 }}><Icon name="✕" /></button>
               </div>
             ))}
           </div>
@@ -133,7 +135,7 @@ export function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) 
             <label title="Pick a colour" style={{ position: 'relative', width: 54, height: 54, borderRadius: 14, flexShrink: 0, background: newColor, border: '2px solid rgba(255,255,255,0.25)', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)}
                 style={{ position: 'absolute', inset: -4, width: 'calc(100% + 8px)', height: 'calc(100% + 8px)', border: 'none', padding: 0, cursor: 'pointer', opacity: 0 }} />
-              <span style={{ fontSize: 16, pointerEvents: 'none', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>🎨</span>
+              <span style={{ fontSize: 16, pointerEvents: 'none', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}><Icon name="🎨" /></span>
             </label>
           </div>
           <button onClick={addCustom} style={{ width: '100%', padding: '13px 16px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ Add Group</button>
@@ -295,7 +297,10 @@ function EditChildForm({ child, onSaved }) {
 }
 
 // ─── INLINE IMPORT ────────────────────────────────────────────
-const CSV_COLS = ['first_name','last_name','date_of_birth','group_name','allergies','medical_notes','sen','emergency_contact_name','emergency_contact_phone']
+// Default column set when no custom template is chosen. Deliberately the full
+// set rather than a minimal one: an org that imports without parent_email ends
+// up with an empty newsletter audience and no obvious reason why.
+const CSV_COLS = AVAILABLE_FIELDS.map(f => f.key)
 
 function InlineChildImport({ org, template, onImported }) {
   const [step, setStep] = useState('upload')
@@ -338,13 +343,18 @@ function InlineChildImport({ org, template, onImported }) {
   const handleImport = async () => {
     setImporting(true)
     const { data: { session } } = await supabase.auth.getSession()
-    const records = rows.filter(r => r.first_name && r.last_name).map(r => ({
-      first_name: r.first_name.trim(), last_name: r.last_name.trim(),
-      date_of_birth: r.date_of_birth || null, group_name: r.group_name || null,
-      allergies: r.allergies || null, medical_notes: r.medical_notes || null,
-      emergency_contact_name: r.emergency_contact_name || null,
-      emergency_contact_phone: r.emergency_contact_phone || null, active: true,
-    }))
+    // Whatever columns the file actually has, filtered to the ones the app
+    // knows about. This used to be a hardcoded list of nine, so a template
+    // including SEN or parent email produced a CSV with those columns and then
+    // silently threw the values away on import.
+    const allowed = new Set(AVAILABLE_FIELDS.map(f => f.key))
+    const records = rows.filter(r => r.first_name && r.last_name).map(r => {
+      const rec = { active: true }
+      Object.entries(r).forEach(([k, v]) => {
+        if (allowed.has(k) && String(v).trim() !== '') rec[k] = String(v).trim()
+      })
+      return rec
+    })
     const res = await fetch('/api/import-children', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
@@ -358,9 +368,11 @@ function InlineChildImport({ org, template, onImported }) {
   }
 
   const downloadTemplate = () => {
-    const sample = { first_name: 'Sarah', last_name: 'Jones', date_of_birth: '2015-06-14', group_name: 'Red', allergies: 'Nut allergy', medical_notes: 'Asthma', sen: '', emergency_contact_name: 'Jane Jones', emergency_contact_phone: '07700900000' }
     const cols = template?.fields?.length ? template.fields.map(f => f.key) : CSV_COLS
-    const row = cols.map(c => sample[c] || '').join(',')
+    // Quote every cell: notes and medication details routinely contain commas,
+    // and one unquoted comma shifts every later column by a place.
+    const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`
+    const row = cols.map(c => q(SAMPLE_ROW[c] ?? '')).join(',')
     const blob = new Blob([`${cols.join(',')}\n${row}\n`], { type: 'text/csv' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${template?.name?.replace(/[^a-z0-9]+/gi,'-').toLowerCase() || 'children'}-import.csv`; a.click()
   }
@@ -370,7 +382,7 @@ function InlineChildImport({ org, template, onImported }) {
   if (step === 'preview') return (
     <div>
       {errors.length > 0 && <div style={{ background: '#FFF0F0', border: '1px solid #FFB3B3', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
-        {errors.map((e,i) => <div key={i} style={{ fontSize: 11, color: '#C00' }}>⚠ {e}</div>)}
+        {errors.map((e,i) => <div key={i} style={{ fontSize: 11, color: '#C00' }}><Icon name="⚠" /> {e}</div>)}
       </div>}
       <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8, fontWeight: 600 }}>{rows.length} records ready</div>
       <div style={{ background: '#F9FAFB', borderRadius: 8, border: '1px solid #e5e7eb', maxHeight: 140, overflowY: 'auto', marginBottom: 10 }}>
@@ -383,7 +395,7 @@ function InlineChildImport({ org, template, onImported }) {
         {rows.length > 8 && <div style={{ padding: '5px 10px', fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>+{rows.length - 8} more</div>}
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
-        <button onClick={() => setStep('upload')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: '#6B7280' }}>← Back</button>
+        <button onClick={() => setStep('upload')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: '#6B7280' }}><Icon name="←" /> Back</button>
         <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ flex: 2, padding: '8px', borderRadius: 8, border: 'none', background: errors.length > 0 ? '#9CA3AF' : primary, color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
           {importing ? 'Importing...' : `Import ${rows.filter(r=>r.first_name&&r.last_name).length}`}
         </button>
@@ -394,16 +406,16 @@ function InlineChildImport({ org, template, onImported }) {
   return (
     <div>
       <div onClick={() => inputRef.current?.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }}
-        style={{ border: `2px dashed ${primary}50`, borderRadius: 10, padding: '14px 10px', textAlign: 'center', cursor: 'pointer', background: primary + '06', marginBottom: 8 }}>
+        style={{ border: `2px dashed var(--org-a35)`, borderRadius: 10, padding: '14px 10px', textAlign: 'center', cursor: 'pointer', background: primary + '06', marginBottom: 8 }}>
         <input ref={inputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
-        <div style={{ fontSize: 20, marginBottom: 4 }}>📂</div>
+        <div style={{ fontSize: 20, marginBottom: 4 }}><Icon name="📂" /></div>
         <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>Drop CSV or click to browse</div>
       </div>
       <textarea value={csvText} onChange={e => setCsvText(e.target.value)} placeholder="or paste CSV here..." rows={3} style={fi} />
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: `1px solid ${primary}40`, background: primary + '10', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>⬇ Template</button>
+        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: `1px solid var(--org-a20)`, background: primary + '10', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
         <button onClick={() => { const { rows: p, errs } = parseCSV(csvText); setRows(p); setErrors(errs); setStep('preview') }} disabled={!csvText.trim()}
-          style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: csvText.trim() ? primary : '#9CA3AF', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Preview →</button>
+          style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: csvText.trim() ? primary : '#9CA3AF', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Preview <Icon name="→" /></button>
       </div>
     </div>
   )
@@ -415,20 +427,50 @@ function NotesTab({ child }) {
   const [notes, setNotes] = useState(child.notes || '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
   const timerRef = React.useRef(null)
+  const latestRef = React.useRef(child.notes || '')
+  const dirtyRef = React.useRef(false)
+  const mountedRef = React.useRef(true)
 
   const save = React.useCallback(async (value) => {
     setSaving(true)
-    await supabase.from('children').update({ notes: value || null }).eq('id', child.id)
+    const { error: e } = await supabase.from('children').update({ notes: value || null }).eq('id', child.id)
+    if (!mountedRef.current) return
     setSaving(false)
+    if (e) {
+      // Previously any failure still showed "Saved". Someone recording a
+      // concern about a child would have walked away believing it was stored.
+      setError('Not saved — check your connection and try again')
+      return
+    }
+    dirtyRef.current = false
+    setError('')
     setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setTimeout(() => { if (mountedRef.current) setSaved(false) }, 2000)
+  }, [child.id])
+
+  // The debounce is 1.2s, so closing the drawer straight after typing used to
+  // drop the last edit silently and then setState on an unmounted component.
+  // Flush the pending value on the way out instead of cancelling it.
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      clearTimeout(timerRef.current)
+      if (dirtyRef.current) {
+        supabase.from('children').update({ notes: latestRef.current || null }).eq('id', child.id)
+      }
+    }
   }, [child.id])
 
   const handleChange = (e) => {
     const value = e.target.value
+    latestRef.current = value
+    dirtyRef.current = true
     setNotes(value)
     setSaved(false)
+    setError('')
     clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => save(value), 1200)
   }
@@ -437,8 +479,8 @@ function NotesTab({ child }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>Private notes about {child.first_name}</div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: saving ? '#F59E0B' : saved ? '#16A34A' : 'transparent' }}>
-          {saving ? 'Saving...' : '✓ Saved'}
+        <div aria-live="polite" style={{ fontSize: 11, fontWeight: 700, color: error ? '#DC2626' : saving ? '#B45309' : saved ? '#15803D' : 'transparent' }}>
+          {error || (saving ? 'Saving…' : '✓ Saved')}
         </div>
       </div>
       <textarea
@@ -464,6 +506,20 @@ function PhotosTab({ child, org }) {
   const [authUserId, setAuthUserId] = useState(null)
   const fileInputRef = React.useRef()
 
+  // The drawer closes on Escape via a document-level listener. Without this,
+  // pressing Escape to dismiss an enlarged photo closed the whole child record
+  // instead. Capture phase so this runs first, and stop it going further.
+  useEffect(() => {
+    if (!viewing) return undefined
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      setViewing(null)
+    }
+    document.addEventListener('keydown', onKey, true)
+    return () => document.removeEventListener('keydown', onKey, true)
+  }, [viewing])
+
   const load = React.useCallback(async () => {
     setLoading(true)
     const { data } = await supabase
@@ -486,7 +542,8 @@ function PhotosTab({ child, org }) {
     setUploading(true)
     const ext = file.name.split('.').pop()
     const path = `${org?.id}/children/${child.id}/attachments/${Date.now()}.${ext}`
-    const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { contentType: file.type })
+    const up = await shrinkImage(file)
+    const { error: upErr } = await supabase.storage.from('gallery').upload(path, up, { contentType: up.type })
     if (!upErr) {
       await supabase.from('child_attachments').insert({
         org_id: org?.id, child_id: child.id, url: path, storage_path: path, uploaded_by: authUserId,
@@ -556,20 +613,257 @@ function PhotosTab({ child, org }) {
 }
 
 // ─── CHILD DRAWER ─────────────────────────────────────────────
+// ─── ACTIVITY TAB ─────────────────────────────────────────────
+// A history timeline for one child, built only from attendance rows that
+// already exist. Nothing here is invented: each entry is a real sign-in or
+// sign-out against a real session. Note edits and detail changes are not
+// shown because there is no audit trail behind them yet -- an "Updated
+// details" row would have to be fabricated to appear.
+function ActivityTab({ child, org }) {
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      setError('')
+      if (!org?.id) { setLoading(false); return }
+      // Fetched wider than it is shown. limit() applies to attendance rows,
+      // and one row yields up to two events, so limiting to 50 rows here and
+      // showing 50 events would cut the timeline at an arbitrary point. Rows
+      // are ordered by created_at because that is the only column every row
+      // has -- an unmarked row has neither timestamp -- so the real ordering
+      // is done below, after the events exist.
+      const { data, error: e } = await supabase
+        .from('attendance')
+        .select('id, status, signed_in_at, signed_out_at, absence_reason, created_at, session_id, sessions(title, session_date)')
+        .eq('child_id', child.id)
+        .eq('org_id', org.id)
+        .order('created_at', { ascending: false })
+        .limit(120)
+      if (cancelled) return
+      if (e) {
+        // An unreadable history is not an empty history. Saying "no activity"
+        // when the query failed tells a safeguarding lead this child has never
+        // attended, which is a different and much worse claim.
+        setError('Activity could not be loaded')
+        setLoading(false)
+        return
+      }
+      // One attendance row can be two events -- arrived, then left -- so it is
+      // flattened into separate timeline entries and re-sorted by the moment
+      // each thing actually happened.
+      const events = []
+      for (const r of data || []) {
+        const label = r.sessions?.title || 'Session'
+        if (r.signed_in_at) events.push({ id: r.id + '-in', at: r.signed_in_at, title: 'Signed in', detail: label, tone: 'green' })
+        if (r.signed_out_at) events.push({ id: r.id + '-out', at: r.signed_out_at, title: 'Signed out', detail: label, tone: 'blue' })
+        if (r.status === 'absent' && !r.signed_in_at) {
+          // session_date is the only date an absence has, and it arrives
+          // through the embedded join -- which returns null for anyone without
+          // Planner access, since sessions carries its own module gate. Those
+          // entries still appear, dated from the attendance row instead.
+          events.push({
+            id: r.id + '-abs',
+            at: r.sessions?.session_date || r.created_at || null,
+            title: 'Marked absent',
+            detail: r.absence_reason ? `${label} — ${r.absence_reason}` : label,
+            tone: 'slate',
+          })
+        }
+      }
+      // Tie-break on id so two events sharing a timestamp keep a stable order
+      // between renders rather than depending on fetch order.
+      events.sort((a, b) => (new Date(b.at || 0) - new Date(a.at || 0)) || a.id.localeCompare(b.id))
+      setRows(events.slice(0, 60))
+      setLoading(false)
+    })()
+    return () => { cancelled = true }
+  }, [child.id, org?.id])
+
+  const TONES = {
+    green: '#16A34A',
+    blue: '#2563EB',
+    slate: '#94A3B8',
+  }
+
+  if (loading) return <div style={{ padding: '28px 0', textAlign: 'center', fontSize: 13, color: '#64748B' }}>Loading activity…</div>
+
+  if (error) {
+    return (
+      <div style={{ padding: '22px 18px', textAlign: 'center', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 12 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#B91C1C', marginBottom: 3 }}>{error}</div>
+        <div style={{ fontSize: 12.5, color: '#B91C1C', lineHeight: 1.55 }}>
+          This does not mean {child.first_name} has no attendance history — the record could not be read.
+        </div>
+      </div>
+    )
+  }
+
+  if (rows.length === 0) {
+    return (
+      <div style={{ padding: '28px 20px', textAlign: 'center' }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#334155', marginBottom: 4 }}>No activity yet</div>
+        <div style={{ fontSize: 12.5, color: '#94A3B8', lineHeight: 1.6 }}>
+          Sign-ins and sign-outs will appear here once {child.first_name} has attended a session.
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {rows.map((r, i) => (
+        <div key={r.id} style={{ display: 'flex', gap: 12, padding: '11px 0', borderBottom: i === rows.length - 1 ? 'none' : '1px solid #F1F5F9' }}>
+          <div style={{ width: 8, height: 8, borderRadius: 8, background: TONES[r.tone], marginTop: 6, flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{r.title}</div>
+            <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 1 }}>{r.detail}</div>
+          </div>
+          <div style={{ fontSize: 12, color: '#64748B', whiteSpace: 'nowrap', textAlign: 'right' }}>
+            {r.at ? format(new Date(r.at), 'd MMM · HH:mm') : '—'}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── SHARED ROW PRIMITIVES ────────────────────────────────────
+// Plain label/value rows rather than a coloured card each. Colour is reserved
+// for things that need attention, so ordinary profile data stays neutral and
+// the medical panel is the only thing competing for the eye.
+function InfoRow({ label, children, last }) {
+  return (
+    <div style={{ display: 'flex', gap: 16, padding: '10px 0', borderBottom: last ? 'none' : '1px solid #F1F5F9', alignItems: 'baseline' }}>
+      <div style={{ fontSize: 12.5, color: '#64748B', width: 130, flexShrink: 0 }}>{label}</div>
+      <div style={{ fontSize: 13.5, color: '#0F172A', fontWeight: 600, flex: 1, minWidth: 0 }}>{children}</div>
+    </div>
+  )
+}
+
+function SectionHeading({ children, action }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '20px 0 2px' }}>
+      <h3 style={{ fontSize: 12, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>{children}</h3>
+      {action}
+    </div>
+  )
+}
+
+// ─── CHILD DRAWER ─────────────────────────────────────────────
 function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], onClose, primary, org, hasSession, onGroupChange, onChildUpdated }) {
   const isMobile = useIsMobile()
   const dragControls = useDragControls()
-  const [drawerTab, setDrawerTab] = useState('info')
+  const [drawerTab, setDrawerTab] = useState('overview')
   const [photoUrl, setPhotoUrl] = useState(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [photoCount, setPhotoCount] = useState(null)
+  const [copied, setCopied] = useState(false)
+  const dialogRef = React.useRef(null)
+  const menuRef = React.useRef(null)
+  const closeBtnRef = React.useRef(null)
+  const tablistRef = React.useRef(null)
+  // Focus has to go back where it came from when the modal closes, or a
+  // keyboard user is dumped at the top of the register every time they look
+  // at a child.
+  const openerRef = React.useRef(typeof document !== 'undefined' ? document.activeElement : null)
 
   // child.photo_url holds an object path (or a legacy public URL) in the now
   // private gallery bucket, so it has to be signed before it can be rendered.
   useEffect(() => {
     let cancelled = false
-    if (!child.photo_url) { setPhotoUrl(null); return }
+    // Clear first. The drawer is reused across children rather than remounted,
+    // so without this the previous child's photograph stays on screen until the
+    // next one finishes signing -- and stays indefinitely if signing fails.
+    // Showing one child's photo against another child's record is its own
+    // safeguarding problem, so nothing is better than something stale here.
+    setPhotoUrl(null)
+    if (!child.photo_url) return undefined
     signOne('gallery', child.photo_url).then(u => { if (!cancelled) setPhotoUrl(u) })
     return () => { cancelled = true }
-  }, [child.photo_url])
+  }, [child.photo_url, child.id])
+
+  // Count only, for the tab label. PhotosTab still loads and signs the
+  // attachments itself when that tab is opened.
+  useEffect(() => {
+    let cancelled = false
+    setPhotoCount(null)
+    supabase.from('child_attachments').select('id', { count: 'exact', head: true }).eq('child_id', child.id)
+      .then(({ count }) => { if (!cancelled) setPhotoCount(count ?? null) })
+    return () => { cancelled = true }
+  }, [child.id])
+
+  // ESC closes. Menu first if it is open, so one press does not close both.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return
+      if (menuOpen) { setMenuOpen(false); return }
+      onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose, menuOpen])
+
+  // Return focus to whatever opened the modal, or a keyboard user is dumped
+  // back at the top of the register every time they look at a child. Read on
+  // mount and captured in a local, since the ref's value is not guaranteed to
+  // still be current by the time cleanup runs.
+  useEffect(() => {
+    const opener = openerRef.current
+    return () => { if (opener && typeof opener.focus === 'function') opener.focus() }
+  }, [])
+
+  // Move focus into the dialog on open, then keep it there.
+  //
+  // Wrapping at the first and last control is not a trap on its own: if focus
+  // never enters the dialog it simply tabs on through to the register behind,
+  // which is exactly what happened here, because opening the modal by pointer
+  // usually leaves activeElement on body. So focus is placed on the close
+  // button first, and a focusin listener pulls anything that lands outside
+  // back in.
+  useEffect(() => {
+    const node = dialogRef.current
+    if (!node) return undefined
+    const focusablesIn = () => Array.from(
+      node.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])')
+    ).filter(el => el.offsetParent !== null || el === document.activeElement)
+
+    closeBtnRef.current?.focus()
+
+    const onKeyDown = (e) => {
+      if (e.key !== 'Tab') return
+      const f = focusablesIn()
+      if (f.length === 0) return
+      const first = f[0]
+      const last = f[f.length - 1]
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+    }
+    const onFocusIn = (e) => {
+      if (node.contains(e.target)) return
+      const f = focusablesIn()
+      if (f.length) f[0].focus()
+    }
+    node.addEventListener('keydown', onKeyDown)
+    document.addEventListener('focusin', onFocusIn)
+    return () => {
+      node.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('focusin', onFocusIn)
+    }
+  }, [])
+
+  // Close the overflow menu on any outside click.
+  useEffect(() => {
+    if (!menuOpen) return undefined
+    const onDown = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [menuOpen])
+
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const currentGroup = child.group_name || ''
   const photoInputRef = React.useRef()
@@ -579,15 +873,24 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   const age = child.date_of_birth ? Math.floor((new Date() - new Date(child.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : null
   const signedInTime = attendanceRecord?.signed_in_at ? format(new Date(attendanceRecord.signed_in_at), 'HH:mm') : null
   const signedOutTime = attendanceRecord?.signed_out_at ? format(new Date(attendanceRecord.signed_out_at), 'HH:mm') : null
-  const hasAlerts = child.allergies || child.medical_notes
   const bColor = bubble?.color || primary || '#1B9AAA'
+  const PURPLE = '#7C3AED'
+
+  const medicalTags = [
+    child.has_epipen && 'EpiPen',
+    child.has_asthma && 'Asthma',
+    child.has_diabetes && 'Diabetes',
+    child.has_medication && 'Medication',
+    child.allergies && child.allergies,
+  ].filter(Boolean)
+  const hasMedical = medicalTags.length > 0 || !!child.medical_notes
 
   const statusCfg = {
-    signed_in:  { label: 'Signed In',  color: '#16A34A', bg: '#DCFCE7', icon: '✓' },
-    signed_out: { label: 'Signed Out', color: '#2563EB', bg: '#DBEAFE', icon: '↗' },
-    absent:     { label: 'Absent',     color: '#DC2626', bg: '#FEE2E2', icon: '✕' },
-    expected:   { label: 'Expected',   color: '#D97706', bg: '#FEF3C7', icon: '◌' },
-    unmarked:   { label: 'Not marked', color: '#6B7280', bg: '#F3F4F6', icon: '—' },
+    signed_in:  { label: 'Signed in',  color: '#15803D', bg: '#F0FDF4', border: '#BBF7D0' },
+    signed_out: { label: 'Signed out', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
+    absent:     { label: 'Absent',     color: '#B91C1C', bg: '#FEF2F2', border: '#FECACA' },
+    expected:   { label: 'Expected',   color: '#B45309', bg: '#FFFBEB', border: '#FDE68A' },
+    unmarked:   { label: 'Not marked', color: '#64748B', bg: '#F8FAFC', border: '#E2E8F0' },
   }
   const sc = statusCfg[status] || statusCfg.unmarked
 
@@ -597,7 +900,8 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
     setUploadingPhoto(true)
     const ext = file.name.split('.').pop()
     const path = `${org?.id}/children/${child.id}/photo.${ext}`
-    const { error: upErr } = await supabase.storage.from('gallery').upload(path, file, { upsert: true, contentType: file.type })
+    const up = await shrinkImage(file, { maxDimension: 900 })
+    const { error: upErr } = await supabase.storage.from('gallery').upload(path, up, { upsert: true, contentType: up.type })
     if (!upErr) {
       // Store the object path, not a URL: the bucket is private, so the only
       // durable reference is the path and signed URLs are minted at read time.
@@ -607,9 +911,49 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
     setUploadingPhoto(false)
   }
 
+  const removeFromRegister = async () => {
+    setMenuOpen(false)
+    if (!window.confirm(`Remove ${name} from the register?`)) return
+    const { error: e } = await supabase.from('children').update({ active: false }).eq('id', child.id)
+    if (e) {
+      // Closing regardless made a refused write look like a completed removal;
+      // the child reappears on the next load and nobody knows why.
+      window.alert(`${name} could not be removed: ${e.message}`)
+      return
+    }
+    onClose()
+  }
+
+  const copyNumber = async (number) => {
+    try {
+      await navigator.clipboard.writeText(number)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    } catch (err) { /* clipboard unavailable (insecure context, older WebView) */ }
+  }
+
+  const ghostBtn = {
+    padding: '7px 13px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff',
+    color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+  }
+
+  const TABS = [
+    ['overview', 'Overview'],
+    ['notes', 'Notes'],
+    ['photos', photoCount ? `Photos ${photoCount}` : 'Photos'],
+    ['activity', 'Activity'],
+  ]
+
   return createPortal(
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 10600, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 20 }} onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', zIndex: 10600, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 20 }}
+      onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}
+    >
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${name} — child profile`}
         onClick={e => e.stopPropagation()}
         drag={isMobile ? 'y' : false}
         dragListener={false}
@@ -617,199 +961,273 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         dragConstraints={{ top: 0, bottom: 400 }}
         dragElastic={{ top: 0.05, bottom: 0.6 }}
         onDragEnd={(e, info) => { if (info.offset.y > 100 || info.velocity.y > 500) onClose() }}
-        style={{ background: '#fff', borderRadius: isMobile ? '24px 24px 0 0' : 24, width: '100%', maxWidth: isMobile ? '100%' : 440, maxHeight: isMobile ? '94vh' : '92vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column' }}
+        style={{
+          background: '#fff', borderRadius: isMobile ? '24px 24px 0 0' : 23,
+          width: '100%', maxWidth: isMobile ? '100%' : 486,
+          // dvh follows the visible area rather than the layout viewport, so an
+          // open keyboard does not push the Notes textarea behind itself.
+          maxHeight: isMobile ? '94dvh' : '88vh',
+          border: isMobile ? 'none' : '1px solid #EEF1F5',
+          boxShadow: '0 24px 64px -12px rgba(15,23,42,0.28)',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        }}
       >
 
         {/* Mobile drag handle */}
         {isMobile && (
-          <div onPointerDown={e => dragControls.start(e)} style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4, cursor: 'grab', touchAction: 'none' }}>
-            <div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.12)' }} />
+          <div onPointerDown={e => dragControls.start(e)} style={{ display: 'flex', justifyContent: 'center', paddingTop: 10, paddingBottom: 2, cursor: 'grab', touchAction: 'none', flexShrink: 0 }}>
+            <div style={{ width: 40, height: 4, borderRadius: 99, background: '#E2E8F0' }} />
           </div>
         )}
 
-        {/* ── HERO HEADER ── */}
-        <div style={{ background: '#fff', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
-          {/* Coloured accent bar */}
-          <div style={{ height: 5, background: `linear-gradient(90deg, ${bColor}, ${bColor}99)`, borderRadius: '0 0 0 0' }} />
+        {/* ── SCROLLING BODY ── */}
+        <div style={{ overflowY: 'auto', flex: 1, WebkitOverflowScrolling: 'touch', scrollPaddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}>
 
           {/* Top controls */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px 0' }}>
-            <button onClick={async e => { e.stopPropagation(); if (!window.confirm(`Remove ${name} from the register?`)) return; await supabase.from('children').update({ active: false }).eq('id', child.id); onClose() }}
-              style={{ padding: '5px 12px', borderRadius: 99, background: '#FEF2F2', border: '1px solid #FECACA', cursor: 'pointer', color: '#DC2626', fontSize: 11, fontWeight: 700 }}>
-              Remove
-            </button>
-            <button onClick={e => { e.stopPropagation(); onClose() }}
-              style={{ width: 28, height: 28, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 6, padding: '12px 14px 0' }}>
+            <div ref={menuRef} style={{ position: 'relative' }}>
+              <button
+                onClick={() => setMenuOpen(v => !v)}
+                aria-label="More actions"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                title="More actions"
+                style={{ width: 32, height: 32, borderRadius: 9, background: menuOpen ? '#F1F5F9' : 'transparent', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#F1F5F9' }}
+                onMouseLeave={e => { if (!menuOpen) e.currentTarget.style.background = 'transparent' }}
+              >⋯</button>
+              {menuOpen && (
+                <div role="menu" style={{ position: 'absolute', top: 36, right: 0, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 12px 32px -8px rgba(15,23,42,0.22)', padding: 5, minWidth: 194, zIndex: 5 }}>
+                  {[
+                    ['Edit details', () => { setMenuOpen(false); setEditing(true) }],
+                    ['View photos', () => { setMenuOpen(false); setDrawerTab('photos') }],
+                    ['View activity', () => { setMenuOpen(false); setDrawerTab('activity') }],
+                  ].map(([label, fn]) => (
+                    <button key={label} role="menuitem" onClick={fn}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 11px', borderRadius: 8, border: 'none', background: 'transparent', color: '#0F172A', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = '#F8FAFC' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                      {label}
+                    </button>
+                  ))}
+                  <div style={{ height: 1, background: '#F1F5F9', margin: '5px 0' }} />
+                  <button role="menuitem" onClick={removeFromRegister}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 11px', borderRadius: 8, border: 'none', background: 'transparent', color: '#DC2626', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                    Remove from register
+                  </button>
+                </div>
+              )}
+            </div>
+            <button ref={closeBtnRef} onClick={onClose} aria-label="Close" title="Close"
+              style={{ width: 32, height: 32, borderRadius: 9, background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 19, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#F1F5F9' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>×</button>
           </div>
 
-          {/* Identity row */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '14px 16px 12px' }}>
-            {/* Avatar */}
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <div style={{ width: 80, height: 80, borderRadius: 24, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 900, color: '#fff', overflow: 'hidden', boxShadow: `0 8px 24px -8px ${bColor}90` }}>
+          {/* ── IDENTITY ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 24px 18px' }}>
+            <div style={{ position: 'relative', flexShrink: 0, marginBottom: 12 }}>
+              <div style={{ width: 76, height: 76, borderRadius: 22, background: bColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 25, fontWeight: 800, color: '#fff', overflow: 'hidden' }}>
                 {photoUrl
                   ? <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : <span>{initials}</span>
                 }
                 {uploadingPhoto && (
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 22 }}>
                     <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                   </div>
                 )}
               </div>
-              <button onClick={e => { e.stopPropagation(); photoInputRef.current?.click() }}
-                style={{ position: 'absolute', bottom: -3, right: -3, width: 22, height: 22, borderRadius: '50%', background: '#fff', border: `2px solid ${bColor}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }}>📷</button>
+              <button onClick={() => photoInputRef.current?.click()} aria-label="Change profile photo" title="Change profile photo"
+                style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: '50%', background: '#fff', border: '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, boxShadow: '0 2px 6px rgba(15,23,42,0.12)' }}><Icon name="📷" /></button>
               <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
             </div>
 
-            {/* Name + key facts */}
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', letterSpacing: -0.3, lineHeight: 1.15, marginBottom: 8 }}>{name}</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-                {age !== null && (
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#475569', background: '#F1F5F9', borderRadius: 99, padding: '2px 9px' }}>Age {age}</span>
-                )}
-                {(bubble || currentGroup) && (
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: bColor, borderRadius: 99, padding: '2px 9px' }}>{bubble?.label || currentGroup}</span>
-                )}
-                <span style={{ fontSize: 12, fontWeight: 800, color: sc.color, background: sc.bg, borderRadius: 99, padding: '2px 9px' }}>{sc.icon} {sc.label}</span>
-              </div>
-              <button onClick={() => setDrawerTab('photos')}
-                style={{ marginTop: 8, background: 'none', border: 'none', color: bColor, fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}>
-                ℹ️ More info — attached photos
-              </button>
+            <h2 style={{ fontSize: 21, fontWeight: 800, color: '#0F172A', letterSpacing: -0.4, lineHeight: 1.2, margin: '0 0 7px', textAlign: 'center' }}>{name}</h2>
+
+            <div style={{ display: 'flex', gap: 7, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', fontSize: 12.5, color: '#64748B' }}>
+              {age !== null && <span>Age {age}</span>}
+              {(bubble || currentGroup) && <><span aria-hidden="true">·</span><span>{bubble?.label || currentGroup}</span></>}
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: sc.color, background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 99, padding: '2px 9px' }}>{sc.label}</span>
             </div>
           </div>
 
-          {/* ── ALERT STRIP — prominent, can't miss it ── */}
-          {(hasAlerts || child.has_epipen || child.has_asthma || child.has_diabetes || child.has_medication) && (
-            <div style={{ margin: '0 16px 12px', background: '#FFF7ED', border: '1.5px solid #FED7AA', borderRadius: 12, padding: '10px 12px' }}>
-              <div style={{ fontSize: 10, fontWeight: 900, color: '#D97706', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
-                ⚠️ Medical Alerts
-              </div>
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: (child.allergies || child.medical_notes) ? 8 : 0 }}>
-                {child.has_epipen && <span style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: '#FEE2E2', borderRadius: 8, padding: '2px 8px' }}>💉 EpiPen</span>}
-                {child.has_asthma && <span style={{ fontSize: 11, fontWeight: 700, color: '#0891B2', background: '#E0F2FE', borderRadius: 8, padding: '2px 8px' }}>🫁 Asthma</span>}
-                {child.has_diabetes && <span style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', background: '#EDE9FE', borderRadius: 8, padding: '2px 8px' }}>💊 Diabetes</span>}
-                {child.has_medication && <span style={{ fontSize: 11, fontWeight: 700, color: '#D97706', background: '#FEF3C7', borderRadius: 8, padding: '2px 8px' }}>💊 Medication</span>}
-              </div>
-              {child.allergies && <div style={{ fontSize: 12, fontWeight: 700, color: '#92400E' }}>Allergies: {child.allergies}</div>}
-              {child.medical_notes && <div style={{ fontSize: 12, color: '#92400E', marginTop: 2 }}>Notes: {child.medical_notes}</div>}
-            </div>
-          )}
-
-          {/* Sign in/out times if applicable */}
-          {(signedInTime || signedOutTime) && (
-            <div style={{ display: 'flex', gap: 8, margin: '0 16px 12px' }}>
-              {signedInTime && (
-                <div style={{ flex: 1, background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '8px 12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#16A34A', textTransform: 'uppercase', letterSpacing: 1 }}>Signed In</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: '#15803D' }}>{signedInTime}</div>
+          {/* ── MEDICAL — the one thing allowed to shout ── */}
+          <div style={{ padding: '0 24px' }}>
+            {hasMedical ? (
+              <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, padding: '13px 15px' }}>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: '#92400E', display: 'flex', alignItems: 'center', gap: 6, marginBottom: medicalTags.length ? 9 : 4 }}>
+                  <span aria-hidden="true"><Icon name="⚠" /></span> Medical information
                 </div>
-              )}
-              {signedOutTime && (
-                <div style={{ flex: 1, background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: '8px 12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', letterSpacing: 1 }}>Signed Out</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: '#1D4ED8' }}>{signedOutTime}</div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* ── TABS ── */}
-        <div style={{ display: 'flex', padding: '8px 12px', gap: 4, background: '#fff', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
-          {[
-            ['info', 'Info'],
-            ['notes', 'Notes'],
-            ['photos', '📷 Photos'],
-            ['edit', 'Edit'],
-          ].map(([key, label]) => (
-            <button key={key} onClick={() => setDrawerTab(key)}
-              style={{ flex: 1, padding: '8px 6px', borderRadius: 10, border: 'none', background: drawerTab === key ? bColor : 'transparent', color: drawerTab === key ? '#fff' : '#94A3B8', fontWeight: drawerTab === key ? 800 : 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s' }}>
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* ── CONTENT ── */}
-        <div style={{ padding: '16px 18px 24px', flex: 1 }}>
-
-          {/* INFO */}
-          {drawerTab === 'info' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-
-              {/* Basic */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
-                <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', border: '1px solid #F1F5F9' }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Date of Birth</div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{child.date_of_birth ? format(new Date(child.date_of_birth), 'd MMM yyyy') : '—'}</div>
-                </div>
-                <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', border: '1px solid #F1F5F9' }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Age</div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{age !== null ? `${age} years old` : '—'}</div>
+                {medicalTags.length > 0 && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: child.medical_notes ? 9 : 0 }}>
+                    {medicalTags.map(t => (
+                      <span key={t} style={{ fontSize: 12, fontWeight: 700, color: '#92400E', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 8, padding: '3px 9px' }}>{t}</span>
+                    ))}
+                  </div>
+                )}
+                <div style={{ fontSize: 12.5, color: child.medical_notes ? '#78350F' : '#A16207', lineHeight: 1.55 }}>
+                  {child.medical_notes || 'No additional medical notes'}
                 </div>
               </div>
-              {child.school && (
-                <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '10px 14px', border: '1px solid #F1F5F9', fontSize: 13, color: '#374151' }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 2 }}>School</span>
-                  {child.school}
-                </div>
-              )}
+            ) : (
+              <div style={{ fontSize: 12.5, color: '#64748B', display: 'flex', alignItems: 'center', gap: 7 }}>
+                <span style={{ color: '#16A34A' }} aria-hidden="true"><Icon name="✓" /></span> No recorded medical alerts
+              </div>
+            )}
+          </div>
 
-              {/* SEN */}
-              {(child.sen || child.has_behaviour_plan) && (
-                <div style={{ background: 'rgba(5,150,105,0.06)', border: '1px solid rgba(5,150,105,0.2)', borderRadius: 14, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#059669', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>🧩 SEN Needs</div>
-                  {child.sen && <div style={{ fontSize: 12, color: '#374151', marginBottom: 4 }}>{child.sen}</div>}
-                  {child.has_behaviour_plan && <span style={{ fontSize: 11, fontWeight: 700, color: '#059669', background: 'rgba(5,150,105,0.1)', borderRadius: 8, padding: '2px 8px' }}>Behaviour Plan</span>}
-                </div>
-              )}
+          {/* ── TABS ── */}
+          <div
+            role="tablist"
+            aria-label="Child profile sections"
+            ref={tablistRef}
+            // Arrow keys move between tabs and only the selected tab is a Tab
+            // stop, which is the ARIA tab pattern. Four separate Tab stops
+            // made reaching the content four presses away.
+            onKeyDown={e => {
+              const keys = TABS.map(t => t[0])
+              const i = keys.indexOf(drawerTab)
+              let next = null
+              if (e.key === 'ArrowRight') next = keys[(i + 1) % keys.length]
+              else if (e.key === 'ArrowLeft') next = keys[(i - 1 + keys.length) % keys.length]
+              else if (e.key === 'Home') next = keys[0]
+              else if (e.key === 'End') next = keys[keys.length - 1]
+              if (!next) return
+              e.preventDefault()
+              setDrawerTab(next)
+              setEditing(false)
+              tablistRef.current?.querySelector(`#child-tab-${next}`)?.focus()
+            }}
+            style={{ display: 'flex', gap: 20, padding: '18px 24px 0', borderBottom: '1px solid #F1F5F9', margin: '4px 0 0' }}>
+            {TABS.map(([key, label]) => (
+              <button key={key} id={`child-tab-${key}`} role="tab"
+                aria-selected={drawerTab === key}
+                aria-controls={`child-panel-${key}`}
+                tabIndex={drawerTab === key ? 0 : -1}
+                onClick={() => { setDrawerTab(key); setEditing(false) }}
+                style={{
+                  padding: '0 0 10px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit',
+                  color: drawerTab === key ? PURPLE : '#64748B',
+                  fontWeight: drawerTab === key ? 800 : 600, fontSize: 13.5,
+                  borderBottom: `2px solid ${drawerTab === key ? PURPLE : 'transparent'}`,
+                  marginBottom: -1, transition: 'color 0.15s',
+                }}>
+                {label}
+              </button>
+            ))}
+          </div>
 
-              {/* Travel consent */}
-              {child.travel_consent && (
-                <div style={{ background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span>🚶</span>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#D97706' }}>Consent to travel home alone</div>
-                </div>
-              )}
+          {/* ── CONTENT ── */}
+          <div
+            id={`child-panel-${drawerTab}`}
+            role="tabpanel"
+            aria-labelledby={`child-tab-${drawerTab}`}
+            tabIndex={-1}
+            style={{ padding: '4px 24px 22px' }}>
 
-              {/* Emergency Contact */}
-              <div style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 14, padding: '14px 16px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: '#7C3AED', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>📞 Emergency Contact</div>
-                {child.emergency_contact_name ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            {editing ? (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 4px' }}>
+                  <h3 style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', margin: 0 }}>Edit details</h3>
+                  <button onClick={() => setEditing(false)} style={ghostBtn}>Cancel</button>
+                </div>
+                <EditChildForm child={child} onSaved={() => onChildUpdated ? onChildUpdated(child.id) : onClose()} />
+              </div>
+            ) : (
+              <>
+                {drawerTab === 'overview' && (
+                  <div>
+                    <SectionHeading action={
+                      <button onClick={() => setEditing(true)} style={{ background: 'none', border: 'none', color: PURPLE, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>Edit</button>
+                    }>Personal details</SectionHeading>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#111', marginBottom: 2 }}>{child.emergency_contact_name}</div>
-                      {child.emergency_contact_phone && (
-                        <a href={`tel:${child.emergency_contact_phone}`} style={{ fontSize: 13, color: '#7C3AED', textDecoration: 'none', fontWeight: 700 }}>{child.emergency_contact_phone}</a>
-                      )}
+                      <InfoRow label="Date of birth">{child.date_of_birth ? format(new Date(child.date_of_birth), 'd MMMM yyyy') : '—'}</InfoRow>
+                      <InfoRow label="Group">{bubble?.label || currentGroup || '—'}</InfoRow>
+                      {child.school && <InfoRow label="School">{child.school}</InfoRow>}
+                      <InfoRow label="Travel home alone" last={!child.sen && !child.has_behaviour_plan}>
+                        {child.travel_consent
+                          ? <span style={{ color: '#15803D' }}><Icon name="✓" /> Consent given</span>
+                          : <span style={{ color: '#64748B', fontWeight: 500 }}>Not given</span>}
+                      </InfoRow>
+                      {child.sen && <InfoRow label="SEN needs" last={!child.has_behaviour_plan}>{child.sen}</InfoRow>}
+                      {child.has_behaviour_plan && <InfoRow label="Behaviour plan" last>In place</InfoRow>}
                     </div>
-                    {child.emergency_contact_phone && (
-                      <a href={`tel:${child.emergency_contact_phone}`} style={{ width: 38, height: 38, borderRadius: 11, background: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, textDecoration: 'none', boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}>📞</a>
+
+                    <SectionHeading>Emergency contact</SectionHeading>
+                    {child.emergency_contact_name ? (
+                      <div style={{ paddingTop: 8 }}>
+                        <div style={{ fontSize: 14.5, fontWeight: 700, color: '#0F172A' }}>{child.emergency_contact_name}</div>
+                        {/* No relationship column exists on children yet, so
+                            the contact's role is labelled generically rather
+                            than rendering a field that is always empty. */}
+                        <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>Primary emergency contact</div>
+                        {child.emergency_contact_phone && (
+                          <>
+                            <div style={{ fontSize: 13.5, color: '#334155', marginTop: 4 }}>{child.emergency_contact_phone}</div>
+                            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                              <a href={`tel:${child.emergency_contact_phone}`}
+                                style={{ ...ghostBtn, background: PURPLE, borderColor: PURPLE, color: '#fff', textDecoration: 'none', display: 'inline-block' }}>
+                                Call
+                              </a>
+                              <button onClick={() => copyNumber(child.emergency_contact_phone)} style={ghostBtn}>
+                                <span aria-live="polite">{copied ? '✓ Copied' : 'Copy number'}</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 13, color: '#64748B', paddingTop: 8 }}>No emergency contact recorded</div>
+                    )}
+
+                    {(child.parent_name || child.parent_phone) && (
+                      <>
+                        <SectionHeading>Parent / carer</SectionHeading>
+                        <div style={{ paddingTop: 8 }}>
+                          {child.parent_name && <div style={{ fontSize: 14.5, fontWeight: 700, color: '#0F172A' }}>{child.parent_name}</div>}
+                          {child.parent_phone && (
+                            <>
+                              <div style={{ fontSize: 13.5, color: '#334155', marginTop: 4 }}>{child.parent_phone}</div>
+                              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                                <a href={`tel:${child.parent_phone}`} style={{ ...ghostBtn, textDecoration: 'none', display: 'inline-block' }}>Call</a>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </>
                     )}
                   </div>
-                ) : <div style={{ fontSize: 12, color: '#9CA3AF' }}>No emergency contact set</div>}
-              </div>
+                )}
 
-              {/* Parent / Carer */}
-              {(child.parent_name || child.parent_phone) && (
-                <div style={{ background: 'rgba(219,39,119,0.06)', border: '1px solid rgba(219,39,119,0.2)', borderRadius: 14, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#DB2777', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>❤️ Parent / Carer</div>
-                  {child.parent_name && <div style={{ fontSize: 14, fontWeight: 800, color: '#111', marginBottom: 2 }}>{child.parent_name}</div>}
-                  {child.parent_phone && <a href={`tel:${child.parent_phone}`} style={{ fontSize: 13, color: '#DB2777', textDecoration: 'none', fontWeight: 700 }}>{child.parent_phone}</a>}
-                </div>
-              )}
-            </div>
-          )}
+                {drawerTab === 'notes' && <div style={{ paddingTop: 16 }}><NotesTab child={child} /></div>}
 
-          {drawerTab === 'notes' && <NotesTab child={child} />}
+                {drawerTab === 'photos' && <div style={{ paddingTop: 16 }}><PhotosTab child={child} org={org} /></div>}
 
-          {drawerTab === 'photos' && <PhotosTab child={child} org={org} />}
-
-          {/* EDIT */}
-          {drawerTab === 'edit' && <EditChildForm child={child} onSaved={() => onChildUpdated ? onChildUpdated(child.id) : onClose()} />}
+                {drawerTab === 'activity' && <div style={{ paddingTop: 8 }}><ActivityTab child={child} org={org} /></div>}
+              </>
+            )}
+          </div>
         </div>
+
+        {/* ── SESSION FOOTER ──
+            Only when the modal was opened against a live register AND this
+            child has actually been marked. The marking itself lives in
+            LiveRegister, which owns the sign-in/out correctness rules, so this
+            reports state rather than duplicating that logic. */}
+        {hasSession && (signedInTime || signedOutTime) && (
+          <div style={{ borderTop: '1px solid #F1F5F9', background: '#FCFCFD', padding: '13px 24px calc(13px + env(safe-area-inset-bottom))', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700 }}>
+            {signedOutTime ? (
+              <><span style={{ color: '#2563EB' }} aria-hidden="true"><Icon name="✓" /></span><span style={{ color: '#1D4ED8' }}>Signed out at {signedOutTime}</span>
+                <span style={{ color: '#64748B', fontWeight: 500, marginLeft: 'auto' }}>In at {signedInTime}</span></>
+            ) : (
+              <><span style={{ color: '#16A34A' }} aria-hidden="true"><Icon name="✓" /></span><span style={{ color: '#15803D' }}>Signed in at {signedInTime}</span></>
+            )}
+          </div>
+        )}
+
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </motion.div>
     </div>,
@@ -819,7 +1237,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 
 
 // ─── CHILD CARD ───────────────────────────────────────────────
-function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, selectMode, onToggleSelect, dark }) {
+function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, selectMode, onToggleSelect, dark, roster }) {
   const bColor = bubble?.color || primary || '#1B9AAA'
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const [hovered, setHovered] = React.useState(false)
@@ -855,8 +1273,8 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
         padding: '10px 14px 10px 18px',
         overflow: 'hidden',
         background: dark
-          ? (selected ? `${primary}22` : hovered ? 'rgba(255,255,255,0.06)' : '#161A30')
-          : (selected ? `${primary}14` : hovered ? `${bColor}14` : `${bColor}08`),
+          ? (selected ? 'var(--org-a10)' : hovered ? 'rgba(255,255,255,0.06)' : '#161A30')
+          : (selected ? 'var(--org-a10)' : hovered ? `${bColor}14` : `${bColor}08`),
         border: dark
           ? `1px solid ${selected ? primary + '55' : 'rgba(255,255,255,0.08)'}`
           : `1.5px solid ${selected ? primary + '45' : hovered ? bColor + '38' : bColor + '20'}`,
@@ -893,10 +1311,10 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
               {bubble?.label || 'Ungrouped'}
             </span>
             {child.allergies && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#FBBF24' : '#D97706', background: dark ? 'rgba(251,191,36,0.14)' : 'linear-gradient(135deg,#FEF3C7,#FDE68A)', borderRadius: 6, padding: '1px 6px' }}>⚠ ALLERGY</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#FBBF24' : '#D97706', background: dark ? 'rgba(251,191,36,0.14)' : 'linear-gradient(135deg,#FEF3C7,#FDE68A)', borderRadius: 6, padding: '1px 6px' }}><Icon name="⚠" /> ALLERGY</span>
             )}
             {child.medical_notes && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#F87171' : '#DC2626', background: dark ? 'rgba(248,113,113,0.14)' : 'linear-gradient(135deg,#FEE2E2,#FECACA)', borderRadius: 6, padding: '1px 6px' }}>✚ MEDICAL</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#F87171' : '#DC2626', background: dark ? 'rgba(248,113,113,0.14)' : 'linear-gradient(135deg,#FEE2E2,#FECACA)', borderRadius: 6, padding: '1px 6px' }}><Icon name="✚" /> MEDICAL</span>
             )}
           </div>
         </div>
@@ -904,6 +1322,23 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
 
       {/* Status + chevron */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        {roster ? (
+          // No session is open, so there is nothing to mark. Fifty-four grey
+          // "Not marked" chips implied a pending job that could not be done;
+          // school and age are at least worth reading while browsing the roster.
+          <div style={{ textAlign: 'right', minWidth: 0 }}>
+            {child.school && (
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: dark ? '#94A3B8' : '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>
+                {child.school}
+              </div>
+            )}
+            {child.date_of_birth && (
+              <div style={{ fontSize: 11, color: dark ? '#64748B' : '#94A3B8', marginTop: 1 }}>
+                {Math.floor((Date.now() - new Date(child.date_of_birth)) / 31557600000)} yrs
+              </div>
+            )}
+          </div>
+        ) : (
         <div
           onClick={e => { e.stopPropagation(); if (onMark) onMark() }}
           style={{ display: 'flex', alignItems: 'center', gap: 5, background: dark ? 'transparent' : sc.bg, borderRadius: 99, padding: dark ? '5px 0' : '5px 12px', cursor: onMark ? 'pointer' : 'default', transition: 'transform 0.12s', boxShadow: !dark && (status === 'signed_in' || status === 'signed_out' || status === 'absent') ? '0 2px 6px -3px rgba(0,0,0,0.25)' : 'none' }}
@@ -913,6 +1348,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
           <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.dot }} />
           <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
         </div>
+        )}
         {dark && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>›</span>}
       </div>
     </motion.div>
@@ -944,7 +1380,7 @@ function EncouragementPanel({ org, primary }) {
 
   return (
     <div style={{ padding: '12px 14px', borderTop: '1px solid #F3F4F6', marginTop: 'auto' }}>
-      <div style={{ background: `linear-gradient(135deg, ${primary}10, ${primary}06)`, border: `1px solid ${primary}20`, borderRadius: 12, padding: '12px 14px' }}>
+      <div style={{ background: `linear-gradient(135deg, var(--org-a05), var(--org-a05))`, border: `1px solid var(--org-a10)`, borderRadius: 12, padding: '12px 14px' }}>
         <div style={{ fontSize: 20, marginBottom: 8 }}>{quote.emoji}</div>
         <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', lineHeight: 1.6, fontStyle: 'italic' }}>
           "{quote.text}"
@@ -1203,7 +1639,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   // only apply when the Dark Mode toggle (in Register Options) is switched on.
   const t = {
     pageBg: darkMode ? 'linear-gradient(180deg, #0A0D1C 0%, #12152A 100%)' : '#F8FAFC',
-    headerBg: darkMode ? 'linear-gradient(165deg, #171B33 0%, rgba(16,19,36,0) 60%)' : `linear-gradient(165deg, ${primary}0A 0%, #fff 55%)`,
+    headerBg: darkMode ? 'linear-gradient(165deg, #171B33 0%, rgba(16,19,36,0) 60%)' : `linear-gradient(165deg, var(--org-a05) 0%, #fff 55%)`,
     headerBorder: darkMode ? 'rgba(255,255,255,0.08)' : '#EEF1F6',
     text: darkMode ? '#F1F5F9' : '#0B1220',
     textSub: darkMode ? '#94A3B8' : '#64748B',
@@ -1229,7 +1665,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       {/* TOAST */}
       {toast && (
         <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', borderRadius: 12, padding: '11px 20px', fontSize: 13, fontWeight: 700, zIndex: 10900, boxShadow: '0 8px 24px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
-          <span style={{ color: '#4ADE80' }}>✓</span> {toast}
+          <span style={{ color: '#4ADE80' }}><Icon name="✓" /></span> {toast}
         </div>
       )}
 
@@ -1247,7 +1683,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           padding: isMobile ? '12px 16px 8px' : '18px 20px 12px', flexShrink: 0, position: 'relative',
           transition: 'background 0.4s ease',
         }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: isLiveSession ? 'linear-gradient(90deg, #16A34A, #4ADE80 45%, transparent)' : `linear-gradient(90deg, ${primary}, ${primary}44, transparent)` }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: isLiveSession ? 'linear-gradient(90deg, #16A34A, #4ADE80 45%, transparent)' : `linear-gradient(90deg, ${primary}, var(--org-a20), transparent)` }} />
           {isLiveSession && (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '35%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)', animation: 'reg-live-sweep 2.6s ease-in-out infinite' }} />
@@ -1264,7 +1700,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: isMobile ? 8 : 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 9 : 12, minWidth: 0 }}>
-              <div style={{ width: isMobile ? 32 : 42, height: isMobile ? 32 : 42, borderRadius: isMobile ? 10 : 13, background: isLiveSession ? 'linear-gradient(135deg, #16A34A, #22C55E)' : `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 15 : 19, flexShrink: 0, boxShadow: isLiveSession ? '0 4px 16px -4px rgba(22,163,74,0.65)' : `0 4px 14px -5px ${primary}90`, position: 'relative' }}>
+              <div style={{ width: isMobile ? 32 : 42, height: isMobile ? 32 : 42, borderRadius: isMobile ? 10 : 13, background: isLiveSession ? 'linear-gradient(135deg, #16A34A, #22C55E)' : `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 15 : 19, flexShrink: 0, boxShadow: isLiveSession ? '0 4px 16px -4px rgba(22,163,74,0.65)' : `0 4px 14px -5px var(--org-a60)`, position: 'relative' }}>
                 <img src="/icons/registers-icon.png" alt="" style={{ width: isMobile ? 22 : 28, height: isMobile ? 22 : 28, objectFit: 'contain' }} />
                 {isLiveSession && (
                   <span data-reg-live-anim style={{ position: 'absolute', inset: -2, borderRadius: 'inherit', border: '2px solid #22C55E', animation: 'reg-live-ping 2.4s ease-out infinite', pointerEvents: 'none' }} />
@@ -1350,7 +1786,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                       {a.icon.startsWith('/') ? (
                         <img src={a.icon} alt="" style={{ width: 30, height: 30, objectFit: 'contain', flexShrink: 0 }} />
                       ) : (
-                        <span style={{ fontSize: 22, lineHeight: 1 }}>{a.icon}</span>
+                        <span style={{ fontSize: 22, lineHeight: 1 }}><Icon name={a.icon} /></span>
                       )}
                     </button>
                   )
@@ -1389,7 +1825,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                     width: isMobile ? 32 : 38, height: isMobile ? 32 : 38, borderRadius: 11, flexShrink: 0,
                     background: `linear-gradient(135deg, ${s.color}, ${s.color}CC)`, boxShadow: `0 4px 10px -3px ${s.color}70`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 14 : 16,
-                  }}>{s.icon}</span>
+                  }}><Icon name={s.icon} /></span>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: 900, color: t.text, lineHeight: 1.1 }}>{s.value}</div>
                     <div style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 700, color: s.live ? (darkMode ? '#4ADE80' : '#15803D') : t.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -1398,14 +1834,14 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                     </div>
                   </div>
                   {s.onClick && (
-                    <span style={{ marginLeft: 'auto', fontSize: 12, color: s.color, opacity: 0.6, flexShrink: 0 }}>→</span>
+                    <span style={{ marginLeft: 'auto', fontSize: 12, color: s.color, opacity: 0.6, flexShrink: 0 }}><Icon name="→" /></span>
                   )}
                 </motion.button>
               ))}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 8 : 12 }}>
               <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: t.textMuted }}>🔍</span>
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: t.textMuted }}><Icon name="🔍" /></span>
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -1437,7 +1873,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
         {/* OFFLINE BANNER */}
         {showOfflineBanner && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: darkMode ? 'rgba(217,119,6,0.16)' : '#FFFBEB', borderBottom: `1px solid ${darkMode ? 'rgba(217,119,6,0.3)' : '#FDE68A'}`, flexShrink: 0 }}>
-            <span style={{ fontSize: 13 }}>📡</span>
+            <span style={{ fontSize: 13 }}><Icon name="📡" /></span>
             <span style={{ fontSize: 11.5, fontWeight: 700, color: darkMode ? '#FBBF24' : '#92400E' }}>
               {isOnline ? 'Reconnecting…' : "You're offline"} — showing the last saved register{isOnline ? '' : '. Changes made elsewhere won\'t appear until you\'re back online'}.
             </span>
@@ -1472,22 +1908,62 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           </div>
         )}
 
+        {/* No session open. The register cannot be marked, so say so once and
+            offer the way forward, rather than leaving a screen that looks like
+            a register nobody has got round to filling in. */}
+        {!session && !loading && children.length > 0 && (
+          <div style={{ padding: isMobile ? '0 10px' : '0 14px', marginTop: 2 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+              padding: isMobile ? '14px 15px' : '16px 18px', borderRadius: 16,
+              background: darkMode
+                ? `linear-gradient(160deg, var(--org-a10), var(--org-a05))`
+                : `linear-gradient(160deg, var(--org-a10), #fff)`,
+              border: `1.5px solid ${primary}${darkMode ? '3A' : '2E'}`,
+            }}>
+              <span aria-hidden="true" style={{
+                width: 40, height: 40, borderRadius: 13, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                background: `linear-gradient(135deg, ${primary}, var(--org-a85))`,
+                boxShadow: `0 4px 12px -4px var(--org-a60)`,
+              }}><Icon name="📋" /></span>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ fontSize: 14.5, fontWeight: 800, color: t.text }}>No session is open</div>
+                <div style={{ fontSize: 12.5, color: t.textSub, marginTop: 2, lineHeight: 1.5 }}>
+                  You're looking at the full roster of {children.length}. Open a session to start signing people in.
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button onClick={() => onNavigate && onNavigate('sessions')} style={{
+                  padding: '10px 17px', borderRadius: 11, border: 'none', background: primary,
+                  color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                }}>Open a session</button>
+                <button onClick={() => setShowPastRegisters(true)} style={{
+                  padding: '10px 15px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
+                  border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.14)' : '#E2E8F0'}`,
+                  background: 'transparent', color: t.textSub, fontSize: 13, fontWeight: 700,
+                }}>Past registers</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* CHILDREN LIST */}
         <div style={{ flex: 1, overflowY: 'auto', background: t.listBg, padding: isMobile ? '10px 10px' : '12px 14px' }}>
           {loading ? (
             <div style={{ padding: 40, textAlign: 'center', color: t.textMuted, fontWeight: 600 }}>Loading register...</div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: 60, textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>👧</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="👧" /></div>
               <div style={{ fontSize: 16, fontWeight: 800, color: t.text, marginBottom: 6 }}>{children.length === 0 ? 'No children yet' : 'No matches'}</div>
               <div style={{ fontSize: 13, color: t.textMuted, marginBottom: 16 }}>{children.length === 0 ? 'Add or import children to get started' : 'Try a different search or filter'}</div>
               {children.length === 0 && (
-                <button onClick={() => setShowImport(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>📥 Import Children</button>
+                <button onClick={() => setShowImport(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}><Icon name="📥" /> Import Children</button>
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {filtered.map(child => (
+            (() => {
+              const renderCard = child => (
                 <ChildCard
                   key={child.id}
                   child={child}
@@ -1500,9 +1976,53 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   onClick={() => selectMode ? toggleSelect(child.id) : setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
                   onMark={null}
                   dark={darkMode}
+                  roster={!session}
                 />
-              ))}
-            </div>
+              )
+
+              // Only section when showing everyone. Filtered to one group, the
+              // headers would just repeat the chip you already pressed, and
+              // searching wants a flat list of hits rather than hits scattered
+              // under group headings.
+              if (activeGroup !== 'all' || search.trim()) {
+                return <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{filtered.map(renderCard)}</div>
+              }
+
+              const sections = []
+              filtered.forEach(c => {
+                const key = c.group_name || 'Ungrouped'
+                let sec = sections.find(x => x.key === key)
+                if (!sec) { sec = { key, children: [] }; sections.push(sec) }
+                sec.children.push(c)
+              })
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {sections.map(sec => {
+                    const col = getBubble(sec.children[0])?.color || primary
+                    return (
+                      <div key={sec.key}>
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+                          position: 'sticky', top: -2, zIndex: 2,
+                          background: t.listBg, padding: '4px 2px',
+                        }}>
+                          <span style={{ width: 9, height: 9, borderRadius: '50%', background: col, flexShrink: 0 }} />
+                          <span style={{ fontSize: 11.5, fontWeight: 900, color: t.text, textTransform: 'uppercase', letterSpacing: 0.7 }}>
+                            {sec.key}
+                          </span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: t.textMuted }}>{sec.children.length}</span>
+                          <span style={{ flex: 1, height: 1, background: darkMode ? 'rgba(255,255,255,0.07)' : '#E9EDF3' }} />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {sec.children.map(renderCard)}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()
           )}
         </div>
 
@@ -1547,7 +2067,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   const badge = e.currentTarget.querySelector('.tool-icon')
                   if (badge) { badge.style.transform = 'none'; badge.style.background = '#F3F4F6' }
                 }}>
-                <div className="tool-icon" style={{ width: 32, height: 32, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, transition: 'transform 0.18s ease, background 0.18s ease' }}>{t.icon}</div>
+                <div className="tool-icon" style={{ width: 32, height: 32, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, transition: 'transform 0.18s ease, background 0.18s ease' }}><Icon name={t.icon} /></div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{t.label}</div>
                   <div style={{ fontSize: 10, color: '#9CA3AF' }}>{t.sub}</div>
@@ -1576,7 +2096,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           {showImport && (
             <div style={{ padding: 14, borderBottom: '1px solid #F3F4F6' }}>
               {activeImportTemplate && (
-                <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid ${primary}25`, borderRadius: 8, padding: '6px 10px' }}>
+                <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
                   🧩 Using "{activeImportTemplate.name}" template
                 </div>
               )}
@@ -1598,10 +2118,14 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
           {/* Safeguarding */}
           <div style={{ padding: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}>🛡 Safeguarding</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}><Icon name="🛡" /> Safeguarding</div>
             <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, padding: '10px 12px' }}>
+              {/* Counts children, not alerts, and says which -- this panel and
+                  the Medical Alerts stat chip both read "medical alerts" while
+                  one counted medical_notes and the other counted allergies OR
+                  medical_notes, so the same screen showed two numbers. */}
               <div style={{ fontSize: 11, fontWeight: 800, color: '#92400E', marginBottom: 3 }}>
-                {children.filter(c => c.allergies || c.medical_notes).length} medical alert{children.filter(c => c.allergies || c.medical_notes).length !== 1 ? 's' : ''} on register
+                {children.filter(c => c.allergies || c.medical_notes).length} child{children.filter(c => c.allergies || c.medical_notes).length !== 1 ? 'ren' : ''} with a medical or allergy alert
               </div>
               <div style={{ fontSize: 11, color: '#92400E', lineHeight: 1.4, opacity: 0.8 }}>Log all concerns immediately.</div>
             </div>
@@ -1643,7 +2167,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             ].map(t => (
               <button key={t.label} onClick={t.action}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{t.icon}</div>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name={t.icon} /></div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{t.label}</div>
                   <div style={{ fontSize: 11, color: '#9CA3AF' }}>{t.sub}</div>
@@ -1670,7 +2194,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               <button onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ width: 28, height: 28, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16 }}>×</button>
             </div>
             {activeImportTemplate && (
-              <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid ${primary}25`, borderRadius: 8, padding: '6px 10px' }}>
+              <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
                 🧩 Using "{activeImportTemplate.name}" template
               </div>
             )}
@@ -1739,6 +2263,12 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       {/* CHILD DRAWER */}
       {selectedChild && (
         <ChildDrawer
+          // Keyed so switching child remounts rather than reuses. Without
+          // this, NotesTab keeps the previous child's text in state while the
+          // save closure moves to the new child's id -- one child's notes get
+          // written onto another's record. Tab, menu and photo-count state
+          // were leaking across children for the same reason.
+          key={selectedChild.child.id}
           child={selectedChild.child}
           status={selectedChild.status}
           attendanceRecord={selectedChild.attRec}
@@ -1875,7 +2405,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
             color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>✕</button>
+          }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
             <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</div>
             <div>
@@ -1913,7 +2443,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
                     </div>
                     <div style={{ fontSize: 12, color, fontWeight: 600, marginTop: 3, lineHeight: 1.4 }}>{getFieldText(c)}</div>
                   </div>
-                  <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0, marginTop: 4 }}>→</span>
+                  <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0, marginTop: 4 }}><Icon name="→" /></span>
                 </button>
               ))}
             </div>
@@ -1967,14 +2497,14 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, ${primary}0F 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
             color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>✕</button>
+          }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}><img src="/icons/past-registers-icon.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} /></div>
+            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}><img src="/icons/past-registers-icon.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} /></div>
             <div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>Past Registers</div>
               <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{sessions.length} closed session{sessions.length !== 1 ? 's' : ''}</div>
@@ -2004,14 +2534,14 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
                         background: '#fff', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
                         cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
                       }}>
-                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🔒</span>
+                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name="🔒" /></span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 800, color: '#0B1220', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                           <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, marginTop: 1 }}>
                             {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}{s.location ? ` · ${s.location}` : ''}
                           </div>
                         </div>
-                        <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0 }}>→</span>
+                        <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0 }}><Icon name="→" /></span>
                       </button>
                     ))}
                   </div>
@@ -2084,14 +2614,14 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, ${primary}0F 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
             color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>✕</button>
+          }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, ${primary}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🗄️</div>
+            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🗄️</div>
             <div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>Archive</div>
               <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{sessions.length} archived session{sessions.length !== 1 ? 's' : ''}</div>
@@ -2135,12 +2665,12 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
                               {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}
                             </div>
                             {delInfo && (
-                              <div style={{ fontSize: 10.5, color: '#B91C1C', fontWeight: 700, marginTop: 3 }}>⚠ {delInfo}</div>
+                              <div style={{ fontSize: 10.5, color: '#B91C1C', fontWeight: 700, marginTop: 3 }}><Icon name="⚠" /> {delInfo}</div>
                             )}
                           </div>
                           <button onClick={(e) => { e.stopPropagation(); onRestore(s) }} style={{
-                            flexShrink: 0, fontSize: 10.5, fontWeight: 800, color: primary, background: `${primary}12`,
-                            border: `1px solid ${primary}30`, borderRadius: 99, padding: '6px 11px', cursor: 'pointer', whiteSpace: 'nowrap',
+                            flexShrink: 0, fontSize: 10.5, fontWeight: 800, color: primary, background: 'var(--org-a05)',
+                            border: `1px solid var(--org-a20)`, borderRadius: 99, padding: '6px 11px', cursor: 'pointer', whiteSpace: 'nowrap',
                           }}>↩ Restore</button>
                         </div>
                       )

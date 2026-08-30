@@ -67,7 +67,7 @@ export default function PublicDonationPage() {
   const amounts = (page.suggested_amounts || [10, 25, 50, 100]).map(Number)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAF9FE', padding: '0 0 48px' }}>
+    <div style={{ minHeight: '100dvh', background: '#FAF9FE', padding: '0 0 48px' }}>
       <div style={{ maxWidth: 560, margin: '0 auto', padding: '28px 18px 0' }}>
 
         {/* org */}
@@ -216,7 +216,7 @@ export default function PublicDonationPage() {
 function Centered({ children }) {
   return (
     <div style={{
-      minHeight: '100vh', display: 'grid', placeItems: 'center',
+      minHeight: '100dvh', display: 'grid', placeItems: 'center',
       background: '#FAF9FE', padding: 24,
     }}>{children}</div>
   )

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { findConflict, suggestNextSlot, fmtDate, fmtTime } from '../../lib/resourceHelpers'
+import Icon from '../../lib/icons'
 
 export default function QuickBookingPanel({ org, resources, bookings, sessions, staff, venues, authUserId, presetResourceId, onBooked }) {
   const today = new Date().toISOString().slice(0, 10)
@@ -199,7 +200,7 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
 
       {checked && conflict && !conflict.quantityIssue && (
         <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginTop: 12, fontSize: 12 }}>
-          <div style={{ fontWeight: 700, color: '#B91C1C', marginBottom: 4 }}>⚠ This time conflicts with an existing booking</div>
+          <div style={{ fontWeight: 700, color: '#B91C1C', marginBottom: 4 }}><Icon name="⚠" /> This time conflicts with an existing booking</div>
           {suggestion && <div style={{ color: '#7F1D1D' }}>Nearest available: {fmtDate(suggestion)} at {fmtTime(suggestion)}</div>}
         </div>
       )}

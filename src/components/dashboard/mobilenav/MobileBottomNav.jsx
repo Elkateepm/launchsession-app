@@ -97,8 +97,15 @@ export default function MobileBottomNav({
             <LaunchActionButton open={menuOpen} onClick={() => setMenuOpen(v => !v)} reducedMotion={reducedMotion} />
           </div>
 
-          <MobileNavItem icon={PeopleIcon} label="Volunteers" active={tab === 'team'} onClick={() => onNavigate('team')} />
-          <MobileNavItem icon={MenuIcon} label="More" active={false} onClick={onOpenMore} />
+          {/* Was onNavigate('team'), which Dashboard's TAB_ALIASES rewrites to
+              'hr' -- so the Volunteers button in the primary mobile navigation
+              opened HR, and active={tab === 'team'} never matched because the
+              alias resolves before the tab is ever set. */}
+          <MobileNavItem icon={PeopleIcon} label="Volunteers" active={tab === 'volunteers'} onClick={() => onNavigate('volunteers')} />
+          {/* More highlights whenever you are somewhere the dock cannot show,
+              so the bar always tells you where you are rather than going blank
+              on two thirds of the app. */}
+          <MobileNavItem icon={MenuIcon} label="More" active={!['home', 'registers', 'volunteers'].includes(tab)} onClick={onOpenMore} />
         </div>
       </div>
 

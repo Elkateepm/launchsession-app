@@ -3,15 +3,18 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { useOrg } from '../../context/OrgContext'
 import OrgSettingsPanel from './OrgSettingsPanel'
+import AccessSection from './AccessSection'
 import {
   isPushSupported, getNotificationPermission, subscribeToPush, unsubscribeFromPush,
   getCurrentSubscription, listMySubscriptions, revokeSubscriptionById, sendTestNotification,
 } from '../../services/pushNotifications'
-import { hasPlatformAuthenticator, enrolBiometric, clearEnrolment, isEnrolledFor, getLockAfterMs, setLockAfterMs } from '../../lib/biometricLock'
+import { hasPlatformAuthenticator, enrolBiometric, clearEnrolment, isEnrolledFor, getLockAfterMs, setLockAfterMs, isAppLockPlatform } from '../../lib/biometricLock'
 import { hasPlatformAuthenticator as hasPasskeyAuthenticator, enrolPasskey, listPasskeys, removePasskey } from '../../lib/passkey'
 import { getTerms } from '../../lib/terminology'
 import SignedImg from '../shared/SignedImg'
 import { signOne } from '../../lib/storageUrl'
+import Icon from '../../lib/icons'
+import { applyBrandPalette } from '../../lib/brandColors'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -20,6 +23,7 @@ const NAV = [
   { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform', requiresAdmin: true },
   { key: 'users',        icon: '👥', label: 'Admin', group: 'Platform' },
   { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform', requiresBranding: true },
+  { key: 'access',       icon: '🔑', label: 'Role Access', group: 'Platform', requiresAdmin: true },
   { key: 'safeguarding', icon: '🛡', label: 'Safeguarding', group: 'Operations' },
   { key: 'registers',    icon: '📋', label: 'Registers', group: 'Operations' },
   { key: 'sessions',     icon: '📍', label: 'Venues', group: 'Operations' },
@@ -146,7 +150,7 @@ function OrgTypeCard({ org }) {
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, marginBottom: 6 }}>
               <span style={{ width: 76, color: 'var(--text3)', fontWeight: 600, flexShrink: 0 }}>{label}</span>
               <span style={{ color: 'var(--text3)', textDecoration: 'line-through' }}>{from}</span>
-              <span style={{ color: 'var(--text3)' }}>→</span>
+              <span style={{ color: 'var(--text3)' }}><Icon name="→" /></span>
               <span style={{ color: 'var(--text)', fontWeight: 700 }}>{to}</span>
             </div>
           ))}
@@ -328,14 +332,14 @@ function RegisterGroupsManager({ org }) {
   return (
     <SettingCard title="Groups" description="Organise your register into groups like Red, Blue, Juniors or Teens">
       {error && (
-        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>
+        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>
       )}
 
       {loading ? (
         <div style={{ fontSize: 13, color: 'var(--text3)', padding: '12px 0' }}>Loading groups...</div>
       ) : groups.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '30px 16px', background: 'var(--surface2)', borderRadius: 14, border: '1.5px dashed var(--border2)' }}>
-          <div style={{ fontSize: 32, marginBottom: 10 }}>🏷️</div>
+          <div style={{ fontSize: 32, marginBottom: 10 }}><Icon name="🏷️" /></div>
           <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>No groups yet</div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Create groups like Red, Blue, Juniors or Teens to organise your register.</div>
           <button onClick={() => setAdding(true)} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: org?.primary_color || '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>+ Add Group</button>
@@ -387,7 +391,7 @@ function GroupCard({ group, count, onRename, onColorChange, onDelete }) {
         ) : (
           <div onClick={() => setEditing(true)} style={{ flex: 1, fontSize: 14, fontWeight: 800, color: 'var(--text)', cursor: 'text' }}>{group.label}</div>
         )}
-        <button onClick={() => onDelete(group.id)} title="Delete group" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#DC2626', opacity: 0.7, padding: 2 }}>🗑️</button>
+        <button onClick={() => onDelete(group.id)} title="Delete group" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#DC2626', opacity: 0.7, padding: 2 }}><Icon name="🗑️" /></button>
       </div>
       <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>{count} {count === 1 ? 'child' : 'children'}</div>
 
@@ -742,7 +746,7 @@ function LogoUploadBox({ label, hint, previewSrc, fallback, transform, onFileCha
               Upload
               <input type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
             </label>
-            {previewSrc && <button onClick={onRemove} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🗑</button>}
+            {previewSrc && <button onClick={onRemove} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}><Icon name="🗑" /></button>}
           </div>
           {previewSrc && (
             <div>
@@ -926,7 +930,9 @@ function BrandingSection({ org, refreshOrg }) {
       return
     }
 
-    document.documentElement.style.setProperty('--org-primary', color)
+    // Same derivation as OrgContext, so the live preview cannot disagree
+    // with what the app looks like after a reload.
+    applyBrandPalette(color)
     {
       const faviconTarget = iconUrl || logoUrl || FALLBACK_LOGO_URL
       const bustedIcon = faviconTarget + (faviconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
@@ -991,7 +997,7 @@ function BrandingSection({ org, refreshOrg }) {
           {showCompletionDropdown && (
             <div style={{ position: 'absolute', top: '110%', right: 0, minWidth: 260, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 32px rgba(0,0,0,0.12)', padding: 12, zIndex: 10 }}>
               {completion.missing.length === 0 ? (
-                <div style={{ fontSize: 12.5, color: 'var(--text2)', fontWeight: 600, padding: '4px 2px' }}>🎉 Your brand profile is fully set up!</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text2)', fontWeight: 600, padding: '4px 2px' }}><Icon name="🎉" /> Your brand profile is fully set up!</div>
               ) : (
                 <>
                   <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Still to do</div>
@@ -1010,7 +1016,7 @@ function BrandingSection({ org, refreshOrg }) {
           <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? '#9ca3af' : color, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 24px ${color}40`, whiteSpace: 'nowrap' }}>
             {saving ? 'Saving...' : saved ? '✅ Saved!' : '💾 Save changes'}
           </button>
-          <button onClick={() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>👁 Preview brand</button>
+          <button onClick={() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{ padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="👁" /> Preview brand</button>
           {confirmingReset ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', border: '1.5px solid #FCA5A5', borderRadius: 10, padding: '6px 6px 6px 12px' }}>
               <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text2)', whiteSpace: 'nowrap' }}>Reset to defaults?</span>
@@ -1145,7 +1151,7 @@ function BrandingSection({ org, refreshOrg }) {
                       Upload
                       <input type="file" accept="image/*" onChange={handleFileChange(setLoginBgPreview, setLoginBgFile, setLoginBgRemoved)} style={{ display: 'none' }} />
                     </label>
-                    {loginBgPreview && <button onClick={() => { setLoginBgPreview(''); setLoginBgFile(null); setLoginBgRemoved(true) }} style={{ padding: '6px 8px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>🗑</button>}
+                    {loginBgPreview && <button onClick={() => { setLoginBgPreview(''); setLoginBgFile(null); setLoginBgRemoved(true) }} style={{ padding: '6px 8px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🗑" /></button>}
                   </div>
                 </div>
               </div>
@@ -1160,7 +1166,7 @@ function BrandingSection({ org, refreshOrg }) {
                       Upload
                       <input type="file" accept="image/*" onChange={handleFileChange(setEmailLogoPreview, setEmailLogoFile, setEmailLogoRemoved)} style={{ display: 'none' }} />
                     </label>
-                    {emailLogoPreview && <button onClick={() => { setEmailLogoPreview(''); setEmailLogoFile(null); setEmailLogoRemoved(true) }} style={{ padding: '6px 8px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>🗑</button>}
+                    {emailLogoPreview && <button onClick={() => { setEmailLogoPreview(''); setEmailLogoFile(null); setEmailLogoRemoved(true) }} style={{ padding: '6px 8px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🗑" /></button>}
                   </div>
                 </div>
               </div>
@@ -1208,7 +1214,7 @@ function BrandingSection({ org, refreshOrg }) {
                         <div style={{ fontSize: 11, fontWeight: 800, color: '#111827' }}>{orgName}</div>
                       </div>
                       <div style={{ position: 'relative' }}>
-                        <div style={{ fontSize: 13 }}>🔔</div>
+                        <div style={{ fontSize: 13 }}><Icon name="🔔" /></div>
                         <div style={{ position: 'absolute', top: -3, right: -3, width: 7, height: 7, borderRadius: '50%', background: accentColor }} />
                       </div>
                     </div>
@@ -1269,7 +1275,7 @@ function BrandingSection({ org, refreshOrg }) {
 
           {completion.missing.length > 0 ? (
             <div style={{ background: `linear-gradient(135deg, ${color}12, ${secondaryColor}12)`, border: `1px solid ${color}30`, borderRadius: 14, padding: 16, marginTop: 16, display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 22, flexShrink: 0 }}>📋</div>
+              <div style={{ fontSize: 22, flexShrink: 0 }}><Icon name="📋" /></div>
               <div style={{ flex: 1, minWidth: 180 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color }}>Complete your brand profile</div>
                 <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, marginBottom: 8, lineHeight: 1.5 }}>A few items are missing before your brand is complete.</div>
@@ -1286,7 +1292,7 @@ function BrandingSection({ org, refreshOrg }) {
             </div>
           ) : (
             <div style={{ background: `linear-gradient(135deg, ${color}12, ${secondaryColor}12)`, border: `1px solid ${color}30`, borderRadius: 14, padding: 16, marginTop: 16, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-              <div style={{ fontSize: 22, flexShrink: 0 }}>🎉</div>
+              <div style={{ fontSize: 22, flexShrink: 0 }}><Icon name="🎉" /></div>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 800, color }}>Your brand profile is complete</div>
                 <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, lineHeight: 1.5 }}>A consistent brand builds confidence with parents, volunteers and partners.</div>
@@ -1380,7 +1386,10 @@ function ModulePasswordCard({ moduleKey, label, icon, accentColor }) {
 
 // Device-local biometric app lock. Only offered where there's actually a
 // built-in authenticator to use, so it doesn't appear as a dead toggle on a
-// desktop with no Touch ID.
+// desktop with no Touch ID -- and only where the lock actually runs, which is
+// phones and tablets. A Touch ID MacBook can satisfy the authenticator check
+// but no longer locks, so offering the toggle there would enrol a device and
+// then do nothing with it.
 function BiometricUnlockCard() {
   const [available, setAvailable] = useState(null)
   const [userId, setUserId] = useState(null)
@@ -1420,6 +1429,34 @@ function BiometricUnlockCard() {
   if (available === false) return null
   if (available === null) return null
 
+  // Enrolled on a desktop under the previous behaviour: say so plainly and let
+  // them clear it, rather than showing a green "Enabled" for a lock that will
+  // never engage here.
+  if (!isAppLockPlatform()) {
+    return (
+      <SettingCard title="App lock" description="Lock the app behind Face ID, Touch ID or your fingerprint.">
+        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: enrolled ? 14 : 0 }}>
+          App lock runs on phones and tablets, where the app might be left open and unattended during a session.
+          On a computer it's your operating system's screen lock that does this job, so LaunchSession doesn't
+          add a second one.
+          {' '}You can still sign in with a passkey here — see Passkeys below.
+        </div>
+        {enrolled && (
+          <>
+            <div style={{ fontSize: 12.5, color: '#92400E', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '10px 13px', marginBottom: 14, lineHeight: 1.5 }}>
+              This computer was set up for app lock previously. It no longer locks.
+            </div>
+            <button onClick={handleDisable}
+              style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+              Clear the setting on this computer
+            </button>
+          </>
+        )}
+        {msg && <div style={{ fontSize: 13, color: msg.startsWith('✅') ? '#16A34A' : '#DC2626', marginTop: 12, fontWeight: 600 }}>{msg}</div>}
+      </SettingCard>
+    )
+  }
+
   return (
     <SettingCard title="Biometric unlock" description="Use Face ID, Touch ID or your fingerprint to unlock the app on this device.">
       <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '10px 13px', fontSize: 12.5, color: '#92400E', marginBottom: 14, lineHeight: 1.5 }}>
@@ -1430,7 +1467,7 @@ function BiometricUnlockCard() {
       {enrolled ? (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 700, color: '#15803D', marginBottom: 14 }}>
-            <span>✅</span> Enabled on this device
+            <span><Icon name="✅" /></span> Enabled on this device
           </div>
           <div style={{ marginBottom: 14 }}>
             <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', marginBottom: 6 }}>Lock after</label>
@@ -1873,7 +1910,7 @@ function IntegrationsSection() {
         {integrations.map(i => (
           <div key={i.name} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <span style={{ fontSize: 24 }}>{i.icon}</span>
+              <span style={{ fontSize: 24 }}><Icon name={i.icon} /></span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{i.name}</div>
                 <div style={{ fontSize: 11, color: 'var(--text3)' }}>{i.desc}</div>
@@ -1961,7 +1998,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
   return (
     <div>
       {error && (
-        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600 }}>⚠️ {error}</div>
+        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>
       )}
 
       <SettingCard title="Current Plan">
@@ -2043,7 +2080,7 @@ function HelpSection() {
           <a key={l.title} href={l.href} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid #e5e7eb', borderRadius: 10, textDecoration: 'none', transition: 'background 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
             onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
-            <span style={{ fontSize: 22 }}>{l.icon}</span>
+            <span style={{ fontSize: 22 }}><Icon name={l.icon} /></span>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{l.title}</div>
               <div style={{ fontSize: 12, color: '#9ca3af' }}>{l.desc}</div>
@@ -2100,7 +2137,7 @@ function SafeguardingSection({ org }) {
     <div>
       {/* Header banner */}
       <div style={{ background: 'linear-gradient(135deg, #7f1d1d, #991b1b)', borderRadius: 12, padding: '20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>🛡️</div>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}><Icon name="🛡️" /></div>
         <div>
           <div style={{ fontSize: 17, fontWeight: 800, color: '#fff' }}>Safeguarding Settings</div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Configure your DSL contact, policy documents and alert preferences.</div>
@@ -2129,16 +2166,16 @@ function SafeguardingSection({ org }) {
       <SettingCard title="Safeguarding Policy Document" description="Upload your organisation's safeguarding policy. Staff can access it directly from the dashboard.">
         {policyUrl ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(220,38,38,0.06)', borderRadius: 10, padding: '12px 14px', border: '1px solid rgba(220,38,38,0.15)', marginBottom: 14 }}>
-            <span style={{ fontSize: 22 }}>📄</span>
+            <span style={{ fontSize: 22 }}><Icon name="📄" /></span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Policy document uploaded</div>
-              <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', policyUrl, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ fontSize: 12, color: '#DC2626', fontWeight: 600, textDecoration: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>View / Download ↗</button>
+              <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', policyUrl, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ fontSize: 12, color: '#DC2626', fontWeight: 600, textDecoration: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>View / Download <Icon name="↗" /></button>
             </div>
             <button onClick={() => setPolicyUrl('')} style={{ background: 'none', border: 'none', color: '#9ca3af', fontSize: 18, cursor: 'pointer', padding: 4 }}>×</button>
           </div>
         ) : (
           <div style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: '28px 20px', textAlign: 'center', marginBottom: 14 }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
+            <div style={{ fontSize: 28, marginBottom: 8 }}><Icon name="📋" /></div>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>No policy uploaded yet</div>
             <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 12 }}>PDF or Word document</div>
             <label style={{ padding: '9px 20px', borderRadius: 8, background: '#DC2626', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'inline-block' }}>
@@ -2248,7 +2285,7 @@ function GroupsSection({ org, refreshOrg }) {
   return (
     <div>
       <div style={{ background: 'linear-gradient(135deg, #0A0F1E, #1a2744)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ fontSize: 32 }}>📋</div>
+        <div style={{ fontSize: 32 }}><Icon name="📋" /></div>
         <div>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Registers</div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>Groups, locations, and how sign-in/sign-out works across your sessions</div>
@@ -2388,7 +2425,7 @@ function VenuesSection({ org, isAdmin }) {
   return (
     <div>
       <div style={{ background: 'linear-gradient(135deg, #0A0F1E, #1a2744)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ fontSize: 32 }}>📍</div>
+        <div style={{ fontSize: 32 }}><Icon name="📍" /></div>
         <div>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Venues</div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>The physical locations sessions run at — pick from these instead of retyping an address every time</div>
@@ -2411,8 +2448,8 @@ function VenuesSection({ org, isAdmin }) {
                 </div>
                 {v.address && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{v.address}</div>}
                 <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                  {v.capacity && <span>👥 Capacity {v.capacity}</span>}
-                  {v.default_meeting_point && <span>📍 Meet at {v.default_meeting_point}</span>}
+                  {v.capacity && <span><Icon name="👥" /> Capacity {v.capacity}</span>}
+                  {v.default_meeting_point && <span><Icon name="📍" /> Meet at {v.default_meeting_point}</span>}
                   {v.default_hazards?.length > 0 && <span>🛡️ {v.default_hazards.length} default hazard{v.default_hazards.length === 1 ? '' : 's'}</span>}
                 </div>
               </div>
@@ -2588,7 +2625,7 @@ function UsersSection({ org, session, isAdmin, currentUserId }) {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)' }}>👥 Admin</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)' }}><Icon name="👥" /> Admin</div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Manage who has access to {org?.name || 'your organisation'} and what they can do.</div>
         </div>
         {isAdmin && (
@@ -2599,7 +2636,7 @@ function UsersSection({ org, session, isAdmin, currentUserId }) {
       </div>
 
       {error && (
-        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>
+        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>
       )}
 
       {[...tiers, ...(unplaced.length > 0
@@ -2706,7 +2743,7 @@ function InviteUserModal({ org, session, onClose, onInvited }) {
         <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>Invite to {org?.name}</div>
         <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 18 }}>They'll get a branded email with a link to set up their account.</div>
 
-        {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12, fontWeight: 600 }}>⚠️ {error}</div>}
+        {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>}
 
         <Field label="Full Name"><input style={inp} value={name} onChange={e => setName(e.target.value)} placeholder="Jane Smith" /></Field>
         <Field label="Email"><input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@example.com" /></Field>
@@ -2745,20 +2782,21 @@ export default function Settings({ org, session, userProfile, initialSection }) 
     switch(active) {
       case 'organisation':   return isAdmin ? <OrgSection org={org} /> : (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+          <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="🔒" /></div>
           <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Admins only</div>
           <div style={{ fontSize: 14, color: '#64748B' }}>Organisation settings can only be changed by an admin. Ask your organisation's admin if you need something updated here.</div>
         </div>
       )
       case 'branding':       return brandingEnabled ? <BrandingSection org={org} refreshOrg={refreshOrg} /> : (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🎨</div>
+          <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="🎨" /></div>
           <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Branding Centre is not enabled</div>
           <div style={{ fontSize: 14, color: '#64748B', marginBottom: 24 }}>Contact your LaunchSession administrator to enable custom branding for your workspace.</div>
           <a href="mailto:hello@launchsession.co.uk" style={{ padding: '12px 28px', borderRadius: 10, background: '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Contact Support</a>
         </div>
       )
       case 'users':           return <UsersSection org={org} session={session} isAdmin={isAdmin} currentUserId={session?.user?.id} />
+      case 'access':         return <AccessSection org={org} isAdmin={isAdmin} />
       case 'security':       return <SecuritySection />
       case 'notifications':  return <NotificationsSection org={org} session={session} />
       case 'integrations':   return <IntegrationsSection />
@@ -2789,9 +2827,9 @@ export default function Settings({ org, session, userProfile, initialSection }) 
       {/* SETTINGS SIDEBAR */}
       <div style={{ width: isMobile ? '100%' : 190, background: '#fff', borderRight: isMobile ? 'none' : '1px solid #e5e7eb', borderBottom: isMobile ? '1px solid #e5e7eb' : 'none', display: isMobile ? (showSidebar ? 'flex' : 'none') : 'flex', flexDirection: 'column', flexShrink: 0, maxHeight: isMobile ? 320 : 'none', overflowY: isMobile ? 'auto' : 'visible', position: isMobile ? 'static' : 'sticky', top: isMobile ? 'auto' : 0, alignSelf: isMobile ? 'auto' : 'flex-start' }}>
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>⚙️ Settings</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}><Icon name="⚙️" /> Settings</div>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9ca3af' }}>🔍</span>
+            <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9ca3af' }}><Icon name="🔍" /></span>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search settings..."
               style={{ width: '100%', padding: '7px 9px 7px 28px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 12, outline: 'none', boxSizing: 'border-box', background: '#F9FAFB' }} />
           </div>
@@ -2805,7 +2843,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? `${org?.primary_color || '#1B9AAA'}12` : 'transparent', color: active === n.key ? (org?.primary_color || '#1B9AAA') : '#374151', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}
                   onMouseEnter={e => { if (active !== n.key) e.currentTarget.style.background = '#F9FAFB' }}
                   onMouseLeave={e => { if (active !== n.key) e.currentTarget.style.background = 'transparent' }}>
-                  <span style={{ fontSize: 15 }}>{n.icon}</span>
+                  <span style={{ fontSize: 15 }}><Icon name={n.icon} /></span>
                   {n.label}
                 </button>
               ))}

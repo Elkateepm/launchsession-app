@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 import { LS, IconGlyph } from './fundraisingShared'
 import FundraisingEmptyState from './hub/FundraisingEmptyState'
+import Icon from '../../lib/icons'
 
 const STAGES = [
   { key: 'researching', label: 'Researching', color: '#6B7280', bg: '#F3F2F7' },
@@ -118,7 +119,7 @@ export default function ApplicationTracker({ org, refreshKey }) {
                     }}>
                       {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
                     </select>
-                    <button onClick={() => removeApp(a.id)} title="Remove" style={{ background: 'none', border: 'none', color: '#D1D5DB', cursor: 'pointer', fontSize: 14, width: 32, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -6 }}>✕</button>
+                    <button onClick={() => removeApp(a.id)} title="Remove" style={{ background: 'none', border: 'none', color: '#D1D5DB', cursor: 'pointer', fontSize: 14, width: 32, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -6 }}><Icon name="✕" /></button>
                   </div>
                 ))}
               </div>

@@ -47,6 +47,51 @@ export const FORM_TEMPLATES = [
     ],
   },
   {
+    // The parent-facing twin of the register import template. Every field here
+    // maps to a column on the children record, in the same order and with the
+    // same wording as the CSV, so a response can be read straight onto the
+    // register instead of being retyped from an email.
+    //
+    // `mapsTo` is the children column each answer belongs in. Nothing consumes
+    // it automatically yet -- it is here so the mapping is recorded once,
+    // rather than being reinvented by whoever wires up auto-creation.
+    id: 'register-details-full',
+    title: 'Register Details (Full)',
+    description: 'Everything the register holds, asked once. Matches the child import template field for field.',
+    categories: ['popular', 'registration', 'health'],
+    purpose: 'register_young_person',
+    icon: '📋',
+    accent: '#0EA5E9',
+    fields: [
+      f("Young person's first name", 'text', true, { mapsTo: 'first_name' }),
+      f("Young person's last name", 'text', true, { mapsTo: 'last_name' }),
+      f('Date of birth', 'date', true, { mapsTo: 'date_of_birth' }),
+      f('Group', 'text', false, { mapsTo: 'group_name', help: 'Leave blank if you are not sure — we will assign one.' }),
+      f('School', 'text', false, { mapsTo: 'school' }),
+
+      f('Parent / carer name', 'text', true, { mapsTo: 'parent_name' }),
+      f('Parent / carer phone', 'phone', true, { mapsTo: 'parent_phone' }),
+      f('Parent / carer email', 'email', true, { mapsTo: 'parent_email', help: 'We use this for newsletters and to send you forms.' }),
+      f('Emergency contact name', 'text', true, { mapsTo: 'emergency_contact_name', help: 'Someone other than you, if possible.' }),
+      f('Emergency contact phone', 'phone', true, { mapsTo: 'emergency_contact_phone' }),
+
+      f('Allergies', 'textarea', false, { mapsTo: 'allergies', help: 'Leave blank if none.' }),
+      f('Medical conditions we should know about', 'textarea', false, { mapsTo: 'medical_notes' }),
+      f('Has asthma', 'checkbox', false, { mapsTo: 'has_asthma' }),
+      f('Has diabetes', 'checkbox', false, { mapsTo: 'has_diabetes' }),
+      f('Carries an EpiPen', 'checkbox', false, { mapsTo: 'has_epipen' }),
+      f('Takes regular medication', 'checkbox', false, { mapsTo: 'takes_medication' }),
+      f('Medication details', 'textarea', false, { mapsTo: 'medication_details', help: 'What, when, and who administers it.' }),
+      f('SEN or additional needs', 'textarea', false, { mapsTo: 'sen' }),
+      f('Has a support or behaviour plan', 'checkbox', false, { mapsTo: 'has_behaviour_plan' }),
+      f('Support plan notes', 'textarea', false, { mapsTo: 'behaviour_plan_notes' }),
+
+      f('This child may travel home independently', 'checkbox', false, { mapsTo: 'travel_consent' }),
+      f('Anything else we should know', 'textarea', false, { mapsTo: 'notes' }),
+      f('I confirm the information above is accurate and I will tell you if it changes', 'checkbox', true),
+    ],
+  },
+  {
     id: 'parent-consent',
     title: 'Parent / Carer Consent',
     description: 'General permission to take part, with emergency and medical confirmation.',
