@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
-import { useOrg } from '../../context/OrgContext'
+import { useOrg, useTerms } from '../../context/OrgContext'
+import { HIDEABLE_ITEMS } from '../dashboard/sidebar/navConfig'
+import { makeHasModule } from '../../lib/moduleAccess'
 import OrgSettingsPanel from './OrgSettingsPanel'
 import AccessSection from './AccessSection'
 import {
@@ -23,6 +25,7 @@ const NAV = [
   { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform', requiresAdmin: true },
   { key: 'users',        icon: '👥', label: 'Admin', group: 'Platform' },
   { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform', requiresBranding: true },
+  { key: 'display',      icon: '🖥', label: 'Display', group: 'Platform', requiresAdmin: true },
   { key: 'access',       icon: '🔑', label: 'Role Access', group: 'Platform', requiresAdmin: true },
   { key: 'safeguarding', icon: '🛡', label: 'Safeguarding', group: 'Operations' },
   { key: 'registers',    icon: '📋', label: 'Registers', group: 'Operations' },
@@ -92,6 +95,137 @@ const ORG_TYPE_OPTIONS = [
   { key: 'social_enterprise', label: 'Social Enterprise' },
   { key: 'other', label: 'Other' },
 ]
+
+// ── DISPLAY ───────────────────────────────────────────────────────────────
+// What the organisation sees, as opposed to what it has. Modules decide what an
+// organisation may open; this decides what it wants shown, and the two are kept
+// apart on purpose -- "we don't run mentoring" and "mentoring is not on our
+// plan" are different sentences, and collapsing them would make switching a tab
+// back on look like a purchase.
+function SidebarDisplayCard({ org, isAdmin }) {
+  const { refreshOrg } = useOrg()
+  const terms = useTerms()
+  const hasModule = makeHasModule(org)
+  const [hidden, setHidden] = useState(org?.hidden_nav_items || [])
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  useEffect(() => { setHidden(org?.hidden_nav_items || []) }, [org?.hidden_nav_items])
+
+  const labelFor = (item) => item.label || terms[item.termKey] || item.id
+
+  // Only offer what this organisation would otherwise see. A row for a module
+  // it has not got is a switch with nothing behind it.
+  const groups = HIDEABLE_ITEMS
+    .map(g => ({
+      ...g,
+      items: g.items.filter(i => {
+        if (i.adminOnly && !isAdmin) return false
+        if (i.moduleKey && !hasModule(i.moduleKey)) return false
+        return true
+      }),
+    }))
+    .filter(g => g.items.length > 0)
+
+  const isOn = (id) => !hidden.includes(id)
+  const toggle = (id) => setHidden(h => (h.includes(id) ? h.filter(x => x !== id) : [...h, id]))
+
+  const dirty = JSON.stringify([...hidden].sort()) !== JSON.stringify([...(org?.hidden_nav_items || [])].sort())
+  const offCount = hidden.length
+
+  const save = async () => {
+    setSaving(true); setMsg('')
+    const { error } = await supabase.from('organisations')
+      .update({ hidden_nav_items: hidden }).eq('id', org?.id)
+    setSaving(false)
+    if (error) { setMsg('Could not save: ' + error.message); return }
+    setMsg('✅ Saved. The sidebar updates for everyone in your organisation.')
+    if (refreshOrg) refreshOrg()
+  }
+
+  return (
+    <SettingCard
+      title="Sidebar"
+      description="Turn off the areas your organisation does not use. This changes the sidebar for everyone here, and nothing is deleted — switch one back on and it returns with its data untouched."
+    >
+      {groups.map(g => (
+        <div key={g.group} style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{g.group}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {g.items.map(item => {
+              const on = isOn(item.id)
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => toggle(item.id)}
+                  role="switch"
+                  aria-checked={on}
+                  aria-label={labelFor(item)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 11, width: '100%', minHeight: 46,
+                    padding: '9px 12px', borderRadius: 10, cursor: 'pointer', textAlign: 'left',
+                    border: '1px solid var(--border)', background: 'var(--surface)',
+                    fontFamily: 'inherit', opacity: on ? 1 : 0.55,
+                  }}
+                >
+                  <span aria-hidden="true" style={{ fontSize: 15, display: 'inline-flex', color: 'var(--text2)' }}>
+                    <Icon name={item.icon} />
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>
+                    {labelFor(item)}
+                  </span>
+                  {/* Reads as a state, not a verb: the row says whether the tab
+                      is shown, rather than what tapping it will do. */}
+                  <span style={{
+                    fontSize: 11, fontWeight: 800, color: on ? '#16A34A' : 'var(--text3)',
+                    flexShrink: 0, minWidth: 46, textAlign: 'right',
+                  }}>{on ? 'Shown' : 'Hidden'}</span>
+                  <span style={{
+                    width: 38, height: 22, borderRadius: 99, flexShrink: 0, position: 'relative',
+                    background: on ? '#16A34A' : 'var(--border)', transition: 'background 0.15s',
+                  }}>
+                    <span style={{
+                      position: 'absolute', top: 3, left: on ? 19 : 3, width: 16, height: 16,
+                      borderRadius: '50%', background: '#fff', transition: 'left 0.15s',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                    }} />
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+
+      <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.55, marginBottom: 14 }}>
+        Hiding an area does not remove anyone's access to it — it stays reachable
+        by a direct link, and its records are untouched. To take access away, use
+        Role Access or the module settings instead.
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <button
+          onClick={save}
+          disabled={!dirty || saving}
+          style={{
+            minHeight: 44, padding: '0 20px', borderRadius: 10, border: 'none', fontFamily: 'inherit',
+            background: dirty && !saving ? 'var(--org-primary, #6D5DF6)' : 'var(--border)',
+            color: dirty && !saving ? '#fff' : 'var(--text3)',
+            fontSize: 13.5, fontWeight: 800, cursor: dirty && !saving ? 'pointer' : 'default',
+          }}
+        >{saving ? 'Saving…' : 'Save changes'}</button>
+        {offCount > 0 && (
+          <button onClick={() => setHidden([])} style={{
+            minHeight: 44, padding: '0 16px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
+            border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)',
+            fontSize: 13, fontWeight: 700,
+          }}>Show all {offCount === 1 ? 'again' : `${offCount} again`}</button>
+        )}
+        {msg && <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text2)' }}>{msg}</span>}
+      </div>
+    </SettingCard>
+  )
+}
 
 function OrgTypeCard({ org }) {
   const { refreshOrg } = useOrg()
@@ -2792,6 +2926,13 @@ export default function Settings({ org, session, userProfile, initialSection }) 
           <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Branding Centre is not enabled</div>
           <div style={{ fontSize: 14, color: '#64748B', marginBottom: 24 }}>Contact your LaunchSession administrator to enable custom branding for your workspace.</div>
           <a href="mailto:hello@launchsession.co.uk" style={{ padding: '12px 28px', borderRadius: 10, background: '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Contact Support</a>
+        </div>
+      )
+      case 'display':        return isAdmin ? <SidebarDisplayCard org={org} isAdmin={isAdmin} /> : (
+        <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="🔒" /></div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Admins only</div>
+          <div style={{ fontSize: 14, color: '#64748B' }}>The sidebar is shared by everyone in the organisation, so only an admin can change what appears in it.</div>
         </div>
       )
       case 'users':           return <UsersSection org={org} session={session} isAdmin={isAdmin} currentUserId={session?.user?.id} />

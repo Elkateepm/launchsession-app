@@ -603,6 +603,8 @@ export default function Dashboard({ session, org }) {
   // Module access is resolved centrally (see lib/moduleAccess) so the sidebar,
   // Hub and Calendar can't disagree, and so an active trial grants everything.
   const hasModule = makeHasModule(org)
+  // Sidebar entries the organisation has switched off in Settings > Display.
+  const hiddenItems = React.useMemo(() => org?.hidden_nav_items || [], [org?.hidden_nav_items])
   const { levels: accessLevels } = useModuleAccess()
   const moduleLevel = makeModuleLevel(org, accessLevels)
 
@@ -655,11 +657,22 @@ export default function Dashboard({ session, org }) {
   // Only offer creation of things this organisation actually has, and that this
   // user may create. An action that opens a locked screen is worse than no
   // action at all.
+  // CREATE_ACTIONS carry their own ids, so they are matched to a hidden nav
+  // entry by the tab they open rather than by id.
+  const createHiddenTabs = React.useMemo(() => {
+    const hiddenTabs = new Set(
+      [...NAV_SECTIONS.flatMap(s => s.items), ...NAV_GROUPS.flatMap(g => g.items)]
+        .filter(i => hiddenItems.includes(i.id))
+        .map(i => i.tab)
+    )
+    return CREATE_ACTIONS.filter(a => hiddenTabs.has(a.tab)).map(a => a.id)
+  }, [hiddenItems])
+
   const createActions = React.useMemo(
-    () => visibleItems(CREATE_ACTIONS, { hasModule, isAdmin, moduleLevel })
+    () => visibleItems(CREATE_ACTIONS, { hasModule, isAdmin, moduleLevel, hiddenItems: createHiddenTabs })
       .map(a => ({ ...a, label: a.label || `${a.labelPrefix || ''}${terms[a.termKey] || ''}`.trim() })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [org?.id, org?.modules, isAdmin, terms, accessLevels]
+    [org?.id, org?.modules, isAdmin, terms, accessLevels, createHiddenTabs]
   )
 
   const [unreadSubs, setUnreadSubs] = useState([])
@@ -755,7 +768,7 @@ export default function Dashboard({ session, org }) {
         <div className="sb-nav" style={{ flex: 1, padding: '0 8px 8px', overflowY: 'auto' }}>
 
           {NAV_SECTIONS.map(section => {
-            const items = visibleItems(section.items, { hasModule, isAdmin, moduleLevel })
+            const items = visibleItems(section.items, { hasModule, isAdmin, moduleLevel, hiddenItems })
             if (!items.length) return null
             return (
               <SidebarSection key={section.id} title={section.label} collapsed={sidebarCollapsed}>
@@ -778,7 +791,7 @@ export default function Dashboard({ session, org }) {
           <div style={{ height: 1, margin: '4px 12px 12px', background: 'rgba(255,255,255,0.06)' }} />
 
           {NAV_GROUPS.map(group => {
-            const items = visibleItems(group.items, { hasModule, isAdmin, moduleLevel })
+            const items = visibleItems(group.items, { hasModule, isAdmin, moduleLevel, hiddenItems })
             if (!items.length) return null
             const active = activeGroup === group.id
             return (
