@@ -59,7 +59,13 @@ export const NAV_GROUPS = [
     items: [
       { id: 'reports', label: 'Reports', icon: 'reports', tab: 'reports', moduleKey: 'reports' },
       { id: 'impact_outcomes', label: 'Impact & Outcomes', icon: 'impact', tab: 'impact_outcomes', moduleKey: 'impact_outcomes' },
-      { id: 'fundraising', label: 'Fundraising', icon: 'fundraising', tab: 'fundraising', moduleKey: 'fundraising' },
+      // Fundraising is hibernated, not deleted. It is three products sharing a
+      // tab -- campaigns/donations, a grants marketplace and a document vault
+      // with an application tracker -- and none of the three can ship: the only
+      // payment provider implementation is `none`, so no donation can actually
+      // be taken, and `grants` is twenty hand-seeded rows with no ingestion
+      // behind it. The route, components and data all stay; this is a one-line
+      // restore once one of the three is built properly.
     ],
   },
   {

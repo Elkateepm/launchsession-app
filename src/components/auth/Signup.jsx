@@ -52,9 +52,11 @@ const WHAT_YOU_GET_GROUPS = [
     { icon: 'child', label: 'Children & Groups' }, { icon: 'heart', label: 'Volunteers' },
     { icon: 'handshake', label: 'Mentoring' }, { icon: 'chat', label: 'Messaging' },
   ]},
+  // Only things the product actually does. Fundraising is hibernated and Events
+  // & Trips is no longer a destination of its own, so advertising either here
+  // would promise a signup something it cannot then find.
   { title: 'Grow & report', color: '#FBBF24', items: [
-    { icon: 'chartBar', label: 'Reports & Impact' }, { icon: 'coin', label: 'Fundraising' },
-    { icon: 'palette', label: 'Branding' }, { icon: 'plane', label: 'Events & Trips' },
+    { icon: 'chartBar', label: 'Reports & Impact' }, { icon: 'palette', label: 'Branding' },
   ]},
 ]
 

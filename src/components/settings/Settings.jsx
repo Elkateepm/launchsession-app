@@ -1623,7 +1623,6 @@ function SecuritySection() {
       </SettingCard>
       <ModulePasswordCard moduleKey="children" label="Children" icon="🧒" accentColor="#2563EB" />
       <ModulePasswordCard moduleKey="safeguarding" label="Safeguarding" icon="🛡" accentColor="#DC2626" />
-      <ModulePasswordCard moduleKey="fundraising" label="Fundraising Hub" icon="💷" accentColor="#6647F0" />
     </div>
   )
 }

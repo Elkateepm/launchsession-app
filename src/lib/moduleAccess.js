@@ -16,6 +16,9 @@
 export const ALL_MODULE_KEYS = [
   'calendar', 'registers', 'planner', 'volunteers', 'messaging', 'gallery',
   'safeguarding', 'forms', 'risk_assessments', 'medical_alerts',
+  // 'fundraising' stays listed here although it is out of the nav: this is the
+  // set a trial grants, and dropping it would lock the route that existing deep
+  // links still use.
   'reports', 'impact_outcomes', 'fundraising',
   'hr', 'payments', 'resource_booking', 'events_trips',
   'parent_portal', 'mentoring',
@@ -94,7 +97,6 @@ export const ACCESS_MODULES = [
   { key: 'gallery', label: 'Gallery', icon: '🖼' },
   { key: 'reports', label: 'Reports', icon: '📈' },
   { key: 'impact_outcomes', label: 'Impact & Outcomes', icon: '🌱' },
-  { key: 'fundraising', label: 'Fundraising', icon: '💷', hint: 'Campaigns, donations and grants' },
   { key: 'payments', label: 'Payments', icon: '💳' },
   { key: 'resource_booking', label: 'Resource Booking', icon: '🗓' },
   { key: 'events_trips', label: 'Events & Trips', icon: '✈️' },
