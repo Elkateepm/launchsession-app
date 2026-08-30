@@ -7,6 +7,8 @@ import {
 } from '../../lib/reportingService'
 import ReportBuilder from './ReportBuilder'
 import FunderReport from './FunderReport'
+import ReportDocument from './ReportDocument'
+import { hasDocument } from '../../lib/reportDocs'
 import Icon from '../../lib/icons'
 
 const VIEWS = [
@@ -58,6 +60,7 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
   const [savedReports, setSavedReports] = useState([])
   const [builderType, setBuilderType] = useState(null)
   const [showFunder, setShowFunder] = useState(false)
+  const [docReport, setDocReport] = useState(null)
 
   const range = useMemo(() => rangeFor(rangeKey, customRange), [rangeKey, customRange])
 
@@ -176,10 +179,13 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
 
       {view === 'library' && (
         <LibraryView role={role} isMobile={isMobile} onRun={(key) => {
-          // The funder report is a document with its own data behind it, not a
-          // section-picker over the overview metrics like the rest of the library.
+          // Every report in the library now has its own aggregate and its own
+          // document. The builder wizard remains only for anything that does
+          // not yet, rather than being the default path.
           if (key === 'funding') setShowFunder(true)
-          else setBuilderType(key)
+          else if (hasDocument(key)) {
+            setDocReport({ key, name: REPORT_LIBRARY.find(r => r.key === key)?.name || 'Report' })
+          } else setBuilderType(key)
         }} />
       )}
 
@@ -192,6 +198,13 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
 
       {showFunder && (
         <FunderReport org={org} range={range} onClose={() => setShowFunder(false)} />
+      )}
+
+      {docReport && (
+        <ReportDocument
+          reportKey={docReport.key} title={docReport.name}
+          org={org} range={range} onClose={() => setDocReport(null)}
+        />
       )}
 
       {builderType && (
