@@ -69,7 +69,6 @@ export const NAV_GROUPS = [
     items: [
       { id: 'payments', label: 'Payments', icon: 'payments', tab: 'payments', moduleKey: 'payments' },
       { id: 'resource_booking', label: 'Resource Booking', icon: 'resources', tab: 'resource_booking', moduleKey: 'resource_booking' },
-      { id: 'events_trips', label: 'Events & Trips', icon: 'events', tab: 'events_trips', moduleKey: 'events_trips' },
       { id: 'messaging', label: 'Messaging', icon: 'messaging', tab: 'messaging', moduleKey: 'messaging' },
       { id: 'gallery', label: 'Gallery', icon: 'gallery', tab: 'gallery', moduleKey: 'gallery' },
       // Not module-gated: staff management absorbed the old Staff & Volunteers
@@ -78,6 +77,13 @@ export const NAV_GROUPS = [
       { id: 'hr', label: 'HR', icon: 'hr', tab: 'hr', adminOnly: true },
       { id: 'parent_portal', label: 'Parent Portal', icon: 'parents', tab: 'parent_portal', moduleKey: 'parent_portal' },
       { id: 'templates', label: 'Templates', icon: 'templates', tab: 'templates', adminOnly: true },
+      // Events & Trips is deliberately absent. An event or trip is a session
+      // carrying an event session_type, so it already shows up in Sessions and
+      // in Calendar -- the dedicated page was a third view of the same rows.
+      // Planning one is a calendar action now: Calendar's plan picker still
+      // routes to the events_trips tab, so that route and its component stay
+      // for that entry point and for existing deep links. Dropping the route
+      // means dropping the picker option with it.
     ],
   },
 ]
