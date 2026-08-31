@@ -38,6 +38,18 @@ export const NAV_SECTIONS = [
     ],
   },
   {
+    id: 'office',
+    label: 'Office',
+    items: [
+      // One row, several modules behind it. Grouped by when they are used
+      // rather than by what they are: these are desk jobs an administrator
+      // does between sessions, not things anybody opens on a phone mid-
+      // delivery. Its own visibility is decided by its contents -- see
+      // OFFICE_TABS and visibleOfficeTabs.
+      { id: 'office', label: 'Office', icon: 'operations', tab: 'office', matchTabs: ['office', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'] },
+    ],
+  },
+  {
     id: 'safety',
     label: 'Safety',
     items: [
@@ -73,16 +85,8 @@ export const NAV_GROUPS = [
     label: 'Operations',
     icon: 'operations',
     items: [
-      { id: 'payments', label: 'Payments', icon: 'payments', tab: 'payments', moduleKey: 'payments' },
-      { id: 'resource_booking', label: 'Resource Booking', icon: 'resources', tab: 'resource_booking', moduleKey: 'resource_booking' },
       { id: 'messaging', label: 'Messaging', icon: 'messaging', tab: 'messaging', moduleKey: 'messaging' },
       { id: 'gallery', label: 'Gallery', icon: 'gallery', tab: 'gallery', moduleKey: 'gallery' },
-      // Not module-gated: staff management absorbed the old Staff & Volunteers
-      // page, which was always available. Compliance and leave inside HR are
-      // still gated on the module.
-      { id: 'hr', label: 'HR', icon: 'hr', tab: 'hr', adminOnly: true },
-      { id: 'parent_portal', label: 'Parent Portal', icon: 'parents', tab: 'parent_portal', moduleKey: 'parent_portal' },
-      { id: 'templates', label: 'Templates', icon: 'templates', tab: 'templates', adminOnly: true },
       // Events & Trips is deliberately absent. An event or trip is a session
       // carrying an event session_type, so it already shows up in Sessions and
       // in Calendar -- the dedicated page was a third view of the same rows.
@@ -143,6 +147,14 @@ export function visibleItems(items, ctx) {
   return items.filter(i => isItemVisible(i, ctx))
 }
 
+export const OFFICE_TABS = [
+  { id: 'hr', label: 'HR', icon: 'hr', tab: 'hr', adminOnly: true },
+  { id: 'payments', label: 'Payments', icon: 'payments', tab: 'payments', moduleKey: 'payments' },
+  { id: 'resource_booking', label: 'Resource Booking', icon: 'resources', tab: 'resource_booking', moduleKey: 'resource_booking' },
+  { id: 'templates', label: 'Templates', icon: 'templates', tab: 'templates', adminOnly: true },
+  { id: 'parent_portal', label: 'Parent Portal', icon: 'parents', tab: 'parent_portal', moduleKey: 'parent_portal' },
+]
+
 /**
  * Every entry an organisation may switch off, in the order Settings lists them.
  *
@@ -155,7 +167,12 @@ export function visibleItems(items, ctx) {
  * switching off the screen it would need to switch anything back on.
  */
 export const HIDEABLE_ITEMS = [
-  ...NAV_SECTIONS.map(s => ({ group: s.label, items: s.items })),
+  ...NAV_SECTIONS.map(s => (
+    // Office is one row in the sidebar but five switches in Settings: hiding
+    // the row would take all five away at once, and an organisation that had
+    // already switched Payments off before Office existed should keep that.
+    s.id === 'office' ? { group: 'Office', items: OFFICE_TABS } : { group: s.label, items: s.items }
+  )),
   ...NAV_GROUPS.map(g => ({ group: g.label, items: g.items })),
 ]
 
