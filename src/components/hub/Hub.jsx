@@ -16,6 +16,7 @@ import { isPushSupported, getNotificationPermission, subscribeToPush } from "../
 import { notifyEvent } from "../../services/notifyEvent";
 import { allowedModules } from '../../lib/moduleAccess'
 import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
+import { monthAttendance as calcMonthAttendance, reachedThisMonth as calcReachedThisMonth } from './glanceStats'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
 import shrinkImage from '../../lib/shrinkImage'
@@ -3161,7 +3162,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   // Cumulative attendance for the day — anyone who has arrived, whether or not they've
   // since signed out — so this matches the "signed in + signed out" total shown on each
   // session's live register, rather than only counting who's currently on site.
-  const signedIn = todayAttendance.filter(a => a.status === "signed_in" || a.status === "signed_out").length;
   const medicalReviewByChild = useMemo(() => {
     const map = {}
     medicalReviews.forEach(r => {
@@ -3181,7 +3181,24 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       return new Date(review.reviewed_at).getTime() < cutoff
     }).length
   }, [children, medicalReviewByChild]);
-  const attendanceRate = children.length > 0 ? Math.round((signedIn / children.length) * 100) : 0;
+  // Attendance for the month, as present out of the places somebody actually
+  // marked. This read signedIn / children.length -- today's sign-ins over the
+  // whole register -- under a heading saying "this month", which showed 22%
+  // against a real figure of 83%: an organisation with 54 on the roll and 12 in
+  // today could not score above 22% however well the session went.
+  //
+  // Present over present-plus-absent is the definition Reports uses. An
+  // unmarked place is not an absence, so it is excluded rather than counted
+  // against the rate.
+  const monthAttendance = useMemo(
+    () => calcMonthAttendance(sessions, attendance, today), [sessions, attendance, today]);
+  const attendanceRate = monthAttendance.rate;
+
+  // Distinct people who turned up at least once this month. The panel says
+  // "this month", so the headcount should mean something monthly -- the size of
+  // the register does not change because a month passed.
+  const reachedThisMonth = useMemo(
+    () => calcReachedThisMonth(sessions, attendance, today), [sessions, attendance, today]);
   const strictlyTodaySessions = useMemo(() => todaySessions.filter(s => s.session_date === today), [todaySessions, today]);
   const todayHasLiveSession = useMemo(() => {
     const now = new Date()
@@ -3202,11 +3219,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   // rule Reports already applies. A missing figure stays neutral: "no
   // registers yet" must not render as a crisis.
   const attendanceTone = React.useMemo(() => {
-    if (!children.length || attendanceRate == null) return { bg: '#F1F5F9', fg: '#64748B' }
+    // No marked places means no rate, which is different from a rate of zero.
+    if (attendanceRate == null) return { bg: '#F1F5F9', fg: '#64748B' }
     if (attendanceRate >= 75) return { bg: '#DCFCE7', fg: '#15803D' }
     if (attendanceRate >= 50) return { bg: '#FEF3C7', fg: '#B45309' }
     return { bg: '#FEE2E2', fg: '#B91C1C' }
-  }, [attendanceRate, children.length])
+  }, [attendanceRate])
   // Mobile-first: full-width, 44px-tall touch targets that lay out in a grid.
   // These used to be an inline-flex row with flexShrink:0, which pushed the
   // primary "Open live register" CTA off the right edge of a 390px screen.
@@ -3260,20 +3278,40 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       return predicate(start, end)
     })
     const sessionsPerWeek = bucket((start, end) => sessions.filter(s => s.session_date >= start && s.session_date < end).length)
+    // Same definition as the number it sits under: present over the places
+    // somebody marked. This divided by every attendance row, unmarked ones
+    // included, so the line and the figure above it were measuring different
+    // things and disagreeing quietly.
     const attendedPerWeek = bucket((start, end) => {
       const ids = new Set(sessions.filter(s => s.session_date >= start && s.session_date < end).map(s => s.id))
       const rows = attendance.filter(a => ids.has(a.session_id))
       const present = rows.filter(a => a.status === 'signed_in' || a.status === 'signed_out').length
-      return rows.length > 0 ? Math.round((present / rows.length) * 100) : 0
+      const marked = rows.filter(a => ['signed_in', 'signed_out', 'absent'].includes(a.status)).length
+      return marked > 0 ? Math.round((present / marked) * 100) : 0
     })
-    const childrenPerWeek = bucket((start, end) => children.filter(c => !c.created_at || c.created_at.slice(0, 10) < end).length)
+    // Distinct people who came that week, matching the headline. It used to
+    // count everyone on the register created before the week ended, which is
+    // roll growth rather than reach.
+    const reachedPerWeek = bucket((start, end) => {
+      const ids = new Set(sessions.filter(s => s.session_date >= start && s.session_date < end).map(s => s.id))
+      return new Set(
+        attendance
+          .filter(a => ids.has(a.session_id) && (a.status === 'signed_in' || a.status === 'signed_out'))
+          .map(a => a.child_id)
+      ).size
+    })
     return {
       sessions: sessionsPerWeek,
       attendance: attendedPerWeek,
-      children: childrenPerWeek,
-      volunteers: sessionsPerWeek.map(() => volunteersCount),
+      children: reachedPerWeek,
+      // No sparkline for volunteers. This was sessionsPerWeek.map(() =>
+      // volunteersCount) -- the same number repeated six times, drawn as a flat
+      // line, directly under a comment promising a real shape rather than
+      // decoration. Nothing in state records when a volunteer was active, so
+      // the honest answer is to draw nothing.
+      volunteers: null,
     }
-  }, [sessions, attendance, children, volunteersCount]);
+  }, [sessions, attendance]);
 
   const quickJumpActions = (() => {
     const list = []
@@ -4456,11 +4494,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 hero and the rest of the module pages. Attendance is the one
                 exception: it grades itself, the same rule Reports already uses,
                 because a rate is a judgement and shouldn't read as brand. */}
+            {/* Every figure here is this month's, except the volunteer count,
+                whose label says plainly that it is a standing number. Three
+                monthly figures and one all-time one under a heading saying
+                "this month" is how the attendance rate went unnoticed. */}
             <GlanceStats isMobile={isMobile} stats={[
-              { key: 'children', value: children.length, label: terms.People, bg: 'var(--org-a10)', colour: primary, trend: trends.children, onClick: () => go('children') },
+              { key: 'children', value: reachedThisMonth, label: `${terms.People} reached`, bg: 'var(--org-a10)', colour: primary, trend: trends.children, onClick: () => go('children') },
               { key: 'sessions', value: sessionsRunThisMonth, label: `${terms.Sessions} run`, bg: `${secondary}14`, colour: secondary, trend: trends.sessions, onClick: () => go('planner') },
-              { key: 'attendance', value: attendanceRate, suffix: '%', label: 'Attendance rate', bg: attendanceTone.bg, colour: attendanceTone.fg, trend: trends.attendance, onClick: () => go('reports') },
-              { key: 'volunteers', value: volunteersCount, label: 'Volunteers active', bg: 'var(--org-a05)', colour: primary, trend: trends.volunteers, onClick: () => go('volunteers') },
+              { key: 'attendance', value: attendanceRate ?? '—', suffix: attendanceRate == null ? '' : '%', label: 'Attendance rate', bg: attendanceTone.bg, colour: attendanceTone.fg, trend: trends.attendance, onClick: () => go('reports') },
+              { key: 'volunteers', value: volunteersCount, label: 'Volunteers on the team', bg: 'var(--org-a05)', colour: primary, trend: trends.volunteers, onClick: () => go('volunteers') },
             ]} />
           </Panel>
         </div>
