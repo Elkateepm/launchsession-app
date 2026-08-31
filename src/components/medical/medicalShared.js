@@ -16,10 +16,54 @@ export const TIERS = {
   3: { key: 'context', label: 'Worth knowing', colour: '#334155', bg: '#F1F5F9' },
 }
 
-// Wording staff actually use when an allergy is the dangerous kind. Matched on
-// the free text because there is no separate anaphylaxis field, and a nut
-// allergy recorded only as text should not sort below a behaviour plan.
-const ANAPHYLAXIS = /(anaphyla|epipen|epi-pen|adrenaline|auto-?injector)/i
+// Text that means "nothing recorded". Staff type these into a required-looking
+// box to get past it, and the page was rendering "Medical note: None" as an
+// alert -- a note saying there is no note.
+const EMPTY_TEXT = /^(n\/?a|none|nil|no|nothing|-{1,3}|\.)$/i
+
+export function meaningfulText(value) {
+  const t = (value || '').trim()
+  if (!t || EMPTY_TEXT.test(t)) return null
+  return t
+}
+
+// What the structured fields cannot express.
+//
+// The booleans already carry asthma, diabetes and EpiPen, so the text matching
+// below deliberately does NOT repeat them: promoting every note that mentions
+// an inhaler put 18 of this org's 34 flagged children into the top tier, and a
+// page where half the list is urgent has stopped triaging anything.
+//
+// What the booleans miss is real, though. has_epipen is false for every child
+// in this database and not one record says anaphylaxis -- so without reading
+// the allergy text, a recorded peanut allergy ranked level with a strawberry
+// one. And there is no column for epilepsy at all.
+//
+// So: allergens that carry an anaphylaxis risk, and seizure conditions. Keyword
+// matching standing in for fields that do not exist, tuned to over-flag rather
+// than under-flag, because here a false positive costs a second look and a
+// false negative costs considerably more. The real fix is capturing severity at
+// the point of entry.
+const ANAPHYLAXIS = '(anaphyla|epipen|epi-?pen|adrenaline|auto-?injector)'
+
+// Allergens that are treated as potentially anaphylactic by default in a youth
+// setting. Not a clinical judgement about any individual: a nut allergy that
+// turns out to be mild costs somebody a second look at a card.
+const RISK_ALLERGENS = '(peanut|tree ?nut|\\bnuts?\\b|shellfish|sesame|bee sting|wasp sting|insect sting)'
+
+const ALLERGY_RISK = new RegExp(`${ANAPHYLAXIS}|${RISK_ALLERGENS}`, 'i')
+// Notes get the anaphylaxis wording plus seizures, which have no column.
+const NOTE_RISK = new RegExp(`${ANAPHYLAXIS}|(epilep|seizure)`, 'i')
+
+export const allergyLooksSevere = (text) => {
+  const t = meaningfulText(text)
+  return !!t && ALLERGY_RISK.test(t)
+}
+
+export const noteLooksUrgent = (text) => {
+  const t = meaningfulText(text)
+  return !!t && NOTE_RISK.test(t)
+}
 
 /**
  * Every flag on a child, tiered.
@@ -32,20 +76,36 @@ const ANAPHYLAXIS = /(anaphyla|epipen|epi-pen|adrenaline|auto-?injector)/i
  */
 export function flagsFor(child) {
   const out = []
-  const allergies = (child.allergies || '').trim()
+  const allergies = meaningfulText(child.allergies)
+  const notes = meaningfulText(child.medical_notes)
+  const medDetail = meaningfulText(child.medication_details)
+  const planNotes = meaningfulText(child.behaviour_plan_notes)
   const onMedication = !!(child.takes_medication || child.has_medication)
 
-  if (child.has_epipen) out.push({ tier: 1, label: 'EpiPen', detail: child.medication_details || null })
-  if (allergies && ANAPHYLAXIS.test(allergies)) {
-    if (!child.has_epipen) out.push({ tier: 1, label: 'Severe allergy', detail: allergies })
-  } else if (allergies) {
-    out.push({ tier: 2, label: 'Allergy', detail: allergies })
+  if (child.has_epipen) out.push({ tier: 1, label: 'EpiPen', detail: medDetail })
+  if (allergies) {
+    const severe = !child.has_epipen && allergyLooksSevere(allergies)
+    out.push({
+      tier: severe ? 1 : 2,
+      label: severe ? 'Severe allergy' : 'Allergy',
+      detail: allergies,
+    })
   }
   if (child.has_diabetes) out.push({ tier: 1, label: 'Diabetes', detail: null })
   if (child.has_asthma) out.push({ tier: 1, label: 'Asthma', detail: null })
-  if (onMedication) out.push({ tier: 2, label: 'Medication', detail: child.medication_details || null })
-  if (child.has_behaviour_plan) out.push({ tier: 3, label: 'Behaviour plan', detail: child.behaviour_plan_notes || null })
-  if (child.medical_notes) out.push({ tier: 3, label: 'Medical note', detail: child.medical_notes })
+  if (onMedication) out.push({ tier: 2, label: 'Medication', detail: medDetail })
+  if (child.has_behaviour_plan) out.push({ tier: 3, label: 'Behaviour plan', detail: planNotes })
+  if (notes) {
+    // A note naming a condition with an emergency protocol is not a footnote.
+    // "Epilepsy -- emergency plan with staff" belongs at the top of the page,
+    // whether or not anybody ticked a box elsewhere.
+    const severe = noteLooksUrgent(notes)
+    out.push({
+      tier: severe ? 1 : 3,
+      label: severe ? 'Medical condition' : 'Medical note',
+      detail: notes,
+    })
+  }
 
   return out.sort((a, b) => a.tier - b.tier)
 }
