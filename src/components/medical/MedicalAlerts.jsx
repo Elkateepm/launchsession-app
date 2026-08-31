@@ -110,11 +110,17 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
 
   const TABS = [
     { key: 'today', label: 'Today', count: onToday.length },
+    // Only offered once there is something in it. A permanent "Immediate
+    // response 0" tab is a worry with nothing behind it.
+    ...(immediate.length ? [{ key: 'immediate', label: 'Immediate response', count: immediate.length, tone: '#B91C1C' }] : []),
     { key: 'all', label: `All ${terms.people}`, count: rows.length },
     { key: 'review', label: 'Needs review', count: needsReviewRows.length },
   ]
 
-  const base = tab === 'today' ? onToday : tab === 'review' ? needsReviewRows : rows
+  const base = tab === 'today' ? onToday
+    : tab === 'immediate' ? immediate
+      : tab === 'review' ? needsReviewRows
+        : rows
   const list = useMemo(() => {
     const q = search.trim().toLowerCase()
     const filtered = q
@@ -159,9 +165,16 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
         // "4 of today's 8 need an immediate response", which was not what it
         // said. Today's number is on the Today tab, where its scope is obvious.
         stats={[
-          { label: `${terms.People} with a medical need`, value: rows.length, icon: '💊' },
-          { label: 'Immediate response', value: immediate.length, icon: '🚨', color: immediate.length ? '#B91C1C' : undefined },
-          { label: 'Needs review', value: needsReviewRows.length, icon: '⏳', color: needsReviewRows.length ? '#D97706' : undefined },
+          { label: `${terms.People} with a medical need`, value: rows.length, icon: '💊',
+            onClick: () => setTab('all'), active: tab === 'all' },
+          { label: 'Immediate response', value: immediate.length, icon: '🚨',
+            color: immediate.length ? '#B91C1C' : undefined,
+            onClick: immediate.length ? () => setTab('immediate') : undefined,
+            active: tab === 'immediate' },
+          { label: 'Needs review', value: needsReviewRows.length, icon: '⏳',
+            color: needsReviewRows.length ? '#D97706' : undefined,
+            onClick: needsReviewRows.length ? () => setTab('review') : undefined,
+            active: tab === 'review' },
         ]}
       />
 
@@ -169,9 +182,11 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             padding: '8px 14px', borderRadius: 99, minHeight: 40, fontFamily: 'inherit',
-            border: `1.5px solid ${tab === t.key ? primary : '#E5E7EB'}`,
-            background: tab === t.key ? `linear-gradient(135deg, ${primary}, var(--org-a85))` : '#fff',
-            color: tab === t.key ? '#fff' : '#6B7280',
+            border: `1.5px solid ${tab === t.key ? (t.tone || primary) : t.tone ? `${t.tone}55` : '#E5E7EB'}`,
+            background: tab === t.key
+              ? (t.tone || `linear-gradient(135deg, ${primary}, var(--org-a85))`)
+              : '#fff',
+            color: tab === t.key ? '#fff' : (t.tone || '#6B7280'),
             fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
           }}>{t.label} {t.count}</button>
         ))}
@@ -183,14 +198,16 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
       </div>
 
       {tab === 'today' && !loading && onToday.some(r => r.tier === 1) && (
-        <div style={{
-          margin: '12px 16px 0', padding: '10px 14px', borderRadius: 10,
-          background: '#FEE2E2', border: '1.5px solid #FECACA',
+        <button onClick={() => setTab('immediate')} style={{
+          display: 'block', width: 'calc(100% - 32px)', textAlign: 'left', fontFamily: 'inherit',
+          margin: '12px 16px 0', padding: '10px 14px', borderRadius: 10, minHeight: 44,
+          background: '#FEE2E2', border: '1.5px solid #FECACA', cursor: 'pointer',
           fontSize: 12.5, fontWeight: 800, color: '#991B1B',
         }}>
           {onToday.filter(r => r.tier === 1).length} of the {onToday.length} on today’s register
           {onToday.filter(r => r.tier === 1).length === 1 ? ' needs' : ' need'} an immediate response plan
-        </div>
+          <span style={{ opacity: 0.75 }}> — see everyone who does</span>
+        </button>
       )}
 
       <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
@@ -253,9 +270,11 @@ function EmptyState({ tab, rows, todaySessions, terms, onSeeAll }) {
             ? (todaySessions.length === 0
               ? 'No sessions today'
               : `Nobody with a medical need is on today's register`)
-            : tab === 'review'
-              ? 'Everything is signed off and in date'
-              : 'No matches'}
+            : tab === 'immediate'
+              ? 'Nobody needs an immediate response plan'
+              : tab === 'review'
+                ? 'Everything is signed off and in date'
+                : 'No matches'}
       </div>
       <div style={{ fontSize: 13, color: '#9CA3AF', maxWidth: 420, margin: '0 auto', lineHeight: 1.55 }}>
         {nothingAtAll
