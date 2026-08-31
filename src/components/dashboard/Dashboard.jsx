@@ -972,7 +972,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'newsletter' && (hasModule('messaging')  ? <NewsletterStudio org={org} session={session} />            : <LockedModule moduleKey="messaging"  label="Newsletter" icon="📨" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── SAFEGUARDING PACK ── */}
-          {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingHub org={org} session={session} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} initialOpenCaseId={openCaseId} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding Hub"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingHub org={org} session={session} isAdmin={isAdmin} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} initialOpenCaseId={openCaseId} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding Hub"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} userProfile={userProfile} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 

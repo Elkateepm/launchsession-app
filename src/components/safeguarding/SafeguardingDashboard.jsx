@@ -1007,9 +1007,15 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
   }
   const attention = attentionItems(cases)
 
+  // Labelled "All concerns", not "Cases". This list is cause_for_concern rows,
+  // and it sat as a Cases tab inside the Concerns tab, one level below a
+  // different Cases tab showing the actual cases table -- two unrelated things
+  // called the same word, nested. The `cases` variable below is the same
+  // misnomer and is left alone deliberately: renaming it touches this whole
+  // file, and the label is what anyone actually reads.
   const TABS = [
     ['overview', '🏠 Overview'],
-    ['cases', '📋 Cases'],
+    ['cases', '📋 All concerns'],
     ['children', '🧒 Children'],
     ['medical', '❤️ Medical'],
     ['documents', '📁 Documents'],
