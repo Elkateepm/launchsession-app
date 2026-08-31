@@ -46,7 +46,7 @@ export const NAV_SECTIONS = [
       // does between sessions, not things anybody opens on a phone mid-
       // delivery. Its own visibility is decided by its contents -- see
       // OFFICE_TABS and visibleOfficeTabs.
-      { id: 'office', label: 'Office', icon: 'operations', tab: 'office', matchTabs: ['office', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'] },
+      { id: 'office', label: 'Office', icon: 'operations', tab: 'office', badgeKey: 'forms', matchTabs: ['office', 'forms', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'] },
     ],
   },
   {
@@ -55,7 +55,6 @@ export const NAV_SECTIONS = [
     items: [
       { id: 'safeguarding', label: 'Safeguarding Hub', icon: 'safeguarding', tab: 'safeguarding', moduleKey: 'safeguarding' },
       { id: 'risk_assessments', label: 'Risk Assessments', icon: 'risk', tab: 'risk_assessments', moduleKey: 'risk_assessments' },
-      { id: 'forms', label: 'Forms', icon: 'forms', tab: 'forms', moduleKey: 'forms', badgeKey: 'forms' },
       { id: 'medical_alerts', label: 'Medical Alerts', icon: 'medical', tab: 'medical_alerts', moduleKey: 'medical_alerts' },
     ],
   },
@@ -148,6 +147,9 @@ export function visibleItems(items, ctx) {
 }
 
 export const OFFICE_TABS = [
+  // Forms first: of everything in here it is the one with live work attached,
+  // and Office opens on whichever module comes first that the viewer may use.
+  { id: 'forms', label: 'Forms', icon: 'forms', tab: 'forms', moduleKey: 'forms', badgeKey: 'forms' },
   { id: 'hr', label: 'HR', icon: 'hr', tab: 'hr', adminOnly: true },
   { id: 'payments', label: 'Payments', icon: 'payments', tab: 'payments', moduleKey: 'payments' },
   { id: 'resource_booking', label: 'Resource Booking', icon: 'resources', tab: 'resource_booking', moduleKey: 'resource_booking' },

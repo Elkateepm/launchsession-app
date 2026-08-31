@@ -18,7 +18,7 @@ import Icon from '../../lib/icons'
 // left its children to scroll themselves and none of them did: the case list
 // was clipped at the fold for months.
 
-export default function Office({ tabs, subTab, onSelect, children }) {
+export default function Office({ tabs, subTab, onSelect, badges = {}, children }) {
   const isMobile = useIsMobile()
 
   return (
@@ -47,6 +47,16 @@ export default function Office({ tabs, subTab, onSelect, children }) {
             >
               <span aria-hidden="true"><Icon name={t.icon} /></span>
               {t.label}
+              {/* Unread form submissions. Moving Forms in here would otherwise
+                  have taken its sidebar badge with it, hiding the one thing in
+                  Office that arrives on its own. */}
+              {t.badgeKey && badges[t.badgeKey] > 0 && (
+                <span style={{
+                  minWidth: 18, height: 18, borderRadius: 99, padding: '0 5px',
+                  background: '#DC2626', color: '#fff', fontSize: 10.5, fontWeight: 900,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                }}>{badges[t.badgeKey]}</span>
+              )}
             </button>
           )
         })}

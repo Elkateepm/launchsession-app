@@ -77,7 +77,10 @@ describe('the Create menu follows the sidebar', () => {
   // Hiding Forms and leaving "New Form" in the Create menu would be a shortcut
   // into a tab the organisation has just said it does not use.
   const hiddenTabs = (hiddenIds) => {
-    const tabs = new Set(allItems.filter(i => hiddenIds.includes(i.id)).map(i => i.tab))
+    // Office's modules are hideable but are not sidebar rows, so they have to
+    // be considered here exactly as Dashboard considers them.
+    const everything = [...allItems, ...OFFICE_TABS]
+    const tabs = new Set(everything.filter(i => hiddenIds.includes(i.id)).map(i => i.tab))
     return CREATE_ACTIONS.filter(a => tabs.has(a.tab)).map(a => a.id)
   }
 
@@ -104,7 +107,27 @@ describe('Office', () => {
   const officeIds = OFFICE_TABS.map(t => t.id)
 
   it('holds the desk-work modules and nothing else', () => {
-    expect(officeIds).toEqual(['hr', 'payments', 'resource_booking', 'templates', 'parent_portal'])
+    expect(officeIds).toEqual(['forms', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'])
+  })
+
+  it('opens on Forms, the one with work arriving in it', () => {
+    // Office opens on the first module the viewer may use, so the order here
+    // decides the landing tab.
+    expect(OFFICE_TABS[0].id).toBe('forms')
+  })
+
+  it('keeps the unread badge reachable from the sidebar', () => {
+    // Forms carried a badge as its own row. Buried a level down it would have
+    // gone, so the Office row carries it and so does the Forms tab.
+    const office = NAV_SECTIONS.flatMap(s => s.items).find(i => i.id === 'office')
+    expect(office.badgeKey).toBe('forms')
+    expect(OFFICE_TABS.find(t => t.id === 'forms').badgeKey).toBe('forms')
+  })
+
+  it('takes Forms out of Safety', () => {
+    const safety = NAV_SECTIONS.find(s => s.label === 'Safety')
+    expect(safety.items.map(i => i.id)).not.toContain('forms')
+    expect(safety.items.map(i => i.id)).toEqual(['safeguarding', 'risk_assessments', 'medical_alerts'])
   })
 
   it('takes them out of the sidebar as separate rows', () => {
@@ -134,7 +157,7 @@ describe('Office', () => {
 
   it('shows an admin every module', () => {
     const ctx = { hasModule: () => true, isAdmin: true, moduleLevel: () => 'edit', hiddenItems: [] }
-    expect(visibleItems(OFFICE_TABS, ctx)).toHaveLength(5)
+    expect(visibleItems(OFFICE_TABS, ctx)).toHaveLength(6)
   })
 
   it('hides the admin-only modules from everyone else', () => {

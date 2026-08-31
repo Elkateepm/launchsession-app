@@ -11,7 +11,7 @@ const setup = (props = {}) => render(
 describe('the Office shell', () => {
   it('offers the modules it was given', () => {
     setup()
-    for (const label of ['HR', 'Payments', 'Resource Booking', 'Templates', 'Parent Portal']) {
+    for (const label of ['Forms', 'HR', 'Payments', 'Resource Booking', 'Templates', 'Parent Portal']) {
       expect(screen.getByRole('tab', { name: new RegExp(label, 'i') })).toBeInTheDocument()
     }
   })
@@ -35,12 +35,22 @@ describe('the Office shell', () => {
     // shell does no filtering of its own.
     setup({ tabs: OFFICE_TABS.filter(t => !t.adminOnly) })
     expect(screen.queryByRole('tab', { name: /^HR/i })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('tab')).toHaveLength(3)
+    expect(screen.getAllByRole('tab')).toHaveLength(4)
   })
 
   it('renders the module handed to it', () => {
     setup()
     expect(screen.getByText('Payments screen')).toBeInTheDocument()
+  })
+
+  it('shows an unread count on the module it belongs to', () => {
+    setup({ badges: { forms: 3 } })
+    expect(screen.getByRole('tab', { name: /Forms/i })).toHaveTextContent('3')
+  })
+
+  it('shows no badge when nothing is waiting', () => {
+    setup({ badges: { forms: 0 } })
+    expect(screen.getByRole('tab', { name: /Forms/i })).not.toHaveTextContent('0')
   })
 
   it('carries its own scroller', () => {
