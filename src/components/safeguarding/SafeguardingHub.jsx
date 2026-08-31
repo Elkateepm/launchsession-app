@@ -27,6 +27,7 @@ const SUB_TABS = [
 export default function SafeguardingHub({
   org,
   session,
+  isAdmin,
   onNavigate,
   initialOpenConcernId,
   initialOpenCaseId,
@@ -94,7 +95,7 @@ export default function SafeguardingHub({
         )}
         {subTab === 'injuries' && (
           <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 24px' }}>
-            <InjuryLog org={org} />
+            <InjuryLog org={org} session={session} isAdmin={isAdmin} />
           </div>
         )}
         {subTab === 'cases' && (

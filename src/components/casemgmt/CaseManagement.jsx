@@ -26,6 +26,9 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState({ status: 'all', risk: 'all', assignee: 'all', category: 'all', requiresDsl: false, archived: false })
   const [sortBy, setSortBy] = useState('newest')
+  // Which slipping-case group is being shown, if any. Separate from `filters`
+  // because it is a lens over them rather than another dimension of them.
+  const [attention, setAttention] = useState(null)
   const [showFilters, setShowFilters] = useState(false)
   const [showWizard, setShowWizard] = useState(false)
   const [showQuickMenu, setShowQuickMenu] = useState(false)
@@ -95,8 +98,33 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
   }
 
   // ---- derived data ----
+  // The ways a safeguarding case quietly goes wrong. next_review_date was only
+  // ever shown inside a case, so a review date could pass without anything on
+  // this screen saying so -- which is the failure this list exists to prevent.
+  const slipping = useMemo(() => {
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
+    const open = cases.filter(c => !c.archived && !c.resolved_at && c.status !== 'closed' && c.status !== 'resolved')
+    return {
+      danger: open.filter(c => c.immediate_danger && !c.risk_ack_at),
+      overdue: open.filter(c => c.next_review_date && c.next_review_date < today),
+      unassigned: open.filter(c => !c.assigned_to_user_id),
+      dsl: open.filter(c => c.requires_dsl),
+    }
+  }, [cases])
+
+  const ATTENTION = [
+    { key: 'danger', label: 'Immediate danger, not acknowledged', colour: '#B91C1C' },
+    { key: 'overdue', label: 'Review date passed', colour: '#B45309' },
+    { key: 'unassigned', label: 'Nobody assigned', colour: '#B45309' },
+    { key: 'dsl', label: 'Needs the safeguarding lead', colour: '#4338CA' },
+  ].filter(a => slipping[a.key].length > 0)
+
   const filteredCases = useMemo(() => {
     let list = cases.filter(c => filters.archived ? c.archived : !c.archived)
+    if (attention && slipping[attention]) {
+      const ids = new Set(slipping[attention].map(c => c.id))
+      list = list.filter(c => ids.has(c.id))
+    }
     if (filters.status !== 'all') list = list.filter(c => c.status === filters.status)
     if (filters.risk !== 'all') list = list.filter(c => (c.risk_level || c.priority) === filters.risk)
     if (filters.assignee !== 'all') list = list.filter(c => c.assigned_to_user_id === filters.assignee)
@@ -124,7 +152,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
     // pinned always float to top
     list.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
     return list
-  }, [cases, filters, search, sortBy])
+  }, [cases, filters, search, sortBy, attention, slipping])
 
   const activeCases = useMemo(() => cases.filter(c => !['closed', 'archived'].includes(c.status)), [cases])
 
@@ -298,7 +326,32 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
         {/* LEFT: case list */}
         {(!isMobile || !selectedCase) && (
           <div style={glass({ padding: 0, overflow: 'hidden' })}>
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>Cases ({filteredCases.length})</div>
+            {ATTENTION.length > 0 && (
+              <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 }}>Needs attention</span>
+                {ATTENTION.map(a => {
+                  const on = attention === a.key
+                  return (
+                    <button key={a.key} onClick={() => setAttention(on ? null : a.key)} style={{
+                      minHeight: 34, padding: '5px 11px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
+                      fontSize: 11.5, fontWeight: 800,
+                      border: `1.5px solid ${on ? a.colour : `${a.colour}44`}`,
+                      background: on ? a.colour : `${a.colour}0F`,
+                      color: on ? '#fff' : a.colour,
+                    }}>{slipping[a.key].length} {a.label}</button>
+                  )
+                })}
+                {attention && (
+                  <button onClick={() => setAttention(null)} style={{
+                    minHeight: 34, padding: '5px 11px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
+                    fontSize: 11.5, fontWeight: 800, border: '1.5px solid #E2E8F0', background: '#fff', color: '#64748B',
+                  }}>Show all</button>
+                )}
+              </div>
+            )}
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>
+              {attention ? ATTENTION.find(a => a.key === attention)?.label : 'Cases'} ({filteredCases.length})
+            </div>
             {filteredCases.length === 0 ? (
               <div style={{ padding: '40px 20px', textAlign: 'center' }}>
                 <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="✅" /></div>
