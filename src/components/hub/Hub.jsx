@@ -2905,7 +2905,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       .then(geo => {
         const loc = geo?.results?.[0]
         if (!loc || !alive) { if (alive) setWeatherError(true); return }
-        return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1`)
+        // Five days rather than one. The daily arrays were already being
+        // requested and only the first entry read, so the forecast costs the
+        // same single call it always did -- no key, no second service.
+        return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=5`)
           .then(r => r.json())
           .then(data => {
             if (!alive || !data?.current) { if (alive) setWeatherError(true); return }
@@ -2917,6 +2920,23 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               high: data.daily?.temperature_2m_max?.[0] != null ? Math.round(data.daily.temperature_2m_max[0]) : null,
               low: data.daily?.temperature_2m_min?.[0] != null ? Math.round(data.daily.temperature_2m_min[0]) : null,
               rainChance: data.daily?.precipitation_probability_max?.[0] ?? null,
+              // Resolved here rather than in the strip so the strip stays
+              // presentational, which is how it already takes today's icon.
+              days: (data.daily?.time || []).map((iso, i) => {
+                const code = data.daily.weather_code?.[i]
+                const meta = weatherFromCode(code)
+                return {
+                  iso,
+                  // Europe/London, like every other date in this app: the
+                  // database runs UTC and the organisations are in the UK.
+                  label: i === 0 ? 'Today' : new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'Europe/London' }),
+                  icon: meta.icon,
+                  description: meta.label,
+                  high: data.daily.temperature_2m_max?.[i] != null ? Math.round(data.daily.temperature_2m_max[i]) : null,
+                  low: data.daily.temperature_2m_min?.[i] != null ? Math.round(data.daily.temperature_2m_min[i]) : null,
+                  rain: data.daily.precipitation_probability_max?.[i] ?? null,
+                }
+              }),
             })
           })
       })
