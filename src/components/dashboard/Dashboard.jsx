@@ -669,7 +669,10 @@ export default function Dashboard({ session, org }) {
 
   const createHiddenTabs = React.useMemo(() => {
     const hiddenTabs = new Set(
-      [...NAV_SECTIONS.flatMap(s => s.items), ...NAV_GROUPS.flatMap(g => g.items)]
+      // OFFICE_TABS included: its modules are hideable in Settings but are no
+      // longer sidebar rows, so without them hiding Forms would leave "New
+      // Form" sitting in the Create menu.
+      [...NAV_SECTIONS.flatMap(s => s.items), ...NAV_GROUPS.flatMap(g => g.items), ...OFFICE_TABS]
         .filter(i => hiddenItems.includes(i.id))
         .map(i => i.tab)
     )
@@ -981,7 +984,7 @@ export default function Dashboard({ session, org }) {
 
           {/* ── SAFEGUARDING PACK ── */}
           {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingHub org={org} session={session} isAdmin={isAdmin} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} initialOpenCaseId={openCaseId} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding Hub"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {/* Forms is rendered inside Office below. */}
           {effectiveTab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} userProfile={userProfile} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── GROWTH PACK ── */}
@@ -1006,9 +1009,11 @@ export default function Dashboard({ session, org }) {
             ) : (
               <Office
                 tabs={visibleOfficeTabs}
+                badges={{ forms: unreadSubs.length }}
                 subTab={effectiveTab === 'office' ? visibleOfficeTabs[0].tab : effectiveTab}
                 onSelect={handleSetTab}
               >
+  {(effectiveTab === 'forms' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'forms'))           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
   {(effectiveTab === 'hr' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'hr'))               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : <HR org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} hasHRModule={hasModule('hr')} />)}
   {(effectiveTab === 'payments' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'payments'))         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} onTrial={onTrial} />)}
   {(effectiveTab === 'resource_booking' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'resource_booking')) && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} onTrial={onTrial} />)}

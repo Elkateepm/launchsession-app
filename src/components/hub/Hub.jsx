@@ -3037,7 +3037,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     ] = await Promise.all([
       supabase.from("sessions").select("*").eq("org_id", orgId).order("session_date", { ascending: true }).order("start_time", { ascending: true }),
       supabase.from("attendance").select("*").eq("org_id", orgId),
-      supabase.from("cause_for_concern").select("*").eq("org_id", orgId).eq("status", "open"),
+      // Open, and not already handed over to a case. Safeguarding stopped
+      // counting escalated concerns as open work; Home did not, so the same
+      // concern read as "1 open concern" here and nothing there. A concern
+      // with a case behind it is being worked in the case.
+      supabase.from("cause_for_concern").select("*").eq("org_id", orgId).eq("status", "open").is("escalated_to_case_id", null),
       supabase.from("children").select("*").eq("org_id", orgId).eq("active", true).order("first_name", { ascending: true }),
       supabase.from("session_reflections").select("*").eq("org_id", orgId),
       supabase.from("volunteers").select("id").eq("org_id", orgId),
@@ -4231,11 +4235,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           />
 
 
-          {/* JUMP STRAIGHT IN — the handful of things people actually start from
-              Home, as one tappable grid rather than buried in the nav rail. */}
-          <Panel title="⚡ Jump straight in">
-            <QuickJump isMobile={isMobile} primary={primary} actions={quickJumpActions} />
-          </Panel>
 
           {/* SESSIONS — merged Live & Upcoming + Ended sessions behind one segmented control, instead of two stacked lists */}
           <div>
@@ -4426,63 +4425,24 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             )}
           </div>
 
-          {/* RECENT REGISTERS — dedicated last-7-days historical register section, separate from
-              the Ended tab above, so past registers are easy to find without digging through a toggle. */}
-          <div style={{ marginTop: 22 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' }}><Icon name="📜" /> Recent Registers</div>
-                <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 1 }}>Last 7 days</div>
-              </div>
-              <button onClick={() => go('registers')} style={sectionLinkBtn(primary)}>View all registers <Icon name="→" /></button>
-            </div>
-            {endedSessions.length === 0 ? (
-              <div style={{ boxSizing: 'border-box', width: '100%', background: '#F8FAFC', border: '1.5px dashed #E5E7EB', borderRadius: 20, padding: '28px 24px', textAlign: 'center', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
-                No sessions have closed in the last 7 days yet
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', flexWrap: 'wrap', gap: 8 }}>
-                {endedSessions.slice(0, 3).map(s => {
-                  const stats = getLiveSessionStats(s)
-                  const attendedTotal = stats.signedIn + stats.absent + stats.signedOut + stats.expected
-                  const attended = stats.signedIn + stats.signedOut
-                  return (
-                    // Ragged-width pills read as noise in a vertical stack, so on
-                    // phones each register becomes a full-width row with the
-                    // attendance and date aligned right.
-                    <button key={s.id} onClick={() => setOpenLiveSessionId(s.id)} style={{
-                      display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: '1.5px solid #EEF1F6',
-                      borderRadius: isMobile ? 14 : 99, padding: isMobile ? '10px 14px 10px 10px' : '8px 14px 8px 8px',
-                      width: isMobile ? '100%' : 'auto', minHeight: isMobile ? 44 : 'auto', textAlign: 'left',
-                      background: '#fff', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
-                    }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#EEF1F6' }}>
-                      <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name="🔒" /></span>
-                      <span style={{ fontSize: 12.5, fontWeight: 800, color: '#374151', maxWidth: isMobile ? 'none' : 140, flex: isMobile ? 1 : 'none', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
-                      {/* The attendance fraction was the most useful number on
-                          this half of the screen and the smallest thing on it.
-                          A bar makes 7/12 and 0/39 tell their story at a glance,
-                          and colours the ones worth looking at: a closed
-                          register nobody was marked on is usually a register
-                          somebody forgot, not a session nobody came to. */}
-                      {attendedTotal > 0 && (
-                        <span style={{ width: 46, height: 5, borderRadius: 99, background: '#EEF1F6', flexShrink: 0, overflow: 'hidden' }}>
-                          <span style={{
-                            display: 'block', height: '100%', borderRadius: 99,
-                            width: `${Math.round((attended / attendedTotal) * 100)}%`,
-                            background: attended === 0 ? '#F59E0B' : 'var(--org-primary)',
-                          }} />
-                        </span>
-                      )}
-                      <span style={{ fontSize: 11, fontWeight: 800, color: attended === 0 && attendedTotal > 0 ? '#B45309' : '#6B7280', flexShrink: 0 }}>{attended}/{attendedTotal}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', flexShrink: 0 }}>· {relativeDay(s.session_date, today)}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          {/* JUMP STRAIGHT IN — moved below the sessions list. Starting
+              something is what you do after reading the day, not before it, and
+              a grid of six buttons sitting between the weather and the sessions
+              interrupted the one run of the page that answers "what is on".
+              The handful of things people actually start from Home, as one
+              tappable grid rather than buried in the nav rail. */}
+          <Panel title="⚡ Jump straight in">
+            <QuickJump isMobile={isMobile} primary={primary} actions={quickJumpActions} />
+          </Panel>
+
+          {/* Recent Registers lived here and has gone. It rendered
+              endedSessions.slice(0, 3) -- the first three of the same array the
+              Ended tab immediately above renders in full -- so the page showed
+              one list twice, the second time shorter. Its own comment gave the
+              reason: past registers were hard to find "without digging through
+              a toggle". The answer to a hard-to-find toggle is a better toggle,
+              not a second copy of the list. The Ended tab carries the count and
+              View all registers is on it. */}
 
           {/* AT A GLANCE — four real numbers that count up on mount, each with a
               six-week sparkline so the figure has context. Replaces the
