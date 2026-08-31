@@ -107,7 +107,7 @@ describe('Office', () => {
   const officeIds = OFFICE_TABS.map(t => t.id)
 
   it('holds the desk-work modules and nothing else', () => {
-    expect(officeIds).toEqual(['forms', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'])
+    expect(officeIds).toEqual(['forms', 'newsletter', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'])
   })
 
   it('opens on Forms, the one with work arriving in it', () => {
@@ -128,6 +128,17 @@ describe('Office', () => {
     const safety = NAV_SECTIONS.find(s => s.label === 'Safety')
     expect(safety.items.map(i => i.id)).not.toContain('forms')
     expect(safety.items.map(i => i.id)).toEqual(['safeguarding', 'risk_assessments', 'medical_alerts'])
+  })
+
+  it('takes Newsletter out of People', () => {
+    // People is the people themselves now: the young people and the
+    // volunteers. Writing to them is a desk job and sits with the other ones.
+    const people = NAV_SECTIONS.find(s => s.label === 'People')
+    expect(people.items.map(i => i.id)).toEqual(['children', 'volunteers'])
+  })
+
+  it('gates Newsletter on messaging, the module it is actually part of', () => {
+    expect(OFFICE_TABS.find(t => t.id === 'newsletter').moduleKey).toBe('messaging')
   })
 
   it('takes them out of the sidebar as separate rows', () => {
@@ -157,7 +168,7 @@ describe('Office', () => {
 
   it('shows an admin every module', () => {
     const ctx = { hasModule: () => true, isAdmin: true, moduleLevel: () => 'edit', hiddenItems: [] }
-    expect(visibleItems(OFFICE_TABS, ctx)).toHaveLength(6)
+    expect(visibleItems(OFFICE_TABS, ctx)).toHaveLength(7)
   })
 
   it('hides the admin-only modules from everyone else', () => {

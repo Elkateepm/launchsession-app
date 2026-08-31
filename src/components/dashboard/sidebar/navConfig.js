@@ -34,7 +34,6 @@ export const NAV_SECTIONS = [
       // are a different relationship with different records, and merging them
       // would recreate the ambiguity this consolidation removed.
       { id: 'volunteers', label: 'Volunteers', icon: 'volunteers', tab: 'volunteers', moduleKey: 'volunteers' },
-      { id: 'newsletter', label: 'Newsletter', icon: 'newsletter', tab: 'newsletter', moduleKey: 'messaging' },
     ],
   },
   {
@@ -46,7 +45,7 @@ export const NAV_SECTIONS = [
       // does between sessions, not things anybody opens on a phone mid-
       // delivery. Its own visibility is decided by its contents -- see
       // OFFICE_TABS and visibleOfficeTabs.
-      { id: 'office', label: 'Office', icon: 'operations', tab: 'office', badgeKey: 'forms', matchTabs: ['office', 'forms', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'] },
+      { id: 'office', label: 'Office', icon: 'operations', tab: 'office', badgeKey: 'forms', matchTabs: ['office', 'forms', 'newsletter', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'] },
     ],
   },
   {
@@ -150,6 +149,9 @@ export const OFFICE_TABS = [
   // Forms first: of everything in here it is the one with live work attached,
   // and Office opens on whichever module comes first that the viewer may use.
   { id: 'forms', label: 'Forms', icon: 'forms', tab: 'forms', moduleKey: 'forms', badgeKey: 'forms' },
+  // Gated on 'messaging', not a module of its own -- the newsletter and the
+  // messaging screens are the same purchase.
+  { id: 'newsletter', label: 'Newsletter', icon: 'newsletter', tab: 'newsletter', moduleKey: 'messaging' },
   { id: 'hr', label: 'HR', icon: 'hr', tab: 'hr', adminOnly: true },
   { id: 'payments', label: 'Payments', icon: 'payments', tab: 'payments', moduleKey: 'payments' },
   { id: 'resource_booking', label: 'Resource Booking', icon: 'resources', tab: 'resource_booking', moduleKey: 'resource_booking' },
