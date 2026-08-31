@@ -362,6 +362,10 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
               <div style={{ maxHeight: isMobile ? 'none' : 620, overflowY: 'auto' }}>
                 {filteredCases.map(cas => {
                   const assignedStaff = staff.find(s => s.id === cas.assigned_to_user_id)
+                  // Where a case came from is part of reading it. Three of the
+                  // five cases here were raised directly and two came from a
+                  // concern, and the list gave no way to tell.
+                  const fromConcern = !!cas.source_concern_id
                   const isSelected = selectedCase?.id === cas.id
                   return (
                     <motion.div key={cas.id} layout onClick={() => { setSelectedCase(cas); setTab('timeline') }}
@@ -375,7 +379,13 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                           {cas.pinned && <span style={{ fontSize: 10 }}><Icon name="📌" /></span>}
                           <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cas.child_name}</div>
                         </div>
-                        <div style={{ fontSize: 11, color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cas.category || cas.case_type} · {assignedStaff?.full_name || 'Unassigned'}</div>
+                        <div style={{ fontSize: 11, color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {cas.category || cas.case_type} · {assignedStaff?.full_name || 'Unassigned'}
+                          {/* Where a case came from is part of reading it: one
+                              raised from a concern has a reporter's account
+                              behind it, one raised directly does not. */}
+                          {fromConcern && <span style={{ color: '#4338CA', fontWeight: 700 }}> · from a concern</span>}
+                        </div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                         <RiskBadge level={cas.risk_level || cas.priority} />

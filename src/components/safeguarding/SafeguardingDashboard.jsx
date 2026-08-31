@@ -331,18 +331,23 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate
 // ── CASES TAB ─────────────────────────────────────────
 function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
   const [search, setSearch] = useState('')
+  // A handed-over concern is its own bucket rather than an open or a closed
+  // one. Filed under either it looks like work nobody is doing, or like work
+  // that finished -- and it is neither.
   const byFilter = filter === 'all' ? cases
-    : filter === 'follow_up' ? cases.filter(c => c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed')
-    : cases.filter(c => c.status === filter)
+    : filter === 'escalated' ? cases.filter(isHandedOver)
+      : filter === 'follow_up' ? cases.filter(c => !isHandedOver(c) && c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed')
+        : cases.filter(c => !isHandedOver(c) && c.status === filter)
   const q = search.trim().toLowerCase()
   const filtered = q ? byFilter.filter(c => (c.child_name || '').toLowerCase().includes(q) || (c.concern_type || '').toLowerCase().includes(q)) : byFilter
 
   const counts = {
     all: cases.length,
-    open: cases.filter(c => c.status === 'open').length,
-    follow_up: cases.filter(c => c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed').length,
-    resolved: cases.filter(c => c.status === 'resolved').length,
-    closed: cases.filter(c => c.status === 'closed').length,
+    open: cases.filter(c => !isHandedOver(c) && c.status === 'open').length,
+    escalated: cases.filter(isHandedOver).length,
+    follow_up: cases.filter(c => !isHandedOver(c) && c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed').length,
+    resolved: cases.filter(c => !isHandedOver(c) && c.status === 'resolved').length,
+    closed: cases.filter(c => !isHandedOver(c) && c.status === 'closed').length,
   }
 
   return (
@@ -350,7 +355,7 @@ function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
       <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search by child or concern type..."
         style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 13, outline: 'none', marginBottom: 12 }} />
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        {[['all', 'All'], ['open', 'Open'], ['follow_up', 'Follow-up'], ['resolved', 'Resolved'], ['closed', 'Closed']].map(([key, label]) => (
+        {[['all', 'All'], ['open', 'Open'], ['follow_up', 'Follow-up'], ...(counts.escalated ? [['escalated', 'Now cases']] : []), ['resolved', 'Resolved'], ['closed', 'Closed']].map(([key, label]) => (
           <button key={key} onClick={() => setFilter(key)} style={{ padding: '7px 14px', borderRadius: 999, border: filter === key ? '1px solid #2563EB' : '1px solid var(--border)', background: filter === key ? 'rgba(37,99,235,0.1)' : 'transparent', color: filter === key ? '#3B82F6' : 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{label} ({counts[key]})</button>
         ))}
       </div>
@@ -380,13 +385,25 @@ function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
                     {c.child_name} <span style={{ fontWeight: 600, color: 'var(--text3)' }}>· {c.concern_type || 'Concern'}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: sc.color, background: sc.bg, padding: '2px 7px', borderRadius: 999 }}>{sc.label}</span>
+                    {/* The handover badge replaces the status rather than
+                        sitting beside it: a concern reading "Open" that is
+                        actually being worked as a case is the confusion this
+                        whole change is about. */}
+                    {isHandedOver(c) ? (
+                      <span style={{ fontSize: 10.5, fontWeight: 800, color: '#4338CA', background: '#EEF2FF', padding: '2px 7px', borderRadius: 999 }}>
+                        Now a case
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 10.5, fontWeight: 700, color: sc.color, background: sc.bg, padding: '2px 7px', borderRadius: 999 }}>{sc.label}</span>
+                    )}
                     {pc && <span style={{ fontSize: 10.5, fontWeight: 700, color: pc.color, background: pc.bg, padding: '2px 7px', borderRadius: 999 }}>{pc.label}</span>}
-                    {c.follow_up_required && <span style={{ fontSize: 10.5, fontWeight: 700, color: '#F59E0B' }}>· Follow-up</span>}
+                    {!isHandedOver(c) && c.follow_up_required && <span style={{ fontSize: 10.5, fontWeight: 700, color: '#F59E0B' }}>· Follow-up</span>}
                     <span style={{ fontSize: 10.5, color: 'var(--text3)' }}>· {new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                   </div>
                 </div>
-                <span style={{ fontSize: 11.5, fontWeight: 800, color: PRIMARY, flexShrink: 0, whiteSpace: 'nowrap' }}>View <Icon name="→" /></span>
+                <span style={{ fontSize: 11.5, fontWeight: 800, color: isHandedOver(c) ? '#4338CA' : PRIMARY, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                  {isHandedOver(c) ? 'Open case' : 'View'} <Icon name="→" />
+                </span>
               </button>
             )
           })}
@@ -814,6 +831,9 @@ function StatusPills({ stats }) {
   const pills = [
     { icon: '🔴', value: stats.open, label: 'Open', color: '#EF4444' },
     { icon: '🟠', value: stats.followUp, label: 'Follow-ups', color: '#F59E0B' },
+    // Shown only once something has been handed over, so the row does not
+    // carry a zero for a thing this organisation has never done.
+    ...(stats.escalated ? [{ icon: '📋', value: stats.escalated, label: 'Now cases', color: '#4338CA' }] : []),
     { icon: '✅', value: stats.resolvedThisMonth, label: 'Resolved', color: '#22C55E' },
   ]
   return (
@@ -836,6 +856,18 @@ function StatusPills({ stats }) {
 //
 // Ordered by how bad it is, not by date: an open concern the DSL has never
 // been told about outranks a follow-up that slipped by a day.
+// A concern with a case behind it has been handed over. The case is where the
+// work happens now, so the concern should stop being chased here and stop being
+// counted as outstanding -- otherwise one incident is open work in two places
+// at once.
+//
+// Derived rather than stored. Escalation never set a status, so the two
+// escalated concerns in this database sit in different states -- one left open,
+// one closed by hand afterwards -- depending on who did it. Reading the link
+// itself gives the same answer for both without a migration or a new status
+// value that existing filters would not recognise.
+export const isHandedOver = (c) => !!c.escalated_to_case_id
+
 export function attentionItems(cases) {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const isOpen = c => c.status !== 'resolved' && c.status !== 'closed'
@@ -844,6 +876,9 @@ export function attentionItems(cases) {
 
   for (const c of cases) {
     if (!isOpen(c)) continue
+    // Chasing a concern that is already a case is chasing work somebody is
+    // actively doing somewhere else.
+    if (isHandedOver(c)) continue
     if (!c.dsl_notified) {
       out.push({ id: c.id + '-dsl', c, rank: 0, title: 'DSL not notified', detail: c.child_name || 'Unnamed concern' })
     }
@@ -996,8 +1031,12 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
   }, [initialOpenConcernId, cases])
 
   const stats = {
-    open: cases.filter(c => c.status === 'open' || c.status === 'in_progress').length,
-    followUp: cases.filter(c => c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed').length,
+    // Open concerns only, not concerns that became cases. The one open concern
+    // this counted was Matilda Ward's, which had already been escalated and was
+    // being worked as a case -- one incident showing as outstanding twice.
+    open: cases.filter(c => !isHandedOver(c) && (c.status === 'open' || c.status === 'in_progress')).length,
+    escalated: cases.filter(isHandedOver).length,
+    followUp: cases.filter(c => !isHandedOver(c) && c.follow_up_required && c.status !== 'resolved' && c.status !== 'closed').length,
     // Counts closed_at, not resolved_at. Only the 'resolved' status ever set
     // resolved_at, so a concern closed as 'closed' was invisible here -- which
     // is why this read zero against five closed concerns.
