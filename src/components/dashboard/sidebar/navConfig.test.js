@@ -1,5 +1,5 @@
 import {
-  isItemVisible, visibleItems, HIDEABLE_ITEMS, NAV_SECTIONS, NAV_GROUPS, CREATE_ACTIONS,
+  isItemVisible, visibleItems, HIDEABLE_ITEMS, NAV_SECTIONS, NAV_GROUPS, CREATE_ACTIONS, OFFICE_TABS,
 } from './navConfig'
 
 // An organisation with everything, so only the hidden list is under test.
@@ -48,9 +48,13 @@ describe('switching a sidebar entry off', () => {
 })
 
 describe('what an organisation is allowed to switch off', () => {
-  it('offers every sidebar entry', () => {
+  it('offers every sidebar entry, and Office as its five modules', () => {
+    // Office is one row but five switches: hiding the row would take all five
+    // away at once, and its modules were individually hideable before it
+    // existed.
     const offered = HIDEABLE_ITEMS.flatMap(g => g.items.map(i => i.id))
-    expect(new Set(offered)).toEqual(new Set(allItems.map(i => i.id)))
+    const expected = allItems.filter(i => i.id !== 'office').map(i => i.id).concat(OFFICE_TABS.map(t => t.id))
+    expect(new Set(offered)).toEqual(new Set(expected))
   })
 
   it('never offers a way to hide the route back to Settings', () => {
@@ -92,5 +96,67 @@ describe('the Create menu follows the sidebar', () => {
     // Mentoring has a sidebar entry but nothing in the Create menu.
     expect(hiddenTabs(['mentoring'])).toEqual([])
     expect(visibleItems(CREATE_ACTIONS, ctx([])).length).toBe(CREATE_ACTIONS.length)
+  })
+})
+
+
+describe('Office', () => {
+  const officeIds = OFFICE_TABS.map(t => t.id)
+
+  it('holds the desk-work modules and nothing else', () => {
+    expect(officeIds).toEqual(['hr', 'payments', 'resource_booking', 'templates', 'parent_portal'])
+  })
+
+  it('takes them out of the sidebar as separate rows', () => {
+    const sidebarIds = [
+      ...NAV_SECTIONS.flatMap(s => s.items),
+      ...NAV_GROUPS.flatMap(g => g.items),
+    ].map(i => i.id)
+    for (const id of officeIds) expect(sidebarIds).not.toContain(id)
+    expect(sidebarIds).toContain('office')
+  })
+
+  it('keeps every existing deep link resolving', () => {
+    // ?tab=payments and the rest must still land somewhere, so the tab names
+    // are unchanged and the Office row claims them all.
+    const office = NAV_SECTIONS.flatMap(s => s.items).find(i => i.id === 'office')
+    for (const t of OFFICE_TABS) expect(office.matchTabs).toContain(t.tab)
+    expect(office.matchTabs).toContain('office')
+  })
+
+  it('still offers all five in Settings > Display', () => {
+    // Hiding one row would otherwise take all five away at once, and an
+    // organisation that switched Payments off before Office existed keeps it.
+    const group = HIDEABLE_ITEMS.find(g => g.group === 'Office')
+    expect(group.items.map(i => i.id)).toEqual(officeIds)
+    expect(HIDEABLE_ITEMS.flatMap(g => g.items.map(i => i.id))).not.toContain('office')
+  })
+
+  it('shows an admin every module', () => {
+    const ctx = { hasModule: () => true, isAdmin: true, moduleLevel: () => 'edit', hiddenItems: [] }
+    expect(visibleItems(OFFICE_TABS, ctx)).toHaveLength(5)
+  })
+
+  it('hides the admin-only modules from everyone else', () => {
+    const ctx = { hasModule: () => true, isAdmin: false, moduleLevel: () => 'edit', hiddenItems: [] }
+    const ids = visibleItems(OFFICE_TABS, ctx).map(i => i.id)
+    expect(ids).not.toContain('hr')
+    expect(ids).not.toContain('templates')
+    expect(ids).toContain('payments')
+  })
+
+  it('drops a module the organisation has not bought', () => {
+    const ctx = { hasModule: (k) => k !== 'payments', isAdmin: true, moduleLevel: () => 'edit', hiddenItems: [] }
+    expect(visibleItems(OFFICE_TABS, ctx).map(i => i.id)).not.toContain('payments')
+  })
+
+  it('drops one the organisation has switched off', () => {
+    const ctx = { hasModule: () => true, isAdmin: true, moduleLevel: () => 'edit', hiddenItems: ['templates'] }
+    expect(visibleItems(OFFICE_TABS, ctx).map(i => i.id)).not.toContain('templates')
+  })
+
+  it('can end up empty, which is what the row checks before showing itself', () => {
+    const ctx = { hasModule: () => false, isAdmin: false, moduleLevel: () => 'none', hiddenItems: [] }
+    expect(visibleItems(OFFICE_TABS, ctx)).toHaveLength(0)
   })
 })

@@ -18,6 +18,7 @@ import { useBreakpoint, useIsMobile } from '../../hooks/useIsMobile'
 import EventsTrips from '../events/EventsTrips'
 import Calendar from '../calendar/Calendar';
 import Templates from '../templates/Templates'
+import Office from '../office/Office'
 import SafeguardingHub from '../safeguarding/SafeguardingHub'
 import NewsletterStudio from '../messaging/NewsletterStudio'
 import Reports from '../reports/Reports'
@@ -40,7 +41,7 @@ import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
 import { useTerms } from '../../context/OrgContext'
 import Today from './Today'
 import {
-  NAV_SECTIONS, NAV_GROUPS, ORG_ITEMS, CREATE_ACTIONS,
+  NAV_SECTIONS, NAV_GROUPS, ORG_ITEMS, CREATE_ACTIONS, OFFICE_TABS,
   visibleItems, groupContainingTab, isItemActive,
 } from './sidebar/navConfig'
 import {
@@ -659,6 +660,13 @@ export default function Dashboard({ session, org }) {
   // action at all.
   // CREATE_ACTIONS carry their own ids, so they are matched to a hidden nav
   // entry by the tab they open rather than by id.
+  const visibleOfficeTabs = React.useMemo(
+    () => visibleItems(OFFICE_TABS, { hasModule, isAdmin, moduleLevel, hiddenItems }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [org?.id, org?.modules, isAdmin, accessLevels, hiddenItems]
+  )
+  const officeTabKeys = React.useMemo(() => OFFICE_TABS.map(t => t.tab), [])
+
   const createHiddenTabs = React.useMemo(() => {
     const hiddenTabs = new Set(
       [...NAV_SECTIONS.flatMap(s => s.items), ...NAV_GROUPS.flatMap(g => g.items)]
@@ -960,7 +968,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
           {effectiveTab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} initialOpenRequestsTab={openRegRequestsTab} /></ChildrenGate>}
           {effectiveTab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
-          {effectiveTab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {/* Rendered inside Office below. */}
           {effectiveTab === 'settings'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
@@ -982,16 +990,37 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'fundraising'     && (hasModule('fundraising')     ? <FundraisingGate org={org} session={session}><Fundraising org={org} session={session} isAdmin={isAdmin} /></FundraisingGate>                           : <LockedModule moduleKey="fundraising"     label="Fundraising"       icon="💷" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── OPERATIONS PACK ── */}
-          {effectiveTab === 'hr'               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : <HR org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} hasHRModule={hasModule('hr')} />)}
-          {effectiveTab === 'payments'         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {/* HR, Payments and Resource Booking are rendered inside Office below. */}
 
           {/* ── LEGACY / COMING SOON ── */}
           {effectiveTab === 'mentoring'    && (hasModule('mentoring') ? <Mentoring org={org} session={session} /> : <LockedModule moduleKey="mentoring" label="Mentoring" icon="🤝" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
+          {/* Parent Portal is rendered inside Office below. */}
+
+          {/* ── OFFICE — one row in the sidebar, five modules behind it ──
+              Every module keeps the guard it had before: the checks below are
+              the same expressions, moved rather than rewritten. Office is only
+              a shell around them. */}
+          {(effectiveTab === 'office' || officeTabKeys.includes(effectiveTab)) && (
+            visibleOfficeTabs.length === 0 ? (
+              <RestrictedModule label="Office" icon="🗂" onNavigate={handleSetTab} />
+            ) : (
+              <Office
+                tabs={visibleOfficeTabs}
+                subTab={effectiveTab === 'office' ? visibleOfficeTabs[0].tab : effectiveTab}
+                onSelect={handleSetTab}
+              >
+  {(effectiveTab === 'hr' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'hr'))               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : <HR org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} hasHRModule={hasModule('hr')} />)}
+  {(effectiveTab === 'payments' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'payments'))         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} onTrial={onTrial} />)}
+  {(effectiveTab === 'resource_booking' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'resource_booking')) && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+  {(effectiveTab === 'templates' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'templates'))  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} onTrial={onTrial} />)}
+  {(effectiveTab === 'parent_portal' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'parent_portal')) && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
+              </Office>
+            )
+          )}
+
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','newsletter','gallery','safeguarding','forms','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','__no_access'].includes(effectiveTab) && (
+          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','newsletter','gallery','safeguarding','forms','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','office','__no_access'].includes(effectiveTab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
         </div>
