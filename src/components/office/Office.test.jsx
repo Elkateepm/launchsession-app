@@ -11,7 +11,7 @@ const setup = (props = {}) => render(
 describe('the Office shell', () => {
   it('offers the modules it was given', () => {
     setup()
-    for (const label of ['Forms', 'HR', 'Payments', 'Resource Booking', 'Templates', 'Parent Portal']) {
+    for (const label of ['Forms', 'Newsletter', 'HR', 'Payments', 'Resource Booking', 'Templates', 'Parent Portal']) {
       expect(screen.getByRole('tab', { name: new RegExp(label, 'i') })).toBeInTheDocument()
     }
   })
@@ -35,7 +35,7 @@ describe('the Office shell', () => {
     // shell does no filtering of its own.
     setup({ tabs: OFFICE_TABS.filter(t => !t.adminOnly) })
     expect(screen.queryByRole('tab', { name: /^HR/i })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('tab')).toHaveLength(4)
+    expect(screen.getAllByRole('tab')).toHaveLength(5)
   })
 
   it('renders the module handed to it', () => {

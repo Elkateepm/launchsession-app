@@ -980,7 +980,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'newsletter' && (hasModule('messaging')  ? <NewsletterStudio org={org} session={session} />            : <LockedModule moduleKey="messaging"  label="Newsletter" icon="📨" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {/* Newsletter is rendered inside Office below. */}
 
           {/* ── SAFEGUARDING PACK ── */}
           {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingHub org={org} session={session} isAdmin={isAdmin} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} initialOpenCaseId={openCaseId} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding Hub"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
@@ -1013,6 +1013,7 @@ export default function Dashboard({ session, org }) {
                 subTab={effectiveTab === 'office' ? visibleOfficeTabs[0].tab : effectiveTab}
                 onSelect={handleSetTab}
               >
+  {(effectiveTab === 'newsletter' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'newsletter')) && (hasModule('messaging')  ? <NewsletterStudio org={org} session={session} />            : <LockedModule moduleKey="messaging"  label="Newsletter" icon="📨" onNavigate={handleSetTab} onTrial={onTrial} />)}
   {(effectiveTab === 'forms' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'forms'))           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
   {(effectiveTab === 'hr' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'hr'))               && (!isAdmin ? <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} /> : <HR org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} hasHRModule={hasModule('hr')} />)}
   {(effectiveTab === 'payments' || (effectiveTab === 'office' && visibleOfficeTabs[0].tab === 'payments'))         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} onTrial={onTrial} />)}
