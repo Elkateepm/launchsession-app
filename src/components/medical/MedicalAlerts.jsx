@@ -154,8 +154,12 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
           { label: 'Print list', icon: '🖨', variant: 'ghost', onClick: () => setPrinting(true) },
           { label: 'Back', icon: '←', variant: 'ghost', onClick: () => onNavigate && onNavigate('registers') },
         ]}
+        // All three count the same population -- everyone with something
+        // recorded. Mixing a today figure in with two org-wide ones read as
+        // "4 of today's 8 need an immediate response", which was not what it
+        // said. Today's number is on the Today tab, where its scope is obvious.
         stats={[
-          { label: 'On a register today', value: onToday.length, icon: '📋' },
+          { label: `${terms.People} with a medical need`, value: rows.length, icon: '💊' },
           { label: 'Immediate response', value: immediate.length, icon: '🚨', color: immediate.length ? '#B91C1C' : undefined },
           { label: 'Needs review', value: needsReviewRows.length, icon: '⏳', color: needsReviewRows.length ? '#D97706' : undefined },
         ]}
@@ -177,6 +181,17 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
             style={{ ...inputStyle, paddingLeft: 32 }} />
         </div>
       </div>
+
+      {tab === 'today' && !loading && onToday.some(r => r.tier === 1) && (
+        <div style={{
+          margin: '12px 16px 0', padding: '10px 14px', borderRadius: 10,
+          background: '#FEE2E2', border: '1.5px solid #FECACA',
+          fontSize: 12.5, fontWeight: 800, color: '#991B1B',
+        }}>
+          {onToday.filter(r => r.tier === 1).length} of the {onToday.length} on today’s register
+          {onToday.filter(r => r.tier === 1).length === 1 ? ' needs' : ' need'} an immediate response plan
+        </div>
+      )}
 
       <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
         {loading ? (
