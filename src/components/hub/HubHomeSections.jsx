@@ -427,18 +427,59 @@ export function WeatherStrip({ weather, weatherError, icon, label, primary }) {
     ? { bg: '#FFF4DE', fg: '#7A4D00', bd: '#F5DCB0' }
     : { bg: 'var(--org-a10)', fg: primary, bd: 'var(--org-a20)' }
 
+  const days = weather.days || []
+
   return (
-    <div style={shell}>
-      <span style={{ fontSize: 26 }}>{icon}</span>
-      <div>
-        <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text, #0F172A)', lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°</div>
-        <div style={{ fontSize: 11.5, color: 'var(--text3, #64748B)', fontWeight: 600, marginTop: 3 }}>
-          {label} · {weather.city}{weather.high != null ? ` · ${weather.high}°/${weather.low}°` : ''}
+    <div style={{ ...shell, flexDirection: 'column', alignItems: 'stretch', gap: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 13, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 26 }}>{icon}</span>
+        <div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text, #0F172A)', lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{weather.temp}°</div>
+          <div style={{ fontSize: 11.5, color: 'var(--text3, #64748B)', fontWeight: 600, marginTop: 3 }}>
+            {label} · {weather.city}{weather.high != null ? ` · ${weather.high}°/${weather.low}°` : ''}
+          </div>
         </div>
+        <span style={{ marginLeft: 'auto', fontSize: 11.5, background: tone.bg, color: tone.fg, padding: '5px 11px', borderRadius: 99, fontWeight: 700, border: `1px solid ${tone.bd}`, whiteSpace: 'nowrap' }}>
+          {verdict}
+        </span>
       </div>
-      <span style={{ marginLeft: 'auto', fontSize: 11.5, background: tone.bg, color: tone.fg, padding: '5px 11px', borderRadius: 99, fontWeight: 700, border: `1px solid ${tone.bd}`, whiteSpace: 'nowrap' }}>
-        {verdict}
-      </span>
+
+      {/* The week, for deciding whether Thursday's session can be outdoors --
+          which is the question this card gets asked and could not answer.
+          Rain chance is shown only where it is worth acting on: a row of "3%"
+          across five days is noise that makes the one 70% harder to see. */}
+      {days.length > 1 && (
+        <div style={{
+          display: 'grid', gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))`,
+          gap: 4, marginTop: 13, paddingTop: 12, borderTop: '1px solid var(--border, #E6EAF4)',
+        }}>
+          {days.map((d, i) => (
+            <div key={d.iso} title={`${d.description}${d.rain != null ? ` · ${d.rain}% chance of rain` : ''}`}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                padding: '6px 2px', borderRadius: 10, minWidth: 0,
+                background: i === 0 ? 'var(--org-a05)' : 'transparent',
+              }}>
+              <span style={{
+                fontSize: 10.5, fontWeight: 800, color: i === 0 ? 'var(--text, #0F172A)' : 'var(--text3, #64748B)',
+                textTransform: 'uppercase', letterSpacing: 0.3, whiteSpace: 'nowrap',
+                overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%',
+              }}>{d.label}</span>
+              <span style={{ fontSize: 17, lineHeight: 1.1 }} aria-hidden="true">{d.icon}</span>
+              <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--text, #0F172A)', whiteSpace: 'nowrap' }}>
+                {d.high != null ? `${d.high}°` : '—'}
+                {d.low != null && <span style={{ color: 'var(--text3, #94A3B8)', fontWeight: 600 }}> {d.low}°</span>}
+              </span>
+              <span style={{
+                fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap',
+                color: d.rain != null && d.rain >= 50 ? '#B45309' : 'transparent',
+              }}>
+                {d.rain != null && d.rain >= 50 ? `${d.rain}%` : '·'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
