@@ -84,7 +84,12 @@ export default function SafeguardingHub({
         })}
       </div>
 
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      {/* The single scroller for the hub. This was overflow: hidden, and none of
+          the three tabs below brings a scroller of its own -- every overflow
+          rule inside them is on a fixed-position modal -- so all three were
+          clipped at the fold with no way to reach the rest. Cases showed it
+          worst because its list is the longest. */}
+      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', display: 'flex', flexDirection: 'column' }}>
         {subTab === 'concerns' && (
           <Safeguarding
             org={org}
@@ -94,7 +99,7 @@ export default function SafeguardingHub({
           />
         )}
         {subTab === 'injuries' && (
-          <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 24px' }}>
+          <div style={{ padding: '14px 16px 24px' }}>
             <InjuryLog org={org} session={session} isAdmin={isAdmin} />
           </div>
         )}
