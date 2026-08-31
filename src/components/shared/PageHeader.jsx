@@ -11,7 +11,10 @@ import Icon from '../../lib/icons'
  *   subtitle   — supporting line
  *   primary    — brand colour
  *   orgName    — org name shown as brand watermark
- *   stats      — array of { label, value, icon, color? }
+ *   stats      — array of { label, value, icon, color?, onClick?, active? }
+ *                a stat with onClick becomes a button that leads to the list
+ *                behind the number; without one it stays inert, as every
+ *                existing caller expects.
  *   actions    — array of { label, icon, onClick, variant: 'primary'|'ghost' }
  *   badge      — { text, color? } small pill next to title
  *   gradient   — override gradient string
@@ -99,13 +102,31 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
             {stats.map((s, i) => {
               const c = s.color || primary
               const isLastOdd = isMobile && stats.length % 2 !== 0 && i === stats.length - 1
+              // A number nobody can follow is a dead end: "4 need an immediate
+              // response" invites the question "which four?". Stats that are
+              // given an onClick answer it; the rest are unchanged.
+              const clickable = typeof s.onClick === 'function'
+              const Tag = clickable ? 'button' : 'div'
               return (
-                <div key={i} className="ls-stat-card" style={{
+                <Tag key={i} className="ls-stat-card"
+                  {...(clickable ? {
+                    onClick: s.onClick,
+                    type: 'button',
+                    'aria-pressed': s.active ? true : undefined,
+                    title: `Show ${s.label.toLowerCase()}`,
+                  } : {})}
+                  style={{
                   gridColumn: isLastOdd ? 'span 2' : undefined,
                   display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 9,
-                  background: `${c}0C`, border: `1px solid ${c}22`, borderRadius: 12,
+                  background: s.active ? `${c}22` : `${c}0C`,
+                  border: `1px solid ${s.active ? `${c}88` : `${c}22`}`,
+                  borderRadius: 12,
                   padding: isMobile ? '8px 10px' : '9px 12px', minWidth: 0,
                   boxShadow: `0 1px 0 rgba(255,255,255,0.5) inset`,
+                  ...(clickable ? {
+                    cursor: 'pointer', textAlign: 'left', width: '100%',
+                    fontFamily: 'inherit', minHeight: 44,
+                  } : {}),
                 }}>
                   {s.icon && (
                     <span style={{
@@ -118,7 +139,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                     <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 900, color: c, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
                     <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text3, #6B7280)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
                   </div>
-                </div>
+                </Tag>
               )
             })}
           </div>
