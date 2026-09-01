@@ -2,7 +2,20 @@ import React, { useEffect, useState } from 'react'
 import MobileNavItem from './MobileNavItem'
 import LaunchActionButton from './LaunchActionButton'
 import LaunchActionMenu, { DEFAULT_ACTION_ICONS } from './LaunchActionMenu'
-import { HouseIcon, ClipboardIcon, PeopleIcon, MenuIcon } from './icons'
+import {
+  HouseIcon, ClipboardIcon, PeopleIcon, MenuIcon, CalendarPlusIcon, HeartHandshakeIcon,
+} from './icons'
+
+// The dock's destinations are chosen from nav data (see mobileNav.js), which
+// names its icons semantically because the sidebar draws them from a different
+// set. This maps those names onto the dock's own line icons.
+const DOCK_ICONS = {
+  sessions: CalendarPlusIcon,
+  registers: ClipboardIcon,
+  children: PeopleIcon,
+  calendar: CalendarPlusIcon,
+  volunteers: HeartHandshakeIcon,
+}
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(() =>
@@ -27,7 +40,8 @@ function usePrefersReducedMotion() {
 export default function MobileBottomNav({
   tab,
   onNavigate,          // = handleSetTab from Dashboard
-  registersBadge = 0,
+  destinations = [],   // the two flanking slots, already access-filtered
+  badges = {},         // badgeKey -> count
   isAdmin,
   onOpenMore,           // opens the existing "More" sheet
   onNewSession,
@@ -52,6 +66,10 @@ export default function MobileBottomNav({
     // Fallback if no handler was wired up.
     setToast('QR codes are not available right now')
   }
+
+  const [left, right] = destinations
+  // Home is always on the dock, so it is part of what "More" is not.
+  const dockTabs = ['home', ...destinations.map(d => d.tab)]
 
   const actions = [
     { key: 'newSession', label: 'New Session', icon: DEFAULT_ACTION_ICONS.newSession, color: '#7C3AED', onSelect: onNewSession },
@@ -83,7 +101,17 @@ export default function MobileBottomNav({
           style={{
             height: 76,
             display: 'grid',
-            gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) 68px minmax(0,1fr) minmax(0,1fr)',
+            // Built from the destinations actually present. A pared-back
+            // organisation may fill only one of the two flanking slots, and a
+            // fixed five-column template would leave a gap where the missing
+            // one used to be.
+            gridTemplateColumns: [
+              'minmax(0,1fr)',
+              left && 'minmax(0,1fr)',
+              '68px',
+              right && 'minmax(0,1fr)',
+              'minmax(0,1fr)',
+            ].filter(Boolean).join(' '),
             alignItems: 'center',
             padding: '0 4px',
             maxWidth: 480,
@@ -91,21 +119,36 @@ export default function MobileBottomNav({
           }}
         >
           <MobileNavItem icon={HouseIcon} label="Home" active={tab === 'home'} onClick={() => onNavigate('home')} />
-          <MobileNavItem icon={ClipboardIcon} label="Registers" active={tab === 'registers'} onClick={() => onNavigate('registers')} badge={registersBadge} />
+          {left && (
+            <MobileNavItem
+              icon={DOCK_ICONS[left.icon] || ClipboardIcon}
+              label={left.label}
+              active={tab === left.tab}
+              onClick={() => onNavigate(left.tab)}
+              badge={left.badgeKey ? badges[left.badgeKey] : undefined}
+            />
+          )}
 
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <LaunchActionButton open={menuOpen} onClick={() => setMenuOpen(v => !v)} reducedMotion={reducedMotion} />
           </div>
 
-          {/* Was onNavigate('team'), which Dashboard's TAB_ALIASES rewrites to
-              'hr' -- so the Volunteers button in the primary mobile navigation
-              opened HR, and active={tab === 'team'} never matched because the
-              alias resolves before the tab is ever set. */}
-          <MobileNavItem icon={PeopleIcon} label="Volunteers" active={tab === 'volunteers'} onClick={() => onNavigate('volunteers')} />
+          {/* Destinations are picked from what this organisation and this member
+              can actually open, so the dock no longer offers a fixed pair that
+              may both land on a locked module. */}
+          {right && (
+            <MobileNavItem
+              icon={DOCK_ICONS[right.icon] || PeopleIcon}
+              label={right.label}
+              active={tab === right.tab}
+              onClick={() => onNavigate(right.tab)}
+              badge={right.badgeKey ? badges[right.badgeKey] : undefined}
+            />
+          )}
           {/* More highlights whenever you are somewhere the dock cannot show,
               so the bar always tells you where you are rather than going blank
               on two thirds of the app. */}
-          <MobileNavItem icon={MenuIcon} label="More" active={!['home', 'registers', 'volunteers'].includes(tab)} onClick={onOpenMore} />
+          <MobileNavItem icon={MenuIcon} label="More" active={!dockTabs.includes(tab)} onClick={onOpenMore} />
         </div>
       </div>
 

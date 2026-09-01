@@ -1,6 +1,6 @@
 // AUTH FLOW LOCK: sign out must clear Supabase session, local org slug, and return to landing.
 import Settings from '../settings/Settings'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useDragControls } from 'framer-motion'
 import Volunteers from '../volunteers/Volunteers'
 import ProfilePage from '../profile/ProfilePage'
 import Mentoring from '../mentoring/Mentoring'
@@ -36,6 +36,7 @@ import HR from '../hr/HRCentre'
 import Payments from '../payments/Payments'
 import ResourceCentre from '../resources/ResourceCentre'
 import MobileBottomNav from './mobilenav/MobileBottomNav'
+import { dockDestinations, moreSections, itemLabel } from './mobilenav/mobileNav'
 import QRShareSheet from '../shared/QRShareSheet'
 import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
 import { useTerms } from '../../context/OrgContext'
@@ -667,6 +668,31 @@ export default function Dashboard({ session, org }) {
   )
   const officeTabKeys = React.useMemo(() => OFFICE_TABS.map(t => t.tab), [])
 
+  // Mobile navigation is derived from the same nav data and the same access
+  // filtering as the sidebar above, rather than from a second hardcoded list
+  // that has to be remembered whenever the nav changes -- see mobileNav.js.
+  const mobileDock = React.useMemo(
+    () => dockDestinations({ hasModule, isAdmin, moduleLevel, hiddenItems })
+      .map(d => ({ ...d, label: itemLabel(d, terms) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [org?.id, org?.modules, isAdmin, terms, accessLevels, hiddenItems]
+  )
+
+  const mobileMoreSections = React.useMemo(
+    () => moreSections(
+      { hasModule, isAdmin, moduleLevel, hiddenItems },
+      { exclude: mobileDock.map(d => d.tab), officeTabCount: visibleOfficeTabs.length },
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [org?.id, org?.modules, isAdmin, accessLevels, hiddenItems, mobileDock, visibleOfficeTabs]
+  )
+
+  // The More sheet now lists every area rather than a fixed eight, so it can be
+  // taller than the screen and has to scroll. Drag-to-dismiss is therefore
+  // started from the grab handle only (dragListener={false}); left on the whole
+  // sheet it would swallow every vertical swipe and the list could not scroll.
+  const moreDragControls = useDragControls()
+
   const createHiddenTabs = React.useMemo(() => {
     const hiddenTabs = new Set(
       // OFFICE_TABS included: its modules are hideable in Settings but are no
@@ -1054,6 +1080,8 @@ export default function Dashboard({ session, org }) {
             <motion.div
               onClick={e => e.stopPropagation()}
               drag="y"
+              dragListener={false}
+              dragControls={moreDragControls}
               dragConstraints={{ top: 0, bottom: 400 }}
               dragElastic={{ top: 0.05, bottom: 0.6 }}
               onDragEnd={(e, info) => {
@@ -1067,51 +1095,71 @@ export default function Dashboard({ session, org }) {
                 width: '100%',
                 background: '#fff',
                 borderRadius: '24px 24px 0 0',
-                padding: '18px 16px 96px',
+                padding: '18px 0 0',
                 boxShadow: '0 -20px 60px rgba(15,23,42,0.25)',
-                touchAction: 'none',
+                maxHeight: '86dvh',
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 0,
               }}
             >
-              <div style={{ width: 42, height: 5, borderRadius: 99, background: 'var(--border)', margin: '0 auto 16px', cursor: 'grab' }} />
-              <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>More</div>
-              <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Open another LaunchSession area</div>
+              <div
+                onPointerDown={e => moreDragControls.start(e)}
+                style={{ padding: '0 16px 4px', flexShrink: 0, touchAction: 'none', cursor: 'grab' }}
+              >
+                <div style={{ width: 42, height: 5, borderRadius: 99, background: 'var(--border)', margin: '0 auto 16px' }} />
+                <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>More</div>
+                <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Open another LaunchSession area</div>
+              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
-                {[
-                  { key: 'mentoring', label: 'Mentoring', icon: '🤝', badge: navBadges.mentoring },
-                  { key: 'projects_list', label: 'Projects', icon: '🚀' },
-                  { key: 'calendar', label: 'Calendar', icon: '📅' },
-                  { key: 'team', label: 'Team & Staff', icon: '👥' },
-                  { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
-                  { key: 'safeguarding', label: 'Safeguarding Hub', icon: '🛡️' },
-                  { key: 'reports', label: 'Reports', icon: '📊' },
-                  { key: 'settings', label: 'Settings', icon: '⚙️' }
-                ].filter(item => !ADMIN_ONLY_TABS.includes(item.key) || isAdmin).map(item => (
-                  <button
-                    key={item.key}
-                    onClick={() => {
-                      handleSetTab(item.key);
-                      setShowMobileMore(false);
-                    }}
-                    style={{
-                      position: 'relative',
-                      border: '1px solid #e5e7eb',
-                      background: 'var(--surface2)',
-                      borderRadius: 18,
-                      padding: 16,
-                      textAlign: 'left',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <div style={{ fontSize: 24, marginBottom: 8, color: 'var(--text)' }}><Icon name={item.icon} size={24} /></div>
-                    <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)' }}>{item.label}</div>
-                    {item.badge > 0 && (
-                      <span style={{ position: 'absolute', top: 10, right: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, borderRadius: 99, minWidth: 17, height: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
-                        {item.badge > 9 ? '9+' : item.badge}
-                      </span>
-                    )}
-                  </button>
-                ))}
+              <div style={{
+                flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                padding: '0 16px calc(96px + env(safe-area-inset-bottom, 0px))',
+              }}>
+
+              {/* Grouped exactly as the sidebar groups them, and filtered by the
+                  same access rules -- this was a fixed list of eight that had
+                  drifted from the nav, leaving Sessions, People, Messaging,
+                  Office, Risk and Medical unreachable on a phone. */}
+              {mobileMoreSections.map(section => (
+                <div key={section.id} style={{ marginBottom: 18 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.7, textTransform: 'uppercase', color: 'var(--text3)', marginBottom: 8 }}>
+                    {section.label}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
+                    {section.items.map(item => {
+                      const badge = item.id === 'mentoring'
+                        ? navBadges.mentoring
+                        : item.badgeKey === 'forms' ? unreadSubs.length : 0
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => { handleSetTab(item.tab); setShowMobileMore(false) }}
+                          style={{
+                            position: 'relative',
+                            border: '1px solid var(--border)',
+                            background: 'var(--surface2)',
+                            borderRadius: 18,
+                            padding: 16,
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            minHeight: 44,
+                          }}
+                        >
+                          <div style={{ fontSize: 24, marginBottom: 8, color: 'var(--text)' }}><Icon name={item.icon} size={24} /></div>
+                          <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)' }}>{itemLabel(item, terms)}</div>
+                          {badge > 0 && (
+                            <span style={{ position: 'absolute', top: 10, right: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, borderRadius: 99, minWidth: 17, height: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                              {badge > 9 ? '9+' : badge}
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
               </div>
             </motion.div>
           </motion.div>
@@ -1122,7 +1170,8 @@ export default function Dashboard({ session, org }) {
           <MobileBottomNav
             tab={tab}
             onNavigate={handleSetTab}
-            registersBadge={navBadges.registers}
+            destinations={mobileDock}
+            badges={navBadges}
             isAdmin={isAdmin}
             onOpenMore={() => setShowMobileMore(true)}
             onNewSession={() => handleSetTab('planner', { autoOpenWizard: true })}
