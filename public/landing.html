@@ -482,7 +482,10 @@ section{padding:96px 5%}
 .popular-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);padding:4px 16px;border-radius:99px;background:linear-gradient(135deg,#3B82F6,#6366F1);font-size:10px;font-weight:800;color:#fff;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap}
 .plan-name{font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
 .plan-price{font-size:42px;font-weight:900;letter-spacing:-1.5px;color:#fff;line-height:1;margin-bottom:4px}
-.plan-price span{font-size:16px;font-weight:600;color:var(--text3);letter-spacing:0}
+/* Only the "/mo" suffix is meant to be small and grey. The price number sits in
+   its own span too (it carries the id the billing toggle writes into), so a
+   blanket rule shrank the actual price to 16px grey next to a 42px white "£". */
+.plan-price span:not([id]){font-size:16px;font-weight:600;color:var(--text3);letter-spacing:0}
 .plan-period{font-size:12px;color:var(--text3);margin-bottom:6px}
 .plan-tagline{font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.5;min-height:40px}
 .plan-btn{width:100%;padding:12px;border-radius:11px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;margin-bottom:28px}
@@ -794,7 +797,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
         Built for youth & community organisations
       </div>
       <h1 class="hero-title">Run your whole<br><span class="grad">organisation</span><br>from one place</h1>
-      <p class="hero-sub">Registers, sessions, volunteers, safeguarding and parent comms — all connected, all in real time. Choose the plan that fits your organisation.</p>
+      <p class="hero-sub">Registers, sessions, volunteers, safeguarding and parent comms — all connected, all in real time. One price for the whole platform, whatever your size.</p>
       <div class="hero-ctas">
         <button class="btn-hero-cta" onclick="window.location.href='/signup'">Start your free 14-day trial →</button>
         <button class="btn-hero-ghost" onclick="document.getElementById('how')?.scrollIntoView({behavior:'smooth'})">See how it works</button>
@@ -912,19 +915,19 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
         <div class="fo-left">
           <div class="fo-badge"><span class="fo-badge-dot"></span>Limited to the first 50 organisations</div>
           <h2 class="fo-heading">Become a <span>Founding Member</span></h2>
-          <p class="fo-sub">Lock in a rate that never changes — even as LaunchSession's pricing grows around you. This offer disappears the moment the 50th spot is claimed.</p>
+          <p class="fo-sub">The whole platform — Branding Centre and HR included — at the price everyone else pays for the base plan, for as long as you stay. This offer disappears the moment the 50th spot is claimed.</p>
 
           <div class="fo-price-row">
             <div class="fo-price-block">
-              <div class="fo-price-was">£79<span>/mo</span> standard rate</div>
+              <div class="fo-price-was">£69.99<span>/mo</span> with Branding &amp; HR</div>
               <div class="fo-price-now">£49.99<span>/mo</span></div>
-              <div class="fo-price-tag">Locked for life</div>
+              <div class="fo-price-tag">Everything, locked for life</div>
             </div>
           </div>
 
           <div class="fo-perks">
-            <div class="fo-perk"><div class="fo-perk-ico"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg></div><div><div class="fo-perk-t">Price locked for life</div><div class="fo-perk-d">Your rate never increases, even as we add new tiers.</div></div></div>
-            <div class="fo-perk"><div class="fo-perk-ico"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div><div><div class="fo-perk-t">Full Pro+ access from day one</div><div class="fo-perk-d">Every module, no waiting on a plan upgrade.</div></div></div>
+            <div class="fo-perk"><div class="fo-perk-ico"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg></div><div><div class="fo-perk-t">Price locked for life</div><div class="fo-perk-d">Your rate never increases, whatever we add later.</div></div></div>
+            <div class="fo-perk"><div class="fo-perk-ico"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div><div><div class="fo-perk-t">Branding Centre and HR included</div><div class="fo-perk-d">The complete £69.99 platform, at the base price, for good.</div></div></div>
             <div class="fo-perk"><div class="fo-perk-ico"><svg viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg></div><div><div class="fo-perk-t">Direct line to our team</div><div class="fo-perk-d">Founding members shape what we build next.</div></div></div>
           </div>
         </div>
@@ -1180,8 +1183,8 @@ async function submitFoundingOffer(e) {
         <div class="jn-card" role="button" tabindex="0" onclick="openStep('plan')"
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openStep('plan')}">
           <div class="jn-tile"><img src="/icons/step-1.png" alt="" loading="lazy" /></div>
-          <div class="jn-t">Choose your plan</div>
-          <div class="jn-d">Pick Starter, Advanced or Pro+ based on your organisation's size and needs. Upgrade any time as you grow.</div>
+          <div class="jn-t">Start your trial</div>
+          <div class="jn-d">One price for the whole platform, whatever your size. Add the Branding Centre or HR whenever you want them.</div>
           <div class="jn-go">›</div>
         </div>
       </div>
@@ -1254,105 +1257,91 @@ async function submitFoundingOffer(e) {
     </div>
     <div class="features-grid">
       <div class="feature-card" style="--feat-color:#22C55E;--feat-bg:rgba(34,197,94,0.1)" data-feat="live_registers" role="button" tabindex="0" onclick="openFeature('live_registers')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('live_registers')}">
-        <div class="feat-tag">Core</div>
+        <div class="feat-tag">Included</div>
         <div class="feat-title">Live Registers</div>
         <div class="feat-desc">Take attendance in real time. Sign young people in and out, track latecomers, and flag medical alerts automatically.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-live_registers.png" alt="Live Registers" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#3B82F6;--feat-bg:rgba(59,130,246,0.1)" data-feat="session_planner" role="button" tabindex="0" onclick="openFeature('session_planner')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('session_planner')}">
-        <div class="feat-tag">Core</div>
+        <div class="feat-tag">Included</div>
         <div class="feat-title">Session Planner</div>
         <div class="feat-desc">Plan activities, trips and workshops weeks ahead. Assign volunteers, set capacity limits and track outcomes.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-session_planner.png" alt="Session Planner" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#8B5CF6;--feat-bg:rgba(139,92,246,0.1)" data-feat="safeguarding" role="button" tabindex="0" onclick="openFeature('safeguarding')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('safeguarding')}">
-        <div class="feat-tag">Core</div>
+        <div class="feat-tag">Included</div>
         <div class="feat-title">Safeguarding</div>
         <div class="feat-desc">Log causes for concern, track follow-ups and ensure no safeguarding alert falls through the cracks.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-safeguarding.png" alt="Safeguarding" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="notifications_centre" role="button" tabindex="0" onclick="openFeature('notifications_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('notifications_centre')}">
-        <div class="feat-tag">Core</div>
+        <div class="feat-tag">Included</div>
         <div class="feat-title">Notifications Centre</div>
         <div class="feat-desc">Send targeted emails, SMS and in-app notifications. Keep your team, volunteers and parents always in the loop.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-notifications_centre.png" alt="Notifications Centre" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="team_staff" role="button" tabindex="0" onclick="openFeature('team_staff')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('team_staff')}">
-        <div class="feat-tag">Core</div>
-        <div class="feat-title">Team & Staff</div>
-        <div class="feat-desc">Manage staff roles, permissions and access. See who's available and what everyone is responsible for.</div>
+        <div class="feat-tag">Option · £69.99</div>
+        <div class="feat-title">HR Centre</div>
+        <div class="feat-desc">Staff records, DBS and training expiry tracking, and per-member access control — so you know who is compliant before you roster them.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-team_staff.png" alt="Team & Staff" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)" data-feat="settings_integrations" role="button" tabindex="0" onclick="openFeature('settings_integrations')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('settings_integrations')}">
-        <div class="feat-tag">Core</div>
+        <div class="feat-tag">Included</div>
         <div class="feat-title">Settings & Integrations</div>
         <div class="feat-desc">Configure your organisation settings and connect with tools you already use.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-settings_integrations.png" alt="Settings & Integrations" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)" data-feat="branding_centre" role="button" tabindex="0" onclick="openFeature('branding_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('branding_centre')}">
-        <div class="feat-tag">Pro+</div>
+        <div class="feat-tag">Option · £59.99</div>
         <div class="feat-title">Branding Centre</div>
         <div class="feat-desc">Upload your logo, set brand colours and your volunteers and parents see a fully branded experience on every screen.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-branding_centre.png" alt="Branding Centre" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)" data-feat="mentoring" role="button" tabindex="0" onclick="openFeature('mentoring')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('mentoring')}">
-        <div class="feat-tag">Pro+</div>
+        <div class="feat-tag">Included</div>
         <div class="feat-title">Mentoring</div>
         <div class="feat-desc">Match mentors and mentees, track session notes, log milestones and measure the impact of 1:1 relationships.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-mentoring.png" alt="Mentoring" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#E11D48;--feat-bg:rgba(225,29,72,0.1)" data-feat="policies_docs" role="button" tabindex="0" onclick="openFeature('policies_docs')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('policies_docs')}">
-        <div class="feat-tag">Pro+</div>
+        <div class="feat-tag">Included</div>
         <div class="feat-title">Policies & Documents</div>
         <div class="feat-desc">Store, organise and share policies, consents and key documents with staff, volunteers and parents.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-policies_docs.png" alt="Policies & Documents" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#DC2626;--feat-bg:rgba(220,38,38,0.1)" data-feat="risk_assessments" role="button" tabindex="0" onclick="openFeature('risk_assessments')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('risk_assessments')}">
-        <div class="feat-tag">Pro+</div>
+        <div class="feat-tag">Included</div>
         <div class="feat-title">Risk Assessments</div>
         <div class="feat-desc">HSE-standard 5×5 risk matrix, hazard tracking, session linking and one-click PDF export. Keep every activity properly assessed.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-risk_assessments.png" alt="Risk Assessments" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="bulk_import" role="button" tabindex="0" onclick="openFeature('bulk_import')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('bulk_import')}">
-        <div class="feat-tag">All plans</div>
+        <div class="feat-tag">Included</div>
         <div class="feat-title">Bulk Import</div>
         <div class="feat-desc">Already have a spreadsheet of young people? Import up to thousands of records in seconds with our CSV import tool.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-bulk_import.png" alt="Bulk Import" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#BA7517;--feat-bg:rgba(186,117,23,0.1)" data-feat="fundraising_hub" role="button" tabindex="0" onclick="openFeature('fundraising_hub')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('fundraising_hub')}">
-        <div class="feat-tag">Pro+</div>
-        <div class="feat-title">Fundraising Hub</div>
-        <div class="feat-desc">Track campaigns and donations, discover real UK grants matched to your work, and get AI-refined fundraising insights — all in one place.</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
-        <div class="feat-icon-wrap"><img src="/icons/feat-fundraising_hub.png" alt="Fundraising Hub" loading="lazy" /></div>
-      </div>
       <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="volunteer_mgmt" role="button" tabindex="0" onclick="openFeature('volunteer_mgmt')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('volunteer_mgmt')}">
-        <div class="feat-tag">Pro+</div>
+        <div class="feat-tag">Included</div>
         <div class="feat-title">Volunteer Management</div>
         <div class="feat-desc">Manage your volunteer workforce with sign-up flows, DBS tracking, availability matching and QR check-in.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-volunteer_mgmt.png" alt="Volunteer Management" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#EC4899;--feat-bg:rgba(236,72,153,0.1)" data-feat="parent_portal" role="button" tabindex="0" onclick="openFeature('parent_portal')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('parent_portal')}">
-        <div class="feat-tag">Pro+</div>
-        <div class="feat-title">Parent Portal</div>
-        <div class="feat-desc">Give parents visibility into their child's attendance, upcoming sessions and key information — no app download needed.</div>
-        <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
-        <div class="feat-icon-wrap"><img src="/icons/feat-parent_portal.png" alt="Parent Portal" loading="lazy" /></div>
-      </div>
       <div class="feature-card" style="--feat-color:#1B9AAA;--feat-bg:rgba(27,154,170,0.1)" data-feat="impact_outcomes" role="button" tabindex="0" onclick="openFeature('impact_outcomes')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('impact_outcomes')}">
-        <div class="feat-tag">All plans</div>
+        <div class="feat-tag">Included</div>
         <div class="feat-title">Impact & Outcomes</div>
         <div class="feat-desc">AI-refined insights, outcome tracking and visual reporting — generate funder-ready evidence of your programme's impact in one click.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
@@ -1366,8 +1355,8 @@ async function submitFoundingOffer(e) {
 <section id="pricing">
   <div class="container" style="text-align:center">
     <div class="section-tag">Pricing</div>
-    <h2 class="section-heading">Simple plans. No per-module pricing.</h2>
-    <p class="section-sub" style="margin:0 auto 32px">Choose the plan that fits your organisation today. Upgrade any time as you grow — nothing to configure, nothing to piece together.</p>
+    <h2 class="section-heading">One price. The whole platform.</h2>
+    <p class="section-sub" style="margin:0 auto 32px">No feature tiers and no cap on how many young people you support. Everyone gets everything — the two options below simply add the Branding Centre and HR on top.</p>
 
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:48px">
       <span id="monthlyLabel" class="active" style="font-size:14px;font-weight:700;color:var(--text2)">Monthly</span>
@@ -1380,68 +1369,65 @@ async function submitFoundingOffer(e) {
 
     <div class="pricing-grid">
 
-      <!-- STARTER -->
-      <div class="pricing-card">
-        <div class="plan-name">Starter</div>
-        <div class="plan-price">£<span id="p1">29</span><span>/mo</span></div>
-        <div class="plan-period" id="pp1">billed monthly</div>
-        <div class="plan-tagline">Everything you need to run sessions safely, from day one.</div>
-        <button class="plan-btn plan-btn-outline" onclick="window.location.href='/signup'">Start Free Trial</button>
-        <div class="plan-divider">What's included</div>
-        <ul class="plan-features">
-          <li><span class="chk">✓</span> Session Planner &amp; Calendar</li>
-          <li><span class="chk">✓</span> Registers &amp; attendance</li>
-          <li><span class="chk">✓</span> Events &amp; Trips</li>
-          <li><span class="chk">✓</span> Venues management</li>
-          <li><span class="chk">✓</span> Safeguarding — Cause for Concern &amp; DSL dashboard</li>
-          <li><span class="chk">✓</span> Basic Forms</li>
-          <li><span class="chk">✓</span> Up to 100 children</li>
-          <li><span class="x">✕</span> Volunteer &amp; Parent Portals</li>
-          <li><span class="x">✕</span> Reports &amp; Impact tracking</li>
-        </ul>
-      </div>
-
-      <!-- ADVANCED -->
+      <!-- COMPLETE PLATFORM -->
       <div class="pricing-card popular">
         <div class="popular-badge">Most Popular</div>
-        <div class="plan-name">Advanced</div>
-        <div class="plan-price">£<span id="p2">59</span><span>/mo</span></div>
-        <div class="plan-period" id="pp2">billed monthly</div>
-        <div class="plan-tagline">Bring your whole community in — volunteers, parents, and deeper safeguarding.</div>
+        <div class="plan-name">Complete Platform</div>
+        <div class="plan-price">£<span id="p1">49.99</span><span>/mo</span></div>
+        <div class="plan-period" id="pp1">billed monthly</div>
+        <div class="plan-tagline">Every module we ship, for your whole organisation. No user limits, no cap on the number of young people.</div>
         <button class="plan-btn plan-btn-fill" onclick="window.location.href='/signup'">Start Free Trial</button>
-        <div class="plan-divider">Everything in Starter, plus</div>
+        <div class="plan-divider">Everything included</div>
         <ul class="plan-features">
-          <li><span class="chk">✓</span> Volunteer Portal &amp; onboarding</li>
-          <li><span class="chk">✓</span> Parent Portal &amp; messaging</li>
-          <li><span class="chk">✓</span> Photo Gallery</li>
-          <li><span class="chk">✓</span> Case Management &amp; Risk Assessments</li>
-          <li><span class="chk">✓</span> Branding Centre — your logo, your colours</li>
-          <li><span class="chk">✓</span> Unlimited children</li>
-          <li><span class="x">✕</span> Reports, Fundraising &amp; HR tools</li>
+          <li><span class="chk">✓</span> Sessions, Calendar &amp; Projects</li>
+          <li><span class="chk">✓</span> Live Registers &amp; attendance history</li>
+          <li><span class="chk">✓</span> Young people, groups &amp; medical alerts</li>
+          <li><span class="chk">✓</span> Safeguarding Hub &amp; Risk Assessments</li>
+          <li><span class="chk">✓</span> Volunteers, applications &amp; QR sign-up</li>
+          <li><span class="chk">✓</span> Forms, Messaging &amp; Newsletter</li>
+          <li><span class="chk">✓</span> Reports, Impact &amp; Outcomes</li>
+          <li><span class="chk">✓</span> Payments, Resource Booking &amp; Gallery</li>
+          <li><span class="chk">✓</span> Mentoring &amp; Templates</li>
         </ul>
       </div>
 
-      <!-- PRO+ -->
+      <!-- + BRANDING CENTRE -->
       <div class="pricing-card">
-        <div class="plan-name">Pro+</div>
-        <div class="plan-price">£<span id="p3">99</span><span>/mo</span></div>
-        <div class="plan-period" id="pp3">billed monthly</div>
-        <div class="plan-tagline">Prove your impact and scale operations with full reporting and fundraising.</div>
+        <div class="plan-name">Platform + Branding</div>
+        <div class="plan-price">£<span id="p2">59.99</span><span>/mo</span></div>
+        <div class="plan-period" id="pp2">billed monthly</div>
+        <div class="plan-tagline">Make it unmistakably yours — everywhere your families and funders see it.</div>
         <button class="plan-btn plan-btn-outline" onclick="window.location.href='/signup'">Start Free Trial</button>
-        <div class="plan-divider">Everything in Advanced, plus</div>
+        <div class="plan-divider">Everything above, plus</div>
         <ul class="plan-features">
-          <li><span class="chk">✓</span> Reports &amp; Impact &amp; Outcomes</li>
-          <li><span class="chk">✓</span> Fundraising tools</li>
-          <li><span class="chk">✓</span> Mentoring module</li>
-          <li><span class="chk">✓</span> HR &amp; Resource Booking</li>
-          <li><span class="chk">✓</span> Priority support</li>
-          <li><span class="chk">✓</span> Dedicated onboarding</li>
+          <li><span class="chk">✓</span> <b>Branding Centre</b></li>
+          <li><span class="chk">✓</span> Your logo and colours across the app</li>
+          <li><span class="chk">✓</span> Branded parent and volunteer forms</li>
+          <li><span class="chk">✓</span> Branded emails and public sign-up pages</li>
+          <li><span class="chk">✓</span> Branded reports for funders and trustees</li>
+        </ul>
+      </div>
+
+      <!-- + HR -->
+      <div class="pricing-card">
+        <div class="plan-name">Platform + Branding + HR</div>
+        <div class="plan-price">£<span id="p3">69.99</span><span>/mo</span></div>
+        <div class="plan-period" id="pp3">billed monthly</div>
+        <div class="plan-tagline">Everything LaunchSession does, including the staff side of running an organisation.</div>
+        <button class="plan-btn plan-btn-outline" onclick="window.location.href='/signup'">Start Free Trial</button>
+        <div class="plan-divider">Everything above, plus</div>
+        <ul class="plan-features">
+          <li><span class="chk">✓</span> <b>HR Centre</b></li>
+          <li><span class="chk">✓</span> Staff records and role management</li>
+          <li><span class="chk">✓</span> DBS and training expiry tracking</li>
+          <li><span class="chk">✓</span> Staff compliance at a glance before you roster</li>
+          <li><span class="chk">✓</span> Per-member access control across modules</li>
         </ul>
       </div>
 
     </div>
 
-    <p style="margin-top:32px;font-size:13px;color:var(--text3)">Every plan includes a 14-day free trial. No contracts. Registered charity? <a href="mailto:hello@launchsession.co.uk" style="color:#60A5FA;font-weight:600">Ask about our discount →</a></p>
+    <p style="margin-top:32px;font-size:13px;color:var(--text3)">Every price includes a 14-day free trial with full access. No contracts, no per-user fees, no limit on how many young people you support. Registered charity? <a href="mailto:hello@launchsession.co.uk" style="color:#60A5FA;font-weight:600">Ask about our discount →</a></p>
   </div>
 </section>
 
@@ -1705,7 +1691,7 @@ async function submitWaitlist(e) {
           <span class="faq-chevron">⌄</span>
         </button>
         <div class="faq-a" id="faq-a-0" role="region">
-          <p>No. You get 14 days of full access with no credit card required. If you decide to continue, you'll pick a plan then.</p>
+          <p>No. You get 14 days of full access to the entire platform with no credit card required. If you decide to continue, it's £49.99 a month — the only choice is whether you also want the Branding Centre or HR.</p>
         </div>
       </div>
       <div class="faq-item">
@@ -1723,7 +1709,7 @@ async function submitWaitlist(e) {
           <span class="faq-chevron">⌄</span>
         </button>
         <div class="faq-a" id="faq-a-2" role="region">
-          <p>Yes, any time. Move between Starter, Advanced and Pro+ as your organisation's needs change — your data stays exactly where you left it.</p>
+          <p>Yes, any time. You can add or drop the Branding Centre and HR whenever you like — the rest of the platform is the same either way, and your data stays exactly where you left it.</p>
         </div>
       </div>
       <div class="faq-item">
@@ -1893,7 +1879,10 @@ function toggleMenu() {
 
 // ── BILLING TOGGLE ─────────────────────────────────────────────
 let annual = false
-const prices = { monthly: [29, 59, 99], annual: [23, 47, 79] }
+// Annual is the monthly price less ~20%, billed once a year. Kept as strings
+// so the pence render exactly -- toFixed(2) on a float would be a rounding
+// argument nobody needs on a pricing page.
+const prices = { monthly: ['49.99', '59.99', '69.99'], annual: ['39.99', '47.99', '55.99'] }
 
 function toggleBilling() {
   annual = !annual
@@ -1981,7 +1970,7 @@ const FEATURES = {
       "<b>Link a risk assessment</b> directly to the session — it surfaces to staff on the live session card.",
       "<b>Capture reflections after the session</b> while it's fresh, feeding straight into your outcome reporting."
     ],
-    note: "<b>Plan once, use everywhere.</b> A planned session automatically generates its register, appears in the parent portal and counts towards your impact figures."
+    note: "<b>Plan once, use everywhere.</b> A planned session automatically generates its register, shows up in the calendar and counts towards your impact figures."
   },
   safeguarding: {
     lead: "A properly structured safeguarding module — not a shared inbox and a spreadsheet. Every concern is logged, owned, tracked and auditable.",
@@ -2006,18 +1995,6 @@ const FEATURES = {
       "<b>Hours are logged automatically</b>, giving you volunteer contribution figures for funders without extra admin."
     ],
     note: "<b>Volunteers see only what they need.</b> Their portal is scoped to their own sessions and contains no sensitive participant data."
-  },
-  parent_portal: {
-    lead: "Give parents and carers real visibility without adding a phone call to your week — and without asking them to download anything.",
-    points: [
-      "<b>No app required.</b> Parents open a link in their browser and it works like an app on their phone.",
-      "<b>See their child's attendance history</b> and which sessions are coming up.",
-      "<b>Self-service registration</b> — parents complete your registration form themselves, and it arrives for admin approval rather than as an email to retype.",
-      "<b>Consents and permissions captured digitally</b>, with a record of who agreed to what and when.",
-      "<b>Medical and emergency contact details kept current</b> by the people who actually know them.",
-      "<b>Branded with your organisation's logo and colours</b>, so it feels like you, not like software."
-    ],
-    note: "<b>Cuts the admin at the front door.</b> Most organisations find registration paperwork is the single biggest time sink — this removes almost all of it."
   },
   impact_outcomes: {
     lead: "Turn the data you're already collecting into the evidence funders ask for — without a week of spreadsheet work before every report.",
@@ -2055,24 +2032,12 @@ const FEATURES = {
     ],
     note: "<b>Included on every plan.</b> Getting your data in shouldn't cost extra — it's the thing standing between you and using the platform."
   },
-  fundraising_hub: {
-    lead: "Track the money coming in, and find more of it, without leaving the system you already run your sessions in.",
-    points: [
-      "<b>Campaign and donation tracking</b> with progress against target.",
-      "<b>Real UK grant discovery</b> matched against the work you actually do and the people you serve.",
-      "<b>Deadline tracking</b> so an opportunity doesn't pass while it sits in someone's inbox.",
-      "<b>AI-refined fundraising insights</b> drawing on your own impact data.",
-      "<b>Pull your attendance and outcome figures straight into an application</b> — the evidence is already in the system.",
-      "<b>Record of what you applied for and what happened</b>, so next year's bid starts from something."
-    ],
-    note: "<b>The evidence and the application in one place.</b> Most funding bids stall on gathering numbers — yours are already there."
-  },
   branding_centre: {
     lead: "Your organisation's identity, applied consistently across every screen your staff, volunteers and parents see.",
     points: [
       "<b>Upload your logo and app icon</b>, set your brand colours with a full spectrum picker.",
       "<b>Automatic WCAG contrast checking</b> warns you if a colour choice would make text hard to read.",
-      "<b>Live preview</b> across the dashboard, volunteer portal and parent portal before you commit.",
+      "<b>Live preview</b> across the dashboard and the volunteer portal before you commit.",
       "<b>Branded install experience</b> — when parents add it to their home screen, they see your icon and your name.",
       "<b>Applies everywhere automatically</b>, including emails sent from the platform.",
       "<b>Change it any time</b> without touching a line of code or waiting on a developer."
@@ -2089,7 +2054,7 @@ const FEATURES = {
       "<b>Flag concerns straight into the safeguarding module</b> when something needs escalating.",
       "<b>Reporting on 1:1 outcomes</b> that sits alongside your group programme data."
     ],
-    note: "<b>Included on Pro+.</b> Built for organisations running structured mentoring alongside their open provision."
+    note: "<b>Included.</b> Built for organisations running structured mentoring alongside their open provision."
   },
   policies_docs: {
     lead: "One place for the documents everyone is always asking for — and a record of who has actually seen them.",
@@ -2116,16 +2081,16 @@ const FEATURES = {
     note: "<b>Contacts stay current automatically.</b> Because parents maintain their own details, you're not messaging a number that changed two years ago."
   },
   team_staff: {
-    lead: "Control who can see and do what, and keep an accurate picture of your team's availability and responsibilities.",
+    lead: "Keep an accurate picture of your team — who they are, what they are qualified for, and what they are allowed to see.",
     points: [
-      "<b>Role-based permissions</b> — admin, staff, volunteer and parent each get an appropriate view.",
-      "<b>Access enforced at the database level</b>, not just hidden in the interface.",
+      "<b>Staff records</b> for everyone who works with you, including sessional coaches and bank staff who have no login.",
+      "<b>DBS and training expiry tracking</b>, so a certificate lapsing is something you see coming.",
+      "<b>Compliance state surfaced when you roster</b> — the session planner shows it as you assign a session lead.",
+      "<b>Per-member access control</b>, module by module, on top of someone's role.",
       "<b>Guided onboarding for new staff</b>, so someone starting on Monday is useful by Tuesday.",
-      "<b>Staff rota</b> showing who's on which session.",
-      "<b>Qualification and training records</b> with expiry tracking.",
       "<b>Deactivate access immediately</b> when someone leaves."
     ],
-    note: "<b>Least-privilege by default.</b> New team members get the minimum access they need, and you widen it deliberately."
+    note: "<b>Role-based permissions come with every plan.</b> Admin, manager, staff and volunteer each get an appropriate view, enforced in the database rather than hidden in the interface. HR adds the staff records and compliance tracking on top."
   },
   settings_integrations: {
     lead: "Configure the platform around how your organisation actually works, and connect it to the tools you already use.",
@@ -2145,18 +2110,18 @@ const FEATURES = {
    Rendered through the same sheet component as the features. */
 const STEPS = {
   plan: {
-    title: "Choose your plan", tag: "Step 1", icon: "/icons/step-1.png",
+    title: "Start your trial", tag: "Step 1", icon: "/icons/step-1.png",
     color: "#3B82F6", bg: "rgba(59,130,246,0.12)",
-    lead: "Start with the plan that matches where your organisation is today. There's no per-module pricing to piece together and nothing to configure before you can begin.",
+    lead: "There are no feature tiers to compare and nothing to configure before you can begin. Everyone gets the whole platform.",
     points: [
-      "<b>Starter</b> covers the essentials — registers, session planning, safeguarding and your core team.",
-      "<b>Advanced</b> adds volunteer management, the parent portal, risk assessments and branding.",
-      "<b>Pro+</b> brings fundraising, policies and the full reporting suite for larger operations.",
-      "<b>Upgrade or downgrade at any point</b> — your data and setup carry across untouched.",
+      "<b>£49.99 a month for everything</b> — every module, for everyone in your organisation.",
+      "<b>No cap on how many young people you support</b>, and no per-user fees as your team grows.",
+      "<b>Branding Centre for £59.99</b> if you want the app, forms, emails and reports carrying your own identity.",
+      "<b>HR for £69.99</b> if you also want staff records, DBS and training expiry tracking.",
       "<b>Monthly or annual billing</b>, with roughly 20% off when you pay annually.",
       "<b>The trial is genuinely free.</b> No card details, and nothing charges automatically at the end."
     ],
-    note: "<b>Not sure which fits?</b> Start on the trial with full access and decide once you've seen how your team actually uses it."
+    note: "<b>Nothing to weigh up.</b> The trial gives you everything for 14 days, so you find out what your team actually uses before you pay for anything."
   },
   team: {
     title: "Add your team", tag: "Step 2", icon: "/icons/step-2.png",
