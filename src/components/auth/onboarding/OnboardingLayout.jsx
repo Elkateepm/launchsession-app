@@ -83,7 +83,11 @@ export default function OnboardingLayout({ children, wide = true, panelStyle, on
           <Dot />
           <a href="/terms.html" className="ls-footlink" style={footLink}>Terms</a>
           <Dot />
-          <a href="/login.html" className="ls-footlink" style={footLink}>Already have an account? Sign in</a>
+          {/* /login.html has never existed -- this pointed at a 404. Sign-in
+              goes through /org-search, which clears any saved organisation
+              first, per AUTH_FLOW_LOCK.md; /login on its own is only valid
+              once an organisation has been chosen. */}
+          <a href="/org-search" className="ls-footlink" style={footLink}>Already have an account? Sign in</a>
         </div>
       </div>
     </div>

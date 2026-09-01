@@ -23,7 +23,10 @@ export default function ProgressHeader({ stepNumber, totalSteps, title, onBack, 
           {showBack && (
             <button type="button" onClick={onBack} aria-label="Go back" style={backBtn}><Icon name="←" /></button>
           )}
-          <div style={{ minWidth: 0, overflow: 'hidden' }}>
+          {/* Stepping is a client-side swap with no navigation, so a screen
+              reader gets no signal that the step changed unless this region
+              announces it. */}
+          <div style={{ minWidth: 0, overflow: 'hidden' }} aria-live="polite" aria-atomic="true">
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
               Step {stepNumber} of {totalSteps}
             </div>

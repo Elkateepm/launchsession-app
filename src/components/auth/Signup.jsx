@@ -13,11 +13,15 @@ import LSIcon from '../../lib/icons'
 
 const DRAFT_KEY = 'ls_signup_draft_v2'
 
-const SUBMIT_STEPS = [
-  { id: 'insert',  label: 'Creating your workspace...' },
-  { id: 'approve', label: 'Setting up your organisation...' },
-  { id: 'email',   label: 'Sending your login link...' },
-]
+// create_trial_signup does the insert, the approval and the email trigger in
+// one round trip, so there are only two moments the client can honestly
+// report: the call going out, and it coming back with the mail on its way.
+// A third "Setting up your organisation..." label used to sit between these
+// and was never once displayed.
+const SUBMIT_LABEL = {
+  creating: 'Creating your workspace...',
+  sending:  'Sending your login link...',
+}
 
 // Expanded organisation-type list. Values stay as free text on the backend
 // (trial_requests.org_type has no check constraint), so adding options here
@@ -60,7 +64,18 @@ const WHAT_YOU_GET_GROUPS = [
   ]},
 ]
 
+const EMAIL_RE = /\S+@\S+\.\S+/
+
 const STEP_KEYS = ['org', 'type', 'you', 'review']
+
+// The last step a saved draft is allowed to resume on, given what it actually
+// contains. Used to clamp the restored step index -- see the restore effect.
+function furthestAllowedStep(d) {
+  if (!(d.organisationName || '').trim()) return 0
+  if (!d.orgType) return 1
+  if (!((d.fullName || '').trim().length > 1 && EMAIL_RE.test((d.email || '').trim()))) return 2
+  return 3
+}
 const STEP_TITLES = { org: 'Organisation name', type: 'Organisation type', you: 'Your details', review: 'Review & confirm' }
 
 // Step content enter/exit -- separate transitions per direction so the
@@ -98,6 +113,11 @@ export default function Signup() {
   const [touchedOrg, setTouchedOrg]              = useState(false)
   const [touchedName, setTouchedName]            = useState(false)
   const [touchedEmail, setTouchedEmail]          = useState(false)
+  const [resendState, setResendState]            = useState('idle') // idle | sending | sent
+  const [resendNote, setResendNote]              = useState('')
+  // Bumped on every failed submit so an identical repeat error still scrolls
+  // itself back into view rather than silently doing nothing.
+  const [errorNonce, setErrorNonce]              = useState(0)
 
   useEffect(() => {
     try {
@@ -109,7 +129,14 @@ export default function Signup() {
         if (d.orgTypeOther) setOrgTypeOther(d.orgTypeOther)
         if (d.fullName) setFullName(d.fullName)
         if (d.email) setEmail(d.email)
-        if (typeof d.stepIndex === 'number') setStepIndex(Math.min(Math.max(d.stepIndex, 0), STEP_KEYS.length - 1))
+        if (typeof d.stepIndex === 'number') {
+          // Clamped to the furthest step whose prerequisites the draft
+          // actually satisfies. A draft written by an older version of this
+          // form, or edited by hand, would otherwise drop someone straight
+          // onto Review with empty fields and a button they cannot press.
+          const allowed = furthestAllowedStep(d)
+          setStepIndex(Math.min(Math.max(d.stepIndex, 0), STEP_KEYS.length - 1, allowed))
+        }
       }
     } catch (e) {}
     setRestored(true)
@@ -126,6 +153,17 @@ export default function Signup() {
     return () => clearTimeout(saveTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restored, done, stepIndex, organisationName, orgType, orgTypeOther, fullName, email])
+
+  // The submit button sits in a fixed bar at the bottom on mobile while errors
+  // render at the top of the panel, so without this a failed submit looked
+  // like nothing happened at all.
+  const errorRef = useRef(null)
+  useEffect(() => {
+    if (!error || !errorRef.current) return
+    errorRef.current.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' })
+  }, [error, errorNonce, reducedMotion])
+
+  const emailRef = useRef(null)
 
   const currentKey = STEP_KEYS[stepIndex]
   const canContinue = {
@@ -165,7 +203,7 @@ export default function Signup() {
 
     const resolvedOrgType = (orgType === 'other' && orgTypeOther.trim()) ? orgTypeOther.trim() : orgType
 
-    setSubmitStep(SUBMIT_STEPS[0].label)
+    setSubmitStep(SUBMIT_LABEL.creating)
     // One call: the row insert, the approval, and the values needed to send the
     // invite email all happen server-side under SECURITY DEFINER. The client
     // used to insert, approve, then re-read trial_requests -- which required
@@ -183,12 +221,18 @@ export default function Signup() {
       const raw = signupError.message || ''
       if (raw.includes('ORG_NAME_TAKEN')) {
         setError(`An organisation called "${organisationName.trim()}" is already active on LaunchSession. If this is you, check your email for the original login link, or use a different name.`)
+      } else if (raw.includes('SIGNUP_RATE_LIMIT')) {
+        // The RPC's rate-limit messages are already written for the person
+        // reading them, and say the one thing the generic copy below gets
+        // actively wrong: trying again right now is what will not work.
+        setError(raw.split('SIGNUP_RATE_LIMIT:').pop().trim())
       } else {
         setError('Could not create your workspace. Please try again, or contact support@launchsession.co.uk if it keeps happening.')
         console.warn('Signup failed:', raw)
       }
       setLoading(false)
       setSubmitStep(null)
+      setErrorNonce(n => n + 1)
       return
     }
 
@@ -197,7 +241,7 @@ export default function Signup() {
     // proves whoever filled this in owns the address they typed. The send is
     // triggered server-side once the row commits, so the token never reaches
     // the browser.
-    setSubmitStep(SUBMIT_STEPS[2].label)
+    setSubmitStep(SUBMIT_LABEL.sending)
 
     try { localStorage.removeItem(DRAFT_KEY) } catch (e) {}
 
@@ -215,6 +259,32 @@ export default function Signup() {
     }
   }
 
+  // Re-triggers the invite email server-side. The RPC is deliberately silent
+  // about whether an address matched anything, so this can only ever report
+  // "sent" -- claiming otherwise would turn the button into a way of testing
+  // which addresses have workspaces.
+  const handleResend = async () => {
+    if (resendState !== 'idle') return
+    setResendState('sending')
+    setResendNote('')
+    const { error: resendErr } = await supabase.rpc('resend_signup_invite', {
+      p_email: email.trim().toLowerCase(),
+    })
+    if (resendErr) {
+      const raw = resendErr.message || ''
+      setResendNote(raw.includes('RESEND_RATE_LIMIT')
+        ? raw.split('RESEND_RATE_LIMIT:').pop().trim()
+        : 'We could not resend it just now. Please email support@launchsession.co.uk and we will get you in.')
+      setResendState('idle')
+      return
+    }
+    setResendState('sent')
+    setResendNote('')
+    // Back to idle after a beat so a genuinely undelivered second attempt is
+    // still possible; the RPC's own rate limit is what actually bounds this.
+    setTimeout(() => setResendState('idle'), 30000)
+  }
+
   // ── SUCCESS SCREEN ──
   if (done) return (
     <OnboardingLayout wide={false}>
@@ -223,9 +293,44 @@ export default function Signup() {
         <h2 style={{ ...cardTitle, textAlign: 'center', marginBottom: 12 }}>You're all set!</h2>
         <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>We've sent a login link to</p>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#60A5FA', marginBottom: 20, wordBreak: 'break-all' }}>{email}</div>
-        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
-          Click the link to set your password and access your <strong style={{ color: 'rgba(255,255,255,0.75)' }}>{organisationName}</strong> workspace — with full access to everything for your first 14 days. Check your spam folder if it doesn't arrive within a couple of minutes, and contact <a href="mailto:support@launchsession.co.uk" style={{ color: '#60A5FA' }}>support@launchsession.co.uk</a> if it still hasn't turned up.
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
+          Click the link to set your password and access your <strong style={{ color: 'rgba(255,255,255,0.75)' }}>{organisationName}</strong> workspace — with full access to everything for your first 14 days. It usually arrives within a minute; check your spam folder if it doesn't.
         </p>
+
+        {/* That email is the only way into the new workspace, so this screen
+            used to be a dead end: nothing to press, and no way back to a
+            mistyped address. */}
+        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '16px 18px', marginBottom: 16, textAlign: 'left' }}>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, marginBottom: 12 }}>
+            Didn't get it?
+          </div>
+          {/* primaryBtn carries no background of its own -- the gradient lives
+              on .ls-primary-btn -- so the class has to stay on while sending,
+              or the button renders transparent mid-request. Only the settled
+              "sent" state drops it, for the green fill. */}
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={resendState !== 'idle'}
+            className={resendState === 'sent' ? undefined : 'ls-primary-btn'}
+            style={{
+              ...primaryBtn, width: '100%', padding: '12px', fontSize: 14,
+              boxShadow: 'none',
+              background: resendState === 'sent' ? 'rgba(74,222,128,0.16)' : undefined,
+              color: resendState === 'sent' ? '#4ADE80' : '#fff',
+              opacity: resendState === 'sending' ? 0.7 : 1,
+              cursor: resendState === 'idle' ? 'pointer' : 'default',
+            }}
+          >
+            {resendState === 'sending' ? 'Sending…' : resendState === 'sent' ? '✓ Sent again — check your inbox' : 'Resend the email'}
+          </button>
+          {resendNote && (
+            <div role="status" style={{ fontSize: 12, color: '#FCD34D', lineHeight: 1.6, marginTop: 10 }}>{resendNote}</div>
+          )}
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginTop: 12 }}>
+            Typed the wrong address? Email <a href="mailto:support@launchsession.co.uk" style={{ color: '#60A5FA' }}>support@launchsession.co.uk</a> and we'll point <strong style={{ color: 'rgba(255,255,255,0.6)' }}>{organisationName}</strong> at the right one.
+          </div>
+        </div>
         <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '14px 18px', fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, textAlign: 'left' }}>
           💡 Once you've set your password, you can sign in anytime at{' '}
           <a href="https://app.launchsession.co.uk" target="_blank" rel="noreferrer" style={{ color: '#60A5FA', fontWeight: 700 }}>app.launchsession.co.uk</a>
@@ -256,7 +361,7 @@ export default function Signup() {
       />
 
       {error && (
-        <div role="alert" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#FCA5A5', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600, lineHeight: 1.5, animation: reducedMotion ? 'ls-fade-in 150ms ease' : 'ls-label-in 260ms cubic-bezier(0.16,1,0.3,1)' }}>
+        <div role="alert" ref={errorRef} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#FCA5A5', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600, lineHeight: 1.5, animation: reducedMotion ? 'ls-fade-in 150ms ease' : 'ls-label-in 260ms cubic-bezier(0.16,1,0.3,1)' }}>
           ⚠️ {error}
         </div>
       )}
@@ -342,6 +447,10 @@ export default function Signup() {
                       value: fullName,
                       onChange: e => setFullName(e.target.value),
                       onBlur: () => setTouchedName(true),
+                      // Enter here can't advance the step -- the email below is
+                      // still empty -- so send it to that field instead of
+                      // letting the key do nothing.
+                      onKeyDown: e => { if (e.key === 'Enter') { e.preventDefault(); emailRef.current?.focus() } },
                     }}
                   />
                 </div>
@@ -350,6 +459,7 @@ export default function Signup() {
                   valid={/\S+@\S+\.\S+/.test(email.trim())}
                   error={touchedEmail && email.trim().length > 2 && !/\S+@\S+\.\S+/.test(email.trim()) ? 'That doesn\'t look like a valid email yet.' : ''}
                   inputProps={{
+                    ref: emailRef,
                     type: 'email',
                     disabled: loading,
                     placeholder: 'jane@organisation.org',

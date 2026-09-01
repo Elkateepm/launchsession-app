@@ -688,7 +688,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
 <!-- NAV -->
 <div class="nav-wrap" id="navWrap">
   <nav>
-    <a href="#" class="logo">
+    <a href="#hero" class="logo" aria-label="LaunchSession — back to top">
       <img src="/logo.png" alt="LaunchSession" />
       <div class="logo-name">Launch<span>Session</span></div>
     </a>
@@ -966,7 +966,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
             </button>
           </form>
           <div id="foMsg" class="fo-msg fo-msg-success" style="display:none">✓ You're on the list — we'll be in touch to confirm your founding member spot.</div>
-          <div id="foErr" class="fo-msg fo-msg-error" style="display:none">Something went wrong — mind trying again, or email <a href="mailto:info@launchnexus.co.uk">info@launchnexus.co.uk</a> directly?</div>
+          <div id="foErr" class="fo-msg fo-msg-error" style="display:none">Something went wrong — mind trying again, or email <a href="mailto:hello@launchsession.co.uk">hello@launchsession.co.uk</a> directly?</div>
 
           <div class="fo-fine"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>No credit card needed · One offer per organisation</div>
         </div>
@@ -1090,11 +1090,20 @@ const FO_TOTAL_SPOTS = 50;
 
 async function loadFoundingSpots() {
   try {
-    const res = await fetch(`${FO_SUPABASE_URL}/rest/v1/waitlist_signups?interest=eq.lifetime_deal_50&select=id`, {
-      headers: { 'apikey': FO_ANON_KEY, 'Authorization': `Bearer ${FO_ANON_KEY}`, 'Prefer': 'count=exact' }
+    // Counted through an RPC rather than by selecting the rows. waitlist_signups
+    // is insert-only for anon -- deliberately, since a SELECT policy there would
+    // expose every lead's name and email -- so the old table read came back as an
+    // empty array on every visit. It never threw, so the catch below never ran and
+    // the bar sat permanently at "50 of 50 remaining", 0% filled, and would never
+    // have closed the form once the spots were actually gone.
+    const res = await fetch(`${FO_SUPABASE_URL}/rest/v1/rpc/founding_spots_claimed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': FO_ANON_KEY, 'Authorization': `Bearer ${FO_ANON_KEY}` },
+      body: '{}'
     });
-    const rows = await res.json();
-    const taken = Array.isArray(rows) ? rows.length : 0;
+    if (!res.ok) throw new Error('spot count unavailable');
+    const taken = Number(await res.json());
+    if (!Number.isFinite(taken) || taken < 0) throw new Error('spot count unavailable');
     const remaining = Math.max(0, FO_TOTAL_SPOTS - taken);
     const pct = Math.min(100, (taken / FO_TOTAL_SPOTS) * 100);
     document.getElementById('foProgressFill').style.width = pct + '%';
@@ -1625,10 +1634,10 @@ async function submitFoundingOffer(e) {
       <div style="font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:14px">Want to know when either launches?</div>
       <form id="waitlistForm" style="display:flex;gap:10px" onsubmit="return submitWaitlist(event)">
         <input id="waitlistEmail" type="email" required placeholder="you@yourcharity.org" style="flex:1;padding:13px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;outline:none;font-family:var(--font)" />
-        <button type="submit" style="padding:13px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;font-family:var(--font)">Notify me</button>
+        <button type="submit" id="waitlistBtn" style="padding:13px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;font-family:var(--font)">Notify me</button>
       </form>
       <div id="waitlistMsg" style="margin-top:12px;font-size:13px;color:#4ADE80;display:none">✓ You're on the list — we'll email you when it's live.</div>
-      <div id="waitlistErr" style="margin-top:12px;font-size:13px;color:#F87171;display:none">Something went wrong — mind trying again?</div>
+      <div id="waitlistErr" style="margin-top:12px;font-size:13px;color:#F87171;display:none">Something went wrong — mind trying again, or email <a href="mailto:hello@launchsession.co.uk" style="color:#F87171;text-decoration:underline">hello@launchsession.co.uk</a> directly?</div>
       <div style="margin-top:20px;font-size:13px;color:rgba(255,255,255,0.4)">
         Prefer email? <a href="mailto:hello@launchsession.co.uk?subject=Register%20interest%20-%20Charity%20Spotlight%20%26%20Giving" style="color:#A5B4FC;text-decoration:underline">hello@launchsession.co.uk</a>
       </div>
@@ -1636,12 +1645,22 @@ async function submitFoundingOffer(e) {
   </div>
 </section>
 <script>
+let waitlistSending = false;
+
 async function submitWaitlist(e) {
   e.preventDefault();
+  // Without this the button stayed live through the whole request, so an
+  // impatient second click posted the same address again.
+  if (waitlistSending) return false;
   const email = document.getElementById('waitlistEmail').value.trim();
   const msg = document.getElementById('waitlistMsg');
   const err = document.getElementById('waitlistErr');
+  const btn = document.getElementById('waitlistBtn');
   msg.style.display = 'none'; err.style.display = 'none';
+  waitlistSending = true;
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  btn.textContent = 'Sending…';
   try {
     const res = await fetch('https://ssahcqeqrxawmwtjpwvh.supabase.co/rest/v1/waitlist_signups', {
       method: 'POST',
@@ -1654,9 +1673,15 @@ async function submitWaitlist(e) {
     });
     if (!res.ok) throw new Error('failed');
     msg.style.display = 'block';
-    document.getElementById('waitlistForm').reset();
+    document.getElementById('waitlistForm').style.display = 'none';
   } catch (e2) {
     err.style.display = 'block';
+    // Only restored on failure -- on success the form is gone, so leaving the
+    // button disabled is what stops a second identical signup.
+    waitlistSending = false;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.textContent = 'Notify me';
   }
   return false;
 }
@@ -1798,14 +1823,15 @@ function toggleFaq(btn) {
       <div class="footer-col-title">Product</div>
       <a href="#features">Features</a>
       <a href="#pricing">Pricing</a>
-      <a href="#modules">Modules</a>
+      <a href="#faq">Common questions</a>
+      <a href="/packages.html">Packages</a>
       <a href="/signup">Start free trial</a>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Company</div>
       <a href="mailto:hello@launchsession.co.uk">Contact us</a>
-      <a href="#">About</a>
-      <a href="#">Blog</a>
+      <a href="#mission">Why we built this</a>
+      <a href="#community">Community</a>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Legal</div>
