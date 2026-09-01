@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 
 // The dock used a fixed violet regardless of the organisation. Everything
 // else in the app now follows the org's colour, and the primary navigation is
@@ -18,6 +18,7 @@ const IDLE = 'rgba(255,255,255,0.58)'
 // the label to crowd it. One state does not need four signals.
 export default function MobileNavItem({ icon: Icon, label, active, onClick, badge }) {
   const [pressed, setPressed] = useState(false)
+  const reduced = useReducedMotion()
 
   return (
     <button
@@ -64,10 +65,23 @@ export default function MobileNavItem({ icon: Icon, label, active, onClick, badg
           }}
         />
       )}
-      <span style={{ position: 'relative', zIndex: 1, display: 'flex', color: active ? ACTIVE : IDLE }}>
+      <motion.span
+        // A small lift-and-settle as the item becomes current, so arriving
+        // somewhere is felt rather than just repainted. Keyframes only fire on
+        // the transition into active; the resting state is plain.
+        animate={reduced || !active ? { scale: 1, y: 0 } : { scale: [1, 1.24, 1], y: [0, -3, 0] }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], times: [0, 0.45, 1] }}
+        style={{ position: 'relative', zIndex: 1, display: 'flex', color: active ? ACTIVE : IDLE }}
+      >
         <Icon width={21} height={21} strokeWidth={active ? 2.2 : 1.8} />
         {badge > 0 && (
-          <span
+          <motion.span
+            // Keyed on the count so an incoming item re-pops rather than
+            // silently ticking up while nobody is looking at the bar.
+            key={badge}
+            initial={reduced ? false : { scale: 0.2, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 640, damping: 18 }}
             style={{
               position: 'absolute', top: -5, right: -8,
               background: '#EF4444', color: '#fff', fontSize: 9, fontWeight: 900,
@@ -77,10 +91,12 @@ export default function MobileNavItem({ icon: Icon, label, active, onClick, badg
             }}
           >
             {badge > 9 ? '9+' : badge}
-          </span>
+          </motion.span>
         )}
-      </span>
-      <span
+      </motion.span>
+      <motion.span
+        animate={{ opacity: active ? 1 : 0.72 }}
+        transition={{ duration: 0.22 }}
         style={{
           position: 'relative', zIndex: 1,
           fontSize: 10, fontWeight: active ? 800 : 600,
@@ -97,7 +113,7 @@ export default function MobileNavItem({ icon: Icon, label, active, onClick, badg
         }}
       >
         {label}
-      </span>
+      </motion.span>
     </button>
   )
 }

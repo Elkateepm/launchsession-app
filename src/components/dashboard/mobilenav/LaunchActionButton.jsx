@@ -1,5 +1,5 @@
 import React from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 // The centre "Launch" button. Sits inside the dock (not floating far above it),
 // with a soft glow, and rotates 45° when the action menu is open.
@@ -22,14 +22,35 @@ export default function LaunchActionButton({ open, onClick, reducedMotion }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
       <div style={{ position: 'relative', width: 56, height: 56 }}>
-      {/* Soft outer glow */}
-      <div
+      {/* Soft outer glow — brightens while the menu is open so the button
+          reads as the live source of what is on screen above it. */}
+      <motion.div
+        animate={{ opacity: open ? 1 : 0.75, scale: open ? 1.12 : 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
         style={{
           position: 'absolute', inset: -6, borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(139,92,246,0.45) 0%, transparent 70%)',
           filter: 'blur(3px)', pointerEvents: 'none',
         }}
       />
+
+      {/* A single ring travelling outwards on open. One shot, tied to the tap
+          — not the idle loop this button used to run all day. */}
+      <AnimatePresence>
+        {open && !reducedMotion && (
+          <motion.div
+            key="ring"
+            initial={{ scale: 0.7, opacity: 0.55 }}
+            animate={{ scale: 1.9, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: 'absolute', inset: 0, borderRadius: '50%',
+              border: '2px solid rgba(196,181,253,0.9)', pointerEvents: 'none',
+            }}
+          />
+        )}
+      </AnimatePresence>
       <motion.button
         onClick={onClick}
         aria-label={open ? 'Close quick actions' : 'Open quick actions'}

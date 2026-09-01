@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { ChevronRightIcon } from './icons'
 
 // One row in the Launch menu.
@@ -16,6 +17,7 @@ import { ChevronRightIcon } from './icons'
 //   danger  — safeguarding, visually separated so it's never a mis-tap
 export default function QuickActionItem({ icon: Icon, label, hint, color = '#8B5CF6', variant = 'default', onClick }) {
   const [pressed, setPressed] = useState(false)
+  const reduced = useReducedMotion()
   const isPrimary = variant === 'primary'
   const isDanger = variant === 'danger'
 
@@ -30,12 +32,13 @@ export default function QuickActionItem({ icon: Icon, label, hint, color = '#8B5
     : isDanger ? 'rgba(220,38,38,0.28)' : 'rgba(255,255,255,0.07)'
 
   return (
-    <button
+    <motion.button
       onClick={onClick}
       aria-label={hint ? `${label} — ${hint}` : label}
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
+      whileTap={reduced ? undefined : { scale: 0.975 }}
       style={{
         display: 'flex', alignItems: 'center', gap: 13, width: '100%',
         padding: isPrimary ? '14px' : '11px 14px',
@@ -44,13 +47,18 @@ export default function QuickActionItem({ icon: Icon, label, hint, color = '#8B5
         border: `1px solid ${borderColour}`,
         background,
         cursor: 'pointer',
-        transform: pressed ? 'scale(0.985)' : 'scale(1)',
-        transition: 'background 0.12s ease, transform 0.12s ease',
+        // Transform belongs to framer's whileTap now; an inline one here would
+        // be overwritten mid-press.
+        transition: 'background 0.12s ease',
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      <span
+      <motion.span
         aria-hidden="true"
+        // The icon leads the press: it dips a little further than the row, so
+        // the tile feels pushed rather than merely recoloured.
+        animate={reduced ? undefined : { scale: pressed ? 0.9 : 1 }}
+        transition={{ type: 'spring', stiffness: 620, damping: 26 }}
         style={{
           width: isPrimary ? 44 : 38, height: isPrimary ? 44 : 38, borderRadius: 12,
           background: `${color}26`, border: `1px solid ${color}4D`,
@@ -59,7 +67,7 @@ export default function QuickActionItem({ icon: Icon, label, hint, color = '#8B5
         }}
       >
         <Icon width={isPrimary ? 21 : 19} height={isPrimary ? 21 : 19} />
-      </span>
+      </motion.span>
 
       <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: 1 }}>
         <span style={{ fontSize: isPrimary ? 15 : 14, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{label}</span>
@@ -68,10 +76,17 @@ export default function QuickActionItem({ icon: Icon, label, hint, color = '#8B5
         )}
       </span>
 
-      <ChevronRightIcon
-        width={16} height={16}
-        style={{ color: isPrimary ? color : 'rgba(255,255,255,0.3)', flexShrink: 0 }}
-      />
-    </button>
+      <motion.span
+        aria-hidden="true"
+        animate={reduced ? undefined : { x: pressed ? 3 : 0 }}
+        transition={{ type: 'spring', stiffness: 620, damping: 26 }}
+        style={{ display: 'flex', flexShrink: 0 }}
+      >
+        <ChevronRightIcon
+          width={16} height={16}
+          style={{ color: isPrimary ? color : 'rgba(255,255,255,0.3)' }}
+        />
+      </motion.span>
+    </motion.button>
   )
 }

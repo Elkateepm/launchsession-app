@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
@@ -424,11 +424,18 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {activeList.map(({ child, att }) => (
-              <RegisterRow key={child.id} child={child} att={att} onOpen={() => setSelectedChild(child)} groupLabel={groupLabel}
-                org={org} authUserId={authUserId} paymentBalance={paymentBalances[child.id]} onPaymentChanged={loadPaymentBalances}
-                onSignIn={() => handleSignIn(child)} onSignOut={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} onCorrect={() => setCorrectChildId(child.id)} isMobile={isMobile} />
-            ))}
+            {/* Signing someone in moves them out of this list. Animating the
+                exit and letting the rest slide up makes that legible: on a
+                busy door the list used to just silently reshuffle under your
+                thumb, which is how you lose your place in it. */}
+            <AnimatePresence initial={false}>
+              {activeList.map(({ child, att }, i) => (
+                <RegisterRow key={child.id} child={child} att={att} onOpen={() => setSelectedChild(child)} groupLabel={groupLabel}
+                  org={org} authUserId={authUserId} paymentBalance={paymentBalances[child.id]} onPaymentChanged={loadPaymentBalances}
+                  onSignIn={() => handleSignIn(child)} onSignOut={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} onCorrect={() => setCorrectChildId(child.id)} isMobile={isMobile}
+                  index={i} />
+              ))}
+            </AnimatePresence>
           </div>
         )}
 
@@ -542,14 +549,42 @@ function MiniStat({ icon, label, value, color }) {
   )
 }
 
-function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, onCorrect, groupLabel, org, authUserId, paymentBalance, onPaymentChanged, isMobile }) {
+const STATUS_FLASH = { signed_in: 'rgba(22,163,74,0.22)', absent: 'rgba(217,119,6,0.22)', signed_out: 'rgba(37,99,235,0.22)' }
+
+function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, onCorrect, groupLabel, org, authUserId, paymentBalance, onPaymentChanged, isMobile, index = 0 }) {
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const status = att?.status
   const [hover, setHover] = useState(false)
+  const reduced = useReducedMotion()
+
+  // A single wash of colour when this child's status changes, so a tap at the
+  // door is confirmed on the row itself rather than only by it disappearing.
+  const [flash, setFlash] = useState(0)
+  const prevStatus = useRef(status)
+  useEffect(() => {
+    if (prevStatus.current !== status && status) setFlash(f => f + 1)
+    prevStatus.current = status
+  }, [status])
+
   return (
-    <div
+    <motion.div
+      layout={!reduced}
+      initial={reduced ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, transition: { duration: 0.16 } }}
+      transition={{
+        duration: 0.28, ease: [0.22, 1, 0.36, 1],
+        // Only the first screenful is staggered. Past that the delay would be
+        // longer than anyone waits before their thumb is moving again.
+        delay: reduced ? 0 : Math.min(index, 8) * 0.028,
+        layout: { type: 'spring', stiffness: 420, damping: 38 },
+      }}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
+        // relative only, deliberately no overflow:hidden — the flash overlay
+        // below already carries the row's own corner radius, and clipping here
+        // would cut off anything a child badge legitimately overhangs.
+        position: 'relative',
         // Actions drop below the name on a phone. Side by side, the two buttons
         // and the avatar left about 110px for a name, so anything longer than
         // "Hana Al-Rashid" truncated -- on the one screen where identifying the
@@ -559,9 +594,20 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         gap: isMobile ? 10 : 12, background: '#fff',
         border: '1px solid #EDEFF3', borderRadius: 16, padding: 12,
         boxShadow: hover ? '0 6px 18px -10px rgba(15,23,42,0.18)' : '0 1px 2px rgba(15,23,42,0.04)',
-        transform: hover ? 'translateY(-1px)' : 'none',
-        transition: 'box-shadow 0.15s ease, transform 0.15s ease',
+        // Transform is left to framer here — an inline transform would be
+        // overwritten by the layout animation the moment the list reorders.
+        transition: 'box-shadow 0.15s ease',
       }}>
+      {flash > 0 && !reduced && (
+        <motion.div
+          key={flash}
+          aria-hidden="true"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.75, ease: 'easeOut' }}
+          style={{ position: 'absolute', inset: 0, borderRadius: 16, background: STATUS_FLASH[status] || 'transparent', pointerEvents: 'none' }}
+        />
+      )}
       <div onClick={onOpen} style={{
         width: 46, height: 46, borderRadius: 14, flexShrink: 0, cursor: 'pointer', overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 15, color: '#fff',
@@ -608,7 +654,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
           </>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
 

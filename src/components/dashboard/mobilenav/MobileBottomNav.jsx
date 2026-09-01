@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import MobileNavItem from './MobileNavItem'
 import LaunchActionButton from './LaunchActionButton'
 import LaunchActionMenu, { DEFAULT_ACTION_ICONS } from './LaunchActionMenu'
@@ -84,9 +85,14 @@ export default function MobileBottomNav({
   return (
     <>
       {/* Dock */}
-      <div
+      <motion.div
         role="navigation"
         aria-label="Primary"
+        // Rises into place on first paint rather than appearing fully formed,
+        // which reads as the app settling rather than snapping.
+        initial={reducedMotion ? false : { y: 90 }}
+        animate={{ y: 0 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 32, delay: 0.05 }}
         style={{
           position: 'fixed', left: 0, right: 0, bottom: 0,
           background: 'rgba(9,12,26,0.88)',
@@ -157,13 +163,18 @@ export default function MobileBottomNav({
             badge={moreBadge}
           />
         </div>
-      </div>
+      </motion.div>
 
       <LaunchActionMenu open={menuOpen} onClose={() => setMenuOpen(false)} actions={actions} reducedMotion={reducedMotion} />
 
+      <AnimatePresence>
       {toast && (
-        <div
+        <motion.div
           role="status"
+          initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 14, scale: 0.94 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.96 }}
+          transition={{ type: 'spring', stiffness: 460, damping: 32 }}
           style={{
             position: 'fixed', left: '50%', transform: 'translateX(-50%)',
             bottom: 'calc(78px + env(safe-area-inset-bottom, 0px))',
@@ -173,8 +184,9 @@ export default function MobileBottomNav({
           }}
         >
           {toast}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </>
   )
 }
