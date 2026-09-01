@@ -69,6 +69,21 @@ export function CalendarPlusIcon(props) {
   )
 }
 
+// Distinct from CalendarPlusIcon: when an organisation has neither Registers
+// nor a People directory, Sessions and Calendar can occupy the dock's two
+// slots at once, and both drawing the same glyph made them indistinguishable.
+export function CalendarIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="4" y="5.5" width="16" height="15" rx="2" />
+      <path d="M4 10h16M8 3.5v3M16 3.5v3" />
+      <circle cx="9" cy="14" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="13" cy="14" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="17.5" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 export function UserPlusIcon(props) {
   return (
     <svg {...base} {...props}>

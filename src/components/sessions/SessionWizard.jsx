@@ -49,6 +49,21 @@ const TYPE_PRESETS = {
   community: { risk_assessment_required: true, venue_confirmation_required: true },
 }
 
+// What the Details step will not continue without, paired with the label the
+// field actually carries so the footer can name them. The check used to be an
+// inline chain of &&, which meant Continue could grey out with nothing on
+// screen explaining why -- on a phone the offending field is usually scrolled
+// out of view by the time you reach the button.
+const DETAIL_REQUIREMENTS = [
+  ['title', 'Session title'],
+  ['session_date', 'Date'],
+  ['start_time', 'Start time'],
+  ['end_time', 'End time'],
+  ['location', 'Location'],
+  ['max_capacity', 'Capacity'],
+  ['lead_staff_id', 'Session lead'],
+]
+
 const OUTCOME_AREAS = ['Confidence', 'Wellbeing', 'Engagement', 'Skills', 'Relationships', 'Physical Activity']
 
 const REQUIREMENT_TOGGLES = [
@@ -1316,8 +1331,12 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     if (step > totalSteps) setStep(totalSteps)
   }, [step, totalSteps])
 
+  const missingDetails = stepKey === 'details'
+    ? DETAIL_REQUIREMENTS.filter(([field]) => !form[field]).map(([, fieldLabel]) => fieldLabel)
+    : []
+
   const canContinue = () => {
-    if (stepKey === 'details') return form.title && form.session_date && form.start_time && form.end_time && form.location && form.lead_staff_id && form.max_capacity
+    if (stepKey === 'details') return missingDetails.length === 0
     return true
   }
 
@@ -1608,11 +1627,16 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       </div>
 
       {/* Footer */}
-      <div style={{
-        padding: compact ? '12px 16px' : '16px 28px', borderTop: '1px solid var(--border)', flexShrink: 0,
-        display: 'flex', flexDirection: compact && isLastStep ? 'column-reverse' : 'row',
-        justifyContent: 'space-between', alignItems: compact && isLastStep ? 'stretch' : 'center', gap: compact && isLastStep ? 10 : 0,
-      }}>
+      <div style={{ padding: compact ? '12px 16px' : '16px 28px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+        {missingDetails.length > 0 && (
+          <div role="status" style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10, lineHeight: 1.5 }}>
+            Still needed: <strong style={{ color: 'var(--text2)', fontWeight: 700 }}>{missingDetails.join(', ')}</strong>
+          </div>
+        )}
+        <div style={{
+          display: 'flex', flexDirection: compact && isLastStep ? 'column-reverse' : 'row',
+          justifyContent: 'space-between', alignItems: compact && isLastStep ? 'stretch' : 'center', gap: compact && isLastStep ? 10 : 0,
+        }}>
         <motion.button
           onClick={() => setStep(s => Math.max(1, s - 1))}
           disabled={step === 1}
@@ -1659,6 +1683,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
             </motion.button>
           </div>
         )}
+        </div>
       </div>
     </div>
   )

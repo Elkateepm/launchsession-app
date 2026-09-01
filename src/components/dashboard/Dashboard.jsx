@@ -1,6 +1,6 @@
 // AUTH FLOW LOCK: sign out must clear Supabase session, local org slug, and return to landing.
 import Settings from '../settings/Settings'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useDragControls, useReducedMotion } from 'framer-motion'
 import Volunteers from '../volunteers/Volunteers'
 import ProfilePage from '../profile/ProfilePage'
 import Mentoring from '../mentoring/Mentoring'
@@ -36,6 +36,9 @@ import HR from '../hr/HRCentre'
 import Payments from '../payments/Payments'
 import ResourceCentre from '../resources/ResourceCentre'
 import MobileBottomNav from './mobilenav/MobileBottomNav'
+import {
+  dockDestinations, moreSections, itemLabel, badgeCount, totalBadges,
+} from './mobilenav/mobileNav'
 import QRShareSheet from '../shared/QRShareSheet'
 import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
 import { useTerms } from '../../context/OrgContext'
@@ -60,6 +63,41 @@ const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/o
 // once rotated (667×375), so it would keep the bottom dock even though there's
 // now very little vertical room for it and plenty of horizontal room for a rail.
 // So: any short, wide (landscape) viewport gets the side nav regardless of width.
+// Per-row delay for the More sheet's reveal. Small enough that the whole
+// sheet has landed well inside 400ms even when every module is enabled --
+// a stagger you have to wait for is just latency wearing a costume.
+const MORE_STAGGER = 0.022
+
+// Fades and lifts the module area each time the tab changes, so moving around
+// the app on a phone reads as travel rather than a hard cut.
+//
+// Two deliberate constraints:
+//
+// It is a pass-through when disabled — desktop and reduced-motion get their
+// children back untouched, with no extra wrapper in the tree, so nothing about
+// the existing layout can shift.
+//
+// There is no AnimatePresence and no exit animation. An exit would hold the old
+// screen for its duration before the new one mounts, which turns every tap into
+// a wait. Keying on the tab replays the entrance on arrival instead: the new
+// screen starts drawing immediately and the motion rides on top of it.
+function TabTransition({ tabKey, enabled, children }) {
+  if (!enabled) return <>{children}</>
+  return (
+    <motion.div
+      key={tabKey}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+      // Transparent to layout: the module inside keeps the same flex context it
+      // had as a direct child of the scroll container.
+      style={{ display: 'flex', flexDirection: 'column', flex: '1 1 auto', minHeight: 0, minWidth: 0 }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
 function computeIsMobileBottomNav() {
   const w = window.innerWidth, h = window.innerHeight
   const isLandscape = w > h
@@ -667,6 +705,32 @@ export default function Dashboard({ session, org }) {
   )
   const officeTabKeys = React.useMemo(() => OFFICE_TABS.map(t => t.tab), [])
 
+  // Mobile navigation is derived from the same nav data and the same access
+  // filtering as the sidebar above, rather than from a second hardcoded list
+  // that has to be remembered whenever the nav changes -- see mobileNav.js.
+  const mobileDock = React.useMemo(
+    () => dockDestinations({ hasModule, isAdmin, moduleLevel, hiddenItems })
+      .map(d => ({ ...d, label: itemLabel(d, terms) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [org?.id, org?.modules, isAdmin, terms, accessLevels, hiddenItems]
+  )
+
+  const mobileMoreSections = React.useMemo(
+    () => moreSections(
+      { hasModule, isAdmin, moduleLevel, hiddenItems },
+      { exclude: mobileDock.map(d => d.tab), officeTabCount: visibleOfficeTabs.length },
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [org?.id, org?.modules, isAdmin, accessLevels, hiddenItems, mobileDock, visibleOfficeTabs]
+  )
+
+  // The More sheet now lists every area rather than a fixed eight, so it can be
+  // taller than the screen and has to scroll. Drag-to-dismiss is therefore
+  // started from the grab handle only (dragListener={false}); left on the whole
+  // sheet it would swallow every vertical swipe and the list could not scroll.
+  const moreDragControls = useDragControls()
+  const prefersReducedMotion = useReducedMotion()
+
   const createHiddenTabs = React.useMemo(() => {
     const hiddenTabs = new Set(
       // OFFICE_TABS included: its modules are hideable in Settings but are no
@@ -703,6 +767,21 @@ export default function Dashboard({ session, org }) {
     const interval = setInterval(fetchUnread, 45000) // no Realtime (iOS WebKit crash) — poll instead
     return () => { cancelled = true; clearInterval(interval) }
   }, [org?.id])
+
+  // Every count the mobile bar can show, in one shape, so the dock badges, the
+  // More roll-up and the sheet all read from the same numbers.
+  const mobileBadges = React.useMemo(
+    () => ({ ...navBadges, forms: unreadSubs.length }),
+    [navBadges, unreadSubs.length]
+  )
+  const mobileMoreBadge = React.useMemo(
+    () => totalBadges(mobileMoreSections, mobileBadges),
+    [mobileMoreSections, mobileBadges]
+  )
+
+  // Counts rows as the More sheet renders so each one can be delayed a little
+  // further down the list. Re-declared every render, so it always starts at 0.
+  let moreRevealIndex = 0
 
   return (
     <div style={{ display: 'flex', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
@@ -959,6 +1038,14 @@ export default function Dashboard({ session, org }) {
           )}
           {tabLevel === 'view' && <ViewOnlyBanner />}
 
+          {/* Office's sub-tabs all live inside one shell, so they share a key:
+              keying them separately would tear the shell down and rebuild it
+              (losing its state and refetching) every time you moved between
+              Forms and Payments. */}
+          <TabTransition
+            tabKey={officeTabKeys.includes(effectiveTab) ? 'office' : effectiveTab}
+            enabled={isMobileBottomNav && !prefersReducedMotion}
+          >
           {/* ── BASE MODULES — always free ── */}
           {effectiveTab === 'today'      && (isAdmin
             ? <Today org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />
@@ -1029,6 +1116,7 @@ export default function Dashboard({ session, org }) {
           {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','newsletter','gallery','safeguarding','forms','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','office','__no_access'].includes(effectiveTab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
+          </TabTransition>
         </div>
 
 
@@ -1054,6 +1142,8 @@ export default function Dashboard({ session, org }) {
             <motion.div
               onClick={e => e.stopPropagation()}
               drag="y"
+              dragListener={false}
+              dragControls={moreDragControls}
               dragConstraints={{ top: 0, bottom: 400 }}
               dragElastic={{ top: 0.05, bottom: 0.6 }}
               onDragEnd={(e, info) => {
@@ -1067,51 +1157,87 @@ export default function Dashboard({ session, org }) {
                 width: '100%',
                 background: '#fff',
                 borderRadius: '24px 24px 0 0',
-                padding: '18px 16px 96px',
+                padding: '18px 0 0',
                 boxShadow: '0 -20px 60px rgba(15,23,42,0.25)',
-                touchAction: 'none',
+                maxHeight: '86dvh',
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 0,
               }}
             >
-              <div style={{ width: 42, height: 5, borderRadius: 99, background: 'var(--border)', margin: '0 auto 16px', cursor: 'grab' }} />
-              <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>More</div>
-              <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Open another LaunchSession area</div>
+              <div
+                onPointerDown={e => moreDragControls.start(e)}
+                style={{ padding: '0 16px 4px', flexShrink: 0, touchAction: 'none', cursor: 'grab' }}
+              >
+                <div style={{ width: 42, height: 5, borderRadius: 99, background: 'var(--border)', margin: '0 auto 16px' }} />
+                <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>More</div>
+                <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Open another LaunchSession area</div>
+              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
-                {[
-                  { key: 'mentoring', label: 'Mentoring', icon: '🤝', badge: navBadges.mentoring },
-                  { key: 'projects_list', label: 'Projects', icon: '🚀' },
-                  { key: 'calendar', label: 'Calendar', icon: '📅' },
-                  { key: 'team', label: 'Team & Staff', icon: '👥' },
-                  { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
-                  { key: 'safeguarding', label: 'Safeguarding Hub', icon: '🛡️' },
-                  { key: 'reports', label: 'Reports', icon: '📊' },
-                  { key: 'settings', label: 'Settings', icon: '⚙️' }
-                ].filter(item => !ADMIN_ONLY_TABS.includes(item.key) || isAdmin).map(item => (
-                  <button
-                    key={item.key}
-                    onClick={() => {
-                      handleSetTab(item.key);
-                      setShowMobileMore(false);
-                    }}
-                    style={{
-                      position: 'relative',
-                      border: '1px solid #e5e7eb',
-                      background: 'var(--surface2)',
-                      borderRadius: 18,
-                      padding: 16,
-                      textAlign: 'left',
-                      cursor: 'pointer'
-                    }}
+              <div style={{
+                flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                padding: '0 16px calc(96px + env(safe-area-inset-bottom, 0px))',
+              }}>
+
+              {/* Grouped exactly as the sidebar groups them, and filtered by the
+                  same access rules -- this was a fixed list of eight that had
+                  drifted from the nav, leaving Sessions, People, Messaging,
+                  Office, Risk and Medical unreachable on a phone. */}
+              {/* moreRevealIndex runs across the whole sheet, so the reveal
+                  travels down the list as one movement instead of each group
+                  starting its own stagger from zero. */}
+              {mobileMoreSections.map(section => (
+                <div key={section.id} style={{ marginBottom: 18 }}>
+                  <motion.div
+                    initial={prefersReducedMotion ? false : { opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.02 + (moreRevealIndex++) * MORE_STAGGER, duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.7, textTransform: 'uppercase', color: 'var(--text3)', marginBottom: 8 }}
                   >
-                    <div style={{ fontSize: 24, marginBottom: 8, color: 'var(--text)' }}><Icon name={item.icon} size={24} /></div>
-                    <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)' }}>{item.label}</div>
-                    {item.badge > 0 && (
-                      <span style={{ position: 'absolute', top: 10, right: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, borderRadius: 99, minWidth: 17, height: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
-                        {item.badge > 9 ? '9+' : item.badge}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                    {section.label}
+                  </motion.div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
+                    {section.items.map(item => {
+                      const badge = badgeCount(item, mobileBadges)
+                      const revealDelay = 0.02 + (moreRevealIndex++) * MORE_STAGGER
+                      return (
+                        <motion.button
+                          key={item.id}
+                          onClick={() => { handleSetTab(item.tab); setShowMobileMore(false) }}
+                          initial={prefersReducedMotion ? false : { opacity: 0, y: 12, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          transition={{ delay: revealDelay, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                          whileTap={{ scale: 0.96 }}
+                          style={{
+                            position: 'relative',
+                            border: '1px solid var(--border)',
+                            background: 'var(--surface2)',
+                            borderRadius: 18,
+                            padding: 16,
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            minHeight: 44,
+                          }}
+                        >
+                          <div style={{ fontSize: 24, marginBottom: 8, color: 'var(--text)' }}><Icon name={item.icon} size={24} /></div>
+                          <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)' }}>{itemLabel(item, terms)}</div>
+                          {badge > 0 && (
+                            <motion.span
+                              initial={prefersReducedMotion ? false : { scale: 0.2 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: 'spring', stiffness: 620, damping: 18, delay: revealDelay + 0.1 }}
+                              style={{ position: 'absolute', top: 10, right: 10, background: '#EF4444', color: '#fff', fontSize: 10, fontWeight: 900, borderRadius: 99, minWidth: 17, height: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}
+                            >
+                              {badge > 9 ? '9+' : badge}
+                            </motion.span>
+                          )}
+                        </motion.button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
               </div>
             </motion.div>
           </motion.div>
@@ -1122,7 +1248,9 @@ export default function Dashboard({ session, org }) {
           <MobileBottomNav
             tab={tab}
             onNavigate={handleSetTab}
-            registersBadge={navBadges.registers}
+            destinations={mobileDock}
+            badges={mobileBadges}
+            moreBadge={mobileMoreBadge}
             isAdmin={isAdmin}
             onOpenMore={() => setShowMobileMore(true)}
             onNewSession={() => handleSetTab('planner', { autoOpenWizard: true })}
