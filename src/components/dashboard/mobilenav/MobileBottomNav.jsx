@@ -3,7 +3,7 @@ import MobileNavItem from './MobileNavItem'
 import LaunchActionButton from './LaunchActionButton'
 import LaunchActionMenu, { DEFAULT_ACTION_ICONS } from './LaunchActionMenu'
 import {
-  HouseIcon, ClipboardIcon, PeopleIcon, MenuIcon, CalendarPlusIcon, HeartHandshakeIcon,
+  HouseIcon, ClipboardIcon, PeopleIcon, MenuIcon, CalendarPlusIcon, CalendarIcon, HeartHandshakeIcon,
 } from './icons'
 
 // The dock's destinations are chosen from nav data (see mobileNav.js), which
@@ -13,7 +13,7 @@ const DOCK_ICONS = {
   sessions: CalendarPlusIcon,
   registers: ClipboardIcon,
   children: PeopleIcon,
-  calendar: CalendarPlusIcon,
+  calendar: CalendarIcon,
   volunteers: HeartHandshakeIcon,
 }
 
@@ -42,6 +42,7 @@ export default function MobileBottomNav({
   onNavigate,          // = handleSetTab from Dashboard
   destinations = [],   // the two flanking slots, already access-filtered
   badges = {},         // badgeKey -> count
+  moreBadge = 0,       // everything waiting behind the More sheet, summed
   isAdmin,
   onOpenMore,           // opens the existing "More" sheet
   onNewSession,
@@ -148,7 +149,13 @@ export default function MobileBottomNav({
           {/* More highlights whenever you are somewhere the dock cannot show,
               so the bar always tells you where you are rather than going blank
               on two thirds of the app. */}
-          <MobileNavItem icon={MenuIcon} label="More" active={!dockTabs.includes(tab)} onClick={onOpenMore} />
+          <MobileNavItem
+            icon={MenuIcon}
+            label="More"
+            active={!dockTabs.includes(tab)}
+            onClick={onOpenMore}
+            badge={moreBadge}
+          />
         </div>
       </div>
 

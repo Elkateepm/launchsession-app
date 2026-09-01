@@ -2,8 +2,22 @@ import React from 'react'
 import { motion } from 'framer-motion'
 
 // The centre "Launch" button. Sits inside the dock (not floating far above it),
-// with a soft glow and an occasional shimmer/breathing pulse. Rotates gently
-// when the action menu is open to signal state.
+// with a soft glow, and rotates 45° when the action menu is open.
+//
+// Two deliberate changes from the original:
+//
+// The glyph is a plus rather than a four-point sparkle. Every action behind
+// this button creates something — a session, a form, a volunteer, a payment —
+// and a plus is the one shape every phone user already reads as "make a new
+// thing". A sparkle reads as "magic" or "AI", which is not what happens. It
+// also makes the existing open/close rotation mean something: a plus turned
+// 45° is an ×, so the button now shows its own state instead of spinning an
+// ornament.
+//
+// The idle "breathing" pulse is gone. It looped forever, on a bar that is on
+// screen for the entire session, next to whatever the user was actually
+// reading — and it kept the compositor busy on a phone all day to say nothing.
+// Motion here is now tied to what the user does: press, and open/close.
 export default function LaunchActionButton({ open, onClick, reducedMotion }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
@@ -21,18 +35,10 @@ export default function LaunchActionButton({ open, onClick, reducedMotion }) {
         aria-label={open ? 'Close quick actions' : 'Open quick actions'}
         aria-expanded={open}
         whileTap={{ scale: 0.93 }}
-        animate={
-          reducedMotion
-            ? { rotate: open ? 45 : 0 }
-            : { rotate: open ? 45 : 0, scale: open ? 1 : [1, 1.045, 1] }
-        }
-        transition={
-          reducedMotion
-            ? { duration: 0.15 }
-            : open
-              ? { type: 'spring', stiffness: 300, damping: 20 }
-              : { scale: { duration: 2.6, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut' }, rotate: { duration: 0.2 } }
-        }
+        animate={{ rotate: open ? 45 : 0 }}
+        transition={reducedMotion
+          ? { duration: 0.12 }
+          : { type: 'spring', stiffness: 300, damping: 20 }}
         style={{
           position: 'relative',
           width: '100%', height: '100%',
@@ -44,10 +50,10 @@ export default function LaunchActionButton({ open, onClick, reducedMotion }) {
           cursor: 'pointer', touchAction: 'manipulation', overflow: 'hidden', padding: 0,
         }}
       >
-        <svg width="42%" height="42%" viewBox="0 0 24 24" fill="none" style={{ pointerEvents: 'none' }}>
+        <svg width="44%" height="44%" viewBox="0 0 24 24" fill="none" style={{ pointerEvents: 'none' }}>
           <path
-            d="M12 2 L14.2 9.8 L22 12 L14.2 14.2 L12 22 L9.8 14.2 L2 12 L9.8 9.8 Z"
-            fill="#fff"
+            d="M12 5v14M5 12h14"
+            stroke="#fff" strokeWidth="2.6" strokeLinecap="round"
           />
         </svg>
       </motion.button>

@@ -1,5 +1,6 @@
 import {
-  dockDestinations, moreSections, itemLabel, DOCK_SLOTS, DOCK_CANDIDATES,
+  dockDestinations, moreSections, itemLabel, badgeCount, totalBadges,
+  DOCK_SLOTS, DOCK_CANDIDATES,
 } from './mobileNav'
 
 // An organisation with everything switched on, so each test varies only the
@@ -92,5 +93,31 @@ describe('labels', () => {
 
   it('falls back to the plain label when there is no term', () => {
     expect(itemLabel({ id: 'planner', label: 'Sessions' }, {})).toBe('Sessions')
+  })
+})
+
+describe('badges', () => {
+  it('counts what is waiting behind an item', () => {
+    expect(badgeCount({ id: 'mentoring' }, { mentoring: 3 })).toBe(3)
+    expect(badgeCount({ id: 'office', badgeKey: 'forms' }, { forms: 2 })).toBe(2)
+    expect(badgeCount({ id: 'calendar' }, { mentoring: 3, forms: 2 })).toBe(0)
+  })
+
+  it('treats a missing count as nothing waiting', () => {
+    expect(badgeCount({ id: 'mentoring' }, {})).toBe(0)
+    expect(badgeCount({ id: 'mentoring' })).toBe(0)
+  })
+
+  it('rolls the sheet up onto More, so nothing waiting is hidden behind a tap', () => {
+    const sections = moreSections(ctx(), { officeTabCount: 3 })
+    expect(totalBadges(sections, { mentoring: 3, forms: 2 })).toBe(5)
+    expect(totalBadges(sections, {})).toBe(0)
+  })
+
+  it('does not count an area this viewer cannot open', () => {
+    // Mentoring not enabled: its referrals are not this organisation's problem
+    // and must not put a number on the bar.
+    const sections = moreSections(ctx({ hasModule: k => k !== 'mentoring' }), { officeTabCount: 3 })
+    expect(totalBadges(sections, { mentoring: 3 })).toBe(0)
   })
 })

@@ -36,7 +36,9 @@ import HR from '../hr/HRCentre'
 import Payments from '../payments/Payments'
 import ResourceCentre from '../resources/ResourceCentre'
 import MobileBottomNav from './mobilenav/MobileBottomNav'
-import { dockDestinations, moreSections, itemLabel } from './mobilenav/mobileNav'
+import {
+  dockDestinations, moreSections, itemLabel, badgeCount, totalBadges,
+} from './mobilenav/mobileNav'
 import QRShareSheet from '../shared/QRShareSheet'
 import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
 import { useTerms } from '../../context/OrgContext'
@@ -730,6 +732,17 @@ export default function Dashboard({ session, org }) {
     return () => { cancelled = true; clearInterval(interval) }
   }, [org?.id])
 
+  // Every count the mobile bar can show, in one shape, so the dock badges, the
+  // More roll-up and the sheet all read from the same numbers.
+  const mobileBadges = React.useMemo(
+    () => ({ ...navBadges, forms: unreadSubs.length }),
+    [navBadges, unreadSubs.length]
+  )
+  const mobileMoreBadge = React.useMemo(
+    () => totalBadges(mobileMoreSections, mobileBadges),
+    [mobileMoreSections, mobileBadges]
+  )
+
   return (
     <div style={{ display: 'flex', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
 
@@ -1129,9 +1142,7 @@ export default function Dashboard({ session, org }) {
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
                     {section.items.map(item => {
-                      const badge = item.id === 'mentoring'
-                        ? navBadges.mentoring
-                        : item.badgeKey === 'forms' ? unreadSubs.length : 0
+                      const badge = badgeCount(item, mobileBadges)
                       return (
                         <button
                           key={item.id}
@@ -1171,7 +1182,8 @@ export default function Dashboard({ session, org }) {
             tab={tab}
             onNavigate={handleSetTab}
             destinations={mobileDock}
-            badges={navBadges}
+            badges={mobileBadges}
+            moreBadge={mobileMoreBadge}
             isAdmin={isAdmin}
             onOpenMore={() => setShowMobileMore(true)}
             onNewSession={() => handleSetTab('planner', { autoOpenWizard: true })}

@@ -86,6 +86,34 @@ export function moreSections(ctx, { exclude = [], officeTabCount = 0 } = {}) {
   return sections.filter(s => s.items.length > 0)
 }
 
+/**
+ * How many outstanding things sit behind a nav item.
+ *
+ * One definition, used both to badge an item and to roll the counts up onto
+ * the dock's More button -- otherwise the two would be written separately and
+ * could disagree about what counts.
+ */
+export function badgeCount(item, badges = {}) {
+  if (item.id === 'mentoring') return badges.mentoring || 0
+  if (item.badgeKey === 'forms') return badges.forms || 0
+  return 0
+}
+
+/**
+ * Everything waiting inside the More sheet, summed.
+ *
+ * The dock could only ever show the badge of a destination it happened to be
+ * displaying, so a pending mentoring referral or an unread form submission was
+ * invisible until you thought to open More and look. The bar should say that
+ * something is waiting, not keep it behind a tap.
+ */
+export function totalBadges(sections, badges) {
+  return sections.reduce(
+    (sum, section) => sum + section.items.reduce((n, item) => n + badgeCount(item, badges), 0),
+    0,
+  )
+}
+
 /** The label to print for an item, resolving the org's own terminology. */
 export function itemLabel(item, terms) {
   return item.label || (item.termKey && terms?.[item.termKey]) || item.id
