@@ -865,7 +865,9 @@ function Fact({ icon, label, value }) {
       <div style={{ fontSize: 10, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 4 }}>
         {icon} {label.toUpperCase()}
       </div>
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', lineHeight: 1.3 }}>{value}</div>
+      {/* Long single values ("Cassiobury Park, Watford") have to wrap inside
+          the cell rather than set its width. */}
+      <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', lineHeight: 1.3, overflowWrap: 'anywhere' }}>{value}</div>
     </div>
   )
 }
@@ -879,6 +881,9 @@ function Chipline({ icon, text }) {
 }
 
 function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount, attendanceCounts, hasReflection, project, onOpenProject, onOpenRegister }) {
+  // Reads the breakpoint itself rather than taking a prop: every call site
+  // would otherwise have to remember to pass it.
+  const isMobile = useIsMobile()
   const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
   const isMultiDay = session.end_date && session.end_date !== session.session_date
   const isPast = session.session_date < format(new Date(), 'yyyy-MM-dd')
@@ -914,10 +919,38 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.55)', backdropFilter: 'blur(4px)', zIndex: 10400, display: 'flex', justifyContent: 'flex-end' }}>
-      <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', stiffness: 320, damping: 34 }}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.55)', backdropFilter: 'blur(4px)', zIndex: 10400,
+        display: 'flex',
+        // A side drawer on a phone puts its close button in the top-right, the
+        // furthest corner from a thumb. Mobile gets a bottom sheet instead, so
+        // it arrives from the direction the hand is already in.
+        justifyContent: isMobile ? 'stretch' : 'flex-end',
+        alignItems: isMobile ? 'flex-end' : 'stretch',
+      }}>
+      <motion.div
+        initial={isMobile ? { y: '100%' } : { x: '100%' }}
+        animate={isMobile ? { y: 0 } : { x: 0 }}
+        exit={isMobile ? { y: '100%' } : { x: '100%' }}
+        transition={{ type: 'spring', stiffness: 320, damping: 34 }}
         onClick={e => e.stopPropagation()}
-        style={{ width: '100%', maxWidth: 420, height: '100%', background: 'var(--surface, #fff)', display: 'flex', flexDirection: 'column', boxShadow: '-24px 0 60px rgba(0,0,0,0.25)' }}>
+        style={{
+          width: '100%', maxWidth: isMobile ? 'none' : 420,
+          // Without this the panel is a flex item at min-width:auto, so a long
+          // location or title sets a floor it cannot shrink below and the whole
+          // sheet runs off the side of the phone.
+          minWidth: 0,
+          height: isMobile ? '92dvh' : '100%',
+          borderRadius: isMobile ? '22px 22px 0 0' : 0,
+          background: 'var(--surface, #fff)', display: 'flex', flexDirection: 'column',
+          boxShadow: isMobile ? '0 -24px 60px rgba(0,0,0,0.28)' : '-24px 0 60px rgba(0,0,0,0.25)',
+          overflow: 'hidden',
+        }}>
+        {isMobile && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '9px 0 3px', flexShrink: 0, background: type.color }}>
+            <div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.45)' }} />
+          </div>
+        )}
 
         {/* Colour banner header */}
         <div style={{ background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, padding: '22px 22px 18px', flexShrink: 0, position: 'relative' }}>
@@ -962,7 +995,7 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
           )}
 
           {/* Key facts as a compact 2-up grid rather than one row each */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10, marginBottom: 14 }}>
             <Fact icon="📅" label="Date" value={dateLabel} />
             <Fact icon="🕐" label="Time" value={timeLabel} />
             <Fact icon="📍" label="Location" value={session.location} />
@@ -1046,8 +1079,13 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
           )}
         </div>
 
-        {/* Footer */}
-        <div style={{ padding: '16px 22px', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 8, flexShrink: 0, background: 'var(--surface, #fff)' }}>
+        {/* Footer — the sheet is fixed-position, so it sits outside the app
+            shell's own safe-area padding and has to add its own or the buttons
+            fall under the home indicator. */}
+        <div style={{
+          padding: isMobile ? '14px 18px calc(14px + env(safe-area-inset-bottom, 0px))' : '16px 22px',
+          borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 8, flexShrink: 0, background: 'var(--surface, #fff)',
+        }}>
           {onVolunteers && (
             <button onClick={() => { onVolunteers(session); onClose() }} style={{ padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}><Icon name="❤️" /> Volunteers</button>
           )}
@@ -1599,6 +1637,7 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
 
 // Compact summary strip — sits BELOW the sessions, not above them.
 function InsightsStrip({ completed, attendancePct, noShows, reached }) {
+  const isMobile = useIsMobile()
   const items = [
     { v: completed, l: 'Sessions' },
     { v: `${attendancePct}%`, l: 'Attendance' },
@@ -1610,9 +1649,17 @@ function InsightsStrip({ completed, attendancePct, noShows, reached }) {
       <div style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: 0.8, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 10 }}>
         Session summary · last 7 days
       </div>
-      <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap' }}>
+      {/* A wrapping flex row broke into a ragged 2-then-1-then-1 on a phone,
+          because "Young people reached" is far wider than the other three. An
+          even 2x2 grid keeps the four readable as a set. */}
+      <div style={{
+        display: isMobile ? 'grid' : 'flex',
+        gridTemplateColumns: isMobile ? 'minmax(0,1fr) minmax(0,1fr)' : undefined,
+        gap: isMobile ? 14 : 26,
+        flexWrap: 'wrap',
+      }}>
         {items.map(i => (
-          <div key={i.l}>
+          <div key={i.l} style={{ minWidth: 0 }}>
             <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', lineHeight: 1.1 }}>{i.v}</div>
             <div style={{ fontSize: 11, color: '#64748B', fontWeight: 600, marginTop: 2 }}>{i.l}</div>
           </div>
@@ -2375,21 +2422,47 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             ))}
           </div>
         ) : (
-          /* WEEK VIEW — unchanged behaviour */
-          <div style={{ overflowX: 'auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(7, minmax(${isTablet ? 100 : 140}px, 1fr))`, gap: isTablet ? 6 : 10, minWidth: isTablet ? 736 : 980 }}>
+          /* WEEK VIEW.
+             Seven columns is a desktop shape. On a phone it was a 980px
+             horizontal scroll showing about two and a half days at a time, so
+             the one thing this view exists for — seeing the shape of a week and
+             spotting the empty days — was the one thing you could not do.
+             Mobile stacks the same seven days vertically instead: still every
+             day, still the "+ Add" on the empty ones, just read downwards. */
+          <div style={{ overflowX: isMobile ? 'visible' : 'auto' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : `repeat(7, minmax(${isTablet ? 100 : 140}px, 1fr))`,
+              gap: isMobile ? 14 : isTablet ? 6 : 10,
+              minWidth: isMobile ? 0 : isTablet ? 736 : 980,
+            }}>
               {weekDays.map(day => {
                 const dateStr = format(day, 'yyyy-MM-dd')
                 const daySessions = displayed.filter(s => s.session_date === dateStr)
                 const isToday = isSameDay(day, new Date())
                 return (
                   <div key={dateStr}>
-                    <div style={{ textAlign: 'center', padding: '10px 0 12px', borderBottom: `3px solid ${isToday ? primary : '#E5E7EB'}`, marginBottom: 10 }}>
-                      <div style={{ fontSize: 13, fontWeight: isToday ? 900 : 700, color: isToday ? primary : '#111' }}>{format(day, 'EEE d')}</div>
-                      <div style={{ fontSize: 10, color: '#6B7280', fontWeight: 600, marginTop: 2 }}>{daySessions.length} session{daySessions.length !== 1 ? 's' : ''}</div>
+                    {/* Centred column heading on desktop; a left-aligned section
+                        header with the count trailing on mobile, which is how a
+                        vertical list is read. */}
+                    <div style={{
+                      display: isMobile ? 'flex' : 'block',
+                      alignItems: 'baseline', justifyContent: 'space-between', gap: 8,
+                      textAlign: isMobile ? 'left' : 'center',
+                      padding: isMobile ? '0 2px 8px' : '10px 0 12px',
+                      borderBottom: `${isMobile ? 2 : 3}px solid ${isToday ? primary : '#E5E7EB'}`,
+                      marginBottom: 10,
+                    }}>
+                      <div style={{ fontSize: isMobile ? 14.5 : 13, fontWeight: isToday ? 900 : 700, color: isToday ? primary : '#111' }}>
+                        {format(day, isMobile ? 'EEEE d MMM' : 'EEE d')}{isMobile && isToday ? ' · Today' : ''}
+                      </div>
+                      <div style={{ fontSize: isMobile ? 11.5 : 10, color: '#6B7280', fontWeight: 600, marginTop: isMobile ? 0 : 2, whiteSpace: 'nowrap' }}>{daySessions.length} session{daySessions.length !== 1 ? 's' : ''}</div>
                     </div>
                     {daySessions.length === 0 ? (
-                      <button onClick={() => openNew(dateStr)} style={{ width: '100%', border: '1.5px dashed #E5E7EB', borderRadius: 12, background: 'none', padding: '24px 0', cursor: 'pointer', color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>+ Add</button>
+                      /* Seven tall dashed boxes stacked up is a lot of screen
+                         spent saying "nothing here", so the empty state is a
+                         slim row on mobile — still a 44px target. */
+                      <button onClick={() => openNew(dateStr)} style={{ width: '100%', border: '1.5px dashed #E5E7EB', borderRadius: 12, background: 'none', padding: isMobile ? '13px 0' : '24px 0', minHeight: isMobile ? 44 : 0, cursor: 'pointer', color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>+ Add</button>
                     ) : daySessions.map(s => {
                       const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
                       const vc = volCounts[s.id] || 0
@@ -2407,10 +2480,13 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                               {covered ? `✓ ${vc}/${needed} vols` : `⚠ ${vc}/${needed} vols`}
                             </div>
                           )}
-                          <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
-                            <button onClick={e => { e.stopPropagation(); setSelectedSession(s) }} style={{ flex: 1, border: 'none', background: type.color + '20', borderRadius: 7, padding: '4px 0', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: type.color }}><Icon name="❤️" /> Vols</button>
-                            <button onClick={e => { e.stopPropagation(); setEditing(s); setView('wizard') }} style={{ border: 'none', background: '#F9FAFB', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}><Icon name="✏️" /></button>
-                            <button onClick={e => { e.stopPropagation(); handleDelete(s.id) }} style={{ border: 'none', background: '#FFF0F0', borderRadius: 7, width: 26, height: 26, cursor: 'pointer' }}><Icon name="🗑" /></button>
+                          {/* 26px squares are half the 44px minimum this project
+                              sets for touch, and Edit sat directly beside Delete
+                              at that size. Both grow on mobile. */}
+                          <div style={{ display: 'flex', gap: isMobile ? 8 : 4, marginTop: 8 }}>
+                            <button onClick={e => { e.stopPropagation(); setSelectedSession(s) }} style={{ flex: 1, border: 'none', background: type.color + '20', borderRadius: isMobile ? 10 : 7, padding: isMobile ? '10px 0' : '4px 0', minHeight: isMobile ? 44 : 0, cursor: 'pointer', fontSize: isMobile ? 12.5 : 11, fontWeight: 800, color: type.color }}><Icon name="❤️" /> Vols</button>
+                            <button aria-label="Edit session" onClick={e => { e.stopPropagation(); setEditing(s); setView('wizard') }} style={{ border: 'none', background: '#F9FAFB', borderRadius: isMobile ? 10 : 7, width: isMobile ? 44 : 26, height: isMobile ? 44 : 26, cursor: 'pointer' }}><Icon name="✏️" /></button>
+                            <button aria-label="Delete session" onClick={e => { e.stopPropagation(); handleDelete(s.id) }} style={{ border: 'none', background: '#FFF0F0', borderRadius: isMobile ? 10 : 7, width: isMobile ? 44 : 26, height: isMobile ? 44 : 26, cursor: 'pointer' }}><Icon name="🗑" /></button>
                           </div>
                         </div>
                       )
