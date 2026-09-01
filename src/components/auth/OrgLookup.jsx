@@ -40,24 +40,35 @@ export default function OrgLookup() {
 
   const norm = (v) => (v || '').toLowerCase().replace(/-/g, ' ').trim()
 
-  // Two characters minimum. A single letter would list most of the tenant
-  // directory to anyone idly typing, which is a different thing from helping
-  // somebody who knows their own organisation's name.
-  const computeSuggestions = (raw) => {
+  // Ranked matches for a query: exact, then prefix, then substring. Shared by
+  // the suggestion dropdown and the submit handler so the two can never
+  // disagree about whether an organisation exists -- submitting used to
+  // require an exact name, which told people "No organisation found" while
+  // their organisation was sitting in the dropdown directly below.
+  const rankMatches = (list, raw) => {
     const q = norm(raw)
-    if (q.length < 2 || !allOrgs) return []
+    if (!q || !list) return []
 
     const scored = []
-    for (const o of allOrgs) {
+    for (const o of list) {
       const name = norm(o.name)
       const slug = norm(o.slug)
       // Prefix beats substring, so typing "sol" puts Solidarity Sports at the
       // top rather than something that merely contains the letters.
-      if (name.startsWith(q) || slug.startsWith(q)) scored.push([0, o])
-      else if (name.includes(q) || slug.includes(q)) scored.push([1, o])
+      if (name === q || slug === q) scored.push([0, o])
+      else if (name.startsWith(q) || slug.startsWith(q)) scored.push([1, o])
+      else if (name.includes(q) || slug.includes(q)) scored.push([2, o])
     }
     scored.sort((a, b) => a[0] - b[0] || norm(a[1].name).localeCompare(norm(b[1].name)))
-    return scored.slice(0, 6).map(x => x[1])
+    return scored.map(x => x[1])
+  }
+
+  // Two characters minimum. A single letter would list most of the tenant
+  // directory to anyone idly typing, which is a different thing from helping
+  // somebody who knows their own organisation's name.
+  const computeSuggestions = (raw) => {
+    if (norm(raw).length < 2 || !allOrgs) return []
+    return rankMatches(allOrgs, raw).slice(0, 6)
   }
 
   // autoFocus means somebody can be mid-word before the list arrives. Without
@@ -114,10 +125,9 @@ export default function OrgLookup() {
 
     const normalizedQuery = norm(orgName)
 
-    // Exact match only (hyphens treated as spaces). Uses the public-safe
-    // view (name/slug/logo/colours only) instead of the base table --
-    // status filtering (active/trial) is already baked into the view.
-    // Prefetched on mount; re-read here only if that hasn't landed yet.
+    // Uses the public-safe view (name/slug/logo/colours only) instead of the
+    // base table -- status filtering (active/trial) is already baked into the
+    // view. Prefetched on mount; re-read here only if that hasn't landed yet.
     let orgs = allOrgs
     if (!orgs) {
       const { data } = await supabase.from('organisations_public').select('*')
@@ -128,7 +138,16 @@ export default function OrgLookup() {
     setLoading(false)
     setSuggestions([])
 
-    const matches = orgs.filter(o => norm(o.name) === normalizedQuery || norm(o.slug) === normalizedQuery)
+    // An exact name wins outright -- someone who typed their organisation in
+    // full should not be handed a chooser. Otherwise fall back to the same
+    // ranking the dropdown uses, so a partial name resolves instead of
+    // erroring. Below two characters only an exact match counts, matching the
+    // dropdown's own floor: "a" must not return half the tenant directory.
+    const ranked = normalizedQuery.length >= 2 ? rankMatches(orgs, orgName) : []
+    const exact = orgs.filter(o => norm(o.name) === normalizedQuery || norm(o.slug) === normalizedQuery)
+    // Capped for the same reason the dropdown is: a very broad query should
+    // narrow the name, not scroll a list of every organisation it touched.
+    const matches = exact.length ? exact : ranked.slice(0, 8)
 
     if (matches.length === 1) {
       setOrg(matches[0])
@@ -194,8 +213,8 @@ export default function OrgLookup() {
 
         {step === 'found' && (
           <div style={{ textAlign: 'center', marginBottom: 22 }}>
-            <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: -0.8, lineHeight: 1.18, color: '#fff' }}>Welcome back!</div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 8, fontWeight: 500 }}>Find your organisation to continue</div>
+            <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: -0.8, lineHeight: 1.18, color: '#fff' }}>We found your workspace</div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 8, fontWeight: 500 }}>Check this looks right, then continue</div>
           </div>
         )}
 

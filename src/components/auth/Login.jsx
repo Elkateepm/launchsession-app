@@ -371,6 +371,17 @@ export default function Login({ org }) {
               </div>
               {errBox}
               <form onSubmit={handleLogin}>
+                {/* Password managers pair a saved credential with a username
+                    field inside the same form. The email was collected on the
+                    previous step, so without this the manager can neither
+                    offer the saved password nor save a new one -- every
+                    returning user had to type it by hand. Visually hidden
+                    rather than display:none, which some managers skip. */}
+                <input
+                  type="email" value={email} readOnly tabIndex={-1} aria-hidden="true"
+                  autoComplete="username"
+                  style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, border: 0, overflow: 'hidden', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', whiteSpace: 'nowrap' }}
+                />
                 <div style={{ marginBottom: 16, position: 'relative' }}>
                   <label style={label}>Password</label>
                   <input className="ls-in" type={showPassword ? 'text' : 'password'} value={password}
@@ -393,7 +404,7 @@ export default function Login({ org }) {
                 </label>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 16 }}>
-                  <span style={{ fontSize: 13 }}><Icon name="🔒" /></span>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', display: 'flex' }}><Icon name="🔒" /></span>
                   <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>You'll stay signed in on this device</span>
                 </div>
               )}
@@ -408,7 +419,7 @@ export default function Login({ org }) {
               <button onClick={() => { setStep(STEPS.EMAIL); setError(''); setForgotSent(false) }} style={backLink}><Icon name="←" /> Back</button>
               {forgotSent ? (
                 <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                  <div style={{ fontSize: 40, marginBottom: 16 }}><Icon name="📬" /></div>
+                  <div style={{ fontSize: 40, marginBottom: 16, color: primary }}><Icon name="📬" /></div>
                   <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Reset link sent</div>
                   <div style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>Check your email at <strong style={{ color: '#fff' }}>{email}</strong> for a password reset link.</div>
                 </div>
