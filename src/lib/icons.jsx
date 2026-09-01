@@ -55,6 +55,7 @@ const ICONS = {
   templates: Files,
   // Chrome
   home: Home, today: Zap, settings: Settings, branding: Palette,
+  team: UsersRound,
   add: Plus, search: Search, bell: Bell, help: CircleHelp,
   signout: LogOut, chevron: ChevronRight,
   // Register tools

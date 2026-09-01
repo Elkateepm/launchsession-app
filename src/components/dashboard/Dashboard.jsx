@@ -33,6 +33,7 @@ import ImpactOutcomes from '../impact/ImpactOutcomes'
 import Fundraising from '../fundraising/Fundraising'
 import FundraisingGate from '../fundraising/FundraisingGate'
 import HR from '../hr/HRCentre'
+import TeamCentre from '../team/TeamCentre'
 import Payments from '../payments/Payments'
 import ResourceCentre from '../resources/ResourceCentre'
 import MobileBottomNav from './mobilenav/MobileBottomNav'
@@ -502,9 +503,7 @@ export default function Dashboard({ session, org }) {
     try {
       const fromUrl = new URLSearchParams(window.location.search).get('tab')
       const resolved = fromUrl || sessionStorage.getItem('ls_dashboard_tab') || 'home'
-      // 'team' was Staff & Volunteers, now part of HR. Applied here as well as
-      // in handleSetTab so a bookmarked link resolves on first paint.
-      return resolved === 'team' ? 'hr' : resolved
+      return resolved
     } catch (e) { return 'home' }
   })
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -559,13 +558,13 @@ export default function Dashboard({ session, org }) {
     } catch (e) { /* best-effort only — never block navigation on this */ }
   }
 
-  // 'team' was the Staff & Volunteers module, now consolidated into HR. The
-  // route is kept and redirected rather than removed, so existing bookmarks and
-  // ?tab=team links still land somewhere sensible.
   // case_management was merged into the Safeguarding Hub. The alias keeps
   // persisted tabs, push notification payloads and any bookmarked deep link
   // working rather than dropping the user on a blank screen.
-  const TAB_ALIASES = { team: 'hr', case_management: 'safeguarding' }
+  //
+  // 'team' used to alias to 'hr'. It is a screen of its own again -- account
+  // approvals, roles and module access -- so the alias is gone.
+  const TAB_ALIASES = { case_management: 'safeguarding' }
 
   // Which module governs each tab, for the per-member access layer. Tabs
   // absent from this map are ungoverned (Home, Today, Settings, Branding,
@@ -691,6 +690,9 @@ export default function Dashboard({ session, org }) {
 
   const userName = userProfile?.full_name || userEmail.split('@')[0]
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'owner'
+  // Managers can reach the Team tab -- approving people and setting module
+  // access is their job -- without gaining the admin-only screens.
+  const isManager = isAdmin || userProfile?.role === 'manager'
   const activeGroup = React.useMemo(() => groupContainingTab(tab), [tab])
 
   // Only offer creation of things this organisation actually has, and that this
@@ -699,7 +701,7 @@ export default function Dashboard({ session, org }) {
   // CREATE_ACTIONS carry their own ids, so they are matched to a hidden nav
   // entry by the tab they open rather than by id.
   const visibleOfficeTabs = React.useMemo(
-    () => visibleItems(OFFICE_TABS, { hasModule, isAdmin, moduleLevel, hiddenItems }),
+    () => visibleItems(OFFICE_TABS, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [org?.id, org?.modules, isAdmin, accessLevels, hiddenItems]
   )
@@ -709,7 +711,7 @@ export default function Dashboard({ session, org }) {
   // filtering as the sidebar above, rather than from a second hardcoded list
   // that has to be remembered whenever the nav changes -- see mobileNav.js.
   const mobileDock = React.useMemo(
-    () => dockDestinations({ hasModule, isAdmin, moduleLevel, hiddenItems })
+    () => dockDestinations({ hasModule, isAdmin, isManager, moduleLevel, hiddenItems })
       .map(d => ({ ...d, label: itemLabel(d, terms) })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [org?.id, org?.modules, isAdmin, terms, accessLevels, hiddenItems]
@@ -717,7 +719,7 @@ export default function Dashboard({ session, org }) {
 
   const mobileMoreSections = React.useMemo(
     () => moreSections(
-      { hasModule, isAdmin, moduleLevel, hiddenItems },
+      { hasModule, isAdmin, isManager, moduleLevel, hiddenItems },
       { exclude: mobileDock.map(d => d.tab), officeTabCount: visibleOfficeTabs.length },
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -744,7 +746,7 @@ export default function Dashboard({ session, org }) {
   }, [hiddenItems])
 
   const createActions = React.useMemo(
-    () => visibleItems(CREATE_ACTIONS, { hasModule, isAdmin, moduleLevel, hiddenItems: createHiddenTabs })
+    () => visibleItems(CREATE_ACTIONS, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems: createHiddenTabs })
       .map(a => ({ ...a, label: a.label || `${a.labelPrefix || ''}${terms[a.termKey] || ''}`.trim() })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [org?.id, org?.modules, isAdmin, terms, accessLevels, createHiddenTabs]
@@ -858,7 +860,7 @@ export default function Dashboard({ session, org }) {
         <div className="sb-nav" style={{ flex: 1, padding: '0 8px 8px', overflowY: 'auto' }}>
 
           {NAV_SECTIONS.map(section => {
-            const items = visibleItems(section.items, { hasModule, isAdmin, moduleLevel, hiddenItems })
+            const items = visibleItems(section.items, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems })
             if (!items.length) return null
             return (
               <SidebarSection key={section.id} title={section.label} collapsed={sidebarCollapsed}>
@@ -881,7 +883,7 @@ export default function Dashboard({ session, org }) {
           <div style={{ height: 1, margin: '4px 12px 12px', background: 'rgba(255,255,255,0.06)' }} />
 
           {NAV_GROUPS.map(group => {
-            const items = visibleItems(group.items, { hasModule, isAdmin, moduleLevel, hiddenItems })
+            const items = visibleItems(group.items, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems })
             if (!items.length) return null
             const active = activeGroup === group.id
             return (
@@ -1060,6 +1062,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
           {/* Rendered inside Office below. */}
           {effectiveTab === 'settings'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'team'       && (isManager ? <TeamCentre org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Team" icon="👥" onNavigate={handleSetTab} />)}
           {effectiveTab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── DELIVERY PACK ── */}

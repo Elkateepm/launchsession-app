@@ -26,7 +26,11 @@ export default async function handler(req, res) {
 
     const { email, name, org_id, org_slug, redirect_to, role } = req.body || {}
     if (!email || !org_id) return res.status(400).json({ error: 'Missing email or org_id' })
-    const inviteRole = ['admin', 'staff', 'volunteer'].includes(role) ? role : 'volunteer'
+    // 'manager' has to be in this list. The Invite Staff dropdown offers it,
+    // and without it every manager invite was silently downgraded to volunteer
+    // -- which routes the person into the volunteer portal instead of the
+    // dashboard they were invited to.
+    const inviteRole = ['admin', 'manager', 'staff', 'volunteer'].includes(role) ? role : 'volunteer'
     const cleanEmail = email.trim().toLowerCase()
     const fullName = name || email.split('@')[0]
 

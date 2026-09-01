@@ -268,14 +268,61 @@ function useBiometricLock(userId) {
   return { locked, unlock }
 }
 
+// Shown to somebody whose account exists but has not been let in yet. The
+// approval decision is made by an admin or manager in the Team tab; until then
+// there is nothing here for them to do but wait or leave, so this screen offers
+// exactly those two things.
+function AwaitingApproval({ org, status, note, email }) {
+  const declined = status === 'declined'
+  const primary = org?.primary_color || '#1B9AAA'
+  return (
+    <div style={{
+      minHeight: '100dvh', background: '#0A0A1A', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', padding: 24, fontFamily: "'Plus Jakarta Sans', sans-serif",
+    }}>
+      <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
+        {org?.logo_url
+          ? <img src={org.logo_url} alt="" style={{ height: 72, objectFit: 'contain', marginBottom: 20 }} />
+          : <div style={{ fontSize: 44, marginBottom: 16 }}>{declined ? '🔒' : '⏳'}</div>}
+        <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 10 }}>
+          {declined ? 'This account was not approved' : 'Waiting for approval'}
+        </div>
+        <div style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, marginBottom: note ? 16 : 26 }}>
+          {declined
+            ? `${org?.name || 'Your organisation'} has declined access for ${email || 'this account'}. If you think that is a mistake, speak to your administrator.`
+            : `Your account is set up. An admin or manager at ${org?.name || 'your organisation'} needs to approve it before you can sign in — you will not need to do anything else once they have.`}
+        </div>
+        {note && (
+          <div style={{
+            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: 12, padding: '12px 14px', marginBottom: 26,
+            fontSize: 13.5, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, textAlign: 'left',
+          }}>{note}</div>
+        )}
+        <button
+          onClick={async () => {
+            try { await supabase.auth.signOut() } catch (e) { /* best effort */ }
+            redirectToSignIn()
+          }}
+          style={{
+            width: '100%', padding: 14, borderRadius: 12, border: 'none', background: primary,
+            color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >Sign out</button>
+      </div>
+    </div>
+  )
+}
+
 function AuthedApp({ session, org, onReady }) {
   const [onboardingDone, setOnboardingDone] = React.useState(null)
   const [userRole, setUserRole] = React.useState(null)
+  const [approval, setApproval] = React.useState(null)
   const { locked, unlock } = useBiometricLock(session?.user?.id)
 
   React.useEffect(() => {
     supabase.from('user_profiles')
-      .select('onboarding_complete, role')
+      .select('onboarding_complete, role, approval_status, approval_note')
       .eq('id', session.user.id)
       .maybeSingle()
       .then(async ({ data, error }) => {
@@ -294,6 +341,10 @@ function AuthedApp({ session, org, onReady }) {
 
         const role = data?.role || 'admin'
         setUserRole(role)
+        setApproval({
+          status: data?.approval_status || 'approved',
+          note: data?.approval_note || null,
+        })
         const isOwnerOrAdmin = role === 'owner' || role === 'admin'
         const orgAlreadyOnboarded = org?.onboarding_complete === true
         const needsOnboarding = !orgAlreadyOnboarded && (!data || (!data.onboarding_complete && isOwnerOrAdmin))
@@ -302,8 +353,8 @@ function AuthedApp({ session, org, onReady }) {
   }, [session.user.id, session.user.email, org?.id, org?.onboarding_complete])
 
   React.useEffect(() => {
-    if (onboardingDone !== null && userRole !== null && onReady) onReady()
-  }, [onboardingDone, userRole, onReady])
+    if (onboardingDone !== null && userRole !== null && approval !== null && onReady) onReady()
+  }, [onboardingDone, userRole, approval, onReady])
 
   // Gate before anything else renders, including the role redirects below --
   // otherwise a locked device would still bounce a volunteer into their portal.
@@ -322,7 +373,18 @@ function AuthedApp({ session, org, onReady }) {
     )
   }
 
-  if (onboardingDone === null || userRole === null) return null
+  if (onboardingDone === null || userRole === null || approval === null) return null
+
+  // Ahead of the role redirects below: an account still waiting on a decision
+  // must not be bounced into a portal either.
+  if (approval.status === 'pending' || approval.status === 'declined') {
+    return (
+      <AwaitingApproval
+        org={org} status={approval.status} note={approval.note}
+        email={session?.user?.email}
+      />
+    )
+  }
 
   // Volunteers must use the volunteer portal, not the main dashboard
   if (userRole === 'volunteer') {

@@ -131,10 +131,18 @@ describe('Office', () => {
   })
 
   it('takes Newsletter out of People', () => {
-    // People is the people themselves now: the young people and the
+    // People is the people themselves now: the young people, the team and the
     // volunteers. Writing to them is a desk job and sits with the other ones.
     const people = NAV_SECTIONS.find(s => s.label === 'People')
-    expect(people.items.map(i => i.id)).toEqual(['children', 'volunteers'])
+    expect(people.items.map(i => i.id)).toEqual(['children', 'team', 'volunteers'])
+  })
+
+  it('shows Team to managers as well as admins, and to nobody else', () => {
+    const team = NAV_SECTIONS.find(s => s.label === 'People').items.find(i => i.id === 'team')
+    const base = { hasModule: () => true, moduleLevel: () => 'edit', hiddenItems: [] }
+    expect(isItemVisible(team, { ...base, isAdmin: true })).toBe(true)
+    expect(isItemVisible(team, { ...base, isAdmin: false, isManager: true })).toBe(true)
+    expect(isItemVisible(team, { ...base, isAdmin: false, isManager: false })).toBe(false)
   })
 
   it('gates Newsletter on messaging, the module it is actually part of', () => {

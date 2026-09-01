@@ -168,37 +168,31 @@ export default function CreatePassword() {
       authData = signUpData
     }
 
-    const uid = authData?.user?.id || authData?.session?.user?.id
-    if (uid) {
-      const { error: profileErr } = await supabase.from('user_profiles').upsert([{
-        id: uid, org_id: invite.org_id,
-        email: invite.email, full_name: invite.full_name, role: invite.role || 'admin'
-      }], { onConflict: 'id' })
-      if (profileErr) {
-        // Without a profile the account has no organisation, so stopping here
-        // and leaving the invite pending is recoverable; continuing is not.
-        setError("We couldn't finish setting up your account. Please try again, or ask your organisation to resend the invite.")
-        setSaving(false)
-        return
-      }
-      // Accepting requires the token too -- a pending status alone used to be
-      // enough for anyone to mark any invite accepted.
-      //
-      // Ordered deliberately: the profile must exist before the invite is
-      // consumed. If acceptance fails the invite stays pending and can be
-      // retried; if it were the other way round a failure would burn the invite
-      // and leave the person with no account and no way back.
-      const { error: acceptErr } = await supabase.rpc('accept_invite_by_token', {
-        p_token: new URLSearchParams(window.location.search).get('token'),
-      })
-      if (acceptErr) {
-        setError("Your account was created, but we couldn't finish setting up the invite. Please sign in and contact your organisation.")
-        setSaving(false)
-        return
-      }
+    // The profile write and the invite acceptance both happen inside
+    // claim_invite_profile(), for two reasons. The role now comes from the
+    // invite row server-side rather than being posted by this screen, which is
+    // what a client should never get to decide. And the two writes are one
+    // statement, so an account can no longer end up existing with a consumed
+    // invite and no organisation.
+    //
+    // It needs a session, so sign in first rather than assuming signUp
+    // returned one.
+    const { data: signedIn, error: signInErr } =
+      await supabase.auth.signInWithPassword({ email: invite.email, password })
+    if (signInErr) {
+      setError("Your password was set, but we couldn't sign you in. Please try signing in directly.")
+      setSaving(false)
+      return
     }
 
-    await supabase.auth.signInWithPassword({ email: invite.email, password })
+    const uid = signedIn?.user?.id || authData?.user?.id || authData?.session?.user?.id
+
+    const { error: claimErr } = await supabase.rpc('claim_invite_profile', { p_token: token })
+    if (claimErr) {
+      setError("We couldn't finish setting up your account. Please try again, or ask your organisation to resend the invite.")
+      setSaving(false)
+      return
+    }
 
     setAuthedUserId(uid)
     setSaving(false)
@@ -318,8 +312,10 @@ export default function CreatePassword() {
             {step === 'done' && (
               <motion.div key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center', padding: '40px 28px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, backdropFilter: 'blur(18px)' }}>
                 <div style={{ fontSize: 56, marginBottom: 16 }}><Icon name="🎉" /></div>
-                <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', marginBottom: 8 }}>You're officially part of the crew!</div>
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>Taking you to your workspace...</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', marginBottom: 8 }}>All set — one last step</div>
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55 }}>
+                  Your account is ready. {orgName || 'Your organisation'} just needs to approve it before you can get in — we&apos;ll take you there now.
+                </div>
                 <div style={{ marginTop: 22, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 99, overflow: 'hidden' }}>
                   <motion.div initial={{ width: '0%' }} animate={{ width: '100%' }} transition={{ duration: 2.2, ease: 'linear' }} style={{ height: '100%', background: `linear-gradient(90deg, ${primary}, #6366F1)`, borderRadius: 99 }} />
                 </div>

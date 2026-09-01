@@ -30,9 +30,12 @@ export const NAV_SECTIONS = [
       // Label comes from the org's own terminology (People / Young People /
       // Members / Players), resolved at render.
       { id: 'children', label: null, termKey: 'People', icon: 'children', tab: 'children', accessKey: 'people' },
-      // Staff are managed in HR (Operations). Volunteers stay separate: they
-      // are a different relationship with different records, and merging them
-      // would recreate the ambiguity this consolidation removed.
+      // Team is who has an account: approvals, roles and module access. HR
+      // (Office) keeps the employment record -- contracts, DBS, leave -- and is
+      // a paid module an org may not have, which is why account administration
+      // does not live there. Volunteers stay separate: a different relationship
+      // with different records.
+      { id: 'team', label: 'Team', icon: 'team', tab: 'team', managerOnly: true },
       { id: 'volunteers', label: 'Volunteers', icon: 'volunteers', tab: 'volunteers', moduleKey: 'volunteers' },
     ],
   },
@@ -125,8 +128,12 @@ export const CREATE_ACTIONS = [
  * screen and its routes still exist, so upgrade prompts elsewhere and any
  * existing deep link continue to work.
  */
-export function isItemVisible(item, { hasModule, isAdmin, moduleLevel, hiddenItems }) {
+export function isItemVisible(item, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems }) {
   if (item.adminOnly && !isAdmin) return false
+  // Managers sit between staff and admin: they approve people and set module
+  // access, but cannot reach the admin-only screens. Admins pass this too --
+  // every admin is a manager for visibility purposes.
+  if (item.managerOnly && !(isManager || isAdmin)) return false
   // Switched off by the organisation in Settings > Display. Deliberately the
   // first check after the admin gate and entirely separate from modules: this
   // says "we don't use this", not "we can't". The route still resolves, so a
