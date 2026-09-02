@@ -916,14 +916,19 @@ function LogoUploadBox({ label, hint, previewSrc, fallback, transform, onFileCha
 function BrandKit({ name, slogan, color, secondaryColor, accentColor, font, logoUrl, iconUrl, isMobile }) {
   const [copied, setCopied] = React.useState(null)
 
+  // The clipboard API is refused outright in some embedded and in-app browsers.
+  // Swallowing that made the button look broken -- pressed, nothing happened,
+  // no explanation. The failure is now visible, and the full text sits in a
+  // selectable box below regardless, so a blocked clipboard is an
+  // inconvenience rather than a dead end.
   const copy = async (label, text) => {
     try {
       await navigator.clipboard.writeText(text)
       setCopied(label)
       setTimeout(() => setCopied(c => (c === label ? null : c)), 1600)
     } catch (e) {
-      // Clipboard is blocked in some embedded browsers; the value is on
-      // screen either way, so this is not worth an error state.
+      setCopied('failed')
+      setTimeout(() => setCopied(c => (c === 'failed' ? null : c)), 3000)
     }
   }
 
@@ -996,11 +1001,25 @@ function BrandKit({ name, slogan, color, secondaryColor, accentColor, font, logo
         background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700,
         cursor: 'pointer', fontFamily: 'inherit',
       }}>
-        {copied === 'sheet' ? 'Copied to clipboard' : 'Copy the whole kit as text'}
+        {copied === 'sheet' ? 'Copied to clipboard'
+          : copied === 'failed' ? 'Copying is blocked here — select the text below'
+          : 'Copy the whole kit as text'}
       </button>
+
+      {/* Shown always, not only as a fallback: this is the thing being sent to
+          a designer, and being able to read it before sending is the point. */}
+      <textarea
+        readOnly value={sheet} rows={7} onFocus={e => e.target.select()}
+        style={{
+          width: '100%', boxSizing: 'border-box', marginTop: 10, padding: '10px 12px',
+          borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)',
+          color: 'var(--text2)', fontSize: 12, lineHeight: 1.55, resize: 'vertical',
+          fontFamily: 'ui-monospace, monospace',
+        }}
+      />
       <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 8, lineHeight: 1.5 }}>
-        Paste it into an email to whoever is making your posters. Colours are given in hex
-        and RGB because print and web tools ask for different ones.
+        Send this to whoever is making your posters. Colours are given in hex and RGB because
+        print and web tools ask for different ones.
       </div>
     </>
   )
@@ -1166,17 +1185,27 @@ function BrandingSection({ org, refreshOrg }) {
       uploadIfNeeded(emailLogoFile, org?.email_logo_url, emailLogoRemoved, 'email-logo'),
     ])
 
-    const { error } = await supabase.from('organisations').update({
+    // .select() so a write that changed nothing can be told apart from one that
+    // worked. An UPDATE matching no row is not an error in PostgREST, so a save
+    // blocked by RLS -- most realistically an expired session -- ran straight
+    // down the success path and showed "Saved!" while storing nothing. The
+    // admin then navigates away and the work is gone.
+    const { data: savedRows, error } = await supabase.from('organisations').update({
       name, primary_color: color, secondary_color: secondaryColor, accent_color: accentColor,
       ui_density: uiDensity, brand_font: brandFont, login_background_style: loginBgStyle,
       slogan, logo_url: logoUrl, icon_url: iconUrl, logo_transform: logoTransform, icon_transform: iconTransform,
       login_background_url: loginBgUrl, welcome_message: welcomeMessage,
       email_logo_url: emailLogoUrl, email_footer_text: emailFooterText, email_sender_name: emailSenderName, recent_colors: recentColors,
-    }).eq('id', org?.id)
+    }).eq('id', org?.id).select('id')
 
     if (error) {
       setSaving(false)
       setSaveError(error.message || 'Something went wrong saving your branding. Please try again.')
+      return
+    }
+    if (!savedRows || savedRows.length === 0) {
+      setSaving(false)
+      setSaveError('Your branding was not saved. Your session may have expired — open LaunchSession in a new tab to check you are still signed in, then try again. Nothing you have typed here has been lost.')
       return
     }
 
