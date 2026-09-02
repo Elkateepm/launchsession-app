@@ -1150,7 +1150,7 @@ function BrandingSection({ org, refreshOrg }) {
       { done: secondaryColor.toUpperCase() !== '#0EA5E9', label: 'Set a secondary colour', section: 'colours' },
       { done: !!accentColor && accentColor.toUpperCase() !== '#F59E0B', label: 'Set an accent colour', section: 'colours' },
       { done: !!slogan, label: 'Add a strapline', section: 'identity' },
-      { done: !!welcomeMessage, label: 'Customise your login welcome message', section: 'login' },
+      { done: !!welcomeMessage, label: 'Add a welcome message for your team', section: 'login' },
       { done: !!emailLogoPreview, label: 'Upload an email logo', section: 'login' },
     ]
     const doneCount = checks.filter(c => c.done).length
@@ -1210,6 +1210,10 @@ function BrandingSection({ org, refreshOrg }) {
     setIconPreview(''); setIconFile(null); setIconRemoved(true); setIconTransform({ zoom: 100, x: 0, y: 0 })
     setLoginBgPreview(''); setLoginBgFile(null); setLoginBgRemoved(true)
     setEmailLogoPreview(''); setEmailLogoFile(null); setEmailLogoRemoved(true)
+    // These three were left behind: "Reset to default" restored the colours and
+    // logos and quietly kept the typeface, the sign-in treatment and the email
+    // sender name, so the workspace did not go back to how it shipped.
+    setBrandFont('default'); setLoginBgStyle('cover'); setEmailSenderName('')
   }
 
   const orgName = name || 'Your Organisation'
@@ -1541,13 +1545,26 @@ function BrandingSection({ org, refreshOrg }) {
               )}
 
               {previewTab === 'login' && (
-                <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB', background: loginBgPreview ? `url(${loginBgPreview}) center/cover` : '#060B18', padding: '32px 20px', textAlign: 'center', minHeight: 320 }}>
+                <div style={{
+                  borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB',
+                  padding: '32px 20px', textAlign: 'center', minHeight: 320,
+                  position: 'relative', fontFamily: fontByKey(brandFont).display,
+                  // Matches Login.jsx: the image only shows for 'cover' and
+                  // 'muted', and 'muted' sits at low opacity. Previewing the
+                  // raw image would promise something the real screen never
+                  // renders.
+                  background: (loginBgPreview && loginBgStyle !== 'tint')
+                    ? `linear-gradient(180deg, rgba(5,9,20,${loginBgStyle === 'cover' ? '0.82' : '0.6'}) 0%, rgba(5,9,20,${loginBgStyle === 'cover' ? '0.68' : '0.7'}) 45%, rgba(5,9,20,0.88) 100%), url(${loginBgPreview}) center/cover`
+                    : '#060B18',
+                }}>
                   <div style={{ width: 56, height: 56, borderRadius: uiDensity === 'compact' ? 6 : 14, margin: '0 auto 14px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0 8px 24px ${color}40` }}>
                     <img src={iconPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.85)', marginBottom: 4 }}>{orgName}</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>{slogan || 'Your tagline here'}</div>
-                  {welcomeMessage && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 16, fontStyle: 'italic' }}>{welcomeMessage}</div>}
+                  {/* The welcome message is shown on Home, not here. It used to
+                      be previewed on this screen, which promised a placement
+                      that does not exist. */}
                   <div style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${color}30`, borderRadius: uiDensity === 'compact' ? 6 : 14, padding: 18, textAlign: 'left' }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 12 }}>Sign in to {orgName}</div>
                     <div style={{ height: 30, borderRadius: uiDensity === 'compact' ? 4 : 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }} />
