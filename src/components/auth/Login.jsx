@@ -84,6 +84,20 @@ export default function Login({ org }) {
   const orgName = org?.name || 'LaunchSession'
   const hasOrg = !!org
 
+  // The sign-in background an organisation uploaded in Branding. This screen
+  // ignored it entirely before -- the field was collected, stored, and read by
+  // nothing, so the setting appeared to work and did not.
+  //
+  // 'cover' fills the screen behind a scrim; 'muted' sits it behind the
+  // starfield at low opacity; 'tint' keeps the default look. The scrim is not
+  // optional -- without one a bright photograph makes the white-on-dark form
+  // unreadable, and an organisation cannot be expected to pre-darken their own
+  // image before uploading it.
+  const bgUrl = org?.login_background_url || null
+  const bgStyle = org?.login_background_style || 'cover'
+  const showBg = !!bgUrl && bgStyle !== 'tint'
+  const fullBleed = showBg && bgStyle === 'cover'
+
   // Only offer the passkey route where it can actually work: a secure context
   // with a real platform authenticator. Offering it on a desktop Chrome with
   // no Touch ID would put a button there that always fails.
@@ -223,7 +237,25 @@ export default function Login({ org }) {
     }}>
       <style>{'@keyframes ls-tw { 0%,100%{opacity:.2} 50%{opacity:.85} } .ls-star{position:absolute;border-radius:50%;background:#fff} .ls-in:focus{border-color:' + primary + ' !important;background:rgba(255,255,255,0.07) !important}'}</style>
 
-      {/* Starfield */}
+      {showBg && (
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute', inset: 0, backgroundImage: `url(${bgUrl})`,
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            opacity: bgStyle === 'muted' ? 0.28 : 1,
+          }} />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: fullBleed
+              ? 'linear-gradient(180deg, rgba(5,9,20,0.82) 0%, rgba(5,9,20,0.68) 45%, rgba(5,9,20,0.88) 100%)'
+              : 'linear-gradient(180deg, rgba(5,9,20,0.55), rgba(5,9,20,0.75))',
+          }} />
+        </div>
+      )}
+
+      {/* Starfield. Dropped behind a full-bleed photograph, where it only adds
+          noise, but kept for the muted treatment and the default. */}
+      {!fullBleed && (
       <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
         {STARS.map((s, i) => (
           <span key={i} className="ls-star" style={{
@@ -232,12 +264,16 @@ export default function Login({ org }) {
           }} />
         ))}
       </div>
+      )}
 
-      {/* Planet horizon crests just above the card */}
+      {/* Planet horizon crests just above the card. Also dropped when the
+          organisation has supplied their own full-bleed image. */}
+      {!fullBleed && (
       <img src="/assets/planet-horizon.png" alt="" aria-hidden="true" style={{
         position: 'absolute', top: 200, left: '50%', transform: 'translateX(-50%)',
         width: 'min(780px, 172%)', pointerEvents: 'none', userSelect: 'none', zIndex: 0, opacity: 0.95,
       }} />
+      )}
 
       <div style={{
         width: '100%', maxWidth: 430, position: 'relative', zIndex: 1,

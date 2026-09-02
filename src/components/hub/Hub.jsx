@@ -3658,6 +3658,19 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 {getGreeting()}, {hubUserName.split(' ')[0]} <span style={{ display: 'inline-block', animation: 'lsWave 2.6s ease-in-out infinite', transformOrigin: '70% 70%' }}><Icon name="👋" /></span>
               </h1>
               <p style={{ margin: '7px 0 0', fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.62)' }}>{heroSummary}</p>
+              {/* The organisation's own welcome message, set in Branding. It
+                  was collected there and displayed nowhere, so the field
+                  looked like it worked and did not. Sits under the day
+                  summary rather than replacing it: the summary is operational
+                  and this is the organisation's voice. */}
+              {org?.welcome_message && (
+                <p style={{
+                  margin: '10px 0 0', fontSize: isMobile ? 12.5 : 13.5, lineHeight: 1.5,
+                  color: 'rgba(255,255,255,0.86)', fontWeight: 500,
+                  borderLeft: '2px solid rgba(255,255,255,0.28)', paddingLeft: 10,
+                  maxWidth: 520,
+                }}>{org.welcome_message}</p>
+              )}
             </div>
 
             {/* On phones this is a 2-column grid with the register CTA spanning

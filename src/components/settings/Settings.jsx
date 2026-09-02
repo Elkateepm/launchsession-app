@@ -17,6 +17,7 @@ import SignedImg from '../shared/SignedImg'
 import { signOne } from '../../lib/storageUrl'
 import Icon from '../../lib/icons'
 import { applyBrandPalette } from '../../lib/brandColors'
+import { BRAND_FONTS, DENSITIES, fontByKey, loadBrandFont, applyBrandTheme } from '../../lib/brandTheme'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -905,6 +906,106 @@ function LogoUploadBox({ label, hint, previewSrc, fallback, transform, onFileCha
   )
 }
 
+// The brand kit.
+//
+// Charities hand their branding to a volunteer designer, a print shop or a
+// funder's comms team -- people who will never have a LaunchSession login. The
+// point of this is to be copied out of: hex values that can be pasted into
+// Canva, and a one-page summary that can be sent on. Nothing here is generated
+// server-side, so there is no export job to wait for or fail.
+function BrandKit({ name, slogan, color, secondaryColor, accentColor, font, logoUrl, iconUrl, isMobile }) {
+  const [copied, setCopied] = React.useState(null)
+
+  const copy = async (label, text) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(label)
+      setTimeout(() => setCopied(c => (c === label ? null : c)), 1600)
+    } catch (e) {
+      // Clipboard is blocked in some embedded browsers; the value is on
+      // screen either way, so this is not worth an error state.
+    }
+  }
+
+  const swatches = [
+    ['Primary', color], ['Secondary', secondaryColor], ['Accent', accentColor],
+  ].filter(([, hex]) => !!hex)
+
+  const rgbOf = (hex) => {
+    const h = String(hex || '').replace('#', '')
+    if (h.length !== 6) return ''
+    const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16))
+    return `rgb(${r}, ${g}, ${b})`
+  }
+
+  const sheet = [
+    `${name || 'Organisation'} — brand`,
+    slogan ? `"${slogan}"` : null,
+    '',
+    ...swatches.map(([l, hex]) => `${l}: ${hex.toUpperCase()}  ${rgbOf(hex)}`),
+    '',
+    `Typeface: ${font.label}`,
+    logoUrl ? `Logo: ${logoUrl}` : null,
+    iconUrl ? `Icon: ${iconUrl}` : null,
+  ].filter(Boolean).join('\n')
+
+  return (
+    <>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
+        {swatches.map(([label, hex]) => (
+          <button key={label} onClick={() => copy(label, hex.toUpperCase())} style={{
+            textAlign: 'left', border: '1px solid var(--border)', borderRadius: 12,
+            overflow: 'hidden', cursor: 'pointer', background: 'var(--surface)', padding: 0,
+            minHeight: 44,
+          }}>
+            <div style={{ height: 54, background: hex }} />
+            <div style={{ padding: '8px 10px' }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)' }}>{label}</div>
+              <div style={{ fontSize: 11.5, color: 'var(--text3)', fontFamily: 'ui-monospace, monospace' }}>
+                {copied === label ? 'Copied' : hex.toUpperCase()}
+              </div>
+              <div style={{ fontSize: 10.5, color: 'var(--text4)', fontFamily: 'ui-monospace, monospace' }}>
+                {rgbOf(hex)}
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+        {[['Logo', logoUrl], ['Icon', iconUrl]].filter(([, u]) => !!u).map(([label, url]) => (
+          <a key={label} href={url} target="_blank" rel="noopener noreferrer" download style={{
+            display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', minHeight: 44,
+            border: '1px solid var(--border)', borderRadius: 10, textDecoration: 'none',
+            background: 'var(--surface)',
+          }}>
+            <span style={{
+              width: 30, height: 30, borderRadius: 7, background: '#fff', overflow: 'hidden',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              border: '1px solid var(--border)',
+            }}>
+              <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>Open {label.toLowerCase()}</span>
+          </a>
+        ))}
+      </div>
+
+      <button onClick={() => copy('sheet', sheet)} style={{
+        width: '100%', minHeight: 44, borderRadius: 10, border: '1.5px solid var(--border)',
+        background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700,
+        cursor: 'pointer', fontFamily: 'inherit',
+      }}>
+        {copied === 'sheet' ? 'Copied to clipboard' : 'Copy the whole kit as text'}
+      </button>
+      <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 8, lineHeight: 1.5 }}>
+        Paste it into an email to whoever is making your posters. Colours are given in hex
+        and RGB because print and web tools ask for different ones.
+      </div>
+    </>
+  )
+}
+
 function BrandingSection({ org, refreshOrg }) {
   const isMobile = useIsMobile()
   const [name, setName] = useState(org?.name || '')
@@ -917,6 +1018,8 @@ function BrandingSection({ org, refreshOrg }) {
   const [emailFooterText, setEmailFooterText] = useState(org?.email_footer_text || '')
   const [emailSenderName, setEmailSenderName] = useState(org?.email_sender_name || '')
   const [recentColors, setRecentColors] = useState(org?.recent_colors || [])
+  const [brandFont, setBrandFont] = useState(org?.brand_font || 'default')
+  const [loginBgStyle, setLoginBgStyle] = useState(org?.login_background_style || 'cover')
 
   const [logoPreview, setLogoPreview] = useState(org?.logo_url || '')
   const [logoFile, setLogoFile] = useState(null)
@@ -963,7 +1066,7 @@ function BrandingSection({ org, refreshOrg }) {
   // so people don't lose work by navigating away without noticing.
   const savedSnapshot = useRef(null)
   const currentSnapshot = () => JSON.stringify({
-    name, slogan, color, secondaryColor, accentColor, uiDensity,
+    name, slogan, color, secondaryColor, accentColor, uiDensity, brandFont, loginBgStyle,
     welcomeMessage, emailFooterText, emailSenderName,
     logoPreview, iconPreview, loginBgPreview, emailLogoPreview, logoTransform, iconTransform,
   })
@@ -981,6 +1084,19 @@ function BrandingSection({ org, refreshOrg }) {
   }, [isDirty])
 
   useEffect(() => { if (logoPreview) extractDominantColors(logoPreview).then(setLogoSuggestions) }, [logoPreview])
+
+  // Typeface and density are applied live to the whole screen while they are
+  // being chosen -- a swatch in a preview panel does not tell you whether a
+  // font is comfortable to read, and this is the app you will read it in.
+  // Reverted on unmount so backing out without saving does not leave the
+  // workspace in a theme nobody committed to.
+  useEffect(() => {
+    applyBrandTheme({ brand_font: brandFont, ui_density: uiDensity })
+  }, [brandFont, uiDensity])
+  useEffect(() => () => {
+    applyBrandTheme({ brand_font: org?.brand_font, ui_density: org?.ui_density })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const commitRecentColor = (hex) => {
     if (!hex || !/^#[0-9A-Fa-f]{6}$/i.test(hex)) return
@@ -1052,7 +1168,7 @@ function BrandingSection({ org, refreshOrg }) {
 
     const { error } = await supabase.from('organisations').update({
       name, primary_color: color, secondary_color: secondaryColor, accent_color: accentColor,
-      ui_density: uiDensity,
+      ui_density: uiDensity, brand_font: brandFont, login_background_style: loginBgStyle,
       slogan, logo_url: logoUrl, icon_url: iconUrl, logo_transform: logoTransform, icon_transform: iconTransform,
       login_background_url: loginBgUrl, welcome_message: welcomeMessage,
       email_logo_url: emailLogoUrl, email_footer_text: emailFooterText, email_sender_name: emailSenderName, recent_colors: recentColors,
@@ -1067,6 +1183,7 @@ function BrandingSection({ org, refreshOrg }) {
     // Same derivation as OrgContext, so the live preview cannot disagree
     // with what the app looks like after a reload.
     applyBrandPalette(color)
+    applyBrandTheme({ brand_font: brandFont, ui_density: uiDensity })
     {
       const faviconTarget = iconUrl || logoUrl || FALLBACK_LOGO_URL
       const bustedIcon = faviconTarget + (faviconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
@@ -1257,23 +1374,58 @@ function BrandingSection({ org, refreshOrg }) {
           </div>
 
           <div ref={appearanceRef} style={sectionWrapStyle('appearance')}>
-          <SettingCard title="Appearance" description="Choose how LaunchSession looks for your users.">
+          <SettingCard title="Typeface &amp; interface" description="Applied across the whole workspace, not just this page — change one and look around.">
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Typeface</div>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8, marginBottom: 20 }}>
+              {BRAND_FONTS.map(f => {
+                const on = brandFont === f.key
+                return (
+                  <button key={f.key}
+                    onMouseEnter={() => loadBrandFont(f.key)}
+                    onClick={() => { loadBrandFont(f.key); setBrandFont(f.key) }}
+                    style={{
+                      textAlign: 'left', padding: '12px 14px', borderRadius: 12, cursor: 'pointer',
+                      border: on ? `2px solid ${color}` : '1.5px solid var(--border)',
+                      background: on ? `${color}10` : 'var(--surface)', minHeight: 44,
+                    }}>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', fontFamily: f.display, lineHeight: 1.15 }}>
+                      {f.label}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3, fontFamily: f.body }}>
+                      {f.note}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Interface style</div>
             <div style={{ display: 'flex', gap: 8 }}>
-              {[{ k: 'rounded', i: '◠', l: 'Rounded' }, { k: 'compact', i: '▭', l: 'Compact' }].map(m => (
-                <button key={m.k} onClick={() => setUiDensity(m.k)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '14px 10px', borderRadius: 12, border: uiDensity === m.k ? `2px solid ${color}` : '1.5px solid var(--border)', background: uiDensity === m.k ? `${color}10` : 'var(--surface)', cursor: 'pointer' }}>
-                  <span style={{ fontSize: 18 }}>{m.i}</span>
-                  <span style={{ fontSize: 12.5, fontWeight: 700, color: uiDensity === m.k ? color : 'var(--text2)' }}>{m.l}</span>
+              {DENSITIES.map(m => (
+                <button key={m.key} onClick={() => setUiDensity(m.key)} style={{ flex: 1, textAlign: 'left', padding: '12px 14px', borderRadius: m.key === 'compact' ? 6 : 14, border: uiDensity === m.key ? `2px solid ${color}` : '1.5px solid var(--border)', background: uiDensity === m.key ? `${color}10` : 'var(--surface)', cursor: 'pointer', minHeight: 44 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: uiDensity === m.key ? color : 'var(--text2)' }}>{m.label}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{m.note}</div>
                 </button>
               ))}
             </div>
+            <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 10, lineHeight: 1.5 }}>
+              Each card here is drawn with its own corner radius, so the choice shows itself.
+            </div>
+          </SettingCard>
+
+          <SettingCard title="Brand kit" description="Everything a designer or printer needs, without them needing an account.">
+            <BrandKit
+              name={name} slogan={slogan} color={color} secondaryColor={secondaryColor}
+              accentColor={accentColor} font={fontByKey(brandFont)}
+              logoUrl={logoPreview} iconUrl={iconPreview} isMobile={isMobile}
+            />
           </SettingCard>
           </div>
 
           <div ref={loginRef} style={sectionWrapStyle('login')}>
           <SettingCard title="Login & Communications" description="Customise messages and visuals for key touchpoints.">
-            <Field label="Login welcome message" hint={`${welcomeMessage.length}/80`}>
-              <input style={inp} value={welcomeMessage} onChange={e => setWelcomeMessage(e.target.value.slice(0, 80))} placeholder="e.g. Welcome back! Sign in to continue making an impact." maxLength={80} />
+            <Field label="Welcome message" hint={`${welcomeMessage.length}/80 — shown on Home, under the daily summary`}>
+              <input style={inp} value={welcomeMessage} onChange={e => setWelcomeMessage(e.target.value.slice(0, 80))} placeholder="e.g. Thank you for everything you do for our young people." maxLength={80} />
             </Field>
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
               <div>
@@ -1288,6 +1440,26 @@ function BrandingSection({ org, refreshOrg }) {
                     {loginBgPreview && <button onClick={() => { setLoginBgPreview(''); setLoginBgFile(null); setLoginBgRemoved(true) }} style={{ padding: '6px 8px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🗑" /></button>}
                   </div>
                 </div>
+                {loginBgPreview && (
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>How it is used</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {[['cover', 'Full bleed'], ['muted', 'Behind the stars'], ['tint', 'Not used']].map(([k, l]) => (
+                        <button key={k} onClick={() => setLoginBgStyle(k)} style={{
+                          padding: '7px 11px', borderRadius: 999, minHeight: 40, cursor: 'pointer',
+                          border: loginBgStyle === k ? `2px solid ${color}` : '1.5px solid var(--border)',
+                          background: loginBgStyle === k ? `${color}10` : 'var(--surface)',
+                          fontSize: 11.5, fontWeight: 700,
+                          color: loginBgStyle === k ? color : 'var(--text2)',
+                        }}>{l}</button>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 7, lineHeight: 1.5 }}>
+                      A dark scrim always sits over the image. Sign-in text is white, and
+                      without one a bright photograph makes the form unreadable.
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Email header logo</div>

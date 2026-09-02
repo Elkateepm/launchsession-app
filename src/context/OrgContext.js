@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { getTerms } from '../lib/terminology'
 import { applyBrandPalette } from '../lib/brandColors'
+import { applyBrandTheme } from '../lib/brandTheme'
 
 // Shown as the tab favicon whenever the org hasn't set its own logo (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -108,6 +109,7 @@ export function OrgProvider({ children }) {
         setOrg(data)
         setNoOrg(false)
         applyBrandPalette(data.primary_color || '#1B9AAA')
+        applyBrandTheme(data)
         {
           const iconTarget = data.icon_url || data.logo_url || FALLBACK_LOGO_URL
           const bustedIcon = iconTarget + (iconTarget.includes('?') ? '&' : '?') + 't=' + Date.now()
@@ -137,6 +139,7 @@ export function OrgProvider({ children }) {
     if (data) {
       setOrg(data)
       applyBrandPalette(data.primary_color || '#1B9AAA')
+        applyBrandTheme(data)
       document.title = data.name || 'LaunchSession'
       {
         const iconTarget = data.icon_url || data.logo_url || FALLBACK_LOGO_URL
