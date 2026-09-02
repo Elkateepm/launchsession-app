@@ -347,7 +347,7 @@ export default function OrgLookup() {
               <div style={{
                 width: 88, height: 88, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 18px', border: `2px solid ${org.primary_color || '#8B5CF6'}`, boxShadow: `0 0 24px 2px ${org.primary_color || '#8B5CF6'}40`,
-                background: '#0B0F27', overflow: 'hidden',
+                background: '#fff', overflow: 'hidden',
               }}>
                 <img src={org.logo_url || FALLBACK_LOGO_URL} alt={org.name} style={{ width: '78%', height: '78%', objectFit: 'contain' }} />
               </div>

@@ -282,7 +282,14 @@ function AwaitingApproval({ org, status, note, email }) {
     }}>
       <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
         {org?.logo_url
-          ? <img src={org.logo_url} alt="" style={{ height: 72, maxWidth: '100%', objectFit: 'contain', marginBottom: 20 }} />
+          ? <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              background: '#fff', borderRadius: 18, padding: '12px 16px',
+              boxShadow: '0 10px 30px -18px rgba(0,0,0,0.9)',
+              maxWidth: '100%', marginBottom: 20,
+            }}>
+              <img src={org.logo_url} alt="" style={{ height: 60, maxWidth: '100%', objectFit: 'contain', display: 'block' }} />
+            </span>
           : <div style={{ fontSize: 44, marginBottom: 16 }}>{declined ? '🔒' : '⏳'}</div>}
         <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 10 }}>
           {declined ? 'This account was not approved' : 'Waiting for approval'}

@@ -11,6 +11,10 @@ const STEPS = { ROLE: 'role', EMAIL: 'email', PASSWORD: 'password', MAGIC: 'magi
 // with the product default as the fallback. Hardcoding it here meant the
 // brand font applied across the whole workspace except the screen every
 // user sees first.
+// The dark LaunchSession badge. Transparent, with its own ring, so it reads
+// on the dark sign-in background without any backing plate.
+const LS_BADGE_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/badge-logo.png'
+
 const font = "var(--font-display, 'Plus Jakarta Sans'), 'Plus Jakarta Sans', sans-serif"
 
 // Leaving an organisation has to clear BOTH keys. 'launchsession_org_slug' is
@@ -287,7 +291,9 @@ export default function Login({ org }) {
         {/* Brand */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           {org?.logo_url ? (
-            <img src={org.logo_url} alt={orgName} style={{ height: 92, maxWidth: '100%', objectFit: 'contain', marginBottom: 12 }} />
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: 18, padding: '12px 16px', boxShadow: '0 10px 30px -18px rgba(0,0,0,0.9)', maxWidth: '100%', marginBottom: 12 }}>
+              <img src={org.logo_url} alt={orgName} style={{ height: 76, maxWidth: '100%', objectFit: 'contain', display: 'block' }} />
+            </span>
           ) : (
             <img src="/logo.png" alt="LaunchSession" style={{ width: 146, height: 146, objectFit: 'contain', margin: '0 auto', display: 'block' }} />
           )}
@@ -312,19 +318,14 @@ export default function Login({ org }) {
 
           {step === STEPS.EMAIL && (
             <div>
-              <div style={{
-                width: 60, height: 60, borderRadius: '50%', margin: '0 auto 20px',
-                border: '1px solid ' + primary + '66', background: primary + '14',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 26px -6px ' + primary,
-              }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ width: 27, height: 27 }}>
-                  <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
-                  <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
-                  <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
-                  <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
-                </svg>
-              </div>
+              {/* The LaunchSession badge, not the old outline rocket. The badge
+                  carries its own ring and is drawn for a dark background, so it
+                  needs no circle or tint behind it -- those were there to give
+                  a bare stroke icon some presence. */}
+              <img
+                src={LS_BADGE_URL} alt="" aria-hidden="true"
+                style={{ width: 104, height: 104, objectFit: 'contain', display: 'block', margin: '0 auto 16px' }}
+              />
 
               <div style={{ textAlign: 'center', marginBottom: 26 }}>
                 <div style={{ fontSize: 27, fontWeight: 800, color: '#fff', letterSpacing: -0.6, marginBottom: 7 }}>Welcome back</div>
