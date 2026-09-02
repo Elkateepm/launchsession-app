@@ -259,14 +259,19 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
         </div>
       )}
 
-      {d.stage === 'investigation' && (
+      {/* Shown from the stage onwards, not only during it. A closed record has
+          to be readable in full -- an investigation that vanishes once the
+          case moves on is exactly what an audit needs to see. */}
+      {(d.stage === 'investigation' || inv) && (
         <Investigation org={org} caseId={caseId} inv={inv} primary={primary}
-          editable={editable} onChanged={load} onProceed={() => setStage('hearing', 'Proceeding to hearing')} />
+          editable={editable && d.stage === 'investigation'} onChanged={load}
+          onAdvance={(stage, note) => setStage(stage, note)} />
       )}
 
-      {d.stage === 'hearing' && (
+      {(d.stage === 'hearing' || hearings.length > 0) && (
         <Hearing org={org} caseId={caseId} hearings={hearings} primary={primary}
-          editable={editable} onChanged={load} onRecordOutcome={() => setPanel('outcome')} />
+          editable={editable && d.stage === 'hearing'} onChanged={load}
+          onRecordOutcome={() => setPanel('outcome')} />
       )}
 
       {(d.stage === 'outcome' || panel === 'outcome') && editable && !currentOutcome && (
@@ -388,7 +393,7 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
   )
 }
 
-function Investigation({ org, caseId, inv, primary, editable, onChanged, onProceed }) {
+function Investigation({ org, caseId, inv, primary, editable, onChanged, onAdvance }) {
   const [items, setItems] = useState({ evidence: [], witnesses: [], interviews: [] })
   const [panel, setPanel] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -412,6 +417,18 @@ function Investigation({ org, caseId, inv, primary, editable, onChanged, onProce
       org_id: org.id, disciplinary_case_id: caseId,
       started_on: todayLondon(), status: 'open',
     })
+    setBusy(false)
+    if (error) { setErr(error.message); return }
+    onChanged()
+  }
+
+  // A recommendation of 'further investigation' means the work continues, but
+  // concluding had set status to completed, which locks evidence entry. This
+  // is how it gets picked back up.
+  const reopen = async () => {
+    setBusy(true); setErr('')
+    const { error } = await supabase.from('disciplinary_investigations')
+      .update({ status: 'open', completed_on: null }).eq('id', inv.id)
     setBusy(false)
     if (error) { setErr(error.message); return }
     onChanged()
@@ -502,8 +519,17 @@ function Investigation({ org, caseId, inv, primary, editable, onChanged, onProce
             setBusy(false)
             if (error) { setErr(error.message); return }
             setPanel(null)
-            if (recommendation === 'proceed_to_hearing') onProceed()
-            else onChanged()
+            // Every recommendation needs somewhere to go. 'No case to answer'
+            // and informal action still require an outcome to be recorded and
+            // the case closed -- previously they stranded it here with no
+            // outcome panel and no close button.
+            if (recommendation === 'further_investigation') { onChanged(); return }
+            onAdvance(
+              recommendation === 'proceed_to_hearing' ? 'hearing' : 'outcome',
+              recommendation === 'proceed_to_hearing'
+                ? 'Proceeding to hearing'
+                : 'Investigation concluded — recording the outcome',
+            )
           }} />
       )}
 
@@ -515,7 +541,16 @@ function Investigation({ org, caseId, inv, primary, editable, onChanged, onProce
           </div>
           {inv.summary && <div style={{ fontSize: 13, color: '#64748B', marginTop: 6, whiteSpace: 'pre-wrap' }}>{inv.summary}</div>}
           {editable && inv.recommendation === 'proceed_to_hearing' && (
-            <button onClick={onProceed} style={{ ...pBtn(primary, false), marginTop: 10 }}>Proceed to hearing</button>
+            <button onClick={() => onAdvance('hearing', 'Proceeding to hearing')}
+              style={{ ...pBtn(primary, false), marginTop: 10 }}>Proceed to hearing</button>
+          )}
+          {editable && ['no_case_to_answer', 'informal_action'].includes(inv.recommendation) && (
+            <button onClick={() => onAdvance('outcome', 'Investigation concluded — recording the outcome')}
+              style={{ ...pBtn(primary, false), marginTop: 10 }}>Record the outcome</button>
+          )}
+          {editable && inv.recommendation === 'further_investigation' && (
+            <button onClick={reopen} disabled={busy}
+              style={{ ...pBtn(primary, busy), marginTop: 10 }}>Reopen the investigation</button>
           )}
         </div>
       )}

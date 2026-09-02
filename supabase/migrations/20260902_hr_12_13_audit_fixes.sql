@@ -1,0 +1,22 @@
+-- Applied as hr_12_close_remit_gaps and hr_13_compliance_missing_status_fix.
+--
+-- Found by auditing the module rather than by using it.
+--
+-- hr_12 — three write checks were weaker than their read checks, and one
+-- outright read leak:
+--   * staff_supervision_actions had no remit scoping on either side. Its
+--     parent staff_supervisions is remit-scoped, but the action lines hanging
+--     off it were readable by anyone in the organisation with HR access -- and
+--     an action is as revealing as the supervision it came from.
+--   * hr_cases and staff_offboarding dropped the remit test from with_check,
+--     so a manager could write a record for somebody they do not manage and
+--     then be unable to read it back.
+--
+-- hr_13 — a requirement explicitly recorded as NOT HELD read back as
+-- 'complete'. The CASE special-cased 'not_required' then fell through to the
+-- expiry logic; a 'missing' record has no expiry, and greatest(null,null) was
+-- read as "held and does not lapse". Marking a DBS as not held therefore
+-- reported that person compliant. Only a record whose status is 'complete' now
+-- counts as evidence, and its expiry is consulted only in that case.
+-- hr_needs_attention and hr_dashboard_stats were rebuilt unchanged (they
+-- depend on the replaced views).
