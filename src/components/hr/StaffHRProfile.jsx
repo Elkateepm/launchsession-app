@@ -10,6 +10,7 @@ import { ComplianceTab, TrainingTab } from './StaffCompliance'
 import StaffDocuments from './StaffDocuments'
 import { SupervisionTab, ProbationTab } from './StaffSupervision'
 import StaffAbsence from './StaffAbsence'
+import StaffOnboarding from './StaffOnboarding'
 import HRCasesTab from './HRCases'
 import DisciplinaryRecord from './DisciplinaryRecord'
 
@@ -60,6 +61,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
 
   const [staff, setStaff] = useState(null)
   const [compliance, setCompliance] = useState(null)
+  const [onboarding, setOnboarding] = useState(null)
   // Opening a disciplinary from a case takes over the tab body rather than
   // stacking a third overlay on an already-nested drawer.
   const [discId, setDiscId] = useState(null)
@@ -88,11 +90,13 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
       // The compliance summary is fetched here rather than by the Compliance
       // tab alone: the header chip and the Overview line both show it, and
       // they must not sit blank until somebody happens to open that tab.
-      const [rec, mgrs, comp] = await Promise.all([
+      const [rec, mgrs, comp, onb] = await Promise.all([
         supabase.from('hr_staff').select('*').eq('id', staffId).maybeSingle(),
         supabase.from('hr_staff').select('id, full_name').eq('org_id', org.id)
           .eq('is_active', true).order('full_name'),
         supabase.from('hr_staff_compliance_summary').select('*')
+          .eq('staff_id', staffId).maybeSingle(),
+        supabase.from('hr_onboarding_progress').select('*')
           .eq('staff_id', staffId).maybeSingle(),
       ])
       if (rec.error) throw rec.error
@@ -100,6 +104,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
       setManagers((mgrs.data || []).filter(m => m.id !== staffId))
       // A failed summary is not fatal -- the rest of the record still opens.
       setCompliance(comp.error ? null : comp.data)
+      setOnboarding(onb.error ? null : onb.data)
     } catch (e) {
       setError(e.message || 'Could not open this HR record.')
     } finally {
@@ -164,6 +169,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
   // empty screen is worse than one that is not there yet.
   const TABS = [
     ['overview', 'Overview'], ['employment', 'Employment'],
+    ['onboarding', 'Onboarding'],
     ['compliance', 'Compliance'], ['training', 'Training'],
     ['documents', 'Documents'], ['supervision', 'Supervision'],
     ['absence', 'Absence'], ['cases', 'HR cases'],
@@ -203,6 +209,9 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
           <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
             <Chip tone={chip.tone} bg={chip.bg}>{chip.label}</Chip>
             {empType && <Chip tone="#3730A3" bg="#EEF2FF">{empType.label}</Chip>}
+            {onboarding && onboarding.required_outstanding > 0 && (
+              <Chip tone="#93500A" bg="#FEF6E7">Onboarding {onboarding.percent}%</Chip>
+            )}
             {compliance && compliance.percent !== null && (
               <Chip
                 tone={compliance.overdue > 0 || compliance.missing > 0 ? '#B42318' : '#04713C'}
@@ -251,6 +260,13 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
               : null
           } />
           <Row label="Account" value={staff.user_id ? 'Linked to a LaunchSession login' : 'No login — HR record only'} />
+          <Row label="Onboarding" value={
+            onboarding
+              ? (onboarding.required_outstanding > 0
+                  ? `${onboarding.percent}% — ${onboarding.required_outstanding} required item(s) left`
+                  : 'Complete')
+              : 'Not started'
+          } />
           <Row label="Compliance" value={
             compliance
               ? (compliance.percent === null
@@ -267,6 +283,11 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
           canEdit={access.canEditEmployment}
           onSaved={(next) => setStaff(next)}
         />
+      )}
+
+      {activeTab === 'onboarding' && (
+        <StaffOnboarding org={org} staff={staff} primary={primary}
+          canEdit={access.canEdit} onJumpToTab={setTab} />
       )}
 
       {activeTab === 'compliance' && (

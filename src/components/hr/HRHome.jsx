@@ -51,6 +51,19 @@ export default function HRHome({ org, session, userProfile, onNavigate }) {
   const [openPerson, setOpenPerson] = useState(null)
   const [openTab, setOpenTab] = useState(null)
   const [inviting, setInviting] = useState(false)
+  // Held here rather than inside the tab so the count shows on the tab itself
+  // -- an approvals queue nobody can see the size of is one nobody works.
+  const [pendingCount, setPendingCount] = useState(0)
+
+  useEffect(() => {
+    if (!org?.id) return
+    let cancelled = false
+    supabase.from('user_profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', org.id).eq('approval_status', 'pending')
+      .then(({ count }) => { if (!cancelled) setPendingCount(count || 0) })
+    return () => { cancelled = true }
+  }, [org?.id, tab])
 
   if (access.loading) {
     return <div style={{ padding: 24, color: '#64748B', fontSize: 14 }}>Loading…</div>
@@ -75,6 +88,7 @@ export default function HRHome({ org, session, userProfile, onNavigate }) {
 
   const TABS = [
     ['overview', 'Overview'], ['people', 'People'],
+    ['approvals', pendingCount ? `Approvals (${pendingCount})` : 'Approvals'],
     ['compliance', 'Compliance'], ['absence', 'Absence'], ['outcomes', 'Outcomes'],
     ...(access.isAdmin ? [['audit', 'Audit']] : []),
   ]
@@ -118,6 +132,10 @@ export default function HRHome({ org, session, userProfile, onNavigate }) {
       {tab === 'people' && (
         <People org={org} primary={primary}
           onOpen={(person) => { setOpenPerson(person); setOpenTab(null) }} />
+      )}
+      {tab === 'approvals' && (
+        <Approvals org={org} primary={primary} canDecide={access.isManager}
+          onOpen={(person, t) => { setOpenPerson(person); setOpenTab(t || null) }} />
       )}
       {tab === 'compliance' && (
         <OrgCompliance org={org} primary={primary} isAdmin={access.isAdmin}
@@ -202,6 +220,10 @@ function Overview({ primary, onOpen }) {
         display: 'grid', gap: 10, marginBottom: 16,
         gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
       }}>
+        <Stat label="Awaiting approval" value={stats?.pending_approvals}
+          tone={stats && stats.pending_approvals > 0 ? '#B42318' : undefined}
+          hint={stats && stats.pending_approvals > 0 ? 'nobody can sign in until you do' : null} />
+        <Stat label="Onboarding to finish" value={stats?.onboarding_outstanding} hint="required items" />
         <Stat label="Active staff" value={stats?.active_staff} />
         <Stat label="Volunteers / sessional" value={stats?.volunteers_sessional} />
         <Stat label="Compliance" value={stats?.compliance_percent === null || stats?.compliance_percent === undefined ? null : stats.compliance_percent + '%'}
@@ -791,6 +813,143 @@ function OrgAbsence({ org, primary, onOpen }) {
             )}
           </div>
         </button>
+      ))}
+    </>
+  )
+}
+
+// Account approvals. Moved here from Team because approving somebody is the
+// first step of joining, not a membership setting -- and because the next
+// three things that follow it (employment record, onboarding checklist,
+// compliance) all live on this screen.
+//
+// Approving offers to open the person's HR record straight away rather than
+// leaving an approved account with nothing behind it, which is how a new
+// starter ends up invisible to HR until somebody remembers them.
+function Approvals({ org, primary, canDecide, onOpen }) {
+  const [rows, setRows] = useState(null)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(null)
+  const [note, setNote] = useState({})
+  const [justApproved, setJustApproved] = useState(null)
+
+  const load = useCallback(async () => {
+    setError('')
+    const { data, error: e } = await supabase.from('user_profiles')
+      .select('id, full_name, email, role, job_title, approval_status, created_at')
+      .eq('org_id', org.id).eq('approval_status', 'pending')
+      .order('created_at', { ascending: true })
+    if (e) { setError(e.message); setRows([]); return }
+    setRows(data || [])
+  }, [org?.id])
+
+  useEffect(() => { load() }, [load])
+
+  const decide = async (person, decision) => {
+    setBusy(person.id); setError('')
+    const { error: e } = await supabase.from('user_profiles')
+      .update({ approval_status: decision, approval_note: note[person.id] || null })
+      .eq('id', person.id)
+    setBusy(null)
+    if (e) { setError(e.message); return }
+    if (decision === 'approved') setJustApproved(person)
+    load()
+  }
+
+  // Creating the employment record and its checklist in one step, because an
+  // approved account with no HR record behind it is the gap this whole screen
+  // exists to close.
+  const startRecord = async (person) => {
+    setBusy(person.id); setError('')
+    const { data: staffId, error: e } = await supabase.rpc('hr_ensure_staff_record', { p_user_id: person.id })
+    if (e) { setBusy(null); setError(e.message); return }
+    const { error: e2 } = await supabase.rpc('hr_seed_onboarding', { p_staff_id: staffId })
+    setBusy(null)
+    if (e2) { setError(e2.message); return }
+    setJustApproved(null)
+    onOpen({ id: person.id, hr_staff_id: staffId, full_name: person.full_name }, 'onboarding')
+  }
+
+  if (rows === null) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading approvals…</div>
+
+  return (
+    <>
+      {error && (
+        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>{error}</div>
+      )}
+
+      {justApproved && (
+        <div style={{ ...card, background: '#E7F8ED', border: '1px solid #A7E7C1' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#04713C', marginBottom: 4 }}>
+            {justApproved.full_name || justApproved.email} approved
+          </div>
+          <div style={{ fontSize: 13, color: '#04713C', opacity: 0.9, lineHeight: 1.5, marginBottom: 12 }}>
+            They can sign in now. Open their HR record to set employment details and start
+            an onboarding checklist.
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button onClick={() => startRecord(justApproved)} disabled={busy === justApproved.id} style={{
+              minHeight: 44, padding: '0 16px', borderRadius: 11, border: 'none', background: primary,
+              color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+            }}>{busy === justApproved.id ? 'Setting up…' : 'Open record and start onboarding'}</button>
+            <button onClick={() => setJustApproved(null)} style={gBtn}>Later</button>
+          </div>
+        </div>
+      )}
+
+      {rows.length === 0 && (
+        <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5, lineHeight: 1.55 }}>
+          Nobody is waiting. New accounts appear here the moment someone finishes setting up
+          from an invite.
+        </div>
+      )}
+
+      {rows.map(p => (
+        <div key={p.id} style={card}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%', flexShrink: 0, background: primary,
+              color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 800, fontSize: 15,
+            }}>{(p.full_name || p.email || '?').slice(0, 1).toUpperCase()}</div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{p.full_name || p.email}</div>
+              <div style={{ fontSize: 12.5, color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.email}</div>
+            </div>
+            <span style={{ padding: '3px 10px', borderRadius: 99, background: '#FEF6E7', color: '#93500A', fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap' }}>
+              Awaiting approval
+            </span>
+          </div>
+          <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 10 }}>
+            Invited as {p.role}{p.created_at ? ` · signed up ${ukDate(p.created_at)}` : ''}
+          </div>
+          {canDecide ? (
+            <>
+              <input value={note[p.id] || ''} onChange={e => setNote(n => ({ ...n, [p.id]: e.target.value }))}
+                placeholder="Optional note (kept on their record)"
+                style={{
+                  width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
+                  border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
+                  background: '#fff', marginBottom: 10,
+                }} />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => decide(p, 'approved')} disabled={busy === p.id} style={{
+                  flex: 1, minHeight: 44, borderRadius: 11, border: 'none', background: primary,
+                  color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                }}>Approve</button>
+                <button onClick={() => decide(p, 'declined')} disabled={busy === p.id} style={{
+                  flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid #FECACA',
+                  background: '#fff', color: '#B42318', fontSize: 14, fontWeight: 800,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}>Decline</button>
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize: 13, color: '#64748B' }}>
+              Only an admin or manager can approve this account.
+            </div>
+          )}
+        </div>
       ))}
     </>
   )

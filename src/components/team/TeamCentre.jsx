@@ -69,7 +69,7 @@ function Pill({ children, tone = '#64748B', bg = '#F1F5F9' }) {
   )
 }
 
-export default function TeamCentre({ org, session, userProfile }) {
+export default function TeamCentre({ org, session, userProfile, onNavigate }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#3B82F6'
   const myRole = userProfile?.role
@@ -145,7 +145,6 @@ export default function TeamCentre({ org, session, userProfile }) {
 
   const TABS = [
     ['people', `Staff (${filtered.length})`],
-    ['pending', `Approvals${pending.length ? ` (${pending.length})` : ''}`],
     ['mail', 'Internal mail'],
   ]
 
@@ -158,17 +157,21 @@ export default function TeamCentre({ org, session, userProfile }) {
         </div>
       </div>
 
-      {pending.length > 0 && tab !== 'pending' && (
-        <button onClick={() => setTab('pending')} style={{
+      {pending.length > 0 && (
+        <button onClick={() => onNavigate && onNavigate('hr')} style={{
           width: '100%', textAlign: 'left', marginBottom: 12, cursor: 'pointer',
           background: '#FEF6E7', border: '1px solid #FCD9A5', borderRadius: 12,
           padding: '12px 14px', fontFamily: 'inherit', display: 'flex',
           alignItems: 'center', gap: 10, minHeight: 44,
         }}>
           <span style={{ color: '#93500A', display: 'flex' }}><Icon name="⚠️" /></span>
-          <span style={{ fontSize: 13.5, color: '#93500A', fontWeight: 700 }}>
+          <span style={{ fontSize: 13.5, color: '#93500A', fontWeight: 700, flex: 1, minWidth: 0 }}>
             {pending.length} {pending.length === 1 ? 'person is' : 'people are'} waiting for approval
+            <span style={{ display: 'block', fontWeight: 500, fontSize: 12.5, marginTop: 1 }}>
+              Approvals moved to HR &amp; Staff, where approving someone starts their record
+            </span>
           </span>
+          <span style={{ color: '#93500A', fontSize: 18, flexShrink: 0 }}>›</span>
         </button>
       )}
 
@@ -241,13 +244,6 @@ export default function TeamCentre({ org, session, userProfile }) {
         </>
       )}
 
-      {!loading && tab === 'pending' && (
-        <PendingList
-          pending={pending} primary={primary} canDecide={canDecide}
-          onDecide={decide} onOpen={setSelected}
-        />
-      )}
-
       {!loading && tab === 'mail' && (
         <InternalMail org={org} people={people} primary={primary} isMobile={isMobile} onFlash={flash} />
       )}
@@ -273,65 +269,6 @@ export default function TeamCentre({ org, session, userProfile }) {
       )}
     </div>
   )
-}
-
-function PendingList({ pending, primary, canDecide, onDecide, onOpen }) {
-  const [note, setNote] = useState({})
-
-  if (pending.length === 0) {
-    return (
-      <div style={{ ...card, color: '#64748B', fontSize: 14 }}>
-        Nobody is waiting. New accounts appear here the moment someone finishes
-        setting up from an invite.
-      </div>
-    )
-  }
-
-  return pending.map(p => (
-    <div key={p.id} style={card}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-        <Avatar person={p} primary={primary} />
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{p.full_name || p.email}</div>
-          <div style={{ fontSize: 12.5, color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.email}</div>
-        </div>
-        <Pill tone="#93500A" bg="#FEF6E7">Awaiting approval</Pill>
-      </div>
-      <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 10 }}>
-        Invited as {ROLE_LABELS[p.role] || p.role}
-        {p.created_at ? ` · signed up ${new Date(p.created_at).toLocaleDateString('en-GB')}` : ''}
-      </div>
-      {canDecide ? (
-        <>
-          <input
-            value={note[p.id] || ''} onChange={e => setNote(n => ({ ...n, [p.id]: e.target.value }))}
-            placeholder="Optional note (kept on their record)"
-            style={{ ...input, marginBottom: 10 }}
-          />
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => onDecide(p, 'approved', note[p.id])} style={{
-              flex: 1, minHeight: 44, borderRadius: 11, border: 'none', background: primary,
-              color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-            }}>Approve</button>
-            <button onClick={() => onDecide(p, 'declined', note[p.id])} style={{
-              flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid #FECACA',
-              background: '#fff', color: '#B42318', fontSize: 14, fontWeight: 800,
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}>Decline</button>
-            <button onClick={() => onOpen(p)} style={{
-              minHeight: 44, padding: '0 14px', borderRadius: 11, border: '1px solid #E2E8F0',
-              background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}>Open</button>
-          </div>
-        </>
-      ) : (
-        <div style={{ fontSize: 13, color: '#64748B' }}>
-          Only an admin or manager can approve this account.
-        </div>
-      )}
-    </div>
-  ))
 }
 
 function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRole, isSelf, onClose, onChanged, onFlash, onDecide, onOpenHR }) {

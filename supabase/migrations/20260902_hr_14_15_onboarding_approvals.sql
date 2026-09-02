@@ -1,0 +1,21 @@
+-- Applied as hr_14_onboarding_and_approvals and
+-- hr_15_approval_stamp_only_on_decision.
+--
+-- hr_14 — staff_onboarding_items had existed with RLS and no UI since the
+-- first HR migration. hr_seed_onboarding() builds a checklist from the
+-- person's employment type: a volunteer gets no contract and no Right to Work
+-- row, because offering those as unticked work is how a checklist teaches
+-- people to ignore it. Idempotent, so reopening a record does not duplicate.
+--
+-- Approvals moved from Team to HR, so pending_approvals and
+-- onboarding_outstanding joined hr_dashboard_stats. Deliberately NOT added to
+-- hr_needs_attention: every row in that view is about an hr_staff record, and
+-- somebody awaiting approval may not have one yet.
+--
+-- hr_onboarding_progress gives one answer for the profile header and any list.
+--
+-- hr_15 — the guard trigger stamped approved_by/approved_at on ANY change of
+-- approval_status, including a move back to 'pending'. That left "approved by
+-- Maria" on the record of somebody Maria had just un-approved. A decision is
+-- 'approved' or 'declined'; returning somebody to the waiting room withdraws
+-- the decision, so the stamp is cleared instead.

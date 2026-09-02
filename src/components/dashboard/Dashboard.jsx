@@ -1064,7 +1064,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
           {/* Rendered inside Office below. */}
           {effectiveTab === 'settings'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'team'       && (isManager ? <TeamCentre org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Team" icon="👥" onNavigate={handleSetTab} />)}
+          {effectiveTab === 'team'       && (isManager ? <TeamCentre org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} /> : <RestrictedModule label="Team" icon="👥" onNavigate={handleSetTab} />)}
           {effectiveTab === 'hr'         && (isManager
             ? (hasModule('hr')
                 ? <HR org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />
