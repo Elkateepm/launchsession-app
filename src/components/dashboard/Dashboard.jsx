@@ -32,7 +32,9 @@ import RiskAssessments from '../riskassessments/RiskAssessments'
 import ImpactOutcomes from '../impact/ImpactOutcomes'
 import Fundraising from '../fundraising/Fundraising'
 import FundraisingGate from '../fundraising/FundraisingGate'
-import HR from '../hr/HRCentre'
+// The HR module is now the HR home screen: dashboard, needs-attention, the
+// people directory and the audit trail. HRCentre remains for its invite modal.
+import HR from '../hr/HRHome' 
 import TeamCentre from '../team/TeamCentre'
 import Payments from '../payments/Payments'
 import ResourceCentre from '../resources/ResourceCentre'

@@ -759,7 +759,9 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
 
 // ------------------------------------------------------------------ invite
 
-function InviteStaffModal({ org, primary, onClose, onSent }) {
+// Exported so the HR home screen can offer the same invite flow rather than a
+// second, subtly different one.
+export function InviteStaffModal({ org, primary, onClose, onSent }) {
   const isMobile = useIsMobile()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')

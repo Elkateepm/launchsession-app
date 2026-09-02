@@ -1,0 +1,13 @@
+-- Applied as hr_11_needs_attention_and_stats.
+--
+-- hr_needs_attention is one security_invoker view whose branches are each
+-- filtered by the RLS already on their base tables. A manager sees their own
+-- remit and the disciplinary branches vanish entirely without hr_sensitive --
+-- there is no second copy of the permission rules here to fall out of step
+-- with the policies.
+--
+-- Every row carries entity_type/entity_id so the UI links to the record rather
+-- than dropping the user on a list to go hunting.
+--
+-- hr_dashboard_stats computes the cards from the same tables the screens read,
+-- so a card cannot disagree with the list behind it.

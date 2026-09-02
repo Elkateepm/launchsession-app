@@ -73,9 +73,17 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
   const load = useCallback(async () => {
     setLoading(true); setError('')
     try {
-      const { data: staffId, error: ensureErr } =
-        await supabase.rpc('hr_ensure_staff_record', { p_user_id: person.id })
-      if (ensureErr) throw ensureErr
+      // Two ways in. From Team we hold a user_profiles id and may need the
+      // employment record creating. From the HR directory we already hold the
+      // hr_staff id -- and must use it, because most staff have no login at
+      // all and there is no user_profiles row to resolve from.
+      let staffId = person.hr_staff_id || null
+      if (!staffId) {
+        const { data, error: ensureErr } =
+          await supabase.rpc('hr_ensure_staff_record', { p_user_id: person.id })
+        if (ensureErr) throw ensureErr
+        staffId = data
+      }
 
       // The compliance summary is fetched here rather than by the Compliance
       // tab alone: the header chip and the Overview line both show it, and
@@ -97,7 +105,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
     } finally {
       setLoading(false)
     }
-  }, [person.id, org?.id])
+  }, [person.id, person.hr_staff_id, org?.id])
 
   useEffect(() => { load() }, [load])
 
@@ -159,6 +167,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
     ['compliance', 'Compliance'], ['training', 'Training'],
     ['documents', 'Documents'], ['supervision', 'Supervision'],
     ['absence', 'Absence'], ['cases', 'HR cases'],
+    ...(access.isAdmin ? [['offboarding', 'Offboarding']] : []),
     // Disciplinary material is a separate grant. Someone without it does not
     // get a tab that would only ever be empty.
     ...(access.sensitiveView ? [['disciplinary', 'Disciplinary']] : []),
@@ -285,6 +294,11 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
         <ProbationTab org={org} staff={staff} primary={primary} canEdit={access.canEdit} />
       )}
 
+      {tab === 'offboarding' && (
+        <Offboarding org={org} staff={staff} primary={primary}
+          canEdit={access.canEditEmployment} onChanged={load} />
+      )}
+
       {tab === 'cases' && (
         discId
           ? <DisciplinaryRecord org={org} staff={staff} caseId={discId} primary={primary}
@@ -299,6 +313,181 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
           ? <DisciplinaryRecord org={org} staff={staff} caseId={discId} primary={primary}
               canEdit={access.sensitiveEdit} onBack={() => setDiscId(null)} />
           : <DisciplinaryList org={org} staff={staff} primary={primary} onOpen={setDiscId} />
+      )}
+    </>
+  )
+}
+
+const OFFBOARD_STEPS = [
+  ['leaving_confirmed', 'Leaving date confirmed'],
+  ['final_day', 'Final working day agreed'],
+  ['access_disabled', 'Access disabled'],
+  ['equipment_returned', 'Equipment returned'],
+  ['documents_complete', 'Documents completed'],
+  ['exit_meeting', 'Exit meeting held'],
+  ['payroll_notified', 'Payroll notified'],
+  ['retention_applied', 'Data retention applied'],
+]
+
+const OFFBOARD_REASONS = [
+  ['resignation', 'Resignation'], ['end_of_fixed_term', 'End of fixed-term contract'],
+  ['retirement', 'Retirement'], ['dismissal', 'Dismissal'],
+  ['redundancy', 'Redundancy'], ['volunteer_leaving', 'Volunteer leaving'],
+  ['other', 'Other'],
+]
+
+// Offboarding. Nobody is deleted -- the record is archived by moving the
+// employment status to 'left', which is what keeps a former staff member's
+// safeguarding and HR history answerable years later.
+function Offboarding({ org, staff, primary, canEdit, onChanged }) {
+  const [rec, setRec] = React.useState(undefined)
+  const [f, setF] = React.useState({ reason: 'resignation', leaving_date: '', final_working_date: '', exit_notes: '' })
+  const [busy, setBusy] = React.useState(false)
+  const [err, setErr] = React.useState('')
+
+  const load = React.useCallback(async () => {
+    const { data } = await supabase.from('staff_offboarding').select('*')
+      .eq('staff_id', staff.id).maybeSingle()
+    setRec(data || null)
+    if (data) setF({
+      reason: data.reason, leaving_date: data.leaving_date || '',
+      final_working_date: data.final_working_date || '', exit_notes: data.exit_notes || '',
+    })
+  }, [staff.id])
+  React.useEffect(() => { load() }, [load])
+
+  if (rec === undefined) {
+    return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading…</div>
+  }
+
+  const checklist = rec?.checklist || {}
+  const done = OFFBOARD_STEPS.filter(([k]) => checklist[k]).length
+
+  const save = async (patch) => {
+    setBusy(true); setErr('')
+    const body = {
+      org_id: org.id, staff_id: staff.id, reason: f.reason,
+      leaving_date: f.leaving_date || null,
+      final_working_date: f.final_working_date || null,
+      exit_notes: f.exit_notes.trim() || null,
+      checklist, ...patch,
+    }
+    const { error } = rec
+      ? await supabase.from('staff_offboarding').update(body).eq('id', rec.id)
+      : await supabase.from('staff_offboarding').insert(body)
+    if (error) { setBusy(false); setErr(error.message); return }
+    await supabase.rpc('hr_audit', {
+      p_entity_type: 'staff_offboarding', p_entity_id: rec?.id || null, p_staff_id: staff.id,
+      p_action: rec ? 'updated' : 'started', p_summary: 'Offboarding updated', p_metadata: null,
+    })
+    setBusy(false)
+    load(); onChanged()
+  }
+
+  const toggle = (k) => save({ checklist: { ...checklist, [k]: !checklist[k] } })
+
+  const complete = async () => {
+    setBusy(true); setErr('')
+    await save({ status: 'completed', completed_at: new Date().toISOString() })
+    const { error } = await supabase.from('hr_staff').update({
+      employment_status: 'left', is_active: false,
+      leaving_date: f.leaving_date || null,
+      status_changed_at: new Date().toISOString(),
+    }).eq('id', staff.id)
+    setBusy(false)
+    if (error) { setErr(error.message); return }
+    onChanged()
+  }
+
+  return (
+    <>
+      {!canEdit && (
+        <div style={{ ...card, background: '#F1F5F9', color: '#64748B', fontSize: 13, lineHeight: 1.5 }}>
+          Offboarding is recorded by an administrator.
+        </div>
+      )}
+
+      <div style={card}>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Leaving</div>
+        <div style={{ marginBottom: 12 }}>
+          <label style={lbl}>REASON</label>
+          <select value={f.reason} disabled={!canEdit}
+            onChange={e => setF(s => ({ ...s, reason: e.target.value }))}
+            style={{ ...field, minHeight: 44 }}>
+            {OFFBOARD_REASONS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+          </select>
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <label style={lbl}>LEAVING DATE</label>
+          <input type="date" value={f.leaving_date} disabled={!canEdit}
+            onChange={e => setF(s => ({ ...s, leaving_date: e.target.value }))} style={field} />
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <label style={lbl}>FINAL WORKING DAY</label>
+          <input type="date" value={f.final_working_date} disabled={!canEdit}
+            onChange={e => setF(s => ({ ...s, final_working_date: e.target.value }))} style={field} />
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <label style={lbl}>EXIT NOTES</label>
+          <textarea rows={3} value={f.exit_notes} disabled={!canEdit}
+            onChange={e => setF(s => ({ ...s, exit_notes: e.target.value }))}
+            style={{ ...field, resize: 'vertical', lineHeight: 1.5 }} />
+        </div>
+        {canEdit && (
+          <button onClick={() => save({})} disabled={busy} style={{
+            width: '100%', minHeight: 44, borderRadius: 11, border: 'none', background: primary,
+            color: '#fff', fontSize: 14, fontWeight: 800, cursor: busy ? 'default' : 'pointer',
+            fontFamily: 'inherit', opacity: busy ? 0.6 : 1,
+          }}>{busy ? 'Saving…' : rec ? 'Save' : 'Start offboarding'}</button>
+        )}
+      </div>
+
+      {rec && (
+        <div style={card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>Checklist</span>
+            <span style={{ fontSize: 13, color: '#64748B' }}>
+              {done} / {OFFBOARD_STEPS.length}
+            </span>
+          </div>
+          {OFFBOARD_STEPS.map(([k, l]) => (
+            <label key={k} style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0',
+              borderTop: '1px solid #F1F5F9', cursor: canEdit ? 'pointer' : 'default', minHeight: 44,
+            }}>
+              <input type="checkbox" checked={!!checklist[k]} disabled={!canEdit || busy}
+                onChange={() => toggle(k)}
+                style={{ width: 18, height: 18, accentColor: primary, flexShrink: 0 }} />
+              <span style={{ fontSize: 13.5, color: '#0F172A' }}>{l}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {err && (
+        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>
+          {err}
+        </div>
+      )}
+
+      {rec && canEdit && rec.status !== 'completed' && staff.employment_status !== 'left' && (
+        <div style={card}>
+          <button onClick={complete} disabled={busy} style={{
+            width: '100%', minHeight: 46, borderRadius: 12, border: 'none', background: '#0F172A',
+            color: '#fff', fontSize: 14.5, fontWeight: 800, cursor: busy ? 'default' : 'pointer',
+            fontFamily: 'inherit', opacity: busy ? 0.6 : 1,
+          }}>{busy ? 'Completing…' : 'Complete offboarding'}</button>
+          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 8, lineHeight: 1.45 }}>
+            Marks them as having left and removes them from active lists. Nothing is deleted —
+            their HR history stays readable.
+          </div>
+        </div>
+      )}
+
+      {staff.employment_status === 'left' && (
+        <div style={{ ...card, background: '#F3F2F7', color: '#5A5772', fontSize: 13, lineHeight: 1.5 }}>
+          {staff.full_name} has left. The record is archived and remains readable.
+        </div>
       )}
     </>
   )
