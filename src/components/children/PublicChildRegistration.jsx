@@ -210,7 +210,7 @@ export default function PublicChildRegistration() {
   return (
     <div style={{ minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`, padding: '28px 20px', color: '#fff', textAlign: 'center' }}>
-        {org.logo_url && <img src={org.logo_url} alt="" style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'cover', marginBottom: 10 }} />}
+        {org.logo_url && <img src={org.logo_url} alt="" style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'contain', background: '#fff', padding: 6, boxSizing: 'border-box', marginBottom: 10 }} />}
         <div style={{ fontSize: 20, fontWeight: 900 }}>{org.name}</div>
         <div style={{ fontSize: 13.5, opacity: 0.85, marginTop: 2 }}>Register a young person</div>
       </div>

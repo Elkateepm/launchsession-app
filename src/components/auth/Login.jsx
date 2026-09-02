@@ -287,7 +287,7 @@ export default function Login({ org }) {
         {/* Brand */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           {org?.logo_url ? (
-            <img src={org.logo_url} alt={orgName} style={{ height: 92, objectFit: 'contain', marginBottom: 12 }} />
+            <img src={org.logo_url} alt={orgName} style={{ height: 92, maxWidth: '100%', objectFit: 'contain', marginBottom: 12 }} />
           ) : (
             <img src="/logo.png" alt="LaunchSession" style={{ width: 146, height: 146, objectFit: 'contain', margin: '0 auto', display: 'block' }} />
           )}

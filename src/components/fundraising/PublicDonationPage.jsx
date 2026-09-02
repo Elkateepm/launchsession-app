@@ -73,7 +73,7 @@ export default function PublicDonationPage() {
         {/* org */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 22 }}>
           {page.org_logo_url
-            ? <img src={page.org_logo_url} alt="" style={{ width: 40, height: 40, borderRadius: 11, objectFit: 'cover' }} />
+            ? <img src={page.org_logo_url} alt="" style={{ width: 40, height: 40, borderRadius: 11, objectFit: 'contain', background: '#fff', padding: 4, boxSizing: 'border-box' }} />
             : <div style={{
                 width: 40, height: 40, borderRadius: 11, background: brand,
                 display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 800, fontSize: 16,

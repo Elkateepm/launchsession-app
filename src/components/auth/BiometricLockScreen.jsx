@@ -42,7 +42,7 @@ export default function BiometricLockScreen({ org, userName, onUnlocked, onSignO
       `}</style>
 
       {org?.logo_url ? (
-        <img src={org.logo_url} alt="" style={{ width: 62, height: 62, borderRadius: 16, objectFit: 'cover', marginBottom: 22 }} />
+        <img src={org.logo_url} alt="" style={{ width: 62, height: 62, borderRadius: 16, objectFit: 'contain', background: '#fff', padding: 6, boxSizing: 'border-box', marginBottom: 22 }} />
       ) : (
         <div style={{ width: 62, height: 62, borderRadius: 16, marginBottom: 22, background: `linear-gradient(135deg, ${primary}, var(--org-a60))` }} />
       )}

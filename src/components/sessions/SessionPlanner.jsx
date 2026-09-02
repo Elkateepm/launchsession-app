@@ -664,7 +664,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
             </motion.div>
             <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text, #111)', fontFamily: 'var(--font-display, sans-serif)' }}>Reflection saved!</div>
             <div style={{ fontSize: 13, color: 'var(--text3, #9CA3AF)', marginTop: 6 }}>Nice work capturing today's session.</div>
-            {org?.logo_url && <img src={org.logo_url} alt={org?.name || ''} style={{ height: 22, objectFit: 'contain', marginTop: 20, opacity: 0.7 }} />}
+            {org?.logo_url && <img src={org.logo_url} alt={org?.name || ''} style={{ height: 22, maxWidth: 160, objectFit: 'contain', marginTop: 20, opacity: 0.7 }} />}
           </div>
         ) : (
           <>

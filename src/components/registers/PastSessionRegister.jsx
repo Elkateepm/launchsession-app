@@ -135,7 +135,7 @@ export default function PastSessionRegister({
                 because a printed register should identify the organisation. */}
             {!isMobile && (
               <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                {org?.logo_url ? <img src={org.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>{(org?.name || 'L')[0]}</span>}
+                {org?.logo_url ? <img src={org.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#fff', padding: 4, boxSizing: 'border-box' }} /> : <span style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>{(org?.name || 'L')[0]}</span>}
               </div>
             )}
             <div>
