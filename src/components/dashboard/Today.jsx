@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useHrAttention } from '../../lib/hrAccess'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -58,6 +59,10 @@ const PHASE = {
 export default function Today({ org, session: authSession, userProfile, onNavigate }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#6D5DF6'
+  // Renders nothing at all for anyone without HR access, and nothing when
+  // there is nothing waiting -- Today is about the session in front of you,
+  // and an HR row with a zero on it would just be furniture.
+  const hrAttention = useHrAttention(org?.id, userProfile?.role)
 
   const [sessions, setSessions] = useState([])
   const [attendance, setAttendance] = useState([])
@@ -298,6 +303,29 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
 
       {!loading && !error && (
         <>
+          {hrAttention.show && (
+            <button onClick={() => onNavigate && onNavigate('hr')} style={{
+              ...CARD, width: '100%', padding: '14px 16px', marginBottom: 16, minHeight: 44,
+              display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
+              textAlign: 'left', fontFamily: 'inherit',
+              border: `1px solid ${hrAttention.urgent > 0 ? '#FCD9A5' : '#E5EAF2'}`,
+              background: hrAttention.urgent > 0 ? '#FEF6E7' : '#fff',
+            }}>
+              <span style={{ fontSize: 20, flexShrink: 0 }}>🧑‍💼</span>
+              <span style={{ minWidth: 0, flex: 1 }}>
+                <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+                  {hrAttention.count} HR item{hrAttention.count > 1 ? 's' : ''} to deal with
+                </span>
+                <span style={{ display: 'block', fontSize: 12.5, color: '#8B87A3', marginTop: 1 }}>
+                  {hrAttention.urgent > 0
+                    ? `${hrAttention.urgent} overdue — compliance, cases or reviews`
+                    : 'Compliance, supervisions and case actions'}
+                </span>
+              </span>
+              <span style={{ color: '#CBD5E1', fontSize: 18, flexShrink: 0 }}>›</span>
+            </button>
+          )}
+
           {sessions.length > 0 && (
             <div style={{
               display: 'grid',

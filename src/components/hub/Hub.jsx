@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useHrAttention } from '../../lib/hrAccess'
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { supabase } from "../../lib/supabase";
@@ -2844,6 +2845,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   // Home was the one module page still hardcoding "Young People" / "Sessions",
   // so a sports club saw Players everywhere else and Young People here.
   const terms = useTerms()
+  // Folded into the existing Needs Attention list rather than given a card of
+  // its own -- a second attention area on the same screen is how people learn
+  // to ignore both.
+  const hrAttention = useHrAttention(org?.id, userProfile?.role)
   const [hubUserName, setHubUserName] = React.useState(() => session?.user?.email?.split('@')[0] || 'there')
   const [search, setSearch] = React.useState('')
   const [searchResults, setSearchResults] = React.useState(null)
@@ -4218,6 +4223,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 title: `${checkedOutCount} item${checkedOutCount > 1 ? 's' : ''} still checked out`,
                 detail: 'Chase or mark as returned',
                 onClick: () => go('resource_booking'),
+              })
+            }
+
+            if (hrAttention.show) {
+              items.push({
+                key: 'hr', icon: '🧑‍💼', tone: hrAttention.urgent > 0 ? 'amber' : 'sky',
+                title: `${hrAttention.count} HR item${hrAttention.count > 1 ? 's' : ''} to deal with`,
+                detail: hrAttention.urgent > 0
+                  ? `${hrAttention.urgent} overdue — compliance, cases or reviews`
+                  : 'Compliance, supervisions and case actions',
+                onClick: () => go('hr'),
               })
             }
 

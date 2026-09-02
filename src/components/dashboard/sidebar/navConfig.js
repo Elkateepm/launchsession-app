@@ -36,6 +36,13 @@ export const NAV_SECTIONS = [
       // does not live there. Volunteers stay separate: a different relationship
       // with different records.
       { id: 'team', label: 'Team', icon: 'team', tab: 'team', managerOnly: true },
+      // HR is its own destination rather than a row inside Office. Office is
+      // desk work done between sessions; HR is a system somebody opens on
+      // purpose, and burying it two taps deep made the whole module feel
+      // optional. moduleKey gates it on the paid module and, through
+      // accessKey, on the viewer's own 'hr' grant -- so a manager who has not
+      // been given HR does not see it at all.
+      { id: 'hr', label: 'HR & Staff', icon: 'hr', tab: 'hr', moduleKey: 'hr', managerOnly: true },
       { id: 'volunteers', label: 'Volunteers', icon: 'volunteers', tab: 'volunteers', moduleKey: 'volunteers' },
     ],
   },
@@ -48,7 +55,7 @@ export const NAV_SECTIONS = [
       // does between sessions, not things anybody opens on a phone mid-
       // delivery. Its own visibility is decided by its contents -- see
       // OFFICE_TABS and visibleOfficeTabs.
-      { id: 'office', label: 'Office', icon: 'operations', tab: 'office', badgeKey: 'forms', matchTabs: ['office', 'forms', 'newsletter', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'] },
+      { id: 'office', label: 'Office', icon: 'operations', tab: 'office', badgeKey: 'forms', matchTabs: ['office', 'forms', 'newsletter', 'payments', 'resource_booking', 'templates', 'parent_portal'] },
     ],
   },
   {
@@ -159,7 +166,6 @@ export const OFFICE_TABS = [
   // Gated on 'messaging', not a module of its own -- the newsletter and the
   // messaging screens are the same purchase.
   { id: 'newsletter', label: 'Newsletter', icon: 'newsletter', tab: 'newsletter', moduleKey: 'messaging' },
-  { id: 'hr', label: 'HR', icon: 'hr', tab: 'hr', adminOnly: true },
   { id: 'payments', label: 'Payments', icon: 'payments', tab: 'payments', moduleKey: 'payments' },
   { id: 'resource_booking', label: 'Resource Booking', icon: 'resources', tab: 'resource_booking', moduleKey: 'resource_booking' },
   { id: 'templates', label: 'Templates', icon: 'templates', tab: 'templates', adminOnly: true },

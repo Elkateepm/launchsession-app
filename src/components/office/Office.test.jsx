@@ -11,7 +11,7 @@ const setup = (props = {}) => render(
 describe('the Office shell', () => {
   it('offers the modules it was given', () => {
     setup()
-    for (const label of ['Forms', 'Newsletter', 'HR', 'Payments', 'Resource Booking', 'Templates', 'Parent Portal']) {
+    for (const label of ['Forms', 'Newsletter', 'Payments', 'Resource Booking', 'Templates', 'Parent Portal']) {
       expect(screen.getByRole('tab', { name: new RegExp(label, 'i') })).toBeInTheDocument()
     }
   })
@@ -19,7 +19,7 @@ describe('the Office shell', () => {
   it('marks the open one for a screen reader, not only by eye', () => {
     setup()
     expect(screen.getByRole('tab', { name: /Payments/i })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: /^HR/i })).toHaveAttribute('aria-selected', 'false')
+    expect(screen.getByRole('tab', { name: /Templates/i })).toHaveAttribute('aria-selected', 'false')
   })
 
   it('navigates by tab name, so the address bar keeps working', () => {
@@ -31,11 +31,11 @@ describe('the Office shell', () => {
   })
 
   it('shows only what it is handed', () => {
-    // A member who may not open HR or Templates is given three tabs, and the
-    // shell does no filtering of its own.
+    // A member who may not open Templates is given the rest, and the shell
+    // does no filtering of its own.
     setup({ tabs: OFFICE_TABS.filter(t => !t.adminOnly) })
-    expect(screen.queryByRole('tab', { name: /^HR/i })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('tab')).toHaveLength(5)
+    expect(screen.queryByRole('tab', { name: /Templates/i })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('tab')).toHaveLength(OFFICE_TABS.filter(t => !t.adminOnly).length)
   })
 
   it('renders the module handed to it', () => {

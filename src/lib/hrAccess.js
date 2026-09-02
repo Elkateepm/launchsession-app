@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useModuleAccess } from '../context/ModuleAccessContext'
+import { supabase } from './supabase'
 
 // One place that decides what an HR viewer may do, mirroring the SQL helpers
 // hr_can_view() / hr_can_edit() / hr_sensitive_can_view() exactly.
@@ -102,4 +103,44 @@ export function daysUntil(value) {
   const target = new Date(String(value).slice(0, 10) + 'T00:00:00Z')
   if (isNaN(target)) return null
   return Math.round((target - today) / 86400000)
+}
+
+/**
+ * How much HR work is waiting for this viewer, for Home and Today.
+ *
+ * Reads hr_needs_attention, which is already scoped by RLS -- a manager gets
+ * their own remit and the disciplinary rows are invisible without the
+ * hr_sensitive grant. There is no permission logic here to drift from the
+ * policies; the count is simply whatever the viewer is allowed to see.
+ *
+ * Returns { show, count, urgent }. `show` is false while access is still being
+ * resolved and for anyone without HR, so the caller renders nothing at all
+ * rather than a card that says zero and then changes its mind.
+ */
+export function useHrAttention(orgId, role) {
+  const access = useHrAccess(role)
+  const [state, setState] = useState({ count: null, urgent: 0 })
+
+  useEffect(() => {
+    if (!orgId || access.loading || !access.canView) return
+    let cancelled = false
+    supabase.from('hr_needs_attention')
+      .select('severity', { count: 'exact' })
+      .eq('org_id', orgId)
+      .then(({ data, count, error }) => {
+        if (cancelled || error) return
+        setState({
+          count: count ?? (data || []).length,
+          urgent: (data || []).filter(r => r.severity === 1).length,
+        })
+      })
+    return () => { cancelled = true }
+  }, [orgId, access.loading, access.canView])
+
+  return {
+    show: !access.loading && access.canView && state.count !== null && state.count > 0,
+    count: state.count,
+    urgent: state.urgent,
+    canView: access.canView,
+  }
 }

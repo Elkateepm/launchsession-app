@@ -107,7 +107,9 @@ describe('Office', () => {
   const officeIds = OFFICE_TABS.map(t => t.id)
 
   it('holds the desk-work modules and nothing else', () => {
-    expect(officeIds).toEqual(['forms', 'newsletter', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'])
+    // HR left Office to become its own sidebar destination; Office is the
+    // desk work you do between sessions, not a system you open on purpose.
+    expect(officeIds).toEqual(['forms', 'newsletter', 'payments', 'resource_booking', 'templates', 'parent_portal'])
   })
 
   it('opens on Forms, the one with work arriving in it', () => {
@@ -134,7 +136,22 @@ describe('Office', () => {
     // People is the people themselves now: the young people, the team and the
     // volunteers. Writing to them is a desk job and sits with the other ones.
     const people = NAV_SECTIONS.find(s => s.label === 'People')
-    expect(people.items.map(i => i.id)).toEqual(['children', 'team', 'volunteers'])
+    expect(people.items.map(i => i.id)).toEqual(['children', 'team', 'hr', 'volunteers'])
+  })
+
+  it('gives HR its own destination, gated on the module and the grant', () => {
+    const hr = NAV_SECTIONS.find(s => s.label === 'People').items.find(i => i.id === 'hr')
+    const base = { isAdmin: true, hiddenItems: [] }
+    expect(isItemVisible(hr, { ...base, hasModule: () => true, moduleLevel: () => 'edit' })).toBe(true)
+    // The organisation has not bought HR.
+    expect(isItemVisible(hr, { ...base, hasModule: () => false, moduleLevel: () => 'edit' })).toBe(false)
+    // The viewer has not been granted it.
+    expect(isItemVisible(hr, { ...base, hasModule: () => true, moduleLevel: () => 'none' })).toBe(false)
+    // Staff never see it, however the grants fall.
+    expect(isItemVisible(hr, {
+      hasModule: () => true, moduleLevel: () => 'edit', hiddenItems: [],
+      isAdmin: false, isManager: false,
+    })).toBe(false)
   })
 
   it('shows Team to managers as well as admins, and to nobody else', () => {
@@ -176,13 +193,12 @@ describe('Office', () => {
 
   it('shows an admin every module', () => {
     const ctx = { hasModule: () => true, isAdmin: true, moduleLevel: () => 'edit', hiddenItems: [] }
-    expect(visibleItems(OFFICE_TABS, ctx)).toHaveLength(7)
+    expect(visibleItems(OFFICE_TABS, ctx)).toHaveLength(6)
   })
 
   it('hides the admin-only modules from everyone else', () => {
     const ctx = { hasModule: () => true, isAdmin: false, moduleLevel: () => 'edit', hiddenItems: [] }
     const ids = visibleItems(OFFICE_TABS, ctx).map(i => i.id)
-    expect(ids).not.toContain('hr')
     expect(ids).not.toContain('templates')
     expect(ids).toContain('payments')
   })
