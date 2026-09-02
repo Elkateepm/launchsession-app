@@ -7,6 +7,9 @@ import {
 } from '../../lib/hrAccess'
 import Icon from '../../lib/icons'
 import { ComplianceTab, TrainingTab } from './StaffCompliance'
+import StaffDocuments from './StaffDocuments'
+import { SupervisionTab, ProbationTab } from './StaffSupervision'
+import StaffAbsence from './StaffAbsence'
 
 // A person's HR record, opened from Team.
 //
@@ -149,6 +152,11 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
   const TABS = [
     ['overview', 'Overview'], ['employment', 'Employment'],
     ['compliance', 'Compliance'], ['training', 'Training'],
+    ['documents', 'Documents'], ['supervision', 'Supervision'],
+    ['absence', 'Absence'],
+    // Probation is only a tab where the role actually has one -- an empty
+    // "not applicable" screen is a worse answer than no tab.
+    ...(staff.probation_required ? [['probation', 'Probation']] : []),
   ]
 
   return shell(
@@ -249,6 +257,24 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
 
       {tab === 'training' && (
         <TrainingTab org={org} staff={staff} primary={primary} canEdit={access.canEdit} />
+      )}
+
+      {tab === 'documents' && (
+        <StaffDocuments org={org} staff={staff} primary={primary}
+          canEdit={access.canEdit} sensitiveView={access.sensitiveView} />
+      )}
+
+      {tab === 'supervision' && (
+        <SupervisionTab org={org} staff={staff} primary={primary}
+          canEdit={access.canEdit} sensitiveView={access.sensitiveView} />
+      )}
+
+      {tab === 'absence' && (
+        <StaffAbsence org={org} staff={staff} primary={primary} canEdit={access.canEdit} />
+      )}
+
+      {tab === 'probation' && (
+        <ProbationTab org={org} staff={staff} primary={primary} canEdit={access.canEdit} />
       )}
     </>
   )

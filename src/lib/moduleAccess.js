@@ -29,6 +29,11 @@ export const ALL_MODULE_KEYS = [
 export const BASE_MODULE_KEYS = [
   'home', 'calendar', 'planner', 'events_trips', 'team', 'settings',
   'templates', 'risk_assessments',
+  // A permission, not a product. 'hr' is a paid module and stays in
+  // ALL_MODULE_KEYS; 'hr_sensitive' only decides who inside an organisation
+  // may open disciplinary material, so it is always available to grant and
+  // must not be labelled "not on your plan".
+  'hr_sensitive',
 ]
 
 /**
@@ -101,6 +106,15 @@ export const ACCESS_MODULES = [
   { key: 'resource_booking', label: 'Resource Booking', icon: '🗓' },
   { key: 'events_trips', label: 'Events & Trips', icon: '✈️' },
   { key: 'mentoring', label: 'Mentoring', icon: '🤝' },
+  // HR is not granted to managers by default -- the brief is explicit that a
+  // manager must not automatically see the organisation's HR records. Granting
+  // 'hr' opens employment, compliance, training, supervision and absence, and
+  // even then only for the people that manager line-manages: the RLS adds
+  // hr_staff_in_my_remit() on top of this grant.
+  { key: 'hr', label: 'HR & Staff', icon: '🧑‍💼', hint: 'Employment, compliance, training, supervision and absence — for their own reports only' },
+  // Disciplinary material sits behind a second, separate grant. Owners and
+  // admins hold it inherently; nobody else does without this being set.
+  { key: 'hr_sensitive', label: 'Disciplinary & warnings', icon: '🛡', hint: 'HR cases that have escalated, investigations, hearings, outcomes, warnings and appeals' },
 ]
 
 // Roles whose access can be templated.
