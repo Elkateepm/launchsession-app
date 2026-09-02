@@ -1,0 +1,8 @@
+-- Applied as hr_04_staff_read_for_managers_and_ensure_record.
+-- 1. hr_staff reads widen from is_org_admin() to hr_can_view() scoped by
+--    remit, so a manager can open their own report's profile. Writes stay
+--    admin-only: employment terms and leaving dates are not a manager's call.
+-- 2. hr_ensure_staff_record() makes the Team -> HR join server-side, creating
+--    an employment record for a user_profiles person who has none.
+-- 3. hr_audit() is the single append path for the audit log.
+-- Full text matches the applied migration; see the Supabase migration history.

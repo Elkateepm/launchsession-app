@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import MemberAccess from '../hr/MemberAccess'
+import StaffHRProfile from '../hr/StaffHRProfile'
 import Icon from '../../lib/icons'
 
 // The Team tab: who is in the organisation, what they are allowed to reach,
@@ -81,6 +82,9 @@ export default function TeamCentre({ org, session, userProfile }) {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
+  // The HR record opens over the top of the Team drawer rather than
+  // replacing it, so closing HR returns you to where you were.
+  const [hrPerson, setHrPerson] = useState(null)
   const [toast, setToast] = useState('')
 
   const load = useCallback(async () => {
@@ -248,6 +252,13 @@ export default function TeamCentre({ org, session, userProfile }) {
         <InternalMail org={org} people={people} primary={primary} isMobile={isMobile} onFlash={flash} />
       )}
 
+      {hrPerson && (
+        <StaffHRProfile
+          org={org} userProfile={userProfile} person={hrPerson}
+          onClose={() => setHrPerson(null)}
+        />
+      )}
+
       {selected && (
         <PersonDrawer
           person={selected} org={org} primary={primary} isMobile={isMobile}
@@ -257,6 +268,7 @@ export default function TeamCentre({ org, session, userProfile }) {
           onChanged={() => load()}
           onFlash={flash}
           onDecide={decide}
+          onOpenHR={() => setHrPerson(selected)}
         />
       )}
     </div>
@@ -322,7 +334,7 @@ function PendingList({ pending, primary, canDecide, onDecide, onOpen }) {
   ))
 }
 
-function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRole, isSelf, onClose, onChanged, onFlash, onDecide }) {
+function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRole, isSelf, onClose, onChanged, onFlash, onDecide, onOpenHR }) {
   const [jobTitle, setJobTitle] = useState(person.job_title || '')
   const [role, setRole] = useState(person.role || 'staff')
   const [savingField, setSavingField] = useState(null)
@@ -432,6 +444,23 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
             </div>
           </div>
         )}
+
+        <button onClick={onOpenHR} style={{
+          width: '100%', minHeight: 48, borderRadius: 12, marginBottom: 18,
+          border: '1px solid #E2E8F0', background: '#fff', cursor: 'pointer',
+          fontFamily: 'inherit', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', gap: 12, padding: '0 14px', textAlign: 'left',
+        }}>
+          <span style={{ minWidth: 0 }}>
+            <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+              Open HR record
+            </span>
+            <span style={{ display: 'block', fontSize: 12.5, color: '#64748B', marginTop: 1 }}>
+              Employment, contract and probation
+            </span>
+          </span>
+          <span style={{ color: '#94A3B8', fontSize: 18, flexShrink: 0 }}>›</span>
+        </button>
 
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>JOB TITLE</label>
