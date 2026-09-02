@@ -9,7 +9,11 @@ import Icon from '../../lib/icons'
 // Shown wherever an org logo would go, whenever the org hasn't set one yet
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
 
-const font = "'Plus Jakarta Sans', sans-serif"
+// Follows the organisation's chosen typeface via the --font-display token,
+// with the product default as the fallback. Hardcoding it here meant the
+// brand font applied across the whole workspace except the screen every
+// user sees first.
+const font = "var(--font-display, 'Plus Jakarta Sans'), 'Plus Jakarta Sans', sans-serif"
 
 export default function OrgLookup() {
   localStorage.removeItem('launchsession_org_slug')

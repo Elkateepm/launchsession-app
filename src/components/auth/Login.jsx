@@ -7,7 +7,11 @@ import Icon from '../../lib/icons'
 
 const STEPS = { ROLE: 'role', EMAIL: 'email', PASSWORD: 'password', MAGIC: 'magic', FORGOT: 'forgot' }
 
-const font = "'Plus Jakarta Sans', sans-serif"
+// Follows the organisation's chosen typeface via the --font-display token,
+// with the product default as the fallback. Hardcoding it here meant the
+// brand font applied across the whole workspace except the screen every
+// user sees first.
+const font = "var(--font-display, 'Plus Jakarta Sans'), 'Plus Jakarta Sans', sans-serif"
 
 // Leaving an organisation has to clear BOTH keys. 'launchsession_org_slug' is
 // the working selection, but 'launchsession_remembered_org_slug' is an opt-in
