@@ -1,0 +1,20 @@
+-- Applied as hr_05_compliance_status_and_seed + hr_06_compliance_status_fixes.
+--
+-- Compliance status is DERIVED, never stored. staff_compliance_records.status
+-- is what was true when the row was written; a DBS recorded 'complete' in
+-- March with a June expiry is not complete in September. The
+-- hr_staff_compliance view is the single answer, so the staff profile, the
+-- compliance centre and Needs Attention cannot disagree.
+--
+-- Objects: hr_requirement_applies(), hr_staff_compliance,
+-- hr_staff_compliance_summary, hr_seed_compliance_requirements(),
+-- hr_record_compliance(). Full text is in the Supabase migration history.
+--
+-- Two corrections made in hr_06 after testing:
+--  * expiry takes the LATER of the compliance record and any completed
+--    training linked to the same requirement -- coalesce() preferred the
+--    record, so refreshing safeguarding training left the requirement
+--    reading overdue.
+--  * 'due_soon' counts towards the percentage: a DBS expiring in three weeks
+--    is valid today, and counting it as non-compliant buried the items that
+--    had actually lapsed.

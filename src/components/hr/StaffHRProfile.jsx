@@ -6,6 +6,7 @@ import {
   PROBATION_STATUSES, statusChip, ukDate, daysUntil,
 } from '../../lib/hrAccess'
 import Icon from '../../lib/icons'
+import { ComplianceTab, TrainingTab } from './StaffCompliance'
 
 // A person's HR record, opened from Team.
 //
@@ -53,6 +54,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
   const access = useHrAccess(userProfile?.role)
 
   const [staff, setStaff] = useState(null)
+  const [compliance, setCompliance] = useState(null)
   const [managers, setManagers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -67,14 +69,21 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
         await supabase.rpc('hr_ensure_staff_record', { p_user_id: person.id })
       if (ensureErr) throw ensureErr
 
-      const [rec, mgrs] = await Promise.all([
+      // The compliance summary is fetched here rather than by the Compliance
+      // tab alone: the header chip and the Overview line both show it, and
+      // they must not sit blank until somebody happens to open that tab.
+      const [rec, mgrs, comp] = await Promise.all([
         supabase.from('hr_staff').select('*').eq('id', staffId).maybeSingle(),
         supabase.from('hr_staff').select('id, full_name').eq('org_id', org.id)
           .eq('is_active', true).order('full_name'),
+        supabase.from('hr_staff_compliance_summary').select('*')
+          .eq('staff_id', staffId).maybeSingle(),
       ])
       if (rec.error) throw rec.error
       setStaff(rec.data)
       setManagers((mgrs.data || []).filter(m => m.id !== staffId))
+      // A failed summary is not fatal -- the rest of the record still opens.
+      setCompliance(comp.error ? null : comp.data)
     } catch (e) {
       setError(e.message || 'Could not open this HR record.')
     } finally {
@@ -137,7 +146,10 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
 
   // Only the tabs that are actually built are offered. A tab that opens an
   // empty screen is worse than one that is not there yet.
-  const TABS = [['overview', 'Overview'], ['employment', 'Employment']]
+  const TABS = [
+    ['overview', 'Overview'], ['employment', 'Employment'],
+    ['compliance', 'Compliance'], ['training', 'Training'],
+  ]
 
   return shell(
     <>
@@ -161,6 +173,12 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
           <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
             <Chip tone={chip.tone} bg={chip.bg}>{chip.label}</Chip>
             {empType && <Chip tone="#3730A3" bg="#EEF2FF">{empType.label}</Chip>}
+            {compliance && compliance.percent !== null && (
+              <Chip
+                tone={compliance.overdue > 0 || compliance.missing > 0 ? '#B42318' : '#04713C'}
+                bg={compliance.overdue > 0 || compliance.missing > 0 ? '#FEF2F2' : '#E7F8ED'}
+              >Compliance {compliance.percent}%</Chip>
+            )}
             {staff.probation_status === 'in_progress' && (
               <Chip tone="#93500A" bg="#FEF6E7">
                 Probation{probationDays !== null ? ` · ${probationDays < 0 ? 'review overdue' : `${probationDays}d`}` : ''}
@@ -203,6 +221,13 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
               : null
           } />
           <Row label="Account" value={staff.user_id ? 'Linked to a LaunchSession login' : 'No login — HR record only'} />
+          <Row label="Compliance" value={
+            compliance
+              ? (compliance.percent === null
+                  ? 'No requirements apply'
+                  : `${compliance.percent}% — ${compliance.overdue} overdue, ${compliance.missing} missing, ${compliance.due_soon} due soon`)
+              : null
+          } />
         </div>
       )}
 
@@ -212,6 +237,18 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
           canEdit={access.canEditEmployment}
           onSaved={(next) => setStaff(next)}
         />
+      )}
+
+      {tab === 'compliance' && (
+        <ComplianceTab
+          org={org} staff={staff} primary={primary}
+          canEdit={access.canEdit} isAdmin={access.isAdmin}
+          onSummary={setCompliance}
+        />
+      )}
+
+      {tab === 'training' && (
+        <TrainingTab org={org} staff={staff} primary={primary} canEdit={access.canEdit} />
       )}
     </>
   )
