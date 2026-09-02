@@ -1,0 +1,23 @@
+-- Applied as hr_08_case_and_disciplinary_workflow,
+-- hr_09_outcomes_warnings_appeals_closure and
+-- hr_10_locked_guard_in_definer_functions.
+--
+-- Workflow operations are functions, not client-side inserts: each writes the
+-- record, its timeline entry and the audit log, and those must agree. A
+-- dropped connection between the update and the timeline write would leave a
+-- case whose history has a hole in it, and the history is the point.
+--
+-- Functions: hr_create_case, hr_case_add_entry, hr_case_set_status,
+-- hr_escalate_to_disciplinary, hr_disciplinary_entry,
+-- hr_disciplinary_set_stage, hr_record_outcome, hr_record_appeal_decision,
+-- hr_close_disciplinary. View: hr_staff_warnings_live.
+--
+-- hr_10 closed a real hole found by testing: the write policies check `locked`
+-- on the parent case, but SECURITY DEFINER bypasses RLS, so a closed
+-- disciplinary could still be appended to through the RPC. The guard has to be
+-- repeated in each function body; it is not inherited.
+--
+-- Warning status is derived (hr_staff_warnings_live), like compliance: a
+-- warning issued today with a six-month life is expired in seven months
+-- whether or not a job ran. 'withdrawn' and 'overturned' are decisions and
+-- always beat the clock.

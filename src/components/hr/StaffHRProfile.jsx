@@ -10,6 +10,8 @@ import { ComplianceTab, TrainingTab } from './StaffCompliance'
 import StaffDocuments from './StaffDocuments'
 import { SupervisionTab, ProbationTab } from './StaffSupervision'
 import StaffAbsence from './StaffAbsence'
+import HRCasesTab from './HRCases'
+import DisciplinaryRecord from './DisciplinaryRecord'
 
 // A person's HR record, opened from Team.
 //
@@ -58,6 +60,9 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
 
   const [staff, setStaff] = useState(null)
   const [compliance, setCompliance] = useState(null)
+  // Opening a disciplinary from a case takes over the tab body rather than
+  // stacking a third overlay on an already-nested drawer.
+  const [discId, setDiscId] = useState(null)
   const [managers, setManagers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -153,7 +158,10 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
     ['overview', 'Overview'], ['employment', 'Employment'],
     ['compliance', 'Compliance'], ['training', 'Training'],
     ['documents', 'Documents'], ['supervision', 'Supervision'],
-    ['absence', 'Absence'],
+    ['absence', 'Absence'], ['cases', 'HR cases'],
+    // Disciplinary material is a separate grant. Someone without it does not
+    // get a tab that would only ever be empty.
+    ...(access.sensitiveView ? [['disciplinary', 'Disciplinary']] : []),
     // Probation is only a tab where the role actually has one -- an empty
     // "not applicable" screen is a worse answer than no tab.
     ...(staff.probation_required ? [['probation', 'Probation']] : []),
@@ -276,8 +284,60 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
       {tab === 'probation' && (
         <ProbationTab org={org} staff={staff} primary={primary} canEdit={access.canEdit} />
       )}
+
+      {tab === 'cases' && (
+        discId
+          ? <DisciplinaryRecord org={org} staff={staff} caseId={discId} primary={primary}
+              canEdit={access.sensitiveEdit} onBack={() => setDiscId(null)} />
+          : <HRCasesTab org={org} staff={staff} primary={primary}
+              canEdit={access.canEdit} sensitiveEdit={access.sensitiveEdit}
+              onOpenDisciplinary={(id) => setDiscId(id)} />
+      )}
+
+      {tab === 'disciplinary' && (
+        discId
+          ? <DisciplinaryRecord org={org} staff={staff} caseId={discId} primary={primary}
+              canEdit={access.sensitiveEdit} onBack={() => setDiscId(null)} />
+          : <DisciplinaryList org={org} staff={staff} primary={primary} onOpen={setDiscId} />
+      )}
     </>
   )
+}
+
+function DisciplinaryList({ org, staff, primary, onOpen }) {
+  const [rows, setRows] = React.useState(null)
+  React.useEffect(() => {
+    let cancelled = false
+    supabase.from('disciplinary_cases')
+      .select('id, reference, stage, allegation, created_at, locked')
+      .eq('staff_id', staff.id).order('created_at', { ascending: false })
+      .then(({ data }) => { if (!cancelled) setRows(data || []) })
+    return () => { cancelled = true }
+  }, [staff.id])
+
+  if (rows === null) {
+    return <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, padding: 16, color: '#64748B', fontSize: 14 }}>Loading…</div>
+  }
+  if (rows.length === 0) {
+    return (
+      <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, padding: 24, textAlign: 'center', color: '#64748B', fontSize: 13.5, lineHeight: 1.55 }}>
+        No active disciplinary processes for {staff.full_name}. A disciplinary is only
+        opened by escalating an HR case.
+      </div>
+    )
+  }
+  return rows.map(r => (
+    <button key={r.id} onClick={() => onOpen(r.id)} style={{
+      display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
+      background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, padding: 16, marginBottom: 12,
+    }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4 }}>{r.reference}</div>
+      <div style={{ fontSize: 14, color: '#0F172A', marginTop: 4 }}>{r.allegation}</div>
+      <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 4, textTransform: 'capitalize' }}>
+        {r.locked ? 'Closed' : r.stage} · opened {ukDate(r.created_at)}
+      </div>
+    </button>
+  ))
 }
 
 function EmploymentForm({ staff, managers, primary, canEdit, onSaved }) {
