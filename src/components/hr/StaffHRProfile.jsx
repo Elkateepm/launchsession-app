@@ -53,7 +53,7 @@ function Row({ label, value }) {
   )
 }
 
-export default function StaffHRProfile({ org, userProfile, person, onClose }) {
+export default function StaffHRProfile({ org, userProfile, person, onClose, initialTab }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#3B82F6'
   const access = useHrAccess(userProfile?.role)
@@ -66,7 +66,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
   const [managers, setManagers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [tab, setTab] = useState('overview')
+  const [tab, setTab] = useState(initialTab || 'overview')
 
   // person is the user_profiles row from Team. It may or may not already have
   // an employment record behind it.
@@ -176,6 +176,11 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
     ...(staff.probation_required ? [['probation', 'Probation']] : []),
   ]
 
+  // A deep link can name a tab this viewer is not entitled to (a warning for
+  // somebody without disciplinary access). Fall back rather than render a body
+  // with nothing in it.
+  const activeTab = TABS.some(([k]) => k === tab) ? tab : 'overview'
+
   return shell(
     <>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
@@ -221,15 +226,15 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
         {TABS.map(([k, label]) => (
           <button key={k} onClick={() => setTab(k)} style={{
             padding: '9px 14px', borderRadius: 10, cursor: 'pointer', minHeight: 44,
-            border: `1px solid ${tab === k ? 'transparent' : '#E2E8F0'}`,
-            background: tab === k ? primary : '#fff',
-            color: tab === k ? '#fff' : '#64748B',
+            border: `1px solid ${activeTab === k ? 'transparent' : '#E2E8F0'}`,
+            background: activeTab === k ? primary : '#fff',
+            color: activeTab === k ? '#fff' : '#64748B',
             fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
           }}>{label}</button>
         ))}
       </div>
 
-      {tab === 'overview' && (
+      {activeTab === 'overview' && (
         <div style={card}>
           <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>Employment summary</div>
           <Row label="Employment type" value={empType?.label} />
@@ -256,7 +261,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
         </div>
       )}
 
-      {tab === 'employment' && (
+      {activeTab === 'employment' && (
         <EmploymentForm
           staff={staff} managers={managers} primary={primary}
           canEdit={access.canEditEmployment}
@@ -264,7 +269,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
         />
       )}
 
-      {tab === 'compliance' && (
+      {activeTab === 'compliance' && (
         <ComplianceTab
           org={org} staff={staff} primary={primary}
           canEdit={access.canEdit} isAdmin={access.isAdmin}
@@ -272,34 +277,34 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
         />
       )}
 
-      {tab === 'training' && (
+      {activeTab === 'training' && (
         <TrainingTab org={org} staff={staff} primary={primary} canEdit={access.canEdit} />
       )}
 
-      {tab === 'documents' && (
+      {activeTab === 'documents' && (
         <StaffDocuments org={org} staff={staff} primary={primary}
           canEdit={access.canEdit} sensitiveView={access.sensitiveView} />
       )}
 
-      {tab === 'supervision' && (
+      {activeTab === 'supervision' && (
         <SupervisionTab org={org} staff={staff} primary={primary}
           canEdit={access.canEdit} sensitiveView={access.sensitiveView} />
       )}
 
-      {tab === 'absence' && (
+      {activeTab === 'absence' && (
         <StaffAbsence org={org} staff={staff} primary={primary} canEdit={access.canEdit} />
       )}
 
-      {tab === 'probation' && (
+      {activeTab === 'probation' && (
         <ProbationTab org={org} staff={staff} primary={primary} canEdit={access.canEdit} />
       )}
 
-      {tab === 'offboarding' && (
+      {activeTab === 'offboarding' && (
         <Offboarding org={org} staff={staff} primary={primary}
           canEdit={access.canEditEmployment} onChanged={load} />
       )}
 
-      {tab === 'cases' && (
+      {activeTab === 'cases' && (
         discId
           ? <DisciplinaryRecord org={org} staff={staff} caseId={discId} primary={primary}
               canEdit={access.sensitiveEdit} onBack={() => setDiscId(null)} />
@@ -308,7 +313,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose }) {
               onOpenDisciplinary={(id) => setDiscId(id)} />
       )}
 
-      {tab === 'disciplinary' && (
+      {activeTab === 'disciplinary' && (
         discId
           ? <DisciplinaryRecord org={org} staff={staff} caseId={discId} primary={primary}
               canEdit={access.sensitiveEdit} onBack={() => setDiscId(null)} />

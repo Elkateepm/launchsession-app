@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { ukDate, todayLondon } from '../../lib/hrAccess'
+import { signOne } from '../../lib/storageUrl'
 
 // HR cases for one person, and the escalation into a disciplinary.
 //
@@ -292,13 +293,14 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
   const [entries, setEntries] = useState([])
   const [actions, setActions] = useState([])
   const [linkedDisc, setLinkedDisc] = useState(null)
+  const [docs, setDocs] = useState([])
   const [error, setError] = useState('')
   const [panel, setPanel] = useState(null)
   const [busy, setBusy] = useState(false)
 
   const load = useCallback(async () => {
     setError('')
-    const [rc, re, ra, rd] = await Promise.all([
+    const [rc, re, ra, rd, rdoc] = await Promise.all([
       supabase.from('hr_cases').select('*').eq('id', caseId).maybeSingle(),
       supabase.from('hr_case_entries').select('*').eq('hr_case_id', caseId)
         .order('created_at', { ascending: false }),
@@ -306,6 +308,9 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
         .order('due_date', { nullsFirst: false }),
       supabase.from('disciplinary_cases').select('id, reference, stage')
         .eq('source_hr_case_id', caseId).maybeSingle(),
+      supabase.from('staff_documents').select('*')
+        .eq('hr_case_id', caseId).is('archived_at', null)
+        .order('uploaded_at', { ascending: false }),
     ])
     if (rc.error) { setError(rc.error.message); return }
     setC(rc.data); setEntries(re.data || []); setActions(ra.data || [])
@@ -313,6 +318,7 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
     // land the same way, which is the intended behaviour for someone without
     // disciplinary access.
     setLinkedDisc(rd.data || null)
+    setDocs(rdoc.data || [])
   }, [caseId])
 
   useEffect(() => { load() }, [load])
@@ -400,6 +406,7 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
               .map(([k, l]) => (
                 <button key={k} onClick={() => setPanel(k)} style={ghostBtn}>{l}</button>
               ))}
+            <button onClick={() => setPanel('document')} style={ghostBtn}>Add document</button>
             <button onClick={() => setPanel('status')} style={ghostBtn}>Change status</button>
             <button onClick={() => setPanel('resolve')} style={ghostBtn}>Resolve</button>
             {sensitiveEdit && !linkedDisc && (
@@ -415,6 +422,41 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
         <TextPanel
           title={ENTRY_LABEL[panel]} primary={primary} busy={busy}
           onCancel={() => setPanel(null)} onSave={(v) => addEntry(panel, v)} />
+      )}
+
+      {panel === 'document' && (
+        <CaseDocumentPanel
+          org={org} staff={staff} caseId={caseId} primary={primary}
+          onCancel={() => setPanel(null)}
+          onSaved={async (title) => {
+            // The timeline records that a document was added; the file itself
+            // lives in staff_documents so it also appears on the person's
+            // Documents tab rather than only inside this case.
+            await supabase.rpc('hr_case_add_entry', {
+              p_case_id: caseId, p_entry_type: 'document',
+              p_body: title, p_occurred_at: null,
+            })
+            setPanel(null); load()
+          }} />
+      )}
+
+      {docs.length > 0 && (
+        <div style={card}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Documents</div>
+          {docs.map(d => (
+            <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderTop: '1px solid #F1F5F9' }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{d.title}</div>
+                <div style={{ fontSize: 12.5, color: '#64748B' }}>Added {ukDate(d.uploaded_at)}</div>
+              </div>
+              <button onClick={async () => {
+                const url = await signOne('hr-documents', d.storage_path)
+                if (url) window.open(url, '_blank', 'noopener,noreferrer')
+                else setError('That file could not be opened.')
+              }} style={ghostBtn}>Open</button>
+            </div>
+          ))}
+        </div>
       )}
 
       {panel === 'status' && (
@@ -472,6 +514,70 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
         </div>
       )}
     </>
+  )
+}
+
+function CaseDocumentPanel({ org, staff, caseId, primary, onCancel, onSaved }) {
+  const [file, setFile] = useState(null)
+  const [title, setTitle] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+
+  const MAX = 25 * 1024 * 1024
+
+  const save = async () => {
+    if (!file || !title.trim()) return
+    setBusy(true); setErr('')
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '')
+    const path = `${org.id}/${staff.id}/${crypto.randomUUID()}.${ext}`
+    const up = await supabase.storage.from('hr-documents')
+      .upload(path, file, { upsert: false, contentType: file.type || undefined })
+    if (up.error) { setBusy(false); setErr(up.error.message || 'Upload failed.'); return }
+
+    const { error } = await supabase.from('staff_documents').insert({
+      org_id: org.id, staff_id: staff.id, hr_case_id: caseId,
+      document_type: 'other', title: title.trim(), storage_path: path,
+      confidentiality: 'hr',
+      uploaded_by: (await supabase.auth.getUser()).data.user?.id || null,
+    })
+    if (error) {
+      await supabase.storage.from('hr-documents').remove([path])
+      setBusy(false); setErr(error.message); return
+    }
+    setBusy(false)
+    onSaved(title.trim())
+  }
+
+  return (
+    <div style={card}>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>Add a document</div>
+      <label style={lbl}>File</label>
+      <input type="file" style={{ ...field, padding: 10, marginBottom: 12 }}
+        onChange={e => {
+          const f = e.target.files?.[0]
+          setErr('')
+          if (f && f.size > MAX) { setErr('That file is larger than 25MB.'); setFile(null); return }
+          setFile(f || null)
+          if (f && !title.trim()) setTitle(f.name.replace(/\.[^.]+$/, ''))
+        }} />
+      <label style={lbl}>Title</label>
+      <input value={title} onChange={e => setTitle(e.target.value)} style={{ ...field, marginBottom: 12 }} />
+      <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12, lineHeight: 1.45 }}>
+        Filed against {staff.full_name} as well as this case, so it appears on their
+        Documents tab too.
+      </div>
+      {err && (
+        <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
+          border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 10 }}>{err}</div>
+      )}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={save} disabled={busy || !file || !title.trim()}
+          style={primaryBtn(primary, busy || !file || !title.trim())}>
+          {busy ? 'Uploading…' : 'Upload'}
+        </button>
+        <button onClick={onCancel} style={ghostBtn}>Cancel</button>
+      </div>
+    </div>
   )
 }
 
