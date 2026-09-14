@@ -14,14 +14,16 @@ export default async function handler(req, res) {
 
   if (slug && REACT_APP_SUPABASE_URL && REACT_APP_SUPABASE_ANON_KEY) {
     try {
-      // "organisations" has a public read policy for active/trial orgs, so
-      // the anon key is enough here — no service role needed for this.
+      // organisations has no anonymous read policy, so reading it here with
+      // the anon key returned nothing and every installed app was named
+      // "LaunchSession" with the LaunchSession icon. organisations_safe is the
+      // view the sign-in screen reads, and it already limits itself to active
+      // and trial organisations.
       const supabase = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_ANON_KEY)
       const { data } = await supabase
-        .from('organisations')
+        .from('organisations_safe')
         .select('name, icon_url, logo_url, primary_color')
         .eq('slug', slug)
-        .in('status', ['active', 'trial'])
         .single()
       if (data) {
         name = data.name || name

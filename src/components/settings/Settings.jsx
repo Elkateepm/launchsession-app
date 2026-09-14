@@ -17,7 +17,8 @@ import SignedImg from '../shared/SignedImg'
 import { signOne } from '../../lib/storageUrl'
 import Icon from '../../lib/icons'
 import { applyBrandPalette } from '../../lib/brandColors'
-import { BRAND_FONTS, DENSITIES, fontByKey, loadBrandFont, applyBrandTheme } from '../../lib/brandTheme'
+import { BRAND_FONTS, fontByKey, loadBrandFont, applyBrandTheme } from '../../lib/brandTheme'
+import { prepareBrandImage, extensionFor, BRAND_IMAGE_TYPES } from '../../lib/brandImage'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -25,7 +26,7 @@ const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/o
 const NAV = [
   { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform', requiresAdmin: true },
   { key: 'users',        icon: '👥', label: 'Admin', group: 'Platform' },
-  { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform', requiresBranding: true },
+  { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform', requiresBranding: true, requiresAdmin: true },
   { key: 'display',      icon: '🖥', label: 'Display', group: 'Platform', requiresAdmin: true },
   { key: 'access',       icon: '🔑', label: 'Role Access', group: 'Platform', requiresAdmin: true },
   { key: 'safeguarding', icon: '🛡', label: 'Safeguarding', group: 'Operations' },
@@ -777,129 +778,23 @@ function ColorField({ label, hint, value, onChange, contrastAgainst, contrastLab
   )
 }
 
-// A logo/icon upload slot with zoom + reposition sliders once an image is set.
-// Finds the actual visual content within an uploaded logo/icon (trimming
-// transparent or solid-background padding) and returns a {zoom, x, y}
-// transform — in the same units as the manual sliders below — that
-// centres and fills the frame with just that content. Handles both
-// true-transparency PNGs and opaque exports (JPEG, or PNG flattened onto
-// a solid background) by sampling the four corners to guess the
-// background colour when there's no alpha to go on. Always fails soft to
-// the untouched {zoom:100,x:0,y:0} default — this can only improve on
-// today's behaviour, never make an upload look worse or block it.
-function computeAutoFitTransform(imageUrl) {
-  return new Promise((resolve) => {
-    const fallback = { zoom: 100, x: 0, y: 0 }
-    const img = new Image()
-    img.onload = () => {
-      try {
-        // Analysing at full resolution isn't necessary to find a bounding
-        // box and would be slow for large uploads, so downscale first.
-        const maxDim = 300
-        const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
-        const w = Math.max(1, Math.round(img.width * scale))
-        const h = Math.max(1, Math.round(img.height * scale))
-        const canvas = document.createElement('canvas')
-        canvas.width = w; canvas.height = h
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(img, 0, 0, w, h)
-        const { data } = ctx.getImageData(0, 0, w, h)
-
-        const px = (x, y) => { const i = (y * w + x) * 4; return [data[i], data[i + 1], data[i + 2], data[i + 3]] }
-        const corners = [px(0, 0), px(w - 1, 0), px(0, h - 1), px(w - 1, h - 1)]
-        const hasAlpha = corners.some(c => c[3] < 250)
-        const bg = corners[0]
-        const colourDist = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2])
-        const ALPHA_THRESHOLD = 12
-        const COLOUR_THRESHOLD = 24
-
-        let minX = w, minY = h, maxX = -1, maxY = -1
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const p = px(x, y)
-            const isContent = hasAlpha ? p[3] > ALPHA_THRESHOLD : colourDist(p, bg) > COLOUR_THRESHOLD
-            if (isContent) {
-              if (x < minX) minX = x
-              if (x > maxX) maxX = x
-              if (y < minY) minY = y
-              if (y > maxY) maxY = y
-            }
-          }
-        }
-
-        if (maxX < minX || maxY < minY) { resolve(fallback); return } // nothing detected — e.g. a blank image
-
-        const PADDING_FRACTION = 0.08 // small breathing room so content doesn't touch the frame edge
-        const contentFraction = Math.max((maxX - minX + 1) / w, (maxY - minY + 1) / h) * (1 + PADDING_FRACTION * 2)
-        const zoom = Math.max(100, Math.min(200, Math.round(100 / Math.max(contentFraction, 0.01))))
-
-        const centreX = (minX + maxX + 1) / 2 / w
-        const centreY = (minY + maxY + 1) / 2 / h
-        const maxOffset = Math.max(0, (zoom - 100) / 2)
-        const x = Math.max(-maxOffset, Math.min(maxOffset, (0.5 - centreX) * 100))
-        const y = Math.max(-maxOffset, Math.min(maxOffset, (0.5 - centreY) * 100))
-
-        resolve({ zoom, x, y })
-      } catch (e) {
-        resolve(fallback) // e.g. a tainted canvas — never block the upload over this
-      }
-    }
-    img.onerror = () => resolve(fallback)
-    img.src = imageUrl
-  })
-}
-
-function LogoUploadBox({ label, hint, previewSrc, fallback, transform, onFileChange, onTransformChange, onRemove, boxSize = 84 }) {
-  const t = transform || { zoom: 100, x: 0, y: 0 }
-  // Scaling around the centre reveals up to (zoom-100)/2 % of extra image on
-  // each side — panning further than that would just push the logo off the
-  // edge into empty space, so the sliders' range is capped to what zoom
-  // actually makes available.
-  const maxOffset = Math.max(0, (t.zoom - 100) / 2)
-  const clamp = (v) => Math.max(-maxOffset, Math.min(maxOffset, v))
-
-  const handleZoomChange = (zoom) => {
-    const newMaxOffset = Math.max(0, (zoom - 100) / 2)
-    onTransformChange({
-      zoom,
-      x: Math.max(-newMaxOffset, Math.min(newMaxOffset, t.x)),
-      y: Math.max(-newMaxOffset, Math.min(newMaxOffset, t.y)),
-    })
-  }
-
+// A logo/icon upload slot. The file is trimmed to its content when chosen
+// (see lib/brandImage), so what shows here is what every screen shows.
+function LogoUploadBox({ label, hint, previewSrc, fallback, onFileChange, onRemove, busy, boxSize = 84 }) {
   return (
     <div style={{ flex: 1, minWidth: 220 }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 10 }}>{hint}</div>
-      <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-        <div style={{ width: boxSize, height: boxSize, borderRadius: 16, background: '#fff', border: '1.5px dashed var(--border2)', overflow: 'hidden', flexShrink: 0 }}>
-          <img src={previewSrc || fallback} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: `translate(${t.x}%, ${t.y}%) scale(${t.zoom / 100})` }} />
+      <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+        <div style={{ width: boxSize, height: boxSize, borderRadius: 16, background: '#fff', border: '1.5px dashed var(--border2)', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src={previewSrc || fallback} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', opacity: busy ? 0.4 : 1 }} />
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <label style={{ padding: '7px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
-              Upload
-              <input type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
-            </label>
-            {previewSrc && <button onClick={onRemove} style={{ padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}><Icon name="🗑" /></button>}
-          </div>
-          {previewSrc && (
-            <div>
-              <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2 }}>Zoom</div>
-              <input type="range" min="100" max="200" value={t.zoom} onChange={e => handleZoomChange(Number(e.target.value))} style={{ width: '100%', marginBottom: 6 }} />
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2 }}>Horizontal</div>
-                  <input type="range" min={-maxOffset} max={maxOffset} disabled={maxOffset === 0} value={clamp(t.x)} onChange={e => onTransformChange({ ...t, x: clamp(Number(e.target.value)) })} style={{ width: '100%', opacity: maxOffset === 0 ? 0.4 : 1 }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2 }}>Vertical</div>
-                  <input type="range" min={-maxOffset} max={maxOffset} disabled={maxOffset === 0} value={clamp(t.y)} onChange={e => onTransformChange({ ...t, y: clamp(Number(e.target.value)) })} style={{ width: '100%', opacity: maxOffset === 0 ? 0.4 : 1 }} />
-                </div>
-              </div>
-              {maxOffset === 0 && <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 6 }}>Zoom in first to reposition.</div>}
-            </div>
-          )}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <label style={{ padding: '7px 12px', minHeight: 44, boxSizing: 'border-box', display: 'flex', alignItems: 'center', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: busy ? 'wait' : 'pointer' }}>
+            {busy ? 'Preparing…' : 'Upload'}
+            <input type="file" accept={BRAND_IMAGE_TYPES.join(',')} onChange={onFileChange} disabled={busy} style={{ display: 'none' }} />
+          </label>
+          {previewSrc && <button onClick={onRemove} aria-label={`Remove ${label.toLowerCase()}`} style={{ minWidth: 44, minHeight: 44, padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}><Icon name="🗑" /></button>}
         </div>
       </div>
     </div>
@@ -1043,12 +938,10 @@ function BrandingSection({ org, refreshOrg }) {
   const [logoPreview, setLogoPreview] = useState(org?.logo_url || '')
   const [logoFile, setLogoFile] = useState(null)
   const [logoRemoved, setLogoRemoved] = useState(false)
-  const [logoTransform, setLogoTransform] = useState(org?.logo_transform || { zoom: 100, x: 0, y: 0 })
 
   const [iconPreview, setIconPreview] = useState(org?.icon_url || '')
   const [iconFile, setIconFile] = useState(null)
   const [iconRemoved, setIconRemoved] = useState(false)
-  const [iconTransform, setIconTransform] = useState(org?.icon_transform || { zoom: 100, x: 0, y: 0 })
 
   const [loginBgPreview, setLoginBgPreview] = useState(org?.login_background_url || '')
   const [loginBgFile, setLoginBgFile] = useState(null)
@@ -1059,6 +952,9 @@ function BrandingSection({ org, refreshOrg }) {
   const [emailLogoRemoved, setEmailLogoRemoved] = useState(false)
 
   const [logoSuggestions, setLogoSuggestions] = useState([])
+  // Which upload is being prepared, and why the last one was refused.
+  const [preparing, setPreparing] = useState(null)
+  const [uploadError, setUploadError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -1087,7 +983,7 @@ function BrandingSection({ org, refreshOrg }) {
   const currentSnapshot = () => JSON.stringify({
     name, slogan, color, secondaryColor, accentColor, uiDensity, brandFont, loginBgStyle,
     welcomeMessage, emailFooterText, emailSenderName,
-    logoPreview, iconPreview, loginBgPreview, emailLogoPreview, logoTransform, iconTransform,
+    logoPreview, iconPreview, loginBgPreview, emailLogoPreview,
   })
   useEffect(() => {
     if (savedSnapshot.current === null) savedSnapshot.current = currentSnapshot()
@@ -1129,35 +1025,33 @@ function BrandingSection({ org, refreshOrg }) {
   ]
   const suggested = useMemo(() => suggestPalette(color), [color])
 
-  const handleFileChange = (setPreview, setFile, setRemoved) => (e) => {
-    const file = e.target.files?.[0]
+  // Every upload is checked and prepared before it is previewed, so a file the
+  // bucket would refuse is caught here with a reason, not at Save.
+  const handleImageChoice = (key, setPreview, setFile, setRemoved, options) => async (e) => {
+    const input = e.target
+    const file = input.files?.[0]
+    input.value = '' // choosing the same file again should still fire
     if (!file) return
-    setFile(file); setPreview(URL.createObjectURL(file)); setRemoved(false)
+    setUploadError(''); setPreparing(key)
+    try {
+      const prepared = await prepareBrandImage(file, options)
+      setFile(prepared); setPreview(URL.createObjectURL(prepared)); setRemoved(false)
+    } catch (err) {
+      setUploadError(err.message || 'That image could not be used.')
+    } finally {
+      setPreparing(null)
+    }
   }
 
-  // Logo/icon uploads also compute a smart default crop, so a fresh upload
-  // is well-fit immediately rather than starting at zoom 100/centred (which
-  // looks tiny and off-balance whenever the source file has the usual
-  // amount of padding around the actual mark — most real logo exports do).
-  // The existing manual zoom/pan sliders are untouched as a fallback/override.
-  const handleLogoFileChange = (setPreview, setFile, setRemoved, setTransform) => async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const url = URL.createObjectURL(file)
-    setFile(file); setPreview(url); setRemoved(false)
-    setTransform(await computeAutoFitTransform(url))
-  }
-
-  async function uploadIfNeeded(file, existingUrl, removed, pathSuffix) {
+  // A failed upload used to fall back to the old URL and carry on, so Save
+  // said "Saved!" while the new logo went nowhere. It now stops the save.
+  async function uploadIfNeeded(file, existingUrl, removed, pathSuffix, label) {
     if (file) {
-      const ext = file.name.split('.').pop()
-      const filePath = `${org.id}/${pathSuffix}.${ext}`
-      const { error } = await supabase.storage.from('org-logos').upload(filePath, file, { upsert: true })
-      if (!error) {
-        const { data } = supabase.storage.from('org-logos').getPublicUrl(filePath)
-        return `${data.publicUrl}?v=${Date.now()}`
-      }
-      return existingUrl
+      const filePath = `${org.id}/${pathSuffix}.${extensionFor(file)}`
+      const { error } = await supabase.storage.from('org-logos').upload(filePath, file, { upsert: true, contentType: file.type })
+      if (error) throw new Error(`The ${label} could not be uploaded (${error.message}). Nothing has been changed.`)
+      const { data } = supabase.storage.from('org-logos').getPublicUrl(filePath)
+      return `${data.publicUrl}?v=${Date.now()}`
     }
     if (removed) return null
     return existingUrl
@@ -1178,12 +1072,19 @@ function BrandingSection({ org, refreshOrg }) {
 
   const handleSave = async () => {
     setSaving(true); setSaveError('')
-    const [logoUrl, iconUrl, loginBgUrl, emailLogoUrl] = await Promise.all([
-      uploadIfNeeded(logoFile, org?.logo_url, logoRemoved, 'logo'),
-      uploadIfNeeded(iconFile, org?.icon_url, iconRemoved, 'icon'),
-      uploadIfNeeded(loginBgFile, org?.login_background_url, loginBgRemoved, 'login-bg'),
-      uploadIfNeeded(emailLogoFile, org?.email_logo_url, emailLogoRemoved, 'email-logo'),
-    ])
+    let logoUrl, iconUrl, loginBgUrl, emailLogoUrl
+    try {
+      ;[logoUrl, iconUrl, loginBgUrl, emailLogoUrl] = await Promise.all([
+        uploadIfNeeded(logoFile, org?.logo_url, logoRemoved, 'logo', 'logo'),
+        uploadIfNeeded(iconFile, org?.icon_url, iconRemoved, 'icon', 'compact icon'),
+        uploadIfNeeded(loginBgFile, org?.login_background_url, loginBgRemoved, 'login-bg', 'sign-in background'),
+        uploadIfNeeded(emailLogoFile, org?.email_logo_url, emailLogoRemoved, 'email-logo', 'email logo'),
+      ])
+    } catch (err) {
+      setSaving(false)
+      setSaveError(err.message)
+      return
+    }
 
     // .select() so a write that changed nothing can be told apart from one that
     // worked. An UPDATE matching no row is not an error in PostgREST, so a save
@@ -1193,7 +1094,7 @@ function BrandingSection({ org, refreshOrg }) {
     const { data: savedRows, error } = await supabase.from('organisations').update({
       name, primary_color: color, secondary_color: secondaryColor, accent_color: accentColor,
       ui_density: uiDensity, brand_font: brandFont, login_background_style: loginBgStyle,
-      slogan, logo_url: logoUrl, icon_url: iconUrl, logo_transform: logoTransform, icon_transform: iconTransform,
+      slogan, logo_url: logoUrl, icon_url: iconUrl,
       login_background_url: loginBgUrl, welcome_message: welcomeMessage,
       email_logo_url: emailLogoUrl, email_footer_text: emailFooterText, email_sender_name: emailSenderName, recent_colors: recentColors,
     }).eq('id', org?.id).select('id')
@@ -1224,6 +1125,7 @@ function BrandingSection({ org, refreshOrg }) {
       // "Add to Home Screen" icon, so it needs the same swap.
       document.querySelectorAll("link[rel='apple-touch-icon']").forEach(el => { el.href = bustedIcon })
     }
+    setLogoFile(null); setIconFile(null); setLoginBgFile(null); setEmailLogoFile(null)
     if (refreshOrg) await refreshOrg()
     savedSnapshot.current = currentSnapshot()
     setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2500)
@@ -1235,8 +1137,8 @@ function BrandingSection({ org, refreshOrg }) {
     setColor('#1B9AAA'); setSecondaryColor('#0EA5E9'); setAccentColor('#F59E0B')
     setUiDensity('rounded')
     setSlogan(''); setWelcomeMessage(''); setEmailFooterText('')
-    setLogoPreview(''); setLogoFile(null); setLogoRemoved(true); setLogoTransform({ zoom: 100, x: 0, y: 0 })
-    setIconPreview(''); setIconFile(null); setIconRemoved(true); setIconTransform({ zoom: 100, x: 0, y: 0 })
+    setLogoPreview(''); setLogoFile(null); setLogoRemoved(true)
+    setIconPreview(''); setIconFile(null); setIconRemoved(true)
     setLoginBgPreview(''); setLoginBgFile(null); setLoginBgRemoved(true)
     setEmailLogoPreview(''); setEmailLogoFile(null); setEmailLogoRemoved(true)
     // These three were left behind: "Reset to default" restored the colours and
@@ -1326,15 +1228,18 @@ function BrandingSection({ org, refreshOrg }) {
           <SettingCard title="Brand Identity" description="Your name, logo and tagline across LaunchSession.">
             <Field label="Organisation name"><input style={inp} value={name} onChange={e => setName(e.target.value)} /></Field>
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 14 }}>
-              <LogoUploadBox label="Logo" hint="PNG or SVG, recommended 512×512px, transparent background works best."
-                previewSrc={logoPreview} fallback={FALLBACK_LOGO_URL} transform={logoTransform}
-                onFileChange={handleLogoFileChange(setLogoPreview, setLogoFile, setLogoRemoved, setLogoTransform)} onTransformChange={setLogoTransform}
+              <LogoUploadBox label="Logo" hint="PNG, JPEG or WebP. A transparent background works best. Empty space around it is trimmed automatically."
+                previewSrc={logoPreview} fallback={FALLBACK_LOGO_URL} busy={preparing === 'logo'}
+                onFileChange={handleImageChoice('logo', setLogoPreview, setLogoFile, setLogoRemoved, { trim: true, maxDim: 1024 })}
                 onRemove={() => { setLogoPreview(''); setLogoFile(null); setLogoRemoved(true) }} boxSize={84} />
-              <LogoUploadBox label="Compact icon" hint="Square, ideally 512×512px. It only ever displays at 36–56px in the app (sidebar, browser tab), so this just keeps it sharp on retina screens."
-                previewSrc={iconPreview} fallback={logoPreview || FALLBACK_LOGO_URL} transform={iconTransform}
-                onFileChange={handleLogoFileChange(setIconPreview, setIconFile, setIconRemoved, setIconTransform)} onTransformChange={setIconTransform}
+              <LogoUploadBox label="Compact icon" hint="Square works best. Used for the browser tab and the icon when LaunchSession is added to a home screen. Your logo is used if you leave this empty."
+                previewSrc={iconPreview} fallback={logoPreview || FALLBACK_LOGO_URL} busy={preparing === 'icon'}
+                onFileChange={handleImageChoice('icon', setIconPreview, setIconFile, setIconRemoved, { trim: true, maxDim: 512 })}
                 onRemove={() => { setIconPreview(''); setIconFile(null); setIconRemoved(true) }} boxSize={64} />
             </div>
+            {uploadError && (
+              <div role="alert" style={{ fontSize: 12.5, color: '#B91C1C', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '9px 12px', marginBottom: 14, fontWeight: 600 }}>{uploadError}</div>
+            )}
             {logoSuggestions.length > 0 && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Colours from your logo</div>
@@ -1357,6 +1262,9 @@ function BrandingSection({ org, refreshOrg }) {
               <ColorField compact label="Primary colour" value={color} onChange={setColor} recentColors={recentColors} onCommit={commitRecentColor} />
               <ColorField compact label="Secondary colour" value={secondaryColor} onChange={setSecondaryColor} recentColors={recentColors} onCommit={commitRecentColor} />
               <ColorField compact label="Accent colour" value={accentColor} onChange={setAccentColor} recentColors={recentColors} onCommit={commitRecentColor} />
+            </div>
+            <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: -8, marginBottom: 16, lineHeight: 1.5 }}>
+              Primary colours the workspace, sign-in screen and emails. Secondary pairs with it in gradients. Accent is used on your public forms.
             </div>
 
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Presets</div>
@@ -1407,9 +1315,9 @@ function BrandingSection({ org, refreshOrg }) {
           </div>
 
           <div ref={appearanceRef} style={sectionWrapStyle('appearance')}>
-          <SettingCard title="Typeface &amp; interface" description="Applied across the whole workspace, not just this page — change one and look around.">
+          <SettingCard title="Typeface" description="Applied across the whole workspace and the sign-in screen, not just this page — choose one and look around.">
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Typeface</div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8, marginBottom: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8 }}>
               {BRAND_FONTS.map(f => {
                 const on = brandFont === f.key
                 return (
@@ -1432,18 +1340,6 @@ function BrandingSection({ org, refreshOrg }) {
               })}
             </div>
 
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Interface style</div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {DENSITIES.map(m => (
-                <button key={m.key} onClick={() => setUiDensity(m.key)} style={{ flex: 1, textAlign: 'left', padding: '12px 14px', borderRadius: m.key === 'compact' ? 6 : 14, border: uiDensity === m.key ? `2px solid ${color}` : '1.5px solid var(--border)', background: uiDensity === m.key ? `${color}10` : 'var(--surface)', cursor: 'pointer', minHeight: 44 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 800, color: uiDensity === m.key ? color : 'var(--text2)' }}>{m.label}</div>
-                  <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{m.note}</div>
-                </button>
-              ))}
-            </div>
-            <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 10, lineHeight: 1.5 }}>
-              Each card here is drawn with its own corner radius, so the choice shows itself.
-            </div>
           </SettingCard>
 
           <SettingCard title="Brand kit" description="Everything a designer or printer needs, without them needing an account.">
@@ -1468,7 +1364,7 @@ function BrandingSection({ org, refreshOrg }) {
                   <div style={{ display: 'flex', gap: 6 }}>
                     <label style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
                       Upload
-                      <input type="file" accept="image/*" onChange={handleFileChange(setLoginBgPreview, setLoginBgFile, setLoginBgRemoved)} style={{ display: 'none' }} />
+                      <input type="file" accept={BRAND_IMAGE_TYPES.join(',')} disabled={preparing === 'login-bg'} onChange={handleImageChoice('login-bg', setLoginBgPreview, setLoginBgFile, setLoginBgRemoved, { maxDim: 2400, photo: true })} style={{ display: 'none' }} />
                     </label>
                     {loginBgPreview && <button onClick={() => { setLoginBgPreview(''); setLoginBgFile(null); setLoginBgRemoved(true) }} style={{ padding: '6px 8px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🗑" /></button>}
                   </div>
@@ -1495,7 +1391,8 @@ function BrandingSection({ org, refreshOrg }) {
                 )}
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Email header logo</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>Email header logo</div>
+                <div style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 8, lineHeight: 1.45 }}>Used in invitation, form and broadcast emails. Your logo is used if you leave this empty.</div>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   <div style={{ width: 42, height: 42, borderRadius: 8, background: '#fff', border: '1.5px dashed var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     <img src={emailLogoPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
@@ -1503,17 +1400,17 @@ function BrandingSection({ org, refreshOrg }) {
                   <div style={{ display: 'flex', gap: 6 }}>
                     <label style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
                       Upload
-                      <input type="file" accept="image/*" onChange={handleFileChange(setEmailLogoPreview, setEmailLogoFile, setEmailLogoRemoved)} style={{ display: 'none' }} />
+                      <input type="file" accept={BRAND_IMAGE_TYPES.join(',')} disabled={preparing === 'email-logo'} onChange={handleImageChoice('email-logo', setEmailLogoPreview, setEmailLogoFile, setEmailLogoRemoved, { trim: true, maxDim: 600 })} style={{ display: 'none' }} />
                     </label>
                     {emailLogoPreview && <button onClick={() => { setEmailLogoPreview(''); setEmailLogoFile(null); setEmailLogoRemoved(true) }} style={{ padding: '6px 8px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🗑" /></button>}
                   </div>
                 </div>
               </div>
             </div>
-            <Field label="Email sender name" hint="Shown as the sender when we email people on your behalf (e.g. form invites). Defaults to your organisation name.">
+            <Field label="Email sender name" hint="Shown as the sender on form and registration emails. Defaults to your organisation name.">
               <input style={inp} value={emailSenderName} onChange={e => setEmailSenderName(e.target.value.slice(0, 60))} placeholder={name || 'e.g. Solidarity Sports'} maxLength={60} />
             </Field>
-            <Field label="Email footer text" hint={`${emailFooterText.length}/80`}>
+            <Field label="Email footer text" hint={`${emailFooterText.length}/80 — added to form and registration emails`}>
               <textarea style={{ ...inp, minHeight: 60, resize: 'vertical' }} value={emailFooterText} onChange={e => setEmailFooterText(e.target.value.slice(0, 80))} placeholder="e.g. Solidarity Sports · Registered Charity No. 123456" maxLength={80} />
             </Field>
           </SettingCard>
@@ -1540,7 +1437,7 @@ function BrandingSection({ org, refreshOrg }) {
                 <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB', display: 'flex', height: 320, background: '#F8FAFC' }}>
                   {previewDevice === 'desktop' && (
                     <div style={{ width: 56, background: '#0F172A', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14, gap: 14, flexShrink: 0 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 8, background: '#fff', overflow: 'hidden' }}><img src={iconPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /></div>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: '#fff', overflow: 'hidden' }}><img src={logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /></div>
                       {['🏠', '📅', '📋', '👥', '📊'].map((ic, i) => (
                         <div key={i} style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, background: i === 0 ? color : 'transparent', color: i === 0 ? '#fff' : 'rgba(255,255,255,0.4)' }}>{ic}</div>
                       ))}
@@ -1554,19 +1451,19 @@ function BrandingSection({ org, refreshOrg }) {
                       </div>
                       <div style={{ position: 'relative' }}>
                         <div style={{ fontSize: 13 }}><Icon name="🔔" /></div>
-                        <div style={{ position: 'absolute', top: -3, right: -3, width: 7, height: 7, borderRadius: '50%', background: accentColor }} />
+                        <div style={{ position: 'absolute', top: -3, right: -3, width: 7, height: 7, borderRadius: '50%', background: color }} />
                       </div>
                     </div>
                     <div style={{ padding: 12, flex: 1, overflow: 'hidden' }}>
                       <div style={{ fontSize: 9, opacity: 0.5, marginBottom: 6, fontWeight: 700 }}>{slogan || 'Your tagline here'}</div>
-                      <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: uiDensity === 'compact' ? 4 : 12, padding: 10, marginBottom: 8 }}>
+                      <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: 10, marginBottom: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                           <div style={{ fontSize: 10, fontWeight: 800, color: '#111827' }}>Football Skills Session</div>
                           <span style={{ fontSize: 8, fontWeight: 800, color: '#fff', background: color, borderRadius: 99, padding: '2px 6px' }}>LIVE</span>
                         </div>
                         <div style={{ fontSize: 9, color: '#6B7280' }}>12 signed in · Main Hall</div>
                       </div>
-                      <button style={{ width: '100%', border: 'none', borderRadius: uiDensity === 'compact' ? 4 : 8, padding: 9, background: `linear-gradient(135deg, ${color}, ${secondaryColor})`, color: '#fff', fontWeight: 700, fontSize: 11 }}>Primary Action</button>
+                      <button style={{ width: '100%', border: 'none', borderRadius: 8, padding: 9, background: `linear-gradient(135deg, ${color}, ${secondaryColor})`, color: '#fff', fontWeight: 700, fontSize: 11 }}>Primary Action</button>
                       <div style={{ textAlign: 'center', fontSize: 9, color: '#9CA3AF', marginTop: 10 }}>Powered by LaunchSession</div>
                     </div>
                   </div>
@@ -1586,18 +1483,18 @@ function BrandingSection({ org, refreshOrg }) {
                     ? `linear-gradient(180deg, rgba(5,9,20,${loginBgStyle === 'cover' ? '0.82' : '0.6'}) 0%, rgba(5,9,20,${loginBgStyle === 'cover' ? '0.68' : '0.7'}) 45%, rgba(5,9,20,0.88) 100%), url(${loginBgPreview}) center/cover`
                     : '#060B18',
                 }}>
-                  <div style={{ width: 56, height: 56, borderRadius: uiDensity === 'compact' ? 6 : 14, margin: '0 auto 14px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0 8px 24px ${color}40` }}>
-                    <img src={iconPreview || logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  <div style={{ width: 56, height: 56, borderRadius: 14, margin: '0 auto 14px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0 8px 24px ${color}40` }}>
+                    <img src={logoPreview || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.85)', marginBottom: 4 }}>{orgName}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>{slogan || 'Your tagline here'}</div>
+                  {/* No strapline: the sign-in screen does not show one. */}
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.85)', marginBottom: 14 }}>{orgName}</div>
                   {/* The welcome message is shown on Home, not here. It used to
                       be previewed on this screen, which promised a placement
                       that does not exist. */}
-                  <div style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${color}30`, borderRadius: uiDensity === 'compact' ? 6 : 14, padding: 18, textAlign: 'left' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${color}30`, borderRadius: 14, padding: 18, textAlign: 'left' }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 12 }}>Sign in to {orgName}</div>
-                    <div style={{ height: 30, borderRadius: uiDensity === 'compact' ? 4 : 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }} />
-                    <div style={{ height: 30, borderRadius: uiDensity === 'compact' ? 4 : 8, background: `linear-gradient(135deg, ${color}, ${secondaryColor})` }} />
+                    <div style={{ height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }} />
+                    <div style={{ height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${color}, ${secondaryColor})` }} />
                   </div>
                 </div>
               )}
@@ -1614,7 +1511,7 @@ function BrandingSection({ org, refreshOrg }) {
                     <div style={{ padding: 16, textAlign: 'center' }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 6 }}>Welcome to {orgName}!</div>
                       <div style={{ fontSize: 10.5, color: '#6B7280', marginBottom: 14, lineHeight: 1.5 }}>You're all set to sign in and get started.</div>
-                      <div style={{ display: 'inline-block', padding: '8px 18px', borderRadius: uiDensity === 'compact' ? 4 : 8, background: color, color: '#fff', fontWeight: 700, fontSize: 11 }}>Get Started</div>
+                      <div style={{ display: 'inline-block', padding: '8px 18px', borderRadius: 8, background: color, color: '#fff', fontWeight: 700, fontSize: 11 }}>Get Started</div>
                     </div>
                     <div style={{ borderTop: '1px solid #F1F5F9', padding: '12px 16px', textAlign: 'center' }}>
                       <div style={{ fontSize: 9, color: '#9CA3AF' }}>{emailFooterText || `${orgName} · Powered by LaunchSession`}</div>
@@ -3138,7 +3035,13 @@ export default function Settings({ org, session, userProfile, initialSection }) 
           <div style={{ fontSize: 14, color: '#64748B' }}>Organisation settings can only be changed by an admin. Ask your organisation's admin if you need something updated here.</div>
         </div>
       )
-      case 'branding':       return brandingEnabled ? <BrandingSection org={org} refreshOrg={refreshOrg} /> : (
+      case 'branding':       return brandingEnabled ? (isAdmin ? <BrandingSection org={org} refreshOrg={refreshOrg} /> : (
+        <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="🎨" /></div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Admin access required</div>
+          <div style={{ fontSize: 14, color: '#64748B' }}>Branding can only be changed by an admin. Ask your organisation's admin if you need something updated here.</div>
+        </div>
+      )) : (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="🎨" /></div>
           <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Branding Centre is not enabled</div>

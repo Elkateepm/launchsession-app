@@ -61,7 +61,7 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
   if (nl.status === 'sent') return res.status(400).json({ error: 'This newsletter has already been sent' })
 
   const { data: org } = await adminClient
-    .from('organisations').select('name, primary_color, logo_url').eq('id', nl.org_id).single()
+    .from('organisations').select('name, primary_color, logo_url, email_logo_url').eq('id', nl.org_id).single()
 
   // Test send. Deliberately touches nothing: no recipient rows, no status
   // change, no claim. It exists so you can look at the real thing in a real
@@ -86,7 +86,7 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
           prerendered: true,
           org_name: org?.name || 'Your organisation',
           org_color: primaryT,
-          org_logo: org?.logo_url,
+          org_logo: org?.email_logo_url || org?.logo_url,
           sender_name: profile.full_name,
         },
       })
@@ -167,7 +167,7 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
         prerendered: true,
         org_name: org?.name || 'Your organisation',
         org_color: primary,
-        org_logo: org?.logo_url,
+        org_logo: org?.email_logo_url || org?.logo_url,
         sender_name: profile.full_name,
       },
     })
@@ -286,7 +286,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, recipient_count: recipients.length, sent: recipients.length, failed: 0 })
     }
 
-    const { data: org } = await adminClient.from('organisations').select('name, primary_color, logo_url').eq('id', org_id).single()
+    const { data: org } = await adminClient.from('organisations').select('name, primary_color, logo_url, email_logo_url').eq('id', org_id).single()
 
     let sent = 0, failed = 0
     try {
@@ -297,7 +297,7 @@ export default async function handler(req, res) {
           body_html,
           org_name: org?.name || 'Your organisation',
           org_color: org?.primary_color,
-          org_logo: org?.logo_url,
+          org_logo: org?.email_logo_url || org?.logo_url,
           sender_name: profile.full_name,
         }
       })

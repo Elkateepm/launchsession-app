@@ -153,6 +153,18 @@ export function OrgProvider({ children }) {
     }
   }
 
+  // The organisation is first loaded before anyone signs in, and signing in
+  // does not reload the page. Contact, safeguarding and billing details are
+  // only returned to members of the organisation, so the copy loaded on the
+  // sign-in screen lacks them. Fetch it again whenever the user changes.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') refreshOrg()
+    })
+    return () => subscription.unsubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return (
     <OrgContext.Provider value={{ org, loading, noOrg, refreshOrg, terms: getTerms(org?.type) }}>
       {children}

@@ -74,7 +74,7 @@ export default async function handler(req, res) {
       try {
         const { data: org, error: orgErr } = await adminClient
           .from('organisations')
-          .select('name, slug, primary_color, logo_url')
+          .select('name, slug, primary_color, logo_url, email_logo_url')
           .eq('id', org_id)
           .single()
         if (orgErr) throw orgErr
@@ -112,7 +112,7 @@ export default async function handler(req, res) {
             org_name: orgDataForExisting?.name || 'your organisation',
             org_slug: orgDataForExisting?.slug || org_slug,
             org_color: orgDataForExisting?.primary_color || '#3B82F6',
-            org_logo: orgDataForExisting?.logo_url || null,
+            org_logo: orgDataForExisting?.email_logo_url || orgDataForExisting?.logo_url || null,
             role: inviteRole,
             existing_user: true, // lets the Edge Function pick an "added to org" template instead of "welcome, set your password"
           }
@@ -176,7 +176,7 @@ export default async function handler(req, res) {
             org_name: orgData?.name || 'your organisation',
             org_slug: orgData?.slug || org_slug,
             org_color: orgData?.primary_color || '#3B82F6',
-            org_logo: orgData?.logo_url || null,
+            org_logo: orgData?.email_logo_url || orgData?.logo_url || null,
             role: inviteRole,
             redirect_to: redirectUrl,
           }
@@ -223,7 +223,7 @@ export default async function handler(req, res) {
           org_name: orgData?.name || 'your organisation',
           org_slug: orgData?.slug || org_slug,
           org_color: orgData?.primary_color || '#3B82F6',
-          org_logo: orgData?.logo_url || null,
+          org_logo: orgData?.email_logo_url || orgData?.logo_url || null,
           role: inviteRole,
           token: adminInvite.token, // the real, DB-generated token CreatePassword.jsx will look up
         }
