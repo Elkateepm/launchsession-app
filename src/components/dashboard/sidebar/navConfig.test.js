@@ -218,3 +218,21 @@ describe('Office', () => {
     expect(visibleItems(OFFICE_TABS, ctx)).toHaveLength(0)
   })
 })
+
+
+describe('People & HR navigation', () => {
+  const peopleItems = NAV_SECTIONS.find(s => s.id === 'people').items
+  it('combines account and volunteer entry points only for an enabled HR workspace', () => {
+    const combined = visibleItems(peopleItems, { ...ctx(), combinePeopleHR: true })
+    expect(combined.map(i => i.id)).toEqual(['children', 'hr'])
+    expect(combined.find(i => i.id === 'hr').label).toBe('People & HR')
+  })
+  it('keeps account and volunteer management available without HR', () => {
+    const fallback = visibleItems(peopleItems, { ...ctx(), hasModule: key => key !== 'hr', combinePeopleHR: false })
+    expect(fallback.map(i => i.id)).toEqual(['children', 'team', 'volunteers'])
+  })
+  it('keeps ordinary staff away from HR while preserving volunteer module access', () => {
+    const staff = visibleItems(peopleItems, { ...ctx(), isAdmin: false, isManager: false, combinePeopleHR: false })
+    expect(staff.map(i => i.id)).toEqual(['children', 'volunteers'])
+  })
+})

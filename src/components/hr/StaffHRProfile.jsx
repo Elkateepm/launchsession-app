@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import {
@@ -6,6 +6,8 @@ import {
   PROBATION_STATUSES, statusChip, ukDate, daysUntil,
 } from '../../lib/hrAccess'
 import Icon from '../../lib/icons'
+import { ProfileSummary } from './PeopleHRPanels'
+import { HR, useDialogFocus } from './peopleHRShared'
 import { ComplianceTab, TrainingTab } from './StaffCompliance'
 import StaffDocuments from './StaffDocuments'
 import { SupervisionTab, ProbationTab } from './StaffSupervision'
@@ -43,25 +45,17 @@ function Chip({ tone, bg, children }) {
   }}>{children}</span>
 }
 
-function Row({ label, value }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '9px 0', borderTop: '1px solid #F1F5F9' }}>
-      <span style={{ fontSize: 13, color: '#64748B', flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 13.5, color: '#0F172A', fontWeight: 600, textAlign: 'right', minWidth: 0 }}>
-        {value || <span style={{ color: '#CBD5E1', fontWeight: 500 }}>Not recorded</span>}
-      </span>
-    </div>
-  )
-}
-
 export default function StaffHRProfile({ org, userProfile, person, onClose, initialTab }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#3B82F6'
   const access = useHrAccess(userProfile?.role)
+  const dialogRef = useRef(null)
+  useDialogFocus(dialogRef, onClose)
 
   const [staff, setStaff] = useState(null)
   const [compliance, setCompliance] = useState(null)
   const [onboarding, setOnboarding] = useState(null)
+  const [summaryWarning, setSummaryWarning] = useState(false)
   // Opening a disciplinary from a case takes over the tab body rather than
   // stacking a third overlay on an already-nested drawer.
   const [discId, setDiscId] = useState(null)
@@ -73,6 +67,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
   // person is the user_profiles row from Team. It may or may not already have
   // an employment record behind it.
   const load = useCallback(async () => {
+    if (access.loading || !access.canView) return
     setLoading(true); setError('')
     try {
       // Two ways in. From Team we hold a user_profiles id and may need the
@@ -91,13 +86,13 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
       // tab alone: the header chip and the Overview line both show it, and
       // they must not sit blank until somebody happens to open that tab.
       const [rec, mgrs, comp, onb] = await Promise.all([
-        supabase.from('hr_staff').select('*').eq('id', staffId).maybeSingle(),
+        supabase.from('hr_staff').select('*').eq('org_id', org.id).eq('id', staffId).maybeSingle(),
         supabase.from('hr_staff').select('id, full_name').eq('org_id', org.id)
           .eq('is_active', true).order('full_name'),
         supabase.from('hr_staff_compliance_summary').select('*')
-          .eq('staff_id', staffId).maybeSingle(),
+          .eq('org_id', org.id).eq('staff_id', staffId).maybeSingle(),
         supabase.from('hr_onboarding_progress').select('*')
-          .eq('staff_id', staffId).maybeSingle(),
+          .eq('org_id', org.id).eq('staff_id', staffId).maybeSingle(),
       ])
       if (rec.error) throw rec.error
       setStaff(rec.data)
@@ -105,14 +100,17 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
       // A failed summary is not fatal -- the rest of the record still opens.
       setCompliance(comp.error ? null : comp.data)
       setOnboarding(onb.error ? null : onb.data)
+      setSummaryWarning(!!comp.error || !!onb.error)
     } catch (e) {
       setError(e.message || 'Could not open this HR record.')
     } finally {
       setLoading(false)
     }
-  }, [person.id, person.hr_staff_id, org?.id])
+  }, [person.id, person.hr_staff_id, org?.id, access.loading, access.canView])
 
   useEffect(() => { load() }, [load])
+
+  const changeTab = target => { setTab(target); if (target === 'overview') load() }
 
   const shell = (body) => (
     <div onClick={onClose} style={{
@@ -120,18 +118,21 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
       display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center',
       padding: isMobile ? 0 : 16,
     }}>
-      <div onClick={e => e.stopPropagation()} style={{
-        background: '#F8FAFC', width: isMobile ? '100%' : 720, maxWidth: '100%',
-        maxHeight: isMobile ? '94vh' : '90vh', overflowY: 'auto',
-        borderRadius: isMobile ? '20px 20px 0 0' : 18, padding: isMobile ? 16 : 20,
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={`${person.full_name || 'Team member'} — HR profile`} tabIndex={-1} onClick={e => e.stopPropagation()} style={{
+        background: HR.canvas, width: isMobile ? '100%' : 1040, maxWidth: '100%',
+        height: isMobile ? '100dvh' : 'auto', maxHeight: isMobile ? '100dvh' : '92vh', overflowY: 'auto', boxSizing: 'border-box',
+        borderRadius: isMobile ? 0 : 22, padding: isMobile ? 18 : 30,
       }}>{body}</div>
     </div>
   )
 
-  if (loading) {
+  if (!access.loading && !access.canView) return shell(<div role="alert" style={card}>You do not have access to this HR record.<button style={HR.button} onClick={onClose}>Close</button></div>)
+
+  if (loading || access.loading) {
     return shell(
       <div style={{ ...card, color: '#64748B', fontSize: 14, marginBottom: 0 }}>
         Opening {person.full_name || person.email}&apos;s HR record…
+        <button style={{ ...HR.button, marginLeft: 12 }} onClick={onClose}>Close</button>
       </div>
     )
   }
@@ -150,7 +151,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
             flex: 1, minHeight: 44, borderRadius: 11, border: 'none', background: primary,
             color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
           }}>Try again</button>
-          <button onClick={onClose} style={{
+          <button onClick={onClose} aria-label="Close HR profile" style={{
             flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid #E2E8F0',
             background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
@@ -186,6 +187,16 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
   // somebody without disciplinary access). Fall back rather than render a body
   // with nothing in it.
   const activeTab = TABS.some(([k]) => k === tab) ? tab : 'overview'
+  const groups = [
+    ['Summary', ['overview']],
+    ['Employment', ['employment', 'onboarding', 'offboarding']],
+    ['Checks & training', ['compliance', 'training']],
+    ['Documents', ['documents']],
+    ['Leave', ['absence']],
+    ['HR records', ['supervision', 'probation', 'cases', 'disciplinary']],
+  ].map(([label, keys]) => [label, TABS.filter(([key]) => keys.includes(key))]).filter(([, tabs]) => tabs.length)
+  const group = groups.find(([, tabs]) => tabs.some(([key]) => key === activeTab))
+
 
   return shell(
     <>
@@ -200,11 +211,11 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
             : (staff.full_name || '?').slice(0, 1).toUpperCase()}
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', letterSpacing: -0.4 }}>
+          <div style={{ fontSize: isMobile ? 23 : 28, fontWeight: 750, color: HR.ink, letterSpacing: -0.8 }}>
             {staff.full_name}
           </div>
           <div style={{ fontSize: 13, color: '#64748B', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {staff.job_title || empType?.label || 'Staff'}{staff.email ? ` · ${staff.email}` : ''}
+            {staff.job_title || empType?.label || 'Staff'}{lineManager ? ` · Managed by ${lineManager.full_name}` : ''}
           </div>
           <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
             <Chip tone={chip.tone} bg={chip.bg}>{chip.label}</Chip>
@@ -231,51 +242,14 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
         }}><Icon name="✕" /></button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-        {TABS.map(([k, label]) => (
-          <button key={k} onClick={() => setTab(k)} style={{
-            padding: '9px 14px', borderRadius: 10, cursor: 'pointer', minHeight: 44,
-            border: `1px solid ${activeTab === k ? 'transparent' : '#E2E8F0'}`,
-            background: activeTab === k ? primary : '#fff',
-            color: activeTab === k ? '#fff' : '#64748B',
-            fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
-          }}>{label}</button>
-        ))}
-      </div>
-
-      {activeTab === 'overview' && (
-        <div style={card}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>Employment summary</div>
-          <Row label="Employment type" value={empType?.label} />
-          <Row label="Job title" value={staff.job_title} />
-          <Row label="Department" value={staff.department} />
-          <Row label="Line manager" value={lineManager?.full_name} />
-          <Row label="Start date" value={ukDate(staff.start_date)} />
-          <Row label="Contract" value={staff.contract_type} />
-          <Row label="Status" value={chip.label} />
-          {staff.employment_status === 'leaving' && <Row label="Leaving date" value={ukDate(staff.leaving_date)} />}
-          <Row label="Emergency contact" value={
-            staff.emergency_contact_name
-              ? `${staff.emergency_contact_name}${staff.emergency_contact_phone ? ` · ${staff.emergency_contact_phone}` : ''}`
-              : null
-          } />
-          <Row label="Account" value={staff.user_id ? 'Linked to a LaunchSession login' : 'No login — HR record only'} />
-          <Row label="Onboarding" value={
-            onboarding
-              ? (onboarding.required_outstanding > 0
-                  ? `${onboarding.percent}% — ${onboarding.required_outstanding} required item(s) left`
-                  : 'Complete')
-              : 'Not started'
-          } />
-          <Row label="Compliance" value={
-            compliance
-              ? (compliance.percent === null
-                  ? 'No requirements apply'
-                  : `${compliance.percent}% — ${compliance.overdue} overdue, ${compliance.missing} missing, ${compliance.due_soon} due soon`)
-              : null
-          } />
-        </div>
-      )}
+      <nav aria-label="Profile sections" style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: `1px solid ${HR.line}`, marginBottom: 18 }}>
+        {groups.map(([label, tabs]) => <button key={label} aria-current={group?.[0] === label ? 'page' : undefined} onClick={() => changeTab(tabs[0][0])} style={{ ...HR.button, flexShrink: 0, borderRadius: 0, border: 0, borderBottom: `3px solid ${group?.[0] === label ? primary : 'transparent'}`, background: 'transparent', color: group?.[0] === label ? primary : HR.muted }}>{label}</button>)}
+      </nav>
+      {group?.[1].length > 1 && <label style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18, color: HR.muted, fontSize: 12 }}>
+        {group[0]}
+        <select aria-label={`${group[0]} section`} value={activeTab} onChange={e => changeTab(e.target.value)} style={{ ...HR.input, width: 'auto', maxWidth: '70%' }}>{group[1].map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
+      </label>}
+      {activeTab === 'overview' && <ProfileSummary staff={staff} compliance={compliance} onboarding={onboarding} primary={primary} lineManager={lineManager} onTab={changeTab} warning={summaryWarning} />}
 
       {activeTab === 'employment' && (
         <EmploymentForm
@@ -287,7 +261,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
 
       {activeTab === 'onboarding' && (
         <StaffOnboarding org={org} staff={staff} primary={primary}
-          canEdit={access.canEdit} onJumpToTab={setTab} />
+          canEdit={access.canEdit} onJumpToTab={changeTab} />
       )}
 
       {activeTab === 'compliance' && (
@@ -597,9 +571,9 @@ function EmploymentForm({ staff, managers, primary, canEdit, onSaved }) {
     }
 
     const { data, error } = await supabase.from('hr_staff')
-      .update(patch).eq('id', staff.id).select().maybeSingle()
+      .update(patch).eq('org_id', staff.org_id).eq('id', staff.id).select().maybeSingle()
     setSaving(false)
-    if (error) { setErr(error.message); return }
+    if (error || !data) { setErr(error?.message || 'No record was updated. Check your access and try again.'); return }
 
     // Recorded, not derived: the log says a change happened and by whom, and
     // deliberately carries no employment detail in the summary.
