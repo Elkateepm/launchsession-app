@@ -447,10 +447,10 @@ function StepDetails({ form, setForm, staff, org }) {
       </div>
 
       <div style={card}>
-        <SectionHeader icon="📝" title="Notes" subtitle="Optional context for your team and for parents" color="#64748B" />
+        <SectionHeader icon="🧭" title="Purpose & plan" subtitle="Give delivery staff a clear intention to reflect against afterwards" color="#64748B" />
         <div style={{ marginBottom: 14 }}>
-          <label style={label}>Description</label>
-          <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} />
+          <label style={label}>What is this session trying to achieve?</label>
+          <textarea style={{ ...inp, minHeight: 80, resize: 'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Describe the purpose, planned approach and what a successful session should look like." />
         </div>
         <div>
           <label style={label}>Internal notes <span style={{ fontWeight: 400, color: 'var(--text3)' }}>(staff only, not shown to parents)</span></label>
@@ -669,7 +669,10 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
       </div>
 
       <div style={card}>
-        <SectionHeader icon="🎯" title="Outcomes to measure" subtitle="What impact should this session track?" color="#059669" />
+        <SectionHeader icon="🎯" title="What should change?" subtitle="Choose intended outcomes now; staff will record which were observed after delivery" color="#059669" />
+        <div style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--text3)', padding: '10px 12px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, marginBottom: 12 }}>
+          Selected outcomes become evidence prompts in the session reflection and feed the Session Learning Report.
+        </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {OUTCOME_AREAS.map(a => {
             const active = form.outcome_areas.includes(a)

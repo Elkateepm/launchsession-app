@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import {
-  DATE_RANGES, rangeFor, getOverviewMetrics, getInsightExtras, deriveInsights,
+  DATE_RANGES, rangeFor, getOverviewMetrics, getInsightExtras, getSessionLearningMetrics, deriveInsights,
   listSavedReports, renameReport, deleteReport, duplicateReport, rerunReport,
   REPORT_LIBRARY, REPORT_CATEGORIES, canAccessReport,
 } from '../../lib/reportingService'
@@ -68,11 +68,12 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
     if (!orgId) return
     setLoading(true); setError('')
     try {
-      const [m, x] = await Promise.all([
+      const [m, x, learning] = await Promise.all([
         getOverviewMetrics(range),
         getInsightExtras(orgId, range),
+        getSessionLearningMetrics(range),
       ])
-      setMetrics(m); setExtras(x)
+      setMetrics(m); setExtras({ ...x, learning })
     } catch (e) {
       setError(e.message || 'Could not load report data.')
       setMetrics(null)
@@ -172,7 +173,9 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
       {view === 'overview' && (
         <OverviewView
           loading={loading} metrics={metrics} insights={insights} isMobile={isMobile}
+          learning={extras.learning}
           savedReports={savedReports} onGoto={goto}
+          onOpenLearning={() => setDocReport({ key: 'learning', name: 'Session Learning Report' })}
           onOpenLibrary={() => setView('library')} onOpenSaved={() => setView('saved')}
         />
       )}
@@ -219,7 +222,7 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
   )
 }
 
-function OverviewView({ loading, metrics, insights, isMobile, savedReports, onGoto, onOpenLibrary, onOpenSaved }) {
+function OverviewView({ loading, metrics, learning, insights, isMobile, savedReports, onGoto, onOpenLearning, onOpenLibrary, onOpenSaved }) {
   if (loading) {
     return (
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit,minmax(150px,1fr))', gap: 12 }}>
@@ -280,6 +283,30 @@ function OverviewView({ loading, metrics, insights, isMobile, savedReports, onGo
         </div>
       )}
 
+      {learning && Number(learning.delivered || 0) > 0 && (
+        <>
+          <SectionLabel>Learning loop</SectionLabel>
+          <div style={{ ...card({ padding: isMobile ? 16 : 20, marginBottom: 22 }), background: 'linear-gradient(135deg,#F5F3FF,#EFF6FF)', borderColor: '#C7D2FE' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+              <div style={{ maxWidth: 520 }}>
+                <div style={{ fontSize: 15, fontWeight: 900, color: '#312E81' }}>From delivery to evidence</div>
+                <div style={{ fontSize: 12.5, color: '#475569', lineHeight: 1.5, marginTop: 4 }}>See whether planned outcomes were observed, where evidence is strong and which improvements still need action.</div>
+              </div>
+              <button onClick={onOpenLearning} style={{ minHeight: 44, padding: '10px 15px', border: 'none', borderRadius: 10, background: '#4338CA', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>Open learning report</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))', gap: 9, marginTop: 16 }}>
+              {[
+                { v: `${learning.reflections_completed}/${learning.reflection_required}`, l: 'reflections' },
+                { v: learning.avg_engagement ? `${learning.avg_engagement}/5` : '—', l: 'engagement' },
+                { v: learning.avg_inclusion ? `${learning.avg_inclusion}/5` : '—', l: 'inclusion' },
+                { v: learning.evidence_count || 0, l: 'with evidence' },
+                { v: learning.actions_open || 0, l: 'open actions' },
+              ].map(x => <div key={x.l} style={{ background: 'rgba(255,255,255,0.78)', border: '1px solid #E0E7FF', borderRadius: 11, padding: 11 }}><div style={{ fontSize: 19, fontWeight: 900, color: '#3730A3' }}>{x.v}</div><div style={{ fontSize: 10.5, color: '#64748B', fontWeight: 700 }}>{x.l}</div></div>)}
+            </div>
+          </div>
+        </>
+      )}
+
       {insights.length > 0 && (
         <>
           <SectionLabel>Needs your attention</SectionLabel>
@@ -305,7 +332,7 @@ function OverviewView({ loading, metrics, insights, isMobile, savedReports, onGo
 
       <SectionLabel>Popular reports</SectionLabel>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(240px,1fr))', gap: 12, marginBottom: 22 }}>
-        {REPORT_LIBRARY.filter(r => ['delivery', 'attendance', 'impact', 'funding'].includes(r.key)).map(r => (
+        {REPORT_LIBRARY.filter(r => ['delivery', 'attendance', 'learning', 'funding'].includes(r.key)).map(r => (
           <div key={r.key} style={card({ padding: 16 })}>
             <div style={{
               width: 34, height: 34, borderRadius: 10, display: 'inline-flex', alignItems: 'center',
