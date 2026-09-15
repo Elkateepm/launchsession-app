@@ -563,11 +563,11 @@ function ReflectionField({ i, children }) {
 }
 
 const REFLECT_STEPS = [
-  { key: 'rating',   title: 'Rate it',        emoji: '⭐' },
-  { key: 'wins',     title: 'The wins',       emoji: '🙌' },
-  { key: 'improve',  title: 'Room to grow',   emoji: '🌱' },
+  { key: 'rating',   title: 'Quick pulse',     emoji: '⭐' },
+  { key: 'evidence', title: 'Change observed', emoji: '🎯' },
+  { key: 'learning', title: 'Voice & learning', emoji: '💬' },
   { key: 'people',   title: 'Who showed up',  emoji: '👥' },
-  { key: 'crew',     title: 'Behind the scenes', emoji: '🎽' },
+  { key: 'actions',  title: 'Next actions',    emoji: '✅' },
   { key: 'wrap',     title: 'Wrap it up',     emoji: '✨' },
 ]
 
@@ -580,7 +580,7 @@ const RATING_REACTIONS = {
   5: { emoji: '🤩', text: 'Brilliant! Absolutely smashed it.' },
 }
 
-function ReflectionModal({ session, org, onClose, existing, onSaved }) {
+function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = [], existingActions = [], teamMembers = [], onSaved }) {
   const primary = org?.primary_color || '#1B9AAA'
   const secondary = org?.secondary_color || '#7C3AED'
   const isMobile = useIsMobile()
@@ -588,6 +588,12 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   const [direction, setDirection] = useState(1)
   const [form, setForm] = useState({
     overall_rating: existing?.overall_rating || 0,
+    engagement_rating: existing?.engagement_rating || 0,
+    inclusion_rating: existing?.inclusion_rating || 0,
+    outcomes_observed: existing?.outcomes_observed || [],
+    evidence_notes: existing?.evidence_notes || '',
+    participant_voice: existing?.participant_voice || '',
+    learning_tags: existing?.learning_tags || [],
     what_went_well: existing?.what_went_well || '',
     what_could_improve: existing?.what_could_improve || '',
     attendance_notes: existing?.attendance_notes || '',
@@ -597,6 +603,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
     safeguarding_flag: existing?.safeguarding_flag || false,
     reflection: existing?.reflection || '',
   })
+  const [actions, setActions] = useState(existingActions.length ? existingActions : [])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
@@ -616,10 +623,31 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       const payload = { ...form, session_id: session.id, org_id: org.id, created_by: user?.id, updated_at: new Date().toISOString() }
-      const { error: err } = existing
-        ? await supabase.from('session_reflections').update(payload).eq('id', existing.id)
-        : await supabase.from('session_reflections').insert(payload)
+      const { data: savedReflection, error: err } = existing
+        ? await supabase.from('session_reflections').update(payload).eq('id', existing.id).eq('org_id', org.id).select('id').single()
+        : await supabase.from('session_reflections').insert(payload).select('id').single()
       if (err) throw err
+      const reflectionId = savedReflection.id
+      const keptIds = actions.filter(a => a.id).map(a => a.id)
+      const removed = existingActions.filter(a => a.status === 'open' && !keptIds.includes(a.id))
+      const removeResults = await Promise.all(removed.map(a => supabase.from('session_follow_up_actions').delete().eq('id', a.id).eq('org_id', org.id)))
+      const removeError = removeResults.find(r => r.error)?.error
+      if (removeError) throw removeError
+      for (const action of actions.filter(a => a.title?.trim())) {
+        const actionPayload = {
+          org_id: org.id, session_id: session.id, reflection_id: reflectionId,
+          title: action.title.trim(), owner_id: action.owner_id || user?.id || null,
+          due_date: action.due_date || null, status: action.status || 'open',
+          completed_at: action.status === 'completed' ? (action.completed_at || new Date().toISOString()) : null,
+          completed_by: action.status === 'completed' ? (action.completed_by || user?.id || null) : null,
+          created_by: action.created_by || user?.id || null, updated_at: new Date().toISOString(),
+        }
+        const actionQuery = action.id
+          ? supabase.from('session_follow_up_actions').update(actionPayload).eq('id', action.id).eq('org_id', org.id)
+          : supabase.from('session_follow_up_actions').insert(actionPayload)
+        const { error: actionError } = await actionQuery
+        if (actionError) throw actionError
+      }
       setSaved(true)
       setTimeout(onSaved, 1400)
     } catch (e) {
@@ -637,6 +665,17 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
   })
   const label = { fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', display: 'block', marginBottom: 6 }
   const hint = { fontSize: 11.5, color: 'var(--text3, #9CA3AF)', marginBottom: 10, lineHeight: 1.4 }
+  const toggleArray = (key, value) => set(key, form[key].includes(value) ? form[key].filter(x => x !== value) : [...form[key], value])
+  const addAction = () => setActions(a => [...a, { title: '', owner_id: '', due_date: '', status: 'open' }])
+  const updateAction = (i, patch) => setActions(a => a.map((x, n) => n === i ? { ...x, ...patch } : x))
+  const scoreRow = (field, title) => (
+    <div style={{ marginTop: 18 }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)' }}>{title}</div>
+      <div style={{ display: 'flex', gap: 7, marginTop: 7 }}>
+        {[1,2,3,4,5].map(n => <button key={n} onClick={() => set(field, n)} style={{ width: 42, height: 42, borderRadius: 11, border: form[field] === n ? `2px solid ${primary}` : '1px solid var(--border)', background: form[field] === n ? 'var(--org-a10)' : 'var(--surface)', color: form[field] === n ? primary : 'var(--text3)', fontWeight: 900, cursor: 'pointer' }}>{n}</button>)}
+      </div>
+    </div>
+  )
 
   const slideVariants = {
     enter: (dir) => ({ opacity: 0, x: dir > 0 ? 40 : -40 }),
@@ -720,7 +759,7 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
                               key={n}
                               whileHover={{ scale: 1.12, y: -3 }} whileTap={{ scale: 0.9 }}
                               onMouseEnter={() => setHoverStar(n)} onMouseLeave={() => setHoverStar(0)}
-                              onClick={() => { set('overall_rating', n); setTimeout(() => goTo(1), 550) }}
+                              onClick={() => set('overall_rating', n)}
                               style={{ width: 52, height: 52, borderRadius: 14, border: `1.5px solid ${lit ? '#F59E0B' : 'var(--border, #E5E7EB)'}`, background: lit ? 'linear-gradient(135deg,#FEF3C7,#FDE68A)' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 22, boxShadow: lit ? '0 6px 16px rgba(245,158,11,0.3)' : 'none', transition: 'background 0.15s, box-shadow 0.15s' }}
                             >
                               ⭐
@@ -728,25 +767,46 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
                           )
                         })}
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--text3, #9CA3AF)', marginTop: 18 }}>Tap a star — we'll move on automatically ✨</div>
+                      {scoreRow('engagement_rating', 'How engaged were young people?')}
+                      {scoreRow('inclusion_rating', 'How inclusive did the session feel?')}
                     </div>
                   )}
 
-                  {/* STEP 1 — Wins */}
+                  {/* STEP 1 — planned outcomes and evidence */}
                   {step === 1 && (
                     <div>
-                      <label style={label}>What went well?</label>
-                      <div style={hint}>Activities, engagement, moments worth repeating.</div>
-                      <textarea autoFocus style={{ ...ta('www'), minHeight: 140 }} onFocus={() => setFocused('www')} onBlur={() => setFocused(null)} value={form.what_went_well} onChange={e => set('what_went_well', e.target.value)} placeholder="e.g. The warm-up game got everyone involved straight away..." />
+                      <label style={label}>Which planned outcomes did you observe?</label>
+                      <div style={hint}>These come from the session plan. Select only changes you actually saw.</div>
+                      {plannedOutcomes.length ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
+                        {plannedOutcomes.map(outcome => {
+                          const active = form.outcomes_observed.includes(outcome)
+                          return <button key={outcome} onClick={() => toggleArray('outcomes_observed', outcome)} style={{ minHeight: 44, padding: '8px 13px', borderRadius: 99, border: active ? `2px solid ${primary}` : '1px solid var(--border)', background: active ? 'var(--org-a10)' : 'var(--surface)', color: active ? primary : 'var(--text2)', fontWeight: 800, cursor: 'pointer' }}>{active ? '✓ ' : ''}{outcome}</button>
+                        })}
+                      </div> : <div style={{ padding: 12, borderRadius: 11, background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E', fontSize: 12, marginBottom: 16 }}>No outcomes were selected when this session was planned. You can still capture evidence below.</div>}
+                      <label style={label}>What tells you change happened?</label>
+                      <div style={hint}>Record an observable moment, behaviour or piece of work—avoid names unless necessary.</div>
+                      <textarea style={{ ...ta('evidence'), minHeight: 120 }} onFocus={() => setFocused('evidence')} onBlur={() => setFocused(null)} value={form.evidence_notes} onChange={e => set('evidence_notes', e.target.value)} placeholder="e.g. Three quieter participants volunteered to lead the final activity..." />
                     </div>
                   )}
 
-                  {/* STEP 2 — Improve */}
+                  {/* STEP 2 — participant voice and learning */}
                   {step === 2 && (
                     <div>
-                      <label style={label}>What could be improved next time?</label>
-                      <div style={hint}>Timing, equipment, structure, anything that didn't quite land.</div>
-                      <textarea autoFocus style={{ ...ta('imp'), minHeight: 140 }} onFocus={() => setFocused('imp')} onBlur={() => setFocused(null)} value={form.what_could_improve} onChange={e => set('what_could_improve', e.target.value)} placeholder="e.g. We ran short on footballs for the group size..." />
+                      <ReflectionField i={0}>
+                        <label style={label}>Participant voice</label>
+                        <div style={hint}>An anonymised quote or short summary of what young people said.</div>
+                        <textarea style={ta('voice')} onFocus={() => setFocused('voice')} onBlur={() => setFocused(null)} value={form.participant_voice} onChange={e => set('participant_voice', e.target.value)} placeholder={'e.g. “I normally sit out, but today I joined the whole game.”'} />
+                      </ReflectionField>
+                      <ReflectionField i={1}>
+                        <label style={label}>What worked—and what should change?</label>
+                        <textarea style={ta('www')} onFocus={() => setFocused('www')} onBlur={() => setFocused(null)} value={form.what_went_well} onChange={e => set('what_went_well', e.target.value)} placeholder="What is worth repeating?" />
+                        <textarea style={{ ...ta('imp'), marginTop: 10 }} onFocus={() => setFocused('imp')} onBlur={() => setFocused(null)} value={form.what_could_improve} onChange={e => set('what_could_improve', e.target.value)} placeholder="What should be adapted next time?" />
+                      </ReflectionField>
+                      <ReflectionField i={2}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                          {['Strong engagement', 'Inclusive practice', 'Adapt activity', 'Equipment issue', 'Timing issue', 'Staffing insight'].map(tag => <button key={tag} onClick={() => toggleArray('learning_tags', tag)} style={{ minHeight: 40, padding: '7px 11px', borderRadius: 99, border: form.learning_tags.includes(tag) ? `2px solid ${secondary}` : '1px solid var(--border)', background: form.learning_tags.includes(tag) ? `${secondary}12` : 'var(--surface)', color: form.learning_tags.includes(tag) ? secondary : 'var(--text3)', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>{tag}</button>)}
+                        </div>
+                      </ReflectionField>
                     </div>
                   )}
 
@@ -766,13 +826,24 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
                     </div>
                   )}
 
-                  {/* STEP 4 — Crew (staffing + would repeat) */}
+                  {/* STEP 4 — accountable follow-up actions */}
                   {step === 4 && (
                     <div>
                       <ReflectionField i={0}>
-                        <label style={label}>Staffing & volunteer cover</label>
-                        <div style={hint}>Was there enough cover? Anyone who went above and beyond?</div>
-                        <textarea autoFocus style={ta('staff')} onFocus={() => setFocused('staff')} onBlur={() => setFocused(null)} value={form.staffing_notes} onChange={e => set('staffing_notes', e.target.value)} placeholder="e.g. Could have used one more volunteer for the smaller groups." />
+                        <label style={label}>Turn learning into action</label>
+                        <div style={hint}>Give each improvement an owner and date. Open actions appear in Needs Review and Reports.</div>
+                        {actions.map((action, i) => <div key={action.id || i} style={{ padding: 11, border: '1px solid var(--border)', borderRadius: 12, marginBottom: 9, background: 'var(--surface2)' }}>
+                          <input style={{ ...ta(`action-${i}`), minHeight: 44, height: 44, resize: 'none' }} value={action.title} onChange={e => updateAction(i, { title: e.target.value })} placeholder="e.g. Bring visual instruction cards" />
+                          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8, marginTop: 8 }}>
+                            <select value={action.owner_id || ''} onChange={e => updateAction(i, { owner_id: e.target.value })} style={{ ...ta('owner'), minHeight: 42, height: 42, padding: '6px 9px' }}><option value="">Assign to me</option>{teamMembers.map(m => <option key={m.id} value={m.id}>{m.full_name}</option>)}</select>
+                            <input type="date" value={action.due_date || ''} onChange={e => updateAction(i, { due_date: e.target.value })} style={{ ...ta('due'), minHeight: 42, height: 42, padding: '6px 9px' }} />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                            {action.id && <label style={{ fontSize: 11.5, fontWeight: 700, color: '#15803D' }}><input type="checkbox" checked={action.status === 'completed'} onChange={e => updateAction(i, { status: e.target.checked ? 'completed' : 'open' })} /> Complete</label>}
+                            <button onClick={() => setActions(a => a.filter((_, n) => n !== i))} style={{ marginLeft: 'auto', border: 'none', background: 'none', color: '#B91C1C', fontWeight: 800, cursor: 'pointer' }}>Remove</button>
+                          </div>
+                        </div>)}
+                        <button onClick={addAction} style={{ minHeight: 44, width: '100%', border: `1.5px dashed ${primary}`, borderRadius: 11, background: 'var(--org-a05)', color: primary, fontWeight: 800, cursor: 'pointer' }}>+ Add follow-up action</button>
                       </ReflectionField>
                       <ReflectionField i={1}>
                         <label style={label}>Would you run this session again as-is?</label>
@@ -792,6 +863,10 @@ function ReflectionModal({ session, org, onClose, existing, onSaved }) {
                             )
                           })}
                         </div>
+                      </ReflectionField>
+                      <ReflectionField i={2}>
+                        <label style={label}>Staffing & volunteer cover</label>
+                        <textarea style={ta('staff')} onFocus={() => setFocused('staff')} onBlur={() => setFocused(null)} value={form.staffing_notes} onChange={e => set('staffing_notes', e.target.value)} placeholder="Anything to change about staffing or cover?" />
                       </ReflectionField>
                     </div>
                   )}
@@ -1342,7 +1417,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
 // Only signals backed by real columns are used -- nothing speculative.
 const REVIEW_SEVERITY = { safeguarding: 0, compliance: 1, attendance: 2, admin: 3 }
 
-function getReviewIssues(s, { hasReflection, counts, openConcerns = 0, hasRiskAssessment = true }) {
+function getReviewIssues(s, { hasReflection, counts, openConcerns = 0, hasRiskAssessment = true, openActions = 0 }) {
   const issues = []
 
   // Safeguarding first -- an unresolved concern raised in a session is the single
@@ -1369,6 +1444,7 @@ function getReviewIssues(s, { hasReflection, counts, openConcerns = 0, hasRiskAs
 
   if (!s.closed_at) issues.push({ kind: 'admin', label: 'Session not closed' })
   if (!hasReflection) issues.push({ kind: 'admin', label: 'Reflection outstanding' })
+  if (openActions > 0) issues.push({ kind: 'admin', label: `${openActions} learning action${openActions === 1 ? '' : 's'} open` })
 
   return issues.sort((a, b) => REVIEW_SEVERITY[a.kind] - REVIEW_SEVERITY[b.kind])
 }
@@ -1681,6 +1757,9 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const [volCounts, setVolCounts] = useState({})
   const [attendanceCounts, setAttendanceCounts] = useState({})
   const [reflections, setReflections] = useState({}) // session_id -> reflection row
+  const [sessionOutcomes, setSessionOutcomes] = useState({}) // session_id -> planned outcome labels
+  const [followUpActions, setFollowUpActions] = useState({}) // session_id -> accountable actions
+  const [teamMembers, setTeamMembers] = useState([])
   const [openConcerns, setOpenConcerns] = useState({}) // session_id -> count of unresolved concerns
   const [raSessions, setRaSessions] = useState({}) // session_id -> true when a risk assessment is attached
   const [reflectingSession, setReflectingSession] = useState(null)
@@ -1720,13 +1799,16 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
   const loadData = async () => {
     if (!orgId) return
-    const [{ data: sess }, { data: staff }, { data: refl }, { data: concerns }, { data: raLinks }, { data: projs }] = await Promise.all([
+    const [{ data: sess }, { data: staff }, { data: refl }, { data: concerns }, { data: raLinks }, { data: projs }, { data: outcomes }, { data: actions }, { data: team }] = await Promise.all([
       supabase.from('sessions').select('*').eq('org_id', orgId).order('session_date').order('start_time'),
       supabase.from('session_staff').select('session_id').eq('org_id', orgId),
       supabase.from('session_reflections').select('*').eq('org_id', orgId),
       supabase.from('cause_for_concern').select('session_id, status, resolved_at').eq('org_id', orgId),
       supabase.from('risk_assessment_sessions').select('session_id').eq('org_id', orgId),
       supabase.from('projects').select('id, name, status').eq('org_id', orgId),
+      supabase.from('session_outcomes').select('session_id, area').eq('org_id', orgId),
+      supabase.from('session_follow_up_actions').select('*').eq('org_id', orgId).order('due_date'),
+      supabase.from('user_profiles').select('id, full_name').eq('org_id', orgId).order('full_name'),
     ])
     setSessions(sess || [])
     const counts = {}
@@ -1735,6 +1817,13 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     const reflMap = {}
     ;(refl || []).forEach(r => { reflMap[r.session_id] = r })
     setReflections(reflMap)
+    const outcomeMap = {}
+    ;(outcomes || []).forEach(r => { if (r.area) outcomeMap[r.session_id] = [...(outcomeMap[r.session_id] || []), r.area] })
+    setSessionOutcomes(outcomeMap)
+    const actionMap = {}
+    ;(actions || []).forEach(a => { actionMap[a.session_id] = [...(actionMap[a.session_id] || []), a] })
+    setFollowUpActions(actionMap)
+    setTeamMembers(team || [])
 
     // A concern counts as still open if it hasn't been resolved. Tables owned by
     // other modules may or may not use `status`, so treat resolved_at as the
@@ -2029,7 +2118,8 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     counts: attendanceCounts[s.id],
     openConcerns: openConcerns[s.id] || 0,
     hasRiskAssessment: !!raSessions[s.id],
-  }), [reflections, attendanceCounts, openConcerns, raSessions])
+    openActions: (followUpActions[s.id] || []).filter(a => a.status === 'open').length,
+  }), [reflections, attendanceCounts, openConcerns, raSessions, followUpActions])
 
   const needsReviewSessions = React.useMemo(() =>
     pastSessionsAll
@@ -2675,6 +2765,9 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
           session={reflectingSession}
           org={org}
           existing={reflections[reflectingSession.id]}
+          plannedOutcomes={sessionOutcomes[reflectingSession.id] || []}
+          existingActions={followUpActions[reflectingSession.id] || []}
+          teamMembers={teamMembers}
           onClose={() => setReflectingSession(null)}
           onSaved={() => { setReflectingSession(null); loadData() }}
         />

@@ -17,6 +17,7 @@ const RPC = {
   attendance: 'report_attendance_metrics',
   young_people: 'report_young_people_metrics',
   impact: 'report_impact_metrics',
+  learning: 'report_session_learning_metrics',
   team: 'report_workforce_metrics',
   project: 'report_project_metrics',
   programme: 'report_young_people_metrics',
@@ -113,6 +114,62 @@ function deliverySpec(m, terms) {
             ? `Reflections were completed for ${reflectionPct}% of delivered sessions, so the ratings describe that subset rather than the whole programme.`
             : null,
           `A session counts as delivered once it has been closed or its date has passed.`,
+        ],
+      },
+    ],
+  }
+}
+
+function learningSpec(m) {
+  const required = n(m.reflection_required)
+  const completed = n(m.reflections_completed)
+  const completion = pct(completed, required)
+  return {
+    docTitle: 'Session learning report',
+    sections: [
+      {
+        title: 'Evidence loop',
+        prose: [`${plural(completed, 'session reflection was', 'session reflections were')} completed from ${plural(n(m.delivered), 'delivered session', 'delivered sessions')}.`],
+        figures: [
+          { value: completion != null ? `${completion}%` : '—', label: 'reflection completion' },
+          { value: m.avg_overall != null ? `${m.avg_overall}/5` : '—', label: 'overall quality' },
+          { value: m.avg_engagement != null ? `${m.avg_engagement}/5` : '—', label: 'engagement' },
+          { value: m.avg_inclusion != null ? `${m.avg_inclusion}/5` : '—', label: 'inclusion' },
+        ],
+      },
+      {
+        title: 'Quality of evidence',
+        figures: [
+          { value: n(m.evidence_count), label: 'reflections with evidence' },
+          { value: n(m.participant_voice_count), label: 'with participant voice' },
+          { value: n(m.would_repeat), label: 'ready to repeat' },
+          { value: n(m.needs_changes), label: 'need changes' },
+        ],
+      },
+      {
+        title: 'Outcomes staff observed',
+        hint: 'Selected from the outcomes planned before each session.',
+        distribution: { rows: labelled(m.observed_outcomes), total: (m.observed_outcomes || []).reduce((sum, x) => sum + n(x.n), 0) },
+      },
+      {
+        title: 'Learning themes',
+        distribution: { rows: labelled(m.learning_tags), total: (m.learning_tags || []).reduce((sum, x) => sum + n(x.n), 0) },
+      },
+      {
+        title: 'Follow-up actions',
+        figures: [
+          { value: n(m.actions_open), label: 'open' },
+          { value: n(m.actions_overdue), label: 'overdue' },
+          { value: n(m.actions_completed), label: 'completed' },
+          { value: n(m.safeguarding_flags), label: 'safeguarding flags' },
+        ],
+      },
+      {
+        title: 'Reading this report',
+        caveats: [
+          completion != null && completion < 60 ? `Only ${completion}% of required reflections were complete, so the findings describe a partial evidence base.` : null,
+          'Observed outcomes are practitioner judgements, not independently verified measures.',
+          'Participant voice is counted when recorded; identifying details are intentionally excluded from this aggregate report.',
         ],
       },
     ],
@@ -580,6 +637,7 @@ const BUILDERS = {
   young_people: (m, t) => youngPeopleSpec(m, t),
   programme: (m, t) => youngPeopleSpec(m, t, { programme: true }),
   impact: impactSpec,
+  learning: learningSpec,
   team: workforceSpec,
   project: projectSpec,
   safeguarding: safeguardingSpec,

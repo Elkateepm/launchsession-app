@@ -37,6 +37,12 @@ export async function getOverviewMetrics({ from, to }) {
   return data
 }
 
+export async function getSessionLearningMetrics({ from, to }) {
+  const { data, error } = await supabase.rpc('report_session_learning_metrics', { p_from: from, p_to: to })
+  if (error) throw error
+  return data
+}
+
 // Deterministic insights only -- each one is a plain calculation over the
 // metrics above. Nothing here is AI-generated and nothing restates a number
 // that's already on screen; an insight only appears when it implies an action.
@@ -90,6 +96,15 @@ export function deriveInsights(m, extras = {}) {
       body: `${extras.unfinalisedRegisters} past session${extras.unfinalisedRegisters === 1 ? ' has' : 's have'} attendance still unmarked, which affects every figure on this page.`,
       action: 'Review sessions', target: 'sessions',
     })
+  }
+
+  const learning = extras.learning || {}
+  const reflectionsDue = Math.max(0, Number(learning.reflection_required || 0) - Number(learning.reflections_completed || 0))
+  if (reflectionsDue > 0) {
+    out.push({ key: 'reflections_due', tone: 'warn', title: 'Learning is being lost', body: `${reflectionsDue} delivered session${reflectionsDue === 1 ? ' needs' : 's need'} a reflection before its evidence reaches reports.`, action: 'Complete reflections', target: 'sessions' })
+  }
+  if (Number(learning.actions_overdue || 0) > 0) {
+    out.push({ key: 'actions_overdue', tone: 'warn', title: 'Learning actions overdue', body: `${learning.actions_overdue} improvement action${learning.actions_overdue === 1 ? ' is' : 's are'} past the agreed date.`, action: 'Review actions', target: 'sessions' })
   }
 
   if (m.outcomes > 0) {
@@ -190,6 +205,8 @@ export const REPORT_LIBRARY = [
     desc: 'Unique young people reached, new and returning participants, engagement.' },
   { key: 'impact', category: 'Impact', icon: '⭐', name: 'Impact Report',
     desc: 'Outcomes recorded, goals created and achieved, progression and reach.' },
+  { key: 'learning', category: 'Impact', icon: '🧭', name: 'Session Learning Report',
+    desc: 'Reflection completion, observed outcomes, participant voice, learning themes and follow-up actions.' },
   { key: 'team', category: 'Team', icon: '👥', name: 'Workforce Delivery Report',
     desc: 'Staff and volunteers involved, sessions worked and delivery hours.' },
   { key: 'project', category: 'Delivery', icon: '🚀', name: 'Project Report',
