@@ -16,7 +16,7 @@ import HistoricalAttendanceModal from "../shared/HistoricalAttendanceModal";
 import { isPushSupported, getNotificationPermission, subscribeToPush } from "../../services/pushNotifications";
 import { notifyEvent } from "../../services/notifyEvent";
 import { allowedModules } from '../../lib/moduleAccess'
-import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
+import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, LearningBrief, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
 import { monthAttendance as calcMonthAttendance, reachedThisMonth as calcReachedThisMonth } from './glanceStats'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
@@ -3174,7 +3174,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const now = new Date();
     return sessions.filter(s => {
       const end = new Date(`${s.session_date}T${s.end_time || "23:59"}`);
-      return end < now && !reflections.some(r => r.session_id === s.id);
+      return !s.cancelled_at && s.reflection_required !== false && (s.closed_at || end < now) && !reflections.some(r => r.session_id === s.id);
     }).sort((a, b) => new Date(b.session_date) - new Date(a.session_date));
   }, [sessions, reflections]);
 
@@ -3252,7 +3252,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const heroGlassBtn = {
     border: 'none', borderRadius: 13,
     padding: isMobile ? '0 12px' : '11px 16px',
-    minHeight: isMobile ? 44 : 'auto',
+    minHeight: 44,
     fontSize: isMobile ? 12.5 : 13, fontWeight: 700,
     cursor: 'pointer', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.12)', color: '#fff',
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -3280,9 +3280,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   // Sessions actually delivered this calendar month — "sessions run" is a more
   // honest headline than "sessions planned", which counted future ones too.
   const sessionsRunThisMonth = useMemo(() => {
-    const d = new Date()
-    const monthStart = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
-    return sessions.filter(s => s.session_date >= monthStart && s.session_date <= today && (s.closed_at || s.session_date < today)).length
+    const monthStart = `${today.slice(0, 7)}-01`
+    return sessions.filter(s => !s.cancelled_at && s.session_date >= monthStart && s.session_date <= today && (s.closed_at || s.session_date < today)).length
   }, [sessions, today]);
 
   // Six weekly buckets behind each stat, so the sparkline shows a real shape
@@ -3673,7 +3672,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 26, fontWeight: 900, lineHeight: 1.12, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.4px', color: '#fff' }}>
                 {getGreeting()}, {hubUserName.split(' ')[0]} <span style={{ display: 'inline-block', animation: 'lsWave 2.6s ease-in-out infinite', transformOrigin: '70% 70%' }}><Icon name="👋" /></span>
               </h1>
-              <p style={{ margin: '7px 0 0', fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.62)' }}>{heroSummary}</p>
+              <p style={{ margin: '7px 0 0', fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6 }}>{heroSummary}</p>
               {/* The organisation's own welcome message, set in Branding. It
                   was collected there and displayed nowhere, so the field
                   looked like it worked and did not. Sits under the day
@@ -3702,6 +3701,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   admin jobs that already live on their own screens, and sitting
                   them beside the register competed with the one thing this
                   header exists to get you to. */}
+              {todaySessions.length === 0 && <button onClick={() => go('planner', { autoOpenWizard: true })} style={{ ...heroGlassBtn, background: '#fff', color: primary, gridColumn: '1 / -1' }}>Plan a {terms.session} →</button>}
               {todaySessions.length > 0 && (
                 <button onClick={() => go('registers')} style={{
                   ...heroGlassBtn, background: '#fff', color: primary, fontWeight: 800,
@@ -3765,6 +3765,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           </div>
         </div>
       )}
+      {isMobile && <div style={{ padding: `${pad}px ${pad}px 0` }}>
+        <QuickJump isMobile primary={primary} actions={quickJumpActions} />
+      </div>}
       {/* ── LIVE SESSION HERO ── */}
       <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
@@ -4305,20 +4308,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           )}
 
-          {/* WEATHER — demoted from a large tile to a strip with a delivery
-              verdict attached, since that's the only decision it informs. The
-              session tiles that used to sit beside it are gone: the day spine
-              in the hero already shows today's sessions and what's next. */}
-          <WeatherStrip
-            weather={weather}
-            weatherError={weatherError}
-            icon={weather ? weatherFromCode(weather.code).icon : '🌡️'}
-            label={weather ? weatherFromCode(weather.code).label : ''}
-            primary={primary}
-          />
-
-
-
           {/* SESSIONS — merged Live & Upcoming + Ended sessions behind one segmented control, instead of two stacked lists */}
           <div>
             <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
@@ -4508,16 +4497,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             )}
           </div>
 
-          {/* JUMP STRAIGHT IN — moved below the sessions list. Starting
-              something is what you do after reading the day, not before it, and
-              a grid of six buttons sitting between the weather and the sessions
-              interrupted the one run of the page that answers "what is on".
-              The handful of things people actually start from Home, as one
-              tappable grid rather than buried in the nav rail. */}
-          <Panel title="⚡ Jump straight in">
-            <QuickJump isMobile={isMobile} primary={primary} actions={quickJumpActions} />
-          </Panel>
-
           {/* Recent Registers lived here and has gone. It rendered
               endedSessions.slice(0, 3) -- the first three of the same array the
               Ended tab immediately above renders in full -- so the page showed
@@ -4553,6 +4532,24 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+          {!isMobile && <Panel title="Quick actions">
+            <QuickJump isMobile={isMobile} primary={primary} actions={quickJumpActions} />
+          </Panel>}
+          <LearningBrief reflections={reflections} sessions={sessions} today={today} primary={primary} terms={terms} onOpen={() => go('reports')} />
+          {/* WEATHER — demoted from a large tile to a strip with a delivery
+              verdict attached, since that's the only decision it informs. The
+              session tiles that used to sit beside it are gone: the day spine
+              in the hero already shows today's sessions and what's next. */}
+          <WeatherStrip
+            weather={weather}
+            weatherError={weatherError}
+            icon={weather ? weatherFromCode(weather.code).icon : '🌡️'}
+            label={weather ? weatherFromCode(weather.code).label : ''}
+            primary={primary}
+          />
+
+
 
           {/* Sidebar is ambient content only. Anything needing a decision
               belongs in the main column, where it is not 320px wide on a
