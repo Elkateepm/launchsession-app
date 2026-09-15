@@ -26,10 +26,10 @@ describe('switching a sidebar entry off', () => {
   })
 
   it('is reversible — the entry returns when it is switched back on', () => {
-    const off = visibleItems(allItems, ctx(['gallery', 'payments']))
-    expect(off.some(i => i.id === 'gallery')).toBe(false)
+    const off = visibleItems(allItems, ctx(['messaging', 'payments']))
+    expect(off.some(i => i.id === 'messaging')).toBe(false)
     const on = visibleItems(allItems, ctx([]))
-    expect(on.some(i => i.id === 'gallery')).toBe(true)
+    expect(on.some(i => i.id === 'messaging')).toBe(true)
   })
 
   it('ignores an id that no longer matches anything', () => {

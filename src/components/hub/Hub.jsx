@@ -377,11 +377,27 @@ function PhotoCarousel({ orgId, primary, userId }) {
   const scrollRef = React.useRef(null)
 
   const load = React.useCallback(() => {
-    supabase.from('gallery_photos').select('*').eq('org_id', orgId).order('created_at', { ascending: false }).limit(50)
+    // A photo marked "do not publish" is never shown, even here.
+    supabase.from('gallery_photos').select('*').eq('org_id', orgId)
+      .or('consent_status.is.null,consent_status.neq.do_not_publish')
+      .order('created_at', { ascending: false }).limit(50)
       .then(async ({ data }) => setPhotos(await signRows('gallery', data || [])))
   }, [orgId])
 
   React.useEffect(() => { load() }, [load])
+
+  // The "Upload photos" quick action on Home used to open the Gallery page,
+  // which has been removed. It now opens this widget's own picker. The event
+  // is dispatched inside the click, so the browser still lets it open a file
+  // dialog.
+  React.useEffect(() => {
+    const open = () => {
+      inputRef.current?.closest('[data-home-photos]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      inputRef.current?.click()
+    }
+    window.addEventListener('ls:add-photos', open)
+    return () => window.removeEventListener('ls:add-photos', open)
+  }, [])
 
   const handleUpload = async (files) => {
     setUploading(true)
@@ -419,8 +435,8 @@ function PhotoCarousel({ orgId, primary, userId }) {
   }
 
   return (
-    <div>
-      <input ref={inputRef} type="file" multiple accept="image/*" hidden onChange={e => handleUpload(e.target.files)} />
+    <div data-home-photos="">
+      <input ref={inputRef} type="file" multiple accept="image/*" hidden onChange={e => { handleUpload(e.target.files); e.target.value = '' }} />
 
       {/* Header row */}
       {/* Two 40px pill buttons next to a 13px label made the header heavier
@@ -3323,7 +3339,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     if (hasModule('registers')) list.push({ key: 'register', icon: '▶️', label: 'Start a register', onClick: () => go('registers') })
     list.push({ key: 'session', icon: '➕', label: `New ${terms.session}`, onClick: () => go('planner', { autoOpenWizard: true }) })
     list.push({ key: 'child', icon: '🧒', label: `Add ${terms.person}`, onClick: () => setShowInviteChild(true) })
-    if (hasModule('gallery')) list.push({ key: 'photos', icon: '📷', label: 'Upload photos', onClick: () => go('gallery') })
+    if (hasModule('gallery')) list.push({ key: 'photos', icon: '📷', label: 'Upload photos', onClick: () => window.dispatchEvent(new Event('ls:add-photos')) })
     if (hasModule('forms')) list.push({ key: 'forms', icon: '📋', label: 'Send a form', onClick: () => go('forms') })
     if (hasModule('safeguarding')) list.push({ key: 'concern', icon: '🚨', label: 'Report a concern', onClick: () => raiseConcern(null) })
     return list
