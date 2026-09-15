@@ -1,428 +1,92 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { ArrowLeft, ArrowRight, CalendarDays, FileText, LayoutDashboard, Mail, Plus, RefreshCw, ShieldCheck, UserPlus, Users } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useHrAccess, ukDate, EMPLOYMENT_TYPES, statusChip } from '../../lib/hrAccess'
+import { useHrAccess, todayLondon, ukDate } from '../../lib/hrAccess'
 import StaffHRProfile from './StaffHRProfile'
 import { InviteStaffModal } from './HRCentre'
+import { absenceOnDate, readAll, useHRWorkspace } from './hrWorkspaceData'
+import { HR, LoadError } from './peopleHRShared'
+import { AddPersonModal, OnboardingBoard, OrgDocuments, PeopleDirectory, PeopleOverview } from './PeopleHRPanels'
 
-// The HR home screen: what needs doing, and everyone it could be about.
-//
-// Team remains the entry point for a person -- this is the organisation-wide
-// view over the same records. Both open the same StaffHRProfile, so there is
-// one staff record and two ways in, not two records.
-
-const card = {
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
-  padding: 16, marginBottom: 12,
-}
-const gBtn = {
-  minHeight: 44, padding: '0 14px', borderRadius: 11, border: '1px solid #E2E8F0',
-  background: '#fff', color: '#64748B', fontSize: 13.5, fontWeight: 700,
-  cursor: 'pointer', fontFamily: 'inherit',
-}
-
-const SEVERITY = {
-  1: { tone: '#B42318', bg: '#FEF2F2', label: 'Overdue' },
-  2: { tone: '#93500A', bg: '#FEF6E7', label: 'Due' },
-  3: { tone: '#3730A3', bg: '#EEF2FF', label: 'Soon' },
-}
-
-// Which tab of the staff profile an attention item is actually about, so
-// clicking it lands on the record rather than the person's front page.
-const ENTITY_TAB = {
-  compliance: 'compliance', staff: 'employment', supervision: 'supervision',
-  absence: 'absence', hr_case: 'cases', disciplinary: 'disciplinary',
-  warning: 'disciplinary', document: 'documents',
-}
-
-const FILTERS = [
-  ['all', 'All'], ['employee', 'Employees'], ['sessional', 'Sessional'],
-  ['volunteer', 'Volunteers'], ['probation', 'On probation'],
-  ['compliance', 'Compliance issue'], ['cases', 'Open HR case'],
-  ['leaving', 'Leaving'], ['left', 'Former staff'],
+const card = { ...HR.card, padding: 18, marginBottom: 12 }
+const gBtn = HR.button
+const TABS = [
+  ['overview', 'Overview', LayoutDashboard], ['people', 'People', Users],
+  ['onboarding', 'Onboarding', UserPlus], ['absence', 'Leave & availability', CalendarDays],
+  ['compliance', 'Checks & training', ShieldCheck], ['documents', 'Documents', FileText],
 ]
 
-export default function HRHome({ org, session, userProfile, onNavigate }) {
+export default function HRHome({ org, session, userProfile, onNavigate, section, workspaceContent, showVolunteers = false }) {
   const isMobile = useIsMobile()
-  const primary = org?.primary_color || '#3B82F6'
+  const primary = org?.primary_color || '#6D5DF6'
   const access = useHrAccess(userProfile?.role)
-
   const [tab, setTab] = useState('overview')
+  const [peopleFilter, setPeopleFilter] = useState('all')
   const [openPerson, setOpenPerson] = useState(null)
   const [openTab, setOpenTab] = useState(null)
   const [inviting, setInviting] = useState(false)
-  // Held here rather than inside the tab so the count shows on the tab itself
-  // -- an approvals queue nobody can see the size of is one nobody works.
-  const [pendingCount, setPendingCount] = useState(0)
-
-  useEffect(() => {
-    if (!org?.id) return
-    let cancelled = false
-    supabase.from('user_profiles')
-      .select('id', { count: 'exact', head: true })
-      .eq('org_id', org.id).eq('approval_status', 'pending')
-      .then(({ count }) => { if (!cancelled) setPendingCount(count || 0) })
-    return () => { cancelled = true }
-  }, [org?.id, tab])
-
-  if (access.loading) {
-    return <div style={{ padding: 24, color: '#64748B', fontSize: 14 }}>Loading…</div>
+  const [adding, setAdding] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [revision, setRevision] = useState(0)
+  const data = useHRWorkspace(org?.id, !access.loading && access.canView, `${session?.user?.id}:${access.sensitiveView}`)
+  const activeTab = section || tab
+  const onOpen = (person, target = 'overview') => { setOpenPerson(person); setOpenTab(target) }
+  const navigateTab = (target, filter = 'all') => {
+    setPeopleFilter(filter); setTab(target)
+    if (section) onNavigate?.('hr')
+  }
+  const refresh = async () => {
+    setRefreshing(true)
+    try { await data.reload(); setRevision(v => v + 1) } finally { setRefreshing(false) }
   }
 
-  if (!access.canView) {
-    return (
-      <div style={{ background: '#F8FAFC', minHeight: '100%', padding: 24 }}>
-        <div style={{ ...card, textAlign: 'center', padding: 28 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>
-            You do not have HR access
-          </div>
-          <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.6 }}>
-            HR records are granted per person by an administrator, under
-            Settings → Role Access. Managers who are granted it see only the people
-            they line-manage.
-          </div>
+  if (access.loading) return <div style={{ padding: 24, color: HR.muted }}>Loading People & HR…</div>
+  if (!access.canView) return <div style={{ padding: 24 }}><LoadError message="You do not have access to HR records. Ask an administrator to review your role access." /></div>
+
+  return <div style={{ background: HR.canvas, minHeight: '100%', padding: isMobile ? '20px 14px 40px' : '26px 30px 48px' }}>
+    <div style={{ maxWidth: 1500, margin: '0 auto' }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap', marginBottom: 24 }}>
+        <div>
+          <div style={{ color: HR.muted, fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Your organisation · Your people</div>
+          <h1 style={{ fontSize: isMobile ? 26 : 30, fontWeight: 750, letterSpacing: -1.1, color: HR.ink, margin: 0 }}>People & HR</h1>
+          <p style={{ color: HR.muted, fontSize: 13, margin: '7px 0 0', lineHeight: 1.6 }}>Your team, their records, and what needs attention.</p>
         </div>
-      </div>
-    )
-  }
-
-  const TABS = [
-    ['overview', 'Overview'], ['people', 'People'],
-    ['approvals', pendingCount ? `Approvals (${pendingCount})` : 'Approvals'],
-    ['compliance', 'Compliance'], ['absence', 'Absence'], ['outcomes', 'Outcomes'],
-    ...(access.isAdmin ? [['audit', 'Audit']] : []),
-  ]
-
-  return (
-    <div style={{ background: '#F8FAFC', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>
-            HR &amp; Staff
-          </div>
-          <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 3 }}>
-            Employment records, compliance and casework for {org?.name}.
-          </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
+          {access.canEditEmployment && <>
+            <button onClick={() => setInviting(true)} style={{ ...HR.button, flex: isMobile ? 1 : undefined }}><Mail size={16} />Invite team member</button>
+            <button onClick={() => setAdding(true)} style={{ ...HR.button, background: primary, borderColor: primary, color: '#fff', flex: isMobile ? 1 : undefined }}><Plus size={17} />Add person</button>
+          </>}
+          <button onClick={refresh} disabled={refreshing} aria-label="Refresh HR records" style={{ ...HR.button, padding: 11, opacity: refreshing ? 0.5 : 1 }}><RefreshCw size={16} /></button>
         </div>
-        {access.isAdmin && (
-          <button onClick={() => setInviting(true)} style={{
-            minHeight: 44, padding: '0 16px', borderRadius: 11, border: 'none',
-            background: primary, color: '#fff', fontSize: 14, fontWeight: 800,
-            cursor: 'pointer', fontFamily: 'inherit',
-          }}>Invite staff</button>
-        )}
-      </div>
-
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        {TABS.map(([k, l]) => (
-          <button key={k} onClick={() => setTab(k)} style={{
-            padding: '9px 14px', borderRadius: 10, cursor: 'pointer', minHeight: 44,
-            border: `1px solid ${tab === k ? 'transparent' : '#E2E8F0'}`,
-            background: tab === k ? primary : '#fff',
-            color: tab === k ? '#fff' : '#64748B',
-            fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
-          }}>{l}</button>
-        ))}
-      </div>
-
-      {tab === 'overview' && (
-        <Overview primary={primary}
-          onOpen={(person, t) => { setOpenPerson(person); setOpenTab(t || null) }} />
-      )}
-      {tab === 'people' && (
-        <People org={org} primary={primary}
-          onOpen={(person) => { setOpenPerson(person); setOpenTab(null) }} />
-      )}
-      {tab === 'approvals' && (
-        <Approvals org={org} primary={primary} canDecide={access.isManager}
-          onOpen={(person, t) => { setOpenPerson(person); setOpenTab(t || null) }} />
-      )}
-      {tab === 'compliance' && (
-        <OrgCompliance org={org} primary={primary} isAdmin={access.isAdmin}
-          onOpen={(person) => { setOpenPerson(person); setOpenTab('compliance') }} />
-      )}
-      {tab === 'absence' && (
-        <OrgAbsence org={org} primary={primary}
-          onOpen={(person) => { setOpenPerson(person); setOpenTab('absence') }} />
-      )}
-      {tab === 'outcomes' && <Outcomes org={org} sensitiveView={access.sensitiveView} />}
-      {tab === 'audit' && <AuditLog org={org} />}
-
-      {openPerson && (
-        <StaffHRProfile org={org} userProfile={userProfile} person={openPerson}
-          initialTab={openTab}
-          onClose={() => { setOpenPerson(null); setOpenTab(null) }} />
-      )}
-
-      {inviting && (
-        <InviteStaffModal org={org} primary={primary}
-          onClose={() => setInviting(false)} onSent={() => setInviting(false)} />
-      )}
+      </header>
+      <nav aria-label="People and HR sections" style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: `1px solid ${HR.line}`, marginBottom: 24 }}>
+        {TABS.map(([key, label, Icon]) => <button key={key} aria-current={activeTab === key ? 'page' : undefined} onClick={() => navigateTab(key)} style={{ ...HR.button, flexShrink: 0, borderRadius: 0, border: 0, borderBottom: `3px solid ${activeTab === key ? primary : 'transparent'}`, background: 'transparent', padding: '13px 14px', color: activeTab === key ? primary : HR.muted }}><Icon size={16} aria-hidden="true" />{label}</button>)}
+      </nav>
+      {activeTab === 'overview' && <PeopleOverview data={data} primary={primary} onOpen={onOpen} onTab={navigateTab} />}
+      {activeTab === 'people' && <PeopleDirectory key={peopleFilter} initialFilter={peopleFilter} data={data} primary={primary} onOpen={onOpen} onAdd={access.canEditEmployment ? () => setAdding(true) : undefined} onAccounts={() => onNavigate?.('team')} onVolunteers={showVolunteers ? () => onNavigate?.('volunteers') : undefined} />}
+      {activeTab === 'onboarding' && <OnboardingBoard data={data} primary={primary} onOpen={onOpen} onApprovals={() => navigateTab('approvals')} />}
+      {activeTab === 'compliance' && <OrgCompliance key={revision} org={org} primary={primary} isAdmin={access.canEditEmployment} onOpen={person => onOpen(person, 'compliance')} />}
+      {activeTab === 'absence' && <OrgAbsence key={revision} org={org} primary={primary} onOpen={person => onOpen(person, 'absence')} />}
+      {activeTab === 'documents' && <OrgDocuments key={revision} org={org} data={data} onOpen={onOpen} />}
+      {['approvals', 'audit', 'outcomes', 'accounts', 'volunteers'].includes(activeTab) && <div>
+        <button style={{ ...HR.button, marginBottom: 16 }} onClick={() => navigateTab('people')}><ArrowLeft size={15} />Back to your people</button>
+        {activeTab === 'approvals' && <Approvals org={org} primary={primary} canDecide={access.canEdit} onOpen={onOpen} onChanged={data.reload} />}
+        {activeTab === 'audit' && access.isAdmin && <AuditLog org={org} />}
+        {activeTab === 'outcomes' && access.sensitiveView && <Outcomes org={org} sensitiveView={access.sensitiveView} />}
+        {section && workspaceContent}
+      </div>}
+      <footer style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 22, borderTop: `1px solid ${HR.line}`, paddingTop: 14 }}>
+        <span style={{ color: HR.muted, fontSize: 11, marginRight: 'auto' }}>{access.isAdmin ? 'Organisation workspace' : 'Your permitted HR records'}</span>
+        <button style={{ ...HR.button, background: 'transparent', border: 0, fontSize: 12 }} onClick={() => navigateTab('approvals')}>Account approvals{data.pending ? ` (${data.pending})` : ''}<ArrowRight size={13} /></button>
+        {access.sensitiveView && <button style={{ ...HR.button, background: 'transparent', border: 0, fontSize: 12 }} onClick={() => navigateTab('outcomes')}>Restricted outcomes</button>}
+        {access.isAdmin && <button style={{ ...HR.button, background: 'transparent', border: 0, fontSize: 12 }} onClick={() => navigateTab('audit')}>Audit trail</button>}
+      </footer>
+      {openPerson && <StaffHRProfile key={openPerson.hr_staff_id || openPerson.id} org={org} userProfile={userProfile} person={openPerson} initialTab={openTab} onClose={() => { setOpenPerson(null); setOpenTab(null); refresh() }} />}
+      {inviting && <InviteStaffModal org={org} primary={primary} onClose={() => setInviting(false)} onSent={() => { setInviting(false); refresh() }} />}
+      {adding && <AddPersonModal org={org} primary={primary} canEdit={access.canEditEmployment} onClose={() => setAdding(false)} onSaved={(person, target) => { setAdding(false); onOpen(person, target); refresh() }} />}
     </div>
-  )
-}
-
-function Stat({ label, value, hint, tone }) {
-  return (
-    <div style={{
-      background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
-      padding: 14, minWidth: 0,
-    }}>
-      <div style={{ fontSize: 11.5, fontWeight: 800, color: '#64748B', letterSpacing: 0.3, textTransform: 'uppercase' }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 26, fontWeight: 900, color: tone || '#0F172A', marginTop: 4, letterSpacing: -0.8 }}>
-        {value === null || value === undefined ? '—' : value}
-      </div>
-      {hint && <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>{hint}</div>}
-    </div>
-  )
-}
-
-function Overview({ primary, onOpen }) {
-  const [stats, setStats] = useState(null)
-  const [items, setItems] = useState(null)
-  const [error, setError] = useState('')
-
-  const load = useCallback(async () => {
-    setError('')
-    const [s, a] = await Promise.all([
-      supabase.from('hr_dashboard_stats').select('*').maybeSingle(),
-      supabase.from('hr_needs_attention').select('*')
-        .order('severity').order('due_date', { nullsFirst: false }).limit(60),
-    ])
-    // A failed stats query must not take the attention list down with it --
-    // the list is the part somebody acts on.
-    if (s.error && a.error) { setError(a.error.message); setItems([]); return }
-    setStats(s.error ? null : s.data)
-    setItems(a.error ? [] : (a.data || []))
-    if (a.error) setError(a.error.message)
-  }, [])
-
-  useEffect(() => { load() }, [load])
-
-  // Deliberately no zeros before the data lands: a confident "0 open cases"
-  // that turns into 3 a moment later is worse than a dash.
-  if (items === null) {
-    return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading HR overview…</div>
-  }
-
-  const byStaff = items.reduce((acc, i) => {
-    (acc[i.staff_id] = acc[i.staff_id] || { name: i.full_name, staff_id: i.staff_id, items: [] }).items.push(i)
-    return acc
-  }, {})
-  const groups = Object.values(byStaff)
-    .sort((a, b) => Math.min(...a.items.map(i => i.severity)) - Math.min(...b.items.map(i => i.severity)))
-
-  return (
-    <>
-      <div style={{
-        display: 'grid', gap: 10, marginBottom: 16,
-        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-      }}>
-        <Stat label="Awaiting approval" value={stats?.pending_approvals}
-          tone={stats && stats.pending_approvals > 0 ? '#B42318' : undefined}
-          hint={stats && stats.pending_approvals > 0 ? 'nobody can sign in until you do' : null} />
-        <Stat label="Onboarding to finish" value={stats?.onboarding_outstanding} hint="required items" />
-        <Stat label="Active staff" value={stats?.active_staff} />
-        <Stat label="Volunteers / sessional" value={stats?.volunteers_sessional} />
-        <Stat label="Compliance" value={stats?.compliance_percent === null || stats?.compliance_percent === undefined ? null : stats.compliance_percent + '%'}
-          hint={stats ? `${stats.compliance_outstanding} outstanding` : null}
-          tone={stats && stats.compliance_percent < 80 ? '#B42318' : undefined} />
-        <Stat label="Open HR cases" value={stats?.open_cases} />
-        <Stat label="Active disciplinaries" value={stats?.active_disciplinaries} />
-        <Stat label="Training due" value={stats?.training_due} hint="next 30 days" />
-        <Stat label="Absent today" value={stats?.absent_today} />
-        <Stat label="Probation reviews" value={stats?.probation_due} hint="next 30 days" />
-      </div>
-
-      {error && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>
-          {error}
-          <button onClick={load} style={{ ...gBtn, marginLeft: 10 }}>Try again</button>
-        </div>
-      )}
-
-      <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A', margin: '18px 0 10px' }}>
-        Needs attention
-      </div>
-
-      {groups.length === 0 && (
-        <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5, lineHeight: 1.55 }}>
-          Nothing outstanding. Everyone is currently compliant and no case is waiting on a decision.
-        </div>
-      )}
-
-      {groups.map(g => (
-        <div key={g.staff_id} style={card}>
-          <button onClick={() => onOpen({ id: null, hr_staff_id: g.staff_id, full_name: g.name })}
-            style={{
-              background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-              fontFamily: 'inherit', textAlign: 'left', marginBottom: 8,
-            }}>
-            <span style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>{g.name}</span>
-            <span style={{ fontSize: 12.5, color: '#94A3B8', marginLeft: 8 }}>
-              {g.items.length} item{g.items.length === 1 ? '' : 's'}
-            </span>
-          </button>
-          {g.items.slice(0, 6).map((i, n) => {
-            const sev = SEVERITY[i.severity] || SEVERITY[3]
-            return (
-              <button key={i.entity_type + i.entity_id + n}
-                onClick={() => onOpen(
-                  { id: null, hr_staff_id: g.staff_id, full_name: g.name },
-                  ENTITY_TAB[i.entity_type] || 'overview',
-                )}
-                style={{
-                display: 'flex', alignItems: 'flex-start', gap: 10, width: '100%',
-                padding: '8px 0', borderTop: '1px solid #F1F5F9', borderLeft: 'none',
-                borderRight: 'none', borderBottom: 'none', background: 'none',
-                cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', minHeight: 44,
-              }}>
-                <span style={{
-                  display: 'inline-block', padding: '2px 8px', borderRadius: 99, flexShrink: 0,
-                  background: sev.bg, color: sev.tone, fontSize: 11, fontWeight: 800,
-                }}>{sev.label}</span>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 13.5, color: '#0F172A', fontWeight: 600 }}>{i.title}</div>
-                  <div style={{ fontSize: 12.5, color: '#64748B' }}>{i.detail}</div>
-                </div>
-                <span style={{ color: '#CBD5E1', fontSize: 16, flexShrink: 0 }}>›</span>
-              </button>
-            )
-          })}
-          {g.items.length > 6 && (
-            <div style={{ fontSize: 12, color: '#94A3B8', paddingTop: 8 }}>
-              and {g.items.length - 6} more
-            </div>
-          )}
-        </div>
-      ))}
-    </>
-  )
-}
-
-function People({ org, primary, onOpen }) {
-  const [rows, setRows] = useState(null)
-  const [summaries, setSummaries] = useState({})
-  const [cases, setCases] = useState({})
-  const [filter, setFilter] = useState('all')
-  const [q, setQ] = useState('')
-  const [error, setError] = useState('')
-
-  const load = useCallback(async () => {
-    setError('')
-    const [s, c, hc] = await Promise.all([
-      supabase.from('hr_staff').select('*').eq('org_id', org.id).order('full_name'),
-      supabase.from('hr_staff_compliance_summary').select('*').eq('org_id', org.id),
-      supabase.from('hr_cases').select('staff_id').eq('org_id', org.id)
-        .not('status', 'in', '(resolved,closed)'),
-    ])
-    if (s.error) { setError(s.error.message); setRows([]); return }
-    setRows(s.data || [])
-    setSummaries(Object.fromEntries((c.data || []).map(r => [r.staff_id, r])))
-    setCases((hc.data || []).reduce((a, r) => ({ ...a, [r.staff_id]: (a[r.staff_id] || 0) + 1 }), {}))
-  }, [org?.id])
-
-  useEffect(() => { load() }, [load])
-
-  if (rows === null) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading people…</div>
-
-  const shown = rows.filter(r => {
-    if (filter === 'employee' || filter === 'sessional' || filter === 'volunteer') {
-      if (r.employment_type !== filter) return false
-    }
-    if (filter === 'probation' && r.probation_status !== 'in_progress') return false
-    if (filter === 'leaving' && r.employment_status !== 'leaving') return false
-    if (filter === 'left' && r.employment_status !== 'left') return false
-    if (filter === 'compliance') {
-      const s = summaries[r.id]
-      if (!s || (s.overdue === 0 && s.missing === 0)) return false
-    }
-    if (filter === 'cases' && !cases[r.id]) return false
-    if (filter !== 'left' && r.employment_status === 'left') return false
-    const t = q.trim().toLowerCase()
-    if (t && ![r.full_name, r.email, r.job_title].filter(Boolean).join(' ').toLowerCase().includes(t)) return false
-    return true
-  })
-
-  return (
-    <>
-      <input value={q} onChange={e => setQ(e.target.value)}
-        placeholder="Search by name, email or job title"
-        style={{
-          width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-          border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
-          background: '#fff', marginBottom: 12,
-        }} />
-
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-        {FILTERS.map(([k, l]) => (
-          <button key={k} onClick={() => setFilter(k)} style={{
-            padding: '7px 12px', borderRadius: 99, cursor: 'pointer', minHeight: 40,
-            border: `1px solid ${filter === k ? 'transparent' : '#E2E8F0'}`,
-            background: filter === k ? '#0F172A' : '#fff',
-            color: filter === k ? '#fff' : '#64748B',
-            fontSize: 12.5, fontWeight: 700, fontFamily: 'inherit',
-          }}>{l}</button>
-        ))}
-      </div>
-
-      {error && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>
-          {error}
-        </div>
-      )}
-
-      {shown.length === 0 && (
-        <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5 }}>
-          Nobody matches that.
-        </div>
-      )}
-
-      {shown.map(p => {
-        const s = summaries[p.id]
-        const chip = statusChip(p.employment_status)
-        const et = EMPLOYMENT_TYPES.find(t => t.key === p.employment_type)
-        return (
-          <button key={p.id} onClick={() => onOpen({ id: p.user_id, hr_staff_id: p.id, full_name: p.full_name, photo_url: null })}
-            style={{ ...card, width: '100%', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'block' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: '50%', flexShrink: 0, background: primary,
-                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 800, fontSize: 15,
-              }}>{(p.full_name || '?').slice(0, 1).toUpperCase()}</div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>{p.full_name}</div>
-                <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 1 }}>
-                  {p.job_title || et?.label || 'Staff'}
-                  {p.department ? ` · ${p.department}` : ''}
-                </div>
-                <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-                  <span style={{ padding: '2px 8px', borderRadius: 99, background: chip.bg, color: chip.tone, fontSize: 11, fontWeight: 800 }}>
-                    {chip.label}
-                  </span>
-                  {s && s.percent !== null && (
-                    <span style={{
-                      padding: '2px 8px', borderRadius: 99, fontSize: 11, fontWeight: 800,
-                      background: s.overdue || s.missing ? '#FEF2F2' : '#E7F8ED',
-                      color: s.overdue || s.missing ? '#B42318' : '#04713C',
-                    }}>{s.percent}% compliant</span>
-                  )}
-                  {cases[p.id] > 0 && (
-                    <span style={{ padding: '2px 8px', borderRadius: 99, background: '#FEF6E7', color: '#93500A', fontSize: 11, fontWeight: 800 }}>
-                      {cases[p.id]} open case{cases[p.id] === 1 ? '' : 's'}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </button>
-        )
-      })}
-    </>
-  )
+  </div>
 }
 
 function Outcomes({ org, sensitiveView }) {
@@ -588,7 +252,7 @@ function OrgCompliance({ org, primary, isAdmin, onOpen }) {
         <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>{error}</div>
       )}
 
-      {view === 'outstanding' && Object.values(byStaff).length === 0 && (
+      {!error && view === 'outstanding' && Object.values(byStaff).length === 0 && (
         <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5 }}>
           Everyone is currently compliant.
         </div>
@@ -683,7 +347,7 @@ function RequirementForm({ org, primary, existing, onCancel, onSaved }) {
       evidence_required: !!f.evidence_required, active: !!f.active,
     }
     const { error } = existing
-      ? await supabase.from('staff_compliance_requirements').update(body).eq('id', existing.id)
+      ? await supabase.from('staff_compliance_requirements').update(body).eq('org_id', org.id).eq('id', existing.id)
       : await supabase.from('staff_compliance_requirements').insert({
           ...body,
           requirement_key: (f.requirement_key || f.label).trim().toLowerCase().replace(/[^a-z0-9]+/g, '_'),
@@ -745,77 +409,53 @@ function RequirementForm({ org, primary, existing, onCancel, onSaved }) {
 function OrgAbsence({ org, primary, onOpen }) {
   const [rows, setRows] = useState(null)
   const [staff, setStaff] = useState({})
-  const [view, setView] = useState('today')
-
+  const [view, setView] = useState('day')
+  const [date, setDate] = useState(todayLondon)
+  const [weekStart, setWeekStart] = useState(todayLondon)
+  const [error, setError] = useState(false)
+  const [retry, setRetry] = useState(0)
+  const shift = (value, days) => {
+    const next = new Date(value + 'T12:00:00Z')
+    next.setUTCDate(next.getUTCDate() + days)
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(next)
+  }
   useEffect(() => {
     let cancelled = false
+    setRows(null); setError(false)
     Promise.all([
-      supabase.from('staff_leave').select('*').eq('org_id', org.id)
-        .order('start_date', { ascending: false }).limit(200),
-      supabase.from('hr_staff').select('id, full_name').eq('org_id', org.id),
+      readAll(() => supabase.from('staff_leave').select('id, staff_id, category, type, start_date, end_date, status, rtw_required, rtw_completed').eq('org_id', org.id).neq('status', 'cancelled').order('start_date', { ascending: false }).order('id')),
+      readAll(() => supabase.from('hr_staff').select('id, full_name').eq('org_id', org.id).order('id')),
     ]).then(([a, s]) => {
       if (cancelled) return
-      setRows(a.data || [])
-      setStaff(Object.fromEntries((s.data || []).map(x => [x.id, x.full_name])))
-    })
+      setRows(a)
+      setStaff(Object.fromEntries(s.map(x => [x.id, x.full_name])))
+    }).catch(() => { if (!cancelled) setError(true) })
     return () => { cancelled = true }
-  }, [org?.id])
-
-  if (rows === null) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading absence…</div>
-
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
-  const absentToday = rows.filter(r => r.start_date <= today && (r.end_date || r.start_date) >= today)
-  const rtwDue = rows.filter(r => r.rtw_required && !r.rtw_completed)
-  const shown = view === 'today' ? absentToday : view === 'rtw' ? rtwDue : rows
-
-  return (
-    <>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-        {[['today', `Away today (${absentToday.length})`],
-          ['rtw', `Return-to-work due (${rtwDue.length})`],
-          ['all', 'All recent']].map(([k, l]) => (
-          <button key={k} onClick={() => setView(k)} style={{
-            padding: '8px 14px', borderRadius: 10, cursor: 'pointer', minHeight: 44,
-            border: `1px solid ${view === k ? 'transparent' : '#E2E8F0'}`,
-            background: view === k ? '#0F172A' : '#fff',
-            color: view === k ? '#fff' : '#64748B',
-            fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
-          }}>{l}</button>
-        ))}
-      </div>
-
-      {shown.length === 0 && (
-        <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5 }}>
-          {view === 'today' ? 'Nobody is recorded as away today.'
-            : view === 'rtw' ? 'No return-to-work meetings outstanding.'
-            : 'No absence recorded.'}
-        </div>
-      )}
-
-      {shown.map(r => (
-        <button key={r.id}
-          onClick={() => onOpen({ id: null, hr_staff_id: r.staff_id, full_name: staff[r.staff_id] || 'Staff' })}
-          style={{ ...card, width: '100%', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'block' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
-                {staff[r.staff_id] || 'Staff member'}
-              </div>
-              <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2, textTransform: 'capitalize' }}>
-                {String(r.category).replace(/_/g, ' ')} · {ukDate(r.start_date)}
-                {r.end_date && r.end_date !== r.start_date ? ` – ${ukDate(r.end_date)}` : ''}
-              </div>
-            </div>
-            {r.rtw_required && !r.rtw_completed && (
-              <span style={{ padding: '3px 10px', borderRadius: 99, background: '#FEF6E7', color: '#93500A', fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap' }}>
-                RTW due
-              </span>
-            )}
-          </div>
-        </button>
-      ))}
-    </>
-  )
+  }, [org.id, retry])
+  const today = todayLondon()
+  const rtwDue = (rows || []).filter(r => r.rtw_required && !r.rtw_completed && r.status !== 'cancelled')
+  const shown = (rows || []).filter(r => r.status !== 'cancelled' && (view === 'day' ? absenceOnDate(r, date) : view === 'rtw' ? rtwDue.includes(r) : view === 'upcoming' ? r.start_date > today : true))
+  const days = Array.from({ length: 7 }, (_, n) => shift(weekStart, n))
+  return <section style={HR.card}>
+    <h2 style={{ margin: '0 0 6px', fontSize: 18, color: HR.ink }}>Leave & availability</h2>
+    <p style={{ margin: '0 0 18px', fontSize: 13, color: HR.muted }}>See who is away, plan ahead and follow up return-to-work meetings.</p>
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 14 }}>
+      <label style={{ color: HR.muted, fontSize: 12 }}>View from <input aria-label="Leave calendar date" type="date" value={date} onChange={e => { if (e.target.value) { setDate(e.target.value); setWeekStart(e.target.value); setView('day') } }} style={{ ...HR.input, width: 'auto', marginLeft: 6 }} /></label>
+      <button style={HR.button} onClick={() => { setDate(today); setWeekStart(today); setView('day') }}>Today</button>
+      <button style={HR.button} onClick={() => { setDate(shift(weekStart, -7)); setWeekStart(shift(weekStart, -7)); setView('day') }}>Previous week</button>
+      <button style={HR.button} onClick={() => { setDate(shift(weekStart, 7)); setWeekStart(shift(weekStart, 7)); setView('day') }}>Next week</button>
+    </div>
+    <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 12, marginBottom: 12 }}>
+      {days.map(d => <button key={d} aria-pressed={date === d && view === 'day'} onClick={() => { setDate(d); setView('day') }} style={{ ...HR.button, display: 'block', minWidth: 90, flex: 1, background: date === d && view === 'day' ? primary : '#fff', color: date === d && view === 'day' ? '#fff' : HR.ink }}>
+        <span style={{ display: 'block', fontSize: 12 }}>{new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', timeZone: 'Europe/London' }).format(new Date(d + 'T12:00:00Z'))}</span>
+        <span style={{ display: 'block', marginTop: 8, fontSize: 11, fontWeight: 400 }}>{rows ? new Set(rows.filter(r => absenceOnDate(r, d)).map(r => r.staff_id)).size : '—'} away</span>
+      </button>)}
+    </div>
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>{[['day', ukDate(date)], ['upcoming', 'Upcoming leave'], ['rtw', `Return to work (${rtwDue.length})`], ['all', 'All records']].map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => setView(key)} style={{ ...HR.button, background: view === key ? '#EEF2F7' : '#fff' }}>{label}</button>)}</div>
+    {error ? <LoadError onRetry={() => setRetry(v => v + 1)} /> : rows === null ? <p style={{ color: HR.muted }}>Loading leave records…</p> : shown.length === 0 ? <p style={{ padding: 18, fontSize: 13, color: HR.muted }}>No leave records match this view.</p> : shown.map(r => <button key={r.id} onClick={() => onOpen({ id: null, hr_staff_id: r.staff_id, full_name: staff[r.staff_id] || 'Team member' })} style={{ ...HR.button, width: '100%', textAlign: 'left', justifyContent: 'space-between', padding: '17px 0', border: 0, borderTop: `1px solid ${HR.line}`, borderRadius: 0 }}>
+      <span><strong style={{ fontSize: 14, color: HR.ink }}>{staff[r.staff_id] || 'Team member'}</strong><span style={{ display: 'block', fontSize: 12, color: HR.muted, fontWeight: 400, marginTop: 6, lineHeight: 1.6, textTransform: 'capitalize' }}>{String(r.category || r.type || 'Leave').replace(/_/g, ' ')} · {ukDate(r.start_date)}{r.end_date && r.end_date !== r.start_date ? ` – ${ukDate(r.end_date)}` : r.status === 'ongoing' ? ' · ongoing' : ''}</span></span><ArrowRight size={16} aria-hidden="true" />
+    </button>)}
+  </section>
 }
 
 // Account approvals. Moved here from Team because approving somebody is the
@@ -826,7 +466,7 @@ function OrgAbsence({ org, primary, onOpen }) {
 // Approving offers to open the person's HR record straight away rather than
 // leaving an approved account with nothing behind it, which is how a new
 // starter ends up invisible to HR until somebody remembers them.
-function Approvals({ org, primary, canDecide, onOpen }) {
+function Approvals({ org, primary, canDecide, onOpen, onChanged }) {
   const [rows, setRows] = useState(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(null)
@@ -846,12 +486,14 @@ function Approvals({ org, primary, canDecide, onOpen }) {
   useEffect(() => { load() }, [load])
 
   const decide = async (person, decision) => {
+    if (!canDecide || busy) return
     setBusy(person.id); setError('')
-    const { error: e } = await supabase.from('user_profiles')
+    const { data: changed, error: e } = await supabase.from('user_profiles')
       .update({ approval_status: decision, approval_note: note[person.id] || null })
-      .eq('id', person.id)
+      .eq('org_id', org.id).eq('id', person.id).select('id').maybeSingle()
     setBusy(null)
-    if (e) { setError(e.message); return }
+    if (e || !changed) { setError(e?.message || 'No account was updated. Check your access and try again.'); return }
+    onChanged?.()
     if (decision === 'approved') setJustApproved(person)
     load()
   }
@@ -860,6 +502,7 @@ function Approvals({ org, primary, canDecide, onOpen }) {
   // approved account with no HR record behind it is the gap this whole screen
   // exists to close.
   const startRecord = async (person) => {
+    if (!canDecide || busy) return
     setBusy(person.id); setError('')
     const { data: staffId, error: e } = await supabase.rpc('hr_ensure_staff_record', { p_user_id: person.id })
     if (e) { setBusy(null); setError(e.message); return }
@@ -897,7 +540,7 @@ function Approvals({ org, primary, canDecide, onOpen }) {
         </div>
       )}
 
-      {rows.length === 0 && (
+      {!error && rows.length === 0 && (
         <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5, lineHeight: 1.55 }}>
           Nobody is waiting. New accounts appear here the moment someone finishes setting up
           from an invite.
