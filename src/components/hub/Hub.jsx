@@ -4275,6 +4275,22 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             return <ActionRow items={items} isMobile={isMobile} />
           })()}
 
+          <Panel title="Operational pulse" right={
+            <button onClick={() => go('reports')} style={{ background: 'var(--org-a10)', color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>Open reports <Icon name="→" /></button>
+          }>
+            <OperationalPulse
+              isMobile={isMobile}
+              primary={primary}
+              terms={terms}
+              items={[
+                { key: 'people', icon: '🧒', value: children.length, label: `${terms.People} on roll`, detail: pendingRegistrations > 0 ? `${pendingRegistrations} awaiting approval` : 'Register up to date', tone: pendingRegistrations > 0 ? 'amber' : 'calm', onClick: () => go('children', pendingRegistrations > 0 ? { openRegistrationRequests: true } : undefined) },
+                { key: 'care', icon: '💊', value: medicalAlertsNeedingReview, label: 'Medical reviews', detail: medicalAlertsNeedingReview > 0 ? 'Need reconfirming' : 'No reviews due', tone: medicalAlertsNeedingReview > 0 ? 'amber' : 'good', onClick: () => go('medical_alerts') },
+                { key: 'learning', icon: '✍️', value: completedWithoutReflection.length, label: 'Reflection queue', detail: completedWithoutReflection.length > 0 ? 'Feeds reports' : 'Learning loop clear', tone: completedWithoutReflection.length > 0 ? 'amber' : 'good', onClick: () => completedWithoutReflection.length > 0 ? setShowReflectionsModal(true) : go('reports') },
+                { key: 'team', icon: '🤝', value: volunteersCount, label: 'Volunteers', detail: checkedOutCount > 0 ? `${checkedOutCount} resources checked out` : 'Ready to support delivery', tone: checkedOutCount > 0 ? 'sky' : 'calm', onClick: () => go('volunteers') },
+              ]}
+            />
+          </Panel>
+
           {/* ACTIVE PROJECT — only shown while a project is genuinely running */}
           {activeProject && (
             <div style={{
@@ -4536,6 +4552,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {!isMobile && <Panel title="Quick actions">
             <QuickJump isMobile={isMobile} primary={primary} actions={quickJumpActions} />
           </Panel>}
+          <WeekAheadCard
+            sessions={upcomingSessions}
+            today={today}
+            primary={primary}
+            terms={terms}
+            onOpenSession={setInfoModalSession}
+            onPlan={() => go('planner', { autoOpenWizard: true })}
+            onCalendar={() => go('calendar')}
+          />
           <LearningBrief reflections={reflections} sessions={sessions} today={today} primary={primary} terms={terms} onOpen={() => go('reports')} />
           {/* WEATHER — demoted from a large tile to a strip with a delivery
               verdict attached, since that's the only decision it informs. The
@@ -4719,6 +4744,87 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     </div>
   );
 }
+
+function OperationalPulse({ items, isMobile, primary }) {
+  const tone = {
+    good: { bg: '#ECFDF5', color: '#047857', border: '#A7F3D0' },
+    amber: { bg: '#FFF7ED', color: '#B45309', border: '#FED7AA' },
+    sky: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
+    calm: { bg: 'var(--org-a05)', color: primary, border: 'var(--org-a20)' },
+  }
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : 'repeat(4, minmax(0,1fr))', gap: 10 }}>
+      {items.map(item => {
+        const t = tone[item.tone] || tone.calm
+        return (
+          <button
+            key={item.key}
+            type="button"
+            onClick={item.onClick}
+            style={{
+              minHeight: 108, textAlign: 'left', border: `1px solid ${t.border}`, borderRadius: 14,
+              background: t.bg, color: t.color, padding: '13px 14px', cursor: 'pointer',
+              fontFamily: 'inherit', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+              gap: 10, minWidth: 0,
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <span style={{ fontSize: 17 }}><Icon name={item.icon} /></span>
+              <strong style={{ fontSize: 24, lineHeight: 1, fontWeight: 950, fontFamily: 'var(--font-display, sans-serif)', fontVariantNumeric: 'tabular-nums' }}>{item.value}</strong>
+            </span>
+            <span>
+              <span style={{ display: 'block', fontSize: 12, fontWeight: 900, color: 'var(--text, #0F172A)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
+              <span style={{ display: 'block', fontSize: 11, lineHeight: 1.45, marginTop: 4, color: 'var(--text3, #64748B)' }}>{item.detail}</span>
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function WeekAheadCard({ sessions, today, primary, terms, onOpenSession, onPlan, onCalendar }) {
+  const list = (sessions || []).filter(s => !s.closed_at).slice(0, 5)
+  return (
+    <section style={railPanel}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
+        <div>
+          <div style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: primary, fontWeight: 900 }}>Planning</div>
+          <h2 style={{ margin: '5px 0 0', fontSize: 17, color: 'var(--text)', letterSpacing: -0.3 }}>Week ahead</h2>
+        </div>
+        <button onClick={onCalendar} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, color: primary, fontSize: 11, fontWeight: 800, minHeight: 34, padding: '0 10px', cursor: 'pointer' }}>Calendar</button>
+      </div>
+      {list.length === 0 ? (
+        <div style={{ border: '1px dashed var(--org-a20)', borderRadius: 14, padding: 16, background: 'var(--org-a05)' }}>
+          <div style={{ fontSize: 13, fontWeight: 900, color: 'var(--text)' }}>No {terms.sessions} booked this week</div>
+          <p style={{ margin: '6px 0 13px', fontSize: 12, lineHeight: 1.55, color: 'var(--text3)' }}>Use this space to get the next delivery date into the plan.</p>
+          <button onClick={onPlan} style={{ width: '100%', minHeight: 40, border: 'none', borderRadius: 10, background: primary, color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>Plan a {terms.session}</button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          {list.map(s => {
+            const time = s.start_time ? `${s.start_time.slice(0, 5)}${s.end_time ? `-${s.end_time.slice(0, 5)}` : ''}` : 'Time TBC'
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => onOpenSession && onOpenSession(s)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', border: '1px solid var(--border)', borderRadius: 12, background: 'var(--surface)', padding: '10px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <span style={{ width: 36, height: 36, borderRadius: 10, display: 'grid', placeItems: 'center', background: 'var(--org-a10)', color: primary, fontSize: 16, flexShrink: 0 }}><Icon name="📅" /></span>
+                <span style={{ minWidth: 0, flex: 1 }}>
+                  <strong style={{ display: 'block', fontSize: 12.5, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</strong>
+                  <span style={{ display: 'block', marginTop: 3, fontSize: 11, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{relativeDay(s.session_date, today)} · {time}{s.location ? ` · ${s.location.split(',')[0]}` : ''}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </section>
+  )
+}
+
 function Panel({ title, right, children }) {
   return (
     <div style={styles.panel}>
@@ -4841,5 +4947,3 @@ const styles = {
   snapshotGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 },
   impactGrid: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 },
 };
-
-
