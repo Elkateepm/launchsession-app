@@ -27,10 +27,12 @@ export const hubHomeKeyframes = `
 .ls-q:hover{transform:translateY(-2px)}
 .ls-q:hover .ls-q-ico{transform:scale(1.16) rotate(-6deg)}
 .ls-stat:hover{transform:translateY(-2px)}
+.ls-act:focus-visible,.ls-q:focus-visible,.ls-stat:focus-visible{outline:3px solid var(--org-primary,#1B9AAA)!important;outline-offset:3px}
 @media (prefers-reduced-motion: reduce){
   .ls-rise{opacity:1;transform:none;animation:none}
   .ls-act:hover,.ls-q:hover,.ls-stat:hover{transform:none}
   .ls-q:hover .ls-q-ico{transform:none}
+  [style*="lsWave"]{animation:none!important}
 }
 `
 
@@ -311,6 +313,9 @@ export function AllClear({ label }) {
 function useCountUp(target, duration = 1000) {
   const [val, setVal] = React.useState(0)
   React.useEffect(() => {
+    if (typeof target !== 'number' || !Number.isFinite(target)) {
+      setVal(target); return
+    }
     if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setVal(target); return
     }
@@ -369,7 +374,7 @@ function GlanceStatTile({ value, suffix, label, bg, colour, trend, onClick }) {
 export function QuickJump({ actions, isMobile, primary }) {
   if (!actions || actions.length === 0) return null
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, minmax(0,1fr))' : 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, minmax(0,1fr))' : 'repeat(2, minmax(0,1fr))', gap: 10 }}>
       {actions.map(a => (
         <div
           key={a.key}
@@ -388,6 +393,28 @@ export function QuickJump({ actions, isMobile, primary }) {
       ))}
     </div>
   )
+}
+
+export function LearningBrief({ reflections, sessions, today, primary, terms, onOpen }) {
+  const delivered = sessions.filter(s => !s.cancelled_at && s.session_date >= `${today.slice(0, 7)}-01` && s.session_date <= today && (s.closed_at || s.session_date < today))
+  const ids = new Set(delivered.map(s => s.id))
+  const reviews = reflections.filter(r => ids.has(r.session_id))
+  const withEvidence = reviews.filter(r => r.evidence_notes?.trim()).length
+  const withVoice = reviews.filter(r => r.participant_voice?.trim()).length
+  const required = delivered.filter(s => s.reflection_required !== false)
+  const reviewedIds = new Set(reviews.map(r => r.session_id))
+  const complete = required.filter(s => reviewedIds.has(s.id)).length
+  return <section aria-label="Learning this month" style={{ background: 'var(--surface, #fff)', border: '1px solid var(--border, #E6EAF4)', borderRadius: 18, padding: 20, minWidth: 0 }}>
+    <div style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: primary, fontWeight: 800 }}>Delivery to impact</div>
+    <h2 style={{ margin: '8px 0', fontSize: 18, letterSpacing: -0.4, color: 'var(--text)' }}>What are we learning?</h2>
+    <p style={{ margin: '0 0 16px', fontSize: 12.5, lineHeight: 1.6, color: 'var(--text3)' }}>This month’s reflections turn your {terms.sessions} into evidence for your next report.</p>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12, color: 'var(--text2)' }}><span>Required reflections</span><strong>{complete} / {required.length}</strong></div>
+    <div role="progressbar" aria-label="Required reflections completed" aria-valuenow={complete} aria-valuemin={0} aria-valuemax={required.length || 1} style={{ height: 6, borderRadius: 8, background: 'var(--border)', margin: '10px 0 16px', overflow: 'hidden' }}><div style={{ width: `${required.length ? complete / required.length * 100 : 0}%`, height: '100%', background: primary }} /></div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      {[[withEvidence, 'With evidence'], [withVoice, 'Participant voice']].map(([value, label]) => <div key={label} style={{ background: 'var(--org-a05)', borderRadius: 10, padding: 12 }}><strong style={{ fontSize: 22, color: primary }}>{value}</strong><div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{label}</div></div>)}
+    </div>
+    <button onClick={onOpen} style={{ width: '100%', minHeight: 44, marginTop: 14, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: primary, fontWeight: 800, cursor: 'pointer' }}>Explore reports →</button>
+  </section>
 }
 
 // ─── Weather strip ───────────────────────────────────────────────────────────
