@@ -85,7 +85,6 @@ export const NAV_GROUPS = [
     icon: 'operations',
     items: [
       { id: 'messaging', label: 'Messaging', icon: 'messaging', tab: 'messaging', moduleKey: 'messaging' },
-      { id: 'gallery', label: 'Gallery', icon: 'gallery', tab: 'gallery', moduleKey: 'gallery' },
       // Events & Trips is deliberately absent. An event or trip is a session
       // carrying an event session_type, so it already shows up in Sessions and
       // in Calendar -- the dedicated page was a third view of the same rows.

@@ -22,7 +22,6 @@ import Office from '../office/Office'
 import SafeguardingHub from '../safeguarding/SafeguardingHub'
 import NewsletterStudio from '../messaging/NewsletterStudio'
 import Reports from '../reports/Reports'
-import Gallery from '../gallery/Gallery'
 import Messaging from '../messaging/Messaging'
 import Forms from '../forms/Forms'
 import ChildrenDirectory from '../children/ChildrenDirectory'
@@ -120,7 +119,6 @@ const ALL_MODULES = [
   { key: 'planner',         label: 'Sessions',         icon: '📅', group: 'delivery' },
   { key: 'volunteers',      label: 'Volunteers',       icon: '❤️', group: 'delivery' },
   { key: 'messaging',       label: 'Messaging',        icon: '💬', group: 'delivery' },
-  { key: 'gallery',         label: 'Gallery',          icon: '🖼️', group: 'delivery' },
   { key: 'newsletter',      label: 'Newsletter',       icon: '📨', group: 'delivery' },
   { key: 'safeguarding',    label: 'Safeguarding Hub', icon: '🛡️', group: 'safeguarding' },
   { key: 'forms',           label: 'Forms',            icon: '📝', group: 'safeguarding' },
@@ -139,7 +137,7 @@ const ALL_MODULES = [
 
 
 const MODULE_TO_PACK = {
-  registers: 'Delivery', volunteers: 'Delivery', messaging: 'Delivery', gallery: 'Delivery',
+  registers: 'Delivery', volunteers: 'Delivery', messaging: 'Delivery',
   safeguarding: 'Safeguarding', forms: 'Safeguarding', risk_assessments: 'Safeguarding',
   reports: 'Growth', impact_outcomes: 'Growth', fundraising: 'Growth',
   hr: 'Operations', resource_booking: 'Operations', payments: 'Operations',
@@ -575,7 +573,7 @@ export default function Dashboard({ session, org }) {
   const TAB_ACCESS_MODULE = {
     children: 'people', planner: 'planner', projects: 'planner', projects_list: 'planner',
     calendar: 'calendar', registers: 'registers', volunteers: 'volunteers',
-    messaging: 'messaging', newsletter: 'messaging', gallery: 'gallery', safeguarding: 'safeguarding',
+    messaging: 'messaging', newsletter: 'messaging', safeguarding: 'safeguarding',
     forms: 'forms', risk_assessments: 'risk_assessments',
     medical_alerts: 'medical_alerts', reports: 'reports', impact_outcomes: 'impact_outcomes',
     fundraising: 'fundraising', payments: 'payments', resource_booking: 'resource_booking',
@@ -1088,8 +1086,7 @@ export default function Dashboard({ session, org }) {
           {/* ── DELIVERY PACK ── */}
           {effectiveTab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'volunteers' && !canUsePeopleHR && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'gallery'    && (hasModule('gallery')    ? <Gallery org={org} session={session} />                     : <LockedModule moduleKey="gallery"    label="Gallery"    icon="🖼️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} readOnly={tabLevel === 'view'} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {/* Newsletter is rendered inside Office below. */}
 
           {/* ── SAFEGUARDING PACK ── */}
@@ -1136,7 +1133,7 @@ export default function Dashboard({ session, org }) {
 
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','newsletter','gallery','safeguarding','forms','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','office','__no_access'].includes(effectiveTab) && (
+          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','newsletter','safeguarding','forms','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','office','__no_access'].includes(effectiveTab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
           </TabTransition>

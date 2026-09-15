@@ -99,7 +99,9 @@ export const ACCESS_MODULES = [
   { key: 'forms', label: 'Forms', icon: '📝' },
   { key: 'volunteers', label: 'Volunteers', icon: '❤️' },
   { key: 'messaging', label: 'Messaging', icon: '💬', hint: 'Threads, announcements and SMS' },
-  { key: 'gallery', label: 'Gallery', icon: '🖼' },
+  // The Gallery page was removed; the key still gates the Photos widget on
+  // Home, and the gallery_photos policies check it.
+  { key: 'gallery', label: 'Photos', icon: '🖼', hint: 'The photos widget on Home' },
   { key: 'reports', label: 'Reports', icon: '📈' },
   { key: 'impact_outcomes', label: 'Impact & Outcomes', icon: '🌱' },
   { key: 'payments', label: 'Payments', icon: '💳' },
