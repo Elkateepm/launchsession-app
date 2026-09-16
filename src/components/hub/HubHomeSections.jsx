@@ -347,7 +347,7 @@ function Sparkline({ points, colour }) {
 export function GlanceStats({ stats, isMobile }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : 'repeat(auto-fit, minmax(140px, 1fr))', gap: 11 }}>
-      {stats.map(s => <GlanceStatTile key={s.key} {...s} />)}
+      {stats.map(({ key, ...stat }) => <GlanceStatTile key={key} {...stat} />)}
     </div>
   )
 }
@@ -371,10 +371,10 @@ function GlanceStatTile({ value, suffix, label, bg, colour, trend, onClick }) {
 }
 
 // ─── Quick jump ──────────────────────────────────────────────────────────────
-export function QuickJump({ actions, isMobile, primary }) {
+export function QuickJump({ actions, isMobile, primary, wide = false }) {
   if (!actions || actions.length === 0) return null
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, minmax(0,1fr))' : 'repeat(2, minmax(0,1fr))', gap: 10 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : wide ? 'repeat(auto-fit, minmax(120px,1fr))' : 'repeat(2, minmax(0,1fr))', gap: 10 }}>
       {actions.map(a => (
         <div
           key={a.key}

@@ -32,4 +32,3 @@ export function extractDominantColors(imgUrl) {
     img.src = imgUrl
   })
 }
-

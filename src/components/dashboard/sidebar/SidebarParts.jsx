@@ -36,7 +36,7 @@ export function SidebarItem({
         // so nothing shifts horizontally when the active item changes.
         borderLeft: active ? `3px solid ${primary}` : '3px solid transparent',
         background: active
-          ? 'var(--org-a10)'
+          ? 'var(--org-nav-active)'
           : highlight ? 'rgba(255,255,255,0.045)' : 'transparent',
         color: active ? '#fff' : highlight ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.5)',
         fontSize: 13, fontWeight: active ? 650 : 500,
@@ -55,7 +55,7 @@ export function SidebarItem({
         fontSize: 15, width: 20, display: 'flex', alignItems: 'center',
         justifyContent: 'center', flexShrink: 0,
         opacity: active ? 1 : muted ? 0.75 : 0.85,
-      }}><Icon name={icon} size={17} tone={active ? 'brand' : 'inherit'} /></span>
+      }}><Icon name={icon} size={17} tone="inherit" /></span>
 
       {!collapsed && (
         <span style={{
@@ -343,7 +343,7 @@ export function ProfileMenu({
       >
         <span style={{
           width: 32, height: 32, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
-          background: `linear-gradient(135deg, var(--org-a60), #6366F199)`,
+          background: `linear-gradient(135deg, var(--org-hero-start), var(--org-hero-end))`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 13, fontWeight: 800, color: '#fff',
           border: `1.5px solid var(--org-a35)`,

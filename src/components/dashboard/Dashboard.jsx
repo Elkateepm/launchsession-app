@@ -327,8 +327,8 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
       transition={{ type: 'spring', stiffness: 260, damping: 26 }}
       style={{
         margin: isMobile ? '10px 12px 0' : '16px 20px 0', borderRadius: isMobile ? 18 : 24, padding: isMobile ? '10px 14px' : '16px 24px',
-        background: 'rgba(255,255,255,0.68)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)',
-        border: '1px solid rgba(255,255,255,0.55)',
+        background: 'linear-gradient(110deg, var(--org-soft), var(--surface, #fff) 60%, var(--org-secondary-soft))', borderTop: '3px solid var(--org-primary)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)',
+        border: '1px solid var(--org-border)', borderTopWidth: 3,
         boxShadow: scrolled ? '0 14px 46px rgba(15,23,42,0.14), inset 0 1px rgba(255,255,255,0.7)' : '0 10px 40px rgba(15,23,42,0.08), inset 0 1px rgba(255,255,255,0.7)',
         display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 20, justifyContent: 'space-between', flexShrink: 0, transition: 'box-shadow 0.25s ease', position: 'relative', zIndex: 50,
       }}
@@ -338,7 +338,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
         <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }} style={{ flexShrink: 0 }}>
           <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 3, border: `1.5px solid var(--org-a20)` }} />
         </motion.div>
-        <div style={{ minWidth: 0, display: 'none' }} className="ls-header-org-text">
+        <div style={{ minWidth: 0, display: isMobile ? 'none' : 'block' }} className="ls-header-org-text">
           <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{orgName}</div>
           {isTrial ? (
             <motion.div whileHover={{ scale: 1.05 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 2, background: 'var(--org-a10)', borderRadius: 99, padding: '1.5px 8px', border: `1px solid var(--org-a10)` }}>
@@ -348,7 +348,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E' }} />
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: '#64748B' }}>Active today</span>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--org-ink)', maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{org?.slogan || 'Your organisation workspace'}</span>
             </div>
           )}
         </div>
@@ -447,7 +447,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '4px' : '6px 12px 6px 6px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.5)', cursor: 'pointer', flexShrink: 0 }}
         >
           <div style={{ position: 'relative', flexShrink: 0 }}>
-            <div style={{ width: isMobile ? 30 : 32, height: isMobile ? 30 : 32, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden' }}>
+            <div style={{ width: isMobile ? 30 : 32, height: isMobile ? 30 : 32, borderRadius: '50%', background: `linear-gradient(135deg, var(--org-hero-start), var(--org-hero-end))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden' }}>
               {userProfile?.photo_url ? <SignedImg bucket="staff-photos" src={userProfile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (userName[0]?.toUpperCase() || '?')}
             </div>
             <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 2, repeat: Infinity }}
@@ -793,7 +793,7 @@ export default function Dashboard({ session, org }) {
       {/* SIDEBAR */}
       <div style={{
         width: sidebarCollapsed ? 64 : 240,
-        background: 'linear-gradient(175deg, #0D1117 0%, #0A0F1A 60%, #080C14 100%)',
+        background: 'linear-gradient(165deg, var(--org-sidebar), var(--org-sidebar-end))',
         transition: isTablet ? 'transform 0.28s cubic-bezier(0.4,0,0.2,1)' : 'width 0.28s cubic-bezier(0.4,0,0.2,1)',
         display: isMobileBottomNav ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0,
         borderRight: '1px solid rgba(255,255,255,0.06)',
@@ -807,7 +807,7 @@ export default function Dashboard({ session, org }) {
       }}>
         <style>{`@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.4)}}.sb-nav::-webkit-scrollbar{width:3px}.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:99px}`}</style>
         <div style={{ position:'absolute',top:-60,left:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle, var(--org-a10), transparent 70%)`,pointerEvents:'none',zIndex:0 }} />
-        <div style={{ position:'absolute',bottom:80,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%)',pointerEvents:'none',zIndex:0 }} />
+        <div style={{ position:'absolute',bottom:80,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle, var(--org-secondary), transparent 70%)',opacity:0.15,pointerEvents:'none',zIndex:0 }} />
 
         {/* COLLAPSE BUTTON — desktop only; tablet uses the burger to open/close instead */}
         {!isTablet && (
@@ -826,7 +826,7 @@ export default function Dashboard({ session, org }) {
         <div style={{ padding: '16px 12px 14px', borderBottom: `1px solid var(--org-a10)`, background: `linear-gradient(180deg, var(--org-a10), transparent)`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}, var(--org-a20))` }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain', flexShrink: 0, background: 'rgba(255,255,255,0.95)', padding: 3, border: `1.5px solid var(--org-a20)` }} />
+            <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: sidebarCollapsed ? 38 : 48, height: sidebarCollapsed ? 38 : 48, borderRadius: 10, objectFit: 'contain', flexShrink: 0, background: 'rgba(255,255,255,0.95)', padding: 3, border: `1.5px solid var(--org-a20)` }} />
             {!sidebarCollapsed && <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-display, sans-serif)' }}>{orgName}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>

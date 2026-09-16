@@ -15,7 +15,9 @@ import AddVolunteersToSessionModal from "../volunteers/AddVolunteersToSessionMod
 import HistoricalAttendanceModal from "../shared/HistoricalAttendanceModal";
 import { isPushSupported, getNotificationPermission, subscribeToPush } from "../../services/pushNotifications";
 import { notifyEvent } from "../../services/notifyEvent";
-import { allowedModules } from '../../lib/moduleAccess'
+import { makeModuleLevel } from '../../lib/moduleAccess'
+import { useModuleAccess } from '../../context/ModuleAccessContext'
+import { todayOverview, monthReflectionCount } from './homeOverview'
 import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, LearningBrief, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
 import { monthAttendance as calcMonthAttendance, reachedThisMonth as calcReachedThisMonth } from './glanceStats'
 import { useTerms } from '../../context/OrgContext'
@@ -2885,7 +2887,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   }, [])
   const [showInviteChild, setShowInviteChild] = React.useState(false)
   const [showReflectionsModal, setShowReflectionsModal] = React.useState(false)
-  const [sessionsView, setSessionsView] = React.useState('upcoming') // 'upcoming' | 'ended' — merged sessions toggle
 
   const getGreeting = () => {
     const h = new Date().getHours()
@@ -2905,8 +2906,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const orgId = org?.id;
   const primary = org?.primary_color || "#1B9AAA";
   const secondary = org?.secondary_color || "#0EA5E9";
-  const activeModules = allowedModules(org);
-  const hasModule = (key) => activeModules.includes(key);
+  const { levels: accessLevels } = useModuleAccess();
+  const moduleLevel = makeModuleLevel(org, accessLevels);
+  const hasModule = (key) => moduleLevel(key) !== 'none';
+  const canEdit = (key) => moduleLevel(key) === 'edit';
   const orgName = org?.name || "LaunchSession";
 
   const [sessions, setSessions] = useState([]);
@@ -2914,7 +2917,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [attendance, setAttendance] = useState([]);
   const [concerns, setConcerns] = useState([]);
   const [children, setChildren] = useState([]);
-  const [volunteersCount, setVolunteersCount] = useState(0);
+  const [, setVolunteersCount] = useState(0);
   const [weather, setWeather] = useState(null);
   const [weatherError, setWeatherError] = useState(false);
 
@@ -3016,7 +3019,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   // Local calendar date (NOT toISOString, which converts to UTC and can roll
   // the date back during the early hours of BST — e.g. 00:19 local on 8 Jul
   // becomes 23:19 UTC on 7 Jul, silently hiding today's live sessions).
-  const toLocalDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const toLocalDateStr = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(d)
   const today = toLocalDateStr(new Date());
 
   function go(tab, payload) {
@@ -3124,7 +3127,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
     const yesterdayStr = toLocalDateStr(yesterday)
     return sessions.filter(s => {
-      if (!s.session_date) return false
+      if (!s.session_date || s.cancelled_at) return false
       // Today's sessions — stay visible all day, even after they've ended, until midnight
       if (s.session_date === today) return true
       // Include yesterday's sessions only if genuinely still ongoing right now
@@ -3158,18 +3161,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         return s.session_date > today && s.session_date <= sevenDaysStr
       })
       .sort((a, b) => (a.session_date + (a.start_time || '')).localeCompare(b.session_date + (b.start_time || '')))
-      .slice(0, 6)
   }, [sessions, today]);
-  const endedSessions = useMemo(() => {
-    const now = new Date()
-    const sevenDaysAgo = new Date(now)
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-    const sevenDaysAgoStr = toLocalDateStr(sevenDaysAgo)
-    return sessions
-      .filter(s => s.closed_at && s.session_date >= sevenDaysAgoStr)
-      .sort((a, b) => new Date(b.closed_at) - new Date(a.closed_at))
-      .slice(0, 8)
-  }, [sessions]);
   const completedWithoutReflection = useMemo(() => {
     const now = new Date();
     return sessions.filter(s => {
@@ -3270,7 +3262,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         ? `No ${terms.sessions} today. Next up: ${next.title} on ${formatDate(next.session_date)}.`
         : `No ${terms.sessions} today, and nothing booked yet. A good moment to plan one.`
     }
-    const expected = todayAttendance.length
+    const expected = new Set(todayAttendance.map(a => a.child_id).filter(Boolean)).size
     const bits = [`${n} ${n > 1 ? terms.sessions : terms.session} today`]
     if (expected > 0) bits.push(`${expected} ${expected > 1 ? terms.people : terms.person} expected`)
     if (concerns.length > 0) bits.push(`${concerns.length} open concern${concerns.length > 1 ? 's' : ''}`)
@@ -3284,62 +3276,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     return sessions.filter(s => !s.cancelled_at && s.session_date >= monthStart && s.session_date <= today && (s.closed_at || s.session_date < today)).length
   }, [sessions, today]);
 
-  // Six weekly buckets behind each stat, so the sparkline shows a real shape
-  // rather than decoration. Derived from data already in state.
-  const trends = useMemo(() => {
-    const weekStarts = []
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date()
-      d.setDate(d.getDate() - i * 7)
-      weekStarts.push(toLocalDateStr(d))
-    }
-    const bucket = (predicate) => weekStarts.map((start, i) => {
-      const end = weekStarts[i + 1] || '9999-12-31'
-      return predicate(start, end)
-    })
-    const sessionsPerWeek = bucket((start, end) => sessions.filter(s => s.session_date >= start && s.session_date < end).length)
-    // Same definition as the number it sits under: present over the places
-    // somebody marked. This divided by every attendance row, unmarked ones
-    // included, so the line and the figure above it were measuring different
-    // things and disagreeing quietly.
-    const attendedPerWeek = bucket((start, end) => {
-      const ids = new Set(sessions.filter(s => s.session_date >= start && s.session_date < end).map(s => s.id))
-      const rows = attendance.filter(a => ids.has(a.session_id))
-      const present = rows.filter(a => a.status === 'signed_in' || a.status === 'signed_out').length
-      const marked = rows.filter(a => ['signed_in', 'signed_out', 'absent'].includes(a.status)).length
-      return marked > 0 ? Math.round((present / marked) * 100) : 0
-    })
-    // Distinct people who came that week, matching the headline. It used to
-    // count everyone on the register created before the week ended, which is
-    // roll growth rather than reach.
-    const reachedPerWeek = bucket((start, end) => {
-      const ids = new Set(sessions.filter(s => s.session_date >= start && s.session_date < end).map(s => s.id))
-      return new Set(
-        attendance
-          .filter(a => ids.has(a.session_id) && (a.status === 'signed_in' || a.status === 'signed_out'))
-          .map(a => a.child_id)
-      ).size
-    })
-    return {
-      sessions: sessionsPerWeek,
-      attendance: attendedPerWeek,
-      children: reachedPerWeek,
-      // No sparkline for volunteers. This was sessionsPerWeek.map(() =>
-      // volunteersCount) -- the same number repeated six times, drawn as a flat
-      // line, directly under a comment promising a real shape rather than
-      // decoration. Nothing in state records when a volunteer was active, so
-      // the honest answer is to draw nothing.
-      volunteers: null,
-    }
-  }, [sessions, attendance]);
-
   const quickJumpActions = (() => {
     const list = []
     if (hasModule('registers')) list.push({ key: 'register', icon: '▶️', label: 'Start a register', onClick: () => go('registers') })
-    list.push({ key: 'session', icon: '➕', label: `New ${terms.session}`, onClick: () => go('planner', { autoOpenWizard: true }) })
-    list.push({ key: 'child', icon: '🧒', label: `Add ${terms.person}`, onClick: () => setShowInviteChild(true) })
-    if (hasModule('gallery')) list.push({ key: 'photos', icon: '📷', label: 'Upload photos', onClick: () => window.dispatchEvent(new Event('ls:add-photos')) })
-    if (hasModule('forms')) list.push({ key: 'forms', icon: '📋', label: 'Send a form', onClick: () => go('forms') })
+    if (canEdit('planner')) list.push({ key: 'session', icon: '➕', label: `New ${terms.session}`, onClick: () => go('planner', { autoOpenWizard: true }) })
+    if (canEdit('people')) list.push({ key: 'child', icon: '🧒', label: `Add ${terms.person}`, onClick: () => setShowInviteChild(true) })
+    if (canEdit('risk_assessments')) list.push({ key: 'risk', icon: '🛡️', label: 'Risk assessments', onClick: () => go('risk_assessments') })
+    if (canEdit('messaging')) list.push({ key: 'message', icon: '💬', label: 'Send communication', onClick: () => go('messaging') })
+    if (canEdit('forms')) list.push({ key: 'forms', icon: '📋', label: 'Send a form', onClick: () => go('forms') })
     if (hasModule('safeguarding')) list.push({ key: 'concern', icon: '🚨', label: 'Report a concern', onClick: () => raiseConcern(null) })
     return list
   })();
@@ -3400,6 +3344,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   if (loading) return <div style={styles.page}><div style={styles.loading}>Loading...</div></div>;
 
+  const dayOverview = todayOverview(sessions, attendance, sessionStaffList, today);
   const pad = isMobile ? 16 : 22;
 
   return (
@@ -3653,8 +3598,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             block. Replaces the old greeting row plus the "N sessions today" and
             "Next session" tiles, which all pointed at the same session. ── */}
         <div className="ls-rise" style={{
-          background: `linear-gradient(135deg, ${primary} 0%, var(--org-a85) 42%, ${secondary}E6 100%)`,
-          borderRadius: isMobile ? 18 : 22, padding: isMobile ? '18px 18px 16px' : '24px 28px 18px',
+          background: 'linear-gradient(125deg, var(--org-hero-start), var(--org-hero-end))',
+          borderRadius: 'var(--radius-lg)', padding: isMobile ? '16px' : '20px 24px',
           color: '#fff', position: 'relative', overflow: 'hidden', margin: '10px 0 4px',
           boxShadow: `0 1px 0 rgba(255,255,255,0.14) inset, 0 18px 40px -24px var(--org-a60)`,
         }}>
@@ -3701,10 +3646,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   admin jobs that already live on their own screens, and sitting
                   them beside the register competed with the one thing this
                   header exists to get you to. */}
-              {todaySessions.length === 0 && <button onClick={() => go('planner', { autoOpenWizard: true })} style={{ ...heroGlassBtn, background: '#fff', color: primary, gridColumn: '1 / -1' }}>Plan a {terms.session} →</button>}
-              {todaySessions.length > 0 && (
+              {todaySessions.length === 0 && canEdit('planner') && <button onClick={() => go('planner', { autoOpenWizard: true })} style={{ ...heroGlassBtn, background: '#fff', color: 'var(--org-ink)', gridColumn: '1 / -1' }}>Plan a {terms.session} →</button>}
+              {todaySessions.length > 0 && hasModule('registers') && (
                 <button onClick={() => go('registers')} style={{
-                  ...heroGlassBtn, background: '#fff', color: primary, fontWeight: 800,
+                  ...heroGlassBtn, background: '#fff', color: 'var(--org-ink)', fontWeight: 800,
                   ...(isMobile ? { gridColumn: '1 / -1' } : null),
                 }}>
                   {todayHasLiveSession ? 'Open live register →' : "Open today's register →"}
@@ -3732,6 +3677,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           )}
 
+          <div style={{ marginTop: 18 }}>
+            <OperationalPulse isMobile={isMobile} primary={primary} items={[
+              { key: 'today', icon: '📅', value: dayOverview.sessions, label: `${terms.Sessions} today`, detail: 'Your delivery schedule', onClick: () => go('calendar') },
+              { key: 'expected', icon: '🧒', value: dayOverview.people, label: `${terms.People} booked`, detail: 'Unique people across today', onClick: () => go('registers') },
+              { key: 'arrived', icon: '✅', value: dayOverview.arrived, label: 'Arrived today', detail: 'Includes those signed out', onClick: () => go('registers') },
+              { key: 'staff', icon: '🤝', value: dayOverview.staff, label: 'Team assigned', detail: 'Unique staff and volunteers', onClick: () => go('planner') },
+            ].filter(item => !['expected', 'arrived'].includes(item.key) || hasModule('registers'))} />
+          </div>
           <DaySpine
             sessions={strictlyTodaySessions}
             statsFor={getLiveSessionStats}
@@ -3739,7 +3692,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             secondary={secondary}
             isMobile={isMobile}
             todayStr={today}
-            onOpenSession={(s) => openRegisterForSession(s.id)}
+            onOpenSession={(s) => hasModule('registers') ? openRegisterForSession(s.id) : setInfoModalSession(s)}
           />
         </div>
       </header>
@@ -3765,9 +3718,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           </div>
         </div>
       )}
-      {isMobile && <div style={{ padding: `${pad}px ${pad}px 0` }}>
-        <QuickJump isMobile primary={primary} actions={quickJumpActions} />
-      </div>}
       {/* ── LIVE SESSION HERO ── */}
       <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
@@ -3885,7 +3835,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   style={{
                     textAlign: 'left', width: '100%', boxSizing: 'border-box', cursor: 'pointer', border: 'none',
                     borderRadius: 20, padding: 0, position: 'relative', overflow: 'hidden',
-                    background: `linear-gradient(160deg, #0C1226 0%, #141D3B 60%, #0F1729 100%)`,
+                    background: 'linear-gradient(160deg, var(--org-sidebar), var(--org-sidebar-end))',
                     boxShadow: `0 1px 0 rgba(255,255,255,0.07) inset, 0 16px 34px -14px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)`,
                   }}>
                   <div style={{ height: 3, width: '100%', position: 'relative', overflow: 'hidden', background: primary }}>
@@ -4171,7 +4121,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   return (
                     <button key={s.id} onClick={() => toggleEndedExpanded(s.id)} style={{
                       flex: '1 1 100%', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', cursor: 'pointer',
-                      background: 'linear-gradient(160deg, #0C1226 0%, #141D3B 60%, #0F1729 100%)',
+                      background: 'linear-gradient(160deg, var(--org-sidebar), var(--org-sidebar-end))',
                       border: isClosed ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(248,113,113,0.35)', borderRadius: 14, padding: '10px 14px', boxSizing: 'border-box',
                     }}>
                       <span style={{ width: 30, height: 30, borderRadius: 9, background: isClosed ? 'rgba(148,163,184,0.16)' : 'rgba(248,113,113,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>{isClosed ? '🔒' : '🔺'}</span>
@@ -4193,26 +4143,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           )
         })()
-      ) : (
-        <section style={{ ...styles.encouragement, background: `linear-gradient(135deg, ${primary}, ${secondary})`, boxShadow: `0 16px 34px var(--org-a20)` }}>
-          <div style={styles.trophy}><Icon name="🏆" /></div>
-          <div>
-            <h2 style={styles.encouragementTitle}>Keep making an impact, {orgName}! <Icon name="⭐" /></h2>
-            <p style={styles.encouragementText}>Supporting {children.length} young people across {sessions.length} planned sessions.</p>
-          </div>
-          <div style={styles.confetti}><Icon name="✨" /></div>
-        </section>
-      )}
+      ) : null}
       </div>
 
-      <section className="ls-hub-outer-grid" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1fr) 320px', gap: 18, padding: pad }}>
-        <div style={{ minWidth: 0, boxSizing: 'border-box', width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {/* NEEDS ATTENTION — only genuine outstanding work, colour-coded by
-              urgency. The old version padded this list with rows like
-              "Registers: no activity yet" and "Mentoring: view active matches",
-              which weren't actions at all — they made a quiet day look as busy
-              as a bad one, and buried the items that did need doing. When
-              there's nothing outstanding, one green line says so. */}
+      <section aria-label="Daily command centre" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0,1fr)' : 'repeat(2,minmax(0,1fr))', alignItems: 'start', gap: 16, padding: pad, paddingBottom: 100 }}>
+        <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
+          <h2 style={{ fontSize: 17, margin: '0 0 12px', fontFamily: 'var(--font-display)' }}>Needs attention</h2>
           {(() => {
             const items = []
             if (hasModule('safeguarding') && concerns.length > 0) {
@@ -4223,7 +4159,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 onClick: () => go('safeguarding'),
               })
             }
-            if (pendingRegistrations > 0) {
+            if (canEdit('people') && ['owner', 'admin'].includes(userProfile?.role) && pendingRegistrations > 0) {
               items.push({
                 key: 'registrations', icon: '🧒', tone: 'punch',
                 title: `${pendingRegistrations} registration${pendingRegistrations > 1 ? 's' : ''} to authorise`,
@@ -4231,7 +4167,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 onClick: () => go('children', { openRegistrationRequests: true }),
               })
             }
-            if (completedWithoutReflection.length > 0) {
+            if (canEdit('planner') && completedWithoutReflection.length > 0) {
               const oldest = completedWithoutReflection[completedWithoutReflection.length - 1]
               const days = oldest ? Math.floor((Date.now() - new Date(oldest.session_date).getTime()) / 86400000) : 0
               items.push({
@@ -4241,7 +4177,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 onClick: () => setShowReflectionsModal(true),
               })
             }
-            if (medicalAlertsNeedingReview > 0) {
+            if (hasModule('medical_alerts') && medicalAlertsNeedingReview > 0) {
               items.push({
                 key: 'medical', icon: '💊', tone: 'amber',
                 title: `${medicalAlertsNeedingReview} medical record${medicalAlertsNeedingReview > 1 ? 's' : ''} to review`,
@@ -4270,37 +4206,24 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             }
 
             if (items.length === 0) {
-              return <AllClear label="Nothing needs your attention right now" />
+              return <AllClear label="No outstanding items in your available Home checks" />
             }
             return <ActionRow items={items} isMobile={isMobile} />
           })()}
-
-          <Panel title="Operational pulse" right={
-            <button onClick={() => go('reports')} style={{ background: 'var(--org-a10)', color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>Open reports <Icon name="→" /></button>
-          }>
-            <OperationalPulse
-              isMobile={isMobile}
-              primary={primary}
-              terms={terms}
-              items={[
-                { key: 'people', icon: '🧒', value: children.length, label: `${terms.People} on roll`, detail: pendingRegistrations > 0 ? `${pendingRegistrations} awaiting approval` : 'Register up to date', tone: pendingRegistrations > 0 ? 'amber' : 'calm', onClick: () => go('children', pendingRegistrations > 0 ? { openRegistrationRequests: true } : undefined) },
-                { key: 'care', icon: '💊', value: medicalAlertsNeedingReview, label: 'Medical reviews', detail: medicalAlertsNeedingReview > 0 ? 'Need reconfirming' : 'No reviews due', tone: medicalAlertsNeedingReview > 0 ? 'amber' : 'good', onClick: () => go('medical_alerts') },
-                { key: 'learning', icon: '✍️', value: completedWithoutReflection.length, label: 'Reflection queue', detail: completedWithoutReflection.length > 0 ? 'Feeds reports' : 'Learning loop clear', tone: completedWithoutReflection.length > 0 ? 'amber' : 'good', onClick: () => completedWithoutReflection.length > 0 ? setShowReflectionsModal(true) : go('reports') },
-                { key: 'team', icon: '🤝', value: volunteersCount, label: 'Volunteers', detail: checkedOutCount > 0 ? `${checkedOutCount} resources checked out` : 'Ready to support delivery', tone: checkedOutCount > 0 ? 'sky' : 'calm', onClick: () => go('volunteers') },
-              ]}
-            />
-          </Panel>
-
-          {/* ACTIVE PROJECT — only shown while a project is genuinely running */}
+        </div>
+        <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
+          <Panel title="Quick actions"><QuickJump isMobile={isMobile} primary={primary} actions={quickJumpActions} wide /></Panel>
+        </div>
+        {activeProject && <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
           {activeProject && (
             <div style={{
-              background: 'linear-gradient(135deg, #F5F3FF, #EEF2FF)',
-              border: '1px solid #DDD6FE', borderRadius: 18, padding: 18,
+              background: 'linear-gradient(135deg, var(--org-a10), var(--org-secondary-soft))',
+              border: '1px solid var(--org-border)', borderRadius: 18, padding: 18,
               boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 16px -12px rgba(15,23,42,0.18)',
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.6, color: '#5B21B6', marginBottom: 5 }}>ACTIVE PROJECT</div>
+                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.6, color: 'var(--org-ink)', marginBottom: 5 }}>ACTIVE PROJECT</div>
                   <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>{activeProject.project.name}</div>
                   <div style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600, marginTop: 3 }}>
                     Day {activeProject.dayNumber} of {activeProject.total}
@@ -4310,301 +4233,50 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 <button onClick={() => onNavigate && onNavigate('projects', { projectId: activeProject.project.id })}
                   style={{
                     padding: '9px 16px', borderRadius: 10, border: 'none', color: '#fff', fontSize: 12.5, fontWeight: 800,
-                    background: 'linear-gradient(135deg,#6D5DF6,#5B8DEF)', cursor: 'pointer', whiteSpace: 'nowrap',
+                    background: 'linear-gradient(135deg,var(--org-hero-start),var(--org-hero-end))', cursor: 'pointer', whiteSpace: 'nowrap',
                   }}>
                   Open project
                 </button>
               </div>
-              <div style={{ height: 6, background: 'rgba(109,93,246,0.15)', borderRadius: 99, overflow: 'hidden', marginTop: 12 }}>
+              <div style={{ height: 6, background: 'var(--org-a10)', borderRadius: 99, overflow: 'hidden', marginTop: 12 }}>
                 <div style={{
                   width: `${activeProject.total ? Math.round((activeProject.completed / activeProject.total) * 100) : 0}%`,
-                  height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#6D5DF6,#5B8DEF)', transition: 'width 400ms ease',
+                  height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,var(--org-primary),var(--org-secondary))', transition: 'width 400ms ease',
                 }} />
               </div>
             </div>
           )}
 
-          {/* SESSIONS — merged Live & Upcoming + Ended sessions behind one segmented control, instead of two stacked lists */}
-          <div>
-            <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
-            {/* Mobile-first: the segmented control takes the full width with two
-                equal halves, and Calendar / New session drop onto their own row
-                as bordered buttons. Previously all four sat on one line at 11px,
-                leaving "+ New session" a few pixels from the screen edge. */}
-            <div style={{
-              display: 'flex', flexDirection: isMobile ? 'column' : 'row',
-              alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between',
-              marginBottom: 14, flexWrap: 'wrap', gap: isMobile ? 10 : 8,
-            }}>
-              <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: 99, padding: 3, width: isMobile ? '100%' : 'auto' }}>
-                <button onClick={() => setSessionsView('upcoming')}
-                  style={{ border: 'none', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
-                    flex: isMobile ? 1 : 'none', minHeight: isMobile ? 38 : 'auto',
-                    background: sessionsView === 'upcoming' ? '#fff' : 'none', color: sessionsView === 'upcoming' ? primary : '#6B7280',
-                    boxShadow: sessionsView === 'upcoming' ? '0 1px 4px rgba(0,0,0,0.12)' : 'none' }}>
-                  📅 Upcoming
-                </button>
-                <button onClick={() => setSessionsView('ended')}
-                  style={{ border: 'none', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
-                    flex: isMobile ? 1 : 'none', minHeight: isMobile ? 38 : 'auto',
-                    background: sessionsView === 'ended' ? '#fff' : 'none', color: sessionsView === 'ended' ? primary : '#6B7280',
-                    boxShadow: sessionsView === 'ended' ? '0 1px 4px rgba(0,0,0,0.12)' : 'none' }}>
-                  🔒 Ended{endedSessions.length > 0 ? ` (${endedSessions.length})` : ''}
-                </button>
-              </div>
-              <div style={{ display: 'flex', gap: isMobile ? 8 : 12, width: isMobile ? '100%' : 'auto' }}>
-                <button onClick={() => go('calendar')} style={isMobile
-                  ? { flex: 1, minHeight: 42, borderRadius: 12, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 12, fontWeight: 700, color: '#6B7280', cursor: 'pointer' }
-                  : { fontSize: 11, fontWeight: 700, color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>📆 Calendar</button>
-                <button onClick={() => go('planner')} style={isMobile
-                  ? { flex: 1, minHeight: 42, borderRadius: 12, border: `1.5px solid ${primary}`, background: '#fff', fontSize: 12, fontWeight: 800, color: primary, cursor: 'pointer' }
-                  : { fontSize: 11, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ New session</button>
-              </div>
-            </div>
-            {sessionsView === 'ended' ? (
-              endedSessions.length === 0 ? (
-                <div style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', background: '#F8FAFC', border: '1.5px dashed #E5E7EB', borderRadius: 20, padding: '36px 24px', textAlign: 'center', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
-                  No ended sessions yet
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {endedSessions.map(s => {
-                    const hasReflection = reflections.some(r => r.session_id === s.id)
-                    return (
-                    <div key={s.id} onClick={() => openRegisterForSession(s.id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 16, padding: '14px 16px', cursor: 'pointer' }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = primary }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 12, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><Icon name="🔒" /></div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13.5, fontWeight: 800, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-                        <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>{formatDate(s.session_date)} · Closed {new Date(s.closed_at).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}</div>
-                      </div>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: '#6B7280', background: '#E5E7EB', borderRadius: 99, padding: '4px 10px', flexShrink: 0 }}>CLOSED</span>
-                      {hasReflection ? (
-                        <span style={{ fontSize: 10, fontWeight: 800, color: '#16A34A', background: '#DCFCE7', border: '1px solid #BBF7D0', borderRadius: 99, padding: '4px 10px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}><Icon name="✓" /> Reflected</span>
-                      ) : (
-                        <button onClick={e => { e.stopPropagation(); go('planner', { reflectSessionId: s.id }) }}
-                          style={{ fontSize: 10.5, fontWeight: 800, color: '#B45309', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 99, padding: '5px 11px', flexShrink: 0, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                          ⭐ Write reflection
-                        </button>
-                      )}
-                      <span style={{ fontSize: 16, color: '#CBD5E1', flexShrink: 0 }}><Icon name="→" /></span>
-                    </div>
-                    )
-                  })}
-                </div>
-              )
-            ) : upcomingSessions.length === 0 ? (
-              <div style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', background: `linear-gradient(135deg, var(--org-a05), var(--org-a05))`, border: `1.5px dashed var(--org-a20)`, borderRadius: 20, padding: '36px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="🚀" /></div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 6, maxWidth: 320 }}>Nothing running or planned in the next 7 days</div>
-                <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20, maxWidth: 320 }}>Create a session and it'll appear here instantly</div>
-                <button onClick={() => go('planner')} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 16px var(--org-a20)` }}>Plan a Session <Icon name="→" /></button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {upcomingSessions.map((s, idx) => {
-                  const { series, part } = splitSeries(s.title)
-                  const prev = idx > 0 ? upcomingSessions[idx - 1] : null
-                  const sameSeriesAsPrev = !!series && !!prev && splitSeries(prev.title).series === series
-                  const isToday = s.session_date === today
-                  const now = new Date()
-                  const startDateTime = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
-                  const endDateTime = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
-                  const hasEnded = isToday && !!endDateTime && endDateTime < now
-                  const notStartedYet = isToday && !!startDateTime && startDateTime > now
-                  const isLiveNow = isToday && (!startDateTime || startDateTime <= now) && !hasEnded
-                  const typeColors = {
-                    activity:  { bg: '#EFF6FF', accent: '#3B82F6', icon: '🏃' },
-                    workshop:  { bg: '#F0FDF4', accent: '#16A34A', icon: '🛠️' },
-                    trip:      { bg: '#FFFBEB', accent: '#D97706', icon: '🚌' },
-                    sports:    { bg: '#F0FDF4', accent: '#16A34A', icon: '⚽' },
-                    arts:      { bg: '#FAF5FF', accent: '#7C3AED', icon: '🎨' },
-                    mentoring: { bg: '#EFF6FF', accent: '#2563EB', icon: '🤝' },
-                  }
-                  const tc = typeColors[s.session_type] || { bg: primary + '10', accent: primary, icon: '📅' }
-                  return (
-                    <div key={s.id}
-                      style={{ width: '100%', background: isToday ? `linear-gradient(135deg, ${primary}, var(--org-a85))` : '#fff', border: isToday ? 'none' : '1.5px solid #F1F5F9', borderRadius: 18, padding: sameSeriesAsPrev && !isToday ? '13px 18px' : '18px 18px', cursor: 'pointer', textAlign: 'left', boxShadow: isToday ? `0 8px 32px var(--org-a20)` : '0 2px 12px rgba(0,0,0,0.06)', transition: 'all 0.2s', position: 'relative', overflow: 'hidden',
-                        // A continuation of the run it belongs to: indented,
-                        // with the series colour running down the edge, so five
-                        // days of one residential read as one thing.
-                        ...(sameSeriesAsPrev && !isToday ? { marginLeft: 22, marginTop: -6, borderLeft: `3px solid var(--org-a35)`, borderTopLeftRadius: 6, borderBottomLeftRadius: 6 } : null) }}
-                      // Was go('planner') for every card, so clicking the fourth
-                      // session in the list opened the same screen as clicking
-                      // the first and told you nothing about the one you picked.
-                      onClick={() => setInfoModalSession(s)}
-                      onMouseEnter={e => { if (!isToday) { e.currentTarget.style.borderColor = primary; e.currentTarget.style.boxShadow = `0 4px 20px var(--org-a10)`; e.currentTarget.style.transform = 'translateY(-2px)' }}}
-                      onMouseLeave={e => { if (!isToday) { e.currentTarget.style.borderColor = '#F1F5F9'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; e.currentTarget.style.transform = 'none' }}}>
 
-                      {/* Background decoration */}
-                      {isToday && <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />}
-
-                      {/* Calendar jump icon */}
-                      <button onClick={e => { e.stopPropagation(); go('calendar') }} title="View in Calendar"
-                        style={{ position: 'absolute', top: 14, right: 14, width: 30, height: 30, borderRadius: 9, border: 'none', background: isToday ? 'rgba(255,255,255,0.2)' : '#F8FAFC', color: isToday ? '#fff' : '#6B7280', fontSize: 13, cursor: 'pointer', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Icon name="🗓️" size={15} />
-                      </button>
-
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                        {/* Icon */}
-                        <div style={{ width: 46, height: 46, borderRadius: 13, background: isToday ? 'rgba(255,255,255,0.2)' : tc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, border: isToday ? '1px solid rgba(255,255,255,0.3)' : 'none' }}>
-                          <Icon name={tc.icon} />
-                        </div>
-
-                        <div style={{ flex: 1, minWidth: 0, paddingRight: 30 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                            <div style={{ fontSize: 15, fontWeight: 900, color: isToday ? '#fff' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {sameSeriesAsPrev ? part : s.title}
-                            </div>
-                            {isLiveNow && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', animation: 'pulse-live 1.5s infinite' }} />LIVE NOW</span>}
-                            {isToday && hasEnded && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>{s.closed_at ? 'Closed' : 'Overrun'}</span>}
-                            {isToday && notStartedYet && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>NOT STARTED</span>}
-                            {isToday && !isLiveNow && !hasEnded && !notStartedYet && <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>TODAY</span>}
-                            {idx === 0 && !isToday && <span style={{ background: primary + '15', color: primary, borderRadius: 99, padding: '2px 9px', fontSize: 9, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase', flexShrink: 0 }}>NEXT</span>}
-                          </div>
-
-                          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <span><Icon name="📅" /></span> {relativeDay(s.session_date, today)}
-                            </span>
-                            {s.start_time && (
-                              <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <span><Icon name="⏰" /></span> {s.start_time.slice(0, 5)}{s.end_time ? ` – ${s.end_time.slice(0, 5)}` : ''}
-                              </span>
-                            )}
-                            {s.location && (
-                              <span style={{ fontSize: 12, color: isToday ? 'rgba(255,255,255,0.8)' : '#6B7280', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <span><Icon name="📍" /></span> {s.location.split(',')[0]}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div style={{ fontSize: 18, color: isToday ? 'rgba(255,255,255,0.7)' : '#CBD5E1', flexShrink: 0 }}><Icon name="→" /></div>
-                      </div>
-
-                      {/* Bottom action bar for today's session */}
-                      {isToday && hasModule('registers') && (
-                        <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.2)', display: 'flex', gap: 8 }}>
-                          <button onClick={e => { e.stopPropagation(); setInfoModalSession(s) }}
-                            style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                            <Icon name="ℹ️" /> Session info
-                          </button>
-                          {hasEnded && !s.closed_at && (
-                            <button onClick={e => { e.stopPropagation(); openRegisterForSession(s.id) }}
-                              style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                              <Icon name="📋" /> Open register
-                            </button>
-                          )}
-                          {hasEnded && userProfile && ['admin', 'owner', 'staff'].includes(userProfile.role) && (
-                            <button onClick={e => { e.stopPropagation(); setClosingSession(s) }}
-                              style={{ flex: 1, background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '8px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                              <Icon name="🔒" /> Close session
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Recent Registers lived here and has gone. It rendered
-              endedSessions.slice(0, 3) -- the first three of the same array the
-              Ended tab immediately above renders in full -- so the page showed
-              one list twice, the second time shorter. Its own comment gave the
-              reason: past registers were hard to find "without digging through
-              a toggle". The answer to a hard-to-find toggle is a better toggle,
-              not a second copy of the list. The Ended tab carries the count and
-              View all registers is on it. */}
-
-          {/* AT A GLANCE — four real numbers that count up on mount, each with a
-              six-week sparkline so the figure has context. Replaces the
-              today/month toggle plus the two GlanceCards below it, which
-              between them showed the same counts in three card styles. */}
-          <Panel title="🧭 This month at a glance" right={
-            <button onClick={() => go('reports')} style={{ background: 'var(--org-a10)', color: primary, border: 'none', borderRadius: 99, padding: '7px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>Full report <Icon name="→" /></button>
-          }>
-            {/* Tints derive from the org's own primary/secondary rather than a
-                fixed four-colour set, so these sit in the same palette as the
-                hero and the rest of the module pages. Attendance is the one
-                exception: it grades itself, the same rule Reports already uses,
-                because a rate is a judgement and shouldn't read as brand. */}
-            {/* Every figure here is this month's, except the volunteer count,
-                whose label says plainly that it is a standing number. Three
-                monthly figures and one all-time one under a heading saying
-                "this month" is how the attendance rate went unnoticed. */}
+        </div>}
+        <WeekAheadCard sessions={upcomingSessions.filter(s => s.session_date > today)} today={today} primary={primary} terms={terms}
+          onOpenSession={setInfoModalSession} onPlan={canEdit('planner') ? () => go('planner', { autoOpenWizard: true }) : null}
+          onCalendar={() => go('calendar')} onRegisters={hasModule('registers') ? () => go('registers') : null} />
+        {hasModule('reports') && <LearningBrief reflections={reflections} sessions={sessions} today={today} primary={primary} terms={terms} onOpen={() => go('reports')} />}
+        {hasModule('reports') && <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
+          <Panel title="Impact snapshot · this month" right={<button onClick={() => go('reports')} style={sectionLinkBtn('var(--org-ink)')}>Explore reports →</button>}>
             <GlanceStats isMobile={isMobile} stats={[
-              { key: 'children', value: reachedThisMonth, label: `${terms.People} reached`, bg: 'var(--org-a10)', colour: primary, trend: trends.children, onClick: () => go('children') },
-              { key: 'sessions', value: sessionsRunThisMonth, label: `${terms.Sessions} run`, bg: `${secondary}14`, colour: secondary, trend: trends.sessions, onClick: () => go('planner') },
-              { key: 'attendance', value: attendanceRate ?? '—', suffix: attendanceRate == null ? '' : '%', label: 'Attendance rate', bg: attendanceTone.bg, colour: attendanceTone.fg, trend: trends.attendance, onClick: () => go('reports') },
-              { key: 'volunteers', value: volunteersCount, label: 'Volunteers on the team', bg: 'var(--org-a05)', colour: primary, trend: trends.volunteers, onClick: () => go('volunteers') },
+              { key: 'children', value: reachedThisMonth, label: `${terms.People} reached`, bg: 'var(--org-a10)', colour: 'var(--org-ink)', onClick: () => go('reports') },
+              { key: 'sessions', value: sessionsRunThisMonth, label: `${terms.Sessions} delivered`, bg: 'var(--org-secondary-soft)', colour: 'var(--org-secondary-ink)', onClick: () => go('reports') },
+              { key: 'attendance', value: attendanceRate ?? '—', suffix: attendanceRate == null ? '' : '%', label: 'Marked attendance', bg: attendanceTone.bg, colour: attendanceTone.fg, onClick: () => go('reports') },
+              { key: 'reflections', value: monthReflectionCount(sessions, reflections, today), label: 'Delivery reflections', bg: 'var(--org-a05)', colour: 'var(--org-ink)', onClick: () => go('reports') },
             ]} />
+            <p style={{ margin: '14px 0 0', fontSize: 13, lineHeight: 1.6, color: 'var(--text2)' }}>
+              {monthAttendance.marked ? `${monthAttendance.present} of ${monthAttendance.marked} marked places attended this month. Unmarked places are excluded.` : 'Attendance insights appear once registers are marked. Unmarked places are not counted as absences.'}
+            </p>
           </Panel>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-
-          {!isMobile && <Panel title="Quick actions">
-            <QuickJump isMobile={isMobile} primary={primary} actions={quickJumpActions} />
-          </Panel>}
-          <WeekAheadCard
-            sessions={upcomingSessions}
-            today={today}
-            primary={primary}
-            terms={terms}
-            onOpenSession={setInfoModalSession}
-            onPlan={() => go('planner', { autoOpenWizard: true })}
-            onCalendar={() => go('calendar')}
-          />
-          <LearningBrief reflections={reflections} sessions={sessions} today={today} primary={primary} terms={terms} onOpen={() => go('reports')} />
-          {/* WEATHER — demoted from a large tile to a strip with a delivery
-              verdict attached, since that's the only decision it informs. The
-              session tiles that used to sit beside it are gone: the day spine
-              in the hero already shows today's sessions and what's next. */}
-          <WeatherStrip
-            weather={weather}
-            weatherError={weatherError}
-            icon={weather ? weatherFromCode(weather.code).icon : '🌡️'}
-            label={weather ? weatherFromCode(weather.code).label : ''}
-            primary={primary}
-          />
-
-
-
-          {/* Sidebar is ambient content only. Anything needing a decision
-              belongs in the main column, where it is not 320px wide on a
-              laptop and does not sit below the session lists on a phone. */}
-          {/* PHOTO CAROUSEL — community content, kept below operational items.
-              Wrapped in the same panel as everything else in this column: it
-              was the one block with no container, so the rail read as two
-              cards and some loose content rather than one column. */}
-          <div style={railPanel}>
-            <PhotoCarousel orgId={orgId} primary={primary} userId={session?.user?.id} />
-          </div>
-
-          {/* ANNOUNCEMENTS — staff/admin only */}
-          {['admin', 'owner', 'staff'].includes(userProfile?.role) && (
-            <AnnouncementsPanel orgId={orgId} primary={primary} userId={session?.user?.id} />
-          )}
-
-          {/* The Report a Cause for Concern button is position: fixed at the
-              bottom right, which is exactly where this column ends. Without
-              this the last panel sits underneath it. */}
-          <div aria-hidden="true" style={{ height: isMobile ? 0 : 72 }} />
-        </div>
+        </div>}
+        <WeatherStrip weather={weather} weatherError={weatherError} icon={weather ? weatherFromCode(weather.code).icon : '🌡️'} label={weather ? weatherFromCode(weather.code).label : ''} primary={primary} />
+        {hasModule('gallery') && <div style={railPanel}><PhotoCarousel orgId={orgId} primary={primary} userId={session?.user?.id} /></div>}
+        {hasModule('messaging') && ['admin', 'owner', 'manager', 'staff'].includes(userProfile?.role) && <div style={{ gridColumn: '1 / -1' }}><AnnouncementsPanel orgId={orgId} primary={primary} userId={session?.user?.id} /></div>}
       </section>
 
       {/* Floating Report a Cause for Concern button — always accessible from Home, no password needed */}
-      <button
+      {hasModule('safeguarding') && <button
         onClick={() => raiseConcern(null)}
         title="Report a Cause for Concern"
         style={{
-          position: 'fixed', bottom: 24, right: 24, zIndex: 60,
+          position: 'fixed', bottom: isMobile ? 100 : 24, right: isMobile ? 16 : 24, zIndex: 60,
           display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '14px' : '12px 20px',
           borderRadius: 99, border: 'none', background: 'linear-gradient(90deg,#DC2626,#B91C1C)',
           color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer',
@@ -4612,7 +4284,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         }}
       >
         🚨{!isMobile && ' Report a Cause for Concern'}
-      </button>
+      </button>}
 
       {showConcernForm && (
         <>
@@ -4750,10 +4422,10 @@ function OperationalPulse({ items, isMobile, primary }) {
     good: { bg: '#ECFDF5', color: '#047857', border: '#A7F3D0' },
     amber: { bg: '#FFF7ED', color: '#B45309', border: '#FED7AA' },
     sky: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
-    calm: { bg: 'var(--org-a05)', color: primary, border: 'var(--org-a20)' },
+    calm: { bg: 'var(--surface, #fff)', color: 'var(--org-ink)', border: 'var(--org-a20)' },
   }
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : 'repeat(4, minmax(0,1fr))', gap: 10 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : 'repeat(auto-fit, minmax(140px,1fr))', gap: 10 }}>
       {items.map(item => {
         const t = tone[item.tone] || tone.calm
         return (
@@ -4783,8 +4455,8 @@ function OperationalPulse({ items, isMobile, primary }) {
   )
 }
 
-function WeekAheadCard({ sessions, today, primary, terms, onOpenSession, onPlan, onCalendar }) {
-  const list = (sessions || []).filter(s => !s.closed_at).slice(0, 5)
+function WeekAheadCard({ sessions, today, primary, terms, onOpenSession, onPlan, onCalendar, onRegisters }) {
+  const list = (sessions || []).filter(s => !s.closed_at && !s.cancelled_at).slice(0, 5)
   return (
     <section style={railPanel}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
@@ -4792,13 +4464,13 @@ function WeekAheadCard({ sessions, today, primary, terms, onOpenSession, onPlan,
           <div style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: primary, fontWeight: 900 }}>Planning</div>
           <h2 style={{ margin: '5px 0 0', fontSize: 17, color: 'var(--text)', letterSpacing: -0.3 }}>Week ahead</h2>
         </div>
-        <button onClick={onCalendar} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, color: primary, fontSize: 11, fontWeight: 800, minHeight: 34, padding: '0 10px', cursor: 'pointer' }}>Calendar</button>
+        <button onClick={onCalendar} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, color: primary, fontSize: 11, fontWeight: 800, minHeight: 44, padding: '0 10px', cursor: 'pointer' }}>Calendar</button>
       </div>
       {list.length === 0 ? (
         <div style={{ border: '1px dashed var(--org-a20)', borderRadius: 14, padding: 16, background: 'var(--org-a05)' }}>
           <div style={{ fontSize: 13, fontWeight: 900, color: 'var(--text)' }}>No {terms.sessions} booked this week</div>
           <p style={{ margin: '6px 0 13px', fontSize: 12, lineHeight: 1.55, color: 'var(--text3)' }}>Use this space to get the next delivery date into the plan.</p>
-          <button onClick={onPlan} style={{ width: '100%', minHeight: 40, border: 'none', borderRadius: 10, background: primary, color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>Plan a {terms.session}</button>
+          {onPlan && <button onClick={onPlan} style={{ width: '100%', minHeight: 44, border: 'none', borderRadius: 10, background: primary, color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>Plan a {terms.session}</button>}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -4821,6 +4493,7 @@ function WeekAheadCard({ sessions, today, primary, terms, onOpenSession, onPlan,
           })}
         </div>
       )}
+      {onRegisters && <button onClick={onRegisters} style={{ ...sectionLinkBtn('var(--org-ink)'), margin: '12px 0 0', width: '100%' }}>View current and past registers →</button>}
     </section>
   )
 }
@@ -4880,11 +4553,6 @@ function relativeDay(dateStr, todayStr) {
 // Sessions in a run share a title prefix -- "PGL Summer Residential — Day 1",
 // "... — Day 2". Repeating the first 24 characters on every row costs the width
 // that would otherwise show what makes each one different.
-function splitSeries(title) {
-  const m = String(title || '').match(/^(.*?)\s+[—–-]\s+(.+)$/);
-  return m ? { series: m[1].trim(), part: m[2].trim() } : { series: null, part: title };
-}
-
 // The side column's panel. One radius, one border, one shadow, so the rail
 // reads as a single column rather than a stack of differently-built boxes.
 const railPanel = {
@@ -4896,7 +4564,7 @@ const railPanel = {
 }
 
 const styles = {
-  page: { height: "100%", background: "linear-gradient(180deg, #F8FBFF 0%, #EEF4FA 100%)", padding: 0, color: "#0F172A", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" },
+  page: { height: "100%", background: "var(--bg)", padding: 0, color: "#0F172A", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" },
   loading: { padding: 50, textAlign: "center", color: "#64748B", fontWeight: 800 },
   liveHero: { background: "linear-gradient(135deg, #081226, #12235A)", borderRadius: 22, color: "#fff", padding: 24, marginBottom: 22, boxShadow: "0 18px 38px rgba(15,23,42,0.25)" },
   liveHeroTop: { display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 22 },

@@ -1,3 +1,5 @@
+import { brandPalette, darken, hexToRgb, lighten } from './brandColors'
+
 // Brand theme beyond colour: typeface and interface density.
 //
 // index.css already exposes --font, --font-display and --radius, and the whole
@@ -98,6 +100,20 @@ export function loadBrandFont(key) {
 export function applyBrandTheme(org) {
   if (typeof document === 'undefined') return
   const root = document.documentElement.style
+  const primary = brandPalette(org?.primary_color)
+  const secondary = brandPalette(org?.secondary_color || primary.primary)
+  const accent = hexToRgb(org?.accent_color) ? org.accent_color : secondary.primary
+  root.setProperty('--org-secondary', secondary.primary)
+  root.setProperty('--org-secondary-ink', secondary.ink)
+  root.setProperty('--org-secondary-soft', secondary.tint)
+  root.setProperty('--org-accent', accent)
+  // Darkened brand surfaces preserve white-text contrast even for yellow brands.
+  root.setProperty('--org-sidebar', darken(primary.primary, 0.78))
+  root.setProperty('--org-sidebar-end', darken(secondary.primary, 0.86))
+  root.setProperty('--org-nav-active', darken(primary.ink, 0.20))
+  root.setProperty('--org-hero-start', darken(primary.ink, 0.15))
+  root.setProperty('--org-hero-end', darken(secondary.ink, 0.20))
+  root.setProperty('--org-on-dark', lighten(primary.primary, 0.80))
 
   const font = fontByKey(org?.brand_font)
   loadBrandFont(font.key)

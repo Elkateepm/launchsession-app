@@ -21,13 +21,13 @@ import Icon from '../../lib/icons'
  */
 export default function PageHeader({ icon, iconImg, title, subtitle, primary = '#1B9AAA', orgName, stats = [], actions = [], badge, gradient, illustration }) {
   const isMobile = useIsMobile()
-  const grad = gradient || `linear-gradient(135deg, var(--org-a10) 0%, var(--org-a05) 60%, transparent 100%)`
+  const grad = gradient || 'linear-gradient(110deg, var(--org-a20), var(--org-a05) 55%, var(--org-secondary-soft))'
 
   return (
     <div className="ls-page-header" style={{ background: 'var(--surface, #fff)', borderBottom: `2px solid var(--org-a10)`, padding: '0', position: 'relative', overflow: 'hidden', flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 12px 28px -20px var(--org-a20)` }}>
 
       {/* Brand colour strip at top */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, var(--org-a35), transparent)` }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, var(--org-primary), var(--org-secondary), var(--org-accent))' }} />
 
       {/* Background decorations */}
       <div style={{ position: 'absolute', inset: 0, background: grad, pointerEvents: 'none' }} />
@@ -65,7 +65,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                 <p className="ls-header-sub" style={{ fontSize: 12.5, color: 'var(--text3, #6B7280)', margin: 0, fontWeight: 500, lineHeight: 1.35 }}>{subtitle}</p>
               )}
               {orgName && (
-                <div style={{ fontSize: 9.5, fontWeight: 800, color: primary, textTransform: 'uppercase', letterSpacing: 0.7, marginTop: 3, opacity: 0.8 }}>{orgName}</div>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--org-ink)', textTransform: 'uppercase', letterSpacing: 0.7, marginTop: 3, opacity: 0.8 }}>{orgName}</div>
               )}
             </div>
           </div>
@@ -75,13 +75,13 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
             <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', justifyContent: isMobile ? 'stretch' : 'flex-end', width: isMobile ? '100%' : 'auto' }}>
               {actions.map((a, i) => (
                 <button key={i} onClick={a.onClick} style={{
-                  padding: '8px 14px', borderRadius: 9, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+                  padding: '8px 14px', minHeight: 44, borderRadius: 'var(--radius-sm)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, whiteSpace: 'nowrap',
                   fontFamily: 'var(--font-display, sans-serif)',
                   ...(isMobile ? { flex: '1 1 0', minWidth: 0 } : {}),
                   ...(a.variant === 'ghost'
                     ? { border: `1.5px solid var(--border, #e5e7eb)`, background: 'var(--surface, #fff)', color: 'var(--text, #111)', boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -2px rgba(15,23,42,0.08)' }
-                    : { border: 'none', background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, color: '#fff', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -1px 0 rgba(0,0,0,0.12) inset, 0 6px 16px -8px var(--org-a35)` }
+                    : { border: 'none', background: 'var(--org-primary)', color: 'var(--org-on-primary)', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -1px 0 rgba(0,0,0,0.12) inset, 0 6px 16px -8px var(--org-a35)` }
                   )
                 }}>
                   {a.icon && <span><Icon name={a.icon} /></span>}

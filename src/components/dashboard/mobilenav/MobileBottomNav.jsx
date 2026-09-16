@@ -95,9 +95,9 @@ export default function MobileBottomNav({
         transition={{ type: 'spring', stiffness: 320, damping: 32, delay: 0.05 }}
         style={{
           position: 'fixed', left: 0, right: 0, bottom: 0,
-          background: 'rgba(9,12,26,0.88)',
+          background: 'linear-gradient(110deg, var(--org-sidebar), var(--org-sidebar-end))',
           backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+          borderTop: '2px solid var(--org-primary)',
           borderRadius: '20px 20px 0 0',
           boxShadow: '0 -8px 28px rgba(0,0,0,0.28)',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
