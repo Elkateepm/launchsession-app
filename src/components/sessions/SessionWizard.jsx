@@ -1511,8 +1511,8 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   if (done) {
     const label = done.publishedAs === 'edited' ? 'updated' : done.publishedAs === 'draft' ? 'saved as a draft' : done.publishedAs === 'scheduled' ? 'scheduled' : 'published'
     const actions = [
-      { key: 'view', label: 'View Session', onClick: onCancel, primary: true },
-      { key: 'register', label: 'Open Register', onClick: () => onNavigate && onNavigate('registers') },
+      { key: 'view', label: 'Back to planner', onClick: onCancel, primary: done.publishedAs === 'draft' },
+      ...(done.publishedAs !== 'draft' && onNavigate ? [{ key: 'register', label: 'Open this register →', primary: true, onClick: () => onNavigate('registers', { sessionId: done.session.id }) }] : []),
       // Only nag about the risk assessment if one wasn't attached during the
       // wizard. Attaching it here already links it and writes the audit entry.
       ...(form.risk_assessment_required && !form.pending_risk_assessment_id ? [{ key: 'ra', label: 'Complete Risk Assessment', onClick: () => onNavigate && onNavigate('risk_assessments') }] : []),

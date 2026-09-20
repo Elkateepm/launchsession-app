@@ -2505,7 +2505,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                     onSaveTemplate={() => handleSaveSessionAsTemplate(s)}
                     onVolunteers={() => setSelectedSession(s)}
                     onReflect={() => setReflectingSession(s)}
-                    onOpenRegister={() => onNavigate && onNavigate('registers')}
+                    onOpenRegister={() => onNavigate && onNavigate('registers', { sessionId: s.id })}
                   />
                 ))}
               </div>

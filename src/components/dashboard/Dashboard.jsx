@@ -14,6 +14,7 @@ import { redirectToSignIn } from '../../lib/authRedirect'
 import { makeModuleLevel, ACCESS_MODULES } from '../../lib/moduleAccess'
 import { useModuleAccess } from '../../context/ModuleAccessContext'
 import Registers from '../registers/Registers'
+import SessionRegisterRoute from '../registers/SessionRegisterRoute'
 import { useBreakpoint, useIsMobile } from '../../hooks/useIsMobile'
 import EventsTrips from '../events/EventsTrips'
 import Calendar from '../calendar/Calendar';
@@ -515,6 +516,7 @@ export default function Dashboard({ session, org }) {
     try { return JSON.parse(sessionStorage.getItem('ls_sidebar_groups') || '{}') } catch (e) { return {} }
   })
   const [registersKey, setRegistersKey] = useState(0)
+  const [registerSessionId, setRegisterSessionId] = useState(null)
   const [reflectSessionId, setReflectSessionId] = useState(null)
   const [openAssessmentId, setOpenAssessmentId] = useState(null)
   const [openCaseId, setOpenCaseId] = useState(null)
@@ -585,6 +587,7 @@ export default function Dashboard({ session, org }) {
     setShowMobileMore(false)
     if (ADMIN_ONLY_TABS.includes(t) && !isAdmin) { setTab('home'); persistTab('home'); return }
     if (t === 'registers') setRegistersKey(k => k + 1)
+    setRegisterSessionId(t === 'registers' ? payload?.sessionId || null : null)
     setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
     setOpenAssessmentId(t === 'risk_assessments' && payload?.openAssessmentId ? payload.openAssessmentId : null)
     // t has already been aliased to 'safeguarding' by this point, so the
@@ -1084,7 +1087,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── DELIVERY PACK ── */}
-          {effectiveTab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'registers'  && (hasModule('registers')  ? (registerSessionId && tabLevel === 'edit' ? <SessionRegisterRoute key={`${org.id}-${registerSessionId}`} sessionId={registerSessionId} org={org} authSession={session} userRole={userProfile?.role} onClose={() => { setRegisterSessionId(null); bumpSessions() }} onNavigate={handleSetTab} /> : <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} />) : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'volunteers' && !canUsePeopleHR && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} readOnly={tabLevel === 'view'} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {/* Newsletter is rendered inside Office below. */}
