@@ -10,6 +10,7 @@ import { useOrgSettings } from "../../hooks/useOrgSettings";
 import CauseForConcernForm from "../safeguarding/CauseForConcernForm";
 import ReportChips from "../incidents/ReportChips";
 import LiveRegister from "../registers/LiveRegister";
+import EndSessionFlow from "../registers/EndSessionFlow";
 import { InviteParentModal } from "../children/ChildrenDirectory";
 import AddVolunteersToSessionModal from "../volunteers/AddVolunteersToSessionModal";
 import HistoricalAttendanceModal from "../shared/HistoricalAttendanceModal";
@@ -1010,16 +1011,6 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     setShowWalkIn(false)
   }
 
-  const handleMarkAllRemainingAbsent = async () => {
-    await Promise.all(regGrouped.expected.map(r => upsertAttendance(r.child.id, { status: 'absent', absence_reason: 'No reason provided' })))
-  }
-
-  const handleCloseRegister = async () => {
-    await supabase.from('sessions').update({ closed_at: new Date().toISOString(), closed_by: authUserId, register_status: 'closed' }).eq('id', activeSession.id)
-    setActiveSession(prev => ({ ...prev, closed_at: new Date().toISOString() }))
-    setShowClosure(false)
-  }
-
   const requiredRatio = hubRequiredRatio(activeSession, org)
   const signedInStaffCount = sessionStaff.filter(s => s.signed_in_at).length || sessionStaff.length
   const currentRatio = signedInStaffCount > 0 ? stats.signedIn / signedInStaffCount : null
@@ -1066,24 +1057,13 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   const handleStartSession = async () => {
     const now = new Date().toISOString()
-    await supabase.from('sessions').update({ opened_at: now, opened_by: authUserId, register_opened_at: activeSession.register_opened_at || now }).eq('id', activeSession.id)
+    const { data, error } = await supabase.from('sessions').update({ opened_at: now, opened_by: authUserId, register_opened_at: activeSession.register_opened_at || now })
+      .eq('org_id', orgId).eq('id', activeSession.id).is('closed_at', null).is('opened_at', null).select('id').single()
+    if (error || !data) { showRegToast('Could not start. Refresh and try again.'); return }
     setActiveSession(prev => ({ ...prev, opened_at: now, register_opened_at: prev.register_opened_at || now }))
     setRegToast('✓ Session started — register is live')
     setTimeout(() => setRegToast(''), 3000)
   }
-
-  // Closure readiness checks (surfaced as warnings in the closure flow)
-  const closureIssues = React.useMemo(() => {
-    const issues = []
-    const stillIn = regGrouped.signed_in.length
-    const noStatus = regGrouped.expected.length
-    if (stillIn > 0) issues.push(`${stillIn} young ${stillIn === 1 ? 'person is' : 'people are'} still signed in.`)
-    if (noStatus > 0) issues.push(`${noStatus} expected attendee${noStatus === 1 ? ' has' : 's have'} no status.`)
-    const staffStillIn = sessionStaff.filter(s => s.signed_in_at && !s.signed_out_at).length
-    if (staffStillIn > 0) issues.push(`${staffStillIn} staff ${staffStillIn === 1 ? 'member is' : 'members are'} still signed in.`)
-    if (!hasReflection) issues.push('Session reflection is incomplete.')
-    return issues
-  }, [regGrouped, sessionStaff, hasReflection])
 
   // ── ••• overflow menu actions ──────────────────────────────────
   const [duplicating, setDuplicating] = useState(false)
@@ -1345,7 +1325,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       }}>
         <div style={{ fontSize: 12.5, color: '#fff', fontWeight: 700 }}>
           {isSessionEnded
-            ? (closureIssues.length > 0 ? `Session ended — ${closureIssues[0].toLowerCase().replace(/\.$/, '')}.` : 'Session ended and everything is resolved.')
+            ? `${regGrouped.signed_in.length} still on site · ${regGrouped.expected.length} arrivals to resolve.`
             : 'Session ending soon.'}
         </div>
         {canCloseRegister ? (
@@ -1372,7 +1352,11 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       <HubNotesPanel notes={sessionNotes} childList={targetedChildren} onClose={() => setShowNotes(false)} onAdd={handleAddRegNote} onRaiseSafeguarding={handleRaiseSafeguardingConcern} />
     )}
     {showClosure && (
-      <HubClosureFlow grouped={regGrouped} issues={closureIssues} onClose={() => setShowClosure(false)} onMarkAllAbsent={handleMarkAllRemainingAbsent} onCloseRegister={handleCloseRegister} primary={primary} secondary={secondary} />
+      <EndSessionFlow session={activeSession} org={org} authUserId={authUserId} canCloseRegister={canCloseRegister}
+        onClose={() => setShowClosure(false)}
+        onReview={nextTab => { setShowClosure(false); setRegTab(nextTab); setRegSearch('') }}
+        onClosed={saved => { setActiveSession(saved); setShowClosure(false) }}
+        onReflect={onNavigate ? id => onNavigate('planner', { reflectSessionId: id }) : undefined} />
     )}
 
     {kioskMode && (
@@ -2460,107 +2444,6 @@ function HubNotesPanel({ notes, childList, onClose, onAdd, onRaiseSafeguarding }
   )
 }
 
-function EndSessionConfirmModal({ sess, attendance, primary, secondary, onClose, onConfirm }) {
-  const [saving, setSaving] = useState(false)
-  const sessAttendance = (attendance || []).filter(a => a.session_id === sess.id)
-  const stillSignedIn = sessAttendance.filter(a => a.status === 'signed_in').length
-  const unresolved = sessAttendance.filter(a => a.status !== 'signed_in' && a.status !== 'absent' && a.status !== 'signed_out').length
-
-  const handleConfirm = async () => {
-    setSaving(true)
-    await onConfirm()
-    setSaving(false)
-  }
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 400, maxWidth: '92vw' }} onClick={e => e.stopPropagation()}>
-        <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>Close {sess.title}?</div>
-        <div style={{ fontSize: 12.5, color: '#6B7280', marginBottom: 14 }}>This locks the register into a read-only historical record. Corrections can still be made with an audit trail, or the register can be reopened later.</div>
-
-        {stillSignedIn > 0 && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 12.5, fontWeight: 700, color: '#B91C1C' }}>
-            ⚠ {stillSignedIn} young {stillSignedIn === 1 ? 'person is' : 'people are'} still marked on site.
-          </div>
-        )}
-        {unresolved > 0 && (
-          <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 12.5, color: '#92400E' }}>
-            {unresolved} expected {unresolved === 1 ? 'attendee has' : 'attendees have'} no attendance status.
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleConfirm} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
-            {saving ? 'Closing...' : 'Close and lock register'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function HubClosureFlow({ grouped, onClose, onMarkAllAbsent, onCloseRegister, primary, secondary, issues = [] }) {
-  const stillSignedIn = grouped.signed_in.length
-  const unaccounted = grouped.expected.length
-  const [overrideOnSite, setOverrideOnSite] = useState(false)
-  const blocked = stillSignedIn > 0 && !overrideOnSite
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 22, width: 420, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Review and close session</div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 14 }}>Once closed, attendance is locked and the register becomes read-only. Later corrections need a reason and are audited.</div>
-
-        {issues.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
-            {issues.map((iss, i) => (
-              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5, fontWeight: 600, color: '#FCD34D' }}>
-                <span><Icon name="⚠" /></span><span>{iss}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        {issues.length === 0 && (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5, fontWeight: 600, color: '#4ADE80', marginBottom: 14 }}>
-            ✓ Everything is resolved — safe to close.
-          </div>
-        )}
-
-        {stillSignedIn > 0 && (
-          <div style={{ background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 10, padding: 12, marginBottom: 12, fontSize: 13, fontWeight: 700, color: '#FCA5A5' }}>
-            ⚠ {stillSignedIn} young {stillSignedIn === 1 ? 'person is' : 'people are'} still marked on site. Sign them out before closing.
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.75)', cursor: 'pointer' }}>
-              <input type="checkbox" checked={overrideOnSite} onChange={e => setOverrideOnSite(e.target.checked)} />
-              Override — I confirm responsibility for these young people has safely ended
-            </label>
-          </div>
-        )}
-        {unaccounted > 0 && (
-          <div style={{ background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 13, color: '#FCD34D' }}>
-            {unaccounted} young {unaccounted === 1 ? 'person has' : 'people have'} no attendance status.
-          </div>
-        )}
-
-        {unaccounted > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-            <button onClick={onMarkAllAbsent} style={{ padding: '11px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>Mark all remaining absent</button>
-            <button onClick={onClose} style={{ padding: '11px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>Review individually</button>
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Leave Open</button>
-          <button onClick={onCloseRegister} disabled={blocked}
-            style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: blocked ? 'rgba(148,163,184,0.35)' : `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: blocked ? 'default' : 'pointer' }}>
-            {blocked ? 'Resolve on-site first' : 'Close and Lock Register'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 const hubInp = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, outline: 'none', fontFamily: 'inherit' }
 
 function ordinalSuffix(day) {
@@ -3335,13 +3218,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [todaySessionsView, setTodaySessionsView] = useState('active')
   const [attendanceBreakdownSession, setAttendanceBreakdownSession] = useState(null)
   const [timeBreakdownSession, setTimeBreakdownSession] = useState(null)
-  const handleCloseSessionFromCard = async (sess) => {
-    const now = new Date().toISOString()
-    await supabase.from('sessions').update({ closed_at: now, closed_by: session?.user?.id, register_status: 'closed' }).eq('id', sess.id)
-    setSessions(prev => prev.map(x => x.id === sess.id ? { ...x, closed_at: now, closed_by: session?.user?.id, register_status: 'closed' } : x))
-    setClosingSession(null)
-  };
-
   if (loading) return <div style={styles.page}><div style={styles.loading}>Loading...</div></div>;
 
   const dayOverview = todayOverview(sessions, attendance, sessionStaffList, today);
@@ -4391,19 +4267,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       )}
 
       {closingSession && (
-        <EndSessionConfirmModal
-          sess={closingSession}
-          attendance={attendance}
-          primary={primary}
-          secondary={secondary}
+        <EndSessionFlow session={closingSession} org={org} authUserId={session?.user?.id}
+          canCloseRegister={['admin', 'owner', 'staff'].includes(userProfile?.role)}
           onClose={() => setClosingSession(null)}
-          onConfirm={() => handleCloseSessionFromCard(closingSession)}
-        />
+          onReview={() => { setLiveRegisterSessionId(closingSession.id); setClosingSession(null) }}
+          onClosed={saved => { setSessions(prev => prev.map(item => item.id === saved.id ? saved : item)); setClosingSession(null) }}
+          onReflect={onNavigate ? id => onNavigate('planner', { reflectSessionId: id }) : undefined} />
       )}
 
 
       {liveRegisterSessionId && sessions.find(s => s.id === liveRegisterSessionId) && (
-        <LiveRegister
+        <LiveRegister key={liveRegisterSessionId}
           session={sessions.find(s => s.id === liveRegisterSessionId)}
           org={org}
           authUserId={session?.user?.id}

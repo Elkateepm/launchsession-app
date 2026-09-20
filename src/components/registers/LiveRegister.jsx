@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
-import { useRealtimeTable } from '../../lib/useRealtimeTable'
+import EndSessionFlow from './EndSessionFlow'
 import PastSessionRegister from './PastSessionRegister'
 import RegisterPaymentBadge from '../payments/RegisterPaymentBadge'
 import AttendanceCorrectionModal from './AttendanceCorrectionModal'
@@ -40,15 +40,15 @@ function getRequiredRatio(session, org) {
 
 function computeRegisterState(session, attendanceRows) {
   if (session.closed_at) return 'closed'
-  const anySignedIn = attendanceRows.some(a => a.status === 'signed_in')
-  const now = new Date()
-  try {
-    const start = new Date(`${session.session_date}T${session.start_time}`)
-    const end = new Date(`${session.end_date || session.session_date}T${session.end_time}`)
-    if (anySignedIn) return now > end ? 'ending' : 'live'
-    if (now >= start) return 'register_open'
-  } catch (e) { /* fall through */ }
-  return anySignedIn ? 'live' : 'upcoming'
+  const started = !!session.opened_at || attendanceRows.some(a => a.status === 'signed_in')
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(new Date()).map(part => [part.type, part.value]))
+  const now = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`
+  const end = session.end_time ? `${session.end_date || session.session_date}T${session.end_time.slice(0, 5)}` : null
+  if (started) return end && now >= end ? 'ending' : 'live'
+  const start = session.start_time ? `${session.session_date}T${session.start_time.slice(0, 5)}` : null
+  return session.register_opened_at || (start && now >= start) ? 'register_open' : 'upcoming'
 }
 
 const STATE_LABEL = { upcoming: 'Upcoming', register_open: 'Register open', live: 'Live', ending: 'Ending', closed: 'Closed' }
@@ -56,10 +56,15 @@ const STATE_COLOR = { upcoming: '#6B7280', register_open: '#2563EB', live: '#16A
 
 function fmtTime(d) {
   if (!d) return ''
-  return new Date(d).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })
+  return new Date(d).toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: 'numeric', minute: '2-digit' })
 }
 
-export default function LiveRegister({ session, org, authUserId, userRole, onClose, onNavigate }) {
+export default function LiveRegister({ session: initialSession, org, authUserId, userRole, onClose, onNavigate }) {
+  const [session, setSession] = useState(initialSession)
+  const [loadError, setLoadError] = useState('')
+  const [starting, setStarting] = useState(false)
+  const loadingRef = useRef(false)
+  const pendingAttendance = useRef(new Set())
   const isMobile = useIsMobile()
   const { groups: orgGroups } = useOrgSettings(org?.id)
   const terms = useTerms()
@@ -109,15 +114,23 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
   useEffect(() => { loadPaymentBalances() }, [loadPaymentBalances])
 
   const load = useCallback(async () => {
-    if (!session?.id) return
-    const [{ data: childData }, { data: attData }, { data: ssData }, { data: noteData }, { data: auditData }, { count: sgCount }] = await Promise.all([
-      supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).order('first_name'),
-      supabase.from('attendance').select('*').eq('session_id', session.id),
-      supabase.from('session_staff').select('*').eq('session_id', session.id),
-      supabase.from('session_notes').select('*').eq('session_id', session.id).order('created_at', { ascending: false }),
-      supabase.from('attendance_audit_log').select('*').eq('session_id', session.id),
-      supabase.from('cause_for_concern').select('id', { count: 'exact', head: true }).eq('session_id', session.id),
+    if (!session?.id || !org?.id || loadingRef.current) return
+    loadingRef.current = true
+    try {
+    const results = await Promise.all([
+      supabase.from('children').select('*').eq('org_id', org.id).order('first_name'),
+      supabase.from('attendance').select('*').eq('org_id', org.id).eq('session_id', session.id),
+      supabase.from('session_staff').select('*').eq('org_id', org.id).eq('session_id', session.id),
+      supabase.from('session_notes').select('*').eq('org_id', org.id).eq('session_id', session.id).order('created_at', { ascending: false }),
+      supabase.from('attendance_audit_log').select('*').eq('org_id', org.id).eq('session_id', session.id),
+      supabase.from('cause_for_concern').select('id', { count: 'exact', head: true }).eq('org_id', org.id).eq('session_id', session.id),
+    supabase.from('sessions').select('*').eq('org_id', org.id).eq('id', session.id).single(),
     ])
+    const failed = [results[0], results[1], results[2], results[6]].find(result => result.error)
+    if (failed) throw failed.error
+    const [{ data: childData }, { data: attData }, { data: ssData }, { data: noteData }, { data: auditData }, { count: sgCount }, { data: freshSession }] = results
+    setSession(freshSession)
+    setLoadError('')
     setChildren(childData || [])
     setAttendance(attData || [])
     setStaffRows(ssData || [])
@@ -131,26 +144,23 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
     if (session.closed_by) staffIds.add(session.closed_by)
     if (session.reopened_by) staffIds.add(session.reopened_by)
     if (staffIds.size) {
-      const { data: profiles } = await supabase.from('user_profiles').select('id, full_name').in('id', [...staffIds])
+      const { data: profiles } = await supabase.from('user_profiles').select('id, full_name').eq('org_id', org.id).in('id', [...staffIds])
       const map = {}
       ;(profiles || []).forEach(p => { map[p.id] = p.full_name })
       setStaffProfiles(map)
     }
-    setLoading(false)
-  }, [session, org?.id])
+    } catch (error) { setLoadError('Could not refresh the register. Check your connection and retry.') }
+    finally { loadingRef.current = false; setLoading(false) }
+  }, [session?.id, session?.closed_by, session?.reopened_by, org?.id])
 
   useEffect(() => { load() }, [load])
 
-  // Live updates -- this page previously only ever fetched once on mount, so
-  // a child added to the register (or signed in/out) from another device or
-  // tab just sat stale here until a manual reload. Same pattern as the Home
-  // dashboard's Live Session card.
-  useRealtimeTable('children', load, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id })
-  useRealtimeTable('attendance', load, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id })
-  useRealtimeTable('session_staff', load, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id })
-  useRealtimeTable('session_notes', load, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id })
-  useRealtimeTable('attendance_audit_log', load, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id, pollInterval: 5000 })
-  useRealtimeTable('cause_for_concern', load, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id, pollInterval: 5000 })
+  useEffect(() => {
+    const refresh = () => { if (!document.hidden && !showClosure) load() }
+    const timer = setInterval(refresh, 5000)
+    document.addEventListener('visibilitychange', refresh)
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', refresh) }
+  }, [load, showClosure])
 
   const attendanceByChild = useMemo(() => {
     const map = {}
@@ -193,15 +203,21 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
   const totalExpected = rows.length
 
   async function upsertAttendance(childId, patch) {
-    const existing = attendanceByChild[childId]
-    if (existing) {
-      const { error } = await supabase.from('attendance').update(patch).eq('id', existing.id)
-      if (error) { showToast('Could not save — please try again.'); return false }
-    } else {
-      const { error } = await supabase.from('attendance').insert({ org_id: org.id, session_id: session.id, child_id: childId, ...patch })
-      if (error) { showToast('Could not save — please try again.'); return false }
-    }
-    return true
+    if (pendingAttendance.current.has(childId) || loadError || session.closed_at) return false
+    pendingAttendance.current.add(childId)
+    try {
+      const existing = attendanceByChild[childId]
+      const query = existing
+        ? supabase.from('attendance').update(patch).eq('org_id', org.id).eq('session_id', session.id).eq('id', existing.id)
+        : supabase.from('attendance').insert({ org_id: org.id, session_id: session.id, child_id: childId, ...patch })
+      const { data, error } = await query.select('*').single()
+      if (error || !data) throw error || new Error('Not saved')
+      setAttendance(prev => [...prev.filter(row => row.child_id !== childId), data])
+      return true
+    } catch (error) {
+      showToast('Could not save — please try again.')
+      return false
+    } finally { pendingAttendance.current.delete(childId) }
   }
 
   const handleSignIn = async (child) => {
@@ -260,6 +276,21 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
     })
     showToast('Safeguarding concern raised — complete details in Safeguarding.')
     if (onNavigate) onNavigate('safeguarding')
+  }
+
+  const startSession = async () => {
+    if (starting || loadError) return
+    setStarting(true)
+    try {
+      const now = new Date().toISOString()
+      const { data, error } = await supabase.from('sessions')
+        .update({ opened_at: now, opened_by: authUserId, register_opened_at: session.register_opened_at || now })
+        .eq('org_id', org.id).eq('id', session.id).is('closed_at', null).is('opened_at', null).select('*').single()
+      if (error || !data) { showToast('Could not start. Refresh the register and try again.'); return }
+      setSession(data)
+      showToast(`${terms.Session} started`)
+    } catch (error) { showToast('Could not start. Check your connection and retry.') }
+    finally { setStarting(false) }
   }
 
   const activeList = searchFiltered(grouped[tab] || [])
@@ -376,6 +407,14 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
         )}
       </div>
 
+      {loadError && <div role="alert" style={{ padding: 12, background: '#FEF2F2', color: '#B91C1C' }}>{loadError} <button onClick={load} style={{ minHeight: 44 }}>Retry</button></div>}
+      <div style={{ padding: '12px 16px', background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border, #E5E7EB)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 13, lineHeight: 1.5 }}>
+          <strong>{!session.opened_at ? 'Ready for arrivals' : grouped.expected.length ? `${grouped.expected.length} arrivals to resolve` : signedInCount ? 'Delivery in progress' : 'Ready to finish'}</strong>
+          <div style={{ color: '#64748B', fontSize: 12 }}>{!session.opened_at ? `Check your team and plan, then start the ${terms.session}.` : 'Record arrivals and departures here. Changes save as you go.'}</div>
+        </div>
+        {!session.opened_at && canCloseRegister && <button disabled={starting || !!loadError} onClick={startSession} style={{ ...ghostBtn, minHeight: 44, background: 'var(--org-primary, #2563EB)', color: 'var(--org-on-primary, #fff)' }}>{starting ? 'Starting…' : `Start ${terms.session}`}</button>}
+      </div>
       {/* TABS */}
       <div style={{ padding: '10px 14px 0', background: '#fff', borderBottom: '1px solid #F1F5F9' }}>
         <div style={{ display: 'flex', gap: 4, background: '#F1F3F7', borderRadius: 12, padding: 4, overflowX: 'auto', marginBottom: 10 }}>
@@ -386,7 +425,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
             { key: 'signed_out', label: 'Signed out', count: grouped.signed_out.length },
           ].map(t => (
             <button key={t.key} onClick={() => setTab(t.key)} style={{
-              position: 'relative', flex: 1, padding: '9px 8px', border: 'none', borderRadius: 9,
+              position: 'relative', flex: 1, minHeight: 44, padding: '9px 8px', border: 'none', borderRadius: 9,
               background: tab === t.key ? '#fff' : 'transparent',
               boxShadow: tab === t.key ? '0 1px 4px rgba(15,23,42,0.12)' : 'none',
               color: tab === t.key ? '#111827' : '#64748B', fontSize: 12.5, fontWeight: 700,
@@ -420,7 +459,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
         {activeList.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px', color: '#94A3B8', fontSize: 13 }}>
             <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}><Icon name="✓" /></div>
-            Nobody in this list{search ? ' matching your search' : ''}.
+            {search ? 'No matches. Try another name or clear your search.' : tab === 'expected' && rows.length ? 'All arrivals accounted for. Switch to Signed in to record departures.' : rows.length ? 'Nobody in this list yet.' : `No ${terms.people} on this register yet. Add a walk-in or update the plan.`}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -488,7 +527,7 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
         </span>
         {registerState !== 'closed' && (
           canCloseRegister ? (
-            <button onClick={() => setShowClosure(true)} style={{ padding: '11px 22px', borderRadius: 11, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px -3px rgba(124,58,237,0.5)' }}>Close register</button>
+            <button onClick={() => setShowClosure(true)} style={{ padding: '11px 22px', borderRadius: 11, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px -3px rgba(124,58,237,0.5)' }}>Finish {terms.session}</button>
           ) : (
             <span title="Only a staff member can close this register" style={{ fontSize: 12, fontWeight: 700, color: '#94A3B8' }}><Icon name="🔒" /> Staff only to close</span>
           )
@@ -506,16 +545,17 @@ export default function LiveRegister({ session, org, authUserId, userRole, onClo
         <AbsentSheet child={absentChild} onClose={() => setAbsentChild(null)} onMark={handleMarkAbsent} />
       )}
       {showWalkIn && (
-        <WalkInModal org={org} session={session} allChildren={children} onClose={() => setShowWalkIn(false)} onDone={() => { setShowWalkIn(false); load() }} onSignIn={handleSignIn} />
+        <WalkInModal org={org} session={session} allChildren={children.filter(child => child.active !== false)} onClose={() => setShowWalkIn(false)} onDone={() => { setShowWalkIn(false); load() }} onSignIn={handleSignIn} />
       )}
       {showNotes && (
         <NotesPanel notes={notes} onClose={() => setShowNotes(false)} onAdd={handleAddNote} onRaiseSafeguarding={handleRaiseSafeguardingConcern} children={children} />
       )}
       {showClosure && (
-        <ClosureFlow session={session} grouped={grouped} onClose={() => setShowClosure(false)} org={org} authUserId={authUserId} canCloseRegister={canCloseRegister} onClosed={() => { setShowClosure(false); onClose && onClose() }} onMarkAllAbsent={async () => {
-          await Promise.all(grouped.expected.map(r => upsertAttendance(r.child.id, { status: 'absent', absence_reason: 'No reason provided' })))
-          load()
-        }} />
+        <EndSessionFlow session={session} org={org} authUserId={authUserId} canCloseRegister={canCloseRegister}
+          onClose={() => { setShowClosure(false); load() }}
+          onReview={nextTab => { setShowClosure(false); setTab(nextTab); setSearch(''); load() }}
+          onClosed={saved => { setShowClosure(false); setSession(saved); load() }}
+          onReflect={onNavigate ? id => onNavigate('planner', { reflectSessionId: id }) : undefined} />
       )}
       {correctChildId !== null && (
         <AttendanceCorrectionModal
@@ -672,7 +712,7 @@ function actionBtn(color, isMobile) {
 }
 // Matches actionBtn's mobile floor via the wrapper's stretch.
 const correctBtn = { padding: '12px 14px', minHeight: 44, borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', color: '#64748B', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
-const ghostBtn = { padding: '9px 13px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }
+const ghostBtn = { minHeight: 44, padding: '9px 13px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }
 
 function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
   const [collectionType, setCollectionType] = useState('')
@@ -680,6 +720,14 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
   const [note, setNote] = useState('')
   const [identityChecked, setIdentityChecked] = useState(false)
   const contacts = child.collection_contacts || []
+  const [saving, setSaving] = useState(false)
+  const cannotConfirm = saving || !collectionType || (collectionType !== 'independent' && !collectedByName.trim()) || (identityCheckRequired && !identityChecked)
+  const confirm = async () => {
+    if (cannotConfirm) return
+    setSaving(true)
+    try { await onConfirm({ collection_type: collectionType, collected_by_name: collectedByName.trim(), collection_note: note, identity_checked: identityChecked }) }
+    finally { setSaving(false) }
+  }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
@@ -710,9 +758,9 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, fontSize: 12.5, color: '#374151' }}>
           <input type="checkbox" checked={identityChecked} onChange={e => setIdentityChecked(e.target.checked)} /> Identity checked{identityCheckRequired && ' *'}
         </label>
-        <button onClick={() => onConfirm({ collection_type: collectionType || 'other', collected_by_name: collectedByName, collection_note: note, identity_checked: identityChecked })}
-          disabled={!collectionType || (identityCheckRequired && !identityChecked)} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: (!collectionType || (identityCheckRequired && !identityChecked)) ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: (!collectionType || (identityCheckRequired && !identityChecked)) ? 'not-allowed' : 'pointer' }}>
-          Confirm Sign Out
+        <button onClick={confirm}
+          disabled={cannotConfirm} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: (cannotConfirm) ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: (cannotConfirm) ? 'not-allowed' : 'pointer' }}>
+          {saving ? 'Saving…' : 'Confirm Sign Out'}
         </button>
       </div>
     </div>
@@ -841,52 +889,6 @@ function NotesPanel({ notes, onClose, onAdd, onRaiseSafeguarding, children }) {
               </div>
             )
           })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ClosureFlow({ session, grouped, onClose, org, authUserId, canCloseRegister, onClosed, onMarkAllAbsent }) {
-  const terms = useTerms()
-  const stillSignedIn = grouped.signed_in.length
-  const unaccounted = grouped.expected.length
-
-  const handleClose = async () => {
-    await supabase.from('sessions').update({ closed_at: new Date().toISOString(), closed_by: authUserId, register_status: 'closed' }).eq('id', session.id)
-    onClosed()
-  }
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 14 }}>Close Register</div>
-
-        {stillSignedIn > 0 && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 12, fontSize: 13, fontWeight: 700, color: '#B91C1C' }}>
-            ⚠ {stillSignedIn} {terms.people} are still marked on site. Sign them out before closing, or confirm this is expected.
-          </div>
-        )}
-        {unaccounted > 0 && (
-          <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 13, color: '#92400E' }}>
-            {unaccounted} {terms.people} have no attendance status.
-          </div>
-        )}
-
-        {unaccounted > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-            <button onClick={onMarkAllAbsent} style={{ padding: '11px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>Mark all remaining absent</button>
-            <button onClick={onClose} style={{ padding: '11px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>Review individually</button>
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Leave Open</button>
-          {canCloseRegister ? (
-            <button onClick={handleClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Close and Lock Register</button>
-          ) : (
-            <span title="Only a staff member can close this register" style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px dashed #E5E7EB', background: '#F9FAFB', fontSize: 13, fontWeight: 700, color: '#9CA3AF', textAlign: 'center' }}><Icon name="🔒" /> Staff only to close</span>
-          )}
         </div>
       </div>
     </div>
