@@ -30,7 +30,7 @@ export default function RASessionCard({ sessionId, sessionTitle, org, session: a
   const load = useCallback(async () => {
     setLoading(true)
     if (sessionId) {
-      const { data } = await supabase.from('risk_assessment_sessions').select('id, risk_assessments(*)').eq('session_id', sessionId).limit(1).maybeSingle()
+      const { data } = await supabase.from('risk_assessment_sessions').select('id, risk_assessments!ras_assessment_org_fk(*)').eq('org_id', org.id).eq('session_id', sessionId).limit(1).maybeSingle()
       if (mounted.current) {
         setLinked(data?.risk_assessments ? { ...data.risk_assessments, linkRowId: data.id } : null)
         setFull(data?.risk_assessments || null)
@@ -42,7 +42,7 @@ export default function RASessionCard({ sessionId, sessionTitle, org, session: a
       setLinked(null)
     }
     setLoading(false)
-  }, [sessionId, pendingAssessmentId])
+  }, [sessionId, pendingAssessmentId, org.id])
 
   useEffect(() => { load() }, [load])
   useEffect(() => { if (onLinkedChange) onLinkedChange(!!linked) }, [linked]) // eslint-disable-line react-hooks/exhaustive-deps

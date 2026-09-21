@@ -65,3 +65,49 @@ test('restricted staff do not see report widgets or creation shortcuts', async (
   expect(screen.queryByText(/New session/i)).not.toBeInTheDocument()
   expect(screen.queryByText(/Plan a session/i)).not.toBeInTheDocument()
 })
+
+function mockAttachment({ saved = false, error = null } = {}) {
+  const assessment = { id: 'ra1', name: 'Day trip assessment', status: 'approved' }
+  const insert = jest.fn()
+  const select = jest.fn()
+  supabase.from.mockImplementation(table => {
+    let inserting = false
+    const query = {
+      then: resolve => Promise.resolve(inserting
+        ? { data: null, error }
+        : { data: table === 'risk_assessments' ? [assessment] : saved ? [{ risk_assessments: assessment }] : [], error: null }).then(resolve),
+      insert: value => { inserting = true; insert(table, value); return query },
+      select: value => { select(value); return query },
+    }
+    for (const method of ['eq', 'order', 'limit']) query[method] = () => query
+    return query
+  })
+  return { insert, select }
+}
+
+test('existing attachment loads using the explicit organisation relationship', async () => {
+  const { select } = mockAttachment({ saved: true })
+  render(<SessionQuickActions session={{ id: 's1' }} orgId={org.id} />)
+  expect(await screen.findByRole('button', { name: /Risk Assessment Attached/ })).toBeInTheDocument()
+  expect(select).toHaveBeenCalledWith('risk_assessments!ras_assessment_org_fk(id, name, risk_rating, status)')
+})
+
+test('successful attachment updates the badge and closes the picker', async () => {
+  const { insert } = mockAttachment()
+  render(<SessionQuickActions session={{ id: 's1', title: 'Day trip' }} orgId={org.id} />)
+  fireEvent.click(await screen.findByRole('button', { name: /Attach Risk Assessment/ }))
+  fireEvent.click(await screen.findByRole('button', { name: /Day trip assessment/ }))
+  expect(await screen.findByRole('button', { name: /Risk Assessment Attached/ })).toBeInTheDocument()
+  expect(screen.queryByPlaceholderText('Search risk assessments…')).not.toBeInTheDocument()
+  expect(insert).toHaveBeenCalledWith('risk_assessment_sessions', { assessment_id: 'ra1', session_id: 's1', org_id: org.id })
+})
+
+test('failed attachment keeps the picker open and shows the save error', async () => {
+  mockAttachment({ error: { message: 'Permission denied' } })
+  render(<SessionQuickActions session={{ id: 's1' }} orgId={org.id} />)
+  fireEvent.click(await screen.findByRole('button', { name: /Attach Risk Assessment/ }))
+  fireEvent.click(await screen.findByRole('button', { name: /Day trip assessment/ }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Permission denied')
+  expect(screen.getByPlaceholderText('Search risk assessments…')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /Day trip assessment/ })).toBeEnabled()
+})

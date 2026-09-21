@@ -16,7 +16,7 @@ export default function RALinkedSessions({ assessment, org, session: authSession
   const load = useCallback(async () => {
     const today = new Date().toISOString().slice(0, 10)
     const [{ data: links }, { data: sessions }] = await Promise.all([
-      supabase.from('risk_assessment_sessions').select('*, sessions(*)').eq('assessment_id', assessment.id),
+      supabase.from('risk_assessment_sessions').select('*, sessions!ras_session_org_fk(*)').eq('org_id', org.id).eq('assessment_id', assessment.id),
       supabase.from('sessions').select('id, title, session_date, start_time, end_time, location, session_type').eq('org_id', org.id).gte('session_date', today).order('session_date').limit(100),
     ])
     setLinked(links || [])
@@ -29,7 +29,7 @@ export default function RALinkedSessions({ assessment, org, session: authSession
   const linkedIds = new Set(linked.map(l => l.session_id))
 
   const attach = async (s) => {
-    const { data } = await supabase.from('risk_assessment_sessions').insert({ assessment_id: assessment.id, session_id: s.id, org_id: org.id }).select('*, sessions(*)').single()
+    const { data } = await supabase.from('risk_assessment_sessions').insert({ assessment_id: assessment.id, session_id: s.id, org_id: org.id }).select('*, sessions!ras_session_org_fk(*)').single()
     if (data) setLinked(l => [...l, data])
     await supabase.from('risk_assessment_audit').insert({ assessment_id: assessment.id, org_id: org.id, action: 'attached', detail: `Attached to ${s.title}`, actor_id: authSession?.user?.id })
   }
