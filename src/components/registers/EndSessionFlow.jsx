@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import OverlayPortal from '../shared/OverlayPortal'
 import { supabase } from '../../lib/supabase'
 import { useTerms } from '../../context/OrgContext'
 
@@ -83,7 +84,7 @@ export default function EndSessionFlow({ session, org, authUserId, canCloseRegis
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
   }
 
-  return <div onClick={dismiss} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.6)', zIndex: 10400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+  return <OverlayPortal><div onClick={dismiss} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.6)', zIndex: 10400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
     <section ref={panel} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="finish-title" aria-busy={busy} onKeyDown={keyDown} onClick={e => e.stopPropagation()}
       style={{ background: 'var(--surface, #fff)', color: 'var(--text, #111827)', borderRadius: 20, padding: 24, width: 460, maxWidth: '100%', boxSizing: 'border-box', maxHeight: '85dvh', overflowY: 'auto' }}>
       <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--org-primary, #2563EB)', letterSpacing: 1 }}>ATTENDANCE → CLOSE → REFLECT</div>
@@ -124,5 +125,5 @@ export default function EndSessionFlow({ session, org, authUserId, canCloseRegis
         </div>
       </>}
     </section>
-  </div>
+  </div></OverlayPortal>
 }
