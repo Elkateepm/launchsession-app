@@ -1722,16 +1722,17 @@ export function SessionQuickActions({ session, org, orgId, authUserId, onNavigat
   const [raOptions, setRaOptions] = useState([])
   const [raPickerSearch, setRaPickerSearch] = useState('')
   const [raPickerBusy, setRaPickerBusy] = useState(false)
+  const [raPickerError, setRaPickerError] = useState('')
 
   const loadLinkedRA = React.useCallback(() => {
     if (!session?.id) { setLinkedRA(null); return }
-    supabase.from('risk_assessment_sessions').select('risk_assessments(id, name, risk_rating, status)').eq('session_id', session.id).limit(1)
+    supabase.from('risk_assessment_sessions').select('risk_assessments!ras_assessment_org_fk(id, name, risk_rating, status)').eq('org_id', orgId).eq('session_id', session.id).limit(1)
       .then(({ data, error }) => {
         if (error) { setLinkedRA(null); return }
         setLinkedRA(data && data.length > 0 ? data[0].risk_assessments : null)
       })
       .catch(() => setLinkedRA(null))
-  }, [session?.id])
+  }, [session?.id, orgId])
 
   React.useEffect(() => { setLinkedRA(undefined); loadLinkedRA() }, [loadLinkedRA])
   useRealtimeTable('risk_assessment_sessions', loadLinkedRA, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id, pollInterval: 5000 })
@@ -1740,33 +1741,61 @@ export function SessionQuickActions({ session, org, orgId, authUserId, onNavigat
     e.stopPropagation()
     setShowRAPicker(true)
     setRaPickerSearch('')
+    setRaPickerError('')
     const { data } = await supabase.from('risk_assessments').select('id, name, activity_type, risk_rating, status')
       .eq('org_id', orgId).eq('archived', false).eq('is_template', false).order('name').limit(50)
     setRaOptions(data || [])
   }
 
-  const attachExistingRA = async (a) => {
-    setRaPickerBusy(true)
-    await supabase.from('risk_assessment_sessions').insert({ assessment_id: a.id, session_id: session.id, org_id: orgId })
-    await supabase.from('risk_assessment_audit').insert({ assessment_id: a.id, org_id: orgId, action: 'attached', detail: `Attached to session "${session.title}"`, actor_id: authUserId })
-    setRaPickerBusy(false)
+  const saveAttachment = async (assessment) => {
+    const { error } = await supabase.from('risk_assessment_sessions').insert({ assessment_id: assessment.id, session_id: session.id, org_id: orgId })
+    // A repeated click can reach an already-saved link; confirm it before succeeding.
+    if (error?.code === '23505') {
+      const { data, error: readError } = await supabase.from('risk_assessment_sessions').select('id')
+        .eq('org_id', orgId).eq('session_id', session.id).eq('assessment_id', assessment.id).limit(1)
+      if (readError || !data?.length) throw readError || error
+    } else if (error) throw error
+    if (!error) {
+      const { error: auditError } = await supabase.from('risk_assessment_audit').insert({ assessment_id: assessment.id, org_id: orgId, action: 'attached', detail: `Attached to session "${session.title}"`, actor_id: authUserId }).then(result => result, () => ({ error: true }))
+      if (auditError) setRaPickerError('Assessment attached, but the activity log could not be saved.')
+    }
+    setLinkedRA(assessment)
     setShowRAPicker(false)
-    loadLinkedRA()
+  }
+
+  const attachExistingRA = async (a) => {
+    if (raPickerBusy) return
+    setRaPickerBusy(true)
+    setRaPickerError('')
+    try {
+      await saveAttachment(a)
+    } catch (error) {
+      setRaPickerError(`Could not attach the assessment. ${error.message || 'Please try again.'}`)
+    } finally {
+      setRaPickerBusy(false)
+    }
   }
 
   const createAndAttachRA = async () => {
+    if (raPickerBusy) return
     setRaPickerBusy(true)
-    const { data: ra, error } = await supabase.from('risk_assessments').insert({
-      org_id: orgId, name: session.title?.trim() || 'Untitled Session', status: 'draft',
-      location: session.location || null, venue_id: session.venue_id || null,
-      created_by: authUserId,
-    }).select().single()
-    if (error) { setRaPickerBusy(false); return }
-    await supabase.from('risk_assessment_sessions').insert({ assessment_id: ra.id, session_id: session.id, org_id: orgId })
-    await supabase.from('risk_assessment_audit').insert({ assessment_id: ra.id, org_id: orgId, action: 'created', detail: `Created for session "${session.title}"`, actor_id: authUserId })
-    setRaPickerBusy(false)
-    setShowRAPicker(false)
-    loadLinkedRA()
+    setRaPickerError('')
+    let created = null
+    try {
+      const { data: ra, error } = await supabase.from('risk_assessments').insert({
+        org_id: orgId, name: session.title?.trim() || 'Untitled activity', status: 'draft',
+        location: session.location || null, venue_id: session.venue_id || null, created_by: authUserId,
+      }).select().single()
+      if (error) throw error
+      created = ra
+      // Keep a created draft available for retry if linking fails.
+      setRaOptions(options => [ra, ...options.filter(option => option.id !== ra.id)])
+      await saveAttachment(ra)
+    } catch (error) {
+      setRaPickerError(`${created ? 'Draft created, but could not attach it. Select it below to retry.' : 'Could not create the assessment.'} ${error.message || 'Please try again.'}`)
+    } finally {
+      setRaPickerBusy(false)
+    }
   }
 
   return (
@@ -1791,10 +1820,11 @@ export function SessionQuickActions({ session, org, orgId, authUserId, onNavigat
         </button>
       )}
 
+      {!showRAPicker && raPickerError && <span role="alert">{raPickerError}</span>}
       {showRAPicker && (
         <HubRAPicker
-          options={raOptions} search={raPickerSearch} onSearchChange={setRaPickerSearch} busy={raPickerBusy}
-          onAttach={attachExistingRA} onCreate={createAndAttachRA} onClose={() => setShowRAPicker(false)}
+          options={raOptions} search={raPickerSearch} onSearchChange={setRaPickerSearch} busy={raPickerBusy} error={raPickerError}
+          onAttach={attachExistingRA} onCreate={createAndAttachRA} onClose={() => { if (!raPickerBusy) setShowRAPicker(false) }}
         />
       )}
       {viewingRA && linkedRA && (
@@ -1804,7 +1834,7 @@ export function SessionQuickActions({ session, org, orgId, authUserId, onNavigat
   )
 }
 
-function HubRAPicker({ options, search, onSearchChange, busy, onAttach, onCreate, onClose }) {
+function HubRAPicker({ options, search, onSearchChange, busy, error, onAttach, onCreate, onClose }) {
   const filtered = options.filter(o => !search.trim() || o.name.toLowerCase().includes(search.toLowerCase()))
   return (
     <OverlayPortal>
@@ -1818,6 +1848,7 @@ function HubRAPicker({ options, search, onSearchChange, busy, onAttach, onCreate
           {busy ? 'Working…' : '+ Create new for this session'}
         </button>
         <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Or attach existing</div>
+        {error && <div role="alert" style={{ color: '#FCA5A5', marginBottom: 12, fontSize: 13 }}>{error}</div>}
         <input autoFocus value={search} onChange={e => onSearchChange(e.target.value)} placeholder="Search risk assessments…"
           style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', marginBottom: 10 }} />
         <div style={{ maxHeight: 220, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
