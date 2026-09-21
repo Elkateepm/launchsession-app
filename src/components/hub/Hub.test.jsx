@@ -1,6 +1,6 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
-import Hub from './Hub'
+import Hub, { SessionQuickActions } from './Hub'
 import { supabase } from '../../lib/supabase'
 import { useModuleAccess } from '../../context/ModuleAccessContext'
 
@@ -28,6 +28,20 @@ beforeEach(() => {
 })
 
 const org = { id: 'test-org', name: 'Community Club', modules: ['reports', 'registers'], primary_color: '#315B46' }
+
+test('risk assessment picker escapes the card and has no session photo upload', async () => {
+  const openCard = jest.fn()
+  const { container } = render(<div onClick={openCard} style={{ overflow: 'hidden', transform: 'translateY(-2px)' }}>
+    <SessionQuickActions session={{ id: 'session-1', title: 'Sports' }} org={org} orgId={org.id} />
+  </div>)
+  fireEvent.click(await screen.findByRole('button', { name: /Attach Risk Assessment/ }))
+  const search = await screen.findByPlaceholderText('Search risk assessments…')
+  expect(container).not.toContainElement(search)
+  fireEvent.click(search)
+  expect(openCard).not.toHaveBeenCalled()
+  expect(screen.queryByRole('button', { name: /Add Photo/ })).not.toBeInTheDocument()
+  expect(container.querySelector('input[type="file"]')).toBeNull()
+})
 
 test('Home renders one week-ahead list and routes its actions without the old filler banner', async () => {
   const onNavigate = jest.fn()

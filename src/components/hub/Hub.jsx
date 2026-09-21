@@ -3,7 +3,6 @@ import { useHrAttention } from '../../lib/hrAccess'
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { supabase } from "../../lib/supabase";
-import { signRows } from "../../lib/storageUrl";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { useRealtimeTable } from "../../lib/useRealtimeTable";
 import { useOrgSettings } from "../../hooks/useOrgSettings";
@@ -23,7 +22,7 @@ import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, LearningBrief, W
 import { monthAttendance as calcMonthAttendance, reachedThisMonth as calcReachedThisMonth } from './glanceStats'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
-import shrinkImage from '../../lib/shrinkImage'
+import OverlayPortal from '../shared/OverlayPortal'
 import Icon from '../../lib/icons'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
@@ -370,163 +369,6 @@ function TimeBreakdownModal({ session, onClose }) {
 // (see announcements table policies), so this is defense in depth, not
 // the only guard.
 // ─── PHOTO CAROUSEL ──────────────────────────────────────────
-function PhotoCarousel({ orgId, primary, userId }) {
-  const [photos, setPhotos] = React.useState([])
-  const [uploading, setUploading] = React.useState(false)
-  const [lightbox, setLightbox] = React.useState(null)
-  const [managing, setManaging] = React.useState(false)
-  const [activeIndex, setActiveIndex] = React.useState(0)
-  const inputRef = React.useRef(null)
-  const scrollRef = React.useRef(null)
-
-  const load = React.useCallback(() => {
-    // A photo marked "do not publish" is never shown, even here.
-    supabase.from('gallery_photos').select('*').eq('org_id', orgId)
-      .or('consent_status.is.null,consent_status.neq.do_not_publish')
-      .order('created_at', { ascending: false }).limit(50)
-      .then(async ({ data }) => setPhotos(await signRows('gallery', data || [])))
-  }, [orgId])
-
-  React.useEffect(() => { load() }, [load])
-
-  // The "Upload photos" quick action on Home used to open the Gallery page,
-  // which has been removed. It now opens this widget's own picker. The event
-  // is dispatched inside the click, so the browser still lets it open a file
-  // dialog.
-  React.useEffect(() => {
-    const open = () => {
-      inputRef.current?.closest('[data-home-photos]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      inputRef.current?.click()
-    }
-    window.addEventListener('ls:add-photos', open)
-    return () => window.removeEventListener('ls:add-photos', open)
-  }, [])
-
-  const handleUpload = async (files) => {
-    setUploading(true)
-    for (const file of Array.from(files)) {
-      const path = `${orgId}/${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`
-      const up = await shrinkImage(file)
-      const { error } = await supabase.storage.from('gallery').upload(path, up, { contentType: up.type })
-      if (!error) {
-        // Private bucket: the path is the durable reference, signed at read.
-        await supabase.from('gallery_photos').insert({ org_id: orgId, url: path, path })
-      }
-    }
-    setUploading(false)
-    load()
-  }
-
-  const handleDelete = async (e, photo) => {
-    e.stopPropagation()
-    await supabase.storage.from('gallery').remove([photo.path])
-    await supabase.from('gallery_photos').delete().eq('id', photo.id)
-    setPhotos(p => p.filter(x => x.id !== photo.id))
-    if (lightbox?.id === photo.id) setLightbox(null)
-  }
-
-  const handleScroll = () => {
-    const el = scrollRef.current
-    if (!el || !el.clientWidth) return
-    setActiveIndex(Math.round(el.scrollLeft / el.clientWidth))
-  }
-
-  const scrollToIndex = (i) => {
-    const el = scrollRef.current
-    if (!el) return
-    el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' })
-  }
-
-  return (
-    <div data-home-photos="">
-      <input ref={inputRef} type="file" multiple accept="image/*" hidden onChange={e => { handleUpload(e.target.files); e.target.value = '' }} />
-
-      {/* Header row */}
-      {/* Two 40px pill buttons next to a 13px label made the header heavier
-          than the photos underneath it. The label leads, the actions are
-          quiet, and Add Photo is the only one that carries the brand. */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
-          <Icon name="📸" size={14} tone="brand" />
-          <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.7 }}>Photos</span>
-          {photos.length > 0 && (
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3, #9CA3AF)' }}>{photos.length}</span>
-          )}
-        </div>
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-          {photos.length > 0 && (
-            <button onClick={() => setManaging(m => !m)}
-              style={{ minHeight: 32, padding: '0 11px', borderRadius: 9, border: '1px solid var(--border, #E5E7EB)', background: managing ? 'var(--org-a10)' : 'transparent', color: managing ? 'var(--org-ink)' : '#6B7280', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>
-              {managing ? 'Done' : 'Manage'}
-            </button>
-          )}
-          <button onClick={() => inputRef.current?.click()} disabled={uploading}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, minHeight: 32, padding: '0 12px', borderRadius: 9, border: 'none', background: uploading ? 'var(--border, #F3F4F6)' : 'var(--org-primary)', color: uploading ? '#9CA3AF' : 'var(--org-on-primary)', fontSize: 11.5, fontWeight: 800, cursor: uploading ? 'default' : 'pointer' }}>
-            <Icon name="📷" size={13} /> {uploading ? 'Uploading…' : 'Add'}
-          </button>
-        </div>
-      </div>
-
-      {/* Photo carousel — full-width, swipeable, snaps one photo per view */}
-      {photos.length === 0 ? (
-        <div onClick={() => inputRef.current?.click()}
-          style={{ height: 110, borderRadius: 16, border: '2px dashed #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
-          <span style={{ fontSize: 22 }}><Icon name="📷" /></span> Add your first photo
-        </div>
-      ) : (
-        <>
-          <div ref={scrollRef} onScroll={handleScroll} className="ls-hide-scrollbar"
-            style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', borderRadius: 18 }}>
-            {photos.map(p => (
-              <div key={p.id} onClick={() => !managing && setLightbox(p)}
-                style={{ position: 'relative', flex: '0 0 100%', width: '100%', scrollSnapAlign: 'center', height: 230, overflow: 'hidden', cursor: 'pointer', borderRadius: 18, background: '#F1F5F9' }}>
-                <img src={p.url} alt={p.caption || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                {p.caption && (
-                  <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '28px 16px 12px', background: 'linear-gradient(0deg, rgba(0,0,0,0.55), transparent)', color: '#fff', fontSize: 12.5, fontWeight: 600 }}>
-                    {p.caption}
-                  </div>
-                )}
-                {/* Delete dot — only shown once "Manage" is tapped, not by default */}
-                {managing && (
-                  <button onClick={e => handleDelete(e, p)}
-                    style={{ position: 'absolute', top: 10, right: 10, width: 28, height: 28, borderRadius: '50%', background: '#EF4444', border: '2px solid #fff', color: '#fff', fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, boxShadow: '0 2px 8px rgba(0,0,0,0.25)' }}>
-                    ×
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Dot pagination */}
-          {photos.length > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 10 }}>
-              {photos.map((_, i) => (
-                <button key={i} onClick={() => scrollToIndex(i)}
-                  style={{ width: i === activeIndex ? 18 : 6, height: 6, borderRadius: 99, border: 'none', padding: 0, cursor: 'pointer', background: i === activeIndex ? primary : '#E2E8F0', transition: 'width 0.25s ease, background 0.25s ease' }} />
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Lightbox — portaled to <body> so it always sits above the bottom nav pill (z-index 9999) and Launch FAB (z-index 10000), and can't get trapped inside any ancestor's stacking context */}
-      {lightbox && createPortal(
-        <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 999999, backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <img src={lightbox.url} alt={lightbox.caption || ''} onClick={e => e.stopPropagation()}
-            style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 14, boxShadow: '0 32px 80px rgba(0,0,0,0.6)' }} />
-          {lightbox.caption && (
-            <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.9)', background: 'rgba(0,0,0,0.5)', borderRadius: 99, padding: '6px 16px', backdropFilter: 'blur(4px)', whiteSpace: 'nowrap' }}>
-              {lightbox.caption}
-            </div>
-          )}
-          <button onClick={() => setLightbox(null)} style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top, 16px))', right: 16, width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer', zIndex: 1 }}>×</button>
-        </div>,
-        document.body
-      )}
-    </div>
-  )
-}
-
 function AnnouncementsPanel({ orgId, primary, userId }) {
   const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
@@ -906,9 +748,8 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   }, [regRows])
 
   const regSearchFiltered = (list) => {
-    if (!regSearch.trim()) return list
-    const q = regSearch.toLowerCase()
-    return list.filter(r => `${r.child.first_name} ${r.child.last_name}`.toLowerCase().includes(q))
+    const q = regSearch.trim().toLowerCase()
+    return list.filter(r => (bubbleFilter === 'all' || configuredGroupLabels.get((r.child.group_name || '').trim().toLowerCase()) === bubbleFilter) && `${r.child.first_name} ${r.child.last_name}`.toLowerCase().includes(q))
   }
 
   const showRegToast = (msg) => { setRegToast(msg); setTimeout(() => setRegToast(''), 3000) }
@@ -1227,6 +1068,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
           <RegisterAndStaffContent
             regTab={regTab} setRegTab={setRegTab} regSearch={regSearch} setRegSearch={setRegSearch}
             regGrouped={regGrouped} regSearchFiltered={regSearchFiltered} stats={stats}
+              bubbleGroups={bubbleGroups} bubbleFilter={bubbleFilter} setBubbleFilter={setBubbleFilter}
             configuredGroupLabels={configuredGroupLabels} getBubbleColor={getBubbleColor}
             activeSession={activeSession} isMobile={isMobile}
             onSignIn={handleRegSignIn} onSignOut={(child) => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)}
@@ -1261,6 +1103,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
                 <RegisterAndStaffContent
                   regTab={regTab} setRegTab={setRegTab} regSearch={regSearch} setRegSearch={setRegSearch}
                   regGrouped={regGrouped} regSearchFiltered={regSearchFiltered} stats={stats}
+              bubbleGroups={bubbleGroups} bubbleFilter={bubbleFilter} setBubbleFilter={setBubbleFilter}
                   configuredGroupLabels={configuredGroupLabels} getBubbleColor={getBubbleColor}
                   activeSession={activeSession} isMobile={isMobile}
                   onSignIn={handleRegSignIn} onSignOut={(child) => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)}
@@ -1276,6 +1119,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
             <RegisterAndStaffContent
               regTab={regTab} setRegTab={setRegTab} regSearch={regSearch} setRegSearch={setRegSearch}
               regGrouped={regGrouped} regSearchFiltered={regSearchFiltered} stats={stats}
+              bubbleGroups={bubbleGroups} bubbleFilter={bubbleFilter} setBubbleFilter={setBubbleFilter}
               configuredGroupLabels={configuredGroupLabels} getBubbleColor={getBubbleColor}
               activeSession={activeSession} isMobile={isMobile}
               onSignIn={handleRegSignIn} onSignOut={(child) => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)}
@@ -1354,7 +1198,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     {showClosure && (
       <EndSessionFlow session={activeSession} org={org} authUserId={authUserId} canCloseRegister={canCloseRegister}
         onClose={() => setShowClosure(false)}
-        onReview={nextTab => { setShowClosure(false); setRegTab(nextTab); setRegSearch('') }}
+        onReview={nextTab => { setShowClosure(false); setRegTab(nextTab); setRegSearch(''); setBubbleFilter('all') }}
         onClosed={saved => { setActiveSession(saved); setShowClosure(false) }}
         onReflect={onNavigate ? id => onNavigate('planner', { reflectSessionId: id }) : undefined} />
     )}
@@ -1487,6 +1331,7 @@ function UpcomingSessionBody({ session, minsToStart, registerOpen, stats, target
 // "View session summary"), and for UPCOMING once the register has opened early.
 function RegisterAndStaffContent({
   regTab, setRegTab, regSearch, setRegSearch, regGrouped, regSearchFiltered, stats,
+  bubbleGroups = [], bubbleFilter = 'all', setBubbleFilter,
   configuredGroupLabels, getBubbleColor, activeSession, isMobile,
   onSignIn, onSignOut, onAbsent,
   sessionStaff, staffProfiles, onStaffSignIn, onStaffSignOut,
@@ -1529,6 +1374,10 @@ function RegisterAndStaffContent({
             <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)' }}>{(regGrouped[regTab] || []).length}</span>
           </div>
         )}
+        {bubbleGroups.length > 1 && <select aria-label="Filter register by group" value={bubbleFilter} onChange={e => setBubbleFilter(e.target.value)} style={{ minHeight: 44, width: '100%', marginBottom: 10, padding: 10, borderRadius: 9, color: '#fff', background: '#172033', border: '1px solid rgba(255,255,255,.2)' }}>
+          <option value="all">All groups</option>{bubbleGroups.map(group => <option key={group} value={group}>{group}</option>)}
+        </select>}
+        {(regSearch || bubbleFilter !== 'all') && <button onClick={() => { setRegSearch(''); setBubbleFilter('all') }} style={{ minHeight: 44, background: 'transparent', border: 0, color: '#fff' }}>Clear filters</button>}
         <input value={regSearch} onChange={e => setRegSearch(e.target.value)} placeholder="🔍 Search young people..."
           style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12.5, marginBottom: 10, outline: 'none' }} />
 
@@ -1703,6 +1552,7 @@ function KioskModeOverlay({ session, org, primary, secondary, regTab, setRegTab,
     { key: 'absent', label: 'Absent', count: regGrouped.absent.length },
   ]
   return (
+    <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, zIndex: 10500, background: `linear-gradient(160deg, var(--org-a20) 0%, ${secondary}22 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, display: 'flex', flexDirection: 'column', WebkitUserSelect: 'none', userSelect: 'none' }}>
       {/* Discreet staff-only exit — small, corner-placed, not obviously a button to a child */}
       <button onClick={onRequestExit} title="Staff exit (PIN required)"
@@ -1775,6 +1625,7 @@ function KioskModeOverlay({ session, org, primary, secondary, regTab, setRegTab,
         })}
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
@@ -1822,6 +1673,7 @@ function KioskPinModal({ mode, onSetupComplete, onUnlockAttempt, onCancel }) {
   }
 
   return (
+    <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, zIndex: 10600, background: 'rgba(6,10,20,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
       <div style={{ width: 320, maxWidth: 'calc(100vw - 32px)', textAlign: 'center' }}>
         <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', marginBottom: 4 }}>{title}</div>
@@ -1858,23 +1710,18 @@ function KioskPinModal({ mode, onSetupComplete, onUnlockAttempt, onCancel }) {
         </button>
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
-// Add Photo + Risk Assessment quick actions, shown directly on the dashboard's
-// Live Session card (outside the register modal) so staff can do these without
-// opening the full register. Self-contained: loads/manages its own RA link and
-// handles its own photo upload, scoped to the given session.
-function SessionQuickActions({ session, org, orgId, authUserId, onNavigate }) {
+// Risk assessment actions for the selected session.
+export function SessionQuickActions({ session, org, orgId, authUserId, onNavigate }) {
   const [linkedRA, setLinkedRA] = useState(undefined) // undefined = loading, null = none, object = found
   const [showRAPicker, setShowRAPicker] = useState(false)
   const [viewingRA, setViewingRA] = useState(false)
   const [raOptions, setRaOptions] = useState([])
   const [raPickerSearch, setRaPickerSearch] = useState('')
   const [raPickerBusy, setRaPickerBusy] = useState(false)
-  const [photoUploading, setPhotoUploading] = useState(false)
-  const [photoToast, setPhotoToast] = useState('')
-  const photoInputRef = React.useRef(null)
 
   const loadLinkedRA = React.useCallback(() => {
     if (!session?.id) { setLinkedRA(null); return }
@@ -1922,46 +1769,8 @@ function SessionQuickActions({ session, org, orgId, authUserId, onNavigate }) {
     loadLinkedRA()
   }
 
-  const handleAddPhotoFiles = async (fileList) => {
-    const files = Array.from(fileList || [])
-    if (!files.length || !session?.id) return
-    setPhotoUploading(true)
-    let succeeded = 0
-    for (const file of files) {
-      const ext = file.name.split('.').pop()
-      const path = `${orgId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const up = await shrinkImage(file)
-      const { error: upErr } = await supabase.storage.from('gallery').upload(path, up, { contentType: up.type })
-      if (!upErr) {
-        const { error: insErr } = await supabase.from('gallery_photos').insert({
-          org_id: orgId, url: path, path,
-          category: 'Sessions', session_id: session.id,
-          media_type: file.type.startsWith('video') ? 'video' : 'image',
-          consent_status: 'pending_review',
-        })
-        if (!insErr) succeeded++
-      }
-    }
-    setPhotoUploading(false)
-    setPhotoToast(succeeded > 0 ? `✓ ${succeeded} photo${succeeded === 1 ? '' : 's'} added` : 'Upload failed — please try again')
-    setTimeout(() => setPhotoToast(''), 3000)
-  }
-
   return (
     <>
-      <input ref={photoInputRef} type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={e => { handleAddPhotoFiles(e.target.files); e.target.value = '' }} />
-
-      <button
-        onClick={(e) => { e.stopPropagation(); photoInputRef.current?.click() }}
-        disabled={photoUploading}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: 'rgba(255,255,255,0.7)',
-          background: 'transparent', border: '1px dashed rgba(255,255,255,0.24)', borderRadius: 99, padding: '5px 10px',
-          cursor: photoUploading ? 'default' : 'pointer', whiteSpace: 'nowrap',
-        }}>
-        📷 {photoUploading ? 'Uploading…' : 'Add Photo'}
-      </button>
-
       {linkedRA === undefined ? null : linkedRA ? (
         <button
           onClick={(e) => { e.stopPropagation(); setViewingRA(true) }}
@@ -1982,10 +1791,6 @@ function SessionQuickActions({ session, org, orgId, authUserId, onNavigate }) {
         </button>
       )}
 
-      {photoToast && (
-        <span style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.65)' }}>{photoToast}</span>
-      )}
-
       {showRAPicker && (
         <HubRAPicker
           options={raOptions} search={raPickerSearch} onSearchChange={setRaPickerSearch} busy={raPickerBusy}
@@ -2002,8 +1807,9 @@ function SessionQuickActions({ session, org, orgId, authUserId, onNavigate }) {
 function HubRAPicker({ options, search, onSearchChange, busy, onAttach, onCreate, onClose }) {
   const filtered = options.filter(o => !search.trim() || o.name.toLowerCase().includes(search.toLowerCase()))
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, width: '100%', maxWidth: 420, padding: 20, boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
+    <OverlayPortal>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 10400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, width: '100%', maxWidth: 420, maxHeight: 'calc(100dvh - 32px)', overflowY: 'auto', boxSizing: 'border-box', padding: 20, boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}><Icon name="🛡️" /> Attach Risk Assessment</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><Icon name="✕" /></button>
@@ -2034,6 +1840,7 @@ function HubRAPicker({ options, search, onSearchChange, busy, onAttach, onCreate
         </div>
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
@@ -2065,7 +1872,8 @@ function HubRAPreviewModal({ assessmentId, onClose, onNavigate }) {
   ].filter(([, v]) => v) : []
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+    <OverlayPortal>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 10400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, width: '100%', maxWidth: 540, maxHeight: '86vh', overflowY: 'auto', padding: 22, boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Loading…</div>
@@ -2132,6 +1940,7 @@ function HubRAPreviewModal({ assessmentId, onClose, onNavigate }) {
         )}
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
@@ -2143,7 +1952,8 @@ function HubSignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
   const contacts = child.collection_contacts || []
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+    <OverlayPortal>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 10400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: 20, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Who is {child.first_name} leaving with?</div>
         {contacts.length > 0 && (
@@ -2174,12 +1984,14 @@ function HubSignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
         </button>
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
 function HubAbsentSheet({ child, onClose, onMark }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+    <OverlayPortal>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 10400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 340 }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Mark {child.first_name} as...</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -2189,6 +2001,7 @@ function HubAbsentSheet({ child, onClose, onMark }) {
         </div>
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
@@ -2359,7 +2172,8 @@ function HubWalkInModal({ allChildren, onClose, onSelectExisting, onCreate }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+    <OverlayPortal>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 10400, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 20, width: 400, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Add Walk-in</div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 14 }}>Search existing young people first — don't create a duplicate record.</div>
@@ -2391,6 +2205,7 @@ function HubWalkInModal({ allChildren, onClose, onSelectExisting, onCreate }) {
         </div>
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
@@ -2411,7 +2226,8 @@ function HubNotesPanel({ notes, childList, onClose, onAdd, onRaiseSafeguarding }
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', justifyContent: 'flex-end' }} onClick={onClose}>
+    <OverlayPortal>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 10400, display: 'flex', justifyContent: 'flex-end' }} onClick={onClose}>
       <div style={{ width: 380, maxWidth: '100%', height: '100%', background: '#0F172A', borderLeft: '1px solid rgba(255,255,255,0.12)', overflowY: 'auto', padding: 20 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Session Notes</div>
@@ -2441,6 +2257,7 @@ function HubNotesPanel({ notes, childList, onClose, onAdd, onRaiseSafeguarding }
         </div>
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
@@ -3701,7 +3518,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   onClick={() => setOpenLiveSessionId(s.id)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenLiveSessionId(s.id) } }}
+                  onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setOpenLiveSessionId(s.id) } }}
                   className="ls-livecard"
                   initial={{ opacity: 0, y: 18, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -4143,7 +3960,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           </Panel>
         </div>}
         <WeatherStrip weather={weather} weatherError={weatherError} icon={weather ? weatherFromCode(weather.code).icon : '🌡️'} label={weather ? weatherFromCode(weather.code).label : ''} primary={primary} />
-        {hasModule('gallery') && <div style={railPanel}><PhotoCarousel orgId={orgId} primary={primary} userId={session?.user?.id} /></div>}
         {hasModule('messaging') && ['admin', 'owner', 'manager', 'staff'].includes(userProfile?.role) && <div style={{ gridColumn: '1 / -1' }}><AnnouncementsPanel orgId={orgId} primary={primary} userId={session?.user?.id} /></div>}
       </section>
 

@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import EndSessionFlow from './EndSessionFlow'
+import OverlayPortal from '../shared/OverlayPortal'
 import PastSessionRegister from './PastSessionRegister'
 import RegisterPaymentBadge from '../payments/RegisterPaymentBadge'
 import AttendanceCorrectionModal from './AttendanceCorrectionModal'
@@ -84,6 +85,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('expected')
   const [search, setSearch] = useState('')
+  const [groupFilter, setGroupFilter] = useState('all')
   const [signOutChild, setSignOutChild] = useState(null)
   const [absentChild, setAbsentChild] = useState(null)
   const [showWalkIn, setShowWalkIn] = useState(false)
@@ -196,9 +198,9 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   const signedInCount = grouped.signed_in.length
   const registerState = computeRegisterState(session, attendance)
   const requiredRatio = getRequiredRatio(session, org)
-  const signedInStaffCount = staffRows.filter(s => s.signed_in_at && !s.signed_out_at).length || staffRows.length // fall back if nobody's using staff sign-in yet
+  const signedInStaffCount = staffRows.filter(s => s.signed_in_at && !s.signed_out_at).length
   const currentRatio = signedInStaffCount > 0 ? signedInCount / signedInStaffCount : null
-  const ratioBreached = currentRatio !== null && signedInStaffCount > 0 && currentRatio > requiredRatio
+  const ratioBreached = signedInCount > 0 && (!signedInStaffCount || currentRatio > requiredRatio)
   const processedCount = grouped.signed_in.length + grouped.absent.length + grouped.signed_out.length
   const totalExpected = rows.length
 
@@ -293,7 +295,8 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
     finally { setStarting(false) }
   }
 
-  const activeList = searchFiltered(grouped[tab] || [])
+  const activeList = searchFiltered(tab === 'all' ? rows : grouped[tab] || []).filter(row => groupFilter === 'all' || groupLabel(row.child.group_name) === groupFilter)
+  const registerGroups = [...new Set(rows.map(row => groupLabel(row.child.group_name)))].sort()
 
   if (loading) {
     return <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>Loading register...</div>
@@ -323,6 +326,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   }
 
   return (
+    <OverlayPortal>
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
@@ -386,7 +390,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         </div>
         {ratioBreached && (
           <div style={{ marginTop: 12, background: 'linear-gradient(135deg,#FEF2F2,#FEF7F7)', border: '1px solid #FECACA', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: '#B91C1C', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> Staff-to-child ratio is currently 1:{currentRatio.toFixed(1)}. Required ratio: 1:{requiredRatio}.
+            <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> {signedInStaffCount ? `Current staffing ratio 1:${currentRatio.toFixed(1)}. Required ratio: 1:${requiredRatio}.` : 'No team members are signed in. Check the team attendance below.'}
           </div>
         )}
         {totalExpected > 0 && (
@@ -419,13 +423,14 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       <div style={{ padding: '10px 14px 0', background: '#fff', borderBottom: '1px solid #F1F5F9' }}>
         <div style={{ display: 'flex', gap: 4, background: '#F1F3F7', borderRadius: 12, padding: 4, overflowX: 'auto', marginBottom: 10 }}>
           {[
+            { key: 'all', label: 'All', count: rows.length },
             { key: 'expected', label: 'Expected', count: grouped.expected.length },
             { key: 'signed_in', label: 'Signed in', count: grouped.signed_in.length },
             { key: 'absent', label: 'Absent', count: grouped.absent.length },
             { key: 'signed_out', label: 'Signed out', count: grouped.signed_out.length },
           ].map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} style={{
-              position: 'relative', flex: 1, minHeight: 44, padding: '9px 8px', border: 'none', borderRadius: 9,
+            <button key={t.key} aria-pressed={tab === t.key} onClick={() => setTab(t.key)} style={{
+              position: 'relative', flex: '1 0 auto', minHeight: 44, padding: '9px 8px', border: 'none', borderRadius: 9,
               background: tab === t.key ? '#fff' : 'transparent',
               boxShadow: tab === t.key ? '0 1px 4px rgba(15,23,42,0.12)' : 'none',
               color: tab === t.key ? '#111827' : '#64748B', fontSize: 12.5, fontWeight: 700,
@@ -443,6 +448,10 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94A3B8', pointerEvents: 'none' }}><Icon name="🔍" /></span>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${terms.people}...`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, background: '#FAFBFC', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
         </div>
+        {registerGroups.length > 1 && <select aria-label="Filter register by group" value={groupFilter} onChange={e => setGroupFilter(e.target.value)} style={{ ...ghostBtn, maxWidth: '100%' }}>
+          <option value="all">All groups</option>{registerGroups.map(name => <option key={name} value={name}>{name}</option>)}
+        </select>}
+        {(search || groupFilter !== 'all') && <button style={ghostBtn} onClick={() => { setSearch(''); setGroupFilter('all') }}>Clear filters</button>}
         <button onClick={() => setShowWalkIn(true)} style={ghostBtn}>+ Walk-in</button>
         <button onClick={() => setShowNotes(true)} style={ghostBtn}>📝 Notes {notes.length > 0 && <span style={{ color: '#7C3AED' }}>({notes.length})</span>}</button>
         {/* Not gated to staff: volunteers can sign children in and out here, so
@@ -459,7 +468,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         {activeList.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px', color: '#94A3B8', fontSize: 13 }}>
             <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}><Icon name="✓" /></div>
-            {search ? 'No matches. Try another name or clear your search.' : tab === 'expected' && rows.length ? 'All arrivals accounted for. Switch to Signed in to record departures.' : rows.length ? 'Nobody in this list yet.' : `No ${terms.people} on this register yet. Add a walk-in or update the plan.`}
+            {search || groupFilter !== 'all' ? 'No matches. Try another name or clear your filters.' : tab === 'expected' && rows.length ? 'All arrivals accounted for. Switch to Signed in to record departures.' : rows.length ? 'Nobody in this list yet.' : `No ${terms.people} on this register yet. Add a walk-in or update the plan.`}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -521,10 +530,10 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         boxShadow: '0 -8px 24px -18px rgba(15,23,42,0.25)',
       }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button onClick={() => { setTab('signed_in'); setSearch(''); setGroupFilter('all') }} style={{ ...ghostBtn, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ width: 7, height: 7, borderRadius: 99, background: '#16A34A' }} />
-          {signedInCount} currently on site
-        </span>
+          {signedInCount} currently on site →
+        </button>
         {registerState !== 'closed' && (
           canCloseRegister ? (
             <button onClick={() => setShowClosure(true)} style={{ padding: '11px 22px', borderRadius: 11, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px -3px rgba(124,58,237,0.5)' }}>Finish {terms.session}</button>
@@ -553,22 +562,23 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       {showClosure && (
         <EndSessionFlow session={session} org={org} authUserId={authUserId} canCloseRegister={canCloseRegister}
           onClose={() => { setShowClosure(false); load() }}
-          onReview={nextTab => { setShowClosure(false); setTab(nextTab); setSearch(''); load() }}
+          onReview={nextTab => { setShowClosure(false); setTab(nextTab); setSearch(''); setGroupFilter('all'); load() }}
           onClosed={saved => { setShowClosure(false); setSession(saved); load() }}
           onReflect={onNavigate ? id => onNavigate('planner', { reflectSessionId: id }) : undefined} />
       )}
       {correctChildId !== null && (
-        <AttendanceCorrectionModal
+        <OverlayPortal><AttendanceCorrectionModal
           session={session} org={org} rows={rows} authUserId={authUserId} groupLabel={groupLabel}
           presetChildId={correctChildId}
           onClose={() => setCorrectChildId(null)}
           onDone={() => { setCorrectChildId(null); showToast('Attendance corrected and logged.'); load() }}
-        />
+        /></OverlayPortal>
       )}
       {selectedChild && (
         <ChildQuickInfo child={selectedChild} att={attendanceByChild[selectedChild.id]} onClose={() => setSelectedChild(null)} groupLabel={groupLabel} />
       )}
     </motion.div>
+    </OverlayPortal>
   )
 }
 
@@ -730,6 +740,7 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
   }
 
   return (
+    <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: 20, maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 14 }}>Who is {child.first_name} leaving with?</div>
@@ -764,11 +775,13 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
         </button>
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
 function AbsentSheet({ child, onClose, onMark }) {
   return (
+    <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 340, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 14 }}>Mark {child.first_name} as...</div>
@@ -779,6 +792,7 @@ function AbsentSheet({ child, onClose, onMark }) {
         </div>
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
@@ -810,6 +824,7 @@ function WalkInModal({ org, session, allChildren, onClose, onDone, onSignIn }) {
   }
 
   return (
+    <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Add Walk-in</div>
@@ -842,6 +857,7 @@ function WalkInModal({ org, session, allChildren, onClose, onDone, onSignIn }) {
         </div>
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
@@ -862,6 +878,7 @@ function NotesPanel({ notes, onClose, onAdd, onRaiseSafeguarding, children }) {
   }
 
   return (
+    <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', justifyContent: 'flex-end' }} onClick={onClose}>
       <div style={{ width: 400, maxWidth: '100%', height: '100%', background: '#fff', overflowY: 'auto', padding: 20 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -892,11 +909,13 @@ function NotesPanel({ notes, onClose, onAdd, onRaiseSafeguarding, children }) {
         </div>
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
 function ChildQuickInfo({ child, att, onClose, groupLabel }) {
   return (
+    <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 340, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>{child.first_name} {child.last_name}</div>
@@ -904,10 +923,15 @@ function ChildQuickInfo({ child, att, onClose, groupLabel }) {
         {child.allergies && <InfoLine label="Allergies" value={child.allergies} />}
         {child.medical_notes && <InfoLine label="Medical notes" value={child.medical_notes} />}
         {child.emergency_contact_name && <InfoLine label="Emergency contact" value={`${child.emergency_contact_name} · ${child.emergency_contact_phone || ''}`} />}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+          {child.emergency_contact_phone && <a href={`tel:${child.emergency_contact_phone.replace(/[^+0-9]/g, '')}`} style={{ ...ghostBtn, display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>Call emergency contact</a>}
+          {child.parent_phone && <a href={`tel:${child.parent_phone.replace(/[^+0-9]/g, '')}`} style={{ ...ghostBtn, display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>Call parent / carer</a>}
+        </div>
         {att?.status === 'signed_out' && <InfoLine label="Collected by" value={att.collected_by_name || att.collection_type} />}
         <button onClick={onClose} style={{ width: '100%', marginTop: 14, padding: 10, borderRadius: 9, border: '1px solid #E5E7EB', background: '#fff', fontWeight: 700, cursor: 'pointer' }}>Close</button>
       </div>
     </div>
+    </OverlayPortal>
   )
 }
 
