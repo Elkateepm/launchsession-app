@@ -88,22 +88,43 @@ export function passkeyUsedHere() {
 }
 
 /* -------------------------------------------------------------- helpers */
-async function post(body, token) {
-  const res = await fetch(API, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
-  })
-  const json = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(json.error || 'Something went wrong. Try again.')
-  return json
+function checkAborted(signal) {
+  if (signal?.aborted) throw new DOMException('Request cancelled', 'AbortError')
 }
 
-// The browser throws for both "user cancelled" and "no credential matched",
-// and the two need different copy — one is not an error the user should see.
+async function post(body, token, signal) {
+  checkAborted(signal)
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  signal?.addEventListener('abort', abort, { once: true })
+  const timer = setTimeout(abort, 15000)
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(json.error || 'Something went wrong. Try again.')
+    checkAborted(signal)
+    return json
+  } catch (err) {
+    checkAborted(signal)
+    if (controller.signal.aborted) throw new Error('The connection took too long. Please try again, or use your password.')
+    if (err instanceof TypeError) throw new Error('Could not connect. Check your connection and try again.')
+    throw err
+  } finally {
+    clearTimeout(timer)
+    signal?.removeEventListener('abort', abort)
+  }
+}
+
+// Enrolment cancellation stays quiet. Sign-in handles ambiguous browser
+// failures separately so explicit attempts always offer a next step.
 function friendlyError(err) {
   const name = err?.name || ''
   if (name === 'NotAllowedError' || name === 'AbortError') return null // cancelled
@@ -116,18 +137,32 @@ function friendlyError(err) {
 
 /**
  * Sign in with a passkey. Returns { ok: true } on success, { ok: false,
- * error } on failure, or { ok: false, cancelled: true } when the user
- * dismissed the sheet — which should show nothing at all.
+ * error } on failure, or { ok: false, cancelled: true } when the caller
+ * aborts or an unused autofill suggestion is retired.
  *
  * @param {object} opts
  * @param {boolean} opts.conditional  use autofill UI rather than a modal
- * @param {AbortSignal} opts.signal    abort an in-flight conditional request
+ * @param {AbortSignal} opts.signal    cancel before the session exchange
+ * @param {function} opts.onPhase      report preparation, device and verification progress
+ * @param {boolean|function} opts.rememberMe persistence choice, read at session creation
  */
-export async function signInWithPasskey({ conditional = false, signal } = {}) {
+export async function signInWithPasskey({ conditional = false, signal, onPhase, rememberMe } = {}) {
   if (!isPasskeyCapable()) return { ok: false, error: 'This device doesn\u2019t support passkeys.' }
 
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  signal?.addEventListener('abort', abort, { once: true })
+  // Autofill can wait indefinitely, but server challenges expire in five
+  // minutes. Retire the suggestion before it can offer an expired challenge.
+  let expiryTimer
+  let credentialSelected = false
+  const startedAt = Date.now()
   try {
-    const { options, challengeId } = await post({ type: 'passkey_auth_options' })
+    checkAborted(signal)
+    onPhase?.('preparing')
+    const { options, challengeId } = await post({ type: 'passkey_auth_options' }, null, controller.signal)
+    checkAborted(controller.signal)
+    expiryTimer = setTimeout(abort, conditional ? 240000 : 65000)
 
     const publicKey = {
       ...options,
@@ -137,12 +172,19 @@ export async function signInWithPasskey({ conditional = false, signal } = {}) {
       })),
     }
 
+    onPhase?.('waiting')
     const cred = await navigator.credentials.get({
       publicKey,
-      signal,
+      signal: controller.signal,
       ...(conditional ? { mediation: 'conditional' } : {}),
     })
-    if (!cred) return { ok: false, cancelled: true }
+    clearTimeout(expiryTimer)
+    checkAborted(controller.signal)
+    if (!cred) return conditional ? { ok: false, cancelled: true } : { ok: false, error: 'No passkey was selected. Try again or use your password.' }
+    credentialSelected = true
+    // Timers may pause in a background tab or while a phone is locked.
+    if (Date.now() - startedAt >= 240000) throw new Error('That sign-in attempt expired. Please try again or use your password.')
+    onPhase?.('verifying')
 
     const { token_hash } = await post({
       type: 'passkey_auth_verify',
@@ -158,19 +200,36 @@ export async function signInWithPasskey({ conditional = false, signal } = {}) {
           userHandle: cred.response.userHandle ? bufToB64url(cred.response.userHandle) : null,
         },
       },
-    })
+    }, null, controller.signal)
+    checkAborted(controller.signal)
+    if (!token_hash) throw new Error('Could not complete passkey sign-in. Please try again.')
 
     // The server verified the assertion and issued a one-time token; this
     // exchanges it for a real Supabase session. The token is single-use and
     // short-lived, so it is safe to hand to the client.
-    const { error } = await supabase.auth.verifyOtp({ token_hash, type: 'email' })
-    if (error) return { ok: false, error: 'Signed in, but the session couldn\u2019t be created. Try your password.' }
+    onPhase?.('session')
+    const persist = typeof rememberMe === 'function' ? rememberMe() : rememberMe
+    if (typeof persist === 'boolean') {
+      try { localStorage.setItem('ls_remember_me', String(persist)) } catch {}
+    }
+    const { data, error } = await supabase.auth.verifyOtp({ token_hash, type: 'email' })
+    if (error || !data?.session) return { ok: false, error: 'Your passkey was verified, but sign-in could not finish. Please try again or use your password.' }
 
     try { localStorage.setItem(LAST_USED_KEY, '1') } catch {}
     return { ok: true }
   } catch (err) {
+    if (signal?.aborted) return { ok: false, cancelled: true }
+    // Browsers use NotAllowedError for cancellation, timeout AND no matching
+    // credential. An explicit attempt needs a useful next step in every case.
+    if (!conditional && (err?.name === 'NotAllowedError' || err?.name === 'AbortError')) {
+      return { ok: false, error: 'Passkey sign-in was not completed. Try again, use a passkey from another device, or continue with your password.' }
+    }
+    if (conditional && !credentialSelected) return { ok: false, cancelled: true }
     const msg = friendlyError(err)
     return msg ? { ok: false, error: msg } : { ok: false, cancelled: true }
+  } finally {
+    clearTimeout(expiryTimer)
+    signal?.removeEventListener('abort', abort)
   }
 }
 
