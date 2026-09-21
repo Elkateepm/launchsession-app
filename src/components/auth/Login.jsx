@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useBreakpoint } from '../../hooks/useIsMobile'
 import { isNativeApp } from '../../lib/nativeEnv'
-import { isPasskeyCapable, passkeyUsedHere, signInWithPasskey, supportsAutofill } from '../../lib/passkey'
 import Icon from '../../lib/icons'
 
 const STEPS = { ROLE: 'role', EMAIL: 'email', PASSWORD: 'password', MAGIC: 'magic', FORGOT: 'forgot' }
@@ -80,9 +79,6 @@ export default function Login({ org }) {
   const [forgotSent, setForgotSent] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
-  const [passkeyReady, setPasskeyReady] = useState(false)
-  const [passkeyBusy, setPasskeyBusy] = useState(false)
-  const [passkeyPhase, setPasskeyPhase] = useState('')
   const { isDesktop } = useBreakpoint()
   // Mobile/tablet is a personal device — same reasoning as the idle-logout
   // carve-out (App.js), so there's no shared-computer risk to opt out of.
@@ -107,99 +103,9 @@ export default function Login({ org }) {
   const showBg = !!bgUrl && bgStyle !== 'tint'
   const fullBleed = showBg && bgStyle === 'cover'
 
-  // Autofill and the button share an owner so a cancelled attempt cannot
-  // overwrite its replacement. Ref guards also cover rapid double taps.
-  const passkeyRef = useRef(null)
-  const activeAttemptRef = useRef(false)
-  const phaseRef = useRef('')
-  const rememberRef = useRef(effectiveRememberMe)
-  rememberRef.current = effectiveRememberMe
-  const finishingPasskey = passkeyBusy && ['verifying', 'session'].includes(passkeyPhase)
-
-  useEffect(() => {
-    // Phones and security keys work even without a built-in authenticator.
-    setPasskeyReady(isPasskeyCapable())
-    return () => passkeyRef.current?.abort()
-  }, [])
-
-  useEffect(() => {
-    if (!passkeyReady || step !== STEPS.EMAIL) return
-    const controller = new AbortController()
-    passkeyRef.current = controller
-    supportsAutofill().then(async ok => {
-      if (!ok || controller.signal.aborted) return
-      const result = await signInWithPasskey({
-        conditional: true,
-        signal: controller.signal,
-        rememberMe: () => rememberRef.current,
-        onPhase: phase => {
-          if (controller.signal.aborted) return
-          phaseRef.current = phase
-          if (phase === 'verifying' || phase === 'session') {
-            activeAttemptRef.current = true
-            setPasskeyPhase(phase)
-            setPasskeyBusy(true)
-            setError('')
-          }
-        },
-      })
-      if (controller.signal.aborted || passkeyRef.current !== controller) return
-      passkeyRef.current = null
-      activeAttemptRef.current = false
-      phaseRef.current = ''
-      setPasskeyBusy(false)
-      if (result.error) setError(result.error)
-    })
-    return () => {
-      controller.abort()
-      if (passkeyRef.current === controller) passkeyRef.current = null
-    }
-  }, [passkeyReady, step])
-
-  const stopPasskey = () => {
-    passkeyRef.current?.abort()
-    passkeyRef.current = null
-    activeAttemptRef.current = false
-    phaseRef.current = ''
-    setPasskeyBusy(false)
-    setPasskeyPhase('')
-  }
-
-  const handlePasskey = async () => {
-    if (activeAttemptRef.current || loading) return
-    stopPasskey()
-    const controller = new AbortController()
-    passkeyRef.current = controller
-    activeAttemptRef.current = true
-    phaseRef.current = 'preparing'
-    setError('')
-    setPasskeyBusy(true)
-    setPasskeyPhase('preparing')
-    try {
-      const result = await signInWithPasskey({
-        signal: controller.signal,
-        rememberMe: () => rememberRef.current,
-        onPhase: phase => {
-          if (controller.signal.aborted) return
-          phaseRef.current = phase
-          setPasskeyPhase(phase)
-        },
-      })
-      if (!controller.signal.aborted && result.error) setError(result.error)
-    } finally {
-      if (passkeyRef.current === controller) {
-        passkeyRef.current = null
-        activeAttemptRef.current = false
-        phaseRef.current = ''
-        setPasskeyBusy(false)
-      }
-    }
-  }
-
   const handleEmailContinue = e => {
     e.preventDefault()
-    if (!email.trim() || ['verifying', 'session'].includes(phaseRef.current)) return
-    stopPasskey()
+    if (!email.trim()) return
     setEmail(email.trim())
     setError('')
     setStep(STEPS.PASSWORD)
@@ -381,51 +287,13 @@ export default function Login({ org }) {
                   <div style={{ position: 'relative' }}>
                     <MailIcon />
                     <input className="ls-in" type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      required autoFocus autoComplete="username webauthn" placeholder="you@organisation.com" style={inp} />
+                      required autoFocus autoComplete="username" placeholder="you@organisation.com" style={inp} />
                   </div>
                 </div>
-                <button type="submit" disabled={loading || finishingPasskey || !email.trim()} style={gradientBtn(loading || finishingPasskey || !email.trim())}>
+                <button type="submit" disabled={loading || !email.trim()} style={gradientBtn(loading || !email.trim())}>
                   {loading ? 'Checking…' : 'Continue  →'}
                 </button>
               </form>
-
-              {passkeyReady && (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 16px' }}>
-                    <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }} />
-                    <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: 0.3 }}>or</span>
-                    <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }} />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handlePasskey}
-                    disabled={passkeyBusy}
-                    style={{
-                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                      padding: '15px 18px', borderRadius: 14, cursor: passkeyBusy ? 'default' : 'pointer',
-                      border: '1px solid rgba(255,255,255,0.16)',
-                      background: passkeyUsedHere() ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)',
-                      color: '#fff', fontSize: 15, fontWeight: 700, fontFamily: 'inherit',
-                      transition: 'background 0.18s',
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{ width: 19, height: 19, flexShrink: 0 }}>
-                      <circle cx="10" cy="8" r="4" />
-                      <path d="M10 12c-3.3 0-6 2.2-6 5v3" />
-                      <path d="M15.5 13.5a3.5 3.5 0 1 1 5 3.1V21l-1.5-1.2L17.5 21v-4.4a3.5 3.5 0 0 1-2-3.1z" />
-                    </svg>
-                    {passkeyBusy ? (passkeyPhase === 'preparing' ? 'Opening passkeys…' : finishingPasskey ? 'Finishing sign-in…' : 'Waiting for your device…') : 'Sign in with a passkey'}
-                  </button>
-
-                  <div aria-live="polite" style={{ textAlign: 'center', fontSize: 12.5, color: 'rgba(255,255,255,0.55)', marginTop: 10, lineHeight: 1.45 }}>
-                    {passkeyBusy ? (finishingPasskey ? 'Verifying your passkey and opening your workspace…' : 'Follow the prompt on your device.') : 'Use a saved passkey on this device, your phone or a security key.'}
-                  </div>
-                  {passkeyBusy && !finishingPasskey && (
-                    <button type="button" onClick={stopPasskey} style={{ ...ghostBtn, marginTop: 10 }}>Cancel and use password</button>
-                  )}
-                </>
-              )}
 
               <div style={{ margin: '20px 0 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
@@ -433,13 +301,7 @@ export default function Login({ org }) {
                 <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
               </div>
 
-              {isDesktop && (
-                <label style={{ display: 'flex', alignItems: 'center', gap: 9, minHeight: 44, color: 'rgba(255,255,255,0.65)', fontSize: 13, marginBottom: 12 }}>
-                  <input type="checkbox" checked={rememberMe} disabled={finishingPasskey} onChange={e => setRememberMe(e.target.checked)} />
-                  Keep me logged in
-                </label>
-              )}
-              <button disabled={finishingPasskey} onClick={() => { stopPasskey(); setError(''); setStep(STEPS.FORGOT) }} style={ghostBtn}>
+              <button onClick={() => { setError(''); setStep(STEPS.FORGOT) }} style={ghostBtn}>
                 Forgot password? <span style={{ opacity: 0.7 }}>›</span>
               </button>
             </div>
