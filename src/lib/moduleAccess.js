@@ -52,6 +52,38 @@ export function isTrialActive(org) {
 }
 
 /**
+ * Whole days left on the trial, rounded up, never below zero.
+ * Returns null when the question doesn't apply -- not on a trial, or on a
+ * trial with no expiry (which isTrialActive treats as open-ended).
+ */
+export function trialDaysRemaining(org) {
+  if (!org || org.plan !== 'trial' || !org.trial_expires_at) return null
+  const expiry = new Date(org.trial_expires_at)
+  if (isNaN(expiry)) return null
+  return Math.max(0, Math.ceil((expiry - new Date()) / 86400000))
+}
+
+/**
+ * True when the organisation may read but not write.
+ *
+ * This mirrors org_write_locked() in the database, which is what actually
+ * enforces it -- the client copy exists so the UI can explain the block before
+ * a save fails, not so the UI can be the block. Keep the two in step:
+ * past_due is deliberately absent from both, because Stripe retries a failed
+ * card for about two weeks before giving up.
+ */
+export function isPlanEnded(org) {
+  if (!org) return false
+  if (org.plan === 'expired') return true
+  if (['canceled', 'unpaid'].includes(org.subscription_status)) return true
+  if (org.plan === 'trial' && org.trial_expires_at) {
+    const expiry = new Date(org.trial_expires_at)
+    if (!isNaN(expiry) && expiry <= new Date()) return true
+  }
+  return false
+}
+
+/**
  * The module keys this organisation may open right now.
  */
 export function allowedModules(org) {

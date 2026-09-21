@@ -3,7 +3,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { useOrg, useTerms } from '../../context/OrgContext'
 import { HIDEABLE_ITEMS } from '../dashboard/sidebar/navConfig'
-import { makeHasModule } from '../../lib/moduleAccess'
+import { makeHasModule, trialDaysRemaining, isPlanEnded, ACCESS_MODULES } from '../../lib/moduleAccess'
 import OrgSettingsPanel from './OrgSettingsPanel'
 import AccessSection from './AccessSection'
 import {
@@ -346,7 +346,7 @@ function OrgSection({ org }) {
         <div>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{org?.name || 'Your Organisation'}</div>
           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-            <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>{org?.plan || 'starter'} plan</span>
+            <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>{org?.plan || 'trial'} plan</span>
             <span style={{ background: 'rgba(34,197,94,0.15)', color: '#4ADE80', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>● Active</span>
           </div>
         </div>
@@ -1079,40 +1079,81 @@ function IntegrationsSection() {
   )
 }
 
-const PLAN_DETAILS = [
-  { key: 'starter', label: 'Starter', price: '£29/mo', blurb: 'For a single site getting started' },
-  { key: 'pro', label: 'Pro', price: '£79/mo', blurb: 'For growing organisations with multiple sessions' },
-  { key: 'enterprise', label: 'Enterprise', price: 'Contact us', blurb: 'For large or multi-site organisations' },
-]
-
 const STATUS_STYLE = {
   active:    { bg: '#DCFCE7', color: '#15803D', label: '● Active' },
   trialing:  { bg: '#DBEAFE', color: '#1D4ED8', label: '● Trial' },
   past_due:  { bg: '#FEF3C7', color: '#B45309', label: '● Payment overdue' },
+  unpaid:    { bg: '#FEE2E2', color: '#B91C1C', label: '● Unpaid' },
   canceled:  { bg: '#FEE2E2', color: '#B91C1C', label: '● Canceled' },
   incomplete:{ bg: '#FEE2E2', color: '#B91C1C', label: '● Incomplete' },
 }
 
+const CYCLES = [
+  { key: 'monthly', label: 'Monthly' },
+  { key: 'annual',  label: 'Annual' },
+]
+
+// The Access screens already name every module for humans; reusing that list
+// keeps one spelling of "Impact & Outcomes" rather than two.
+const MODULE_LABEL = Object.fromEntries(ACCESS_MODULES.map(m => [m.key, m.label]))
+
+const poundsPerMonth = (pence) => `£${Math.round(pence / 100)}`
+
 function BillingSection({ org, session, isAdmin, refreshOrg }) {
+  const isMobile = useIsMobile()
+  const [plans, setPlans] = useState(null)      // null while loading
+  const [plansError, setPlansError] = useState('')
+  const [cycle, setCycle] = useState(org?.billing_cycle === 'annual' ? 'annual' : 'monthly')
   const [loadingPlan, setLoadingPlan] = useState(null) // which plan button is spinning
   const [portalLoading, setPortalLoading] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
 
+  const currentPlan = org?.plan || 'trial'
   const status = org?.subscription_status
   const statusStyle = STATUS_STYLE[status] || { bg: '#F1F5F9', color: '#475569', label: status ? `● ${status}` : '● No active subscription' }
+  const daysLeft = trialDaysRemaining(org)
+  const planEnded = isPlanEnded(org)
 
-  const handleUpgrade = async (plan) => {
-    setError('')
+  // The catalogue lives in the database so the app, the Stripe webhook and the
+  // Command Centre cannot hold three different ideas of what a plan includes.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data, error: err } = await supabase
+        .from('plan_entitlements')
+        .select('plan, label, blurb, modules, child_limit, price_monthly_pence, price_annual_pence, sort, self_serve')
+        .order('sort')
+      if (cancelled) return
+      if (err) { setPlansError('Could not load the plans right now.'); setPlans([]); return }
+      setPlans(data || [])
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  const currentEntitlement = (plans || []).find(p => p.plan === currentPlan)
+  const sellable = (plans || []).filter(p => p.self_serve)
+
+  const handleChoose = async (plan) => {
+    setError(''); setNotice('')
     setLoadingPlan(plan)
     try {
       const { data: { session: liveSession } } = await supabase.auth.getSession()
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${liveSession?.access_token}` },
-        body: JSON.stringify({ org_id: org.id, plan }),
+        body: JSON.stringify({ org_id: org.id, plan, cycle }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
+      // An organisation that already has a subscription changes price in place
+      // rather than going through Checkout again, so there is no URL to follow.
+      if (json.updated) {
+        setNotice('Your plan has been changed. The difference appears on your next invoice.')
+        setLoadingPlan(null)
+        if (refreshOrg) refreshOrg()
+        return
+      }
       window.location.href = json.url
     } catch (err) {
       setError(err.message || 'Failed to start checkout')
@@ -1121,7 +1162,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
   }
 
   const handleManageBilling = async () => {
-    setError('')
+    setError(''); setNotice('')
     setPortalLoading(true)
     try {
       const { data: { session: liveSession } } = await supabase.auth.getSession()
@@ -1139,11 +1180,21 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
     }
   }
 
-  React.useEffect(() => {
+  // Stripe redirects back here the moment the payment clears, but the webhook
+  // that records the plan can land a second or two later. Refetch a few times
+  // rather than showing the old plan and leaving the customer wondering
+  // whether their payment worked.
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get('checkout') === 'success' && refreshOrg) {
+    if (params.get('checkout') !== 'success' || !refreshOrg) return
+    setNotice('Payment received — setting up your plan.')
+    let tries = 0
+    const timer = setInterval(() => {
+      tries += 1
       refreshOrg()
-    }
+      if (tries >= 5) clearInterval(timer)
+    }, 1500)
+    return () => clearInterval(timer)
   }, [refreshOrg])
 
   return (
@@ -1151,66 +1202,114 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
       {error && (
         <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>
       )}
+      {notice && (
+        <div style={{ background: '#DCFCE7', border: '1px solid #86EFAC', color: '#15803D', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600 }}>{notice}</div>
+      )}
 
       <SettingCard title="Current Plan">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', textTransform: 'capitalize' }}>{org?.plan || 'Starter'}</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)' }}>
+              {currentEntitlement?.label || currentPlan}
+            </div>
             <div style={{ fontSize: 13, color: '#6b7280' }}>
-              {org?.current_period_end
-                ? `Renews ${new Date(org.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
-                : 'No billing history yet'}
+              {planEnded
+                ? 'Read-only — choose a plan to start making changes again'
+                : daysLeft !== null
+                  ? `${daysLeft === 1 ? '1 day' : `${daysLeft} days`} left · no card required`
+                  : org?.current_period_end
+                    ? `Renews ${new Date(org.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                    : 'No billing history yet'}
             </div>
           </div>
-          <span style={{ background: statusStyle.bg, color: statusStyle.color, borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700 }}>{statusStyle.label}</span>
+          <span style={{ background: statusStyle.bg, color: statusStyle.color, borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700 }}>
+            {!status && daysLeft !== null ? '● Trial' : statusStyle.label}
+          </span>
         </div>
 
         {isAdmin && org?.stripe_customer_id && (
           <button onClick={handleManageBilling} disabled={portalLoading}
-            style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            style={{ minHeight: 44, padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
             {portalLoading ? 'Opening...' : 'Manage Billing'}
           </button>
         )}
       </SettingCard>
 
       {isAdmin && (
-        <SettingCard title="Plans" description="Upgrade or change your organisation's plan">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-            {PLAN_DETAILS.map(p => {
-              const isCurrent = (org?.plan || 'starter') === p.key
-              return (
-                <div key={p.key} style={{ border: isCurrent ? '2px solid #1B9AAA' : '1.5px solid var(--border)', borderRadius: 14, padding: '18px 16px', background: 'var(--surface)' }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{p.label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', margin: '4px 0' }}>{p.price}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14, minHeight: 32 }}>{p.blurb}</div>
-                  {isCurrent ? (
-                    <div style={{ textAlign: 'center', padding: '9px 0', borderRadius: 8, background: '#DCFCE7', color: '#15803D', fontWeight: 700, fontSize: 13 }}>Current Plan</div>
-                  ) : p.key === 'enterprise' ? (
-                    <a href="mailto:hello@launchsession.co.uk?subject=Enterprise%20Plan" style={{ display: 'block', textAlign: 'center', padding: '9px 0', borderRadius: 8, border: 'none', background: '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>Contact Us</a>
-                  ) : (
-                    <button onClick={() => handleUpgrade(p.key)} disabled={loadingPlan === p.key}
-                      style={{ width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', background: loadingPlan === p.key ? '#9ca3af' : '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-                      {loadingPlan === p.key ? 'Redirecting...' : 'Upgrade'}
-                    </button>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+        <SettingCard title="Plans" description="Every plan starts with the 14-day trial. Change or cancel at any time.">
+          {plansError && (
+            <div style={{ fontSize: 13, color: '#B91C1C', marginBottom: 12 }}>{plansError}</div>
+          )}
+          {plans === null ? (
+            <div style={{ fontSize: 13, color: 'var(--text3)', padding: '8px 0' }}>Loading plans…</div>
+          ) : (
+            <>
+              <div role="group" aria-label="Billing cycle" style={{ display: 'inline-flex', gap: 4, padding: 4, borderRadius: 10, background: 'var(--bg)', border: '1px solid var(--border)', marginBottom: 16 }}>
+                {CYCLES.map(c => (
+                  <button key={c.key} onClick={() => setCycle(c.key)}
+                    aria-pressed={cycle === c.key}
+                    style={{
+                      minHeight: 36, padding: '7px 16px', borderRadius: 7, border: 'none', cursor: 'pointer',
+                      background: cycle === c.key ? '#1B9AAA' : 'transparent',
+                      color: cycle === c.key ? '#fff' : 'var(--text3)',
+                      fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
+                    }}>
+                    {c.key === 'annual' ? 'Annual · save ~20%' : c.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                {sellable.map(p => {
+                  const isCurrent = currentPlan === p.plan
+                  const pence = cycle === 'annual' ? p.price_annual_pence : p.price_monthly_pence
+                  return (
+                    <div key={p.plan} style={{ border: isCurrent ? '2px solid #1B9AAA' : '1.5px solid var(--border)', borderRadius: 14, padding: '18px 16px', background: 'var(--surface)' }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{p.label}</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', margin: '4px 0' }}>
+                        {pence == null ? '—' : <>{poundsPerMonth(pence)}<span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text3)' }}>/mo</span></>}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 8 }}>
+                        {cycle === 'annual' ? 'billed annually' : 'billed monthly'}
+                        {p.child_limit ? ` · up to ${p.child_limit} children` : ' · unlimited children'}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14, minHeight: 48, lineHeight: 1.5 }}>{p.blurb}</div>
+                      {isCurrent ? (
+                        <div style={{ textAlign: 'center', padding: '12px 0', borderRadius: 8, background: '#DCFCE7', color: '#15803D', fontWeight: 700, fontSize: 13 }}>Current Plan</div>
+                      ) : (
+                        <button onClick={() => handleChoose(p.plan)} disabled={loadingPlan === p.plan}
+                          style={{ width: '100%', minHeight: 44, borderRadius: 8, border: 'none', background: loadingPlan === p.plan ? '#9ca3af' : '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          {loadingPlan === p.plan ? 'Redirecting...' : org?.stripe_subscription_id ? `Switch to ${p.label}` : `Choose ${p.label}`}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              <p style={{ fontSize: 12, color: 'var(--text3)', margin: '14px 0 0', lineHeight: 1.6 }}>
+                Registered charity? <a href="mailto:hello@launchsession.co.uk?subject=Charity%20discount" style={{ color: '#1B9AAA', fontWeight: 600 }}>Ask about our discount</a>.
+                {' '}Need more than Pro+? <a href="mailto:hello@launchsession.co.uk?subject=Enterprise%20Plan" style={{ color: '#1B9AAA', fontWeight: 600 }}>Talk to us</a>.
+              </p>
+            </>
+          )}
         </SettingCard>
       )}
 
-      <SettingCard title="Usage">
-        {[
-          { label: 'Staff Users', value: '—', max: 'Unlimited' },
-          { label: 'Children on Register', value: '—', max: 'Unlimited' },
-          { label: 'Sessions This Month', value: '—', max: 'Unlimited' },
-        ].map(u => (
-          <div key={u.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
-            <span style={{ fontSize: 14, color: '#374151' }}>{u.label}</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{u.value} <span style={{ color: '#9ca3af', fontWeight: 400 }}>/ {u.max}</span></span>
+      <SettingCard title="What your plan includes">
+        {currentEntitlement ? (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {(currentEntitlement.modules || []).length === 0
+              ? <span style={{ fontSize: 13, color: 'var(--text3)' }}>No modules — this organisation is read-only until a plan is chosen.</span>
+              : (currentEntitlement.modules || []).map(m => (
+                <span key={m} style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2, #475569)', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 99, padding: '4px 11px' }}>
+                  {MODULE_LABEL[m] || m}
+                </span>
+              ))}
           </div>
-        ))}
+        ) : (
+          <span style={{ fontSize: 13, color: 'var(--text3)' }}>—</span>
+        )}
       </SettingCard>
     </div>
   )

@@ -42,7 +42,8 @@ export default async function handler(req, res) {
       .single()
     if (profileErr || !profile) return res.status(403).json({ error: 'No profile found for this user' })
     if (profile.org_id !== org_id) return res.status(403).json({ error: 'You do not have access to this organisation' })
-    if (profile.role !== 'admin') return res.status(403).json({ error: 'Only admins can manage billing' })
+    // Owners were locked out of their own billing while this read role !== 'admin'.
+    if (!['owner', 'admin'].includes(profile.role)) return res.status(403).json({ error: 'Only owners and administrators can manage billing' })
 
     const { data: org, error: orgErr } = await adminClient
       .from('organisations')

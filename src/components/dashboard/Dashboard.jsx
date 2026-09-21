@@ -53,7 +53,8 @@ import {
 import {
   SidebarItem, SidebarSection, SidebarCollapsibleGroup, CreateMenu, ProfileMenu,
 } from './sidebar/SidebarParts'
-import { makeHasModule, isTrialActive } from '../../lib/moduleAccess'
+import { makeHasModule, isTrialActive, isPlanEnded } from '../../lib/moduleAccess'
+import { TrialBanner, ReadOnlyBanner, PlanEndedWall } from '../billing/TrialStatus'
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
 
@@ -639,7 +640,7 @@ export default function Dashboard({ session, org }) {
     return () => clearInterval(interval)
   }, [org?.id])
 
-  const plan    = org?.plan || 'starter'
+  const plan    = org?.plan || 'trial'
   const terms   = useTerms()
   // Module access is resolved centrally (see lib/moduleAccess) so the sidebar,
   // Hub and Calendar can't disagree, and so an active trial grants everything.
@@ -659,6 +660,17 @@ export default function Dashboard({ session, org }) {
   const effectiveTab = tabLevel === 'none' ? '__no_access' : rawTab
 
   const onTrial = isTrialActive(org)
+  // Mirrors org_write_locked() in the database, which is what actually refuses
+  // the writes. This only decides what we explain and when.
+  const planEnded = isPlanEnded(org)
+  const [wallDismissed, setWallDismissed] = useState(false)
+  // Settings opens on whichever section sent the user there, so "Choose a
+  // plan" lands on Billing rather than on the organisation form.
+  const [settingsSection, setSettingsSection] = useState(null)
+  const goToBilling = () => {
+    setSettingsSection('billing')
+    handleSetTab('settings')
+  }
   const primary = org?.primary_color || '#1B9AAA'
   const orgName = org?.name || 'My Organisation'
 
@@ -792,6 +804,17 @@ export default function Dashboard({ session, org }) {
 
   return (
     <div style={{ display: 'flex', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
+
+      {/* Not rendered over Settings: that is where the plan is chosen, and a
+          wall covering the way out of it would be a trap. */}
+      {planEnded && !wallDismissed && effectiveTab !== 'settings' && (
+        <PlanEndedWall
+          org={org}
+          isAdmin={isAdmin}
+          onChoosePlan={goToBilling}
+          onDismiss={() => setWallDismissed(true)}
+        />
+      )}
 
       {/* SIDEBAR */}
       <div style={{
@@ -1018,24 +1041,9 @@ export default function Dashboard({ session, org }) {
               unreadSubs={unreadSubs}
             />
           )}
-          {org?.trial_expires_at && org?.plan === 'starter' && (() => {
-            const expires = new Date(org.trial_expires_at)
-            const daysLeft = Math.max(0, Math.ceil((expires - new Date()) / (1000 * 60 * 60 * 24)))
-            const urgent = daysLeft <= 2
-            return (
-              <div style={{ padding: '6px 20px 0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderRadius: 10, background: urgent ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.05)', border: `1px solid ${urgent ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.15)'}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 13 }}>{urgent ? '⚠️' : '🚀'}</span>
-                    <span style={{ fontSize: 13, color: urgent ? '#DC2626' : '#64748B', fontWeight: 500 }}>
-                      {daysLeft === 0 ? 'Your trial expires today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left on your free trial`}
-                    </span>
-                  </div>
-                  <a href="mailto:hello@launchsession.co.uk?subject=Upgrade LaunchSession" style={{ fontSize: 12, fontWeight: 700, color: urgent ? '#DC2626' : '#3B82F6', textDecoration: 'none' }}>Upgrade <Icon name="→" /></a>
-                </div>
-              </div>
-            )
-          })()}
+          {planEnded
+            ? <ReadOnlyBanner isAdmin={isAdmin} onChoosePlan={goToBilling} />
+            : <TrialBanner org={org} isAdmin={isAdmin} onChoosePlan={goToBilling} />}
           {effectiveTab === '__no_access' && (
             <NoModuleAccess
               label={(ACCESS_MODULES.find(m => m.key === tabAccessKey) || {}).label || 'This area'}
@@ -1066,7 +1074,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} initialOpenRequestsTab={openRegRequestsTab} /></ChildrenGate>}
           {effectiveTab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
           {/* Rendered inside Office below. */}
-          {effectiveTab === 'settings'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'settings'   && (isAdmin ? <Settings key={settingsSection || 'default'} org={org} session={session} userProfile={userProfile} initialSection={settingsSection || undefined} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'team' && !canUsePeopleHR && (isManager ? <TeamCentre org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} /> : <RestrictedModule label="Team" icon="👥" onNavigate={handleSetTab} />)}
           {canUsePeopleHR && ['hr', 'team', 'volunteers'].includes(effectiveTab) && (
             <HR key={`${org.id}:${session?.user?.id}`} org={org} session={session} userProfile={userProfile}
