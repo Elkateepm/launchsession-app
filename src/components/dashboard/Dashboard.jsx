@@ -20,6 +20,7 @@ import EventsTrips from '../events/EventsTrips'
 import Calendar from '../calendar/Calendar';
 import Templates from '../templates/Templates'
 import Office from '../office/Office'
+import OfficeOverview from '../office/OfficeOverview'
 import SafeguardingHub from '../safeguarding/SafeguardingHub'
 import NewsletterStudio from '../messaging/NewsletterStudio'
 import Reports from '../reports/Reports'
@@ -317,7 +318,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
     return () => el.removeEventListener('scroll', onScroll, true)
   }, [])
 
-  const moduleLabel = tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : ALL_MODULES.find(m => m.key === tab)?.label || tab
+  const moduleLabel = tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : ALL_MODULES.find(m => m.key === tab)?.label || tab
 
   const daysLeft = org?.trial_expires_at ? Math.max(0, Math.ceil((new Date(org.trial_expires_at) - new Date()) / (1000 * 60 * 60 * 24))) : null
   const isTrial = org?.plan === 'starter' && daysLeft !== null
@@ -1134,16 +1135,19 @@ export default function Dashboard({ session, org }) {
               <Office
                 tabs={visibleOfficeTabs}
                 badges={{ forms: unreadSubs.length }}
-                subTab={effectiveTab === 'office' ? visibleOfficeTabs[0]?.tab : effectiveTab}
+                subTab={effectiveTab}
                 onSelect={handleSetTab}
               >
-  {(effectiveTab === 'newsletter' || (effectiveTab === 'office' && visibleOfficeTabs[0]?.tab === 'newsletter')) && (hasModule('messaging')  ? <NewsletterStudio org={org} session={session} />            : <LockedModule moduleKey="messaging"  label="Newsletter" icon="📨" onNavigate={handleSetTab} onTrial={onTrial} />)}
-  {(effectiveTab === 'forms' || (effectiveTab === 'office' && visibleOfficeTabs[0]?.tab === 'forms'))           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
+  {effectiveTab === 'office' && (
+    <OfficeOverview org={org} tabs={visibleOfficeTabs} onSelect={handleSetTab} newResponses={unreadSubs.length} />
+  )}
+  {effectiveTab === 'newsletter' && (hasModule('messaging')  ? <NewsletterStudio org={org} session={session} />            : <LockedModule moduleKey="messaging"  label="Newsletter" icon="📨" onNavigate={handleSetTab} onTrial={onTrial} />)}
+  {effectiveTab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
-  {(effectiveTab === 'payments' || (effectiveTab === 'office' && visibleOfficeTabs[0]?.tab === 'payments'))         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} onTrial={onTrial} />)}
-  {(effectiveTab === 'resource_booking' || (effectiveTab === 'office' && visibleOfficeTabs[0]?.tab === 'resource_booking')) && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} onTrial={onTrial} />)}
-  {(effectiveTab === 'templates' || (effectiveTab === 'office' && visibleOfficeTabs[0]?.tab === 'templates'))  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} onTrial={onTrial} />)}
-  {(effectiveTab === 'parent_portal' || (effectiveTab === 'office' && visibleOfficeTabs[0]?.tab === 'parent_portal')) && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
+  {effectiveTab === 'payments'         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} onTrial={onTrial} />)}
+  {effectiveTab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+  {effectiveTab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} onTrial={onTrial} />)}
+  {effectiveTab === 'parent_portal' && <ComingSoonModule icon="👨‍👧" label="Parent Portal" desc="Give parents a window into their child's journey. Coming soon." />}
               </Office>
             )
           )}

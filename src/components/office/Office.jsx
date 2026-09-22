@@ -27,7 +27,11 @@ export default function Office({ tabs, subTab, onSelect, badges = {}, children }
         display: 'flex', gap: 6, padding: isMobile ? '12px 12px 0' : '12px 16px 0',
         flexShrink: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch',
       }} role="tablist" aria-label="Office">
-        {tabs.map(t => {
+        {/* Overview first, and it is a real destination rather than a label:
+            without it, the only way back out of a module was the sidebar, and
+            the sidebar row was already highlighted, so nothing looked
+            clickable. */}
+        {[{ id: '__overview', label: 'Overview', icon: 'operations', tab: 'office' }, ...tabs].map(t => {
           const active = subTab === t.tab
           return (
             <button

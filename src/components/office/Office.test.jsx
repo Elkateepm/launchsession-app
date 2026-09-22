@@ -30,12 +30,29 @@ describe('the Office shell', () => {
     expect(onSelect).toHaveBeenCalledWith('templates')
   })
 
-  it('shows only what it is handed', () => {
+  it('shows only what it is handed, plus Overview', () => {
     // A member who may not open Templates is given the rest, and the shell
-    // does no filtering of its own.
-    setup({ tabs: OFFICE_TABS.filter(t => !t.adminOnly) })
+    // does no filtering of its own. Overview is the single exception: it is
+    // the shell's own way back out, so it is always there and is not a module.
+    const allowed = OFFICE_TABS.filter(t => !t.adminOnly)
+    setup({ tabs: allowed })
     expect(screen.queryByRole('tab', { name: /Templates/i })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('tab')).toHaveLength(OFFICE_TABS.filter(t => !t.adminOnly).length)
+    expect(screen.getAllByRole('tab')).toHaveLength(allowed.length + 1)
+  })
+
+  it('always offers a way back to the overview', () => {
+    // Without this the only route out of a module was the sidebar, whose
+    // Office row was already highlighted -- so nothing looked clickable.
+    const onSelect = jest.fn()
+    setup({ onSelect })
+    fireEvent.click(screen.getByRole('tab', { name: /Overview/i }))
+    expect(onSelect).toHaveBeenCalledWith('office')
+  })
+
+  it('marks Overview as the open one when Office is on its landing', () => {
+    setup({ subTab: 'office' })
+    expect(screen.getByRole('tab', { name: /Overview/i })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: /Payments/i })).toHaveAttribute('aria-selected', 'false')
   })
 
   it('renders the module handed to it', () => {
