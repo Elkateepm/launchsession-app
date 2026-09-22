@@ -112,9 +112,48 @@ If the plan never changes, check the Vercel function logs for
   says 100 for Starter and the Billing screen shows it, but nothing blocks the
   101st child. Enforcing it needs a decision about what happens to an
   organisation that is already over the limit when it downgrades.
-- **No trial reminder emails.** The countdown is in the app only; nothing emails
-  an organisation on day 11 or day 14.
+- **Trial reminder emails have no live test yet.** They are built (see below)
+  but nothing has been through the real path, because no organisation has had a
+  trial ending within the window since they were added.
 - **Medical Alerts is included in Starter** even though the marketing page does
   not list it. Withholding medical alerts from a paying youth organisation
   looked indefensible — change the `starter` row in `plan_entitlements` if you
   disagree.
+
+---
+
+## Trial reminder emails
+
+Two emails, both from `hello@launchsession.co.uk`:
+
+| When | `kind` | Subject |
+|---|---|---|
+| Trial has 3 days or less left | `ending_soon` | Your LaunchSession trial ends in N days |
+| Trial lapsed in the last 2 days | `ended` | Your LaunchSession trial has ended — your data is safe |
+
+**How it runs.** The `trial-reminders-daily` pg_cron job (08:00 UTC) calls
+`trigger_trial_reminders()`, which posts `{type:'trial_reminders'}` to
+`/api/send-form-email` with the `db_event_secret` already in the Supabase
+vault. That handler asks `orgs_due_trial_reminder(kind)` who is due and invokes
+the `send-trial-reminder` edge function per organisation.
+
+Deliberately **not** a Vercel cron: the Hobby plan allows two, and they are
+worth saving for something that needs a specific time of day.
+
+**Who gets it.** Owners and admins of the organisation, plus
+`organisations.contact_email`, de-duplicated. Nobody else can reach Billing, so
+telling anyone else would be asking them to do something the app forbids.
+
+**Why it will not spam anyone.** `trial_reminders_sent` has a primary key of
+`(org_id, kind)` and the row is written *before* the send is attempted. A
+reminder that goes out twice is worse than one that does not go out at all, so
+a failed send is logged and not retried.
+
+**Why it did not mail your old test orgs.** Each window has a lower bound as
+well as an upper one. Watford FC (lapsed 25 Aug) and Tye Dye Drama (5 Sep) fall
+outside the two-day `ended` window, so the first run ignored them.
+
+**To test it without waiting.** Set an organisation's `trial_expires_at` to two
+days out, delete any matching `trial_reminders_sent` row, and run
+`select public.trigger_trial_reminders();`. Watch the Vercel function logs for
+`send-form-email(trial_reminders)`.

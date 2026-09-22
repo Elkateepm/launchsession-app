@@ -196,6 +196,61 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true })
     }
 
+    // ── Trial reminders — swept once a day by the trial-reminders-daily
+    // pg_cron job, which posts here with the same vault secret the signup
+    // mailer uses. Lives in this handler rather than its own file because
+    // Vercel's Hobby plan caps api/ at 12 serverless functions. ──
+    if (req.body?.type === 'trial_reminders') {
+      const providedSecret = req.headers['x-db-event-secret']
+      const { DB_EVENT_SECRET, REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY } = process.env
+      if (!DB_EVENT_SECRET || providedSecret !== DB_EVENT_SECRET) return res.status(401).json({ error: 'Unauthorized' })
+      if (!REACT_APP_SUPABASE_URL || !REACT_APP_SUPABASE_SERVICE_KEY) {
+        console.error('send-form-email(trial_reminders): missing Supabase env vars')
+        return res.status(500).json({ error: 'Server misconfiguration' })
+      }
+
+      const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
+
+      // orgs_due_trial_reminder() owns the windows, including a *lower* bound
+      // on each. The lower bound is what stops this mailing organisations
+      // whose trial lapsed months ago the first time it runs -- they have had
+      // their answer, and a reminder about a trial that ended in August would
+      // read as a bug, which it would be.
+      const results = []
+      for (const kind of ['ending_soon', 'ended']) {
+        const { data: due, error: dueErr } = await adminClient.rpc('orgs_due_trial_reminder', { p_kind: kind })
+        if (dueErr) {
+          console.error(`send-form-email(trial_reminders): failed to list ${kind}`, dueErr)
+          results.push({ kind, error: dueErr.message })
+          continue
+        }
+
+        let sent = 0
+        for (const org of due || []) {
+          // Claim the send first. If the mail then fails we have not sent it
+          // and will not retry -- which is the right way round: a reminder
+          // that silently goes out twice is worse than one that does not go
+          // out at all, and the failure is in the logs either way.
+          const { error: claimErr } = await adminClient
+            .from('trial_reminders_sent')
+            .insert({ org_id: org.org_id, kind })
+          if (claimErr) continue // already claimed by an earlier run
+
+          const { error: fnErr } = await adminClient.functions.invoke('send-trial-reminder', {
+            body: { org_id: org.org_id, kind },
+          })
+          if (fnErr) {
+            console.error(`send-form-email(trial_reminders): send failed for ${org.org_id}`, fnErr.message)
+          } else {
+            sent += 1
+          }
+        }
+        results.push({ kind, due: (due || []).length, sent })
+      }
+
+      return res.status(200).json({ ok: true, results })
+    }
+
     // ── SESSION_CREATED / SESSION_EDITED — called by the
     // notify_session_created_or_edited Postgres trigger via pg_net right
     // after an insert/update commits, not by a logged-in user, so it's

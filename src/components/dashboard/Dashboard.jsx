@@ -666,7 +666,13 @@ export default function Dashboard({ session, org }) {
   const [wallDismissed, setWallDismissed] = useState(false)
   // Settings opens on whichever section sent the user there, so "Choose a
   // plan" lands on Billing rather than on the organisation form.
-  const [settingsSection, setSettingsSection] = useState(null)
+  //
+  // Seeded from ?section= so the same thing works for a link arriving from
+  // outside the app -- Stripe's post-checkout redirect and the trial reminder
+  // emails both deep-link straight to Billing.
+  const [settingsSection, setSettingsSection] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get('section') } catch (e) { return null }
+  })
   const goToBilling = () => {
     setSettingsSection('billing')
     handleSetTab('settings')

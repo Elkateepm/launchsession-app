@@ -58,7 +58,7 @@ export default async function handler(req, res) {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: org.stripe_customer_id,
-      return_url: return_url || `${origin}/settings?section=billing`,
+      return_url: return_url || `${origin}/?tab=settings&section=billing`,
     })
 
     return res.status(200).json({ url: session.url })

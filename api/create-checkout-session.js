@@ -154,8 +154,11 @@ export default async function handler(req, res) {
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: subscriptionData,
       allow_promotion_codes: true,
-      success_url: success_url || `${origin}/settings?section=billing&checkout=success`,
-      cancel_url: cancel_url || `${origin}/settings?section=billing&checkout=cancelled`,
+      // ?tab= and ?section= rather than a /settings path: this app selects its
+      // screen from the query string, so a path-based return URL landed the
+      // customer on Home with their old plan still showing.
+      success_url: success_url || `${origin}/?tab=settings&section=billing&checkout=success`,
+      cancel_url: cancel_url || `${origin}/?tab=settings&section=billing&checkout=cancelled`,
     })
 
     return res.status(200).json({ url: session.url })
