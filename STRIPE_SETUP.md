@@ -108,10 +108,7 @@ If the plan never changes, check the Vercel function logs for
 
 ## Not done yet
 
-- **Child limits are displayed, not enforced.** `plan_entitlements.child_limit`
-  says 100 for Starter and the Billing screen shows it, but nothing blocks the
-  101st child. Enforcing it needs a decision about what happens to an
-  organisation that is already over the limit when it downgrades.
+- **Nothing here is on live keys yet.** Everything below describes the sandbox.
 - **Trial reminder emails have no live test yet.** They are built (see below)
   but nothing has been through the real path, because no organisation has had a
   trial ending within the window since they were added.
@@ -157,3 +154,37 @@ outside the two-day `ended` window, so the first run ignored them.
 days out, delete any matching `trial_reminders_sent` row, and run
 `select public.trigger_trial_reminders();`. Watch the Vercel function logs for
 `send-form-email(trial_reminders)`.
+
+---
+
+## Child limits
+
+`plan_entitlements.child_limit` is enforced by `trg_child_limit` on `children`.
+Starter is 100; Advanced, Pro+ and the trial are unlimited (`null`).
+
+It is a **soft ceiling**: it blocks *adding*, never viewing. An organisation
+that downgrades while over the limit keeps every child fully readable and
+editable. On a system holding medical alerts and safeguarding concerns, making
+a child's record vanish because of a billing state is not a trade worth making
+in any case — so the limit stops growth and nothing else.
+
+- Only **active** children count. Archiving someone who has left frees a place.
+- Adding an already-archived child, editing, archiving and deleting are all
+  free — only an insert of an active child, or reactivating an archived one,
+  consumes a place.
+- **Imports are included.** `api/import-children.js` runs with the service key
+  and is deliberately not exempt: a limit a spreadsheet walks past is not a
+  limit.
+- Super admins are exempt, so the Command Centre can always dig an
+  organisation out of a state it cannot fix itself.
+- Concurrent adds take a per-org advisory lock, so two people cannot both read
+  99 and both succeed.
+
+The Billing screen counts through `org_child_usage()` — the same numbers the
+trigger checks, so the screen cannot claim there is room when the database will
+refuse.
+
+The error is raised as `CHILD_LIMIT_REACHED: <sentence>`, following the
+`SIGNUP_RATE_LIMIT:` / `ORG_NAME_TAKEN:` convention already in this schema.
+`readableDbError()` in `src/lib/dbErrors.js` strips the code so users read the
+sentence, not the code.

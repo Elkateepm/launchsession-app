@@ -1108,6 +1108,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
   const [portalLoading, setPortalLoading] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [usage, setUsage] = useState(null)
 
   const currentPlan = org?.plan || 'trial'
   const status = org?.subscription_status
@@ -1130,6 +1131,19 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
     })()
     return () => { cancelled = true }
   }, [])
+
+  // Counted in the database rather than from a fetched list: this is the same
+  // number enforce_child_limit() checks against, so the screen cannot claim
+  // there is room when the trigger will refuse.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data, error: err } = await supabase.rpc('org_child_usage')
+      if (cancelled || err) return
+      setUsage(Array.isArray(data) ? data[0] : data)
+    })()
+    return () => { cancelled = true }
+  }, [org?.plan])
 
   const currentEntitlement = (plans || []).find(p => p.plan === currentPlan)
   const sellable = (plans || []).filter(p => p.self_serve)
@@ -1295,6 +1309,44 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
           )}
         </SettingCard>
       )}
+
+      <SettingCard title="Young people">
+        {usage == null ? (
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Counting…</div>
+        ) : (() => {
+          const used = usage.used || 0
+          const cap = usage.child_limit
+          if (cap == null) {
+            return (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)' }}>{used}</span>
+                <span style={{ fontSize: 13, color: 'var(--text3)' }}>on the register · no limit on this plan</span>
+              </div>
+            )
+          }
+          const pct = Math.min(100, Math.round((used / cap) * 100))
+          const full = used >= cap
+          const tone = full ? '#DC2626' : pct >= 80 ? '#B45309' : '#1B9AAA'
+          return (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)' }}>{used} <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text3)' }}>of {cap}</span></span>
+                <span style={{ fontSize: 13, color: tone, fontWeight: 600 }}>
+                  {full ? 'Limit reached' : `${cap - used} place${cap - used === 1 ? '' : 's'} left`}
+                </span>
+              </div>
+              <div style={{ height: 8, borderRadius: 99, background: 'var(--bg)', overflow: 'hidden' }}>
+                <div style={{ width: `${pct}%`, height: '100%', background: tone, borderRadius: 99 }} />
+              </div>
+              <p style={{ margin: '12px 0 0', fontSize: 12.5, lineHeight: 1.6, color: 'var(--text3)' }}>
+                {full
+                  ? 'Archiving someone who has left frees a place, or move to a plan with no limit. Nobody already on the register is affected.'
+                  : 'Only active young people count. Archiving someone who has left frees a place.'}
+              </p>
+            </div>
+          )
+        })()}
+      </SettingCard>
 
       <SettingCard title="What your plan includes">
         {currentEntitlement ? (

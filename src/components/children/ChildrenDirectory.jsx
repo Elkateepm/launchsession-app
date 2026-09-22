@@ -8,6 +8,7 @@ import { Avatar, glass, inputStyle, btnGhost, btnPrimary } from '../volunteers/v
 import ChildPaymentsCard from '../payments/ChildPaymentsCard'
 import { useTerms } from '../../context/OrgContext'
 import Icon from '../../lib/icons'
+import { readableDbError } from '../../lib/dbErrors'
 
 const CONSENT_TYPES = [
   { key: 'photo', label: 'Photo consent' },
@@ -704,7 +705,7 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
       has_epipen: req.has_epipen, has_behaviour_plan: req.has_behaviour_plan, behaviour_plan_notes: req.behaviour_plan_notes,
       travel_consent: req.travel_consent, notes: req.notes, active: true, profile_incomplete: false,
     }).select().single()
-    if (error) { setBusy(false); window.alert('Could not create the child record: ' + error.message); return }
+    if (error) { setBusy(false); window.alert(readableDbError(error, 'Could not create the child record.')); return }
 
     const consentRows = [
       { consent_type: 'photo', status: req.consent_photo ? 'granted' : 'not_granted' },
