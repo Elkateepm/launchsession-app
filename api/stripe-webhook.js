@@ -39,6 +39,23 @@ function periodEnd(subscription) {
   return subscription?.current_period_end ?? subscription?.items?.data?.[0]?.current_period_end ?? null
 }
 
+// Same story for the invoice's subscription: `invoice.subscription` until
+// 2025-03-31.basil, `invoice.parent.subscription_details.subscription` after.
+//
+// This matters more than the version pinned in package.json suggests. Objects
+// we retrieve ourselves always come back in the library's version, but a
+// webhook payload arrives in whatever version the *endpoint* is configured
+// with in the Stripe dashboard, which can differ. Reading both shapes means
+// the two cannot drift apart without anyone noticing.
+function invoiceSubscriptionId(invoice) {
+  const candidates = [invoice?.subscription, invoice?.parent?.subscription_details?.subscription]
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string') return candidate
+    if (candidate?.id) return candidate.id
+  }
+  return null
+}
+
 // Everything a subscription tells us about an organisation's entitlement, in
 // the shape organisations expects. Resolving the modules from the catalogue
 // here is what makes a downgrade actually remove modules -- before this, a
@@ -180,8 +197,9 @@ export default async function handler(req, res) {
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object
-        if (invoice.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(invoice.subscription)
+        const subscriptionId = invoiceSubscriptionId(invoice)
+        if (subscriptionId) {
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId)
           const update = await subscriptionUpdate(adminClient, subscription)
           await applyToOrg(subscription.metadata?.org_id, invoice.customer, update, 'record successful payment')
         }
