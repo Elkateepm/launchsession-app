@@ -43,7 +43,7 @@ function AttentionRow({ tone, title, detail, cta, onAction, primary, isMobile })
         <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>{detail}</div>
       </div>
       <button onClick={onAction} style={{
-        padding: '9px 15px', borderRadius: 10, border: 'none', background: primary,
+        minHeight: 44, padding: '9px 15px', borderRadius: 10, border: 'none', background: primary,
         color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
         flexShrink: 0, width: isMobile ? '100%' : 'auto', marginTop: isMobile ? 8 : 0,
       }}>{cta}</button>
@@ -51,175 +51,86 @@ function AttentionRow({ tone, title, detail, cta, onAction, primary, isMobile })
   )
 }
 
-export function FormsOverview({ org, forms = [], submissions = [], primary, onOpenForm, onGoResponses, onCreate }) {
+export function FormsOverview({ forms = [], submissions = [], primary, onOpenForm, onGoResponses, onCreate, onEdit, onShare, onTemplates, isAdmin, canViewSubmissions, loading, copiedId }) {
   const isMobile = useIsMobile()
-
-  const stats = useMemo(() => ({
-    total: forms.length,
-    live: forms.filter(f => (f.status || (f.is_active ? 'active' : 'draft')) === 'active').length,
-    draft: forms.filter(f => (f.status || (f.is_active ? 'active' : 'draft')) === 'draft').length,
-    unread: submissions.filter(s => s.review_status === 'new').length,
-  }), [forms, submissions])
-
-  const attention = useMemo(() => {
-    const items = []
-
-    // Anything flagged comes first regardless of age. A new allergy sitting
-    // behind four ordinary registrations is exactly what this exists to stop.
-    const flagged = submissions.filter(s => s.review_status === 'needs_review')
-    if (flagged.length) {
-      items.push({
-        id: 'flagged',
-        tone: '#E5484D',
-        title: `${flagged.length} response${flagged.length === 1 ? '' : 's'} need${flagged.length === 1 ? 's' : ''} review`,
-        detail: 'Contains medical, medication or consent changes',
-        cta: 'Review',
-        onAction: () => onGoResponses('needs_review'),
-      })
-    }
-
-    const fresh = submissions.filter(s => s.review_status === 'new')
-    if (fresh.length) {
-      items.push({
-        id: 'new',
-        tone: 'var(--org-primary)',
-        title: `${fresh.length} new response${fresh.length === 1 ? '' : 's'}`,
-        detail: 'Not yet looked at',
-        cta: 'Review',
-        onAction: () => onGoResponses('new'),
-      })
-    }
-
-    // A form that closes soon and a form left in draft are both quiet failures
-    // -- nobody is chasing them, so surface them here.
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
-    forms.forEach(f => {
-      if (!f.closing_date) return
-      const days = Math.round((new Date(f.closing_date) - new Date(today)) / 86400000)
-      if (days >= 0 && days <= 3 && (f.status || (f.is_active ? 'active' : 'draft')) === 'active') {
-        items.push({
-          id: `closing-${f.id}`,
-          tone: '#F79009',
-          title: f.name,
-          detail: days === 0 ? 'Closes today' : `Closes in ${days} day${days === 1 ? '' : 's'}`,
-          cta: 'Open',
-          onAction: () => onOpenForm(f),
-        })
-      }
-    })
-
-    return items
-  }, [forms, submissions, onGoResponses, onOpenForm])
-
-  const liveForms = forms.filter(f => (f.status || (f.is_active ? 'active' : 'draft')) === 'active')
-  const recent = submissions.slice(0, 6)
+  const compact = useIsMobile(1180)
+  const [query, setQuery] = useState('')
+  const [status, setStatus] = useState('all')
+  const statusOf = f => f.status || (f.is_active ? 'active' : 'draft')
+  const live = forms.filter(f => statusOf(f) === 'active').length
+  const drafts = forms.filter(f => statusOf(f) === 'draft').length
+  const fresh = submissions.filter(s => s.review_status === 'new').length
+  const flagged = submissions.filter(s => s.review_status === 'needs_review').length
+  const visible = forms.filter(f => (status === 'all' || statusOf(f) === status) && `${f.name} ${f.description || ''} ${f.tag || ''}`.toLowerCase().includes(query.trim().toLowerCase()))
+  const button = { minHeight: 44, padding: '10px 14px', borderRadius: 10, border: '1px solid #E2E8F0', background: 'var(--surface, #fff)', color: 'var(--text2, #334155)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }
+  const heading = { margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--text, #172033)' }
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
+  const closing = forms.filter(f => {
+    const days = (new Date(f.closing_date) - new Date(today)) / 86400000
+    return statusOf(f) === 'active' && f.closing_date && days >= 0 && days <= 3
+  })
+  if (loading) return <div role="status" style={{ ...CARD, padding: 40, color: 'var(--text3, #64748B)' }}>Loading your forms…</div>
 
   return (
-    <div>
-      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>
-        {stats.total} form{stats.total === 1 ? '' : 's'} &nbsp;·&nbsp; {stats.live} live
-        &nbsp;·&nbsp; {stats.draft} draft &nbsp;·&nbsp; {stats.unread} new response{stats.unread === 1 ? '' : 's'}
+    <div style={{ display: 'grid', gap: 22 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
+        {[
+          ['Live forms', live, 'Ready to collect responses', () => setStatus('active'), primary],
+          ['Drafts', drafts, 'Work in progress', () => setStatus('draft'), 'var(--text3, #64748B)'],
+          ['New responses', fresh, 'Waiting to be read', () => onGoResponses('new'), primary],
+          ['Needs review', flagged, 'Flagged information', () => onGoResponses('needs_review'), '#B45309'],
+        ].map(([label, count, detail, action, tone]) => <button key={label} onClick={action} style={{ ...CARD, padding: isMobile ? 16 : 20, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', borderTop: `3px solid ${tone}` }}>
+          <div style={{ color: 'var(--text2, #526075)', fontSize: 12, fontWeight: 700 }}>{label}</div>
+          <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text, #172033)', margin: '8px 0', letterSpacing: -1 }}>{count}</div>
+          <div style={{ fontSize: 12, color: 'var(--text3, #64748B)' }}>{detail} <span aria-hidden="true">↗</span></div>
+        </button>)}
       </div>
-
-      {attention.length > 0 ? (
-        <div style={{ ...CARD, marginBottom: 16, overflow: 'hidden' }}>
-          <div style={{ padding: '13px 16px', borderBottom: '1px solid var(--border)', fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
-            Needs attention
+      <div style={{ display: 'grid', gridTemplateColumns: compact ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) 300px', alignItems: 'start', gap: 22 }}>
+        <section style={{ ...CARD, overflow: 'hidden', minWidth: 0 }}>
+          <div style={{ padding: isMobile ? 16 : 22, borderBottom: '1px solid #E8EDF3' }}>
+            <h2 style={heading}>Your form library</h2>
+            <p style={{ fontSize: 13, color: 'var(--text3, #64748B)', margin: '6px 0 18px' }}>Everything you collect, organised in one place.</p>
+            <input aria-label="Search form library" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search by name, description or type…" style={{ width: '100%', minHeight: 46, padding: '12px 14px', border: '1px solid #DCE3EB', borderRadius: 10, background: 'var(--surface2, #F8FAFC)', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: 14 }} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 14 }}>
+              {[['all', 'All forms', forms.length], ['active', 'Live', live], ['draft', 'Drafts', drafts], ['archived', 'Archived', forms.filter(f => statusOf(f) === 'archived').length]].map(([key, label, count]) => <button key={key} aria-pressed={status === key} onClick={() => setStatus(key)} style={{ ...button, borderColor: status === key ? primary : 'transparent', color: status === key ? primary : 'var(--text3, #64748B)', background: status === key ? 'var(--org-a05, #F8FAFC)' : '#fff' }}>{label} <span style={{ marginLeft: 5, fontSize: 11 }}>{count}</span></button>)}
+            </div>
           </div>
-          {attention.map(item => (
-            <AttentionRow key={item.id} {...item} primary={primary} isMobile={isMobile} />
-          ))}
-        </div>
-      ) : (
-        // Nothing to do is good news, and good news does not need a third of
-        // the screen. One line, so the live forms below it come up the fold.
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 9, marginBottom: 16,
-          padding: '11px 14px', borderRadius: 12,
-          background: 'var(--org-a05)', border: '1px solid var(--border)',
-        }}>
-          <span style={{ fontSize: 14 }} aria-hidden="true"><Icon name="✅" /></span>
-          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text2, #475569)' }}>
-            Nothing needs attention
-          </span>
-        </div>
-      )}
-
-      {liveForms.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Live forms</div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(250px, 1fr))',
-            gap: 10,
-          }}>
-            {liveForms.slice(0, 6).map(f => {
-              const count = submissions.filter(s => s.form_id === f.id).length
-              return (
-                <button key={f.id} onClick={() => onOpenForm(f)} style={{
-                  ...CARD, padding: 15, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: 7, background: '#12B76A' }} />
-                    <span style={{ fontSize: 10.5, fontWeight: 800, color: '#04713C', letterSpacing: 0.5 }}>LIVE</span>
-                  </div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 3 }}>{f.name}</div>
-                  <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>
-                    {count} response{count === 1 ? '' : 's'}
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {recent.length > 0 && (
-        <div>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Recent responses</div>
-          <div style={{ ...CARD, overflow: 'hidden' }}>
-            {recent.map((s, i) => {
-              const form = forms.find(f => f.id === s.form_id)
-              return (
-                <button key={s.id} onClick={() => onGoResponses('all')} style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 11,
-                  padding: '12px 15px', border: 'none', background: 'transparent',
-                  borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
-                  cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-                }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
-                      {s.submitted_name || 'Anonymous'}
-                    </div>
-                    <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>{form?.name || 'Form'}</div>
-                  </div>
-                  {s.flags?.length > 0 && (
-                    <span style={{ width: 7, height: 7, borderRadius: 7, background: '#E5484D', flexShrink: 0 }} />
-                  )}
-                  <span style={{ fontSize: 12, color: 'var(--text3)', flexShrink: 0 }}>{timeAgo(s.created_at)}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {forms.length === 0 && (
-        <div style={{ ...CARD, padding: '44px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}><Icon name="📝" /></div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>
-            Collect what you need without chasing paperwork
-          </div>
-          <div style={{ fontSize: 14, color: 'var(--text3)', maxWidth: 380, margin: '0 auto 20px', lineHeight: 1.55 }}>
-            Registrations, consent, medical updates and feedback — sent as a link,
-            answered on a phone, and back with you in minutes.
-          </div>
-          <button onClick={onCreate} style={{
-            padding: '12px 22px', borderRadius: 12, border: 'none', background: primary,
-            color: '#fff', fontSize: 14.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-          }}>Create your first form</button>
-        </div>
-      )}
+          {visible.map(f => {
+            const state = statusOf(f)
+            const count = submissions.filter(s => s.form_id === f.id).length
+            const review = submissions.filter(s => s.form_id === f.id && s.review_status === 'needs_review').length
+            const tone = state === 'active' ? '#047857' : state === 'draft' ? '#B45309' : 'var(--text3, #64748B)'
+            return <article key={f.id} style={{ padding: isMobile ? 16 : 22, borderBottom: '1px solid #EDF0F5' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                {!isMobile && <div style={{ width: 44, height: 50, borderRadius: 10, background: 'var(--surface2, #F1F5F9)', color: primary, display: 'grid', placeItems: 'center', flexShrink: 0 }}><Icon name="📝" /></div>}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}><h3 style={{ ...heading, fontSize: 15, overflowWrap: 'anywhere' }}>{f.name}</h3><span style={{ color: tone, fontWeight: 700, fontSize: 11, background: 'var(--surface2, #F8FAFC)', borderRadius: 6, padding: '4px 7px' }}>{state === 'active' ? '● Live' : state === 'draft' ? 'Draft' : 'Archived'}</span></div>
+                  <p style={{ fontSize: 13, color: 'var(--text3, #64748B)', margin: '7px 0 12px', lineHeight: 1.5 }}>{f.description || `${f.tag || 'General'} form · ${(f.fields || []).length} fields`}</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 12, color: 'var(--text3, #64748B)' }}><span><strong style={{ color: 'var(--text, #172033)' }}>{count}</strong> loaded responses</span>{review > 0 && <span style={{ color: '#B45309', fontWeight: 700 }}>{review} need review</span>}{f.closing_date && <span>Closes {new Date(f.closing_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' })}</span>}</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16, paddingLeft: isMobile ? 0 : 58 }}>
+                {canViewSubmissions(f) && <button onClick={() => onOpenForm(f)} style={{ ...button, color: primary }}>View responses ↗</button>}
+                {state === 'active' && <button onClick={() => onShare(f)} style={button}>{copiedId === f.id ? 'Link copied ✓' : 'Copy link'}</button>}
+                {isAdmin && <button onClick={() => onEdit(f)} style={{ ...button, borderColor: 'transparent' }}>{state === 'draft' ? 'Continue editing' : 'Edit form'}</button>}
+              </div>
+            </article>
+          })}
+          {!visible.length && <div style={{ padding: '38px 22px', textAlign: 'center' }}><h3 style={heading}>{forms.length ? 'No matching forms' : 'Your first form starts here'}</h3><p style={{ color: 'var(--text3, #64748B)', fontSize: 13 }}>{forms.length ? 'Try another search or choose a different status.' : 'Collect registrations, consent and feedback with a simple link.'}</p>{!forms.length && isAdmin && <button style={{ ...button, background: primary, color: '#fff' }} onClick={onCreate}>Create a form</button>}</div>}
+          <div style={{ padding: '14px 22px', fontSize: 12, color: 'var(--text3, #64748B)', background: 'var(--surface2, #FAFBFD)' }}>{visible.length} of {forms.length} forms · Response counts reflect the latest loaded submissions.</div>
+        </section>
+        <aside style={{ display: 'grid', gap: 18 }}>
+          <section style={{ ...CARD, overflow: 'hidden' }}>
+            <h2 style={{ ...heading, padding: '20px 18px 12px' }}>Action centre</h2>
+            {flagged > 0 && <AttentionRow tone="#B45309" title={`${flagged} need review`} detail="Check flagged information" cta="Review" onAction={() => onGoResponses('needs_review')} primary={primary} isMobile />}
+            {fresh > 0 && <AttentionRow tone={primary} title={`${fresh} new responses`} detail="Ready for your team" cta="Open inbox" onAction={() => onGoResponses('new')} primary={primary} isMobile />}
+            {closing.filter(f => isAdmin || canViewSubmissions(f)).map(f => <AttentionRow key={f.id} tone="#B45309" title={f.name} detail="Closing within 3 days" cta={isAdmin ? 'Manage form' : 'View responses'} onAction={() => isAdmin ? onEdit(f) : onOpenForm(f)} primary={primary} isMobile />)}
+            {!flagged && !fresh && !closing.length && <div style={{ margin: '0 18px 18px', borderRadius: 10, padding: 14, background: '#F0FDF7', color: '#166534', fontSize: 13, lineHeight: 1.6 }}><strong>✓ Nothing waiting for review</strong><br />New responses and upcoming deadlines will appear here.</div>}
+          </section>
+          {isAdmin && <section style={{ ...CARD, padding: 20, background: '#172033', color: '#fff' }}><div style={{ fontSize: 11, letterSpacing: 1.4, color: '#CBD5E1', fontWeight: 700 }}>LESS ADMIN, MORE IMPACT</div><h2 style={{ fontSize: 21, margin: '12px 0 8px', letterSpacing: -0.5 }}>Start with a head start.</h2><p style={{ fontSize: 13, color: '#CBD5E1', lineHeight: 1.7 }}>Ready-made forms for consent, registrations, feedback and everyday admin.</p><button onClick={onTemplates} style={{ ...button, width: '100%', marginTop: 8 }}>Explore templates →</button></section>}
+          <section style={{ ...CARD, padding: 18 }}><h2 style={heading}>Latest responses</h2>{submissions.length ? submissions.slice(0, 4).map(s => <button key={s.id} onClick={() => onGoResponses('all')} style={{ display: 'block', width: '100%', padding: '14px 0', border: 0, borderBottom: '1px solid #EDF0F5', background: 'transparent', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}><div style={{ color: 'var(--text, #172033)', fontWeight: 700, fontSize: 13 }}>{s.submitted_name || 'Anonymous'}</div><div style={{ color: 'var(--text3, #64748B)', fontSize: 12, marginTop: 5 }}>{forms.find(f => f.id === s.form_id)?.name || 'Form'} · {timeAgo(s.created_at)}</div></button>) : <p style={{ fontSize: 13, color: 'var(--text3, #64748B)', lineHeight: 1.7, marginBottom: 0 }}>No responses yet. Share a live form to start collecting answers.</p>}</section>
+        </aside>
+      </div>
     </div>
   )
 }

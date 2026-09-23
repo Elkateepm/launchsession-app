@@ -922,56 +922,33 @@ export default function Forms({ org, session, isAdmin }) {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
 
-      {/* HEADER */}
-      <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'flex-start', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
-        <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-          <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--org-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 8px 20px -8px var(--org-a35)' }}><Icon name="📝" /></div>
-          <div>
-            <span style={{ fontSize: isMobile ? 21 : 24, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5 }}>Forms</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 5, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13.5, color: 'var(--text3)' }}>Create it, send it, see who replied.</span>
-              <select value={period} onChange={e => setPeriod(e.target.value)} style={{ ...sel, fontWeight: 700, padding: '5px 9px', fontSize: 12 }}>
-                <option value="month">This month</option>
-                <option value="week">This week</option>
-                <option value="all">All time</option>
-              </select>
-            </div>
-          </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 18, marginBottom: 26 }}>
+        <div>
+          <div style={{ color: primary, fontSize: 11, fontWeight: 800, letterSpacing: 1.5, marginBottom: 8 }}>OFFICE / FORMS</div>
+          <h1 style={{ fontSize: isMobile ? 28 : 34, fontWeight: 800, color: 'var(--text, #172033)', letterSpacing: -1.2, margin: 0 }}>Forms, without the paperwork.</h1>
+          <p style={{ fontSize: 14, color: 'var(--text3, #64748B)', margin: '8px 0 0', lineHeight: 1.6 }}>Create, share and keep every response in one place.</p>
         </div>
-        {isAdmin && (
-          isMobile ? (
-            <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '13px 20px', borderRadius: 12, border: 'none', background: 'var(--org-primary)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 10px 24px -8px var(--org-a35)', width: '100%' }}>+ Create Form</button>
-          ) : (
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { setSection('templates'); setTab('templates') }} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid #6D5DF6', background: 'var(--surface)', color: 'var(--org-primary)', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="📋" /> Browse Templates</button>
-              <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '11px 20px', borderRadius: 12, border: 'none', background: 'var(--org-primary)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: '0 10px 24px -8px var(--org-a35)', whiteSpace: 'nowrap' }}>+ Create Form</button>
-            </div>
-          )
-        )}
+        {isAdmin && <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ minHeight: 46, padding: '12px 20px', borderRadius: 11, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>+ Create form</button>}
       </div>
-
-      <div style={{ display: 'flex', gap: 6, marginBottom: 18, overflowX: 'auto', paddingBottom: 2 }}>
-        {[['overview', 'Overview'], ['forms', 'Forms'], ['responses', 'Responses'], ['templates', 'Templates']].map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => { setSection(key); if (key === 'templates') setTab('templates') }}
-            style={{
-              padding: '8px 16px', borderRadius: 999, fontSize: 13, fontWeight: 700,
-              whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit',
-              border: `1px solid ${section === key ? 'transparent' : '#E2E8F0'}`,
-              background: section === key ? 'var(--org-primary)' : '#fff',
-              color: section === key ? '#fff' : '#64748B',
-            }}
-          >{label}</button>
+      <div style={{ display: 'flex', gap: 18, marginBottom: 24, overflowX: 'auto', borderBottom: '1px solid #DDE3ED' }}>
+        {[['overview', 'Workspace'], ['forms', 'Manage forms'], ['responses', 'Response inbox'], ['templates', 'Templates']].map(([key, label]) => (
+          <button key={key} aria-pressed={section === key} onClick={() => { setSection(key); if (key === 'templates') setTab('templates'); else if (key === 'forms') setTab('all') }} style={{ minHeight: 48, padding: '10px 2px', border: 'none', borderBottom: `3px solid ${section === key ? primary : 'transparent'}`, background: 'transparent', color: section === key ? primary : 'var(--text3, #64748B)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit' }}>{label}</button>
         ))}
       </div>
 
       {section === 'overview' && (
         <FormsOverview
           org={org}
+          loading={loading}
+          isAdmin={isAdmin}
+          copiedId={copiedId}
+          canViewSubmissions={canViewSubmissions}
+          onEdit={openForEdit}
+          onShare={copyFormLink}
+          onTemplates={() => { setSection('templates'); setTab('templates') }}
           forms={forms}
           submissions={submissions}
-          primary={org?.primary_color || 'var(--org-primary)'}
+          primary={org?.primary_color || '#6D5DF6'}
           onOpenForm={f => { setSelectedForm(f); setView('submissions') }}
           onGoResponses={filter => { setResponseFilter(filter); setSection('responses') }}
           onCreate={() => { setSelectedForm(null); setView('builder') }}
@@ -990,6 +967,7 @@ export default function Forms({ org, session, isAdmin }) {
 
       {(section === 'forms' || section === 'templates') && (
       <>
+      <div style={{ marginBottom: 16 }}><label style={{ fontSize: 13, color: '#64748B' }}>Response reporting period <select aria-label="Response reporting period" value={period} onChange={e => setPeriod(e.target.value)} style={sel}><option value="month">This month</option><option value="week">This week</option><option value="all">All time</option></select></label></div>
       {/* STATS */}
       <div style={{ display: 'grid', gridTemplateColumns: isCompact ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
         {statCards.map((s, i) => (
