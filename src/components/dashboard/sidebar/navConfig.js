@@ -18,9 +18,7 @@ export const NAV_SECTIONS = [
       { id: 'planner', label: 'Sessions', icon: 'sessions', tab: 'planner', moduleKey: 'planner' },
       { id: 'projects', label: 'Projects', icon: 'projects', tab: 'projects_list', matchTabs: ['projects_list', 'projects'], accessKey: 'planner' },
       { id: 'registers', label: 'Registers', icon: 'registers', tab: 'registers', moduleKey: 'registers' },
-      // Rendered by Dashboard but absent from the old sidebar, so it was only
-      // reachable by deep link. Module-gated, so it appears only where enabled.
-      { id: 'mentoring', label: 'Mentoring', icon: 'mentoring', tab: 'mentoring', moduleKey: 'mentoring' },
+      // Mentoring keeps its existing route and records, but has no nav entry.
     ],
   },
   {
@@ -167,8 +165,7 @@ export const OFFICE_TABS = [
  * Every entry an organisation may switch off, in the order Settings lists them.
  *
  * Built from the nav itself so the two cannot drift: an item added to a section
- * above becomes hideable without a second edit here, which is the mistake that
- * left Mentoring reachable only by deep link before the nav became data.
+ * above becomes hideable without a second edit here.
  *
  * Home and the Organisation items (Settings, Branding) are not in NAV_SECTIONS
  * or NAV_GROUPS and so are not hideable. That is what stops an organisation

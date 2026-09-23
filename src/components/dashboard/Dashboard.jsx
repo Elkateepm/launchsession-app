@@ -305,6 +305,7 @@ function timeAgo(dateStr) {
 
 function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, userProfile, onProfileClick, onNavigate, hasModule, unreadSubs = [] }) {
   const isMobile = useIsMobile()
+  const terms = useTerms()
   const [search, setSearch] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -318,7 +319,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
     return () => el.removeEventListener('scroll', onScroll, true)
   }, [])
 
-  const moduleLabel = tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : ALL_MODULES.find(m => m.key === tab)?.label || tab
+  const moduleLabel = tab === 'children' ? terms.People : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : ALL_MODULES.find(m => m.key === tab)?.label || tab
 
   const daysLeft = org?.trial_expires_at ? Math.max(0, Math.ceil((new Date(org.trial_expires_at) - new Date()) / (1000 * 60 * 60 * 24))) : null
   const isTrial = org?.plan === 'starter' && daysLeft !== null

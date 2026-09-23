@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
-import PageHeader from '../shared/PageHeader'
+import { PeopleHeader, PeopleTabs, PeopleSummary, PeopleRoster, PeopleProfileDrawer } from './PeopleWorkspace'
 import QRShareSheet from '../shared/QRShareSheet'
 import { Avatar, glass, inputStyle, btnGhost, btnPrimary } from '../volunteers/vh_shared'
 import ChildPaymentsCard from '../payments/ChildPaymentsCard'
@@ -52,6 +52,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
   const [search, setSearch] = useState('')
   const [groupFilter, setGroupFilter] = useState('all')
   const [quickFilter, setQuickFilter] = useState(null)
+  const [sort, setSort] = useState('name')
   const [selectedId, setSelectedId] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
@@ -114,17 +115,28 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
     medical: children.filter(hasMedicalAlert).length,
     consentIssues: children.filter(c => consentIssue(c.id)).length,
     pendingRegs: registrations.filter(r => r.status === 'pending').length,
+    attention: children.filter(c => c.profile_incomplete || consentIssue(c.id)).length,
   }), [children, activeThisMonthIds, latestAttByChild, consentIssue, registrations])
 
-  const groupLabel = (name) => (orgGroups || []).find(g => (g.label || '').toLowerCase() === (name || '').trim().toLowerCase())?.label
+  const groupLabel = (name) => (orgGroups || []).find(g => (g.label || '').toLowerCase() === (name || '').trim().toLowerCase())?.label || (name || '').trim()
+  const groupOptions = useMemo(() => {
+    const names = new Map()
+    for (const name of [...(orgGroups || []).map(g => g.label), ...children.map(c => c.group_name)]) {
+      const label = (name || '').trim()
+      if (label && !names.has(label.toLowerCase())) names.set(label.toLowerCase(), label)
+    }
+    return [...names.values()].sort((a, b) => a.localeCompare(b, 'en-GB'))
+  }, [orgGroups, children])
 
   const filtered = useMemo(() => {
     let list = children
-    if (groupFilter !== 'all') list = list.filter(c => (c.group_name || '').toLowerCase() === groupFilter.toLowerCase())
+    if (groupFilter === '__ungrouped') list = list.filter(c => !(c.group_name || '').trim())
+    else if (groupFilter !== 'all') list = list.filter(c => (c.group_name || '').trim().toLowerCase() === groupFilter.toLowerCase())
     if (quickFilter === 'onsite') list = list.filter(c => latestAttByChild[c.id]?.status === 'signed_in')
     if (quickFilter === 'medical') list = list.filter(hasMedicalAlert)
     if (quickFilter === 'consent') list = list.filter(c => consentIssue(c.id))
     if (quickFilter === 'incomplete') list = list.filter(c => c.profile_incomplete)
+    if (quickFilter === 'attention') list = list.filter(c => c.profile_incomplete || consentIssue(c.id))
     if (quickFilter === 'active') list = list.filter(c => activeThisMonthIds.has(c.id))
     const q = search.trim().toLowerCase()
     if (q) {
@@ -132,175 +144,48 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
         `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
         (c.parent_name || '').toLowerCase().includes(q) ||
         (c.parent_phone || '').includes(q) ||
+        (c.parent_email || '').toLowerCase().includes(q) ||
         (c.school || '').toLowerCase().includes(q) ||
         (c.group_name || '').toLowerCase().includes(q)
       )
     }
-    return list
-  }, [children, groupFilter, quickFilter, search, latestAttByChild, consentIssue, activeThisMonthIds])
+    const nameOf = c => `${c.first_name || ''} ${c.last_name || ''}`.trim()
+    return [...list].sort((a, b) => {
+      if (sort === 'recent') {
+        const difference = (Date.parse(latestAttByChild[b.id]?.created_at) || 0) - (Date.parse(latestAttByChild[a.id]?.created_at) || 0)
+        if (difference) return difference
+      }
+      if (sort === 'surname') return `${a.last_name || ''} ${a.first_name || ''}`.localeCompare(`${b.last_name || ''} ${b.first_name || ''}`, 'en-GB')
+      if (sort === 'group') {
+        const difference = (a.group_name || '\uffff').localeCompare(b.group_name || '\uffff', 'en-GB')
+        if (difference) return difference
+      }
+      return nameOf(a).localeCompare(nameOf(b), 'en-GB')
+    })
+  }, [children, groupFilter, quickFilter, search, latestAttByChild, consentIssue, activeThisMonthIds, sort])
 
   const selected = children.find(c => c.id === selectedId) || null
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F6F8FC' }}>
-      <PageHeader
-        icon="🧒"
-        title={terms.People}
-        subtitle="Manage participant records, safety information, attendance and family contacts."
-        primary={primary}
-        orgName={org?.name}
-        stats={[
-          { label: 'Total', value: stats.total, icon: '👥' },
-          { label: 'Active this month', value: stats.activeThisMonth, icon: '📈', color: '#059669' },
-          { label: 'On site now', value: stats.onSite, icon: '📍', color: '#2563EB' },
-          { label: 'Profiles incomplete', value: stats.incomplete, icon: '⚠️', color: '#D97706' },
-          { label: 'Medical alerts', value: stats.medical, icon: '❤️', color: '#DC2626' },
-          { label: 'Consent issues', value: stats.consentIssues, icon: '🔏', color: '#7C3AED' },
-        ]}
-        actions={[
-          { label: 'Invite / Register', icon: '✉️', variant: 'ghost', onClick: () => setShowInvite(true) },
-          { label: 'Show QR', icon: '⊞', variant: 'ghost', onClick: () => setShowQR(true) },
-          { label: 'Add young person', icon: '+', variant: 'primary', onClick: () => setShowAdd(true) },
-        ]}
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: 'var(--bg, #F6F8FC)', padding: isMobile ? 16 : 28, boxSizing: 'border-box' }}>
+      <PeopleHeader
+        terms={terms} primary={primary} stats={stats} loading={loading}
+        onAdd={() => setShowAdd(true)} onInvite={() => setShowInvite(true)}
+        onQR={() => setShowQR(true)} onOnSite={() => setMainTab('onsite')}
       />
-
-      <div style={{ display: 'flex', gap: 4, padding: isMobile ? '10px 14px 0' : '14px 24px 0', overflowX: 'auto', flexShrink: 0 }}>
-        {[
-          ['directory', '📇 Directory'],
-          ['onsite', `📍 On Site${stats.onSite ? ` (${stats.onSite})` : ''}`],
-          ['groups', '👥 Groups'],
-          ['consents', `🔏 Consents${stats.consentIssues ? ` (${stats.consentIssues})` : ''}`],
-          ['medical', `❤️ Medical & Support${stats.medical ? ` (${stats.medical})` : ''}`],
-          ['requests', `📥 Registration Requests`],
-        ].map(([key, label]) => {
-          const isRequests = key === 'requests'
-          const flagged = isRequests && stats.pendingRegs > 0
-          const active = mainTab === key
-          return (
-            <button key={key} onClick={() => { setMainTab(key); setSelectedId(null) }}
-              style={{
-                position: 'relative', display: 'flex', alignItems: 'center', gap: 6,
-                padding: '9px 14px', borderRadius: '10px 10px 0 0', border: 'none',
-                borderBottom: active ? `2.5px solid ${flagged ? '#DC2626' : primary}` : flagged ? '2.5px solid #FCA5A5' : '2.5px solid transparent',
-                background: active ? '#fff' : flagged ? '#FEF2F2' : 'transparent',
-                color: active ? (flagged ? '#DC2626' : primary) : flagged ? '#B91C1C' : '#64748B',
-                fontWeight: flagged ? 800 : 700, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap',
-              }}>
-              {label}
-              {flagged && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#DC2626', color: '#fff', borderRadius: 99, padding: '1px 7px 1px 5px', fontSize: 10.5, fontWeight: 900, lineHeight: '15px' }}>
-                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', animation: 'pulse-live 1.5s infinite', flexShrink: 0 }} />
-                  {stats.pendingRegs}
-                </span>
-              )}
-            </button>
-          )
-        })}
-      </div>
-      <style>{`@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.6)}}`}</style>
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 14 : 24 }}>
-        {mainTab === 'directory' && (
-        <>
-        {/* Quick-filter chips mirroring the stat cards */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-          {[
-            [null, 'All'],
-            ['active', 'Active this month'],
-            ['onsite', 'On site now'],
-            ['medical', 'Medical alerts'],
-            ['consent', 'Consent issues'],
-            ['incomplete', 'Profiles incomplete'],
-          ].map(([key, label]) => (
-            <button key={label} onClick={() => setQuickFilter(key)}
-              style={{ padding: '7px 14px', borderRadius: 99, border: quickFilter === key ? `2px solid ${primary}` : '1px solid rgba(15,23,42,0.1)', background: quickFilter === key ? 'var(--org-a10)' : '#fff', color: quickFilter === key ? primary : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Search + group filter */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: '1 1 260px' }}>
-            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}><Icon name="🔍" /></span>
-            <input style={{ ...inputStyle, paddingLeft: 32 }} placeholder="Search by name, parent, school, group…" value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
-          <select style={{ ...inputStyle, width: 170 }} value={groupFilter} onChange={e => setGroupFilter(e.target.value)}>
-            <option value="all">All groups</option>
-            {(orgGroups || []).map(g => <option key={g.id || g.label} value={g.label}>{g.label}</option>)}
-          </select>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : selected ? '1fr 1.6fr' : '1fr', gap: 16, alignItems: 'start' }}>
-          {/* LIST */}
-          {(!isMobile || !selected) && (
-            <div style={glass({ padding: 0, overflow: 'hidden' })}>
-              <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>
-                {loading ? 'Loading…' : `${filtered.length} young ${filtered.length === 1 ? 'person' : 'people'}`}
-              </div>
-              {filtered.length === 0 && !loading ? (
-                <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="🧒" /></div>
-                  <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>No {terms.people} found</div>
-                  <div style={{ fontSize: 12.5, color: '#94A3B8' }}>Try adjusting your search or filters.</div>
-                </div>
-              ) : (
-                <div style={{ maxHeight: 640, overflowY: 'auto' }}>
-                  {filtered.map(c => {
-                    const isSelected = selectedId === c.id
-                    const onSite = latestAttByChild[c.id]?.status === 'signed_in'
-                    const chips = medicalAlerts(c)
-                    return (
-                      <div key={c.id} onClick={() => setSelectedId(c.id)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSelected ? 'var(--org-a05)' : 'transparent', borderLeft: `3px solid ${isSelected ? primary : 'transparent'}` }}>
-                        <Avatar name={`${c.first_name} ${c.last_name}`} photoUrl={c.photo_url} size={38} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.first_name} {c.last_name}</div>
-                          <div style={{ fontSize: 11, color: '#94A3B8' }}>
-                            {age(c.date_of_birth) != null ? `Age ${age(c.date_of_birth)} · ` : ''}{groupLabel(c.group_name) || 'Ungrouped'}
-                          </div>
-                          {chips.length > 0 && (
-                            <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
-                              {chips.map(ch => <span key={ch.label} style={{ fontSize: 9.5, fontWeight: 800, color: ch.color, background: ch.bg, borderRadius: 99, padding: '1px 7px' }}>{ch.label}</span>)}
-                            </div>
-                          )}
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                          <span style={{ fontSize: 10, fontWeight: 800, color: onSite ? '#15803D' : '#94A3B8', background: onSite ? '#DCFCE7' : '#F1F5F9', borderRadius: 99, padding: '2px 8px' }}>{onSite ? '● On site' : 'Not on site'}</span>
-                          {consentIssue(c.id) && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#7C3AED', background: '#EDE9FE', borderRadius: 99, padding: '1px 7px' }}>Consent due</span>}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* PROFILE */}
-          {selected && (
-            <ChildProfile
-              child={selected}
-              org={org}
-              session={session}
-              primary={primary}
-              authUserId={authUserId}
-              groupLabel={groupLabel(selected.group_name)}
-              consentRec={consentsByChild[selected.id] || {}}
-              latestAtt={latestAttByChild[selected.id]}
-              notes={sessionNotes.filter(n => n.child_id === selected.id).slice(0, 5)}
-              attendanceForChild={attendance.filter(a => a.child_id === selected.id)}
-              onBack={() => setSelectedId(null)}
-              onNavigate={onNavigate}
-              onConsentChanged={load}
-              onChildUpdated={load}
-              isMobile={isMobile}
-            />
-          )}
-        </div>
-        </>
-        )}
-
+      <PeopleTabs terms={terms} stats={stats} value={mainTab} onChange={setMainTab} />
+      <div style={{ paddingTop: 22 }}>
+        {mainTab === 'directory' && <>
+          <PeopleSummary terms={terms} stats={stats} primary={primary} loading={loading} value={quickFilter} onChange={setQuickFilter} />
+          <PeopleRoster
+            records={filtered} total={children.length} terms={terms} primary={primary} loading={loading}
+            search={search} onSearch={setSearch} groupFilter={groupFilter} groups={groupOptions} onGroup={setGroupFilter}
+            quickFilter={quickFilter} onFilter={setQuickFilter} sort={sort} onSort={setSort}
+            onClear={() => { setSearch(''); setGroupFilter('all'); setQuickFilter(null) }}
+            onOpen={setSelectedId} onAdd={() => setShowAdd(true)} groupLabel={groupLabel}
+            latestAttByChild={latestAttByChild} medicalAlerts={medicalAlerts} consentIssue={consentIssue} age={age}
+          />
+        </>}
         {mainTab === 'onsite' && (
           <OnSiteTab children={children} latestAttByChild={latestAttByChild} groupLabel={groupLabel} primary={primary} org={org} authUserId={authUserId} onReload={load} />
         )}
@@ -308,16 +193,25 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
           <GroupsTab children={children} orgGroups={orgGroups} latestAttByChild={latestAttByChild} primary={primary} onSelectGroup={g => { setGroupFilter(g); setMainTab('directory') }} />
         )}
         {mainTab === 'consents' && (
-          <ConsentsTab children={children.filter(c => consentIssue(c.id))} consentsByChild={consentsByChild} groupLabel={groupLabel} primary={primary} onOpenChild={id => { setSelectedId(id); setMainTab('directory') }} />
+          <ConsentsTab children={children.filter(c => consentIssue(c.id))} consentsByChild={consentsByChild} groupLabel={groupLabel} primary={primary} onOpenChild={setSelectedId} />
         )}
         {mainTab === 'medical' && (
-          <MedicalTab children={children.filter(hasMedicalAlert)} groupLabel={groupLabel} primary={primary} onOpenChild={id => { setSelectedId(id); setMainTab('directory') }} />
+          <MedicalTab children={children.filter(hasMedicalAlert)} groupLabel={groupLabel} primary={primary} onOpenChild={setSelectedId} />
         )}
         {mainTab === 'requests' && (
           <RegistrationRequestsTab registrations={registrations} org={org} authUserId={authUserId} primary={primary} onReload={load} />
         )}
       </div>
-
+      {selected && <PeopleProfileDrawer name={`${selected.first_name} ${selected.last_name}`} onClose={() => setSelectedId(null)}>
+        <ChildProfile
+          key={selected.id} child={selected} org={org} session={session} primary={primary} authUserId={authUserId}
+          groupLabel={groupLabel(selected.group_name)} consentRec={consentsByChild[selected.id] || {}}
+          latestAtt={latestAttByChild[selected.id]}
+          notes={sessionNotes.filter(n => n.child_id === selected.id).slice(0, 5)}
+          attendanceForChild={attendance.filter(a => a.child_id === selected.id)}
+          onNavigate={onNavigate} onConsentChanged={load} isMobile={isMobile}
+        />
+      </PeopleProfileDrawer>}
       {showAdd && <AddChildQuickModal org={org} onClose={() => setShowAdd(false)} onAdded={() => { setShowAdd(false); load() }} />}
       {showInvite && <InviteParentModal org={org} onClose={() => setShowInvite(false)} />}
       {showQR && <QRShareSheet org={org} onClose={() => setShowQR(false)} />}
@@ -325,7 +219,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
   )
 }
 
-function ChildProfile({ child, org, session, primary, authUserId, groupLabel, consentRec, latestAtt, notes, attendanceForChild, onBack, onNavigate, onConsentChanged, isMobile }) {
+function ChildProfile({ child, org, session, primary, authUserId, groupLabel, consentRec, latestAtt, notes, attendanceForChild, onNavigate, onConsentChanged, isMobile }) {
   const [savingConsent, setSavingConsent] = useState(null)
   const [editingContact, setEditingContact] = useState(false)
   const [savingContact, setSavingContact] = useState(false)
@@ -371,8 +265,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
   ) : null
 
   return (
-    <div style={glass({ padding: 20 })}>
-      {isMobile && <button onClick={onBack} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}><Icon name="←" /> Back to directory</button>}
+    <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E3E8F0', padding: isMobile ? 16 : 22 }}>
 
       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap' }}>
         <Avatar name={`${child.first_name} ${child.last_name}`} photoUrl={child.photo_url} size={56} />
