@@ -147,7 +147,7 @@ export default function OfficeOverview({ org, tabs, onSelect, newResponses = 0 }
                 transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'var(--org-a40, rgba(109,93,246,0.35))'
+                e.currentTarget.style.borderColor = 'var(--org-a35)'
                 e.currentTarget.style.transform = 'translateY(-2px)'
                 e.currentTarget.style.boxShadow = '0 10px 26px -14px rgba(15,23,42,0.35)'
               }}

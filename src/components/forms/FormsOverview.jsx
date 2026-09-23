@@ -10,7 +10,7 @@ import Icon from '../../lib/icons'
 // knowing there are two live forms tells a youth worker nothing they can act on.
 // This leads with what needs doing and shows the numbers as one quiet line.
 
-const CARD = { background: '#fff', border: '1px solid #ECE9F5', borderRadius: 16 }
+const CARD = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16 }
 
 const FLAG_LABELS = {
   medical: { label: 'Medical information', tone: '#B42318', bg: '#FEF2F2' },
@@ -35,12 +35,12 @@ function AttentionRow({ tone, title, detail, cta, onAction, primary, isMobile })
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
-      borderBottom: '1px solid #F5F3FA', flexWrap: isMobile ? 'wrap' : 'nowrap',
+      borderBottom: '1px solid var(--border)', flexWrap: isMobile ? 'wrap' : 'nowrap',
     }}>
       <span style={{ width: 8, height: 8, borderRadius: 8, background: tone, flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14.5, fontWeight: 700, color: '#0F172A' }}>{title}</div>
-        <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 2 }}>{detail}</div>
+        <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text)' }}>{title}</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>{detail}</div>
       </div>
       <button onClick={onAction} style={{
         padding: '9px 15px', borderRadius: 10, border: 'none', background: primary,
@@ -82,7 +82,7 @@ export function FormsOverview({ org, forms = [], submissions = [], primary, onOp
     if (fresh.length) {
       items.push({
         id: 'new',
-        tone: '#7C5CFC',
+        tone: 'var(--org-primary)',
         title: `${fresh.length} new response${fresh.length === 1 ? '' : 's'}`,
         detail: 'Not yet looked at',
         cta: 'Review',
@@ -116,14 +116,14 @@ export function FormsOverview({ org, forms = [], submissions = [], primary, onOp
 
   return (
     <div>
-      <div style={{ fontSize: 12.5, color: '#8B87A3', marginBottom: 14 }}>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>
         {stats.total} form{stats.total === 1 ? '' : 's'} &nbsp;·&nbsp; {stats.live} live
         &nbsp;·&nbsp; {stats.draft} draft &nbsp;·&nbsp; {stats.unread} new response{stats.unread === 1 ? '' : 's'}
       </div>
 
       {attention.length > 0 ? (
         <div style={{ ...CARD, marginBottom: 16, overflow: 'hidden' }}>
-          <div style={{ padding: '13px 16px', borderBottom: '1px solid #ECE9F5', fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+          <div style={{ padding: '13px 16px', borderBottom: '1px solid var(--border)', fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
             Needs attention
           </div>
           {attention.map(item => (
@@ -131,18 +131,23 @@ export function FormsOverview({ org, forms = [], submissions = [], primary, onOp
           ))}
         </div>
       ) : (
-        <div style={{ ...CARD, padding: '26px 20px', marginBottom: 16, textAlign: 'center' }}>
-          <div style={{ fontSize: 26, marginBottom: 6 }}><Icon name="✅" /></div>
-          <div style={{ fontSize: 15.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
-            You're all caught up
-          </div>
-          <div style={{ fontSize: 13.5, color: '#8B87A3' }}>There are no outstanding form actions.</div>
+        // Nothing to do is good news, and good news does not need a third of
+        // the screen. One line, so the live forms below it come up the fold.
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 9, marginBottom: 16,
+          padding: '11px 14px', borderRadius: 12,
+          background: 'var(--org-a05)', border: '1px solid var(--border)',
+        }}>
+          <span style={{ fontSize: 14 }} aria-hidden="true"><Icon name="✅" /></span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text2, #475569)' }}>
+            Nothing needs attention
+          </span>
         </div>
       )}
 
       {liveForms.length > 0 && (
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Live forms</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Live forms</div>
           <div style={{
             display: 'grid',
             gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(250px, 1fr))',
@@ -158,8 +163,8 @@ export function FormsOverview({ org, forms = [], submissions = [], primary, onOp
                     <span style={{ width: 7, height: 7, borderRadius: 7, background: '#12B76A' }} />
                     <span style={{ fontSize: 10.5, fontWeight: 800, color: '#04713C', letterSpacing: 0.5 }}>LIVE</span>
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 3 }}>{f.name}</div>
-                  <div style={{ fontSize: 12.5, color: '#8B87A3' }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 3 }}>{f.name}</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>
                     {count} response{count === 1 ? '' : 's'}
                   </div>
                 </button>
@@ -171,7 +176,7 @@ export function FormsOverview({ org, forms = [], submissions = [], primary, onOp
 
       {recent.length > 0 && (
         <div>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Recent responses</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Recent responses</div>
           <div style={{ ...CARD, overflow: 'hidden' }}>
             {recent.map((s, i) => {
               const form = forms.find(f => f.id === s.form_id)
@@ -179,19 +184,19 @@ export function FormsOverview({ org, forms = [], submissions = [], primary, onOp
                 <button key={s.id} onClick={() => onGoResponses('all')} style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 11,
                   padding: '12px 15px', border: 'none', background: 'transparent',
-                  borderBottom: i < recent.length - 1 ? '1px solid #F5F3FA' : 'none',
+                  borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
                   cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
                       {s.submitted_name || 'Anonymous'}
                     </div>
-                    <div style={{ fontSize: 12.5, color: '#8B87A3' }}>{form?.name || 'Form'}</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>{form?.name || 'Form'}</div>
                   </div>
                   {s.flags?.length > 0 && (
                     <span style={{ width: 7, height: 7, borderRadius: 7, background: '#E5484D', flexShrink: 0 }} />
                   )}
-                  <span style={{ fontSize: 12, color: '#94A3B8', flexShrink: 0 }}>{timeAgo(s.created_at)}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text3)', flexShrink: 0 }}>{timeAgo(s.created_at)}</span>
                 </button>
               )
             })}
@@ -202,10 +207,10 @@ export function FormsOverview({ org, forms = [], submissions = [], primary, onOp
       {forms.length === 0 && (
         <div style={{ ...CARD, padding: '44px 24px', textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}><Icon name="📝" /></div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>
             Collect what you need without chasing paperwork
           </div>
-          <div style={{ fontSize: 14, color: '#8B87A3', maxWidth: 380, margin: '0 auto 20px', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 14, color: 'var(--text3)', maxWidth: 380, margin: '0 auto 20px', lineHeight: 1.55 }}>
             Registrations, consent, medical updates and feedback — sent as a link,
             answered on a phone, and back with you in minutes.
           </div>
@@ -273,16 +278,16 @@ export function ResponseInbox({ org, forms = [], primary, initialFilter = 'all',
     return (
       <div>
         <button onClick={() => setOpen(null)} style={{
-          padding: '7px 13px', borderRadius: 9, border: '1px solid #ECE9F5',
-          background: '#fff', color: '#64748B', fontSize: 12.5, fontWeight: 700,
+          padding: '7px 13px', borderRadius: 9, border: '1px solid var(--border)',
+          background: 'var(--surface)', color: 'var(--text3)', fontSize: 12.5, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14,
         }}><Icon name="←" /> Responses</button>
 
         <div style={{ ...CARD, padding: isMobile ? 18 : 24 }}>
-          <div style={{ fontSize: 21, fontWeight: 900, color: '#0F172A' }}>
+          <div style={{ fontSize: 21, fontWeight: 900, color: 'var(--text)' }}>
             {open.submitted_name || 'Anonymous'}
           </div>
-          <div style={{ fontSize: 13.5, color: '#8B87A3', marginTop: 3 }}>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 3 }}>
             {form?.name} · {new Date(open.created_at).toLocaleString('en-GB', {
               day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London',
             })}
@@ -305,8 +310,8 @@ export function ResponseInbox({ org, forms = [], primary, initialFilter = 'all',
           <div style={{ marginTop: 20, display: 'grid', gap: 14 }}>
             {answers.map(([k, v]) => (
               <div key={k}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#8B87A3', marginBottom: 3 }}>{k}</div>
-                <div style={{ fontSize: 14.5, color: '#0F172A', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 3 }}>{k}</div>
+                <div style={{ fontSize: 14.5, color: 'var(--text)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
                   {typeof v === 'boolean' ? (v ? 'Yes' : 'No') : (String(v || '—'))}
                 </div>
               </div>
@@ -331,7 +336,7 @@ export function ResponseInbox({ org, forms = [], primary, initialFilter = 'all',
         {[['all', 'All'], ['new', 'New'], ['needs_review', 'Needs review']].map(([key, label]) => (
           <button key={key} onClick={() => setFilter(key)} style={{
             padding: '8px 14px', borderRadius: 99, fontSize: 13, fontWeight: 700,
-            border: `1px solid ${filter === key ? 'transparent' : '#ECE9F5'}`,
+            border: `1px solid ${filter === key ? 'transparent' : 'var(--border)'}`,
             background: filter === key ? primary : '#fff',
             color: filter === key ? '#fff' : '#64748B',
             cursor: 'pointer', fontFamily: 'inherit',
@@ -347,19 +352,19 @@ export function ResponseInbox({ org, forms = [], primary, initialFilter = 'all',
         placeholder="Search responses…"
         style={{
           width: '100%', padding: '11px 14px', borderRadius: 11, fontSize: 14,
-          border: '1px solid #ECE9F5', background: '#fff', color: '#0F172A',
+          border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)',
           outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', marginBottom: 14,
         }}
       />
 
-      {loading && <div style={{ padding: 30, textAlign: 'center', color: '#8B87A3', fontSize: 14 }}>Loading…</div>}
+      {loading && <div style={{ padding: 30, textAlign: 'center', color: 'var(--text3)', fontSize: 14 }}>Loading…</div>}
 
       {!loading && filtered.length === 0 && (
         <div style={{ ...CARD, padding: '38px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 15.5, fontWeight: 800, color: '#0F172A', marginBottom: 5 }}>
+          <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)', marginBottom: 5 }}>
             {rows.length === 0 ? 'No responses yet' : 'Nothing matches that'}
           </div>
-          <div style={{ fontSize: 13.5, color: '#8B87A3' }}>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)' }}>
             {rows.length === 0
               ? "When someone completes a form, you'll see it here."
               : 'Try a different search or filter.'}
@@ -382,15 +387,15 @@ export function ResponseInbox({ org, forms = [], primary, initialFilter = 'all',
               style={{
                 ...CARD, padding: 14, textAlign: 'left', cursor: 'pointer',
                 fontFamily: 'inherit', width: '100%',
-                borderLeft: `3px solid ${flagged ? '#E5484D' : fresh ? '#7C5CFC' : '#ECE9F5'}`,
+                borderLeft: `3px solid ${flagged ? '#E5484D' : fresh ? 'var(--org-primary)' : 'var(--border)'}`,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
                     {r.submitted_name || 'Anonymous'}
                   </div>
-                  <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 2 }}>
+                  <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                     {form?.name || 'Form'} · {timeAgo(r.created_at)}
                   </div>
                 </div>

@@ -47,7 +47,7 @@ const CATEGORY_COLOR = {
   volunteers: '#F16063', staff: '#7C3AED', trips: '#D97706', organisation: '#059669',
 }
 
-const FORM_ACCENTS = ['#6D5DF6', '#2563EB', '#059669', '#D97706', '#DB2777', '#0EA5E9', '#7C3AED']
+const FORM_ACCENTS = ['var(--org-primary)', '#2563EB', '#059669', '#D97706', '#DB2777', '#0EA5E9', '#7C3AED']
 
 // "Type" tag shown on each form row/card — distinct from the audience CATEGORIES
 // above (which classify templates), this is the purpose of the form itself.
@@ -56,7 +56,7 @@ const FORM_ACCENTS = ['#6D5DF6', '#2563EB', '#059669', '#D97706', '#DB2777', '#0
 // which is what assigns it.
 const TAG_OPTIONS = [CHILD_TAG, 'Registration', 'Consent', 'Application', 'Survey', 'Report', 'Request', 'Other']
 const TAG_COLOR = {
-  [CHILD_TAG]: '#6D5DF6',
+  [CHILD_TAG]: 'var(--org-primary)',
   Registration: '#2563EB', Consent: '#0EA5E9', Application: '#D97706',
   Survey: '#7C3AED', Report: '#DC2626', Request: '#059669', Other: '#64748B',
 }
@@ -73,15 +73,15 @@ function GroupHeading({ tag, count }) {
     // gridColumn spans the card grid; it is simply ignored in the flex list.
     <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 9, padding: '8px 2px 0' }}>
       <span style={{ width: 7, height: 7, borderRadius: '50%', background: TAG_COLOR[tag] || '#64748B', flexShrink: 0 }} />
-      <span style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A' }}>{tag}</span>
-      <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8' }}>{count}</span>
+      <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text)' }}>{tag}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)' }}>{count}</span>
     </div>
   )
 }
 const STATUS_STYLE = {
   active:   { label: 'Active',   bg: '#F0FDF4', color: '#16A34A', dot: '#16A34A' },
   draft:    { label: 'Draft',    bg: '#FFF7ED', color: '#D97706', dot: '#D97706' },
-  archived: { label: 'Archived', bg: '#F1F5F9', color: '#64748B', dot: '#94A3B8' },
+  archived: { label: 'Archived', bg: '#F1F5F9', color: 'var(--text3)', dot: '#94A3B8' },
 }
 
 const BASE_TEMPLATES = [
@@ -361,13 +361,13 @@ function SubmissionsView({ form, org, onBack }) {
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 800, fontSize: 13, cursor: 'pointer', padding: 0 }}><Icon name="←" /> Back</button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 17, fontWeight: 900 }}>{form.name}</div>
-          <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{submissions.length} submission{submissions.length !== 1 ? 's' : ''}</div>
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{submissions.length} submission{submissions.length !== 1 ? 's' : ''}</div>
         </div>
       </div>
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>Loading...</div>
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>Loading...</div>
       ) : submissions.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, background: '#F9FAFB', borderRadius: 16, color: '#9CA3AF', border: '1.5px dashed #e5e7eb' }}>
+        <div style={{ textAlign: 'center', padding: 60, background: '#F9FAFB', borderRadius: 16, color: 'var(--text3)', border: '1.5px dashed var(--border)' }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}>📭</div>
           <div style={{ fontWeight: 700 }}>No submissions yet</div>
           <div style={{ fontSize: 13, marginTop: 4 }}>Share the form link to start collecting responses</div>
@@ -375,13 +375,13 @@ function SubmissionsView({ form, org, onBack }) {
       ) : selected ? (
         <div>
           <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}><Icon name="←" /> All Submissions</button>
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: 20 }}>
-            <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>Submitted {format(new Date(selected.created_at), 'd MMM yyyy HH:mm')}</div>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 20 }}>
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14 }}>Submitted {format(new Date(selected.created_at), 'd MMM yyyy HH:mm')}</div>
             {form.fields.map((field, i) => (
               <div key={i} style={{ paddingBottom: 12, marginBottom: 12, borderBottom: i < form.fields.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', marginBottom: 4 }}>{field.label}</div>
                 <div style={{ fontSize: 14, color: '#111' }}>
-                  {field.type === 'checkbox' ? (selected.data?.[field.label] ? '✅ Yes' : '☐ No') : selected.data?.[field.label] || <span style={{ color: '#9CA3AF' }}>—</span>}
+                  {field.type === 'checkbox' ? (selected.data?.[field.label] ? '✅ Yes' : '☐ No') : selected.data?.[field.label] || <span style={{ color: 'var(--text3)' }}>—</span>}
                 </div>
               </div>
             ))}
@@ -390,14 +390,14 @@ function SubmissionsView({ form, org, onBack }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {submissions.map((sub, i) => (
-            <div key={sub.id} onClick={() => setSelected(sub)} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+            <div key={sub.id} onClick={() => setSelected(sub)} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = primary}
-              onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}>
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>Submission #{submissions.length - i}</div>
-                <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{format(new Date(sub.created_at), 'd MMM yyyy · HH:mm')}</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{format(new Date(sub.created_at), 'd MMM yyyy · HH:mm')}</div>
               </div>
-              <div style={{ fontSize: 13, color: '#9CA3AF' }}>View <Icon name="→" /></div>
+              <div style={{ fontSize: 13, color: 'var(--text3)' }}>View <Icon name="→" /></div>
             </div>
           ))}
         </div>
@@ -436,12 +436,12 @@ export function EmailFormModal({ form, primary, onClose, recipients }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 440, boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, padding: 24, width: '100%', maxWidth: 440, boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}><Icon name="✉️" /> Email this form</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
+          <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}><Icon name="✉️" /> Email this form</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text3)', cursor: 'pointer', padding: 4 }}>×</button>
         </div>
-        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 16 }}>{form.name}</div>
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>{form.name}</div>
 
         {recipients && recipients.length > 0 && (
           <div style={{ padding: '10px 14px', borderRadius: 10, background: '#F0F9FF', border: '1px solid #BAE6FD', marginBottom: 14 }}>
@@ -456,7 +456,7 @@ export function EmailFormModal({ form, primary, onClose, recipients }) {
           </div>
         )}
 
-        <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 6, letterSpacing: 0.4 }}>RECIPIENT EMAIL(S)</label>
+        <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6, letterSpacing: 0.4 }}>RECIPIENT EMAIL(S)</label>
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -464,7 +464,7 @@ export function EmailFormModal({ form, primary, onClose, recipients }) {
           rows={3}
           style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'inherit', outline: 'none', resize: 'vertical' }}
         />
-        <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 6, marginBottom: 16 }}>Separate multiple addresses with commas or new lines.</div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6, marginBottom: 16 }}>Separate multiple addresses with commas or new lines.</div>
 
         {result?.error && <div style={{ padding: '10px 14px', borderRadius: 10, background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', fontSize: 13, fontWeight: 600, marginBottom: 14 }}>{result.error}</div>}
         {result && !result.error && (
@@ -474,7 +474,7 @@ export function EmailFormModal({ form, primary, onClose, recipients }) {
         )}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Close</button>
+          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2, #475569)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Close</button>
           <button onClick={handleSend} disabled={sending || !input.trim()}
             style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: sending || !input.trim() ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: sending || !input.trim() ? 'default' : 'pointer' }}>
             {sending ? 'Sending...' : 'Send'}
@@ -503,56 +503,56 @@ function AccessModal({ form, staff, currentUserId, primary, onClose, onSave }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 460, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, padding: 24, width: '100%', maxWidth: 460, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}><Icon name="🔒" /> Who can view submissions</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
+          <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}><Icon name="🔒" /> Who can view submissions</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text3)', cursor: 'pointer', padding: 4 }}>×</button>
         </div>
-        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 18 }}>{form.name}</div>
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 18 }}>{form.name}</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'admins' ? primary : '#E2E8F0'}`, cursor: 'pointer', background: mode === 'admins' ? 'var(--org-a05)' : '#fff' }}>
             <input type="radio" checked={mode === 'admins'} onChange={() => setMode('admins')} style={{ marginTop: 3 }} />
             <div>
-              <div style={{ fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>Admins only</div>
-              <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>The safest default. Only people with the Admin role can see who filled this in.</div>
+              <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text)' }}>Admins only</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>The safest default. Only people with the Admin role can see who filled this in.</div>
             </div>
           </label>
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'custom' ? primary : '#E2E8F0'}`, cursor: 'pointer', background: mode === 'custom' ? 'var(--org-a05)' : '#fff' }}>
             <input type="radio" checked={mode === 'custom'} onChange={() => setMode('custom')} style={{ marginTop: 3 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>Admins + specific people</div>
-              <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>Choose exactly who else can see responses to this form.</div>
+              <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text)' }}>Admins + specific people</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Choose exactly who else can see responses to this form.</div>
             </div>
           </label>
         </div>
 
         {mode === 'custom' && (
-          <div style={{ border: '1px solid #EEF1F6', borderRadius: 14, padding: 14, marginBottom: 8 }}>
+          <div style={{ border: '1px solid var(--border)', borderRadius: 14, padding: 14, marginBottom: 8 }}>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search your team…"
               style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none', marginBottom: 10 }}
             />
-            <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 6 }}>ALWAYS INCLUDED</div>
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text3)', letterSpacing: 0.4, marginBottom: 6 }}>ALWAYS INCLUDED</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
               {admins.length === 0 ? (
-                <div style={{ fontSize: 12, color: '#94A3B8' }}>No admins found</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)' }}>No admins found</div>
               ) : admins.map(a => (
-                <span key={a.id} style={{ fontSize: 12, fontWeight: 700, color: '#334155', background: '#F1F5F9', padding: '5px 10px', borderRadius: 99 }}>{a.full_name}{a.id === currentUserId ? ' (you)' : ''}</span>
+                <span key={a.id} style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2, #475569)', background: 'var(--bg)', padding: '5px 10px', borderRadius: 99 }}>{a.full_name}{a.id === currentUserId ? ' (you)' : ''}</span>
               ))}
             </div>
-            <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 6 }}>ALSO ALLOW</div>
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text3)', letterSpacing: 0.4, marginBottom: 6 }}>ALSO ALLOW</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
               {others.length === 0 ? (
-                <div style={{ fontSize: 12, color: '#94A3B8', padding: '8px 0' }}>No matching team members</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', padding: '8px 0' }}>No matching team members</div>
               ) : others.map(person => (
                 <label key={person.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, cursor: 'pointer' }}
                   onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <input type="checkbox" checked={selected.has(person.id)} onChange={() => toggle(person.id)} />
-                  <span style={{ fontSize: 13, color: '#0F172A', fontWeight: 600 }}>{person.full_name || 'Unnamed'}</span>
-                  {person.role && <span style={{ fontSize: 10.5, color: '#94A3B8', textTransform: 'capitalize' }}>· {person.role}</span>}
+                  <span style={{ fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{person.full_name || 'Unnamed'}</span>
+                  {person.role && <span style={{ fontSize: 10.5, color: 'var(--text3)', textTransform: 'capitalize' }}>· {person.role}</span>}
                 </label>
               ))}
             </div>
@@ -560,7 +560,7 @@ function AccessModal({ form, staff, currentUserId, primary, onClose, onSave }) {
         )}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
-          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2, #475569)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
           <button onClick={() => onSave(mode, mode === 'custom' ? Array.from(selected) : [])}
             style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
             Save
@@ -571,7 +571,7 @@ function AccessModal({ form, staff, currentUserId, primary, onClose, onSave }) {
   )
 }
 
-const AVATAR_COLORS = ['#6D5DF6', '#2563EB', '#059669', '#D97706', '#DB2777', '#0EA5E9', '#7C3AED', '#DC2626']
+const AVATAR_COLORS = ['var(--org-primary)', '#2563EB', '#059669', '#D97706', '#DB2777', '#0EA5E9', '#7C3AED', '#DC2626']
 function avatarColor(seed) {
   const s = String(seed || '')
   let hash = 0
@@ -630,19 +630,19 @@ function ImportFormModal({ onClose, onImport }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 480, boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, padding: 24, width: '100%', maxWidth: 480, boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}><Icon name="📥" /> Import a form</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
+          <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}><Icon name="📥" /> Import a form</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text3)', cursor: 'pointer', padding: 4 }}>×</button>
         </div>
-        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 14 }}>Paste form JSON — <code style={{ fontSize: 11, background: '#F1F5F9', padding: '1px 5px', borderRadius: 4 }}>{'{ name, description, fields: [{ type, label, required }] }'}</code></div>
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 14 }}>Paste form JSON — <code style={{ fontSize: 11, background: 'var(--bg)', padding: '1px 5px', borderRadius: 4 }}>{'{ name, description, fields: [{ type, label, required }] }'}</code></div>
         <textarea value={text} onChange={e => setText(e.target.value)} rows={8} placeholder='{"name": "Trip Consent", "fields": [{"type":"text","label":"Child Name","required":true}]}'
           style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 12.5, fontFamily: 'monospace', outline: 'none', resize: 'vertical' }} />
         {error && <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', fontSize: 13, fontWeight: 600 }}>{error}</div>}
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
-          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2, #475569)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleImport} disabled={saving || !text.trim()}
-            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving || !text.trim() ? '#9CA3AF' : 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: saving || !text.trim() ? 'default' : 'pointer' }}>
+            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving || !text.trim() ? '#9CA3AF' : 'var(--org-primary)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: saving || !text.trim() ? 'default' : 'pointer' }}>
             {saving ? 'Importing...' : 'Import as draft'}
           </button>
         </div>
@@ -655,22 +655,22 @@ function DuplicatePickerModal({ forms, onClose, onDuplicate }) {
   const [busyId, setBusyId] = useState(null)
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 22, width: '100%', maxWidth: 440, maxHeight: '70vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, padding: 22, width: '100%', maxWidth: 440, maxHeight: '70vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 70px -20px rgba(15,23,42,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}><Icon name="📋" /> Duplicate a form</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}>×</button>
+          <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}><Icon name="📋" /> Duplicate a form</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text3)', cursor: 'pointer', padding: 4 }}>×</button>
         </div>
         <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {forms.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 24, color: '#94A3B8', fontSize: 13 }}>No forms to duplicate yet.</div>
+            <div style={{ textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 13 }}>No forms to duplicate yet.</div>
           ) : forms.map(f => (
             <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: '1px solid #F1F5F9' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</div>
-                <div style={{ fontSize: 11, color: '#94A3B8' }}>{(f.fields || []).length} fields</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{(f.fields || []).length} fields</div>
               </div>
               <button onClick={async () => { setBusyId(f.id); await onDuplicate(f); setBusyId(null) }} disabled={busyId === f.id}
-                style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: busyId === f.id ? '#9CA3AF' : 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12, fontWeight: 800, cursor: busyId === f.id ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: busyId === f.id ? '#9CA3AF' : 'var(--org-primary)', color: '#fff', fontSize: 12, fontWeight: 800, cursor: busyId === f.id ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
                 {busyId === f.id ? 'Copying…' : 'Duplicate'}
               </button>
             </div>
@@ -819,7 +819,7 @@ export default function Forms({ org, session, isAdmin }) {
   const draftPct = totalForms ? Math.round((draftCount / totalForms) * 100) : 0
 
   const statCards = [
-    { key: 'total', label: 'Total Forms', value: totalForms, icon: '📝', color: '#6D5DF6', sub: 'All time' },
+    { key: 'total', label: 'Total Forms', value: totalForms, icon: '📝', color: 'var(--org-primary)', sub: 'All time' },
     { key: 'live', label: 'Live Forms', value: liveCount, icon: '✅', color: '#16A34A', sub: `${livePct}% of total` },
     { key: 'responses', label: `Responses ${period === 'all' ? '(All Time)' : period === 'week' ? 'This Week' : 'This Month'}`, value: responsesThisPeriod, icon: '📈', color: '#2563EB',
       sub: periodChangePct === null ? 'All-time total' : `${periodChangePct >= 0 ? '↑' : '↓'} ${Math.abs(periodChangePct)}% vs last ${period}`, subColor: periodChangePct === null ? undefined : (periodChangePct >= 0 ? '#16A34A' : '#DC2626') },
@@ -900,8 +900,8 @@ export default function Forms({ org, session, isAdmin }) {
     setView('builder')
   }
 
-  const sel = { padding: '9px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', fontSize: 12.5, color: '#374151', fontWeight: 600, outline: 'none' }
-  const iconBtn = { width: 32, height: 32, borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', color: '#64748B', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
+  const sel = { padding: '9px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 12.5, color: 'var(--text2, #475569)', fontWeight: 600, outline: 'none' }
+  const iconBtn = { width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
 
   const openForSubmissions = (form) => { setSelectedForm(form); setView('submissions') }
   const openForEdit = (form) => { setSelectedForm({ ...form, fields: form.fields || [] }); setView('builder') }
@@ -920,31 +920,31 @@ export default function Forms({ org, session, isAdmin }) {
   if (view === 'submissions' && selectedForm) return <SubmissionsView form={selectedForm} org={org} onBack={() => { setView('list'); setSelectedForm(null); load() }} />
 
   return (
-    <div style={{ background: '#F8FAFC', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
 
       {/* HEADER */}
       <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'flex-start', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-          <div style={{ width: 44, height: 44, borderRadius: 13, background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 8px 20px -8px rgba(109,93,246,0.5)' }}><Icon name="📝" /></div>
+          <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--org-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 8px 20px -8px var(--org-a35)' }}><Icon name="📝" /></div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: isMobile ? 21 : 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>Forms</span>
-              <select value={period} onChange={e => setPeriod(e.target.value)} style={{ ...sel, fontWeight: 700 }}>
+            <span style={{ fontSize: isMobile ? 21 : 24, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5 }}>Forms</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 5, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 13.5, color: 'var(--text3)' }}>Create it, send it, see who replied.</span>
+              <select value={period} onChange={e => setPeriod(e.target.value)} style={{ ...sel, fontWeight: 700, padding: '5px 9px', fontSize: 12 }}>
                 <option value="month">This month</option>
                 <option value="week">This week</option>
                 <option value="all">All time</option>
               </select>
             </div>
-            <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>Create it, send it, see who replied.</div>
           </div>
         </div>
         {isAdmin && (
           isMobile ? (
-            <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '13px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(109,93,246,0.4)', width: '100%' }}>+ Create Form</button>
+            <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '13px 20px', borderRadius: 12, border: 'none', background: 'var(--org-primary)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 10px 24px -8px var(--org-a35)', width: '100%' }}>+ Create Form</button>
           ) : (
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { setSection('templates'); setTab('templates') }} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid #6D5DF6', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="📋" /> Browse Templates</button>
-              <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '11px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(109,93,246,0.4)', whiteSpace: 'nowrap' }}>+ Create Form</button>
+              <button onClick={() => { setSection('templates'); setTab('templates') }} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid #6D5DF6', background: 'var(--surface)', color: 'var(--org-primary)', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="📋" /> Browse Templates</button>
+              <button onClick={() => { setSelectedForm(null); setView('builder') }} style={{ padding: '11px 20px', borderRadius: 12, border: 'none', background: 'var(--org-primary)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: '0 10px 24px -8px var(--org-a35)', whiteSpace: 'nowrap' }}>+ Create Form</button>
             </div>
           )
         )}
@@ -959,7 +959,7 @@ export default function Forms({ org, session, isAdmin }) {
               padding: '8px 16px', borderRadius: 999, fontSize: 13, fontWeight: 700,
               whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit',
               border: `1px solid ${section === key ? 'transparent' : '#E2E8F0'}`,
-              background: section === key ? 'linear-gradient(135deg, #6D5DF6, #5B8DEF)' : '#fff',
+              background: section === key ? 'var(--org-primary)' : '#fff',
               color: section === key ? '#fff' : '#64748B',
             }}
           >{label}</button>
@@ -971,7 +971,7 @@ export default function Forms({ org, session, isAdmin }) {
           org={org}
           forms={forms}
           submissions={submissions}
-          primary={org?.primary_color || '#6D5DF6'}
+          primary={org?.primary_color || 'var(--org-primary)'}
           onOpenForm={f => { setSelectedForm(f); setView('submissions') }}
           onGoResponses={filter => { setResponseFilter(filter); setSection('responses') }}
           onCreate={() => { setSelectedForm(null); setView('builder') }}
@@ -982,7 +982,7 @@ export default function Forms({ org, session, isAdmin }) {
         <ResponseInbox
           org={org}
           forms={forms}
-          primary={org?.primary_color || '#6D5DF6'}
+          primary={org?.primary_color || 'var(--org-primary)'}
           initialFilter={responseFilter}
           onChanged={load}
         />
@@ -994,10 +994,10 @@ export default function Forms({ org, session, isAdmin }) {
       <div style={{ display: 'grid', gridTemplateColumns: isCompact ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
         {statCards.map((s, i) => (
           <motion.div key={s.key} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: i * 0.05 }}
-            style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '18px' }}>
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '18px' }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: `${s.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={s.icon} /></div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5, lineHeight: 1 }}><CountUp value={s.value} /></div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginTop: 4 }}>{s.label}</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5, lineHeight: 1 }}><CountUp value={s.value} /></div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginTop: 4 }}>{s.label}</div>
             <div style={{ fontSize: 11, fontWeight: 700, color: s.subColor || '#94A3B8', marginTop: 6 }}>{s.sub}</div>
           </motion.div>
         ))}
@@ -1007,9 +1007,9 @@ export default function Forms({ org, session, isAdmin }) {
         <div>
           {/* SEARCH + FILTERS */}
           <div style={{ position: 'relative', marginBottom: 8 }}>
-            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}><Icon name="🔍" /></span>
+            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text3)', fontSize: 13 }}><Icon name="🔍" /></span>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search forms..."
-              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1px solid #E2E8F0', fontSize: 13, outline: 'none' }} />
+              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1px solid var(--border)', fontSize: 13, outline: 'none' }} />
           </div>
           <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? '1fr 1fr' : undefined, gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
             <select value={tab === 'templates' ? 'all' : tab} onChange={e => setTab(e.target.value)} style={{ ...sel, width: isMobile ? '100%' : undefined }}>
@@ -1028,42 +1028,42 @@ export default function Forms({ org, session, isAdmin }) {
               <option value="submissions">Sort: Most submissions</option>
               <option value="newest">Sort: Newest</option>
             </select>
-            <div style={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: 10, overflow: 'hidden', gridColumn: isMobile ? '1 / -1' : undefined }}>
-              <button onClick={() => setListMode('list')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'list' ? '#6D5DF6' : '#fff', color: listMode === 'list' ? '#fff' : '#64748B', cursor: 'pointer' }}><Icon name="☰" /> List</button>
-              <button onClick={() => setListMode('grid')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'grid' ? '#6D5DF6' : '#fff', color: listMode === 'grid' ? '#fff' : '#64748B', cursor: 'pointer' }}>▦ Grid</button>
+            <div style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', gridColumn: isMobile ? '1 / -1' : undefined }}>
+              <button onClick={() => setListMode('list')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'list' ? 'var(--org-primary)' : '#fff', color: listMode === 'list' ? '#fff' : '#64748B', cursor: 'pointer' }}><Icon name="☰" /> List</button>
+              <button onClick={() => setListMode('grid')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'grid' ? 'var(--org-primary)' : '#fff', color: listMode === 'grid' ? '#fff' : '#64748B', cursor: 'pointer' }}>▦ Grid</button>
             </div>
           </div>
 
           {/* TABS */}
-          <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '1px solid #E2E8F0', overflowX: 'auto' }}>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
             {[
               { key: 'all', label: 'All' }, { key: 'active', label: 'Active' }, { key: 'draft', label: 'Drafts' },
               { key: 'archived', label: 'Archived' }, { key: 'templates', label: 'Templates' },
             ].map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                style={{ padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #6D5DF6' : '2.5px solid transparent', background: 'none', color: tab === t.key ? '#6D5DF6' : '#64748B', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
-                {t.label} <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? '#6D5DF6' : '#94A3B8', background: tab === t.key ? '#6D5DF618' : '#F1F5F9', borderRadius: 99, padding: '1px 7px' }}>{tabCounts[t.key]}</span>
+                style={{ padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #6D5DF6' : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-primary)' : '#64748B', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+                {t.label} <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? 'var(--org-primary)' : '#94A3B8', background: tab === t.key ? '#6D5DF618' : '#F1F5F9', borderRadius: 99, padding: '1px 7px' }}>{tabCounts[t.key]}</span>
               </button>
             ))}
           </div>
 
           {tab === 'templates' ? (
-            <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: isMobile ? 16 : 20 }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: isMobile ? 16 : 20 }}>
               <div style={{ position: 'relative', marginBottom: 14 }}>
-                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8' }}><Icon name="🔍" /></span>
+                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: 'var(--text3)' }}><Icon name="🔍" /></span>
                 <input value={templateSearch} onChange={e => setTemplateSearch(e.target.value)} placeholder="Search templates..."
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px 11px 38px', borderRadius: 12, border: '1px solid #E2E8F0', fontSize: 13.5, outline: 'none' }} />
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px 11px 38px', borderRadius: 12, border: '1px solid var(--border)', fontSize: 13.5, outline: 'none' }} />
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
                 {CATEGORIES.map(c => (
                   <button key={c.key} onClick={() => setTemplateCategory(c.key)}
-                    style={{ padding: '7px 15px', borderRadius: 99, border: 'none', background: templateCategory === c.key ? 'linear-gradient(135deg, #6D5DF6, #5B8DEF)' : '#F1F5F9', color: templateCategory === c.key ? '#fff' : '#64748B', fontSize: 12.5, fontWeight: templateCategory === c.key ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    style={{ padding: '7px 15px', borderRadius: 99, border: 'none', background: templateCategory === c.key ? 'var(--org-primary)' : '#F1F5F9', color: templateCategory === c.key ? '#fff' : '#64748B', fontSize: 12.5, fontWeight: templateCategory === c.key ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     {c.icon} {c.label}
                   </button>
                 ))}
               </div>
               {filteredTemplates.length === 0 ? (
-                <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>No templates match "{templateSearch}"</div>
+                <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>No templates match "{templateSearch}"</div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(230px, 1fr))', gap: 12 }}>
                   {filteredTemplates.map(t => {
@@ -1072,8 +1072,8 @@ export default function Forms({ org, session, isAdmin }) {
                       <button key={t.name} onClick={() => applyTemplate(t)}
                         style={{ padding: 16, borderRadius: 16, border: `1px solid ${color}25`, background: `${color}08`, cursor: 'pointer', textAlign: 'left' }}>
                         <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={t.icon} /></div>
-                        <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{t.name}</div>
-                        <div style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.4, marginBottom: 10 }}>{t.desc}</div>
+                        <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{t.name}</div>
+                        <div style={{ fontSize: 11.5, color: 'var(--text3)', lineHeight: 1.4, marginBottom: 10 }}>{t.desc}</div>
                         <div style={{ fontSize: 10.5, fontWeight: 700, color, background: color + '14', borderRadius: 99, padding: '3px 9px', display: 'inline-block' }}>{t.fields.length} fields</div>
                       </button>
                     )
@@ -1082,12 +1082,12 @@ export default function Forms({ org, session, isAdmin }) {
               )}
             </div>
           ) : loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>Loading forms...</div>
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>Loading forms...</div>
           ) : filteredForms.length === 0 ? (
-            <div style={{ padding: '48px 20px', textAlign: 'center', background: '#fff', borderRadius: 16, border: '1px solid #EEF1F6' }}>
+            <div style={{ padding: '48px 20px', textAlign: 'center', background: 'var(--surface)', borderRadius: 16, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 38, marginBottom: 12 }}><Icon name="📝" /></div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{forms.length === 0 ? 'No forms yet' : 'No matching forms'}</div>
-              <div style={{ fontSize: 13, color: '#64748B' }}>{forms.length === 0 ? (isAdmin ? 'Create your first form or start from a template.' : "An admin hasn't built any forms yet.") : 'Try adjusting your search or filters.'}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{forms.length === 0 ? 'No forms yet' : 'No matching forms'}</div>
+              <div style={{ fontSize: 13, color: 'var(--text3)' }}>{forms.length === 0 ? (isAdmin ? 'Create your first form or start from a template.' : "An admin hasn't built any forms yet.") : 'Try adjusting your search or filters.'}</div>
             </div>
           ) : listMode === 'grid' ? (
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
@@ -1101,27 +1101,27 @@ export default function Forms({ org, session, isAdmin }) {
                   <React.Fragment key={form.id}>
                   {startsGroup && <GroupHeading tag={tg} count={groupCounts[tg]} />}
                   <div onClick={() => isAdmin ? openForEdit(form) : (canView && openForSubmissions(form))}
-                    style={{ cursor: 'pointer', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 16 }}>
+                    style={{ cursor: 'pointer', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                       <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TAG_COLOR[form.tag] || accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}><Icon name="📝" /></div>
                       <span style={{ fontSize: 10.5, fontWeight: 800, padding: '3px 9px', borderRadius: 99, background: STATUS_STYLE[form.status]?.bg, color: STATUS_STYLE[form.status]?.color }}>● {STATUS_STYLE[form.status]?.label}</span>
                     </div>
-                    <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{form.name}</div>
-                    <div style={{ fontSize: 12, color: '#64748B', marginBottom: 10, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{form.description || 'No description'}</div>
+                    <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{form.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{form.description || 'No description'}</div>
                     <div style={{ display: 'flex', gap: 10, fontSize: 11.5, fontWeight: 700, color: '#475569', marginBottom: isAdmin ? 10 : 0 }}>
                       <span><Icon name="📋" /> {(form.fields || []).length} fields</span>
                       <span><Icon name="📬" /> {subCount} submissions</span>
                     </div>
                     {isAdmin && (
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={(e) => { e.stopPropagation(); openForSubmissions(form) }} style={{ flex: 1, padding: '8px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}><Icon name="📬" /> View submissions</button>
-                        <button onClick={(e) => { e.stopPropagation(); setAccessModalFor(form) }} title="Choose who can view submissions" style={{ padding: '8px 10px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        <button onClick={(e) => { e.stopPropagation(); openForSubmissions(form) }} style={{ flex: 1, padding: '8px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2, #475569)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}><Icon name="📬" /> View submissions</button>
+                        <button onClick={(e) => { e.stopPropagation(); setAccessModalFor(form) }} title="Choose who can view submissions" style={{ padding: '8px 10px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2, #475569)', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                           {form.submission_view_mode === 'custom' ? `🔓 ${(form.submission_viewer_ids || []).length}` : '🔒'}
                         </button>
                       </div>
                     )}
                     {!isAdmin && !canView && (
-                      <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700 }}><Icon name="🔒" /> Only admins can view responses</div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700 }}><Icon name="🔒" /> Only admins can view responses</div>
                     )}
                     </div>
                   </React.Fragment>
@@ -1143,15 +1143,15 @@ export default function Forms({ org, session, isAdmin }) {
                 return (
                   <React.Fragment key={form.id}>
                   {startsGroup && <GroupHeading tag={tg} count={groupCounts[tg]} />}
-                  <div style={{ position: 'relative', background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                  <div style={{ position: 'relative', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                     <div onClick={rowClick} style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, cursor: 'pointer' }}><Icon name="📝" /></div>
 
                     <div onClick={rowClick} style={{ flex: '1 1 220px', minWidth: 180, cursor: 'pointer' }}>
-                      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 2 }}>{form.name}</div>
-                      <div style={{ fontSize: 12, color: '#64748B', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{form.description || 'No description'}</div>
+                      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 2 }}>{form.name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{form.description || 'No description'}</div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 9px', borderRadius: 99, background: `${accent}15`, color: accent }}>{form.tag || 'Other'}</span>
-                        <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 9px', borderRadius: 99, background: '#F1F5F9', color: '#64748B' }}>{form.visibility === 'private' ? '🔒 Private' : '🌐 Public'}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 9px', borderRadius: 99, background: 'var(--bg)', color: 'var(--text3)' }}>{form.visibility === 'private' ? '🔒 Private' : '🌐 Public'}</span>
                       </div>
                     </div>
 
@@ -1160,17 +1160,17 @@ export default function Forms({ org, session, isAdmin }) {
                     {!isCompact && (
                       <>
                         <div style={{ textAlign: 'center', width: 60, flexShrink: 0 }}>
-                          <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>{(form.fields || []).length}</div>
-                          <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 700 }}>Fields</div>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)' }}>{(form.fields || []).length}</div>
+                          <div style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 700 }}>Fields</div>
                         </div>
                         <div style={{ textAlign: 'center', width: 90, flexShrink: 0 }} title={`${subCount} all time`}>
-                          <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>{subThisMonth}</div>
-                          <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 700, marginBottom: 3 }}>Submissions this mo.</div>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)' }}>{subThisMonth}</div>
+                          <div style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 700, marginBottom: 3 }}>Submissions this mo.</div>
                           <Sparkline points={sparklineFor(form.id)} color={accent} />
                         </div>
                         <div style={{ width: 110, flexShrink: 0, fontSize: 11 }}>
-                          <div style={{ fontWeight: 700, color: '#334155' }}>{format(new Date(form.updated_at || form.created_at), 'd MMM yyyy')}</div>
-                          <div style={{ color: '#94A3B8' }}>Last updated{updaterName ? ` · by ${updaterName.split(' ')[0]}` : ''}</div>
+                          <div style={{ fontWeight: 700, color: 'var(--text2, #475569)' }}>{format(new Date(form.updated_at || form.created_at), 'd MMM yyyy')}</div>
+                          <div style={{ color: 'var(--text3)' }}>Last updated{updaterName ? ` · by ${updaterName.split(' ')[0]}` : ''}</div>
                         </div>
                       </>
                     )}
@@ -1178,19 +1178,19 @@ export default function Forms({ org, session, isAdmin }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, flexWrap: 'wrap', marginLeft: isCompact ? 0 : 'auto' }}>
                       {isAdmin && (
                         <button onClick={() => setAccessModalFor(form)} title="Choose who can view submissions"
-                          style={{ ...iconBtn, width: 'auto', minWidth: 32, padding: '0 10px', fontSize: 12, fontWeight: 800, color: '#334155' }}>
+                          style={{ ...iconBtn, width: 'auto', minWidth: 32, padding: '0 10px', fontSize: 12, fontWeight: 800, color: 'var(--text2, #475569)' }}>
                           {form.submission_view_mode === 'custom' ? `🔓 ${(form.submission_viewer_ids || []).length}` : '🔒'}
                         </button>
                       )}
                       {isAdmin && (
-                        <button onClick={() => openForSubmissions(form)} title="View submissions" style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>📬{subCount ? ` ${subCount}` : ''}</button>
+                        <button onClick={() => openForSubmissions(form)} title="View submissions" style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2, #475569)', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>📬{subCount ? ` ${subCount}` : ''}</button>
                       )}
                       {isAdmin ? (
-                        <button onClick={() => openForEdit(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="✏️" /> Edit</button>
+                        <button onClick={() => openForEdit(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'var(--org-primary)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="✏️" /> Edit</button>
                       ) : canView ? (
-                        <button onClick={() => openForSubmissions(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="📬" /> View</button>
+                        <button onClick={() => openForSubmissions(form)} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'var(--org-primary)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="📬" /> View</button>
                       ) : (
-                        <span style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 700, padding: '9px 4px', whiteSpace: 'nowrap' }}><Icon name="🔒" /> Admins only</span>
+                        <span style={{ fontSize: 11.5, color: 'var(--text3)', fontWeight: 700, padding: '9px 4px', whiteSpace: 'nowrap' }}><Icon name="🔒" /> Admins only</span>
                       )}
                       <button onClick={() => window.open(`/forms/${org?.slug}/${form.id}`, '_blank')} title="Preview" style={iconBtn}><Icon name="👁" /></button>
                       <button onClick={() => copyFormLink(form)} disabled={!form.is_active} title={form.is_active ? 'Copy public link' : 'Activate to get a link'}
@@ -1204,7 +1204,7 @@ export default function Forms({ org, session, isAdmin }) {
                           <AnimatePresence>
                             {rowMenuFor === form.id && (
                               <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                                style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 12px 32px -12px rgba(0,0,0,0.2)', zIndex: 30, minWidth: 170, overflow: 'hidden' }}>
+                                style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 32px -12px rgba(0,0,0,0.2)', zIndex: 30, minWidth: 170, overflow: 'hidden' }}>
                                 {form.status !== 'active' && <button onClick={() => setFormStatus(form, 'active')} style={menuItemStyle}>● Set Active</button>}
                                 {form.status !== 'draft' && <button onClick={() => setFormStatus(form, 'draft')} style={menuItemStyle}><Icon name="📄" /> Move to Draft</button>}
                                 {form.status !== 'archived' && <button onClick={() => setFormStatus(form, 'archived')} style={menuItemStyle}>🗄 Archive</button>}
@@ -1226,24 +1226,24 @@ export default function Forms({ org, session, isAdmin }) {
         {/* SIDEBAR */}
         {!isMobile && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 16 }}>
-            <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 18 }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 18 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>Recent submissions</div>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>Recent submissions</div>
                 {recentSubmissions.length > 0 && (
-                  <button onClick={() => openForSubmissions(forms.find(f => f.id === recentSubmissions[0].form_id))} style={{ background: 'none', border: 'none', fontSize: 11.5, fontWeight: 800, color: '#6D5DF6', cursor: 'pointer' }}>View all</button>
+                  <button onClick={() => openForSubmissions(forms.find(f => f.id === recentSubmissions[0].form_id))} style={{ background: 'none', border: 'none', fontSize: 11.5, fontWeight: 800, color: 'var(--org-primary)', cursor: 'pointer' }}>View all</button>
                 )}
               </div>
               {recentSubmissions.length === 0 ? (
-                <div style={{ fontSize: 12, color: '#94A3B8', padding: '10px 0' }}>No submissions yet.</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', padding: '10px 0' }}>No submissions yet.</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {recentSubmissions.map(s => (
                     <div key={s.id} onClick={() => { const f = forms.find(x => x.id === s.form_id); if (f) openForSubmissions(f) }} style={{ display: 'flex', gap: 10, cursor: 'pointer' }}>
                       <div style={{ width: 32, height: 32, borderRadius: '50%', background: avatarColor(s.submitterName), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 800, flexShrink: 0 }}>{s.submitterName.charAt(0).toUpperCase()}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A' }}>{s.submitterName}</div>
-                        <div style={{ fontSize: 11.5, color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.formName}</div>
-                        <div style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 1 }}>{timeAgo(s.created_at)}</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text)' }}>{s.submitterName}</div>
+                        <div style={{ fontSize: 11.5, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.formName}</div>
+                        <div style={{ fontSize: 10.5, color: 'var(--text3)', marginTop: 1 }}>{timeAgo(s.created_at)}</div>
                       </div>
                     </div>
                   ))}
@@ -1252,15 +1252,15 @@ export default function Forms({ org, session, isAdmin }) {
             </div>
 
             {isAdmin && (
-              <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 18 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Quick actions</div>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 18 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Quick actions</div>
                 {[
                   ['📋 Create from template', () => setTab('templates')],
                   ['📥 Import form', () => setShowImport(true)],
                   ['🗂 Duplicate existing form', () => setShowDuplicatePicker(true)],
                   ['📚 View all templates', () => setTab('templates')],
                 ].map(([label, fn]) => (
-                  <button key={label} onClick={fn} style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '9px 2px', border: 'none', borderTop: '1px solid #F1F5F9', background: 'none', fontSize: 12.5, fontWeight: 700, color: '#334155', cursor: 'pointer' }}>
+                  <button key={label} onClick={fn} style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '9px 2px', border: 'none', borderTop: '1px solid #F1F5F9', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--text2, #475569)', cursor: 'pointer' }}>
                     <span style={{ flex: 1 }}>{label}</span><span style={{ color: '#CBD5E1' }}>›</span>
                   </button>
                 ))}
@@ -1270,7 +1270,7 @@ export default function Forms({ org, session, isAdmin }) {
             <div style={{ background: 'linear-gradient(150deg, #6D5DF6, #5B8DEF)', borderRadius: 16, padding: 20, color: '#fff' }}>
               <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 6 }}>Need inspiration?</div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, marginBottom: 14 }}>Browse our template gallery to get started quickly.</div>
-              <button onClick={() => { setSection('templates'); setTab('templates') }} style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: '#fff', color: '#6D5DF6', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>Browse Templates</button>
+              <button onClick={() => { setSection('templates'); setTab('templates') }} style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: 'var(--surface)', color: 'var(--org-primary)', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>Browse Templates</button>
             </div>
           </div>
         )}
@@ -1301,4 +1301,4 @@ export default function Forms({ org, session, isAdmin }) {
   )
 }
 
-const menuItemStyle = { display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: '#334155', cursor: 'pointer' }
+const menuItemStyle = { display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--text2, #475569)', cursor: 'pointer' }

@@ -43,7 +43,7 @@ export default function Office({ tabs, subTab, onSelect, badges = {}, children }
                 display: 'flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap',
                 padding: '9px 16px', borderRadius: 11, cursor: 'pointer', minHeight: 42,
                 fontSize: 13.5, fontWeight: 800, fontFamily: 'inherit',
-                border: `1px solid ${active ? 'var(--org-a40, rgba(109,93,246,0.35))' : 'var(--border)'}`,
+                border: `1px solid ${active ? 'var(--org-a35)' : 'var(--border)'}`,
                 background: active ? 'var(--org-a10)' : 'transparent',
                 color: active ? 'var(--org-primary, #6D5DF6)' : 'var(--text3)',
                 transition: 'all 0.15s',
