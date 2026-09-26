@@ -1,8 +1,8 @@
 import React, { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useIsMobile } from '../../hooks/useIsMobile'
-export const flowButton = { minHeight: 44, padding: '10px 16px', borderRadius: 10, border: '1px solid #DCE2E9', background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }
-export const flowInput = { width: '100%', minHeight: 44, padding: '10px 12px', borderRadius: 10, border: '1px solid #CBD5E1', background: 'var(--surface)', color: 'var(--text)', fontSize: 16, boxSizing: 'border-box' }
+export const flowButton = { minHeight: 44, padding: '10px 16px', borderRadius: 10, border: '1px solid var(--border2)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }
+export const flowInput = { width: '100%', minHeight: 44, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border2)', background: 'var(--surface)', color: 'var(--text)', fontSize: 16, boxSizing: 'border-box' }
 // A portal avoids clipping inside the dashboard's animated tab container.
 export default function SessionSheet({ title, subtitle, onClose, children, footer, width = 600, busy = false, bodyStyle = {} }) {
   const mobile = useIsMobile(), panel = useRef(null), close = useRef(onClose), busyRef = useRef(busy), titleId = useId()
