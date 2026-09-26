@@ -60,7 +60,7 @@ function fmtTime(d) {
   return new Date(d).toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: 'numeric', minute: '2-digit' })
 }
 
-export default function LiveRegister({ session: initialSession, org, authUserId, userRole, onClose, onNavigate }) {
+export default function LiveRegister({ session: initialSession, org, authUserId, userRole, onClose, onNavigate, backLabel = 'Back to registers' }) {
   const [session, setSession] = useState(initialSession)
   const [loadError, setLoadError] = useState('')
   const [starting, setStarting] = useState(false)
@@ -311,6 +311,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           userRole={userRole} authUserId={authUserId} groupLabel={groupLabel}
           safeguardingCount={safeguardingCount}
           onClose={onClose}
+          backLabel={backLabel}
           onOpenNotes={() => setShowNotes(true)}
           onOpenChild={(child) => setSelectedChild(child)}
           onReload={load}
@@ -348,8 +349,8 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px -18px rgba(15,23,42,0.25)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <button onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', fontSize: 15.5, fontWeight: 800, color: '#111827', cursor: 'pointer', padding: '4px 6px 4px 2px', borderRadius: 8, letterSpacing: '-0.01em' }}>
-            <span style={{ fontSize: 17, color: '#7C3AED' }}>‹</span>{session.title}
+          <button aria-label={backLabel} onClick={onClose} style={{ minHeight: 44, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', fontSize: 15.5, fontWeight: 800, color: '#111827', cursor: 'pointer', padding: '4px 6px 4px 2px', borderRadius: 8, letterSpacing: '-0.01em' }}>
+            <span style={{ fontSize: 20, color: org?.primary_color || '#1B9AAA' }}>‹</span><span style={{ textAlign: 'left', minWidth: 0 }}><span style={{ display: 'block', color: '#64748B', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{backLabel}</span><span style={{ display: 'block', overflowWrap: 'anywhere' }}>{session.title}</span></span>
           </button>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800,

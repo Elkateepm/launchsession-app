@@ -13,9 +13,12 @@ const ctx = (hiddenItems = []) => ({
 const allItems = [...NAV_SECTIONS.flatMap(s => s.items), ...NAV_GROUPS.flatMap(g => g.items)]
 
 describe('switching a sidebar entry off', () => {
+  it('omits Mentoring even when every module is enabled', () => {
+    expect(visibleItems(allItems, ctx()).map(i => i.id)).not.toContain('mentoring')
+  })
   it('hides only the entry that was switched off', () => {
-    const shown = visibleItems(allItems, ctx(['mentoring']))
-    expect(shown.some(i => i.id === 'mentoring')).toBe(false)
+    const shown = visibleItems(allItems, ctx(['calendar']))
+    expect(shown.some(i => i.id === 'calendar')).toBe(false)
     expect(shown.length).toBe(allItems.length - 1)
   })
 
@@ -96,7 +99,7 @@ describe('the Create menu follows the sidebar', () => {
   })
 
   it('changes nothing when the hidden tab has no shortcut', () => {
-    // Mentoring has a sidebar entry but nothing in the Create menu.
+    // A saved Mentoring visibility setting has no Create action to hide.
     expect(hiddenTabs(['mentoring'])).toEqual([])
     expect(visibleItems(CREATE_ACTIONS, ctx([])).length).toBe(CREATE_ACTIONS.length)
   })

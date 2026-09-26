@@ -9,6 +9,9 @@ import RASessionCard from '../riskassessments/RASessionCard'
 import SessionWizard from './SessionWizard'
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
+import { useTerms } from '../../context/OrgContext'
+import { londonDate, sessionPhase } from '../../lib/sessionPhase'
+import SessionSheet, { flowButton, flowInput } from './SessionSheet'
 
 const SESSION_TYPES = [
   { key: 'activity',  label: 'Activity',  icon: '🏃', color: '#1B9AAA' },
@@ -40,8 +43,8 @@ function normaliseEndDate(form) {
 }
 
 const EMPTY_FORM = {
-  title: '', session_date: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
-  end_date: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
+  title: '', session_date: format(addDays(parseISO(londonDate()), 1), 'yyyy-MM-dd'),
+  end_date: format(addDays(parseISO(londonDate()), 1), 'yyyy-MM-dd'),
   start_time: '09:00', end_time: '15:00', location: '',
   session_type: 'activity', description: '', max_capacity: '',
   bubbles: [], packed_lunch: false, meeting_point: '',
@@ -422,6 +425,8 @@ function VolunteerPanel({ session, org, onClose }) {
   const [allVolunteers, setAllVolunteers] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(null)
+  const [error, setError] = useState('')
+  const [query, setQuery] = useState('')
   const primary = org?.primary_color || '#1B9AAA'
   const needed = session.volunteer_limit || 0
 
@@ -438,55 +443,22 @@ function VolunteerPanel({ session, org, onClose }) {
   }, [session?.id, org?.id])
 
   const assignedIds = new Set(assigned.map(a => a.user_id))
-  const unassigned = allVolunteers.filter(v => !assignedIds.has(v.id))
+  const unassigned = allVolunteers.filter(v => !assignedIds.has(v.id) && (v.full_name || '').toLowerCase().includes(query.trim().toLowerCase()))
   const covered = needed === 0 || assigned.length >= needed
 
-  async function addVolunteer(vol) {
-    setSaving(vol.id)
-    await supabase.from('session_staff').insert({ session_id: session.id, user_id: vol.id, org_id: org.id, role: 'volunteer', status: 'confirmed' })
-    setAssigned(prev => [...prev, { user_id: vol.id, status: 'confirmed', volunteer: vol }])
-    setSaving(null)
+  async function saveAssignment(userId, operation, update) {
+    setSaving(userId); setError('')
+    try { const { error: saveError } = await operation(); if (saveError) throw saveError; setAssigned(update) }
+    catch (err) { setError(err.message || 'Could not save. Please try again.') }
+    finally { setSaving(null) }
   }
-
-  async function removeVolunteer(staffRow) {
-    setSaving(staffRow.user_id)
-    await supabase.from('session_staff').delete().eq('session_id', session.id).eq('user_id', staffRow.user_id).eq('org_id', org.id)
-    setAssigned(prev => prev.filter(a => a.user_id !== staffRow.user_id))
-    setSaving(null)
-  }
-
-  async function updateStatus(staffRow, status) {
-    setSaving(staffRow.user_id)
-    await supabase.from('session_staff').update({ status }).eq('session_id', session.id).eq('user_id', staffRow.user_id).eq('org_id', org.id)
-    setAssigned(prev => prev.map(a => a.user_id === staffRow.user_id ? { ...a, status } : a))
-    setSaving(null)
-  }
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 10200, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.4)' }} />
-      <div style={{ position: 'relative', width: 400, maxWidth: '100vw', boxSizing: 'border-box', height: '100%', background: 'var(--surface, #fff)', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ background: `linear-gradient(135deg, ${primary}, #6366F1)`, padding: '20px 20px 16px', color: '#fff', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.8 }}>Volunteer Coverage</div>
-            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: '#fff', fontSize: 16 }}><Icon name="✕" /></button>
-          </div>
-          <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 4 }}>{session.title}</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
-            📅 {format(parseISO(session.session_date), 'EEE d MMM')} · 🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}{session.location ? ` · 📍 ${session.location.split(',')[0]}` : ''}
-          </div>
-          <div style={{ marginTop: 14 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>{assigned.length} of {needed || '?'} volunteers</span>
-              <span style={{ fontSize: 12, fontWeight: 800, color: covered ? '#4ADE80' : '#FDE68A' }}>{covered ? '✓ Covered' : `Needs ${needed - assigned.length} more`}</span>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 99, height: 6 }}>
-              <div style={{ background: covered ? '#4ADE80' : '#FDE68A', width: `${needed ? Math.min((assigned.length / needed) * 100, 100) : 0}%`, height: '100%', borderRadius: 99, transition: 'width 0.4s' }} />
-            </div>
-          </div>
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+  const addVolunteer = vol => saveAssignment(vol.id, () => supabase.from('session_staff').insert({ session_id: session.id, user_id: vol.id, org_id: org.id, role: 'volunteer', status: 'confirmed' }), prev => [...prev, { user_id: vol.id, status: 'confirmed', volunteer: vol }])
+  const removeVolunteer = row => saveAssignment(row.user_id, () => supabase.from('session_staff').delete().eq('session_id', session.id).eq('user_id', row.user_id).eq('org_id', org.id), prev => prev.filter(a => a.user_id !== row.user_id))
+  const updateStatus = (row, status) => saveAssignment(row.user_id, () => supabase.from('session_staff').update({ status }).eq('session_id', session.id).eq('user_id', row.user_id).eq('org_id', org.id), prev => prev.map(a => a.user_id === row.user_id ? { ...a, status } : a))
+  return <SessionSheet title="Volunteer cover" subtitle={session.title} onClose={onClose} busy={!!saving} width={560} footer={<button onClick={onClose} disabled={!!saving} style={{ ...flowButton, width: '100%', background: primary, borderColor: primary, color: '#fff' }}>Done</button>}>
+    {error && <p role="alert" style={{ padding: 14, background: '#FEF2F2', color: '#991B1B', borderRadius: 10 }}>{error}</p>}
+    <div style={{ padding: 16, background: covered ? '#F0FDF4' : '#FFFBEB', borderRadius: 12, marginBottom: 20 }}><strong>{assigned.length}{needed ? ` / ${needed}` : ''} volunteers assigned</strong><div style={{ marginTop: 6, fontSize: 13 }}>{covered ? 'Volunteer cover in place' : `${needed - assigned.length} more needed`}</div></div>
+    <input type="search" aria-label="Search volunteers" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search available volunteers…" style={{ ...flowInput, marginBottom: 20 }} />
           {loading ? (
             <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>Loading...</div>
           ) : (
@@ -499,20 +471,20 @@ function VolunteerPanel({ session, org, onClose }) {
                     <div style={{ fontSize: 12, color: '#92400E', opacity: 0.7, marginTop: 4 }}>Add from the list below</div>
                   </div>
                 ) : assigned.map(a => (
-                  <div key={a.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: a.status === 'confirmed' ? '#F0FDF4' : '#FFFBEB', borderRadius: 12, border: `1.5px solid ${a.status === 'confirmed' ? '#86EFAC' : '#FDE68A'}`, marginBottom: 8 }}>
+                  <div key={a.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 12px', background: a.status === 'confirmed' ? '#F0FDF4' : '#FFFBEB', borderRadius: 12, border: `1.5px solid ${a.status === 'confirmed' ? '#86EFAC' : '#FDE68A'}`, marginBottom: 8 }}>
                     <div style={{ width: 36, height: 36, borderRadius: 10, background: primary + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                       {a.volunteer?.photo_url ? <SignedImg bucket="staff-photos" src={a.volunteer.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, fontWeight: 900, color: primary }}>{(a.volunteer?.full_name || '?')[0]}</span>}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ flex: '1 1 110px', minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.volunteer?.full_name || 'Volunteer'}</div>
                       {a.volunteer?.phone && <div style={{ fontSize: 11, color: '#6B7280' }}>{a.volunteer.phone}</div>}
                     </div>
-                    <select value={a.status || 'pending'} onChange={e => updateStatus(a, e.target.value)} disabled={saving === a.user_id}
-                      style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 8, border: '1.5px solid #E5E7EB', background: '#fff', cursor: 'pointer', color: a.status === 'confirmed' ? '#16A34A' : '#92400E' }}>
+                    <select aria-label={`Status for ${a.volunteer?.full_name || 'volunteer'}`} value={a.status || 'pending'} onChange={e => updateStatus(a, e.target.value)} disabled={!!saving}
+                      style={{ minHeight: 44, fontSize: 16, fontWeight: 700, padding: '4px 8px', borderRadius: 8, border: '1.5px solid #E5E7EB', background: '#fff', cursor: 'pointer', color: a.status === 'confirmed' ? '#16A34A' : '#92400E' }}>
                       <option value="pending">Pending</option>
                       <option value="confirmed">Confirmed</option>
                     </select>
-                    <button onClick={() => removeVolunteer(a)} disabled={saving === a.user_id} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid #FFE5E5', background: '#FFF0F0', cursor: 'pointer', fontSize: 14, color: '#C00', flexShrink: 0 }}>×</button>
+                    <button aria-label={`Remove ${a.volunteer?.full_name || 'volunteer'}`} onClick={() => removeVolunteer(a)} disabled={!!saving} style={{ width: 44, height: 44, borderRadius: 8, border: '1px solid #FFE5E5', background: '#FFF0F0', cursor: 'pointer', fontSize: 14, color: '#C00', flexShrink: 0 }}>×</button>
                   </div>
                 ))}
               </div>
@@ -521,12 +493,12 @@ function VolunteerPanel({ session, org, onClose }) {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 12 }}>Add Volunteers ({unassigned.length} available)</div>
                   {unassigned.map(v => (
-                    <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--surface2, #F9FAFB)', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', marginBottom: 8 }}>
+                    <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 12px', background: 'var(--surface2, #F9FAFB)', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', marginBottom: 8 }}>
                       <div style={{ width: 36, height: 36, borderRadius: 10, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                         {v.photo_url ? <SignedImg bucket="staff-photos" src={v.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, fontWeight: 900, color: '#6B7280' }}>{(v.full_name || '?')[0]}</span>}
                       </div>
                       <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: 'var(--text, #111)' }}>{v.full_name}</div>
-                      <button onClick={() => addVolunteer(v)} disabled={saving === v.id} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: primary, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>
+                      <button onClick={() => addVolunteer(v)} disabled={!!saving} style={{ minHeight: 44, padding: '6px 14px', borderRadius: 8, border: 'none', background: primary, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>
                         {saving === v.id ? '...' : '+ Add'}
                       </button>
                     </div>
@@ -537,15 +509,12 @@ function VolunteerPanel({ session, org, onClose }) {
               {allVolunteers.length === 0 && (
                 <div style={{ background: '#F0F9FF', borderRadius: 12, padding: 16, textAlign: 'center', border: '1.5px solid #BAE6FD' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#0369A1' }}>No volunteers in your workspace yet</div>
-                  <div style={{ fontSize: 12, color: '#0369A1', opacity: 0.7, marginTop: 4 }}>Invite volunteers from the Volunteers tab</div>
+                  <div style={{ fontSize: 12, color: '#0369A1', opacity: 0.7, marginTop: 4 }}>Manage your team in People & HR</div>
                 </div>
               )}
             </>
           )}
-        </div>
-      </div>
-    </div>
-  )
+    </SessionSheet>
 }
 
 // ─── SESSION CARD ─────────────────────────────────────────────
@@ -684,17 +653,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
   }
 
   return (
-    <motion.div
-      onClick={saved ? undefined : onClose}
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 10700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
-    >
-      <motion.div
-        onClick={e => e.stopPropagation()}
-        initial={{ opacity: 0, y: 20, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 14, scale: 0.97 }}
-        transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-        style={{ background: 'var(--surface, #fff)', borderRadius: 26, width: '100%', maxWidth: 520, maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.04)' }}
-      >
+    <SessionSheet title="Reflection" subtitle={session.title} onClose={onClose} busy={saving} bodyStyle={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {saved ? (
           /* ── CELEBRATION SCREEN ── */
           <div style={{ padding: '56px 32px', textAlign: 'center', background: `linear-gradient(160deg, var(--org-a05), ${secondary}08)` }}>
@@ -707,28 +666,11 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
           </div>
         ) : (
           <>
-            {/* Header — branded */}
-            <div style={{ padding: '20px 22px 16px', background: `linear-gradient(135deg, var(--org-a10), ${secondary}08)`, borderBottom: '1px solid var(--border, #F3F4F6)', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
-              <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, borderRadius: '50%', background: `${secondary}18`, filter: 'blur(20px)', pointerEvents: 'none' }} />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1, marginBottom: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                  {org?.logo_url ? (
-                    <img src={org.logo_url} alt={org?.name || ''} style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'contain', background: '#fff', border: `1px solid var(--org-a10)`, padding: 3 }} />
-                  ) : (
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><Icon name="⭐" /></div>
-                  )}
-                  <div>
-                    <div style={{ fontSize: 15.5, fontWeight: 900, color: 'var(--text, #111)', fontFamily: 'var(--font-display, sans-serif)' }}>Session Reflection</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--text3, #9CA3AF)', marginTop: 1 }}>{session.title} · {format(parseISO(session.session_date), 'd MMM yyyy')}</div>
-                  </div>
-                </div>
-                <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} onClick={onClose} style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: 'var(--surface2, #F3F4F6)', cursor: 'pointer', fontSize: 15, color: 'var(--text3, #6B7280)', flexShrink: 0 }}>×</motion.button>
-              </div>
-
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', flexShrink: 0 }}>
               {/* Progress dots */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative', zIndex: 1 }}>
                 {REFLECT_STEPS.map((s, i) => (
-                  <div key={s.key} onClick={() => i < step && goTo(i)} style={{ flex: 1, height: 5, borderRadius: 99, background: i <= step ? `linear-gradient(90deg, ${primary}, ${secondary})` : 'var(--border, #E5E7EB)', cursor: i < step ? 'pointer' : 'default', transition: 'background 0.25s' }} />
+                  <div key={s.key} style={{ flex: 1, height: 5, borderRadius: 99, background: i <= step ? `linear-gradient(90deg, ${primary}, ${secondary})` : 'var(--border, #E5E7EB)', cursor: i < step ? 'pointer' : 'default', transition: 'background 0.25s' }} />
                 ))}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, position: 'relative', zIndex: 1 }}>
@@ -738,7 +680,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
             </div>
 
             {/* Scrollable step content */}
-            <div style={{ overflowY: 'auto', flex: 1, minHeight: isMobile ? 320 : 360, padding: 24, WebkitOverflowScrolling: 'touch', position: 'relative' }}>
+            <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, padding: isMobile ? 16 : 24, WebkitOverflowScrolling: 'touch', position: 'relative' }}>
               {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 16, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>}
 
               <AnimatePresence mode="wait" custom={direction}>
@@ -904,24 +846,23 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
             </div>
 
             {/* Footer */}
-            <div style={{ padding: '16px 22px', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 10, flexShrink: 0, background: 'var(--surface, #fff)' }}>
+            <div style={{ padding: '16px 20px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 10, flexShrink: 0, background: 'var(--surface, #fff)' }}>
               {step > 0 && (
-                <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}><Icon name="←" /> Back</motion.button>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}><Icon name="←" /> Back</motion.button>
               )}
               {!isLast ? (
-                <motion.button whileTap={{ scale: 0.97 }} disabled={!canAdvance} onClick={goNext} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: canAdvance ? `linear-gradient(135deg, ${primary}, ${secondary})` : '#D1D5DB', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canAdvance ? 'pointer' : 'default', boxShadow: canAdvance ? `0 8px 20px var(--org-a20)` : 'none' }}>
+                <motion.button whileTap={{ scale: 0.97 }} disabled={!canAdvance} onClick={goNext} style={{ minHeight: 44, flex: 1, padding: 12, borderRadius: 12, border: 'none', background: canAdvance ? `linear-gradient(135deg, ${primary}, ${secondary})` : '#D1D5DB', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canAdvance ? 'pointer' : 'default', boxShadow: canAdvance ? `0 8px 20px var(--org-a20)` : 'none' }}>
                   Next →
                 </motion.button>
               ) : (
-                <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 20px var(--org-a20)` }}>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving} style={{ minHeight: 44, flex: 1, padding: 12, borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: saving ? 'none' : `0 8px 20px var(--org-a20)` }}>
                   {saving ? 'Saving...' : existing ? '💾 Update Reflection' : '✅ Complete Reflection'}
                 </motion.button>
               )}
             </div>
           </>
         )}
-      </motion.div>
-    </motion.div>
+    </SessionSheet>
   )
 }
 
@@ -938,7 +879,7 @@ function Fact({ icon, label, value }) {
   return (
     <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: '10px 12px' }}>
       <div style={{ fontSize: 10, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 4 }}>
-        {icon} {label.toUpperCase()}
+        <Icon name={icon} /> {label.toUpperCase()}
       </div>
       {/* Long single values ("Cassiobury Park, Watford") have to wrap inside
           the cell rather than set its width. */}
@@ -955,120 +896,24 @@ function Chipline({ icon, text }) {
   )
 }
 
-function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount, attendanceCounts, hasReflection, project, onOpenProject, onOpenRegister }) {
-  // Reads the breakpoint itself rather than taking a prop: every call site
-  // would otherwise have to remember to pass it.
-  const isMobile = useIsMobile()
-  const type = SESSION_TYPES.find(t => t.key === session.session_type) || SESSION_TYPES[0]
-  const isMultiDay = session.end_date && session.end_date !== session.session_date
-  const isPast = session.session_date < format(new Date(), 'yyyy-MM-dd')
-  const isToday = session.session_date === format(new Date(), 'yyyy-MM-dd') && !isPast
-  const needed = session.volunteer_limit || 0
-  const covered = needed === 0 || volCount >= needed
+function SessionDetailDrawer({ session, org, onClose, onEdit, onVolunteers, volCount, attendanceCounts, hasReflection, project, onOpenProject, onOpenRegister, onReflect, hasRiskAssessment, onRisk }) {
+  const terms = useTerms(), primary = org?.primary_color || '#1B9AAA'
+  const phase = sessionPhase(session), isPast = phase === 'completed'
+  const needed = session.volunteer_limit || 0, covered = needed === 0 || volCount >= needed
   const ac = attendanceCounts?.[session.id] || { total: 0, signedIn: 0 }
   const [absentees, setAbsentees] = useState(null)
-
   useEffect(() => {
     if (!isPast) { setAbsentees(null); return }
     let cancelled = false
-    supabase.from('attendance').select('status, absence_reason, children(id, first_name, last_name, photo_url)').eq('session_id', session.id).eq('status', 'expected')
-      .then(({ data }) => { if (!cancelled) setAbsentees(data || []) })
+    supabase.from('attendance').select('status, absence_reason, children(id, first_name, last_name, photo_url)').eq('org_id', org.id).eq('session_id', session.id).eq('status', 'expected').then(({ data }) => { if (!cancelled) setAbsentees(data || []) })
     return () => { cancelled = true }
-  }, [session.id, isPast])
-
-  const dateLabel = isMultiDay
-    ? `${format(parseISO(session.session_date), 'EEE d MMM')} – ${format(parseISO(session.end_date), 'EEE d MMM')}`
-    : format(parseISO(session.session_date), 'EEEE d MMMM')
-
-  const statusChip = isPast
-    ? { label: 'Completed', dot: '#94A3B8' }
-    : isToday
-      ? { label: 'Live', dot: '#4ADE80' }
-      : { label: 'Upcoming', dot: '#FBBF24' }
-
-  // Times come back as HH:MM:SS from Postgres -- trim the seconds.
-  const hhmm = (t) => (t || '').slice(0, 5)
-  const timeLabel = session.start_time
-    ? `${hhmm(session.start_time)}${session.end_time ? ` – ${hhmm(session.end_time)}` : ''}`
-    : null
-
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.55)', backdropFilter: 'blur(4px)', zIndex: 10400,
-        display: 'flex',
-        // A side drawer on a phone puts its close button in the top-right, the
-        // furthest corner from a thumb. Mobile gets a bottom sheet instead, so
-        // it arrives from the direction the hand is already in.
-        justifyContent: isMobile ? 'stretch' : 'flex-end',
-        alignItems: isMobile ? 'flex-end' : 'stretch',
-      }}>
-      <motion.div
-        initial={isMobile ? { y: '100%' } : { x: '100%' }}
-        animate={isMobile ? { y: 0 } : { x: 0 }}
-        exit={isMobile ? { y: '100%' } : { x: '100%' }}
-        transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%', maxWidth: isMobile ? 'none' : 420,
-          // Without this the panel is a flex item at min-width:auto, so a long
-          // location or title sets a floor it cannot shrink below and the whole
-          // sheet runs off the side of the phone.
-          minWidth: 0,
-          height: isMobile ? '92dvh' : '100%',
-          borderRadius: isMobile ? '22px 22px 0 0' : 0,
-          background: 'var(--surface, #fff)', display: 'flex', flexDirection: 'column',
-          boxShadow: isMobile ? '0 -24px 60px rgba(0,0,0,0.28)' : '-24px 0 60px rgba(0,0,0,0.25)',
-          overflow: 'hidden',
-        }}>
-        {isMobile && (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '9px 0 3px', flexShrink: 0, background: type.color }}>
-            <div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.45)' }} />
-          </div>
-        )}
-
-        {/* Colour banner header */}
-        <div style={{ background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, padding: '22px 22px 18px', flexShrink: 0, position: 'relative' }}>
-          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}><Icon name="✕" /></button>
-          <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 12 }}><Icon name={type.icon} /></div>
-          <div style={{ fontSize: 19, fontWeight: 900, color: '#fff', marginBottom: 8, paddingRight: 40, lineHeight: 1.2 }}>{session.title}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-            {/* Translucent chip -- the old pastel background was invisible against the banner */}
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 99, padding: '4px 11px' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusChip.dot }} />
-              {statusChip.label}
-            </span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.14)', borderRadius: 99, padding: '4px 11px' }}>{type.label}</span>
-            {project && (
-              <button onClick={() => onOpenProject && onOpenProject(project)}
-                style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 99, padding: '4px 11px', cursor: 'pointer' }}>
-                🚀 {project.name}{session.project_day_number ? ` · Day ${session.project_day_number}` : ''}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 22px' }}>
-          {/* Attendance front and centre -- it's what staff actually open this for */}
-          {ac.total > 0 && (
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 14, padding: 14, marginBottom: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-                <span style={{ fontSize: 10.5, fontWeight: 800, color: '#64748B', letterSpacing: 0.4 }}>ATTENDANCE</span>
-                <span style={{ fontSize: 13, fontWeight: 900, color: '#0F172A' }}>{ac.signedIn} / {ac.total} signed in</span>
-              </div>
-              <div style={{ height: 7, background: '#E2E8F0', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ width: `${ac.total ? Math.round((ac.signedIn / ac.total) * 100) : 0}%`, height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#16A34A,#22C55E)', transition: 'width 400ms ease' }} />
-              </div>
-              {!isPast && (
-                <button onClick={() => onOpenRegister && onOpenRegister(session)}
-                  style={{ marginTop: 10, width: '100%', padding: '9px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff', fontSize: 12.5, fontWeight: 800, color: type.color, cursor: 'pointer' }}>
-                  Open register →
-                </button>
-              )}
-            </div>
-          )}
-
+  }, [session.id, org.id, isPast])
+  const dateLabel = session.session_date ? format(parseISO(session.session_date), 'EEE d MMM yyyy') + (session.end_date > session.session_date ? ` – ${format(parseISO(session.end_date), 'd MMM')}` : '') : 'Date to be confirmed'
+  const timeLabel = session.start_time ? `${session.start_time.slice(0, 5)}${session.end_time ? ` – ${session.end_time.slice(0, 5)}` : ''}` : 'Time to be confirmed'
+  return <SessionSheet title={session.title} subtitle={`${phase === 'live' ? 'Live now' : phase.charAt(0).toUpperCase() + phase.slice(1)} · ${dateLabel}`} onClose={onClose}
+    footer={<div style={{ display: 'flex', gap: 8 }}><button onClick={() => { onEdit(session); onClose() }} style={{ ...flowButton, flex: 1 }}>Edit details</button>{phase !== 'cancelled' && <button onClick={() => { if (phase === 'draft') onEdit(session); else onOpenRegister(session); onClose() }} style={{ ...flowButton, flex: 2, background: primary, color: '#fff', borderColor: primary }}>{phase === 'draft' ? 'Continue planning' : isPast ? 'View register' : 'Open register →'}</button>}</div>}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 16, background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12, marginBottom: 20 }}><div><div style={{ color: '#64748B', fontSize: 12, marginBottom: 5 }}>Attendance</div><strong style={{ fontSize: 22 }}>{phase === 'live' || isPast ? ac.signedIn : ac.total}</strong><span style={{ color: '#64748B', fontSize: 13 }}> {phase === 'live' ? 'signed in' : isPast ? 'attended' : 'expected'}</span></div><span style={{ fontSize: 13, color: '#64748B' }}>{ac.total ? `${ac.total} on the register` : 'No one added yet'}</span></div>
+    {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, width: '100%', textAlign: 'left', marginBottom: 14 }}>Project: {project.name} →</button>}
           {/* Key facts as a compact 2-up grid rather than one row each */}
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10, marginBottom: 14 }}>
             <Fact icon="📅" label="Date" value={dateLabel} />
@@ -1152,25 +997,10 @@ function SessionDetailDrawer({ session, onClose, onEdit, onVolunteers, volCount,
               </div>
             </div>
           )}
-        </div>
 
-        {/* Footer — the sheet is fixed-position, so it sits outside the app
-            shell's own safe-area padding and has to add its own or the buttons
-            fall under the home indicator. */}
-        <div style={{
-          padding: isMobile ? '14px 18px calc(14px + env(safe-area-inset-bottom, 0px))' : '16px 22px',
-          borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 8, flexShrink: 0, background: 'var(--surface, #fff)',
-        }}>
-          {onVolunteers && (
-            <button onClick={() => { onVolunteers(session); onClose() }} style={{ padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}><Icon name="❤️" /> Volunteers</button>
-          )}
-          <button onClick={() => { onEdit(session); onClose() }} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${type.color}, ${type.color}cc)`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: `0 8px 20px ${type.color}44` }}><Icon name="✏️" /> Edit Session</button>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
+    <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: 16, marginTop: 16, display: 'grid', gap: 10 }}><div style={{ fontSize: 13, fontWeight: 800 }}>Next steps</div><button onClick={() => { onVolunteers(session); onClose() }} style={{ ...flowButton, textAlign: 'left' }}>Manage volunteer cover · {volCount} assigned →</button>{session.risk_assessment_required && <button onClick={onRisk} style={{ ...flowButton, textAlign: 'left' }}>{hasRiskAssessment ? 'View linked risk assessment' : 'Add a risk assessment'} →</button>}{isPast && <button onClick={() => { onReflect(session); onClose() }} style={{ ...flowButton, textAlign: 'left' }}>{hasReflection ? 'View or update reflection' : `Reflect on this ${terms.session}`} →</button>}</div>
+  </SessionSheet>
 }
-
 
 // ─── SESSIONS TIPS ("learning to use LaunchSession") ──────────
 const TEMPLATE_ICONS = ['📋', '⚽', '🏀', '🎨', '🏊', '🚌', '🎭', '🏆', '🎉', '📚', '🛠️', '🏕️', '🎊', '🤝', '🏃', '✨']
@@ -1182,21 +1012,21 @@ function TemplateCard({ t, primary, onUse, onEdit, onDelete }) {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
         <div style={{ width: 44, height: 44, borderRadius: 13, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{t.icon || '📋'}</div>
         <div style={{ display: 'flex', gap: 4 }}>
-          <button onClick={() => onEdit(t)} title="Edit template" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#F1F5F9', cursor: 'pointer', fontSize: 12 }}><Icon name="✏️" /></button>
-          <button onClick={() => onDelete(t.id)} title="Delete template" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#FFF0F0', cursor: 'pointer', fontSize: 12 }}><Icon name="🗑" /></button>
+          <button onClick={() => onEdit(t)} title="Edit template" style={{ width: 44, height: 44, borderRadius: 8, border: 'none', background: '#F1F5F9', cursor: 'pointer', fontSize: 12 }}><Icon name="✏️" /></button>
+          <button onClick={() => onDelete(t.id)} title="Delete template" style={{ width: 44, height: 44, borderRadius: 8, border: 'none', background: '#FFF0F0', cursor: 'pointer', fontSize: 12 }}><Icon name="🗑" /></button>
         </div>
       </div>
       <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{t.name}</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 11.5, fontWeight: 600, color: '#64748B', marginBottom: 12 }}>
         <span>{type.icon} {type.label}</span>
-        {t.start_time && t.end_time && <span><Icon name="🕐" /> {t.start_time}–{t.end_time}</span>}
+        {t.start_time && t.end_time && <span><Icon name="🕐" /> {t.start_time.slice(0, 5)}–{t.end_time.slice(0, 5)}</span>}
         {t.max_capacity && <span><Icon name="👥" /> {t.max_capacity}</span>}
         {t.location && <span>📍 {t.location.split(',')[0]}</span>}
       </div>
       {t.use_count > 0 && (
         <div style={{ fontSize: 10.5, color: '#94A3B8', marginBottom: 12 }}>Used {t.use_count} time{t.use_count === 1 ? '' : 's'}</div>
       )}
-      <button onClick={() => onUse(t)} style={{ width: '100%', padding: '10px 0', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
+      <button onClick={() => onUse(t)} style={{ width: '100%', minHeight: 44, padding: '10px 0', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
         Use template →
       </button>
     </div>
@@ -1204,20 +1034,25 @@ function TemplateCard({ t, primary, onUse, onEdit, onDelete }) {
 }
 
 function TemplatesView({ templates, loading, primary, onBack, onUse, onEdit, onDelete, onCreateNew, isMobile }) {
+  const terms = useTerms()
+  const [query, setQuery] = useState('')
+  const filtered = templates.filter(t => `${t.name} ${t.location || ''}`.toLowerCase().includes(query.toLowerCase().trim()))
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'radial-gradient(circle at 15% 0%, #6D5DF60C, transparent 40%), radial-gradient(circle at 85% 15%, #30C48D0C, transparent 40%), #F6F8FC' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F6F8FA' }}>
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 22, flexWrap: 'wrap' }}>
           <div>
-            <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#64748B', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 6, padding: 0 }}><Icon name="←" /> Back to sessions</button>
-            <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>🗂️ Session Templates</div>
+            <button onClick={onBack} style={{ minHeight: 44, background: 'none', border: 'none', color: '#64748B', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 6, padding: 0 }}><Icon name="←" /> Back to {terms.sessions}</button>
+            <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>{terms.Session} templates</div>
             <div style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>Reusable presets for sessions you run again and again.</div>
           </div>
-          <button onClick={onCreateNew} style={{ padding: '12px 20px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+          <button onClick={onCreateNew} style={{ padding: '12px 20px', borderRadius: 14, border: 'none', minHeight: 44, background: primary, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
             + New Template
           </button>
         </div>
 
+        <input type="search" aria-label="Search templates" value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a template…" style={{ ...flowInput, marginBottom: 20 }} />
+        {!loading && templates.length > 0 && !filtered.length && <p>No templates match your search.</p>}
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8', fontWeight: 700 }}>Loading templates...</div>
         ) : templates.length === 0 ? (
@@ -1225,13 +1060,13 @@ function TemplatesView({ templates, loading, primary, onBack, onUse, onEdit, onD
             <div style={{ fontSize: 44, marginBottom: 14 }}>🗂️</div>
             <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>No templates yet</div>
             <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 22 }}>Build one from scratch, or save any existing session as a template from its card.</div>
-            <button onClick={onCreateNew} style={{ padding: '12px 26px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+            <button onClick={onCreateNew} style={{ padding: '12px 26px', borderRadius: 14, border: 'none', minHeight: 44, background: primary, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
               + New Template
             </button>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
-            {templates.map(t => (
+            {filtered.map(t => (
               <TemplateCard key={t.id} t={t} primary={primary} onUse={onUse} onEdit={onEdit} onDelete={onDelete} />
             ))}
           </div>
@@ -1241,7 +1076,7 @@ function TemplatesView({ templates, loading, primary, onBack, onUse, onEdit, onD
   )
 }
 
-function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
+function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel, primary }) {
   const [form, setForm] = useState({
     name: '', icon: '📋', title: '', session_type: 'activity', description: '',
     location: '', start_time: '09:00', end_time: '11:00', max_capacity: '', volunteer_limit: '',
@@ -1266,25 +1101,17 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
   const canSave = form.name.trim().length > 0
   const isEditing = !!initial?.id
 
-  const fi = { width: '100%', padding: '11px 13px', borderRadius: 11, border: '1.5px solid #E5E7EB', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', color: '#111', fontFamily: 'inherit' }
+  const fi = { width: '100%', padding: '11px 13px', borderRadius: 11, border: '1.5px solid #E5E7EB', fontSize: 16, minHeight: 44, background: '#fff', boxSizing: 'border-box', color: '#111', fontFamily: 'inherit' }
   const lb = { fontSize: 11, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, display: 'block' }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div onClick={onCancel} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)' }} />
-      <div style={{ position: 'relative', width: '100%', maxWidth: 560, maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: 24, boxShadow: '0 32px 80px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
-        <div style={{ padding: '18px 22px', borderBottom: '1px solid #EEF1F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>{isEditing ? 'Edit Template' : 'New Template'}</div>
-          <button onClick={onCancel} style={{ width: 30, height: 30, borderRadius: 8, background: '#F1F5F9', border: 'none', fontSize: 16, cursor: 'pointer' }}><Icon name="✕" /></button>
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', padding: 22 }}>
+    <SessionSheet title={isEditing ? 'Edit template' : 'New template'} onClose={onCancel} busy={saving} footer={<div style={{ display: 'flex', gap: 8 }}><button onClick={onCancel} disabled={saving} style={flowButton}>Cancel</button><button onClick={() => canSave && onSave({ ...form, id: initial?.id })} disabled={!canSave || saving} style={{ ...flowButton, flex: 1, background: canSave ? primary : '#94A3B8', borderColor: 'transparent', color: '#fff' }}>{saving ? 'Saving…' : isEditing ? 'Save template' : 'Create template'}</button></div>}>
           {/* Icon + name */}
           <div style={{ marginBottom: 16 }}>
             <label style={lb}>Icon</label>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {TEMPLATE_ICONS.map(ic => (
-                <button key={ic} onClick={() => set('icon', ic)} style={{ width: 36, height: 36, borderRadius: 10, border: form.icon === ic ? '2px solid #6D5DF6' : '1.5px solid #E5E7EB', background: form.icon === ic ? '#6D5DF614' : '#fff', fontSize: 17, cursor: 'pointer' }}>{ic}</button>
+                <button key={ic} onClick={() => set('icon', ic)} style={{ width: 44, height: 44, borderRadius: 10, border: form.icon === ic ? '2px solid #6D5DF6' : '1.5px solid #E5E7EB', background: form.icon === ic ? '#6D5DF614' : '#fff', fontSize: 17, cursor: 'pointer' }}>{ic}</button>
               ))}
             </div>
           </div>
@@ -1336,7 +1163,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
               {bubbleDefs.map(b => {
                 const active = (form.bubbles || []).includes(b.label)
                 return (
-                  <button key={b.key} onClick={() => toggleBubble(b.label)} style={{ padding: '6px 12px', borderRadius: 99, border: `1.5px solid ${active ? b.color : '#E5E7EB'}`, background: active ? b.color + '18' : '#fff', color: active ? b.color : '#64748B', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <button key={b.key} onClick={() => toggleBubble(b.label)} style={{ minHeight: 44, padding: '6px 12px', borderRadius: 99, border: `1.5px solid ${active ? b.color : '#E5E7EB'}`, background: active ? b.color + '18' : '#fff', color: active ? b.color : '#64748B', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                     {b.label}
                   </button>
                 )
@@ -1382,24 +1209,14 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel }) {
               ].map(opt => {
                 const active = !!form[opt.key]
                 return (
-                  <button key={opt.key} onClick={() => set(opt.key, !active)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 99, border: `1.5px solid ${active ? '#6D5DF6' : '#E5E7EB'}`, background: active ? '#6D5DF614' : '#fff', color: active ? '#6D5DF6' : '#64748B', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <button key={opt.key} onClick={() => set(opt.key, !active)} style={{ display: 'flex', alignItems: 'center', minHeight: 44, gap: 6, padding: '7px 12px', borderRadius: 99, border: `1.5px solid ${active ? primary : '#E5E7EB'}`, background: active ? `${primary}14` : '#fff', color: active ? primary : '#64748B', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                     <span><Icon name={opt.icon} /></span>{opt.label}
                   </button>
                 )
               })}
             </div>
           </div>
-        </div>
-
-        <div style={{ padding: '16px 22px', borderTop: '1px solid #EEF1F6', display: 'flex', gap: 10, justifyContent: 'flex-end', flexShrink: 0 }}>
-          <button onClick={onCancel} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={() => canSave && onSave({ ...form, id: initial?.id })} disabled={!canSave || saving}
-            style={{ padding: '11px 22px', borderRadius: 11, border: 'none', background: canSave ? '#6D5DF6' : '#CBD5E1', color: '#fff', fontWeight: 800, cursor: canSave ? 'pointer' : 'default' }}>
-            {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Template'}
-          </button>
-        </div>
-      </div>
-    </div>
+    </SessionSheet>
   )
 }
 
@@ -1465,7 +1282,7 @@ const REVIEW_TONES = {
 function fmtDayLabel(dateStr) {
   if (!dateStr) return ''
   const d = parseISO(dateStr)
-  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const today = parseISO(londonDate())
   const diff = Math.round((new Date(dateStr + 'T00:00:00') - today) / 86400000)
   if (diff === 0) return 'Today'
   if (diff === 1) return 'Tomorrow'
@@ -1475,7 +1292,7 @@ function fmtDayLabel(dateStr) {
 
 // Buckets a list of sessions into natural date groups for the given direction.
 function groupSessions(list, direction) {
-  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const today = parseISO(londonDate())
   const buckets = new Map()
   const order = direction === 'future'
     ? ['Today', 'Tomorrow', 'This week', 'Later']
@@ -1544,7 +1361,7 @@ function CardMenu({ status, onView, onEdit, onDuplicate, onDelete, onSaveTemplat
         {items.map((it, i) => (
           <button key={i} onClick={(e) => { e.stopPropagation(); onClose(); it.onClick && it.onClick() }}
             style={{
-              display: 'block', width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: 'none',
+              display: 'block', width: '100%', minHeight: 44, textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: 'none',
               background: 'transparent', color: it.danger ? '#DC2626' : '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
             }}
             onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
@@ -1557,173 +1374,46 @@ function CardMenu({ status, onView, onEdit, onDuplicate, onDelete, onSaveTemplat
   )
 }
 
-function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, project, onOpenProject, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister }) {
+function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, project, onOpenProject, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister, primary, hasRiskAssessment }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
-  const expected = counts?.total || 0
-  const signedIn = counts?.signedIn || 0
-  const absent = counts?.absent || 0
-  const pending = counts?.expected || 0
+  const terms = useTerms()
+  const past = status === 'completed' || status === 'review'
   const needsVols = s.volunteer_limit && volCount < s.volunteer_limit
-
-  const accent = status === 'live' ? '#16A34A' : status === 'review' ? '#F59E0B' : status === 'completed' ? '#94A3B8' : '#6D5DF6'
-  const attendancePct = expected > 0 ? Math.round((signedIn / expected) * 100) : 0
-  const reviewIssues = status === 'review' ? (issues || []) : []
-
-  return (
-    <div
-      onClick={onView}
-      style={{
-        position: 'relative', background: '#fff', border: `1px solid ${status === 'live' ? '#BBF7D0' : '#EEF1F6'}`,
-        borderLeft: `3px solid ${accent}`, borderRadius: 16, padding: isMobile ? 14 : '16px 18px', marginBottom: 10, cursor: 'pointer',
-        boxShadow: status === 'live' ? '0 8px 26px -14px rgba(22,163,74,0.45)' : '0 4px 16px -12px rgba(15,23,42,0.18)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{
-          width: 40, height: 40, borderRadius: 11, background: type.color + '18', border: `1.5px solid ${type.color}30`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0,
-        }}><Icon name={type.icon} /></div>
-
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
-            {status === 'live' && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 900, letterSpacing: 0.6, color: '#15803D', background: '#DCFCE7', border: '1px solid #BBF7D0', borderRadius: 99, padding: '2px 8px' }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#16A34A', animation: 'sp-live-pulse 1.6s ease-in-out infinite' }} />
-                LIVE
-              </span>
-            )}
-            {status === 'completed' && <StatusPill ok><Icon name="✓" /> Completed</StatusPill>}
-            <span style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{s.title}</span>
-            {project && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onOpenProject && onOpenProject(project) }}
-                title={`Part of ${project.name}`}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800,
-                  color: '#5B21B6', background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 99,
-                  padding: '2px 9px', cursor: 'pointer', whiteSpace: 'nowrap',
-                }}>
-                {project.name}{s.project_day_number ? ` · Day ${s.project_day_number}` : ''}
-              </button>
-            )}
-          </div>
-
-          <div style={{ fontSize: 12, color: '#64748B', fontWeight: 600, marginBottom: 8 }}>
-            {fmtDayLabel(s.session_date)}
-            {s.start_time ? ` · ${s.start_time}${s.end_time ? `–${s.end_time}` : ''}` : ''}
-            {s.location ? ` · ${s.location}` : ''}
-          </div>
-
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: reviewIssues.length || status !== 'completed' ? 8 : 0 }}>
-            {status === 'live' ? (
-              <>
-                <MetaStat value={signedIn} label="signed in" />
-                <MetaStat value={pending} label="to arrive" />
-                <MetaStat value={absent} label="absent" />
-              </>
-            ) : status === 'completed' || status === 'review' ? (
-              <>
-                <MetaStat value={expected} label="expected" />
-                <MetaStat value={signedIn} label="attended" />
-                <MetaStat value={absent} label="absent" />
-                {expected > 0 && <MetaStat value={`${attendancePct}%`} label="attendance" />}
-              </>
-            ) : (
-              <>
-                <MetaStat value={expected} label="expected" />
-                <MetaStat value={volCount} label="volunteers" />
-              </>
-            )}
-          </div>
-
-          {status === 'live' && expected > 0 && (
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ height: 6, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
-                <div style={{ width: `${attendancePct}%`, height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#16A34A,#4ADE80)' }} />
-              </div>
-              <div style={{ fontSize: 10.5, color: '#64748B', fontWeight: 700, marginTop: 4 }}>{signedIn} / {expected} signed in</div>
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {reviewIssues.map((iss, i) => {
-              const tone = REVIEW_TONES[iss.kind] || REVIEW_TONES.admin
-              return (
-                <span key={i} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800,
-                  borderRadius: 99, padding: '4px 10px', color: tone.color, background: tone.bg, whiteSpace: 'nowrap',
-                }}>
-                  {tone.icon} {iss.label}
-                </span>
-              )
-            })}
-            {status === 'upcoming' && needsVols && <StatusPill tone="amber">⚠ {s.volunteer_limit - volCount} volunteer{s.volunteer_limit - volCount === 1 ? '' : 's'} needed</StatusPill>}
-            {status === 'upcoming' && s.risk_assessment_required && <StatusPill tone="amber"><Icon name="⚠" /> Risk assessment required</StatusPill>}
-            {status === 'completed' && (hasReflection ? <StatusPill ok><Icon name="✓" /> Reflection complete</StatusPill> : <StatusPill tone="amber"><Icon name="⚠" /> Reflection due</StatusPill>)}
-          </div>
-        </div>
-
-        <div style={{ position: 'relative', flexShrink: 0 }}>
-          <button onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }} aria-label="Session actions"
-            style={{ border: 'none', background: 'transparent', color: '#94A3B8', fontSize: 16, fontWeight: 900, cursor: 'pointer', padding: '2px 6px', borderRadius: 8 }}>
-            •••
-          </button>
-          {menuOpen && (
-            <CardMenu
-              status={status}
-              onClose={() => setMenuOpen(false)}
-              onView={onView} onEdit={onEdit} onDuplicate={onDuplicate}
-              onDelete={onDelete} onSaveTemplate={onSaveTemplate}
-            />
-          )}
-        </div>
+  const labels = { live: 'Live now', upcoming: 'Upcoming', completed: 'Completed', review: 'Follow-up', draft: 'Draft', cancelled: 'Cancelled' }
+  const accent = status === 'live' ? '#15803D' : status === 'review' ? '#B45309' : primary
+  const action = status === 'draft' ? onEdit : past && !hasReflection ? onReflect : onOpenRegister
+  const actionLabel = status === 'draft' ? 'Continue planning' : past && !hasReflection ? 'Add reflection' : past ? 'View register' : 'Open register'
+  return <article style={{ position: 'relative', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, padding: isMobile ? 16 : 20, marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+      {!isMobile && <div style={{ width: 58, flexShrink: 0, background: '#F1F5F9', borderRadius: 10, padding: '12px 0', textAlign: 'center' }}><div style={{ fontSize: 11, color: '#64748B', textTransform: 'uppercase' }}>{s.session_date ? format(parseISO(s.session_date), 'MMM') : 'Date'}</div><strong style={{ display: 'block', fontSize: 22, color: '#0F172A' }}>{s.session_date ? format(parseISO(s.session_date), 'dd') : '—'}</strong></div>}
+      <div style={{ flex: 1, minWidth: 0 }}><span style={{ display: 'inline-flex', fontSize: 11, fontWeight: 800, color: accent, background: `${accent}12`, borderRadius: 6, padding: '4px 7px', marginBottom: 5 }}>{labels[status]}</span>
+        <button onClick={onView} style={{ display: 'block', textAlign: 'left', minHeight: 44, background: 'none', border: 0, padding: 0, fontSize: 17, fontWeight: 800, color: '#0F172A', cursor: 'pointer', overflowWrap: 'anywhere' }}>{s.title}</button>
+        <div style={{ fontSize: 13, lineHeight: 1.7, color: '#64748B' }}>{s.session_date ? fmtDayLabel(s.session_date) : 'Date to be confirmed'}{s.start_time ? ` · ${s.start_time.slice(0, 5)}${s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}` : ''}</div>
+        {s.location && <div style={{ fontSize: 13, color: '#64748B', marginTop: 3, overflowWrap: 'anywhere' }}><Icon name="📍" /> {s.location}</div>}
+        {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, border: 0, background: 'none', color: primary, padding: '6px 0', textAlign: 'left', fontSize: 12 }}>{project.name}{s.project_day_number ? ` · Day ${s.project_day_number}` : ''} →</button>}
       </div>
-
-      {/* Primary action row */}
-      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
-        {status === 'live' && (
-          <button onClick={onOpenRegister}
-            style={{ flex: isMobile ? '1 1 100%' : '0 0 auto', padding: '10px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#16A34A,#22C55E)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
-            Open Live Register
-          </button>
-        )}
-        {status === 'upcoming' && (
-          <button onClick={onView}
-            style={{ flex: isMobile ? '1 1 100%' : '0 0 auto', padding: '10px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#6D5DF6,#5B8DEF)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
-            Open session
-          </button>
-        )}
-        {(status === 'completed' || status === 'review') && (
-          <button onClick={hasReflection ? onView : onReflect}
-            style={{ flex: isMobile ? '1 1 100%' : '0 0 auto', padding: '10px 18px', borderRadius: 10, border: hasReflection ? '1.5px solid #E2E8F0' : 'none', background: hasReflection ? '#fff' : 'linear-gradient(135deg,#F59E0B,#F97316)', color: hasReflection ? '#334155' : '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
-            {hasReflection ? 'View session' : status === 'review' ? 'Review session' : 'Complete reflection'}
-          </button>
-        )}
-        {needsVols && status !== 'completed' && (
-          <button onClick={onVolunteers}
-            style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
-            ❤️ Volunteers
-          </button>
-        )}
-      </div>
+      <div style={{ position: 'relative', flexShrink: 0 }}><button aria-label={`Actions for ${s.title}`} aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)} style={{ ...flowButton, width: 44, padding: 0, border: 0, fontSize: 18 }}>•••</button>{menuOpen && <CardMenu status={status} onClose={() => setMenuOpen(false)} onView={onView} onEdit={onEdit} onDuplicate={onDuplicate} onDelete={onDelete} onSaveTemplate={onSaveTemplate} />}</div>
     </div>
-  )
+    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '14px 0', marginTop: 10, borderTop: '1px solid #F1F5F9' }}><MetaStat value={status === 'live' || past ? counts?.signedIn || 0 : counts?.total || 0} label={status === 'live' ? 'signed in' : past ? 'attended' : 'expected'} />{status === 'live' && <MetaStat value={counts?.expected || 0} label="to arrive" />}<MetaStat value={volCount} label="volunteers" />{past && <MetaStat value={counts?.absent || 0} label="absent" />}</div>
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: issues?.length || needsVols || s.risk_assessment_required ? 12 : 0 }}>{(issues || []).map((issue, i) => <span key={i} style={{ fontSize: 12, color: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).color, background: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).bg, padding: '5px 8px', borderRadius: 6 }}>{issue.label}</span>)}{!past && needsVols && <StatusPill tone="amber">{s.volunteer_limit - volCount} volunteers needed</StatusPill>}{!past && s.risk_assessment_required && !hasRiskAssessment && <StatusPill tone="amber">Risk assessment needed</StatusPill>}</div>
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{status !== 'cancelled' && <button onClick={action} style={{ ...flowButton, flex: isMobile ? '1 1 auto' : undefined, background: primary, borderColor: primary, color: '#fff' }}>{actionLabel} →</button>}<button onClick={onView} aria-label={`View ${terms.session} details for ${s.title}`} style={flowButton}>Details</button>{!isMobile && !past && needsVols && <button onClick={onVolunteers} style={flowButton}>Assign volunteers</button>}</div>
+  </article>
 }
 
 // Compact summary strip — sits BELOW the sessions, not above them.
 function InsightsStrip({ completed, attendancePct, noShows, reached }) {
+  const terms = useTerms()
   const isMobile = useIsMobile()
   const items = [
-    { v: completed, l: 'Sessions' },
+    { v: completed, l: terms.Sessions },
     { v: `${attendancePct}%`, l: 'Attendance' },
     { v: noShows, l: 'No-shows' },
-    { v: reached, l: 'Young people reached' },
+    { v: reached, l: 'Attendances' },
   ]
   return (
     <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '14px 18px', marginTop: 20 }}>
       <div style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: 0.8, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 10 }}>
-        Session summary · last 7 days
+        {terms.Session} summary · last 7 days
       </div>
       {/* A wrapping flex row broke into a ragged 2-then-1-then-1 on a phone,
           because "Young people reached" is far wider than the other three. An
@@ -1747,6 +1437,9 @@ function InsightsStrip({ completed, attendancePct, noShows, reached }) {
 
 export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, autoOpenWizard, initialEditSessionId, onNavigate }) {
   const orgId = org?.id
+  const terms = useTerms()
+  const preferencesKey = `ls_planner_view_${orgId}`
+  const [preferences] = useState(() => { try { return JSON.parse(sessionStorage.getItem(preferencesKey)) || {} } catch { return {} } })
   const primary = org?.primary_color || '#1B9AAA'
   const { groups: orgGroups } = useOrgSettings(orgId)
   const bubbleDefs = normaliseBubbleDefs(orgGroups)
@@ -1764,11 +1457,11 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const [raSessions, setRaSessions] = useState({}) // session_id -> true when a risk assessment is attached
   const [reflectingSession, setReflectingSession] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [view, setView] = useState('list') // 'list' | 'week' | 'form' | 'wizard'
-  const [tab, setTab] = useState('upcoming') // 'upcoming' | 'live' | 'completed' | 'needs_review'
-  const [locationFilter, setLocationFilter] = useState('all')
+  const [view, setView] = useState(preferences.view || 'list') // 'list' | 'week' | 'form' | 'wizard'
+  const [tab, setTab] = useState(preferences.tab || 'upcoming') // 'upcoming' | 'live' | 'completed' | 'needs_review'
+  const [locationFilter, setLocationFilter] = useState(preferences.locationFilter || 'all')
   const [showFilters, setShowFilters] = useState(false)
-  const [sourceFilter, setSourceFilter] = useState('all') // all | standalone | project
+  const [sourceFilter, setSourceFilter] = useState(preferences.sourceFilter || 'all') // all | standalone | project
   const [showNewMenu, setShowNewMenu] = useState(false)
   const [showProjectWizard, setShowProjectWizard] = useState(false)
   const [showDuplicatePicker, setShowDuplicatePicker] = useState(false)
@@ -1780,9 +1473,9 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     setTipDismissed(true)
     try { localStorage.setItem('ls_sessions_tip_dismissed', '1') } catch {}
   }
-  const [typeFilter, setTypeFilter] = useState('all') // 'all' | 'sessions' | 'trips'
-  const [onlyNeedsVolunteers, setOnlyNeedsVolunteers] = useState(false)
-  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState(preferences.typeFilter || 'all') // 'all' | 'sessions' | 'trips'
+  const [onlyNeedsVolunteers, setOnlyNeedsVolunteers] = useState(preferences.onlyNeedsVolunteers || false)
+  const [search, setSearch] = useState(preferences.search || '')
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
@@ -1794,7 +1487,12 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const [initialTemplate, setInitialTemplate] = useState(null) // template to seed the wizard with
   const [projects, setProjects] = useState({}) // id -> project, for the badge on project-day cards
 
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
+  const [weekOffset, setWeekOffset] = useState(Number(preferences.weekOffset) || 0)
+  useEffect(() => {
+    if (!['list', 'week'].includes(view)) return
+    try { sessionStorage.setItem(preferencesKey, JSON.stringify({ view, tab, search, typeFilter, sourceFilter, locationFilter, onlyNeedsVolunteers, weekOffset })) } catch {}
+  }, [preferencesKey, view, tab, search, typeFilter, sourceFilter, locationFilter, onlyNeedsVolunteers, weekOffset])
+  const weekStart = startOfWeek(addDays(parseISO(londonDate()), weekOffset * 7), { weekStartsOn: 1 })
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
   const loadData = async () => {
@@ -1804,8 +1502,8 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       supabase.from('session_staff').select('session_id').eq('org_id', orgId),
       supabase.from('session_reflections').select('*').eq('org_id', orgId),
       supabase.from('cause_for_concern').select('session_id, status, resolved_at').eq('org_id', orgId),
-      supabase.from('risk_assessment_sessions').select('session_id').eq('org_id', orgId),
-      supabase.from('projects').select('id, name, status').eq('org_id', orgId),
+      supabase.from('risk_assessment_sessions').select('session_id, assessment_id').eq('org_id', orgId),
+      supabase.from('projects').select('id, name, status, start_date, end_date').eq('org_id', orgId),
       supabase.from('session_outcomes').select('session_id, area').eq('org_id', orgId),
       supabase.from('session_follow_up_actions').select('*').eq('org_id', orgId).order('due_date'),
       supabase.from('user_profiles').select('id, full_name').eq('org_id', orgId).order('full_name'),
@@ -1837,7 +1535,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     setOpenConcerns(concernMap)
 
     const raMap = {}
-    ;(raLinks || []).forEach(r => { if (r.session_id) raMap[r.session_id] = true })
+    ;(raLinks || []).forEach(r => { if (r.session_id) raMap[r.session_id] = r.assessment_id || true })
     setRaSessions(raMap)
 
     const projMap = {}
@@ -1898,49 +1596,29 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     if (target) { setReflectingSession(target); autoReflectOpenedRef.current = true }
   }, [initialReflectSessionId, sessions])
 
-  // Only trust end_date when the session genuinely crosses midnight (end_time
-  // earlier than start_time). Some rows carry a stray end_date on same-day
-  // sessions, which previously pushed the computed end into the future and left
-  // them stuck as "live" indefinitely. Same guard Hub.jsx already applies.
-  const sessionEndsAt = (s) => {
-    if (!s.session_date) return null
-    const endTimeStr = s.end_time || '23:59'
-    const crossesMidnight = !!s.end_time && !!s.start_time && s.end_time < s.start_time
-    const endDateStr = crossesMidnight ? (s.end_date || s.session_date) : s.session_date
-    return new Date(`${endDateStr}T${endTimeStr}`)
-  }
-
-  const isSessionPast = (s) => {
-    if (!s.session_date) return false
-    if (s.closed_at) return true // explicitly closed is past, whatever the clock says
-    const endDateTime = sessionEndsAt(s)
-    return endDateTime ? endDateTime < new Date() : false
-  }
-
-  // A session counts as "live" once its start time has passed but before isSessionPast
-  // becomes true — distinct from "upcoming" (not started) and "past 7 days" (already ended).
-  const isSessionLive = (s) => {
-    if (!s.session_date || s.closed_at || isSessionPast(s)) return false
-    const startTimeStr = s.start_time || '00:00'
-    const startDateTime = new Date(`${s.session_date}T${startTimeStr}`)
-    return startDateTime <= new Date()
-  }
-
-  const pastSessionsAll = React.useMemo(() => sessions.filter(isSessionPast), [sessions]) // eslint-disable-line react-hooks/exhaustive-deps
-  const liveSessions = React.useMemo(() => sessions.filter(isSessionLive), [sessions]) // eslint-disable-line react-hooks/exhaustive-deps
-  const strictlyUpcomingSessions = React.useMemo(() => sessions.filter(s => !isSessionPast(s) && !isSessionLive(s)), [sessions]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const sevenDaysAgoStr = format(addDays(new Date(), -7), 'yyyy-MM-dd')
+  const [clock, setClock] = useState(() => new Date())
+  useEffect(() => {
+    const refresh = () => { if (!document.hidden) setClock(new Date()) }
+    const timer = setInterval(refresh, 30000)
+    document.addEventListener('visibilitychange', refresh)
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', refresh) }
+  }, [])
+  const pastSessionsAll = React.useMemo(() => sessions.filter(s => sessionPhase(s, clock) === 'completed'), [sessions, clock])
+  const liveSessions = React.useMemo(() => sessions.filter(s => sessionPhase(s, clock) === 'live'), [sessions, clock])
+  const strictlyUpcomingSessions = React.useMemo(() => sessions.filter(s => sessionPhase(s, clock) === 'upcoming'), [sessions, clock])
+  const draftSessions = React.useMemo(() => sessions.filter(s => sessionPhase(s, clock) === 'draft'), [sessions, clock])
+  const cancelledSessions = React.useMemo(() => sessions.filter(s => sessionPhase(s, clock) === 'cancelled'), [sessions, clock])
+  const sevenDaysAgoStr = format(addDays(parseISO(londonDate()), -7), 'yyyy-MM-dd')
   const past7DaysSessions = React.useMemo(() =>
-    sessions.filter(s => isSessionPast(s) && s.session_date >= sevenDaysAgoStr)
+    pastSessionsAll.filter(s => s.session_date >= sevenDaysAgoStr)
       .sort((a, b) => `${b.session_date}${b.start_time || ''}`.localeCompare(`${a.session_date}${a.start_time || ''}`))
-  , [sessions, sevenDaysAgoStr]) // eslint-disable-line react-hooks/exhaustive-deps
+  , [pastSessionsAll, sevenDaysAgoStr])
 
 
 
   // Land the user on the most useful tab: live if something's running, else
   // upcoming, else fall back to completed so the page isn't empty on arrival.
-  const defaultTabSetRef = React.useRef(false)
+  const defaultTabSetRef = React.useRef(!!preferences.tab)
   useEffect(() => {
     if (loading || defaultTabSetRef.current) return
     defaultTabSetRef.current = true
@@ -2078,7 +1756,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       reopened_at, reopened_by, reopen_reason, cancelled_at, cancelled_by, cancellation_reason,
       starting_soon_notified_at, register_open_reminder_sent_at, volunteer_cover_reminder_sent_at,
       archived_at, status: _status, register_status: _rs, ...rest } = s
-    const nextDate = format(addDays(new Date(), 1), 'yyyy-MM-dd')
+    const nextDate = format(addDays(parseISO(londonDate()), 1), 'yyyy-MM-dd')
     setInitialTemplate(null)
     setEditing({ ...rest, title: s.title, session_date: nextDate, end_date: s.end_date ? nextDate : nextDate })
     setView('wizard')
@@ -2086,7 +1764,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
   const openNew = (date) => {
     setInitialTemplate(null)
-    setEditing({ ...EMPTY_FORM, session_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), end_date: date || format(addDays(new Date(), 1), 'yyyy-MM-dd'), session_type: typeFilter === 'trips' ? 'trip' : 'activity' })
+    setEditing(date ? { ...EMPTY_FORM, session_date: date, end_date: date, session_type: typeFilter === 'trips' ? 'trip' : 'activity' } : null)
     setView('wizard')
   }
 
@@ -2142,9 +1820,13 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     live: liveSessions,
     completed: completedSessions,
     needs_review: needsReviewSessions,
+    draft: draftSessions,
+    cancelled: cancelledSessions,
   }[tab] || []
 
+  const clearFilters = () => { setTypeFilter('all'); setOnlyNeedsVolunteers(false); setLocationFilter('all'); setSourceFilter('all'); setSearch('') }
   const activeFilterChips = []
+  if (sourceFilter !== 'all') activeFilterChips.push({ key: 'source', label: sourceFilter === 'project' ? 'Project only' : 'Standalone only', clear: () => setSourceFilter('all') })
   if (typeFilter !== 'all') activeFilterChips.push({ key: 'type', label: typeFilter === 'trips' ? 'Trips only' : 'Sessions only', clear: () => setTypeFilter('all') })
   if (onlyNeedsVolunteers) activeFilterChips.push({ key: 'vols', label: 'Needs volunteers', clear: () => setOnlyNeedsVolunteers(false) })
   if (locationFilter !== 'all') activeFilterChips.push({ key: 'loc', label: locationFilter, clear: () => setLocationFilter('all') })
@@ -2198,8 +1880,10 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const TABS = [
     { key: 'upcoming', label: 'Upcoming', count: strictlyUpcomingSessions.length },
     { key: 'live', label: 'Live', count: liveSessions.length, live: true },
-    { key: 'completed', label: 'Completed', count: completedSessions.length },
-    { key: 'needs_review', label: 'Needs Review', count: needsReviewSessions.length },
+    { key: 'completed', label: 'Past', count: completedSessions.length },
+    { key: 'needs_review', label: 'Follow-up', count: needsReviewSessions.length },
+    { key: 'draft', label: 'Drafts', count: draftSessions.length },
+    ...(cancelledSessions.length ? [{ key: 'cancelled', label: 'Cancelled', count: cancelledSessions.length }] : []),
   ]
 
   // ── Last-7-days summary, from data already loaded ──
@@ -2227,6 +1911,8 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         session={session}
         bubbleDefs={bubbleDefs}
         initialTemplate={initialTemplate}
+        initialPlan={!editing?.id ? editing : null}
+        initialType={typeFilter === 'trips' ? 'trip' : undefined}
         editSession={editing?.id ? editing : null}
         onCancel={() => { setView('list'); setInitialTemplate(null); setEditing(null) }}
         onNavigate={onNavigate}
@@ -2276,6 +1962,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         />
         {editingTemplate && (
           <TemplateFormModal
+            primary={primary}
             initial={editingTemplate}
             bubbleDefs={bubbleDefs}
             saving={templateSaving}
@@ -2290,6 +1977,8 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
 
   const EMPTY_COPY = {
+    draft: { title: 'No drafts', text: 'Plans saved as drafts will appear here when you are ready to continue.', icon: '📝', showCta: true },
+    cancelled: { title: 'No cancelled plans', text: 'Cancelled plans are kept here for reference.', icon: '✓', showCta: false },
     upcoming: { icon: null, title: 'No upcoming sessions', text: 'Your schedule is clear.', showCta: true },
     live: {
       icon: '🟢', title: 'Nothing live right now',
@@ -2304,49 +1993,19 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
   // ── LIST / WEEK VIEW ──
   return (
-    <div style={{ background: '#F6F8FC' }}>
+    <div style={{ background: '#F6F8FA', minHeight: '100%' }}>
       <style>{`@keyframes sp-live-pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
-      <div style={{ padding: isMobile ? 16 : 28 }}>
+      <div style={{ padding: isMobile ? 16 : 28, maxWidth: 1280, margin: '0 auto' }}>
 
-        {/* ═══ HEADER ═══ */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 27, fontWeight: 900, color: '#0F172A', letterSpacing: -0.6 }}>Sessions</h1>
-            {!isMobile && (
-              <p style={{ margin: '4px 0 0', fontSize: 13.5, color: '#64748B', fontWeight: 500 }}>
-                Plan, run and review your organisation's sessions.
-              </p>
-            )}
+        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+          <div><div style={{ fontSize: 11, letterSpacing: 1.2, color: '#64748B', fontWeight: 800, marginBottom: 8 }}>PLAN · RUN · REVIEW</div><h1 style={{ margin: 0, fontSize: isMobile ? 27 : 32, fontWeight: 800, color: '#0F172A', letterSpacing: '-1px' }}>{terms.Sessions}</h1><p style={{ margin: '7px 0 0', fontSize: 14, color: '#64748B' }}>Your plans, people and registers in one place.</p></div>
+          <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : undefined }}>
+            <button onClick={() => setView('templates')} style={{ ...flowButton, flex: isMobile ? 1 : undefined }}>Templates</button><button onClick={() => openNew()} style={{ ...flowButton, flex: isMobile ? 2 : undefined, background: primary, borderColor: primary, color: '#fff' }}>+ New {terms.session}</button>
+            <div style={{ position: 'relative' }}><button aria-label="More creation options" aria-expanded={showNewMenu} onClick={() => setShowNewMenu(v => !v)} style={{ ...flowButton, width: 44, padding: 0 }}>•••</button>
+              {showNewMenu && <><div onClick={() => setShowNewMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} /><div style={{ position: 'absolute', right: 0, top: 50, width: 240, zIndex: 41, padding: 6, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 12px 30px #0F172A20' }}>{[{ label: 'Duplicate a previous plan', action: () => setShowDuplicatePicker(true) }, { label: 'Create a multi-day project', action: () => setShowProjectWizard(true) }].map(item => <button key={item.label} onClick={() => { setShowNewMenu(false); item.action() }} style={{ ...flowButton, width: '100%', border: 0, textAlign: 'left' }}>{item.label}</button>)}</div></>}
+            </div>
           </div>
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setShowNewMenu(v => !v)}
-              style={{ padding: isMobile ? '10px 14px' : '11px 18px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 8px 22px -10px rgba(109,93,246,0.7)' }}>
-              {isMobile ? '＋' : '＋ New Session'}
-            </button>
-            {showNewMenu && (
-              <>
-                <div onClick={() => setShowNewMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 41, width: 260, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, boxShadow: '0 20px 50px -16px rgba(15,23,42,0.3)', padding: 6 }}>
-                  {[
-                    { t: 'Blank session', d: 'Start a session from scratch', a: () => openNew() },
-                    { t: 'From template', d: 'Create from a saved session template', a: () => setView('templates') },
-                    { t: 'Duplicate previous', d: 'Reuse a previous session', a: () => setShowDuplicatePicker(true) },
-                    { t: 'New Project', d: 'A multi-day programme containing several sessions', a: () => setShowProjectWizard(true), divider: true },
-                  ].map(o => (
-                    <button key={o.t} onClick={() => { setShowNewMenu(false); o.a() }}
-                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', borderTop: o.divider ? '1px solid #F1F5F9' : 'none', marginTop: o.divider ? 4 : 0, paddingTop: o.divider ? 12 : 10 }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{o.t}</div>
-                      <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 1 }}>{o.d}</div>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
+        </header>
         {/* ═══ ACTIVE PROJECT STRIP — bridges Sessions to Projects ═══ */}
         {runningProject && (
           <button
@@ -2374,72 +2033,22 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         {/* ═══ TABS ═══ */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 14, borderBottom: '1px solid #E2E8F0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              style={{ padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #6D5DF6' : '2.5px solid transparent', background: 'none', color: tab === t.key ? '#6D5DF6' : '#64748B', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button key={t.key} aria-pressed={tab === t.key} onClick={() => setTab(t.key)}
+              style={{ minHeight: 48, padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? primary : '#64748B', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
               {t.live && t.count > 0 && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16A34A', animation: 'sp-live-pulse 1.6s ease-in-out infinite' }} />}
               {t.label}
-              <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? '#6D5DF6' : '#94A3B8', background: tab === t.key ? '#6D5DF618' : '#F1F5F9', borderRadius: 99, padding: '1px 7px' }}>{t.count}</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? primary : '#94A3B8', background: tab === t.key ? '#6D5DF618' : '#F1F5F9', borderRadius: 99, padding: '1px 7px' }}>{t.count}</span>
             </button>
           ))}
         </div>
 
-        {/* ═══ SEARCH + FILTERS ═══ */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: '1 1 220px', minWidth: 0 }}>
-            <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94A3B8' }}><Icon name="🔍" /></span>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search sessions..."
-              style={{ width: '100%', padding: '10px 14px 10px 34px', borderRadius: 12, border: '1px solid #E2E8F0', background: '#fff', fontSize: 13.5, color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
-            />
-          </div>
-          <button onClick={() => setShowFilters(true)}
-            style={{ padding: '10px 14px', borderRadius: 11, border: `1.5px solid ${activeFilterChips.length ? '#6D5DF6' : '#E2E8F0'}`, background: activeFilterChips.length ? '#6D5DF610' : '#fff', color: activeFilterChips.length ? '#6D5DF6' : '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            Filters{activeFilterChips.length ? ` (${activeFilterChips.length})` : ''}
-          </button>
-          {Object.keys(projects).length > 0 && (
-            <div style={{ display: 'flex', gap: 3, padding: 3, background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 11 }}>
-              {[
-                { key: 'all', label: 'All' },
-                { key: 'standalone', label: 'Standalone' },
-                { key: 'project', label: 'Project' },
-              ].map(o => {
-                const on = sourceFilter === o.key
-                return (
-                  <button key={o.key} onClick={() => setSourceFilter(o.key)} style={{
-                    padding: '7px 12px', borderRadius: 9, border: 'none', cursor: 'pointer',
-                    fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap',
-                    background: on ? '#fff' : 'transparent',
-                    color: on ? '#6D5DF6' : '#64748B',
-                    boxShadow: on ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
-                  }}>{o.label}</button>
-                )
-              })}
-            </div>
-          )}
-          <div style={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: 11, overflow: 'hidden' }}>
-            {[{ key: 'list', icon: '☰' }, { key: 'week', icon: '📅' }].map(v => (
-              <button key={v.key} onClick={() => setView(v.key)} style={{ padding: '9px 13px', border: 'none', background: view === v.key ? '#6D5DF6' : '#fff', color: view === v.key ? '#fff' : '#64748B', fontSize: 13, cursor: 'pointer' }}><Icon name={v.icon} /></button>
-            ))}
-          </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+          <input type="search" aria-label={`Search ${terms.sessions}`} value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or location…" style={{ ...flowInput, flex: '1 1 240px' }} />
+          <button onClick={() => setShowFilters(true)} style={flowButton}>Filters{activeFilterChips.length ? ` (${activeFilterChips.length})` : ''}</button>
+          <div style={{ display: 'flex', gap: 4 }} aria-label="View style">{[{ key: 'list', label: 'List' }, { key: 'week', label: 'Week' }].map(v => <button key={v.key} aria-pressed={view === v.key} onClick={() => setView(v.key)} style={{ ...flowButton, color: view === v.key ? primary : '#64748B', borderColor: view === v.key ? primary : '#E2E8F0', background: view === v.key ? `${primary}0C` : '#fff' }}>{v.label}</button>)}</div>
         </div>
-
-        {activeFilterChips.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
-            {activeFilterChips.map(c => (
-              <button key={c.key} onClick={c.clear}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700, color: '#475569', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 99, padding: '5px 10px', cursor: 'pointer' }}>
-                {c.label} <span style={{ color: '#94A3B8' }}>×</span>
-              </button>
-            ))}
-            <button onClick={() => { setTypeFilter('all'); setOnlyNeedsVolunteers(false); setLocationFilter('all'); setSearch('') }}
-              style={{ fontSize: 11.5, fontWeight: 700, color: '#6D5DF6', background: 'none', border: 'none', cursor: 'pointer', padding: '5px 4px' }}>
-              Clear all
-            </button>
-          </div>
-        )}
-
+        {activeFilterChips.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>{activeFilterChips.map(c => <button key={c.key} onClick={c.clear} aria-label={`Remove ${c.label} filter`} style={{ ...flowButton, fontSize: 12, padding: '8px 12px' }}>{c.label} ×</button>)}<button onClick={clearFilters} style={{ ...flowButton, border: 0, background: 'none', color: primary }}>Clear all</button></div>}
+        {view === 'week' && <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 16 }}><button aria-label="Previous week" onClick={() => setWeekOffset(n => n - 1)} style={flowButton}>←</button><strong style={{ fontSize: 14, flex: 1 }}>{format(weekStart, 'd MMM')} – {format(addDays(weekStart, 6), 'd MMM yyyy')}</strong><button aria-label="Next week" onClick={() => setWeekOffset(n => n + 1)} style={flowButton}>→</button><button onClick={() => setWeekOffset(0)} style={flowButton}>This week</button></div>}
         {/* ═══ SESSIONS ═══ */}
         {loading ? (
           <div>
@@ -2455,16 +2064,17 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
               </div>
             ))}
           </div>
-        ) : displayed.length === 0 ? (
+        ) : displayed.length === 0 && view === 'list' ? (
           <div style={{ textAlign: 'center', padding: '52px 20px', background: '#fff', borderRadius: 20, border: '1px solid #EEF1F6' }}>
             <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
               {EMPTY_COPY.icon
                 ? <span style={{ fontSize: 40 }}><Icon name={EMPTY_COPY.icon} /></span>
                 : <img src="/assets/rockets/rocket-hero.png" alt="" style={{ height: 84, width: 'auto' }} />}
             </div>
-            <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>{EMPTY_COPY.title}</div>
-            <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: EMPTY_COPY.showCta ? 20 : 0, maxWidth: 420, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>{EMPTY_COPY.text}</div>
-            {EMPTY_COPY.showCta && (
+            <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>{activeFilterChips.length ? 'No matching results' : EMPTY_COPY.title}</div>
+            <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: EMPTY_COPY.showCta ? 20 : 0, maxWidth: 420, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>{activeFilterChips.length ? 'Try another search or clear the filters to see more.' : EMPTY_COPY.text}</div>
+            {activeFilterChips.length > 0 && <button onClick={clearFilters} style={{ ...flowButton, marginTop: 16 }}>Clear filters</button>}
+            {EMPTY_COPY.showCta && activeFilterChips.length === 0 && (
               <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => openNew()}
                   style={{ padding: '11px 22px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer' }}>
@@ -2490,7 +2100,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                   <SessionRowCard
                     key={s.id}
                     s={s}
-                    status={tab === 'needs_review' ? 'review' : tab === 'completed' ? 'completed' : tab === 'live' ? 'live' : 'upcoming'}
+                    status={tab === 'needs_review' ? 'review' : sessionPhase(s, clock)} primary={primary} hasRiskAssessment={!!raSessions[s.id]}
                     counts={attendanceCounts[s.id]}
                     volCount={volCounts[s.id] || 0}
                     hasReflection={!!reflections[s.id]}
@@ -2505,7 +2115,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                     onSaveTemplate={() => handleSaveSessionAsTemplate(s)}
                     onVolunteers={() => setSelectedSession(s)}
                     onReflect={() => setReflectingSession(s)}
-                    onOpenRegister={() => onNavigate && onNavigate('registers', { sessionId: s.id })}
+                    onOpenRegister={() => onNavigate && onNavigate('registers', { sessionId: s.id, returnTo: 'planner' })}
                   />
                 ))}
               </div>
@@ -2529,7 +2139,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
               {weekDays.map(day => {
                 const dateStr = format(day, 'yyyy-MM-dd')
                 const daySessions = displayed.filter(s => s.session_date === dateStr)
-                const isToday = isSameDay(day, new Date())
+                const isToday = isSameDay(day, parseISO(londonDate()))
                 return (
                   <div key={dateStr}>
                     {/* Centred column heading on desktop; a left-aligned section
@@ -2554,32 +2164,8 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                          slim row on mobile — still a 44px target. */
                       <button onClick={() => openNew(dateStr)} style={{ width: '100%', border: '1.5px dashed #E5E7EB', borderRadius: 12, background: 'none', padding: isMobile ? '13px 0' : '24px 0', minHeight: isMobile ? 44 : 0, cursor: 'pointer', color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>+ Add</button>
                     ) : daySessions.map(s => {
-                      const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
-                      const vc = volCounts[s.id] || 0
-                      const needed = s.volunteer_limit || 0
-                      const covered = needed === 0 || vc >= needed
-                      return (
-                        <div key={s.id} onClick={() => setViewingSession(s)} style={{ background: type.color + '12', border: `1.5px solid ${type.color}30`, borderRadius: 12, padding: 10, marginBottom: 8, cursor: 'pointer' }}>
-                          <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 4 }}>{s.title}</div>
-                          <div style={{ fontSize: 11, color: '#475569', fontWeight: 600, lineHeight: 1.6 }}>
-                            🕐 {s.start_time || '—'}{s.end_time ? `–${s.end_time}` : ''}<br />
-                            {s.location ? `📍 ${s.location.split(',')[0]}` : ''}
-                          </div>
-                          {needed > 0 && (
-                            <div style={{ fontSize: 10, fontWeight: 800, color: covered ? '#16A34A' : '#92400E', marginTop: 6 }}>
-                              {covered ? `✓ ${vc}/${needed} vols` : `⚠ ${vc}/${needed} vols`}
-                            </div>
-                          )}
-                          {/* 26px squares are half the 44px minimum this project
-                              sets for touch, and Edit sat directly beside Delete
-                              at that size. Both grow on mobile. */}
-                          <div style={{ display: 'flex', gap: isMobile ? 8 : 4, marginTop: 8 }}>
-                            <button onClick={e => { e.stopPropagation(); setSelectedSession(s) }} style={{ flex: 1, border: 'none', background: type.color + '20', borderRadius: isMobile ? 10 : 7, padding: isMobile ? '10px 0' : '4px 0', minHeight: isMobile ? 44 : 0, cursor: 'pointer', fontSize: isMobile ? 12.5 : 11, fontWeight: 800, color: type.color }}><Icon name="❤️" /> Vols</button>
-                            <button aria-label="Edit session" onClick={e => { e.stopPropagation(); setEditing(s); setView('wizard') }} style={{ border: 'none', background: '#F9FAFB', borderRadius: isMobile ? 10 : 7, width: isMobile ? 44 : 26, height: isMobile ? 44 : 26, cursor: 'pointer' }}><Icon name="✏️" /></button>
-                            <button aria-label="Delete session" onClick={e => { e.stopPropagation(); handleDelete(s.id) }} style={{ border: 'none', background: '#FFF0F0', borderRadius: isMobile ? 10 : 7, width: isMobile ? 44 : 26, height: isMobile ? 44 : 26, cursor: 'pointer' }}><Icon name="🗑" /></button>
-                          </div>
-                        </div>
-                      )
+                      const phase = sessionPhase(s, clock)
+                      return <div key={s.id} style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: 12, marginBottom: 8 }}><button onClick={() => setViewingSession(s)} style={{ ...flowButton, border: 0, padding: 0, textAlign: 'left', width: '100%', overflowWrap: 'anywhere' }}>{s.title}</button><div style={{ fontSize: 12, color: '#64748B', margin: '6px 0', lineHeight: 1.7 }}>{(s.start_time || '').slice(0, 5)}{s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}<br />{s.location}</div>{phase !== 'cancelled' && <button onClick={() => { if (phase === 'draft') { setEditing(s); setView('wizard') } else if (onNavigate) onNavigate('registers', { sessionId: s.id, returnTo: 'planner' }) }} style={{ ...flowButton, width: '100%', padding: '8px 5px', fontSize: 12, color: primary }}>{phase === 'draft' ? 'Continue plan' : 'Open register'} →</button>}</div>
                     })}
                   </div>
                 )
@@ -2626,70 +2212,24 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
               💡 Running the same activity again? Duplicate a previous session instead of creating one from scratch.
             </div>
             <button onClick={() => setShowDuplicatePicker(true)}
-              style={{ padding: '8px 14px', borderRadius: 9, border: 'none', background: '#6D5DF6', color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              style={{ ...flowButton, color: primary }}>
               Duplicate session
             </button>
             <button onClick={dismissTip} aria-label="Dismiss tip"
-              style={{ border: 'none', background: 'transparent', color: '#7C6BB0', fontSize: 16, cursor: 'pointer', padding: '0 4px' }}>×</button>
+              style={{ ...flowButton, border: 0, width: 44, padding: 0, fontSize: 20 }}>×</button>
           </div>
         )}
       </div>
 
       {/* ═══ FILTERS DRAWER / BOTTOM SHEET ═══ */}
-      {showFilters && (
-        <>
-          <div onClick={() => setShowFilters(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.4)', zIndex: 10400 }} />
-          <div style={{
-            position: 'fixed', zIndex: 10401, background: '#fff', display: 'flex', flexDirection: 'column',
-            ...(isMobile
-              ? { left: 0, right: 0, bottom: 0, borderRadius: '20px 20px 0 0', maxHeight: '80vh', paddingBottom: 'env(safe-area-inset-bottom)' }
-              : { top: 0, right: 0, bottom: 0, width: 340, boxShadow: '-24px 0 60px rgba(0,0,0,0.2)' }),
-          }}>
-            <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>Filters</div>
-              <button onClick={() => setShowFilters(false)} style={{ border: 'none', background: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-              <div style={{ marginBottom: 18 }}>
-                <label style={{ fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }}>Session type</label>
-                <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, background: '#fff', color: '#0F172A', boxSizing: 'border-box' }}>
-                  <option value="all">All types</option>
-                  <option value="sessions">Sessions only</option>
-                  <option value="trips">Trips only</option>
-                </select>
-              </div>
-              {locationOptions.length > 0 && (
-                <div style={{ marginBottom: 18 }}>
-                  <label style={{ fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }}>Location</label>
-                  <select value={locationFilter} onChange={e => setLocationFilter(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, background: '#fff', color: '#0F172A', boxSizing: 'border-box' }}>
-                    <option value="all">All locations</option>
-                    {locationOptions.map(l => <option key={l} value={l}>{l}</option>)}
-                  </select>
-                </div>
-              )}
-              <div style={{ marginBottom: 18 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={onlyNeedsVolunteers} onChange={e => setOnlyNeedsVolunteers(e.target.checked)} style={{ width: 16, height: 16, cursor: 'pointer' }} />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>Only sessions needing volunteers</span>
-                </label>
-              </div>
-            </div>
-            <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8 }}>
-              <button onClick={() => { setTypeFilter('all'); setOnlyNeedsVolunteers(false); setLocationFilter('all') }}
-                style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                Clear filters
-              </button>
-              <button onClick={() => setShowFilters(false)}
-                style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#6D5DF6,#5B8DEF)', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
-                Show results
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
+      {showFilters && <SessionSheet title="Filter plans" onClose={() => setShowFilters(false)} width={440} footer={<div style={{ display: 'flex', gap: 8 }}><button onClick={clearFilters} style={flowButton}>Clear all</button><button onClick={() => setShowFilters(false)} style={{ ...flowButton, flex: 1, background: primary, borderColor: primary, color: '#fff' }}>Show {displayed.length} results</button></div>}>
+        <div style={{ display: 'grid', gap: 22 }}>
+          <label style={{ fontSize: 14, fontWeight: 700 }}>Source<select aria-label="Source" value={sourceFilter} onChange={e => setSourceFilter(e.target.value)} style={{ ...flowInput, marginTop: 8 }}><option value="all">All plans</option><option value="standalone">Standalone</option><option value="project">Part of a project</option></select></label>
+          <label style={{ fontSize: 14, fontWeight: 700 }}>Type<select aria-label="Type" value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ ...flowInput, marginTop: 8 }}><option value="all">All types</option><option value="sessions">{terms.Sessions}</option><option value="trips">Trips</option></select></label>
+          <label style={{ fontSize: 14, fontWeight: 700 }}>Location<select aria-label="Location" value={locationFilter} onChange={e => setLocationFilter(e.target.value)} style={{ ...flowInput, marginTop: 8 }}><option value="all">All locations</option>{locationOptions.map(l => <option key={l}>{l}</option>)}</select></label>
+          <label style={{ display: 'flex', alignItems: 'center', minHeight: 44, gap: 12, fontSize: 14 }}><input type="checkbox" checked={onlyNeedsVolunteers} onChange={e => setOnlyNeedsVolunteers(e.target.checked)} style={{ width: 22, height: 22 }} />Needs volunteer cover</label>
+        </div>
+      </SessionSheet>}
       {/* ═══ DUPLICATE PICKER ═══ */}
       {showProjectWizard && (
         <ProjectWizard
@@ -2705,19 +2245,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         />
       )}
 
-      {showDuplicatePicker && (
-        <>
-          <div onClick={() => setShowDuplicatePicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10400 }} />
-          <div style={{
-            position: 'fixed', zIndex: 10401, background: '#fff', display: 'flex', flexDirection: 'column',
-            ...(isMobile
-              ? { left: 0, right: 0, bottom: 0, borderRadius: '20px 20px 0 0', maxHeight: '80vh', paddingBottom: 'env(safe-area-inset-bottom)' }
-              : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(460px,92vw)', maxHeight: '76vh', borderRadius: 18, boxShadow: '0 30px 70px rgba(0,0,0,0.3)' }),
-          }}>
-            <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>Duplicate a previous session</div>
-              <button onClick={() => setShowDuplicatePicker(false)} style={{ border: 'none', background: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
-            </div>
+      {showDuplicatePicker && <SessionSheet title="Duplicate a previous plan" subtitle="Choose a plan, then update its date and details." onClose={() => setShowDuplicatePicker(false)}>
             <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
               {completedSessions.length === 0 ? (
                 <div style={{ padding: 30, textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>No previous sessions to duplicate yet.</div>
@@ -2738,15 +2266,16 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                 )
               })}
             </div>
-          </div>
-        </>
-      )}
-
+      </SessionSheet>}
       {selectedSession && <VolunteerPanel session={selectedSession} org={org} onClose={() => { setSelectedSession(null); loadData() }} />}
       <AnimatePresence>
         {viewingSession && (
           <SessionDetailDrawer
             session={viewingSession}
+            org={org}
+            hasRiskAssessment={!!raSessions[viewingSession.id]}
+            onReflect={setReflectingSession}
+            onRisk={() => { setViewingSession(null); if (typeof raSessions[viewingSession.id] === 'string') { onNavigate && onNavigate('risk_assessments', { openAssessmentId: raSessions[viewingSession.id] }) } else { setEditing(viewingSession); setView('wizard') } }}
             onClose={() => setViewingSession(null)}
             onEdit={s => { setEditing(s); setView('wizard') }}
             onVolunteers={setSelectedSession}
@@ -2755,7 +2284,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             hasReflection={!!reflections[viewingSession.id]}
             project={viewingSession.project_id ? projects[viewingSession.project_id] : null}
             onOpenProject={(pr) => { setViewingSession(null); onNavigate && onNavigate('projects', { projectId: pr.id }) }}
-            onOpenRegister={(sess) => { setViewingSession(null); onNavigate && onNavigate('registers', { sessionId: sess.id }) }}
+            onOpenRegister={(sess) => { setViewingSession(null); onNavigate && onNavigate('registers', { sessionId: sess.id, returnTo: 'planner' }) }}
           />
         )}
       </AnimatePresence>
@@ -2775,6 +2304,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       </AnimatePresence>
       {editingTemplate && (
         <TemplateFormModal
+            primary={primary}
           initial={editingTemplate}
           bubbleDefs={bubbleDefs}
           saving={templateSaving}

@@ -110,7 +110,8 @@ describe('badges', () => {
 
   it('rolls the sheet up onto More, so nothing waiting is hidden behind a tap', () => {
     const sections = moreSections(ctx(), { officeTabCount: 3 })
-    expect(totalBadges(sections, { mentoring: 3, forms: 2 })).toBe(5)
+    expect(allTabs(sections)).not.toContain('mentoring')
+    expect(totalBadges(sections, { mentoring: 3, forms: 2 })).toBe(2)
     expect(totalBadges(sections, {})).toBe(0)
   })
 

@@ -5,6 +5,8 @@ import { useRealtimeTable } from '../../lib/useRealtimeTable'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { allowedModules } from '../../lib/moduleAccess'
 import Icon from '../../lib/icons'
+import { sessionPhase } from '../../lib/sessionPhase'
+import SessionSheet, { flowButton } from '../sessions/SessionSheet'
 
 // Postgres returns time columns as HH:MM:SS. Trim to HH:MM everywhere the
 // calendar shows a time -- the raw value was leaking into the month cells,
@@ -178,65 +180,22 @@ function PlanPickerModal({ date, org, onClose, onNavigate }) {
   )
 }
 
-function SessionModal({ session, org, onClose, onDelete, project, onOpenProject }) {
-  const cfg = getCfg(session.session_type)
-  const [deleting, setDeleting] = useState(false)
-
+function SessionModal({ session, org, onClose, onDelete, project, onOpenProject, onNavigate }) {
+  const phase = sessionPhase(session), primary = org?.primary_color || '#1B9AAA'
+  const [deleting, setDeleting] = useState(false), [error, setError] = useState('')
   const handleDelete = async () => {
     if (!window.confirm(`Delete "${session.title}"?`)) return
     setDeleting(true)
-    await supabase.from('sessions').delete().eq('id', session.id)
-    onDelete(session.id)
-    onClose()
+    const { error: deleteError } = await supabase.from('sessions').delete().eq('org_id', org.id).eq('id', session.id)
+    setDeleting(false)
+    if (deleteError) { setError(deleteError.message); return }
+    onDelete(session.id); onClose()
   }
-
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'cal-fade-in 0.2s ease' }}>
-      <style>{KEYFRAMES}</style>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)', animation: 'cal-bounce-in 0.35s cubic-bezier(0.22, 1, 0.36, 1)' }}>
-        <div style={{ background: `linear-gradient(135deg, ${cfg.color}22, ${cfg.color}08)`, borderBottom: `3px solid ${cfg.color}`, padding: '24px 24px 20px', position: 'relative' }}>
-          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.08)', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-          <div style={{ fontSize: 36, marginBottom: 8 }}><Icon name={cfg.icon} /></div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: '#111', marginBottom: 4 }}>{session.title}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-            <span style={{ background: cfg.color, color: '#fff', borderRadius: 99, padding: '3px 12px', fontSize: 11, fontWeight: 800 }}>{cfg.label}</span>
-            {project && (
-              <button onClick={() => onOpenProject && onOpenProject(project)}
-                style={{ background: '#F5F3FF', color: '#5B21B6', border: '1px solid #DDD6FE', borderRadius: 99, padding: '3px 11px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
-                🚀 {project.name}{session.project_day_number ? ` · Day ${session.project_day_number}` : ''}
-              </button>
-            )}
-          </div>
-        </div>
-        <div style={{ padding: '20px 24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-            {[
-              { icon: '📅', label: 'Date', value: session.session_date ? format(parseISO(session.session_date), 'EEEE, d MMMM yyyy') : '—' },
-              { icon: '⏰', label: 'Time', value: timeRange(session.start_time, session.end_time) || '—' },
-              { icon: '📍', label: 'Location', value: session.location || '—' },
-              { icon: '👥', label: 'Capacity', value: session.max_capacity ? `${session.max_capacity} max` : '—' },
-            ].map(d => (
-              <div key={d.label} style={{ background: '#F8FAFC', borderRadius: 12, padding: '10px 14px' }}>
-                <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{d.icon} {d.label}</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{d.value}</div>
-              </div>
-            ))}
-          </div>
-          {session.description && (
-            <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', marginBottom: 16, fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
-              {session.description}
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, cursor: 'pointer' }}>Close</button>
-            <button onClick={handleDelete} disabled={deleting} style={{ padding: '11px 18px', borderRadius: 12, border: '1.5px solid rgba(220,38,38,0.3)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
-              {deleting ? 'Deleting...' : '🗑️ Delete'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+  return <SessionSheet title={session.title} subtitle={phase === 'live' ? 'Live now' : phase.charAt(0).toUpperCase() + phase.slice(1)} onClose={onClose} busy={deleting}
+    footer={<div style={{ display: 'flex', gap: 8 }}><button onClick={() => { onClose(); onNavigate && onNavigate('planner', { editSessionId: session.id }) }} style={{ ...flowButton, flex: 1 }}>{phase === 'draft' ? 'Continue planning' : 'Edit plan'}</button>{!['draft', 'cancelled'].includes(phase) && <button onClick={() => { onClose(); onNavigate && onNavigate('registers', { sessionId: session.id, returnTo: 'calendar' }) }} style={{ ...flowButton, flex: 1, background: primary, borderColor: primary, color: '#fff' }}>Open register →</button>}</div>}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 20 }}>{[['Date', session.session_date ? format(parseISO(session.session_date), 'EEE d MMM yyyy') : 'To be confirmed'], ['Time', timeRange(session.start_time, session.end_time) || 'To be confirmed'], ['Location', session.location || 'To be confirmed'], ['Capacity', session.max_capacity || 'Not set']].map(([label, value]) => <div key={label} style={{ padding: 14, borderRadius: 12, background: '#F8FAFC', overflowWrap: 'anywhere' }}><div style={{ fontSize: 12, color: '#64748B', marginBottom: 8 }}>{label}</div><strong style={{ fontSize: 14 }}>{value}</strong></div>)}</div>
+    {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, width: '100%', textAlign: 'left', marginBottom: 16 }}>Project: {project.name} →</button>}{session.description && <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7 }}>{session.description}</p>}{error && <p role="alert" style={{ color: '#B91C1C' }}>{error}</p>}{phase !== 'live' && <button onClick={handleDelete} disabled={deleting} style={{ ...flowButton, marginTop: 24, color: '#B91C1C' }}>{deleting ? 'Deleting…' : 'Delete plan'}</button>}
+  </SessionSheet>
 }
 
 export default function Calendar({ org, onSessionChanged, onNavigate }) {
@@ -821,7 +780,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
     </div>
 
     {selectedSession && (
-      <SessionModal project={selectedSession?.project_id ? projects[selectedSession.project_id] : null} onOpenProject={(pr) => { setSelectedSession(null); onNavigate && onNavigate('projects', { projectId: pr.id }) }} session={selectedSession} org={org} onClose={() => setSelectedSession(null)} onDelete={deleteSession} />
+      <SessionModal project={selectedSession?.project_id ? projects[selectedSession.project_id] : null} onOpenProject={(pr) => { setSelectedSession(null); onNavigate && onNavigate('projects', { projectId: pr.id }) }} session={selectedSession} org={org} onClose={() => setSelectedSession(null)} onDelete={deleteSession} onNavigate={onNavigate} />
     )}
 
     {planPickerDate && (

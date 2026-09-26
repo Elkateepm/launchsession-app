@@ -305,6 +305,7 @@ function timeAgo(dateStr) {
 
 function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, userProfile, onProfileClick, onNavigate, hasModule, unreadSubs = [] }) {
   const isMobile = useIsMobile()
+  const terms = useTerms()
   const [search, setSearch] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -318,7 +319,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
     return () => el.removeEventListener('scroll', onScroll, true)
   }, [])
 
-  const moduleLabel = tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : ALL_MODULES.find(m => m.key === tab)?.label || tab
+  const moduleLabel = tab === 'children' ? terms.People : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : ALL_MODULES.find(m => m.key === tab)?.label || tab
 
   const daysLeft = org?.trial_expires_at ? Math.max(0, Math.ceil((new Date(org.trial_expires_at) - new Date()) / (1000 * 60 * 60 * 24))) : null
   const isTrial = org?.plan === 'starter' && daysLeft !== null
@@ -519,6 +520,8 @@ export default function Dashboard({ session, org }) {
   })
   const [registersKey, setRegistersKey] = useState(0)
   const [registerSessionId, setRegisterSessionId] = useState(null)
+  const [registerReturnTab, setRegisterReturnTab] = useState('registers')
+  const [registerReturnProjectId, setRegisterReturnProjectId] = useState(null)
   const [reflectSessionId, setReflectSessionId] = useState(null)
   const [openAssessmentId, setOpenAssessmentId] = useState(null)
   const [openCaseId, setOpenCaseId] = useState(null)
@@ -590,6 +593,10 @@ export default function Dashboard({ session, org }) {
     if (ADMIN_ONLY_TABS.includes(t) && !isAdmin) { setTab('home'); persistTab('home'); return }
     if (t === 'registers') setRegistersKey(k => k + 1)
     setRegisterSessionId(t === 'registers' ? payload?.sessionId || null : null)
+    if (t === 'registers') {
+      setRegisterReturnTab(['planner', 'calendar', 'projects'].includes(payload?.returnTo) ? payload.returnTo : 'registers')
+      setRegisterReturnProjectId(payload?.projectId || null)
+    }
     setReflectSessionId(t === 'planner' && payload?.reflectSessionId ? payload.reflectSessionId : null)
     setOpenAssessmentId(t === 'risk_assessments' && payload?.openAssessmentId ? payload.openAssessmentId : null)
     // t has already been aliased to 'safeguarding' by this point, so the
@@ -1102,7 +1109,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── DELIVERY PACK ── */}
-          {effectiveTab === 'registers'  && (hasModule('registers')  ? (registerSessionId && tabLevel === 'edit' ? <SessionRegisterRoute key={`${org.id}-${registerSessionId}`} sessionId={registerSessionId} org={org} authSession={session} userRole={userProfile?.role} onClose={() => { setRegisterSessionId(null); bumpSessions() }} onNavigate={handleSetTab} /> : <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} />) : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'registers'  && (hasModule('registers')  ? (registerSessionId && tabLevel === 'edit' ? <SessionRegisterRoute key={`${org.id}-${registerSessionId}`} sessionId={registerSessionId} org={org} authSession={session} userRole={userProfile?.role} backLabel={{ planner: 'Back to planner', calendar: 'Back to calendar', projects: 'Back to project', registers: 'Back to registers' }[registerReturnTab]} onClose={() => { setRegisterSessionId(null); bumpSessions(); if (registerReturnTab !== 'registers') handleSetTab(registerReturnTab, { projectId: registerReturnProjectId }) }} onNavigate={handleSetTab} /> : <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} />) : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'volunteers' && !canUsePeopleHR && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} readOnly={tabLevel === 'view'} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {/* Newsletter is rendered inside Office below. */}

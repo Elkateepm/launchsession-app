@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
-import { format, addDays } from 'date-fns'
+import { format, addDays, parseISO } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -7,6 +7,10 @@ import { EmailFormModal } from '../forms/Forms'
 import FormBuilder from '../forms/FormBuilder'
 import { GroupsQuickSetupModal } from '../registers/Registers'
 import Icon from '../../lib/icons'
+import { createPortal } from 'react-dom'
+import { useTerms } from '../../context/OrgContext'
+import { londonDate } from '../../lib/sessionPhase'
+import { flowButton } from './SessionSheet'
 
 // ─── CONSTANTS ──────────────────────────────────────────────────
 
@@ -88,8 +92,8 @@ const REQUIREMENT_TOGGLES = [
 
 const emptyForm = () => ({
   session_type: 'activity',
-  title: '', session_date: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
-  end_date: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
+  title: '', session_date: format(addDays(parseISO(londonDate()), 1), 'yyyy-MM-dd'),
+  end_date: format(addDays(parseISO(londonDate()), 1), 'yyyy-MM-dd'),
   start_time: '09:00', end_time: '11:00',
   location: '', venue_id: null, description: '', max_capacity: '', age_range: '',
   internal_notes: '', meeting_point: '', colour: '#1B9AAA',
@@ -110,7 +114,7 @@ const emptyForm = () => ({
 
 const ACCENT = '#6D5DF6'
 const card = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 16 }
-const inp = { width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)', color: 'var(--text)' }
+const inp = { width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 16, minHeight: 44, boxSizing: 'border-box', background: 'var(--surface)', color: 'var(--text)' }
 const label = { fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 5 }
 
 function SectionHeader({ icon, title, subtitle, color = ACCENT }) {
@@ -118,7 +122,7 @@ function SectionHeader({ icon, title, subtitle, color = ACCENT }) {
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 18 }}>
       <motion.div
         initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 22 }}
-        style={{ width: 38, height: 38, borderRadius: 11, background: `linear-gradient(135deg, ${color}26, ${color}0D)`, boxShadow: `0 2px 8px ${color}22, inset 0 0 0 1px ${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>{icon}</motion.div>
+        style={{ width: 38, height: 38, borderRadius: 11, background: `linear-gradient(135deg, ${color}26, ${color}0D)`, boxShadow: `0 2px 8px ${color}22, inset 0 0 0 1px ${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><Icon name={icon} /></motion.div>
       <div>
         <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{title}</div>
         {subtitle && <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 1 }}>{subtitle}</div>}
@@ -128,14 +132,7 @@ function SectionHeader({ icon, title, subtitle, color = ACCENT }) {
 }
 
 function Toggle({ value, onChange, label: text }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-      <span style={{ fontSize: 13.5, color: 'var(--text2)', fontWeight: 500 }}>{text}</span>
-      <div onClick={() => onChange(!value)} style={{ width: 40, height: 22, borderRadius: 11, background: value ? '#1B9AAA' : '#D1D5DB', position: 'relative', cursor: 'pointer', flexShrink: 0 }}>
-        <div style={{ position: 'absolute', top: 2, left: value ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.15s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
-      </div>
-    </div>
-  )
+  return <button type="button" role="switch" aria-checked={!!value} onClick={() => onChange(!value)} style={{ display: 'flex', width: '100%', minHeight: 52, alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '10px 0', border: 0, borderBottom: '1px solid var(--border)', background: 'none', cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 14, color: 'var(--text2)' }}>{text}</span><span style={{ width: 42, height: 24, borderRadius: 12, background: value ? 'var(--org-primary, #1B9AAA)' : '#CBD5E1', position: 'relative', flexShrink: 0 }}><span style={{ position: 'absolute', top: 3, left: value ? 21 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff' }} /></span></button>
 }
 
 function StepDot({ n, active, done, label: text, onClick, compact, color = ACCENT }) {
@@ -275,7 +272,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
         </div>
       )}
       <SectionHeader icon="🏃" title="What kind of session is this?" subtitle="This sets sensible defaults you can adjust later" color={ACCENT} />
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 12, minWidth: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 12, minWidth: 0 }}>
         {WIZARD_TYPES.map(t => {
           const active = form.session_type === t.key
           return (
@@ -489,7 +486,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
             ['later', 'Add attendees later'],
           ].map(([key, txt]) => (
             <button key={key} onClick={() => set('participant_mode', key)} style={{
-              padding: '9px 16px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+              minHeight: 44, padding: '9px 16px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
               border: form.participant_mode === key ? '2px solid #1B9AAA' : '1.5px solid var(--border)',
               background: form.participant_mode === key ? 'rgba(27,154,170,0.08)' : 'var(--surface)', color: 'var(--text)',
             }}>{txt}</button>
@@ -503,13 +500,13 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
                 const active = form.bubbles.includes(b.label)
                 return (
                   <button key={b.key} onClick={() => set('bubbles', active ? form.bubbles.filter(x => x !== b.label) : [...form.bubbles, b.label])}
-                    style={{ padding: '7px 14px', borderRadius: 99, border: active ? `2px solid ${b.color}` : '1.5px solid var(--border)', background: active ? `${b.color}18` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', color: 'var(--text)' }}>
+                    style={{ minHeight: 44, padding: '7px 14px', borderRadius: 99, border: active ? `2px solid ${b.color}` : '1.5px solid var(--border)', background: active ? `${b.color}18` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', color: 'var(--text)' }}>
                     {b.label}
                   </button>
                 )
               })}
               <button onClick={() => setShowGroupsModal(true)}
-                style={{ padding: '7px 14px', borderRadius: 99, border: `1.5px dashed ${ACCENT}60`, background: `${ACCENT}0A`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
+                style={{ minHeight: 44, padding: '7px 14px', borderRadius: 99, border: `1.5px dashed ${ACCENT}60`, background: `${ACCENT}0A`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
                 + Add group
               </button>
             </div>
@@ -518,7 +515,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
         {form.participant_mode === 'individual' && (
           <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, padding: 8 }}>
             {children.map(c => (
-              <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', cursor: 'pointer', fontSize: 13 }}>
+              <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '6px 8px', cursor: 'pointer', fontSize: 13 }}>
                 <input type="checkbox" checked={form.child_ids.includes(c.id)} onChange={() => toggleChild(c.id)} />
                 {c.first_name} {c.last_name} <span style={{ color: 'var(--text3)', fontSize: 11 }}>({c.group_name})</span>
               </label>
@@ -946,6 +943,8 @@ function ReviewFact({ label: l, value, wide }) {
 }
 
 function StepReview({ form, staff, expectedCount, primary, riskAssessments = [], typeColor }) {
+  const terms = useTerms()
+  const isMobile = useIsMobile()
   const leadName = staff.find(s => s.id === form.lead_staff_id)?.full_name
   const staffCount = (form.lead_staff_id ? 1 : 0) + form.supporting_staff_ids.length
   const volunteerSpaces = form.volunteer_slots.reduce((s, v) => s + (parseInt(v.spaces_required, 10) || 0), 0)
@@ -1028,21 +1027,21 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
             {form.title || 'Untitled session'}
           </div>
           <div style={{ fontSize: 13.5, color: 'var(--text2)', fontWeight: 600 }}>
-            {form.session_date && format(new Date(form.session_date), 'EEEE d MMMM yyyy')}
-            {form.start_time ? ` · ${form.start_time}–${form.end_time}` : ''}
+            {form.session_date && format(parseISO(form.session_date), 'EEEE d MMMM yyyy')}
+            {form.start_time ? ` · ${form.start_time.slice(0, 5)}–${(form.end_time || '').slice(0, 5)}` : ''}
           </div>
           {form.location && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}><Icon name="📍" /> {form.location}</div>}
 
-          <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : 'repeat(4, minmax(0,1fr))', gap: 10, marginTop: 16 }}>
             {[
-              { v: expectedCount, l: 'Young people' },
+              { v: expectedCount, l: terms.People },
               { v: staffCount, l: 'Staff' },
               { v: volunteerSpaces, l: 'Volunteer spaces' },
               { v: form.max_capacity || '—', l: 'Capacity' },
             ].map(m => (
               <div key={m.l} style={{ flex: '1 1 90px', minWidth: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 12px' }}>
                 <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)', lineHeight: 1.1 }}>{m.v}</div>
-                <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.l}</div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text3)', lineHeight: 1.5, marginTop: 4 }}>{m.l}</div>
               </div>
             ))}
           </div>
@@ -1151,14 +1150,25 @@ const sessionToForm = (s) => ({
   reflection_required: !!s.reflection_required,
 })
 
-export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPublished, onNavigate, initialType, initialTemplate, editSession }) {
+export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPublished, onNavigate, initialType, initialTemplate, initialPlan, editSession }) {
   const isMobile = useIsMobile()
   const { isTablet, isDesktop } = useBreakpoint()
   // Sidebar only earns its keep once there's real width to spare (iPad landscape / desktop).
   // On phones and iPad portrait it would crush the main column, so those get a focused single-column flow.
   const showSidebar = isDesktop
   const compact = isMobile || isTablet
+  const terms = useTerms()
   const isEditing = !!editSession?.id
+  const editingDraft = isEditing && editSession.status === 'draft'
+  const [saveAs, setSaveAs] = useState('ready')
+  const bodyRef = useRef(null), headingRef = useRef(null)
+  const screen = content => compact ? createPortal(content, document.body) : content
+  useEffect(() => {
+    if (!compact) return
+    const before = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = before }
+  }, [compact])
   const draftKey = `ls_session_draft_${org?.id}`
   const [step, setStep] = useState(1)
   const [form, setForm] = useState(() => {
@@ -1166,6 +1176,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     // those exist to speed up creating a *new* session, and restoring
     // either here would silently overwrite the real session being edited.
     if (editSession?.id) return { ...emptyForm(), ...sessionToForm(editSession) }
+    if (initialPlan) return { ...emptyForm(), ...sessionToForm(initialPlan) }
     if (initialTemplate) return { ...emptyForm(), ...templateToFormPatch(initialTemplate) }
     try {
       const saved = localStorage.getItem(draftKey)
@@ -1187,7 +1198,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   const [lastSaved, setLastSaved] = useState(null)
 
   const primary = org?.primary_color || '#1B9AAA'
-  const typeColor = (WIZARD_TYPES.find(t => t.key === form.session_type) || WIZARD_TYPES[0]).color
+  const typeColor = primary
 
   const applyTemplate = (t) => {
     setForm(f => ({ ...f, ...templateToFormPatch(t) }))
@@ -1250,7 +1261,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   // and then reappear as a "draft" the next time someone creates one.
   const saveTimer = useRef(null)
   useEffect(() => {
-    if (isEditing) return
+    if (isEditing || done) return
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
       try {
@@ -1260,7 +1271,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     }, 800)
     return () => clearTimeout(saveTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form, isEditing])
+  }, [form, isEditing, done])
 
   // In edit mode the relational parts of a session live in their own
   // tables, so pull them in and merge into the form once loaded —
@@ -1325,6 +1336,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   const STEPS = STEP_DEFS.map(s => s.label)
   const totalSteps = STEP_DEFS.length
   const stepKey = STEP_DEFS[step - 1]?.key
+  useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = 0; headingRef.current?.focus({ preventScroll: true }) }, [step])
   const isLastStep = step >= totalSteps
 
   // Turning the requirement back off removes a step. If that happened while
@@ -1348,6 +1360,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   const publish = async (status) => {
     setSaving(true)
     setError('')
+    try {
 
     if (isEditing) {
       const sessionPatch = {
@@ -1389,7 +1402,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       // silently reset it back to scheduled.
       if (status) sessionPatch.status = status
 
-      const { error: upErr } = await supabase.from('sessions').update(sessionPatch).eq('id', editSession.id)
+      const { error: upErr } = await supabase.from('sessions').update(sessionPatch).eq('org_id', org.id).eq('id', editSession.id)
       if (upErr) { setError(upErr.message); setSaving(false); return }
 
       const sid = editSession.id
@@ -1450,7 +1463,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       }
 
       setSaving(false)
-      setDone({ session: { ...editSession, ...sessionPatch }, publishedAs: 'edited' })
+      setDone({ session: { ...editSession, ...sessionPatch }, publishedAs: status || (editSession.status === 'draft' ? 'draft' : 'edited') })
       if (onPublished) onPublished({ ...editSession, ...sessionPatch })
       return
     }
@@ -1505,189 +1518,36 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     }
     setDone({ session: data.session, publishedAs: status })
     if (onPublished) onPublished(data.session)
+    } catch (err) { setError(err.message || 'Could not save. Please try again.') }
+    finally { setSaving(false) }
   }
 
-  // ─── Confirmation screen ───
+  const closeWizard = () => {
+    if (!isEditing && !done) { try { localStorage.setItem(draftKey, JSON.stringify(form)) } catch {} }
+    onCancel()
+  }
   if (done) {
-    const label = done.publishedAs === 'edited' ? 'updated' : done.publishedAs === 'draft' ? 'saved as a draft' : done.publishedAs === 'scheduled' ? 'scheduled' : 'published'
-    const actions = [
-      { key: 'view', label: 'Back to planner', onClick: onCancel, primary: done.publishedAs === 'draft' },
-      ...(done.publishedAs !== 'draft' && onNavigate ? [{ key: 'register', label: 'Open this register →', primary: true, onClick: () => onNavigate('registers', { sessionId: done.session.id }) }] : []),
-      // Only nag about the risk assessment if one wasn't attached during the
-      // wizard. Attaching it here already links it and writes the audit entry.
-      ...(form.risk_assessment_required && !form.pending_risk_assessment_id ? [{ key: 'ra', label: 'Complete Risk Assessment', onClick: () => onNavigate && onNavigate('risk_assessments') }] : []),
-      { key: 'msg', label: 'Message Team', onClick: () => onNavigate && onNavigate('messaging') },
-    ]
-    const doneType = (WIZARD_TYPES.find(t => t.key === done.session.session_type) || WIZARD_TYPES[0])
-    const burstColors = [ACCENT, '#16A34A', '#F59E0B', '#EC4899', '#0EA5E9', doneType.color]
-    return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} style={{ maxWidth: 480, margin: '10vh auto', textAlign: 'center', padding: '0 20px' }}>
-        <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto 16px' }}>
-          {burstColors.map((c, i) => {
-            const angle = (i / burstColors.length) * Math.PI * 2
-            return (
-              <motion.span key={i}
-                initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
-                animate={{ x: Math.cos(angle) * 60, y: Math.sin(angle) * 60, opacity: 0, scale: 0.4 }}
-                transition={{ duration: 0.7, delay: 0.05, ease: 'easeOut' }}
-                style={{ position: 'absolute', top: '50%', left: '50%', width: 8, height: 8, borderRadius: '50%', background: c, marginTop: -4, marginLeft: -4 }} />
-            )
-          })}
-          <motion.div
-            initial={{ scale: 0, rotate: -20 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.05 }}
-            style={{ width: 80, height: 80, borderRadius: '50%', background: `radial-gradient(circle, ${doneType.color}22, transparent 70%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, position: 'relative' }}><Icon name="🚀" /></motion.div>
-        </div>
-        <motion.h2 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.3 }} style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Your session is ready for launch</motion.h2>
-        <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.3 }} style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 14 }}>
-          <strong>{done.session.title}</strong> has been {label} successfully.
-        </motion.p>
-        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.26, duration: 0.25 }}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${doneType.color}15`, color: doneType.color, fontSize: 12, fontWeight: 800, borderRadius: 99, padding: '5px 14px', marginBottom: 28 }}>
-          <span><Icon name={doneType.icon} /></span>{doneType.label}
-        </motion.div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
-          {actions.map((a, i) => (
-            <motion.button
-              key={a.key}
-              onClick={a.onClick}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.28 + i * 0.06, duration: 0.25 }}
-              whileHover={{ y: -1, boxShadow: a.primary ? `0 8px 20px ${doneType.color}45` : '0 4px 12px rgba(0,0,0,0.06)' }}
-              whileTap={{ scale: 0.97 }}
-              style={a.primary
-                ? { padding: 12, borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${doneType.color})`, color: '#fff', fontWeight: 700, cursor: 'pointer' }
-                : { padding: 12, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>
-              {a.label}
-            </motion.button>
-          ))}
-        </div>
-      </motion.div>
-    )
+    const draft = done.publishedAs === 'draft'
+    const label = done.publishedAs === 'edited' ? 'Changes saved' : draft ? 'Draft saved' : done.publishedAs === 'scheduled' ? 'Plan scheduled' : 'Plan published'
+    return screen(<div style={{ ...(compact ? { position: 'fixed', inset: 0, zIndex: 10700, overflowY: 'auto' } : { minHeight: '100%' }), background: '#F6F8FA', display: 'grid', placeItems: 'center', padding: 24, boxSizing: 'border-box' }}><div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}><div style={{ fontSize: 32, color: primary }}>✓</div><h1 style={{ fontSize: 28, color: '#0F172A' }}>{label}</h1><p style={{ color: '#64748B', lineHeight: 1.6 }}><strong>{done.session.title}</strong>{draft ? ' is in Drafts. Come back when you are ready to finish planning.' : ' is saved. You can now open its register or return to your plans.'}</p><div style={{ display: 'grid', gap: 10, marginTop: 24 }}>{!draft && onNavigate && <button onClick={() => onNavigate('registers', { sessionId: done.session.id, returnTo: 'planner' })} style={{ ...flowButton, background: primary, color: '#fff', borderColor: primary }}>Open register →</button>}<button onClick={onCancel} style={flowButton}>Back to {terms.sessions}</button>{!draft && form.risk_assessment_required && !form.pending_risk_assessment_id && onNavigate && <button onClick={() => onNavigate('risk_assessments')} style={flowButton}>Complete risk assessment</button>}</div></div></div>)
   }
-
-  return (
-    <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--surface)', position: 'relative' }}>
-      <motion.div
-        animate={{ background: `radial-gradient(circle, ${typeColor}20, transparent 70%)` }}
-        transition={{ duration: 0.5 }}
-        style={{ position: 'absolute', top: -120, right: -120, width: 320, height: 320, borderRadius: '50%', pointerEvents: 'none', zIndex: 0, filter: 'blur(10px)' }}
-      />
-      {/* Header / progress */}
-      <motion.div
-        animate={{ background: `linear-gradient(135deg, ${typeColor}14, ${typeColor}03 55%, transparent)` }}
-        transition={{ duration: 0.45, ease: 'easeOut' }}
-        style={{ padding: compact ? '14px 16px' : '18px 28px', borderBottom: '1px solid var(--border)', flexShrink: 0, position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <motion.span animate={{ background: typeColor }} transition={{ duration: 0.35 }} style={{ width: 8, height: 8, borderRadius: '50%', display: 'inline-block', boxShadow: `0 0 0 4px ${typeColor}22` }} />
-            <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Create Session</div>
-          </div>
-          <button onClick={onCancel} style={{ background: 'none', border: 'none', fontSize: 13, color: 'var(--text3)', cursor: 'pointer', fontWeight: 700 }}>Cancel</button>
-        </div>
-        <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', top: compact ? 14 : 17, left: `${100 / STEPS.length / 2}%`, right: `${100 / STEPS.length / 2}%`, height: 2, background: 'var(--border)', borderRadius: 2, zIndex: 0 }} />
-          <motion.div
-            initial={false}
-            animate={{ width: `${totalSteps > 1 ? ((step - 1) / (totalSteps - 1)) * 100 : 0}%` }}
-            transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-            style={{ position: 'absolute', top: compact ? 14 : 17, left: `${100 / STEPS.length / 2}%`, right: `${100 / STEPS.length / 2}%`, height: 2, background: `linear-gradient(90deg, #16A34A, ${typeColor})`, borderRadius: 2, zIndex: 0, maxWidth: `calc(100% - ${100 / STEPS.length}%)` }}
-          />
-          <div style={{ display: 'flex', gap: compact ? 2 : 4, position: 'relative' }}>
-            {STEPS.map((s, i) => (
-              <StepDot key={s} n={i + 1} label={s} active={step === i + 1} done={step > i + 1} onClick={() => step > i + 1 && setStep(i + 1)} compact={compact} color={typeColor} />
-            ))}
-          </div>
-        </div>
-        <AnimatePresence>
-          {lastSaved && (
-            <motion.div key={lastSaved.getTime()} initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'right', marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
-              <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ width: 5, height: 5, borderRadius: '50%', background: '#16A34A', display: 'inline-block' }} />
-              Autosaved {format(lastSaved, 'HH:mm:ss')}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Body */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: compact ? 16 : 28, display: 'grid', gridTemplateColumns: showSidebar ? '1fr 300px' : '1fr', gap: 24, maxWidth: showSidebar ? 'none' : 720, margin: showSidebar ? 0 : '0 auto', width: '100%', boxSizing: 'border-box', position: 'relative', zIndex: 1 }}>
-        <div style={{ minWidth: 0 }}>
-          <AnimatePresence mode="wait">
-            <motion.div key={step} initial={{ opacity: 0, x: 18, scale: 0.99 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: -18, scale: 0.99 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} style={{ minWidth: 0 }}>
-              {stepKey === 'type' && <StepType form={form} setForm={setForm} templates={templates} appliedTemplateId={appliedTemplateId} onApplyTemplate={applyTemplate} />}
-              {stepKey === 'details' && <StepDetails form={form} setForm={setForm} staff={staff} org={org} />}
-              {stepKey === 'people' && <StepPeople form={form} setForm={setForm} staff={staff} children={children} expectedCount={expectedCount} bubbleDefs={bubbleDefs} org={org} />}
-              {stepKey === 'requirements' && <StepRequirements form={form} setForm={setForm} orgForms={orgForms} org={org} onFormCreated={(f) => setOrgForms(prev => [...prev, f])} expectedChildren={expectedChildren} />}
-              {stepKey === 'risk' && <StepRisk form={form} setForm={setForm} org={org} riskAssessments={riskAssessments} onCreated={(ra) => setRiskAssessments(prev => [ra, ...prev])} />}
-              {stepKey === 'review' && <StepReview form={form} staff={staff} expectedCount={expectedCount} primary={primary} riskAssessments={riskAssessments} typeColor={typeColor} />}
-            </motion.div>
-          </AnimatePresence>
-          {error && <div style={{ color: '#DC2626', fontWeight: 700, fontSize: 13, marginTop: 8 }}>{error}</div>}
-        </div>
-        {showSidebar && <LiveSummary form={form} leadName={staff.find(s => s.id === form.lead_staff_id)?.full_name} expectedCount={expectedCount} />}
-      </div>
-
-      {/* Footer */}
-      <div style={{ padding: compact ? '12px 16px' : '16px 28px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
-        {missingDetails.length > 0 && (
-          <div role="status" style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10, lineHeight: 1.5 }}>
-            Still needed: <strong style={{ color: 'var(--text2)', fontWeight: 700 }}>{missingDetails.join(', ')}</strong>
-          </div>
-        )}
-        <div style={{
-          display: 'flex', flexDirection: compact && isLastStep ? 'column-reverse' : 'row',
-          justifyContent: 'space-between', alignItems: compact && isLastStep ? 'stretch' : 'center', gap: compact && isLastStep ? 10 : 0,
-        }}>
-        <motion.button
-          onClick={() => setStep(s => Math.max(1, s - 1))}
-          disabled={step === 1}
-          whileHover={step === 1 ? {} : { y: -1 }}
-          whileTap={step === 1 ? {} : { scale: 0.95 }}
-          animate={{ opacity: step === 1 ? 0.4 : 1 }}
-          transition={{ duration: 0.15 }}
-          style={{ padding: compact ? '13px 22px' : '11px 22px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: step === 1 ? 'default' : 'pointer', flexShrink: 0 }}>
-          Back
-        </motion.button>
-        {!isLastStep ? (
-          <motion.button
-            onClick={() => canContinue() && setStep(s => s + 1)}
-            disabled={!canContinue()}
-            whileHover={canContinue() ? { y: -1, boxShadow: `0 8px 20px ${typeColor}45` } : {}}
-            whileTap={canContinue() ? { scale: 0.95 } : {}}
-            animate={{ background: canContinue() ? `linear-gradient(135deg, ${primary}, ${typeColor})` : '#9CA3AF' }}
-            transition={{ duration: 0.25 }}
-            style={{ padding: compact ? '13px 26px' : '11px 26px', borderRadius: 10, border: 'none', color: '#fff', fontWeight: 700, cursor: canContinue() ? 'pointer' : 'default', flexShrink: 0 }}>
-            Continue
-          </motion.button>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: compact ? 'column' : 'row', gap: 10, width: compact ? '100%' : 'auto' }}>
-            {!isEditing && <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('draft')} disabled={saving} style={{ padding: compact ? '13px 18px' : '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', order: compact ? 3 : 0 }}>Save as Draft</motion.button>}
-            {!isEditing && <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.95 }} onClick={() => publish('scheduled')} disabled={saving} style={{ padding: compact ? '13px 18px' : '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', order: compact ? 2 : 0 }}>Schedule Session</motion.button>}
-            <motion.button
-              whileHover={{ y: -1, boxShadow: `0 8px 20px ${typeColor}45` }}
-              whileTap={{ scale: 0.95 }}
-              // Editing passes no status, so a live or completed session
-              // keeps the status it already has rather than being reset.
-              onClick={() => publish(isEditing ? null : 'ready')}
-              disabled={saving}
-              style={{ padding: compact ? '13px 22px' : '11px 22px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${typeColor})`, color: '#fff', fontWeight: 800, cursor: 'pointer', minWidth: 140, textAlign: 'center', order: compact ? 1 : 0 }}>
-              <AnimatePresence mode="wait" initial={false}>
-                {saving ? (
-                  <motion.span key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                    <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }} style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', display: 'inline-block' }} />
-                    {isEditing ? 'Saving...' : 'Publishing...'}
-                  </motion.span>
-                ) : (
-                  <motion.span key="publish" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'block' }}>{isEditing ? 'Save Changes' : 'Publish Session'}</motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          </div>
-        )}
-        </div>
-      </div>
-    </div>
-  )
+  return screen(<div style={{ ...(compact ? { position: 'fixed', inset: 0, zIndex: 10700, height: '100dvh' } : { height: '100%', minHeight: 600 }), overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#F8FAFC', color: '#0F172A' }}>
+    <header style={{ padding: compact ? '12px 16px' : '20px 28px', paddingTop: compact ? 'max(12px, env(safe-area-inset-top))' : 20, borderBottom: '1px solid #E2E8F0', background: '#fff', flexShrink: 0 }}><div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', marginBottom: 12 }}><h1 ref={headingRef} tabIndex={-1} style={{ fontSize: compact ? 19 : 23, margin: 0, outline: 'none' }}>{isEditing ? 'Edit' : 'New'} {terms.session}</h1><button onClick={closeWizard} disabled={saving} style={{ ...flowButton, border: 0, color: '#64748B' }}>Close</button></div>
+      {compact ? <><div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 10, fontSize: 13 }}><strong>{STEP_DEFS[step - 1]?.label}</strong><span style={{ color: '#64748B' }}>Step {step} of {totalSteps}</span></div><div role="progressbar" aria-label="Planning progress" aria-valuenow={step} aria-valuemin={1} aria-valuemax={totalSteps} style={{ height: 4, background: '#E2E8F0', borderRadius: 8 }}><div style={{ width: `${step / totalSteps * 100}%`, height: '100%', borderRadius: 8, background: primary }} /></div></> : <div style={{ display: 'flex', gap: 8 }}>{STEPS.map((name, i) => <StepDot key={name} n={i + 1} label={name} active={step === i + 1} done={step > i + 1} onClick={() => step > i + 1 && setStep(i + 1)} compact={false} color={primary} />)}</div>}
+    </header>
+    <div ref={bodyRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: compact ? 16 : 28 }}><div style={{ display: 'grid', alignItems: 'start', gridTemplateColumns: showSidebar ? 'minmax(0, 1fr) 280px' : 'minmax(0, 1fr)', gap: 24, maxWidth: 1140, margin: '0 auto' }}><div style={{ minWidth: 0 }}>
+      {stepKey === 'type' && <StepType form={form} setForm={setForm} templates={templates} appliedTemplateId={appliedTemplateId} onApplyTemplate={applyTemplate} />}
+      {stepKey === 'details' && <StepDetails form={form} setForm={setForm} staff={staff} org={org} />}
+      {stepKey === 'people' && <StepPeople form={form} setForm={setForm} staff={staff} children={children} expectedCount={expectedCount} bubbleDefs={bubbleDefs} org={org} />}
+      {stepKey === 'requirements' && <StepRequirements form={form} setForm={setForm} orgForms={orgForms} org={org} onFormCreated={f => setOrgForms(prev => [...prev, f])} expectedChildren={expectedChildren} />}
+      {stepKey === 'risk' && <StepRisk form={form} setForm={setForm} org={org} riskAssessments={riskAssessments} onCreated={ra => setRiskAssessments(prev => [ra, ...prev])} />}
+      {stepKey === 'review' && <><div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>{STEP_DEFS.filter(s => !['review', 'type'].includes(s.key)).map(s => <button key={s.key} onClick={() => setStep(STEP_DEFS.findIndex(item => item.key === s.key) + 1)} style={{ ...flowButton, fontSize: 12 }}>Change {s.label.toLowerCase()}</button>)}</div><StepReview form={form} staff={staff} expectedCount={expectedCount} primary={primary} riskAssessments={riskAssessments} typeColor={typeColor} /></>}
+    </div>{showSidebar && <LiveSummary form={form} leadName={staff.find(s => s.id === form.lead_staff_id)?.full_name} expectedCount={expectedCount} />}</div></div>
+    <footer style={{ padding: compact ? '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))' : '16px 28px', borderTop: '1px solid #E2E8F0', background: '#fff', flexShrink: 0 }}>
+      {error && <div role="alert" style={{ color: '#B91C1C', fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      {missingDetails.length > 0 && <div role="status" style={{ fontSize: 12, color: '#64748B', marginBottom: 10 }}>Still needed: {missingDetails.join(', ')}</div>}
+      {isLastStep && (!isEditing || editingDraft) && <label style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Save as<select aria-label="Save as" disabled={saving} value={saveAs} onChange={e => setSaveAs(e.target.value)} style={{ ...inp, flex: 1 }}><option value="ready">Published — ready to run</option><option value="scheduled">Scheduled</option><option value="draft">Draft — finish later</option></select></label>}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}><button onClick={() => step === 1 ? closeWizard() : setStep(s => s - 1)} disabled={saving} style={flowButton}>{step === 1 ? 'Cancel' : '← Back'}</button>{!compact && !isEditing && lastSaved && <span style={{ color: '#64748B', fontSize: 12 }}>Draft saved on this device</span>}<button onClick={() => isLastStep ? publish(isEditing && !editingDraft ? null : saveAs) : canContinue() && setStep(s => s + 1)} disabled={saving || !canContinue()} style={{ ...flowButton, background: !canContinue() || saving ? '#94A3B8' : primary, borderColor: 'transparent', color: '#fff', flex: compact ? 1 : undefined }}>{saving ? 'Saving…' : isLastStep ? isEditing && !editingDraft ? 'Save changes' : saveAs === 'draft' ? 'Save draft' : saveAs === 'scheduled' ? `Schedule ${terms.session}` : `Publish ${terms.session}` : 'Continue →'}</button></div>
+    </footer>
+  </div>)
 }

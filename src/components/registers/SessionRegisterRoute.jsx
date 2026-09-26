@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import LiveRegister from './LiveRegister'
 
-export default function SessionRegisterRoute({ sessionId, org, authSession, userRole, onClose, onNavigate }) {
+export default function SessionRegisterRoute({ sessionId, org, authSession, userRole, onClose, onNavigate, backLabel = 'Back to registers' }) {
   const [result, setResult] = useState({ loading: true })
   const [retry, setRetry] = useState(0)
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function SessionRegisterRoute({ sessionId, org, authSession, user
   if (result.error) return <div role="alert">
     <p>This register could not be opened. Check your connection and access.</p>
     <button style={{ minHeight: 44 }} onClick={() => setRetry(n => n + 1)}>Retry</button>
-    <button style={{ minHeight: 44 }} onClick={onClose}>Back to registers</button>
+    <button style={{ minHeight: 44 }} onClick={onClose}>{backLabel}</button>
   </div>
-  return <LiveRegister key={sessionId} session={result.data} org={org} authUserId={authSession?.user?.id} userRole={userRole} onClose={onClose} onNavigate={onNavigate} />
+  return <LiveRegister key={sessionId} session={result.data} org={org} authUserId={authSession?.user?.id} userRole={userRole} onClose={onClose} backLabel={backLabel} onNavigate={onNavigate} />
 }
