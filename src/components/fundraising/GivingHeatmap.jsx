@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const DAY_MS = 1000 * 60 * 60 * 24
-const GOLD = '#BA7517'
+const GOLD = 'var(--warn-text)'
 
 export default function GivingHeatmap({ donations }) {
   const now = new Date()

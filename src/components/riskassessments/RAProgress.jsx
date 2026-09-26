@@ -87,7 +87,7 @@ export function ProgressStrip({ steps, onJump }) {
         const tone = step.done
           ? { bg: 'var(--ok-bg)', text: 'var(--ok-text)', mark: '✓' }
           : step.optional
-            ? { bg: 'var(--surface2)', text: '#5A5772', mark: '○' }
+            ? { bg: 'var(--surface2)', text: 'var(--text2)', mark: '○' }
             : { bg: 'var(--warn-bg)', text: 'var(--warn-text)', mark: '!' }
 
         return (
@@ -221,7 +221,7 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
             : 'Not set'],
         ].map(([label, value]) => (
           <div key={label}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#8B87A3', letterSpacing: 0.3 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: 0.3 }}>
               {label.toUpperCase()}
             </div>
             <div style={{ fontSize: 13.5, color: 'var(--text)', marginTop: 3 }}>{value}</div>
@@ -247,13 +247,13 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
           )}
 
           {!approved && !isManager && assessment.approval_required !== false && (
-            <div style={{ fontSize: 13, color: '#8B87A3' }}>
+            <div style={{ fontSize: 13, color: 'var(--text3)' }}>
               A manager needs to approve this before it counts as ready.
             </div>
           )}
 
           {approved && !isManager && (
-            <div style={{ fontSize: 13, color: '#8B87A3' }}>
+            <div style={{ fontSize: 13, color: 'var(--text3)' }}>
               A manager needs to carry out the review.
             </div>
           )}
@@ -292,7 +292,7 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
             }}>Changes required</button>
             <button onClick={() => setReviewing(false)} style={{
               padding: '10px 16px', borderRadius: 11, border: 'none',
-              background: 'transparent', color: '#8B87A3', fontSize: 13.5, fontWeight: 700,
+              background: 'transparent', color: 'var(--text3)', fontSize: 13.5, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>Cancel</button>
           </div>

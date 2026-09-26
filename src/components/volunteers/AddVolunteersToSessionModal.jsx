@@ -199,8 +199,8 @@ export default function AddVolunteersToSessionModal({ session, orgId, primary, s
           {toggleRow(sendEmail, setSendEmail, 'Send email', 'Branded invite email to each person added')}
           {toggleRow(sendPush, setSendPush, 'Send push notification', "Instant alert, if they've enabled push")}
 
-          {error && <div style={{ fontSize: 12, fontWeight: 700, color: '#FCA5A5' }}>{error}</div>}
-          {done && <div style={{ fontSize: 12, fontWeight: 700, color: '#86EFAC' }}><Icon name="✓" /> Added — closing…</div>}
+          {error && <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--danger-text)' }}>{error}</div>}
+          {done && <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ok-text)' }}><Icon name="✓" /> Added — closing…</div>}
 
           <button
             onClick={handleInvite}

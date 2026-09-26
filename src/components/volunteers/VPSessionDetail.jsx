@@ -135,7 +135,7 @@ function VPRegister({ session, org, primary, theme, onClose }) {
                     {alert && <div style={{ fontSize: 10.5, color: 'var(--danger-text)', fontWeight: 700 }}><Icon name="⚠" /> Medical alert</div>}
                   </div>
                   <button onClick={() => toggle(r)} disabled={busy === r.id}
-                    style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: r.status === 'signed_in' ? '#FEF2F2' : theme.gradient, color: r.status === 'signed_in' ? '#DC2626' : '#fff', fontWeight: 800, fontSize: 11.5, cursor: 'pointer', flexShrink: 0 }}>
+                    style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: r.status === 'signed_in' ? 'var(--danger-bg)' : theme.gradient, color: r.status === 'signed_in' ? '#DC2626' : '#fff', fontWeight: 800, fontSize: 11.5, cursor: 'pointer', flexShrink: 0 }}>
                     {busy === r.id ? '…' : r.status === 'signed_in' ? 'Sign Out' : 'Sign In'}
                   </button>
                 </div>

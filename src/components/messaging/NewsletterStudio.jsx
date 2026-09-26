@@ -595,7 +595,7 @@ export default function NewsletterStudio({ org, session }) {
 
   const checkRow = (ok, label, detail) => (
     <div style={{ display: 'flex', gap: 10, padding: '9px 0', borderBottom: '1px solid var(--border)' }}>
-      <span aria-hidden="true" style={{ fontSize: 13, color: ok ? '#15803D' : '#B45309', flexShrink: 0 }}>{ok ? '✓' : '!'}</span>
+      <span aria-hidden="true" style={{ fontSize: 13, color: ok ? 'var(--ok-text)' : 'var(--warn-text)', flexShrink: 0 }}>{ok ? '✓' : '!'}</span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{label}</span>
         {detail && <span style={{ display: 'block', fontSize: 12, color: 'var(--text3)', marginTop: 2, lineHeight: 1.5 }}>{detail}</span>}
@@ -701,7 +701,7 @@ export default function NewsletterStudio({ org, session }) {
         <div style={{
           padding: '11px 15px', borderRadius: 11, fontSize: 13, fontWeight: 600, marginBottom: 14,
           background: result.ok ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-          color: result.ok ? '#15803D' : '#B91C1C',
+          color: result.ok ? 'var(--ok-text)' : 'var(--danger-text)',
         }}>{result.text}</div>
       )}
 
@@ -738,7 +738,7 @@ export default function NewsletterStudio({ org, session }) {
                 padding: '3px 9px', borderRadius: 99, fontSize: 10.5, fontWeight: 800, flexShrink: 0,
                 textTransform: 'uppercase', letterSpacing: 0.4,
                 background: n.status === 'draft' ? 'var(--border)' : 'rgba(34,197,94,0.15)',
-                color: n.status === 'draft' ? 'var(--text3)' : '#15803D',
+                color: n.status === 'draft' ? 'var(--text3)' : 'var(--ok-text)',
               }}>{n.status === 'draft' ? 'Draft' : 'Sent'}</span>
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 14, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

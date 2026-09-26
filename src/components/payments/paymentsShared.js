@@ -4,15 +4,15 @@
 
 export const PB = {
   blue: '#2563EB',
-  blueDark: '#1D4ED8',
+  blueDark: 'var(--info-text)',
   gradient: 'linear-gradient(135deg, #4F7DFF 0%, #2563EB 100%)',
   green: '#16A34A',
   greenBg: 'var(--ok-bg)',
-  amber: '#B45309',
+  amber: 'var(--warn-text)',
   amberBg: 'var(--warn-bg)',
   red: '#DC2626',
   redBg: 'var(--danger-bg)',
-  grey: '#64748B',
+  grey: 'var(--text3)',
   greyBg: 'var(--surface-hover)',
   purple: '#7C3AED',
   purpleBg: 'var(--violet-bg)',

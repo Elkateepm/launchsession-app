@@ -59,7 +59,7 @@ function Avatar({ person, size = 42, primary }) {
   )
 }
 
-function Pill({ children, tone = '#64748B', bg = '#F1F5F9' }) {
+function Pill({ children, tone = 'var(--text3)', bg = 'var(--border-soft)' }) {
   return (
     <span style={{
       display: 'inline-block', padding: '3px 9px', borderRadius: 99,
@@ -179,9 +179,9 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
         {TABS.map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} style={{
             padding: '9px 14px', borderRadius: 10, cursor: 'pointer', minHeight: 44,
-            border: `1px solid ${tab === key ? 'transparent' : '#E2E8F0'}`,
+            border: `1px solid ${tab === key ? 'transparent' : 'var(--border)'}`,
             background: tab === key ? primary : '#fff',
-            color: tab === key ? '#fff' : '#64748B',
+            color: tab === key ? '#fff' : 'var(--text3)',
             fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
           }}>{label}</button>
         ))}
@@ -224,8 +224,8 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'flex-end' }}>
-                <Pill tone="#3730A3" bg="#EEF2FF">{ROLE_LABELS[p.role] || p.role}</Pill>
-                {p.approval_status === 'declined' && <Pill tone="#B42318" bg="#FEF2F2">Declined</Pill>}
+                <Pill tone="#3730A3" bg="var(--info-bg)">{ROLE_LABELS[p.role] || p.role}</Pill>
+                {p.approval_status === 'declined' && <Pill tone="var(--danger-text)" bg="var(--danger-bg)">Declined</Pill>}
               </div>
             </button>
           ))}
@@ -514,9 +514,9 @@ function InternalMail({ org, people, primary, isMobile, onFlash }) {
           {[['all_staff', 'Everyone on the team'], ['selected', 'Choose people']].map(([k, l]) => (
             <button key={k} onClick={() => setAudience(k)} style={{
               padding: '9px 14px', borderRadius: 10, cursor: 'pointer', minHeight: 44,
-              border: `1px solid ${audience === k ? 'transparent' : '#E2E8F0'}`,
+              border: `1px solid ${audience === k ? 'transparent' : 'var(--border)'}`,
               background: audience === k ? primary : '#fff',
-              color: audience === k ? '#fff' : '#64748B',
+              color: audience === k ? '#fff' : 'var(--text3)',
               fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
             }}>{l}</button>
           ))}

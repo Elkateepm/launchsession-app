@@ -73,7 +73,7 @@ function CategoryIcon({ category, color, size = 12 }) {
   return <svg {...common}><path d="M12 2l2.4 6.6L21 10l-5.5 4.3L17 21l-5-3.6L7 21l1.5-6.7L3 10l6.6-1.4L12 2Z" /></svg>
 }
 
-function SearchIcon({ color = '#9CA3AF' }) {
+function SearchIcon({ color = 'var(--text-faint)' }) {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
 }
 
@@ -110,7 +110,7 @@ function DeadlineBadge({ grant }) {
   }
   const daysLeft = Math.ceil((new Date(grant.deadline_date) - new Date()) / DAY_MS)
   if (daysLeft < 0) return <span style={{ fontSize: 13, color: 'var(--text-faint)', fontWeight: 500 }}>Closed</span>
-  const color = daysLeft <= 7 ? '#B91C1C' : daysLeft <= 30 ? '#B45309' : '#1C2333'
+  const color = daysLeft <= 7 ? 'var(--danger-text)' : daysLeft <= 30 ? 'var(--warn-text)' : '#1C2333'
   return (
     <span style={{ fontSize: 13, color, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
       {daysLeft <= 30 && <ClockIcon color={color} />}
@@ -301,14 +301,14 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {CATEGORIES.map(c => (
             <button key={c.key} onClick={() => setCategory(c.key)}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 20, border: category === c.key ? `1.5px solid ${primary}` : '1.5px solid #E5E3DC', background: category === c.key ? 'var(--org-a05)' : '#fff', color: category === c.key ? primary : '#6B7280', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s' }}>
-              {c.icon && <CategoryIcon category={c.icon} color={category === c.key ? primary : '#9CA3AF'} />}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 20, border: category === c.key ? `1.5px solid ${primary}` : '1.5px solid #E5E3DC', background: category === c.key ? 'var(--org-a05)' : '#fff', color: category === c.key ? primary : 'var(--text3)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s' }}>
+              {c.icon && <CategoryIcon category={c.icon} color={category === c.key ? primary : 'var(--text-faint)'} />}
               {c.label}
               <span style={{ opacity: 0.55, fontWeight: 500 }}>({categoryCounts[c.key] || 0})</span>
             </button>
           ))}
           <button onClick={() => setSavedOnly(v => !v)}
-            style={{ padding: '6px 14px', borderRadius: 20, border: savedOnly ? '1.5px solid #BA7517' : '1.5px solid #E5E3DC', background: savedOnly ? '#FDF6E8' : '#fff', color: savedOnly ? '#92640C' : '#6B7280', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', marginLeft: 'auto' }}>
+            style={{ padding: '6px 14px', borderRadius: 20, border: savedOnly ? '1.5px solid #BA7517' : '1.5px solid #E5E3DC', background: savedOnly ? '#FDF6E8' : '#fff', color: savedOnly ? '#92640C' : 'var(--text3)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', marginLeft: 'auto' }}>
             {savedOnly ? '★ Saved only' : '☆ Saved only'}
           </button>
         </div>
@@ -353,7 +353,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                     </div>
                     <motion.button onClick={() => toggleSave(g.id)} disabled={busyId === g.id} title={saves[g.id] ? 'Unsave' : 'Save'}
                       whileTap={{ scale: 0.8 }}
-                      style={{ background: 'none', border: 'none', fontSize: 19, cursor: 'pointer', color: saves[g.id] ? '#BA7517' : '#D1D5DB', flexShrink: 0, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: -6, marginRight: -8 }}>
+                      style={{ background: 'none', border: 'none', fontSize: 19, cursor: 'pointer', color: saves[g.id] ? 'var(--warn-text)' : 'var(--text-faint)', flexShrink: 0, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: -6, marginRight: -8 }}>
                       {saves[g.id] ? '★' : '☆'}
                     </motion.button>
                   </div>
@@ -402,7 +402,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                     <a href={g.website_url} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 14px', borderRadius: 9, border: '1.5px solid #E5E3DC', color: 'var(--text2)', fontWeight: 600, fontSize: 12.5, textDecoration: 'none' }}>Visit site</a>
                     <button onClick={() => shareGrant(g)} title="Share"
                       style={{ marginLeft: 'auto', background: 'none', border: '1.5px solid #E5E3DC', borderRadius: 9, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text3)' }}>
-                      {shareFeedback === g.id ? <CheckIcon color="#16A34A" /> : <ShareIcon color="#6B7280" />}
+                      {shareFeedback === g.id ? <CheckIcon color="#16A34A" /> : <ShareIcon color="var(--text3)" />}
                     </button>
                   </div>
                   <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at var(--mx, 50%) var(--my, 50%), var(--org-a35), transparent 55%)`, opacity: 'var(--sO, 0)', transition: 'opacity 0.3s', mixBlendMode: 'overlay', pointerEvents: 'none' }} />

@@ -285,7 +285,7 @@ function ReferralForm({ org, children, session, primary, onCancel, onCreated }) 
         <Panel title="🎯 Desired Outcomes">
           <div style={styles.chipWrap}>
             {OUTCOMES.map(o => (
-              <button key={o} onClick={() => toggle(o)} style={{ ...styles.chip, borderColor: outcomes.includes(o) ? primary : '#E5E7EB', background: outcomes.includes(o) ? primary + '18' : '#fff', color: outcomes.includes(o) ? primary : '#475569' }}>
+              <button key={o} onClick={() => toggle(o)} style={{ ...styles.chip, borderColor: outcomes.includes(o) ? primary : 'var(--border)', background: outcomes.includes(o) ? primary + '18' : '#fff', color: outcomes.includes(o) ? primary : 'var(--text2)' }}>
                 {outcomes.includes(o) ? '✓ ' : ''}{o}
               </button>
             ))}
@@ -296,7 +296,7 @@ function ReferralForm({ org, children, session, primary, onCancel, onCreated }) 
           <Textarea label="Staff only" value={safeguardingNotes} onChange={setSafeguardingNotes} placeholder="Confidential safeguarding notes..." />
         </Panel>
 
-        <button onClick={save} disabled={!childId || saving} style={{ ...styles.saveButton, background: !childId || saving ? '#CBD5E1' : `linear-gradient(135deg, ${primary}, #7C3AED)` }}>
+        <button onClick={save} disabled={!childId || saving} style={{ ...styles.saveButton, background: !childId || saving ? 'var(--text-faint)' : `linear-gradient(135deg, ${primary}, #7C3AED)` }}>
           {saving ? 'Creating...' : 'Create Referral'}
         </button>
       </div>
@@ -394,7 +394,7 @@ function MatchForm({ org, children, team, referral, session, primary, onCancel, 
           <Field label="Meeting Frequency">
             <div style={styles.frequencyGrid}>
               {['weekly', 'fortnightly', 'monthly'].map(f => (
-                <button key={f} onClick={() => setFrequency(f)} style={{ ...styles.chip, borderColor: frequency === f ? primary : '#E5E7EB', background: frequency === f ? primary + '18' : '#fff', color: frequency === f ? primary : '#475569' }}>
+                <button key={f} onClick={() => setFrequency(f)} style={{ ...styles.chip, borderColor: frequency === f ? primary : 'var(--border)', background: frequency === f ? primary + '18' : '#fff', color: frequency === f ? primary : 'var(--text2)' }}>
                   {f}
                 </button>
               ))}
@@ -402,7 +402,7 @@ function MatchForm({ org, children, team, referral, session, primary, onCancel, 
           </Field>
         </Panel>
 
-        <button onClick={save} disabled={!childId || !volunteerId || !supervisorId || saving} style={{ ...styles.saveButton, background: (!childId || !volunteerId || !supervisorId || saving) ? '#CBD5E1' : 'linear-gradient(135deg, #E91E63, #7C3AED)' }}>
+        <button onClick={save} disabled={!childId || !volunteerId || !supervisorId || saving} style={{ ...styles.saveButton, background: (!childId || !volunteerId || !supervisorId || saving) ? 'var(--text-faint)' : 'linear-gradient(135deg, #E91E63, #7C3AED)' }}>
           {saving ? 'Creating...' : 'Confirm Match'}
         </button>
       </div>
@@ -467,7 +467,7 @@ function MatchProfile({ org, match, session, primary, onBack }) {
           <Field label="Mood">
             <div style={styles.moodGrid}>
               {MOODS.map(m => (
-                <button key={m.key} onClick={() => setCheckMood(m.key)} style={{ ...styles.moodButton, borderColor: checkMood === m.key ? primary : '#E5E7EB', background: checkMood === m.key ? primary + '18' : '#fff' }}>
+                <button key={m.key} onClick={() => setCheckMood(m.key)} style={{ ...styles.moodButton, borderColor: checkMood === m.key ? primary : 'var(--border)', background: checkMood === m.key ? primary + '18' : '#fff' }}>
                   <span>{m.emoji}</span>
                   <small>{m.label}</small>
                 </button>

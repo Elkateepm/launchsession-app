@@ -60,7 +60,7 @@ export default function RALinkedSessions({ assessment, org, session: authSession
                   <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{s.title}</div>
                   <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>{s.session_date ? new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''}{s.start_time ? ` · ${s.start_time}` : ''}{s.location ? ` · ${s.location}` : ''}</div>
                 </div>
-                <button onClick={() => detach(link)} style={{ background: 'none', border: 'none', color: '#CBD5E1', cursor: 'pointer', fontSize: 15 }}><Icon name="✕" /></button>
+                <button onClick={() => detach(link)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 15 }}><Icon name="✕" /></button>
               </div>
             )
           })}

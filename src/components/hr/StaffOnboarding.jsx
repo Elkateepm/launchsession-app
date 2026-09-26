@@ -121,7 +121,7 @@ export default function StaffOnboarding({ org, staff, primary, canEdit, onJumpTo
             background: complete ? '#22C55E' : primary, transition: 'width 0.3s',
           }} />
         </div>
-        <div style={{ fontSize: 12.5, color: complete ? '#04713C' : '#64748B', marginTop: 10, fontWeight: complete ? 700 : 400 }}>
+        <div style={{ fontSize: 12.5, color: complete ? 'var(--ok-text)' : 'var(--text3)', marginTop: 10, fontWeight: complete ? 700 : 400 }}>
           {complete
             ? 'Everything required is done. Compliance and probation take it from here.'
             : `${requiredLeft} required item${requiredLeft === 1 ? '' : 's'} still to do`}
@@ -150,7 +150,7 @@ export default function StaffOnboarding({ org, staff, primary, canEdit, onJumpTo
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{
                   fontSize: 14, fontWeight: 600,
-                  color: i.completed ? '#94A3B8' : '#0F172A',
+                  color: i.completed ? 'var(--text-faint)' : 'var(--text)',
                   textDecoration: i.completed ? 'line-through' : 'none',
                 }}>
                   {i.label}

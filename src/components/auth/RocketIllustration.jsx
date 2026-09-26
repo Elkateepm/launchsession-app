@@ -15,7 +15,7 @@ export default function RocketIllustration({ width = 200 }) {
           <stop offset="100%" stopColor="#3B82F6" />
         </linearGradient>
         <radialGradient id="flameCore" cx="50%" cy="0%" r="85%">
-          <stop offset="0%" stopColor="#FDE68A" />
+          <stop offset="0%" stopColor="var(--warn-border)" />
           <stop offset="45%" stopColor="#FB923C" />
           <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
         </radialGradient>

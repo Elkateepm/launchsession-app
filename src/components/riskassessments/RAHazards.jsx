@@ -73,7 +73,7 @@ export default function RAHazards({ assessment, org, session: authSession, venue
   const scale = (val, onChange) => (
     <div style={{ display: 'flex', gap: 3 }}>
       {[1, 2, 3, 4, 5].map(n => (
-        <button key={n} onClick={() => onChange(n)} style={{ width: 26, height: 26, borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 800, background: val === n ? primary : '#F1F5F9', color: val === n ? '#fff' : '#64748B' }}>{n}</button>
+        <button key={n} onClick={() => onChange(n)} style={{ width: 26, height: 26, borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 800, background: val === n ? primary : 'var(--border-soft)', color: val === n ? '#fff' : 'var(--text3)' }}>{n}</button>
       ))}
     </div>
   )
@@ -100,14 +100,14 @@ export default function RAHazards({ assessment, org, session: authSession, venue
               <motion.div key={h.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
                 style={{ border: '1.5px solid rgba(15,23,42,0.08)', borderRadius: 12, marginBottom: 10, overflow: 'hidden', background: 'var(--surface)' }}>
                 <div onClick={() => setExpanded(isOpen ? null : h.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', cursor: 'pointer' }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: '#CBD5E1', width: 18 }}>{idx + 1}</span>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', width: 18 }}>{idx + 1}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: h.hazard ? '#0F172A' : '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.hazard || 'Untitled hazard'}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: h.hazard ? 'var(--text)' : 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.hazard || 'Untitled hazard'}</div>
                     {h.who_at_risk && <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>At risk: {h.who_at_risk}</div>}
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text3)' }}>{score}</span>
                   <RatingBadge rating={rating} size="sm" />
-                  <span style={{ fontSize: 14, color: '#CBD5E1' }}>{isOpen ? '▾' : '▸'}</span>
+                  <span style={{ fontSize: 14, color: 'var(--text-faint)' }}>{isOpen ? '▾' : '▸'}</span>
                 </div>
                 <AnimatePresence>
                   {isOpen && (

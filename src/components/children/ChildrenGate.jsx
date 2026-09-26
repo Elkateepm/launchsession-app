@@ -124,7 +124,7 @@ export default function ChildrenGate({ org, session, children }) {
               disabled={verifying || !pw}
               style={{
                 padding: '11px 28px', borderRadius: 10, border: 'none',
-                background: verifying || !pw ? '#9ca3af' : '#2563EB', color: '#fff',
+                background: verifying || !pw ? 'var(--text-faint)' : '#2563EB', color: '#fff',
                 fontSize: 14, fontWeight: 700, cursor: verifying || !pw ? 'default' : 'pointer', width: '100%',
               }}
             >

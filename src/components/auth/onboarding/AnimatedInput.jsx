@@ -13,7 +13,7 @@ export default function AnimatedInput({ label, valid, error, inputProps, autoFoc
 
   return (
     <div>
-      {label && <label className="ls-input-label" style={{ ...labelStyle, color: error ? '#FCA5A5' : labelStyle.color }}>{label}</label>}
+      {label && <label className="ls-input-label" style={{ ...labelStyle, color: error ? 'var(--danger-border)' : labelStyle.color }}>{label}</label>}
       <div style={{ position: 'relative' }}>
         <input
           {...inputProps}
@@ -29,7 +29,7 @@ export default function AnimatedInput({ label, valid, error, inputProps, autoFoc
         )}
       </div>
       {error && (
-        <div role="alert" style={{ fontSize: 11.5, color: '#FCA5A5', marginTop: 6, animation: reducedMotion ? 'ls-fade-in 150ms ease' : 'ls-label-in 220ms cubic-bezier(0.16,1,0.3,1)' }}>
+        <div role="alert" style={{ fontSize: 11.5, color: 'var(--danger-text)', marginTop: 6, animation: reducedMotion ? 'ls-fade-in 150ms ease' : 'ls-label-in 220ms cubic-bezier(0.16,1,0.3,1)' }}>
           {error}
         </div>
       )}

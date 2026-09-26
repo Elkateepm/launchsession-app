@@ -188,7 +188,7 @@ export default function VolunteerAcceptInvite() {
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
                     {[1, 2, 3, 4].map(i => (
-                      <div key={i} style={{ flex: 1, height: 3, borderRadius: 99, background: i <= pwStrength ? strengthColor[pwStrength] : '#E5E7EB', transition: 'background 0.2s' }} />
+                      <div key={i} style={{ flex: 1, height: 3, borderRadius: 99, background: i <= pwStrength ? strengthColor[pwStrength] : 'var(--border)', transition: 'background 0.2s' }} />
                     ))}
                   </div>
                   <div style={{ fontSize: 11, color: strengthColor[pwStrength], fontWeight: 700 }}>{strengthLabel[pwStrength]}</div>
@@ -202,7 +202,7 @@ export default function VolunteerAcceptInvite() {
                 onChange={e => setConfirm(e.target.value)}
                 required
                 placeholder="Repeat password"
-                style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${confirm && confirm !== password ? '#FCA5A5' : '#E5E7EB'}`, fontSize: 15, outline: 'none', marginBottom: 6, fontFamily: 'Inter,sans-serif' }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${confirm && confirm !== password ? 'var(--danger-border)' : 'var(--border)'}`, fontSize: 15, outline: 'none', marginBottom: 6, fontFamily: 'Inter,sans-serif' }}
               />
               {confirm && confirm !== password && <div style={{ fontSize: 11, color: 'var(--danger-text)', marginBottom: 14, fontWeight: 600 }}>Passwords don't match</div>}
               {confirm && confirm === password && <div style={{ fontSize: 11, color: 'var(--ok-text)', marginBottom: 14, fontWeight: 600 }}><Icon name="✓" /> Passwords match</div>}
@@ -210,7 +210,7 @@ export default function VolunteerAcceptInvite() {
               <button
                 type="submit"
                 disabled={saving || !password || !confirm}
-                style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: saving || !password || !confirm ? '#E5E7EB' : primary, color: saving || !password || !confirm ? '#9CA3AF' : '#fff', fontSize: 16, fontWeight: 800, cursor: saving || !password || !confirm ? 'default' : 'pointer', marginTop: 8 }}
+                style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: saving || !password || !confirm ? 'var(--border)' : primary, color: saving || !password || !confirm ? 'var(--text-faint)' : '#fff', fontSize: 16, fontWeight: 800, cursor: saving || !password || !confirm ? 'default' : 'pointer', marginTop: 8 }}
               >
                 {saving ? 'Setting up your account...' : 'Confirm & Join →'}
               </button>

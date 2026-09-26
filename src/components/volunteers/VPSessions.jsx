@@ -33,7 +33,7 @@ export default function VPSessions({ sessions, myBookings, todayStr, onOpenSessi
       <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
         {FILTERS.map(f => (
           <button key={f.key} onClick={() => setFilter(f.key)}
-            style={{ padding: '8px 16px', borderRadius: 99, border: 'none', background: filter === f.key ? primary : '#F1F5F9', color: filter === f.key ? '#fff' : '#64748B', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>
+            style={{ padding: '8px 16px', borderRadius: 99, border: 'none', background: filter === f.key ? primary : 'var(--border-soft)', color: filter === f.key ? '#fff' : 'var(--text3)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>
             {f.label}
           </button>
         ))}
@@ -48,7 +48,7 @@ export default function VPSessions({ sessions, myBookings, todayStr, onOpenSessi
       ) : (
         grouped.map((group, gi) => (
           <div key={group.date} style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 800, color: group.date === todayStr ? primary : '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: group.date === todayStr ? primary : 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
               {group.date === todayStr ? 'Today' : new Date(group.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

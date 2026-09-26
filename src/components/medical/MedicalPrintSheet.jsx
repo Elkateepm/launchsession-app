@@ -69,7 +69,7 @@ export default function MedicalPrintSheet({ org, rows, scopeLabel, todaySessions
           your care. Keep it with the first aid kit, do not leave it unattended, and destroy it when the session ends.
         </div>
 
-        <div style={{ height: 1, background: '#E5E7EB', margin: '20px 0 4px' }} />
+        <div style={{ height: 1, background: 'var(--border)', margin: '20px 0 4px' }} />
 
         {rows.length === 0 ? (
           <div style={{ padding: '30px 0', fontSize: 13, color: 'var(--text3)' }}>Nobody in this list.</div>
@@ -93,7 +93,7 @@ export default function MedicalPrintSheet({ org, rows, scopeLabel, todaySessions
               {flags.map((f, i) => (
                 <div key={i} style={{ fontSize: 12.5, lineHeight: 1.5 }}>
                   <span style={{ fontWeight: 800 }}>{f.label}:</span>{' '}
-                  <span style={{ color: f.detail ? '#374151' : '#9CA3AF' }}>
+                  <span style={{ color: f.detail ? 'var(--text2)' : 'var(--text-faint)' }}>
                     {f.detail || 'no further detail recorded'}
                   </span>
                 </div>

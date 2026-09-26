@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import SignedImg from '../shared/SignedImg'
 
 export const PURPLE = '#7C5CFC'
-export const PAGE_BG = '#F6F8FC'
+export const PAGE_BG = 'var(--surface2)'
 
 export function glass(extra = {}) {
   return {
@@ -48,7 +48,7 @@ export function SectionTitle({ icon, title, subtitle, right }) {
   )
 }
 
-export function Badge({ children, color = '#475569', bg = '#F1F5F9' }) {
+export function Badge({ children, color = 'var(--text2)', bg = 'var(--border-soft)' }) {
   return (
     <span style={{ background: bg, color, borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' }}>
       {children}
@@ -95,13 +95,13 @@ export function statusStyle(status) {
     active: { bg: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)', label: '● Active' },
     available: { bg: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)', label: 'Available' },
     pending: { bg: 'rgba(245,158,11,0.14)', color: 'var(--warn-text)', label: 'Pending' },
-    unavailable: { bg: 'rgba(148,163,184,0.16)', color: '#475569', label: 'Unavailable' },
+    unavailable: { bg: 'rgba(148,163,184,0.16)', color: 'var(--text2)', label: 'Unavailable' },
     rejected: { bg: 'rgba(239,68,68,0.12)', color: 'var(--danger-text)', label: 'Rejected' },
     expiring: { bg: 'rgba(245,158,11,0.14)', color: 'var(--warn-text)', label: 'Expiring' },
     expired: { bg: 'rgba(239,68,68,0.12)', color: 'var(--danger-text)', label: 'Expired' },
     complete: { bg: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)', label: 'Complete' },
   }
-  return map[status] || { bg: 'var(--surface-hover)', color: '#475569', label: status || '—' }
+  return map[status] || { bg: 'var(--surface-hover)', color: 'var(--text2)', label: status || '—' }
 }
 
 export function daysUntil(dateStr) {

@@ -118,7 +118,7 @@ export default function ResourceCentre({ org, session: authSession }) {
 
       <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
         {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '10px 16px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #7C3AED' : '2.5px solid transparent', background: 'none', color: tab === t.key ? '#7C3AED' : '#6B7280', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '10px 16px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #7C3AED' : '2.5px solid transparent', background: 'none', color: tab === t.key ? '#7C3AED' : 'var(--text3)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {t.label}
           </button>
         ))}

@@ -164,8 +164,8 @@ const TONES = {
   brandInk: 'var(--org-ink)',       // brand-coloured text on white, contrast-safe
   onBrand: 'var(--org-on-primary)', // sitting on top of the brand colour
   danger: '#DC2626',
-  warn: '#B45309',
-  ok: '#15803D',
+  warn: 'var(--warn-text)',
+  ok: 'var(--ok-text)',
   muted: 'var(--text3, #94A3B8)',
 }
 

@@ -76,7 +76,7 @@ export function SidebarItem({
 // numbers trains people to ignore the ones that matter.
 export function SidebarBadge({ value, tone = 'urgent', collapsed }) {
   const colours = {
-    urgent: '#E5484D',
+    urgent: 'var(--danger-text)',
     attention: '#F79009',
     neutral: 'rgba(255,255,255,0.16)',
   }
@@ -357,7 +357,7 @@ export function ProfileMenu({
           <>
             <span style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
               <span style={{
-                display: 'block', fontSize: 12.5, fontWeight: 700, color: '#f1f5f9',
+                display: 'block', fontSize: 12.5, fontWeight: 700, color: 'var(--text-faint)',
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>{userName}</span>
               <span style={{
@@ -397,7 +397,7 @@ export function ProfileMenu({
                 <SidebarItem
                   icon={item.icon}
                   label={item.label}
-                  primary={item.danger ? '#E5484D' : primary}
+                  primary={item.danger ? 'var(--danger-text)' : primary}
                   onClick={() => { onSelect(item); setOpen(false) }}
                 />
               </React.Fragment>

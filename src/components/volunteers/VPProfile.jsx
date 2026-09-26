@@ -40,7 +40,7 @@ export default function VPProfile({ org, user, profile, attendance, primary, ini
       <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '14px 16px 0' }}>
         {SEGMENTS.map(s => (
           <button key={s.key} onClick={() => setSeg(s.key)}
-            style={{ padding: '7px 14px', borderRadius: 99, border: 'none', background: seg === s.key ? primary : '#F1F5F9', color: seg === s.key ? '#fff' : '#64748B', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            style={{ padding: '7px 14px', borderRadius: 99, border: 'none', background: seg === s.key ? primary : 'var(--border-soft)', color: seg === s.key ? '#fff' : 'var(--text3)', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
             {s.label}
           </button>
         ))}
@@ -116,7 +116,7 @@ function Availability({ profile, org, user, primary, onProfileUpdated }) {
               const on = (grid[day] || []).includes(slotKey)
               return (
                 <button key={slotKey} onClick={() => toggle(day, slotKey)}
-                  style={{ height: 36, borderRadius: 10, border: 'none', background: on ? primary : '#F1F5F9', cursor: 'pointer' }} />
+                  style={{ height: 36, borderRadius: 10, border: 'none', background: on ? primary : 'var(--border-soft)', cursor: 'pointer' }} />
               )
             })}
           </div>
@@ -145,9 +145,9 @@ function Training({ org, user, primary }) {
       {mandatory.map(m => {
         const done = completedTypes.has(m)
         return (
-          <div key={m} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, background: done ? '#F0FDF4' : '#FFFBEB', marginBottom: 8 }}>
+          <div key={m} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, background: done ? 'var(--ok-bg)' : 'var(--warn-bg)', marginBottom: 8 }}>
             <span style={{ fontSize: 18 }}>{done ? '✅' : '⏳'}</span>
-            <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{m}</div><div style={{ fontSize: 11, color: done ? '#16A34A' : '#B45309' }}>{done ? 'Completed' : 'Outstanding'}</div></div>
+            <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{m}</div><div style={{ fontSize: 11, color: done ? '#16A34A' : 'var(--warn-text)' }}>{done ? 'Completed' : 'Outstanding'}</div></div>
           </div>
         )
       })}
@@ -224,7 +224,7 @@ function Settings({ profile, onSignOut }) {
         <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.06)', marginBottom: 8 }}>
           <span style={{ fontSize: 18 }}>{icon}</span>
           <div style={{ flex: 1, fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{label}</div>
-          <button onClick={toggle} style={{ width: 42, height: 24, borderRadius: 99, border: 'none', background: val ? '#7C5CFC' : '#E2E8F0', position: 'relative', cursor: 'pointer' }}>
+          <button onClick={toggle} style={{ width: 42, height: 24, borderRadius: 99, border: 'none', background: val ? '#7C5CFC' : 'var(--border)', position: 'relative', cursor: 'pointer' }}>
             <motion.div animate={{ x: val ? 20 : 2 }} style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--surface)', position: 'absolute', top: 2 }} />
           </button>
         </div>
@@ -232,7 +232,7 @@ function Settings({ profile, onSignOut }) {
       {['Help & Support', 'Privacy Policy', 'Volunteer Handbook'].map(label => (
         <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.06)', marginBottom: 8, cursor: 'pointer' }}>
           <div style={{ flex: 1, fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{label}</div>
-          <span style={{ color: '#CBD5E1' }}>›</span>
+          <span style={{ color: 'var(--text-faint)' }}>›</span>
         </div>
       ))}
       <button onClick={onSignOut} style={{ width: '100%', marginTop: 8, padding: 13, borderRadius: 14, border: '1.5px solid var(--danger-border)', background: 'var(--surface)', color: 'var(--danger-text)', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>Sign Out</button>

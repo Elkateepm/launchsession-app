@@ -18,7 +18,7 @@ export const sectionHint = { fontSize: 12, color: 'var(--text-faint)', marginTop
 const GREEN = '#16A34A'
 const AMBER = '#F59E0B'
 const RED = '#DC2626'
-const GREY = '#CBD5E1'
+const GREY = 'var(--text-faint)'
 
 export const directionColor = (d) => d === 'improved' ? GREEN : d === 'declined' ? RED : AMBER
 
@@ -88,7 +88,7 @@ export function Headline({ impact, terms, periodLabel, isMobile }) {
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? 12 : 18, marginTop: 12 }}>
         {segments.map(s => (
-          <span key={s.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#475569', fontWeight: 700 }}>
+          <span key={s.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text2)', fontWeight: 700 }}>
             <span style={{ width: 9, height: 9, borderRadius: 99, background: s.color, flexShrink: 0 }} />
             {s.n} {s.label}
           </span>
@@ -173,7 +173,7 @@ export function AreaMovement({ impact, isMobile, onSelectArea, activeArea }) {
           <span style={{ width: 11, height: 11, borderRadius: 99, background: 'var(--surface)', border: `2px solid ${GREY}`, boxSizing: 'border-box' }} /> started at
         </span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 700 }}>
-          <span style={{ width: 11, height: 11, borderRadius: 99, background: '#64748B' }} /> now
+          <span style={{ width: 11, height: 11, borderRadius: 99, background: 'var(--text3)' }} /> now
         </span>
       </div>
     </div>
@@ -190,7 +190,7 @@ export function GoalsPanel({ goals, childName, periodLabel }) {
   const stats = [
     { label: 'completed', value: goals.completed, color: GREEN },
     { label: 'in progress', value: goals.active, color: 'var(--text3)' },
-    { label: 'past target date', value: goals.overdue, color: goals.overdue > 0 ? RED : '#64748B' },
+    { label: 'past target date', value: goals.overdue, color: goals.overdue > 0 ? RED : 'var(--text3)' },
   ]
 
   return (
@@ -217,7 +217,7 @@ export function GoalsPanel({ goals, childName, periodLabel }) {
               <span style={{ color: GREEN, flexShrink: 0, display: 'inline-flex' }}><Icon name="✓" /></span>
               <span style={{ fontSize: 12.5, color: 'var(--text2)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.title}</span>
               {g.completed_at && (
-                <span style={{ marginLeft: 'auto', fontSize: 11, color: '#CBD5E1', fontWeight: 700, flexShrink: 0 }}>
+                <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-faint)', fontWeight: 700, flexShrink: 0 }}>
                   {format(new Date(g.completed_at), 'd MMM')}
                 </span>
               )}
@@ -390,7 +390,7 @@ export function PeopleList({ impact, children, terms, primary, onOpenChild, area
               padding: '7px 12px', borderRadius: 8, border: 'none', minHeight: 36,
               background: sort === s.key ? '#fff' : 'transparent',
               boxShadow: sort === s.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-              color: sort === s.key ? primary : '#94A3B8',
+              color: sort === s.key ? primary : 'var(--text-faint)',
               fontWeight: 800, fontSize: 11.5, cursor: 'pointer', fontFamily: 'inherit',
             }}>{s.label}</button>
           ))}
@@ -444,7 +444,7 @@ export function PeopleList({ impact, children, terms, primary, onOpenChild, area
 
             <span style={{
               fontSize: 13, fontWeight: 900, textAlign: 'right',
-              color: m ? directionColor(m.direction) : '#CBD5E1',
+              color: m ? directionColor(m.direction) : 'var(--text-faint)',
             }}>{m ? signed(m.delta) : '—'}</span>
           </button>
         ))}

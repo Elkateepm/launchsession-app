@@ -20,7 +20,7 @@ export const STATUS_STYLE = {
   strategy_discussion: { bg: 'rgba(139,92,246,0.14)', color: 'var(--violet-text)' },
   child_protection: { bg: 'rgba(239,68,68,0.14)', color: 'var(--danger-text)' },
   resolved: { bg: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)' },
-  closed: { bg: 'rgba(100,116,139,0.14)', color: '#475569' },
+  closed: { bg: 'rgba(100,116,139,0.14)', color: 'var(--text2)' },
   archived: { bg: 'rgba(148,163,184,0.16)', color: 'var(--text3)' },
 }
 
@@ -69,7 +69,7 @@ export function RiskBadge({ level }) {
 }
 
 export function StatusChip({ status }) {
-  const s = STATUS_STYLE[status] || { bg: 'var(--surface-hover)', color: '#475569' }
+  const s = STATUS_STYLE[status] || { bg: 'var(--surface-hover)', color: 'var(--text2)' }
   return (
     <motion.span layout style={{ background: s.bg, color: s.color, borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' }}>
       {STATUS_LABELS[status] || status}
@@ -86,7 +86,7 @@ export function DonutChart({ segments, size = 120, thickness = 16 }) {
   let offset = 0
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={c} cy={c} r={r} fill="none" stroke="#F1F5F9" strokeWidth={thickness} />
+      <circle cx={c} cy={c} r={r} fill="none" stroke="var(--border-soft)" strokeWidth={thickness} />
       {segments.map((seg, i) => {
         const frac = seg.value / total
         const dash = frac * circumference
@@ -107,7 +107,7 @@ export function DonutChart({ segments, size = 120, thickness = 16 }) {
         return el
       })}
       <text x={c} y={c - 4} textAnchor="middle" fontSize="22" fontWeight="900" fill="#0F172A">{total}</text>
-      <text x={c} y={c + 14} textAnchor="middle" fontSize="10" fontWeight="700" fill="#94A3B8">Total</text>
+      <text x={c} y={c + 14} textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--text-faint)">Total</text>
     </svg>
   )
 }

@@ -61,7 +61,7 @@ function ViewModal({ template, onClose, onUse, onEdit, isOwn, using }) {
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 22 }}><Icon name={typeMeta.icon} /></span>
               {template.is_global && !isOwn && <span style={{ fontSize: 10, fontWeight: 900, color: '#38BDF8', background: 'rgba(56,189,248,0.12)', padding: '3px 8px', borderRadius: 999 }}>GLOBAL TEMPLATE</span>}
-              {isOwn && <span style={{ fontSize: 10, fontWeight: 900, color: '#86EFAC', background: 'rgba(34,197,94,0.12)', padding: '3px 8px', borderRadius: 999 }}>YOUR TEMPLATE</span>}
+              {isOwn && <span style={{ fontSize: 10, fontWeight: 900, color: 'var(--ok-text)', background: 'rgba(34,197,94,0.12)', padding: '3px 8px', borderRadius: 999 }}>YOUR TEMPLATE</span>}
               {template.category && <span style={{ fontSize: 10, fontWeight: 900, color: '#A78BFA', background: 'rgba(124,58,237,0.12)', padding: '3px 8px', borderRadius: 999 }}>{template.category}</span>}
             </div>
             <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)' }}>{template.title}</div>
@@ -402,7 +402,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
       {tab === 'import' && (
         <div>
           {importResult ? (
-            <div style={{ background: importResult.failed === 0 ? '#F0FDF4' : '#FFFBEB', border: `1.5px solid ${importResult.failed === 0 ? '#86EFAC' : '#FDE68A'}`, borderRadius: 16, padding: '24px', textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ background: importResult.failed === 0 ? 'var(--ok-bg)' : 'var(--warn-bg)', border: `1.5px solid ${importResult.failed === 0 ? 'var(--ok-border)' : 'var(--warn-border)'}`, borderRadius: 16, padding: '24px', textAlign: 'center', marginBottom: 20 }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>{importResult.failed === 0 ? '🎉' : '⚠️'}</div>
               <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>
                 {importResult.success} young {importResult.success === 1 ? 'person' : 'people'} imported!
@@ -456,7 +456,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
                       <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Preview — {preview.length} record{preview.length !== 1 ? 's' : ''}</div>
                       <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Showing first 5 rows · {errors.length > 0 ? `${errors.length} error${errors.length > 1 ? 's' : ''} found` : '✓ All clear'}</div>
                     </div>
-                    <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: errors.length > 0 ? '#9ca3af' : `linear-gradient(135deg, ${primary}, var(--org-a85))`, color: '#fff', fontWeight: 800, fontSize: 13, cursor: errors.length > 0 ? 'default' : 'pointer' }}>
+                    <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: errors.length > 0 ? 'var(--text-faint)' : `linear-gradient(135deg, ${primary}, var(--org-a85))`, color: '#fff', fontWeight: 800, fontSize: 13, cursor: errors.length > 0 ? 'default' : 'pointer' }}>
                       {importing ? 'Importing...' : `✓ Import ${preview.length} records`}
                     </button>
                   </div>
@@ -608,7 +608,7 @@ export default function Templates({ org, onNavigate }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
-            {isOwn && <span style={{ fontSize: 10, fontWeight: 900, color: '#86EFAC', background: 'rgba(34,197,94,0.1)', padding: '2px 7px', borderRadius: 999 }}>YOURS</span>}
+            {isOwn && <span style={{ fontSize: 10, fontWeight: 900, color: 'var(--ok-text)', background: 'rgba(34,197,94,0.1)', padding: '2px 7px', borderRadius: 999 }}>YOURS</span>}
             {!isOwn && <span style={{ fontSize: 10, fontWeight: 900, color: '#38BDF8', background: 'rgba(56,189,248,0.1)', padding: '2px 7px', borderRadius: 999 }}>GLOBAL</span>}
             {t.category && <span style={{ fontSize: 10, fontWeight: 900, color: '#A78BFA', background: 'rgba(124,58,237,0.1)', padding: '2px 7px', borderRadius: 999 }}>{t.category}</span>}
           </div>

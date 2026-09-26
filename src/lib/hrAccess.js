@@ -64,7 +64,7 @@ export const EMPLOYMENT_STATUSES = [
   { key: 'suspended', label: 'Suspended', tone: 'var(--warn-text)', bg: 'var(--warn-bg)' },
   { key: 'on_leave', label: 'On leave', tone: 'var(--info-text)', bg: 'var(--info-bg)' },
   { key: 'leaving', label: 'Leaving', tone: 'var(--warn-text)', bg: 'var(--warn-bg)' },
-  { key: 'left', label: 'Left', tone: '#5A5772', bg: 'var(--surface2)' },
+  { key: 'left', label: 'Left', tone: 'var(--text2)', bg: 'var(--surface2)' },
 ]
 
 export const CONTRACT_TYPES = ['Permanent', 'Fixed term', 'Sessional', 'Volunteer', 'Casual']

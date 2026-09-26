@@ -23,11 +23,11 @@ export default function FundraisingKpis({ raisedThisYear, monthDelta, activeCoun
   const isMobile = useIsMobile()
   return (
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 10, marginBottom: 22 }}>
-      <Kpi icon="coin" iconColor="#7C5CFC" iconBg="#F1EDFF" label="Raised This Year" value={raisedThisYear} prefix="£"
+      <Kpi icon="coin" iconColor="#7C5CFC" iconBg="var(--violet-bg)" label="Raised This Year" value={raisedThisYear} prefix="£"
         support={monthDelta === null ? 'No prior-year data yet' : monthDelta === 'new' ? 'New this year' : `${monthDelta >= 0 ? '↑' : '↓'} ${Math.abs(monthDelta)}% vs last year`} />
       <Kpi icon="rocket" iconColor="#2F6F63" iconBg="#EAF5F2" label="Active Campaigns" value={activeCount}
         support={endingSoonCount > 0 ? `${endingSoonCount} ending soon` : 'None ending soon'} />
-      <Kpi icon="clock" iconColor="#BA7517" iconBg="#FDF3E4" label="Upcoming Deadlines" value={upcomingDeadlinesCount}
+      <Kpi icon="clock" iconColor="var(--warn-text)" iconBg="#FDF3E4" label="Upcoming Deadlines" value={upcomingDeadlinesCount}
         support={nextDeadlineDays !== null ? `Next deadline in ${nextDeadlineDays} day${nextDeadlineDays === 1 ? '' : 's'}` : 'None scheduled'} />
       <Kpi icon="trophy" iconColor="#375A82" iconBg="#E9F0F7" label="Success Rate" value={successRate} suffix={successRate !== null ? '%' : ''}
         support={successRate !== null ? `Based on last ${successRateSampleSize} campaign${successRateSampleSize === 1 ? '' : 's'}` : 'Complete a campaign to see this'} />

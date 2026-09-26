@@ -121,7 +121,7 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
         {['Select resource', 'Choose date & time', 'Assign to session/staff', 'Confirm booking'].map((s, i) => (
           <div key={s} style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ width: 26, height: 26, borderRadius: '50%', margin: '0 auto 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, background: step > i ? '#7C3AED' : '#E5E7EB', color: step > i ? '#fff' : '#9CA3AF' }}>{i + 1}</div>
+            <div style={{ width: 26, height: 26, borderRadius: '50%', margin: '0 auto 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, background: step > i ? '#7C3AED' : 'var(--border)', color: step > i ? '#fff' : 'var(--text-faint)' }}>{i + 1}</div>
             <div style={{ fontSize: 9, color: 'var(--text-faint)', fontWeight: 600 }}>{s}</div>
           </div>
         ))}
@@ -218,7 +218,7 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
       <button onClick={handleCheckAvailability} disabled={!resource || !startISO || !endISO} style={{ width: '100%', marginTop: 16, padding: 12, borderRadius: 10, border: '1.5px solid #7C3AED', background: 'var(--surface)', color: 'var(--violet-text)', fontSize: 13.5, fontWeight: 700, cursor: !resource ? 'not-allowed' : 'pointer', opacity: !resource ? 0.5 : 1 }}>
         📅 Check Availability
       </button>
-      <button onClick={handleConfirm} disabled={!checked || (conflict && true) || saving} style={{ width: '100%', marginTop: 10, padding: 13, borderRadius: 10, border: 'none', background: (!checked || conflict) ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: (!checked || conflict) ? 'not-allowed' : 'pointer' }}>
+      <button onClick={handleConfirm} disabled={!checked || (conflict && true) || saving} style={{ width: '100%', marginTop: 10, padding: 13, borderRadius: 10, border: 'none', background: (!checked || conflict) ? 'var(--text-faint)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: (!checked || conflict) ? 'not-allowed' : 'pointer' }}>
         {saving ? 'Booking...' : 'Confirm Booking'}
       </button>
     </div>

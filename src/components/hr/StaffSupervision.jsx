@@ -79,9 +79,9 @@ export function SupervisionTab({ org, staff, primary, canEdit, sensitiveView }) 
   return (
     <>
       {rows.length > 0 && (
-        <div style={{ ...card, background: overdue ? '#FEF6E7' : '#fff',
-          border: `1px solid ${overdue ? '#FCD9A5' : '#E2E8F0'}` }}>
-          <div style={{ fontSize: 13, color: overdue ? '#93500A' : '#64748B', fontWeight: 700 }}>
+        <div style={{ ...card, background: overdue ? 'var(--warn-bg)' : '#fff',
+          border: `1px solid ${overdue ? '#FCD9A5' : 'var(--border)'}` }}>
+          <div style={{ fontSize: 13, color: overdue ? 'var(--warn-text)' : 'var(--text3)', fontWeight: 700 }}>
             {overdue
               ? `Supervision overdue — next was due ${ukDate(rows[0].next_supervision_date)}`
               : next
@@ -126,8 +126,8 @@ export function SupervisionTab({ org, staff, primary, canEdit, sensitiveView }) 
             </div>
             <span style={{
               display: 'inline-block', padding: '3px 10px', borderRadius: 99,
-              background: r.status === 'completed' ? '#E7F8ED' : '#F3F2F7',
-              color: r.status === 'completed' ? '#04713C' : '#5A5772',
+              background: r.status === 'completed' ? 'var(--ok-bg)' : 'var(--surface2)',
+              color: r.status === 'completed' ? 'var(--ok-text)' : 'var(--text2)',
               fontSize: 11.5, fontWeight: 800, textTransform: 'capitalize', whiteSpace: 'nowrap',
             }}>{r.status === 'follow_up' ? 'Follow-up' : r.status}</span>
           </div>

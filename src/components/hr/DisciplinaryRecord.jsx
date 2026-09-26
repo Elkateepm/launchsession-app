@@ -78,14 +78,14 @@ function Stepper({ stage }) {
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '6px 12px', borderRadius: 99, whiteSpace: 'nowrap',
-                background: now ? '#0F172A' : done ? '#E7F8ED' : '#F1F5F9',
-                color: now ? '#fff' : done ? '#04713C' : '#94A3B8',
+                background: now ? '#0F172A' : done ? 'var(--ok-bg)' : 'var(--border-soft)',
+                color: now ? '#fff' : done ? 'var(--ok-text)' : 'var(--text-faint)',
                 fontSize: 12.5, fontWeight: 800,
               }}>
                 {done ? '✓' : ''} {l}
               </div>
               {i < STAGES.length - 1 && (
-                <div style={{ width: 14, height: 2, background: i < idx ? '#A7E7C1' : '#E2E8F0' }} />
+                <div style={{ width: 14, height: 2, background: i < idx ? '#A7E7C1' : 'var(--border)' }} />
               )}
             </div>
           )
@@ -179,7 +179,7 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
         </div>
         {locked && (
           <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 10,
-            background: 'var(--surface2)', color: '#5A5772', fontSize: 12.5, lineHeight: 1.5 }}>
+            background: 'var(--surface2)', color: 'var(--text2)', fontSize: 12.5, lineHeight: 1.5 }}>
             This disciplinary is closed and is now read-only. Closed {ukDate(d.closed_at)}.
           </div>
         )}
@@ -209,8 +209,8 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
                 <span style={{
                   display: 'inline-block', padding: '3px 10px', borderRadius: 99,
                   fontSize: 11.5, fontWeight: 800, textTransform: 'capitalize',
-                  background: w.effective_status === 'active' ? '#FEF2F2' : '#F3F2F7',
-                  color: w.effective_status === 'active' ? '#B42318' : '#5A5772',
+                  background: w.effective_status === 'active' ? 'var(--danger-bg)' : 'var(--surface2)',
+                  color: w.effective_status === 'active' ? 'var(--danger-text)' : 'var(--text2)',
                 }}>{w.effective_status}</span>
               </div>
             </div>

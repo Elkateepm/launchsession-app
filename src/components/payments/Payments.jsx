@@ -89,7 +89,7 @@ export default function Payments({ org, session, isAdmin }) {
               <button key={t.key} onClick={() => setTab(t.key)} style={{
                 padding: isMobile ? '12px 12px' : '12px 14px', background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: isMobile ? 13 : 13.5, fontWeight: 700, whiteSpace: 'nowrap',
-                color: tab === t.key ? primary : '#64748B',
+                color: tab === t.key ? primary : 'var(--text3)',
                 borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent',
               }}>{isMobile ? (t.shortLabel || t.label) : t.label}</button>
             ))}
@@ -169,7 +169,7 @@ function FilterPills({ options, value, onChange }) {
           padding: '7px 13px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
           border: value === o.value ? '1.5px solid transparent' : '1.5px solid #E2E8F0',
           background: value === o.value ? PB.blue : '#fff',
-          color: value === o.value ? '#fff' : '#475569',
+          color: value === o.value ? '#fff' : 'var(--text2)',
         }}>{o.label}</button>
       ))}
     </div>
@@ -221,13 +221,13 @@ function PickChildThenPay({ children, onClose, onPick, isMobile }) {
               background: 'var(--surface)', marginBottom: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
               transition: 'background 0.15s, border-color 0.15s',
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.borderColor = 'var(--border)' }}
               onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'transparent' }}>
               <ChildAvatar child={c} size={36} />
               <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {c.first_name} {c.last_name}
               </span>
-              <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0 }}>›</span>
+              <span style={{ fontSize: 14, color: 'var(--text-faint)', flexShrink: 0 }}>›</span>
             </button>
           ))}
         </div>

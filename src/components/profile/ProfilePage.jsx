@@ -7,10 +7,10 @@ import shrinkImage from '../../lib/shrinkImage'
 import Icon from '../../lib/icons'
 
 const ROLE_CONFIG = {
-  admin:     { label: 'Administrator', badge: 'Admin',     color: '#4F6EF7', light: '#EEF2FF' },
+  admin:     { label: 'Administrator', badge: 'Admin',     color: '#4F6EF7', light: 'var(--info-bg)' },
   staff:     { label: 'Staff Member',  badge: 'Staff',     color: '#1B9AAA', light: '#F0FDFA' },
   volunteer: { label: 'Volunteer',     badge: 'Volunteer', color: '#10B981', light: '#ECFDF5' },
-  parent:    { label: 'Parent/Carer',  badge: 'Parent',    color: '#F59E0B', light: '#FFFBEB' },
+  parent:    { label: 'Parent/Carer',  badge: 'Parent',    color: '#F59E0B', light: 'var(--warn-bg)' },
 }
 
 function EditFieldModal({ label, value, onClose, onSave }) {
@@ -136,7 +136,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
       <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>{label}</div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: value ? '#111' : '#d1d5db', marginTop: 1 }}>{value || 'Not set'}</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: value ? '#111' : 'var(--text-faint)', marginTop: 1 }}>{value || 'Not set'}</div>
       </div>
       {onAction && (
         <button onClick={onAction} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--text2)', flexShrink: 0 }}>{actionLabel || 'Change'}</button>
@@ -190,10 +190,10 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
           {/* Nav */}
           <div style={{ flex: 1, padding: '8px 12px', overflowY: 'auto' }}>
             {NAV.map(n => (
-              <button key={n.key} onClick={() => setActiveSection(n.key)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: activeSection === n.key ? '#EEF2FF' : 'transparent', cursor: 'pointer', textAlign: 'left', marginBottom: 2, transition: 'background 0.15s' }}>
+              <button key={n.key} onClick={() => setActiveSection(n.key)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: activeSection === n.key ? 'var(--info-bg)' : 'transparent', cursor: 'pointer', textAlign: 'left', marginBottom: 2, transition: 'background 0.15s' }}>
                 <span style={{ fontSize: 16, width: 24, textAlign: 'center' }}><Icon name={n.icon} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: activeSection === n.key ? '#4F6EF7' : '#374151' }}>{n.label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: activeSection === n.key ? '#4F6EF7' : 'var(--text2)' }}>{n.label}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{n.sub}</div>
                 </div>
                 {activeSection === n.key && <span style={{ color: '#4F6EF7', fontSize: 16 }}>›</span>}
@@ -207,7 +207,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
               <span style={{ fontSize: 16 }}><Icon name="🚪" /></span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>Sign Out</div>
-                <div style={{ fontSize: 11, color: '#fca5a5' }}>Sign out of your account</div>
+                <div style={{ fontSize: 11, color: 'var(--danger-text)' }}>Sign out of your account</div>
               </div>
             </button>
           </div>
@@ -296,7 +296,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
           <div style={{ padding: '12px 28px', borderTop: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             {saved
               ? <span style={{ fontSize: 13, fontWeight: 700, color: '#10B981' }}><Icon name="✓" /> Saved!</span>
-              : <div style={{ fontSize: 11, color: '#d1d5db' }}>LaunchSession · {role.badge} Account · {org?.name || ''}</div>}
+              : <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>LaunchSession · {role.badge} Account · {org?.name || ''}</div>}
             <button onClick={onClose} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--text2)' }}>Close</button>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 
-const GOLD = '#BA7517'
+const GOLD = 'var(--warn-text)'
 
 export default function CampaignComparisonChart({ campaigns }) {
   const withTargets = campaigns.filter(c => (c.target_amount || 0) > 0).map(c => ({

@@ -219,18 +219,18 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
           </div>
           <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
             <Chip tone={chip.tone} bg={chip.bg}>{chip.label}</Chip>
-            {empType && <Chip tone="#3730A3" bg="#EEF2FF">{empType.label}</Chip>}
+            {empType && <Chip tone="#3730A3" bg="var(--info-bg)">{empType.label}</Chip>}
             {onboarding && onboarding.required_outstanding > 0 && (
-              <Chip tone="#93500A" bg="#FEF6E7">Onboarding {onboarding.percent}%</Chip>
+              <Chip tone="var(--warn-text)" bg="var(--warn-bg)">Onboarding {onboarding.percent}%</Chip>
             )}
             {compliance && compliance.percent !== null && (
               <Chip
-                tone={compliance.overdue > 0 || compliance.missing > 0 ? '#B42318' : '#04713C'}
-                bg={compliance.overdue > 0 || compliance.missing > 0 ? '#FEF2F2' : '#E7F8ED'}
+                tone={compliance.overdue > 0 || compliance.missing > 0 ? 'var(--danger-text)' : 'var(--ok-text)'}
+                bg={compliance.overdue > 0 || compliance.missing > 0 ? 'var(--danger-bg)' : 'var(--ok-bg)'}
               >Compliance {compliance.percent}%</Chip>
             )}
             {staff.probation_status === 'in_progress' && (
-              <Chip tone="#93500A" bg="#FEF6E7">
+              <Chip tone="var(--warn-text)" bg="var(--warn-bg)">
                 Probation{probationDays !== null ? ` · ${probationDays < 0 ? 'review overdue' : `${probationDays}d`}` : ''}
               </Chip>
             )}
@@ -485,7 +485,7 @@ function Offboarding({ org, staff, primary, canEdit, onChanged }) {
       )}
 
       {staff.employment_status === 'left' && (
-        <div style={{ ...card, background: 'var(--surface2)', color: '#5A5772', fontSize: 13, lineHeight: 1.5 }}>
+        <div style={{ ...card, background: 'var(--surface2)', color: 'var(--text2)', fontSize: 13, lineHeight: 1.5 }}>
           {staff.full_name} has left. The record is archived and remains readable.
         </div>
       )}

@@ -71,7 +71,7 @@ export default function UpcomingBookings({ bookings, resources, sessions, staff,
                 {menuOpenId === b.id && (
                   <div style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 20, minWidth: 150 }}>
                     {['Edit', 'Duplicate', 'Check Out', 'Mark Returned', 'Cancel'].map(a => (
-                      <button key={a} onClick={() => handleAction(a, b)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: a === 'Cancel' ? '#DC2626' : '#374151', cursor: 'pointer' }}>{a}</button>
+                      <button key={a} onClick={() => handleAction(a, b)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: a === 'Cancel' ? '#DC2626' : 'var(--text2)', cursor: 'pointer' }}>{a}</button>
                     ))}
                   </div>
                 )}

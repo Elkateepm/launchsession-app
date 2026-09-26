@@ -93,10 +93,10 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 16 }}>
-            <ProgressRing value={Number(avgScore) || 0} size={48} stroke={5} color={avgScore ? scoreColor(Number(avgScore)) : '#D1D5DB'} />
+            <ProgressRing value={Number(avgScore) || 0} size={48} stroke={5} color={avgScore ? scoreColor(Number(avgScore)) : 'var(--text-faint)'} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, color: 'var(--text3)' }}>Overall Impact</div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: avgScore ? scoreColor(Number(avgScore)) : '#9CA3AF' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: avgScore ? scoreColor(Number(avgScore)) : 'var(--text-faint)' }}>
                 {avgScore ? `${scoreEmoji(Number(avgScore))} ${scoreLabel(Number(avgScore))}` : 'No scores yet'}
               </div>
             </div>
@@ -107,7 +107,7 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
           <div style={{ display: 'flex', gap: 2, marginTop: 18, overflowX: 'auto' }}>
             {TABS.map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                style={{ padding: '9px 12px', border: 'none', background: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', color: tab === t.key ? primary : '#9CA3AF', fontWeight: 800, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                style={{ padding: '9px 12px', border: 'none', background: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', color: tab === t.key ? primary : 'var(--text-faint)', fontWeight: 800, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 {t.icon} {t.label}
               </button>
             ))}
@@ -119,17 +119,17 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
           {tab === 'overview' && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
               {latestByArea.map(area => (
-                <div key={area.key} style={{ background: 'var(--surface)', border: `1.5px solid ${area.latest ? area.color + '30' : '#F3F4F6'}`, borderRadius: 14, padding: '12px 14px' }}>
+                <div key={area.key} style={{ background: 'var(--surface)', border: `1.5px solid ${area.latest ? area.color + '30' : 'var(--border-soft)'}`, borderRadius: 14, padding: '12px 14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                     <span style={{ fontSize: 15 }}><Icon name={area.icon} /></span>
                     <span style={{ fontSize: 12, fontWeight: 800 }}>{area.label}</span>
                   </div>
                   {area.latest ? (
                     <>
-                      <div style={{ fontSize: 18, fontWeight: 900, color: scoreColor(area.latest.score) }}>{area.latest.score}<span style={{ fontSize: 11, color: '#D1D5DB' }}>/10</span></div>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: scoreColor(area.latest.score) }}>{area.latest.score}<span style={{ fontSize: 11, color: 'var(--text-faint)' }}>/10</span></div>
                       <ScoreBar value={area.latest.score} color={area.color} />
                     </>
-                  ) : <div style={{ fontSize: 11, color: '#D1D5DB' }}>Not tracked</div>}
+                  ) : <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>Not tracked</div>}
                 </div>
               ))}
             </div>
@@ -220,7 +220,7 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
                       <div style={{ fontSize: 13, fontWeight: 700 }}>{a.sessions?.title || 'Session'}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{a.sessions?.session_date ? format(new Date(a.sessions.session_date), 'd MMM yyyy') : ''}</div>
                     </div>
-                    <div style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 99, background: a.status === 'present' ? '#DCFCE7' : '#FEE2E2', color: a.status === 'present' ? '#16A34A' : '#DC2626' }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 99, background: a.status === 'present' ? 'var(--ok-bg)' : 'var(--danger-bg)', color: a.status === 'present' ? '#16A34A' : '#DC2626' }}>
                       {a.status || '—'}
                     </div>
                   </div>

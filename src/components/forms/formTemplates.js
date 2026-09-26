@@ -118,7 +118,7 @@ export const FORM_TEMPLATES = [
     categories: ['popular', 'health'],
     purpose: 'emergency_contacts',
     icon: '📞',
-    accent: '#E5484D',
+    accent: 'var(--danger-text)',
     fields: [
       f("Young person's name", 'text', true),
       f('First emergency contact — name', 'text', true),
@@ -266,7 +266,7 @@ export const FORM_TEMPLATES = [
     categories: ['consent'],
     purpose: 'consent',
     icon: '🚫',
-    accent: '#64748B',
+    accent: 'var(--text3)',
     fields: [
       f("Young person's name", 'text', true),
       f('Parent / carer name', 'text', true),
@@ -531,7 +531,7 @@ export const FORM_TEMPLATES = [
     categories: ['feedback'],
     purpose: 'feedback',
     icon: '👋',
-    accent: '#64748B',
+    accent: 'var(--text3)',
     fields: [
       f('Name (optional)', 'text'),
       f('What is the main reason you are leaving?', 'select', true, {
@@ -622,11 +622,11 @@ export const CREATE_INTENTS = [
   { id: 'register_young_person', label: 'Register someone', icon: '🧒', accent: '#7C5CFC', templateId: 'young-person-registration' },
   { id: 'consent', label: 'Collect consent', icon: '✍️', accent: '#F5A623', templateId: 'parent-consent' },
   { id: 'medical', label: 'Update medical information', icon: '❤️', accent: '#12B76A', templateId: 'medical-information' },
-  { id: 'emergency_contacts', label: 'Emergency contacts', icon: '📞', accent: '#E5484D', templateId: 'emergency-contacts' },
+  { id: 'emergency_contacts', label: 'Emergency contacts', icon: '📞', accent: 'var(--danger-text)', templateId: 'emergency-contacts' },
   { id: 'feedback', label: 'Get feedback', icon: '💬', accent: '#0EA5E9', templateId: 'young-person-feedback' },
   { id: 'trip', label: 'Session or trip form', icon: '🚌', accent: '#8B5CF6', templateId: 'trip-consent' },
   { id: 'register_volunteer', label: 'Staff or volunteer form', icon: '🙌', accent: '#14B8A6', templateId: 'volunteer-application' },
-  { id: 'other', label: 'Something else', icon: '📝', accent: '#64748B', templateId: null },
+  { id: 'other', label: 'Something else', icon: '📝', accent: 'var(--text3)', templateId: null },
 ]
 
 // ---------------------------------------------------------------- adapter

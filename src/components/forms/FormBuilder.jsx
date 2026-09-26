@@ -347,9 +347,9 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
           <button key={key} onClick={() => setTab(key)} style={{
             padding: '8px 16px', borderRadius: 999, fontSize: 13, fontWeight: 700,
             whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit',
-            border: `1px solid ${tab === key ? 'transparent' : '#E2E8F0'}`,
+            border: `1px solid ${tab === key ? 'transparent' : 'var(--border)'}`,
             background: tab === key ? primary : '#fff',
-            color: tab === key ? '#fff' : '#64748B',
+            color: tab === key ? '#fff' : 'var(--text3)',
           }}>{label}</button>
         ))}
       </div>
@@ -472,7 +472,7 @@ function Canvas({
           <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 5 }}>
             Your form is ready to build
           </div>
-          <div style={{ fontSize: 13.5, color: '#8B87A3', marginBottom: 16 }}>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginBottom: 16 }}>
             Add your first question below.
           </div>
         </div>
@@ -557,9 +557,9 @@ function AddQuestionButton({ open, onOpen, onPick, primary, subtle, smartOptions
         aria-expanded={open}
         style={{
           width: '100%', padding: subtle ? '7px' : '13px', borderRadius: 11,
-          border: `1.5px dashed ${open ? primary : '#E2E8F0'}`,
+          border: `1.5px dashed ${open ? primary : 'var(--border)'}`,
           background: subtle ? 'transparent' : '#fff',
-          color: open ? primary : '#64748B',
+          color: open ? primary : 'var(--text3)',
           fontSize: subtle ? 12.5 : 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}
@@ -624,7 +624,7 @@ function MenuItem({ label, hint, onClick, disabled }) {
       onMouseLeave={() => setHover(false)}
       style={{
         width: '100%', textAlign: 'left', padding: '9px 10px', borderRadius: 9,
-        border: 'none', background: hover && !disabled ? '#F8FAFC' : 'transparent',
+        border: 'none', background: hover && !disabled ? 'var(--surface2)' : 'transparent',
         cursor: disabled ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
         opacity: disabled ? 0.45 : 1,
       }}
@@ -659,7 +659,7 @@ function QuestionCard({
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect() } }}
       style={{
         position: 'relative', padding: '16px 18px', borderRadius: 14, cursor: 'pointer',
-        border: `1.5px solid ${selected ? primary : hover ? '#DDD6FE' : '#F1F5F9'}`,
+        border: `1.5px solid ${selected ? primary : hover ? 'var(--violet-border)' : 'var(--border-soft)'}`,
         background: selected ? 'var(--org-a05)' : '#fff',
         transition: 'border-color 170ms ease, background 170ms ease',
         marginBottom: 4,
@@ -830,14 +830,14 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
         style={{
           display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px',
           borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-          border: `1.5px solid ${field.required ? primary : '#E2E8F0'}`,
+          border: `1.5px solid ${field.required ? primary : 'var(--border)'}`,
           background: field.required ? 'var(--org-a05)' : '#fff',
         }}
       >
         <span style={{
           width: 18, height: 18, borderRadius: 5, flexShrink: 0,
           display: 'grid', placeItems: 'center', fontSize: 11, color: '#fff',
-          border: `1.5px solid ${field.required ? primary : '#CBD5E1'}`,
+          border: `1.5px solid ${field.required ? primary : 'var(--text-faint)'}`,
           background: field.required ? primary : '#fff',
         }}>{field.required ? '✓' : ''}</span>
         <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Required</span>
@@ -1011,14 +1011,14 @@ function SettingsPanel({ form, setForm, primary }) {
           style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 11, padding: '13px 14px',
             borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-            border: `1.5px solid ${form.updates_child ? primary : '#E2E8F0'}`,
+            border: `1.5px solid ${form.updates_child ? primary : 'var(--border)'}`,
             background: form.updates_child ? `${primary}0D` : '#fff',
           }}
         >
           <span style={{
             width: 19, height: 19, borderRadius: 6, flexShrink: 0,
             display: 'grid', placeItems: 'center', fontSize: 12, color: '#fff',
-            border: `1.5px solid ${form.updates_child ? primary : '#CBD5E1'}`,
+            border: `1.5px solid ${form.updates_child ? primary : 'var(--text-faint)'}`,
             background: form.updates_child ? primary : '#fff',
           }}>{form.updates_child ? '✓' : ''}</span>
           <span>
@@ -1045,14 +1045,14 @@ function SettingsPanel({ form, setForm, primary }) {
                   style={{
                     width: '100%', display: 'flex', alignItems: 'flex-start', gap: 11, padding: '12px 13px',
                     borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-                    border: `1.5px solid ${on ? primary : '#E2E8F0'}`,
+                    border: `1.5px solid ${on ? primary : 'var(--border)'}`,
                     background: on ? `${primary}0D` : '#fff',
                   }}
                 >
                   <span style={{
                     width: 17, height: 17, borderRadius: '50%', flexShrink: 0, marginTop: 1,
                     display: 'grid', placeItems: 'center',
-                    border: `1.5px solid ${on ? primary : '#CBD5E1'}`, background: 'var(--surface)',
+                    border: `1.5px solid ${on ? primary : 'var(--text-faint)'}`, background: 'var(--surface)',
                   }}>
                     <span style={{ width: 9, height: 9, borderRadius: '50%', background: on ? primary : 'transparent' }} />
                   </span>
@@ -1080,14 +1080,14 @@ function SettingsPanel({ form, setForm, primary }) {
         style={{
           display: 'flex', alignItems: 'center', gap: 11, padding: '13px 14px',
           borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-          border: `1.5px solid ${form.multi_step ? primary : '#E2E8F0'}`,
+          border: `1.5px solid ${form.multi_step ? primary : 'var(--border)'}`,
           background: form.multi_step ? 'var(--org-a05)' : '#fff',
         }}
       >
         <span style={{
           width: 19, height: 19, borderRadius: 6, flexShrink: 0,
           display: 'grid', placeItems: 'center', fontSize: 12, color: '#fff',
-          border: `1.5px solid ${form.multi_step ? primary : '#CBD5E1'}`,
+          border: `1.5px solid ${form.multi_step ? primary : 'var(--text-faint)'}`,
           background: form.multi_step ? primary : '#fff',
         }}>{form.multi_step ? '✓' : ''}</span>
         <span>
@@ -1127,9 +1127,9 @@ function PreviewPanel({ form, primary, value, onChange, isMobile }) {
           {[['mobile', 'Mobile'], ['desktop', 'Desktop']].map(([k, l]) => (
             <button key={k} onClick={() => setDevice(k)} style={{
               padding: '7px 14px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
-              border: `1px solid ${device === k ? 'transparent' : '#E2E8F0'}`,
+              border: `1px solid ${device === k ? 'transparent' : 'var(--border)'}`,
               background: device === k ? primary : '#fff',
-              color: device === k ? '#fff' : '#64748B',
+              color: device === k ? '#fff' : 'var(--text3)',
               cursor: 'pointer', fontFamily: 'inherit',
             }}>{l}</button>
           ))}
@@ -1302,9 +1302,9 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
             {['all', ...groupNames].map(b => (
               <button key={b} onClick={() => setGroup(b)} style={{
                 padding: '6px 12px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
-                border: `1px solid ${group === b ? 'transparent' : '#E2E8F0'}`,
+                border: `1px solid ${group === b ? 'transparent' : 'var(--border)'}`,
                 background: group === b ? primary : '#fff',
-                color: group === b ? '#fff' : '#64748B',
+                color: group === b ? '#fff' : 'var(--text3)',
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>{b === 'all' ? 'Everyone' : b}</button>
             ))}
@@ -1322,15 +1322,15 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '9px 11px',
                     borderRadius: 10, textAlign: 'left', fontFamily: 'inherit',
-                    border: `1px solid ${sel ? primary : '#F1F5F9'}`,
-                    background: added ? '#F8FAFC' : sel ? 'var(--org-a05)' : '#fff',
+                    border: `1px solid ${sel ? primary : 'var(--border-soft)'}`,
+                    background: added ? 'var(--surface2)' : sel ? 'var(--org-a05)' : '#fff',
                     cursor: added ? 'not-allowed' : 'pointer', opacity: added ? 0.55 : 1,
                   }}
                 >
                   <span style={{
                     width: 17, height: 17, borderRadius: 5, flexShrink: 0,
                     display: 'grid', placeItems: 'center', fontSize: 10, color: '#fff',
-                    border: `1.5px solid ${sel ? primary : '#CBD5E1'}`,
+                    border: `1.5px solid ${sel ? primary : 'var(--text-faint)'}`,
                     background: sel ? primary : '#fff',
                   }}>{sel ? '\u2713' : ''}</span>
                   <span style={{ flex: 1, minWidth: 0 }}>
@@ -1354,7 +1354,7 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
             disabled={!chosen.length || busy}
             style={{
               marginTop: 12, width: '100%', padding: '12px', borderRadius: 11, border: 'none',
-              background: chosen.length && !busy ? primary : '#E2E8F0', color: '#fff',
+              background: chosen.length && !busy ? primary : 'var(--border)', color: '#fff',
               fontSize: 14, fontWeight: 800,
               cursor: chosen.length && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
             }}
@@ -1380,7 +1380,7 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
               <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5 }}>
                 <span style={{
                   width: 7, height: 7, borderRadius: 7, flexShrink: 0,
-                  background: r.recipient_email ? '#F79009' : '#CBD5E1',
+                  background: r.recipient_email ? '#F79009' : 'var(--text-faint)',
                 }} />
                 <span style={{ color: 'var(--text)', flex: 1 }}>{r.recipient_name || 'Unnamed'}</span>
                 {r.recipient_email ? (

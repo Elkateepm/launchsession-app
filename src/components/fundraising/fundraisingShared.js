@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
 export const DAY_MS = 1000 * 60 * 60 * 24
-export const GOLD = '#BA7517'
+export const GOLD = 'var(--warn-text)'
 
 // ─── LaunchSession purple "space" identity for this page's chrome.
 // (Distinct from org.primary_color, which still drives small org-branded
@@ -12,14 +12,14 @@ export const LS = {
   purpleDeep: '#4B2FC4',
   gradient: 'linear-gradient(135deg, #8B6CFF 0%, #6647F0 100%)',
   softGradient: 'linear-gradient(135deg, #F1EDFF 0%, #FBFAFF 100%)',
-  lavender: '#F1EDFF',
+  lavender: 'var(--violet-bg)',
   lavenderBorder: '#E4DCFB',
-  border: '#ECE9F5',
+  border: 'var(--border)',
   bg: 'var(--surface2)',
-  text: '#1C1B2E',
-  muted: '#8B87A3',
+  text: 'var(--text)',
+  muted: 'var(--text3)',
   success: '#16A34A',
-  warning: '#B45309',
+  warning: 'var(--warn-text)',
   danger: '#DC2626',
 }
 

@@ -348,7 +348,7 @@ export default function CreatePassword() {
 
                 <form onSubmit={createAccount}>
                   {error && (
-                    <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#FCA5A5', borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600 }}>
+                    <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--danger-text)', borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600 }}>
                       ⚠ {error}
                     </div>
                   )}
@@ -382,7 +382,7 @@ export default function CreatePassword() {
                       <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password"
                         style={{ ...inputStyle(false), border: `1.5px solid ${confirm && confirm !== password ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.12)'}`, paddingRight: 16 }} />
                     </div>
-                    {confirm && confirm !== password && <div style={{ fontSize: 11, color: '#FCA5A5', marginTop: 6, fontWeight: 600 }}>Passwords don't match</div>}
+                    {confirm && confirm !== password && <div style={{ fontSize: 11, color: 'var(--danger-text)', marginTop: 6, fontWeight: 600 }}>Passwords don't match</div>}
                     {confirm && confirm === password && <div style={{ fontSize: 11, color: '#4ADE80', marginTop: 6, fontWeight: 600 }}><Icon name="✓" /> Passwords match</div>}
                   </div>
 

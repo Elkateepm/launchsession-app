@@ -15,9 +15,9 @@ const STATUS_META = {
 }
 
 const CARD_COLORS = {
-  purple: { bg: 'linear-gradient(135deg,#EDE9FE,#F5F3FF)', icon: '#7C3AED', ring: '#DDD6FE' },
-  blue:   { bg: 'linear-gradient(135deg,#DBEAFE,#EFF6FF)', icon: '#2563EB', ring: '#BFDBFE' },
-  green:  { bg: 'linear-gradient(135deg,#DCFCE7,#F0FDF4)', icon: '#16A34A', ring: '#BBF7D0' },
+  purple: { bg: 'linear-gradient(135deg,#EDE9FE,#F5F3FF)', icon: '#7C3AED', ring: 'var(--violet-border)' },
+  blue:   { bg: 'linear-gradient(135deg,#DBEAFE,#EFF6FF)', icon: '#2563EB', ring: 'var(--info-border)' },
+  green:  { bg: 'linear-gradient(135deg,#DCFCE7,#F0FDF4)', icon: '#16A34A', ring: 'var(--ok-border)' },
   orange: { bg: 'linear-gradient(135deg,#FFEDD5,#FFF7ED)', icon: '#EA580C', ring: '#FED7AA' },
 }
 
@@ -219,7 +219,7 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
 
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border-soft)', padding: '0 24px' }}>
           {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '12px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: tab === t.key ? primary : '#94A3B8', borderBottom: tab === t.key ? `2px solid ${primary}` : '2px solid transparent' }}>
+            <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '12px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: tab === t.key ? primary : 'var(--text-faint)', borderBottom: tab === t.key ? `2px solid ${primary}` : '2px solid transparent' }}>
               {t.icon} {t.label}
             </button>
           ))}
@@ -433,7 +433,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
             {['all', 'planning', 'confirmed', 'live', 'completed', 'cancelled'].map(k => (
               <button key={k} onClick={() => { setFilterStatus(k); setPage(1) }} style={{
                 padding: '8px 14px', borderRadius: 10, border: filterStatus === k ? 'none' : '1.5px solid #E2E8F0',
-                background: filterStatus === k ? primary : '#fff', color: filterStatus === k ? '#fff' : '#475569',
+                background: filterStatus === k ? primary : '#fff', color: filterStatus === k ? '#fff' : 'var(--text2)',
                 fontSize: 12.5, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize',
               }}>
                 {k === 'all' ? 'All' : STATUS_META[k]?.label.replace(' Now', '') || k} ({counts[k]})
@@ -479,15 +479,15 @@ export default function EventsTrips({ org, session, onNavigate }) {
                       <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>📍 {e.location || 'No location set'}</div>
                     </div>
                     <div onClick={ev => ev.stopPropagation()}><StatusChip status={e._status} /></div>
-                    <div style={{ fontSize: 12, color: '#475569', textAlign: 'center', minWidth: 70 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', textAlign: 'center', minWidth: 70 }}>
                       <div>👤 {e._attendanceCount}{e.max_capacity ? ` / ${e.max_capacity}` : ''}</div>
                       <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Participants</div>
                     </div>
-                    <div style={{ fontSize: 12, color: '#475569', textAlign: 'center', minWidth: 60 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', textAlign: 'center', minWidth: 60 }}>
                       <div>🧑‍🏫 {e._staffCount}{e.min_staff ? ` / ${e.min_staff}` : ''}</div>
                       <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Staff</div>
                     </div>
-                    <div style={{ fontSize: 12, color: '#475569', textAlign: 'center', minWidth: 70 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', textAlign: 'center', minWidth: 70 }}>
                       <div>🙋 {e._volFilled} / {e._volRequired}</div>
                       <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Volunteers</div>
                     </div>

@@ -67,7 +67,7 @@ export function AnimatedNumber({ value, decimals = 0, suffix = '', duration = 90
 // ---------------------------------------------------------------------------
 export function Sparkline({ data, color = '#1B9AAA', width = 72, height = 26 }) {
   if (!data || data.length < 2) {
-    return <div style={{ width, height, display: 'flex', alignItems: 'center', fontSize: 10, color: '#D1D5DB' }}>—</div>
+    return <div style={{ width, height, display: 'flex', alignItems: 'center', fontSize: 10, color: 'var(--text-faint)' }}>—</div>
   }
   const min = Math.min(...data), max = Math.max(...data)
   const range = max - min || 1
@@ -91,7 +91,7 @@ export function Sparkline({ data, color = '#1B9AAA', width = 72, height = 26 }) 
 export function TrendArrow({ delta, suffix = '%' }) {
   if (delta === null || delta === undefined || Number.isNaN(delta)) return <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700 }}>—</span>
   const up = delta > 0, flat = Math.abs(delta) < 0.5
-  const color = flat ? '#9CA3AF' : up ? '#16A34A' : '#DC2626'
+  const color = flat ? 'var(--text-faint)' : up ? '#16A34A' : '#DC2626'
   const arrow = flat ? '→' : up ? '↑' : '↓'
   return <span style={{ fontSize: 11, color, fontWeight: 800 }}>{arrow} {Math.abs(delta).toFixed(1)}{suffix}</span>
 }
@@ -112,7 +112,7 @@ export function CircularGauge({ value, size = 168, stroke = 14, color = '#1B9AAA
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#F3F4F6" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--border-soft)" strokeWidth={stroke} />
         <circle
           cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
           strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
@@ -141,7 +141,7 @@ export function ProgressRing({ value, max = 10, size = 56, stroke = 6, color = '
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#F3F4F6" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--border-soft)" strokeWidth={stroke} />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
           strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
           style={{ transition: 'stroke-dashoffset 0.9s cubic-bezier(.16,1,.3,1)' }} />

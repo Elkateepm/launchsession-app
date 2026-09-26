@@ -37,12 +37,12 @@ function deriveStatus(project) {
 
 function StatusChip({ status }) {
   const map = {
-    draft: { t: 'Draft', c: '#64748B', b: 'var(--surface-hover)' },
+    draft: { t: 'Draft', c: 'var(--text3)', b: 'var(--surface-hover)' },
     upcoming: { t: 'Upcoming', c: 'var(--info-text)', b: 'var(--info-bg)' },
     active: { t: 'Active', c: 'var(--ok-text)', b: 'var(--ok-bg)' },
-    completed: { t: 'Completed', c: '#64748B', b: 'var(--surface-hover)' },
+    completed: { t: 'Completed', c: 'var(--text3)', b: 'var(--surface-hover)' },
     cancelled: { t: 'Cancelled', c: 'var(--danger-text)', b: 'var(--danger-bg)' },
-    archived: { t: 'Archived', c: '#64748B', b: 'var(--surface-hover)' },
+    archived: { t: 'Archived', c: 'var(--text3)', b: 'var(--surface-hover)' },
   }
   const m = map[status] || map.draft
   return <span style={{ fontSize: 10.5, fontWeight: 800, color: m.c, background: m.b, borderRadius: 99, padding: '3px 9px', flexShrink: 0 }}>{m.t}</span>
@@ -124,7 +124,7 @@ export default function ProjectsList({ org, session, onNavigate }) {
             <button key={f.key} onClick={() => setFilter(f.key)} style={{
               padding: '8px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
               border: filter === f.key ? '2px solid #6D5DF6' : '1.5px solid #E2E8F0',
-              background: filter === f.key ? '#F5F3FF' : '#fff', color: filter === f.key ? '#6D5DF6' : '#334155',
+              background: filter === f.key ? 'var(--violet-bg)' : '#fff', color: filter === f.key ? '#6D5DF6' : 'var(--text2)',
               whiteSpace: 'nowrap',
             }}>{f.label}</button>
           ))}
@@ -169,7 +169,7 @@ export default function ProjectsList({ org, session, onNavigate }) {
                     {fmtRange(p.start_date, p.end_date)} · {days} {days === 1 ? 'day' : 'days'}
                   </div>
                 </div>
-                <span style={{ color: '#CBD5E1', fontSize: 18 }}>›</span>
+                <span style={{ color: 'var(--text-faint)', fontSize: 18 }}>›</span>
               </button>
             )
           })}

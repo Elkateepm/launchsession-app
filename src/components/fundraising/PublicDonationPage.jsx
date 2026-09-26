@@ -12,9 +12,9 @@ import { supabase } from '../../lib/supabase'
 // route that does work: contacting the organisation.
 
 const PURPLE = '#7C5CFC'
-const TEXT = '#1C1B2E'
-const MUTED = '#8B87A3'
-const BORDER = '#ECE9F5'
+const TEXT = 'var(--text)'
+const MUTED = 'var(--text3)'
+const BORDER = 'var(--border)'
 
 const money = n => `£${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
 

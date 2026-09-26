@@ -119,7 +119,7 @@ export default function ApplicationTracker({ org, refreshKey }) {
                     }}>
                       {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
                     </select>
-                    <button onClick={() => removeApp(a.id)} title="Remove" style={{ background: 'none', border: 'none', color: '#D1D5DB', cursor: 'pointer', fontSize: 14, width: 32, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -6 }}><Icon name="✕" /></button>
+                    <button onClick={() => removeApp(a.id)} title="Remove" style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 14, width: 32, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -6 }}><Icon name="✕" /></button>
                   </div>
                 ))}
               </div>

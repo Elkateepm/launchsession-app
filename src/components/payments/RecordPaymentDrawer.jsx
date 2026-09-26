@@ -105,7 +105,7 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
                         <button key={c.id} onClick={() => setCharge(c)} style={{
                           textAlign: 'left', padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
                           border: charge?.id === c.id ? `2px solid ${PB.blue}` : '1.5px solid #E2E8F0',
-                          background: charge?.id === c.id ? '#EFF6FF' : '#fff',
+                          background: charge?.id === c.id ? 'var(--info-bg)' : '#fff',
                         }}>
                           <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{c.title}</div>
                           <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{fmtMoney(c.remaining)} remaining of {fmtMoney(c.amount)}</div>
@@ -144,7 +144,7 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
                         <button key={m.key} onClick={() => setMethod(m.key)} style={{
                           padding: '8px 10px', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'left',
                           border: method === m.key ? `2px solid ${PB.blue}` : '1.5px solid #E2E8F0',
-                          background: method === m.key ? '#EFF6FF' : '#fff', color: 'var(--text2)',
+                          background: method === m.key ? 'var(--info-bg)' : '#fff', color: 'var(--text2)',
                         }}>
                           {m.icon} {m.label}
                         </button>
@@ -200,7 +200,7 @@ function Row({ label, value, strong }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: 12.5 }}>
       <span style={{ color: 'var(--text3)' }}>{label}</span>
-      <span style={{ fontWeight: strong ? 900 : 700, color: strong ? '#0F172A' : '#334155' }}>{value}</span>
+      <span style={{ fontWeight: strong ? 900 : 700, color: strong ? 'var(--text)' : 'var(--text2)' }}>{value}</span>
     </div>
   )
 }

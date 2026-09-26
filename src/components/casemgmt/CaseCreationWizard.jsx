@@ -100,7 +100,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
           <div style={{ display: 'flex', gap: 4 }}>
             {STEPS.map((s, i) => (
               <div key={s} style={{ flex: 1 }}>
-                <div style={{ height: 4, borderRadius: 2, background: i <= step ? primary : '#F1F5F9', transition: 'background 0.2s' }} />
+                <div style={{ height: 4, borderRadius: 2, background: i <= step ? primary : 'var(--border-soft)', transition: 'background 0.2s' }} />
               </div>
             ))}
           </div>
@@ -140,7 +140,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {CATEGORIES.map(c => (
                       <button key={c} onClick={() => set('category', c)}
-                        style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${form.category === c ? primary : 'rgba(15,23,42,0.1)'}`, background: form.category === c ? 'var(--org-a10)' : '#fff', color: form.category === c ? primary : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                        style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${form.category === c ? primary : 'rgba(15,23,42,0.1)'}`, background: form.category === c ? 'var(--org-a10)' : '#fff', color: form.category === c ? primary : 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                         {c}
                       </button>
                     ))}

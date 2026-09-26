@@ -124,8 +124,8 @@ export default function PublicVolunteerRegistration() {
         <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
           {['About You', 'Contact', 'Skills', 'DBS', 'Review'].map((s, i) => (
             <div key={s} style={{ flex: 1, textAlign: 'center' }}>
-              <div style={{ height: 4, borderRadius: 99, background: step > i ? primary : '#E2E8F0', marginBottom: 5 }} />
-              <div style={{ fontSize: 10, fontWeight: 700, color: step === i + 1 ? primary : '#94A3B8' }}>{s}</div>
+              <div style={{ height: 4, borderRadius: 99, background: step > i ? primary : 'var(--border)', marginBottom: 5 }} />
+              <div style={{ fontSize: 10, fontWeight: 700, color: step === i + 1 ? primary : 'var(--text-faint)' }}>{s}</div>
             </div>
           ))}
         </div>
@@ -159,7 +159,7 @@ export default function PublicVolunteerRegistration() {
                 const active = form.skills.includes(s)
                 return (
                   <button key={s} type="button" onClick={() => set('skills', toggleInArray(form.skills, s))}
-                    style={{ padding: '7px 13px', borderRadius: 99, border: `1.5px solid ${active ? primary : '#E2E8F0'}`, background: active ? primary : '#fff', color: active ? '#fff' : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                    style={{ padding: '7px 13px', borderRadius: 99, border: `1.5px solid ${active ? primary : 'var(--border)'}`, background: active ? primary : '#fff', color: active ? '#fff' : 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                     {s}
                   </button>
                 )
@@ -171,7 +171,7 @@ export default function PublicVolunteerRegistration() {
                 const active = form.availability.includes(a)
                 return (
                   <button key={a} type="button" onClick={() => set('availability', toggleInArray(form.availability, a))}
-                    style={{ padding: '7px 13px', borderRadius: 99, border: `1.5px solid ${active ? primary : '#E2E8F0'}`, background: active ? primary : '#fff', color: active ? '#fff' : '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                    style={{ padding: '7px 13px', borderRadius: 99, border: `1.5px solid ${active ? primary : 'var(--border)'}`, background: active ? primary : '#fff', color: active ? '#fff' : 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                     {a}
                   </button>
                 )
@@ -213,7 +213,7 @@ export default function PublicVolunteerRegistration() {
           {step > 1 && <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '13px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}><Icon name="←" /> Back</button>}
           {step < 5 ? (
             <button onClick={() => canContinue() && setStep(s => s + 1)} disabled={!canContinue()}
-              style={{ flex: 2, padding: '13px', borderRadius: 10, border: 'none', background: canContinue() ? primary : '#CBD5E1', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canContinue() ? 'pointer' : 'default' }}>
+              style={{ flex: 2, padding: '13px', borderRadius: 10, border: 'none', background: canContinue() ? primary : 'var(--text-faint)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canContinue() ? 'pointer' : 'default' }}>
               Continue →
             </button>
           ) : (

@@ -9,7 +9,7 @@ const field = { marginBottom: 14 }
 function Toggle({ checked, onChange, label: text }) {
   return (
     <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 12 }}>
-      <div onClick={() => onChange(!checked)} style={{ width: 38, height: 22, borderRadius: 99, background: checked ? '#7C3AED' : '#E5E7EB', position: 'relative', transition: 'background 0.15s', flexShrink: 0 }}>
+      <div onClick={() => onChange(!checked)} style={{ width: 38, height: 22, borderRadius: 99, background: checked ? '#7C3AED' : 'var(--border)', position: 'relative', transition: 'background 0.15s', flexShrink: 0 }}>
         <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--surface)', position: 'absolute', top: 3, left: checked ? 19 : 3, transition: 'left 0.15s' }} />
       </div>
       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>{text}</span>
@@ -213,7 +213,7 @@ export default function AddResourceModal({ org, staff, venues, existingResource,
           <textarea style={{ ...inp, minHeight: 50, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
         </div>
 
-        <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: saving ? '#9CA3AF' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', marginTop: 8 }}>
+        <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: saving ? 'var(--text-faint)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', marginTop: 8 }}>
           {saving ? 'Saving...' : r ? 'Save Changes' : 'Add Resource'}
         </button>
       </div>

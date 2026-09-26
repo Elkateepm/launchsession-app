@@ -87,8 +87,8 @@ export function TripReadiness({ org, day, counts, hasRiskAssessment, staffCount,
         <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', letterSpacing: 0.4 }}>TRIP READINESS</span>
         <span style={{
           fontSize: 10.5, fontWeight: 800, borderRadius: 99, padding: '3px 9px',
-          color: outstanding === 0 ? '#15803D' : '#B45309',
-          background: outstanding === 0 ? '#DCFCE7' : '#FEF3C7',
+          color: outstanding === 0 ? 'var(--ok-text)' : 'var(--warn-text)',
+          background: outstanding === 0 ? 'var(--ok-bg)' : 'var(--warn-bg)',
         }}>
           {outstanding === 0 ? 'Ready' : `${outstanding} outstanding`}
         </span>
@@ -101,9 +101,9 @@ export function TripReadiness({ org, day, counts, hasRiskAssessment, staffCount,
               border: '1px solid var(--border-soft)', background: 'var(--surface)', width: '100%', textAlign: 'left',
               cursor: c.go ? 'pointer' : 'default',
             }}>
-            <span style={{ fontSize: 13, color: c.ok ? '#16A34A' : '#B45309' }}>{c.ok ? '✓' : '⚠'}</span>
+            <span style={{ fontSize: 13, color: c.ok ? '#16A34A' : 'var(--warn-text)' }}>{c.ok ? '✓' : '⚠'}</span>
             <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text2)', flex: 1 }}>{c.text}</span>
-            {c.go && <span style={{ color: '#CBD5E1', fontSize: 14 }}>›</span>}
+            {c.go && <span style={{ color: 'var(--text-faint)', fontSize: 14 }}>›</span>}
           </button>
         ))}
       </div>
@@ -183,8 +183,8 @@ export function ProjectReflectionModal({ org, session, project, summary, existin
                 <button key={n} onClick={() => set('overall_rating', n)} style={{
                   flex: 1, padding: '10px 0', borderRadius: 10, fontSize: 15, fontWeight: 800, cursor: 'pointer',
                   border: form.overall_rating === n ? `2px solid ${PURPLE}` : '1.5px solid #E2E8F0',
-                  background: form.overall_rating === n ? '#F5F3FF' : '#fff',
-                  color: form.overall_rating === n ? PURPLE : '#64748B',
+                  background: form.overall_rating === n ? 'var(--violet-bg)' : '#fff',
+                  color: form.overall_rating === n ? PURPLE : 'var(--text3)',
                 }}>{n}</button>
               ))}
             </div>
@@ -221,7 +221,7 @@ export function ProjectReflectionModal({ org, session, project, summary, existin
           <div style={{ flex: 1 }} />
           <button onClick={save} disabled={saving} style={{
             padding: '11px 22px', borderRadius: 11, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800,
-            background: saving ? '#CBD5E1' : `linear-gradient(135deg, ${PURPLE}, #5B8DEF)`, cursor: saving ? 'default' : 'pointer',
+            background: saving ? 'var(--text-faint)' : `linear-gradient(135deg, ${PURPLE}, #5B8DEF)`, cursor: saving ? 'default' : 'pointer',
           }}>{saving ? 'Saving…' : 'Save reflection'}</button>
         </div>
       </div>
@@ -300,7 +300,7 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
                 return (
                   <button key={c.id} onClick={() => toggle(c.id)} style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, width: '100%', textAlign: 'left', cursor: 'pointer',
-                    border: on ? `2px solid ${PURPLE}` : '1px solid #F1F5F9', background: on ? '#F5F3FF' : '#fff',
+                    border: on ? `2px solid ${PURPLE}` : '1px solid #F1F5F9', background: on ? 'var(--violet-bg)' : '#fff',
                   }}>
                     <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--violet-bg)', color: 'var(--violet-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
                       {c.photo_url ? <SignedImg bucket="gallery" src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`.toUpperCase()}
@@ -309,7 +309,7 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
                       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
                       {c.group_name && <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{c.group_name}</div>}
                     </div>
-                    <span style={{ fontSize: 15, color: on ? PURPLE : '#CBD5E1' }}>{on ? '✓' : '+'}</span>
+                    <span style={{ fontSize: 15, color: on ? PURPLE : 'var(--text-faint)' }}>{on ? '✓' : '+'}</span>
                   </button>
                 )
               })}
@@ -322,7 +322,7 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
           <div style={{ flex: 1 }} />
           <button onClick={save} disabled={saving || selected.size === 0} style={{
             padding: '11px 22px', borderRadius: 11, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800,
-            background: (saving || selected.size === 0) ? '#CBD5E1' : PURPLE, cursor: (saving || selected.size === 0) ? 'default' : 'pointer',
+            background: (saving || selected.size === 0) ? 'var(--text-faint)' : PURPLE, cursor: (saving || selected.size === 0) ? 'default' : 'pointer',
           }}>{saving ? 'Adding…' : `Add ${selected.size || ''}`.trim()}</button>
         </div>
       </div>
@@ -401,7 +401,7 @@ export function AddTeamModal({ org, projectId, existingUserIds, onClose, onAdded
                   </div>
                   <button onClick={() => add(p)} disabled={adding === p.id} style={{
                     padding: '6px 12px', borderRadius: 9, border: 'none', fontSize: 12, fontWeight: 800, color: '#fff',
-                    background: adding === p.id ? '#CBD5E1' : PURPLE, cursor: adding === p.id ? 'default' : 'pointer',
+                    background: adding === p.id ? 'var(--text-faint)' : PURPLE, cursor: adding === p.id ? 'default' : 'pointer',
                   }}>{adding === p.id ? '…' : 'Add'}</button>
                 </div>
               ))}
@@ -484,7 +484,7 @@ export function EditProjectModal({ project, onClose, onSaved }) {
           <div style={{ flex: 1 }} />
           <button onClick={save} disabled={saving} style={{
             padding: '11px 22px', borderRadius: 11, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800,
-            background: saving ? '#CBD5E1' : `linear-gradient(135deg, ${PURPLE}, #5B8DEF)`, cursor: saving ? 'default' : 'pointer',
+            background: saving ? 'var(--text-faint)' : `linear-gradient(135deg, ${PURPLE}, #5B8DEF)`, cursor: saving ? 'default' : 'pointer',
           }}>{saving ? 'Saving…' : 'Save changes'}</button>
         </div>
       </div>
@@ -507,7 +507,7 @@ function Choice({ label, value, onChange, options }) {
           <button key={k} onClick={() => onChange(k)} style={{
             padding: '8px 14px', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
             border: value === k ? `2px solid ${PURPLE}` : '1.5px solid #E2E8F0',
-            background: value === k ? '#F5F3FF' : '#fff', color: value === k ? PURPLE : '#334155',
+            background: value === k ? 'var(--violet-bg)' : '#fff', color: value === k ? PURPLE : 'var(--text2)',
           }}>{t}</button>
         ))}
       </div>
@@ -601,7 +601,7 @@ export function DuplicateProjectModal({ project, onClose, onDuplicated }) {
           <div style={{ flex: 1 }} />
           <button onClick={run} disabled={!valid || saving} style={{
             padding: '11px 22px', borderRadius: 11, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800,
-            background: (!valid || saving) ? '#CBD5E1' : `linear-gradient(135deg, ${PURPLE}, #5B8DEF)`,
+            background: (!valid || saving) ? 'var(--text-faint)' : `linear-gradient(135deg, ${PURPLE}, #5B8DEF)`,
             cursor: (!valid || saving) ? 'default' : 'pointer',
           }}>{saving ? 'Duplicating…' : 'Duplicate project'}</button>
         </div>

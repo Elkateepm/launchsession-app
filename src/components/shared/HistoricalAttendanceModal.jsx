@@ -42,7 +42,7 @@ export default function HistoricalAttendanceModal({ session, attendance, allChil
   const statusChip = (status) => ({
     signed_in: { label: 'Still in', color: '#4ADE80', bg: 'rgba(34,197,94,0.14)', border: 'rgba(34,197,94,0.32)' },
     signed_out: { label: 'Signed out', color: '#C4B5FD', bg: 'rgba(139,92,246,0.14)', border: 'rgba(139,92,246,0.32)' },
-    absent: { label: 'Absent', color: '#FCA5A5', bg: 'rgba(239,68,68,0.14)', border: 'rgba(239,68,68,0.32)' },
+    absent: { label: 'Absent', color: 'var(--danger-text)', bg: 'rgba(239,68,68,0.14)', border: 'rgba(239,68,68,0.32)' },
     expected: { label: 'No show', color: 'rgba(255,255,255,0.55)', bg: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.16)' },
   }[status] || { label: status || '—', color: 'rgba(255,255,255,0.55)', bg: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.16)' })
 
@@ -80,8 +80,8 @@ export default function HistoricalAttendanceModal({ session, attendance, allChil
           }}><Icon name="✕" /></button>
 
           <div style={{ paddingRight: 42 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#CBD5E1', letterSpacing: 0.8, marginBottom: 9 }}>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#94A3B8' }} />ENDED · REGISTER
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.32)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: 'var(--text-faint)', letterSpacing: 0.8, marginBottom: 9 }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--text-faint)' }} />ENDED · REGISTER
             </div>
             <h2 style={{ margin: 0, fontSize: isMobile ? 19 : 22, fontWeight: 900, color: '#fff', letterSpacing: -0.4 }}>{s.title}</h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', marginTop: 7 }}>

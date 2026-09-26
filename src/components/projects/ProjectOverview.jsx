@@ -331,7 +331,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
               padding: '8px 16px', border: 'none', borderRadius: 10, cursor: 'pointer',
               fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap',
               background: on ? 'linear-gradient(135deg,#6D5DF6,#5B8DEF)' : 'transparent',
-              color: on ? '#fff' : '#64748B',
+              color: on ? '#fff' : 'var(--text3)',
               boxShadow: on ? '0 1px 0 rgba(255,255,255,0.25) inset, 0 6px 16px -8px rgba(109,93,246,0.8)' : 'none',
               transition: 'background 0.16s ease, color 0.16s ease',
             }}>{t.label}</button>
@@ -446,9 +446,9 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, width: '100%',
                       textAlign: 'left', padding: '10px 12px', borderRadius: 11, cursor: 'pointer',
-                      border: `1px solid ${item.tone === 'red' ? '#FECACA' : '#FDE68A'}`,
-                      background: item.tone === 'red' ? '#FEF2F2' : '#FFFBEB',
-                      fontSize: 12.5, fontWeight: 700, color: item.tone === 'red' ? '#B91C1C' : '#92400E',
+                      border: `1px solid ${item.tone === 'red' ? 'var(--danger-border)' : 'var(--warn-border)'}`,
+                      background: item.tone === 'red' ? 'var(--danger-bg)' : 'var(--warn-bg)',
+                      fontSize: 12.5, fontWeight: 700, color: item.tone === 'red' ? 'var(--danger-text)' : 'var(--warn-text)',
                     }}>
                     <span><Icon name="⚠" /> {item.text}</span>
                     <span style={{ opacity: 0.6 }}><Icon name="→" /></span>
@@ -641,10 +641,10 @@ function PeopleTab({ participants, days, attendance, isMobile, onAdd, onWithdraw
                 {withdrawn && (
                   <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', background: 'var(--surface-hover)', borderRadius: 99, padding: '2px 8px' }}>{p.status.replace('_', ' ')}</span>
                 )}
-                {!withdrawn && <span style={{ fontSize: 12, fontWeight: 800, color: pct >= 75 ? '#15803D' : pct >= 50 ? '#B45309' : '#B91C1C' }}>{pct}%</span>}
+                {!withdrawn && <span style={{ fontSize: 12, fontWeight: 800, color: pct >= 75 ? 'var(--ok-text)' : pct >= 50 ? 'var(--warn-text)' : 'var(--danger-text)' }}>{pct}%</span>}
                 <button onClick={() => withdrawn ? onReactivate(p) : onWithdraw(p)} style={{
                   background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 9px', fontSize: 11, fontWeight: 700,
-                  color: withdrawn ? '#15803D' : '#B91C1C', cursor: 'pointer',
+                  color: withdrawn ? 'var(--ok-text)' : 'var(--danger-text)', cursor: 'pointer',
                 }}>{withdrawn ? 'Reactivate' : 'Withdraw'}</button>
               </div>
             )
@@ -681,7 +681,7 @@ function TeamTab({ team, staffProfiles, onAdd, onRemove, onToggleLead }) {
               <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                 <button onClick={() => onToggleLead(t)} style={{
                   fontSize: 10, fontWeight: 800, borderRadius: 99, padding: '2px 8px', cursor: 'pointer', border: 'none',
-                  color: t.is_lead ? '#5B21B6' : '#94A3B8', background: t.is_lead ? '#F5F3FF' : '#F1F5F9',
+                  color: t.is_lead ? 'var(--violet-text)' : 'var(--text-faint)', background: t.is_lead ? 'var(--violet-bg)' : 'var(--border-soft)',
                 }}>{t.is_lead ? 'Lead' : 'Make lead'}</button>
                 <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>{t.role}</span>
                 <button onClick={() => onRemove(t)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 9px', fontSize: 11, fontWeight: 700, color: 'var(--danger-text)', cursor: 'pointer' }}>Remove</button>
@@ -730,12 +730,12 @@ function DayCounts({ counts }) {
 
 function StatusChip({ status, onDark }) {
   const map = {
-    draft: { t: 'Draft', c: '#64748B', b: 'var(--surface-hover)', dot: '#94A3B8' },
+    draft: { t: 'Draft', c: 'var(--text3)', b: 'var(--surface-hover)', dot: 'var(--text-faint)' },
     upcoming: { t: 'Upcoming', c: 'var(--info-text)', b: 'var(--info-bg)', dot: '#3B82F6' },
     active: { t: 'Active', c: 'var(--ok-text)', b: 'var(--ok-bg)', dot: '#22C55E' },
-    completed: { t: 'Completed', c: '#64748B', b: 'var(--surface-hover)', dot: '#94A3B8' },
+    completed: { t: 'Completed', c: 'var(--text3)', b: 'var(--surface-hover)', dot: 'var(--text-faint)' },
     cancelled: { t: 'Cancelled', c: 'var(--danger-text)', b: 'var(--danger-bg)', dot: '#EF4444' },
-    archived: { t: 'Archived', c: '#64748B', b: 'var(--surface-hover)', dot: '#94A3B8' },
+    archived: { t: 'Archived', c: 'var(--text3)', b: 'var(--surface-hover)', dot: 'var(--text-faint)' },
   }
   const m = map[status] || map.draft
   // On the gradient hero the light pastel backgrounds vanish, so use a

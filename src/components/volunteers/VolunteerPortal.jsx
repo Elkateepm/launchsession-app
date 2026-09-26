@@ -31,7 +31,7 @@ const s = {
   inp: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1.5px solid var(--border)', fontSize:15, outline:'none', boxSizing:'border-box', marginBottom:14, fontFamily:'Inter,sans-serif', transition:'border-color 0.15s, box-shadow 0.15s' },
   btn: (color) => ({ width:'100%', padding:14, borderRadius:14, border:'none', background:`linear-gradient(135deg, ${color||'#1B9AAA'}, ${color||'#1B9AAA'}cc)`, color:'#fff', fontSize:16, fontWeight:800, cursor:'pointer', marginTop:8, boxShadow:`0 8px 24px ${color||'#1B9AAA'}55` }),
   back: { background:'none', border:'none', color:'rgba(255,255,255,0.6)', fontSize:13, cursor:'pointer', padding:0, display:'flex', alignItems:'center', gap:4, marginBottom:12 },
-  chip: (active,color) => ({ padding:'8px 14px', borderRadius:99, border:`1.5px solid ${active?(color||'#1B9AAA'):'#E5E7EB'}`, background:active?(color||'#1B9AAA')+'18':'#F9FAFB', color:active?(color||'#1B9AAA'):'#6B7280', fontSize:13, fontWeight:700, cursor:'pointer', transition:'all 0.15s' }),
+  chip: (active,color) => ({ padding:'8px 14px', borderRadius:99, border:`1.5px solid ${active?(color||'#1B9AAA'):'var(--border)'}`, background:active?(color||'#1B9AAA')+'18':'var(--surface2)', color:active?(color||'#1B9AAA'):'var(--text3)', fontSize:13, fontWeight:700, cursor:'pointer', transition:'all 0.15s' }),
   prog: (pct,color) => ({ height:3, background:'rgba(255,255,255,0.2)', borderRadius:2, marginTop:12, overflow:'hidden', children:null }),
 }
 
@@ -247,7 +247,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>Select any you currently hold — you can upload documents later</div>
       <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:18 }}>
         {QUALIFICATIONS.map(q=>(
-          <label key={q} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:12, border:`1.5px solid ${f.qualifications.includes(q)?primary:'#E5E7EB'}`, background:f.qualifications.includes(q)?primary+'08':'#F9FAFB', cursor:'pointer' }}>
+          <label key={q} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:12, border:`1.5px solid ${f.qualifications.includes(q)?primary:'var(--border)'}`, background:f.qualifications.includes(q)?primary+'08':'var(--surface2)', cursor:'pointer' }}>
             <input type="checkbox" checked={f.qualifications.includes(q)} onChange={()=>tog('qualifications',q)} style={{ accentColor:primary, width:16, height:16 }} />
             <span style={{ fontSize:14, fontWeight:600, color:'#111' }}>{q}</span>
           </label>
@@ -314,7 +314,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>Please read and agree to the following</div>
       <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:18 }}>
         {[['volunteer_agreement','Volunteer agreement'],['safeguarding_policy','Safeguarding policy'],['privacy_policy','Privacy policy'],['photo_consent','Photo consent']].map(([k,label])=>(
-          <label key={k} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:12, border:`1.5px solid ${f.agreements[k]?primary:'#E5E7EB'}`, background:f.agreements[k]?primary+'08':'#F9FAFB', cursor:'pointer' }}>
+          <label key={k} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:12, border:`1.5px solid ${f.agreements[k]?primary:'var(--border)'}`, background:f.agreements[k]?primary+'08':'var(--surface2)', cursor:'pointer' }}>
             <input type="checkbox" checked={f.agreements[k]} onChange={()=>togAgree(k)} style={{ accentColor:primary, width:16, height:16 }} />
             <span style={{ fontSize:14, fontWeight:600, color:'#111' }}>{label}</span>
           </label>
@@ -437,7 +437,7 @@ export default function VolunteerPortal() {
         <div style={s.head(primary)}><div style={{ fontSize:32 }}>⏳</div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Pending Approval</div></div>
         <div style={s.body}>
           <p style={{ color: 'var(--text3)', lineHeight:1.6, marginBottom:20 }}>Your application has been received. A staff member will review and approve your account shortly.</p>
-          <motion.button whileTap={{ scale:0.97 }} onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('#6B7280'), marginTop:0 }}>Sign out</motion.button>
+          <motion.button whileTap={{ scale:0.97 }} onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('var(--text3)'), marginTop:0 }}>Sign out</motion.button>
         </div>
       </motion.div>
     </div>
@@ -450,7 +450,7 @@ export default function VolunteerPortal() {
         <div style={s.head('#EF4444')}><div style={{ fontSize:32 }}><Icon name="❌" /></div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Application Unsuccessful</div></div>
         <div style={s.body}>
           <p style={{ color: 'var(--text3)', lineHeight:1.6, marginBottom:20 }}>Unfortunately your volunteer application was not approved. Please contact {org?.name} for more information.</p>
-          <motion.button whileTap={{ scale:0.97 }} onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('#6B7280'), marginTop:0 }}>Sign out</motion.button>
+          <motion.button whileTap={{ scale:0.97 }} onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('var(--text3)'), marginTop:0 }}>Sign out</motion.button>
         </div>
       </motion.div>
     </div>

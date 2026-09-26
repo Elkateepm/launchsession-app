@@ -138,7 +138,7 @@ export function PlanEndedWall({ org, isAdmin, onChoosePlan, onDismiss }) {
             disabled={busy}
             style={{
               width: '100%', minHeight: 48, borderRadius: 12, border: 'none',
-              background: busy ? '#94A3B8' : 'var(--org-primary, #1B9AAA)', color: '#fff',
+              background: busy ? 'var(--text-faint)' : 'var(--org-primary, #1B9AAA)', color: '#fff',
               fontSize: 15, fontWeight: 800, cursor: busy ? 'default' : 'pointer',
               fontFamily: 'inherit', marginBottom: 10,
             }}

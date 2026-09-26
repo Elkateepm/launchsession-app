@@ -12,8 +12,8 @@ import React from 'react'
 // it came from one organisation.
 
 export const INK = '#111827'
-export const MUTED = '#6B7280'
-export const RULE = '#E5E7EB'
+export const MUTED = 'var(--text3)'
+export const RULE = 'var(--border)'
 
 export const PRINT_CSS = `
 @media print {
@@ -200,7 +200,7 @@ export function DocShell({
         <input type="date" value={to} onChange={e => onTo(e.target.value)} style={ctl} aria-label="Period end" />
         <button onClick={onPrint} disabled={loading || !!error} style={{
           ...ctl, cursor: loading || error ? 'default' : 'pointer', fontWeight: 800, border: 'none',
-          background: loading || error ? '#CBD5E1' : INK, color: '#fff',
+          background: loading || error ? 'var(--text-faint)' : INK, color: '#fff',
         }}>Print or save as PDF</button>
       </div>
 

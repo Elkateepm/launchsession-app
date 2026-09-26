@@ -49,12 +49,12 @@ export default function ReportChips({
     display: 'inline-flex', alignItems: 'center', gap: compact ? 5 : 7,
     ...(onDark
       ? { border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.10)', color: '#fff' }
-      : { border: '1px solid var(--border)', background: 'var(--surface)', color: '#475569' }),
+      : { border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)' }),
   }
   // On a dark card the meaning-carrying reds and ambers are unreadable at chip
   // size, so the icon lifts to a tint that holds against the background.
-  const concernColour = onDark ? '#FCA5A5' : '#C0392B'
-  const injuryColour = onDark ? '#FCD34D' : '#B45309'
+  const concernColour = onDark ? 'var(--danger-border)' : '#C0392B'
+  const injuryColour = onDark ? '#FCD34D' : 'var(--warn-text)'
 
   // These sit inside a card that is itself a button. Without this, reporting an
   // injury would also open the register behind the form.

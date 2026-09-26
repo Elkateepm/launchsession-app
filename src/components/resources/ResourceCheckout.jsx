@@ -81,7 +81,7 @@ export default function ResourceCheckout({ org, resources, checkouts, sessions, 
             </div>
             <textarea style={{ ...sel, minHeight: 44, resize: 'vertical', width: '100%', marginBottom: 10 }} placeholder="Notes (condition, etc.)" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
             <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 10 }}>Signature capture isn't available in this version — use notes to record who signed for it if needed.</div>
-            <button onClick={handleCheckOut} disabled={!form.resource_id || !form.checked_out_to} style={{ padding: '10px 18px', borderRadius: 9, border: 'none', background: (!form.resource_id || !form.checked_out_to) ? '#D1D5DB' : '#7C3AED', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: (!form.resource_id || !form.checked_out_to) ? 'not-allowed' : 'pointer' }}>Confirm Check-out</button>
+            <button onClick={handleCheckOut} disabled={!form.resource_id || !form.checked_out_to} style={{ padding: '10px 18px', borderRadius: 9, border: 'none', background: (!form.resource_id || !form.checked_out_to) ? 'var(--text-faint)' : '#7C3AED', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: (!form.resource_id || !form.checked_out_to) ? 'not-allowed' : 'pointer' }}>Confirm Check-out</button>
           </div>
         )}
 
@@ -94,7 +94,7 @@ export default function ResourceCheckout({ org, resources, checkouts, sessions, 
               const borrower = staff.find(s => s.id === c.checked_out_to)
               const isOverdue = c.expected_return_at && new Date(c.expected_return_at) < new Date()
               return (
-                <div key={c.id} style={{ border: `1px solid ${isOverdue ? '#FECACA' : '#E5E7EB'}`, background: isOverdue ? '#FEF2F2' : '#fff', borderRadius: 10, padding: 12 }}>
+                <div key={c.id} style={{ border: `1px solid ${isOverdue ? 'var(--danger-border)' : 'var(--border)'}`, background: isOverdue ? 'var(--danger-bg)' : '#fff', borderRadius: 10, padding: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{resource?.name} <span style={{ fontWeight: 500, color: 'var(--text3)' }}>× {c.quantity}</span></div>

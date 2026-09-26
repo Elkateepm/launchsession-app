@@ -54,14 +54,14 @@ function ChildCard({ child, index, total, primary, open, onToggle, onChange, onR
   const incomplete = !child.first_name.trim()
 
   return (
-    <div style={{ border: `1.5px solid ${open ? primary : '#E2E8F0'}`, borderRadius: 14, marginBottom: 12, background: 'var(--surface)', overflow: 'hidden' }}>
+    <div style={{ border: `1.5px solid ${open ? primary : 'var(--border)'}`, borderRadius: 14, marginBottom: 12, background: 'var(--surface)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px' }}>
         <button type="button" onClick={onToggle} aria-expanded={open}
           style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
           <span style={{
             width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center',
             justifyContent: 'center', fontSize: 12, fontWeight: 800,
-            background: incomplete ? '#F1F5F9' : 'var(--org-a10)', color: incomplete ? '#94A3B8' : primary,
+            background: incomplete ? 'var(--border-soft)' : 'var(--org-a10)', color: incomplete ? 'var(--text-faint)' : primary,
           }}>{index + 1}</span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
@@ -219,8 +219,8 @@ export default function PublicChildRegistration() {
         <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
           {['Your details', 'Young people', 'Review'].map((s, i) => (
             <div key={s} style={{ flex: 1, textAlign: 'center' }}>
-              <div style={{ height: 4, borderRadius: 99, background: step > i ? primary : '#E2E8F0', marginBottom: 5 }} />
-              <div style={{ fontSize: 10, fontWeight: 700, color: step === i + 1 ? primary : '#94A3B8' }}>{s}</div>
+              <div style={{ height: 4, borderRadius: 99, background: step > i ? primary : 'var(--border)', marginBottom: 5 }} />
+              <div style={{ fontSize: 10, fontWeight: 700, color: step === i + 1 ? primary : 'var(--text-faint)' }}>{s}</div>
             </div>
           ))}
         </div>
@@ -326,7 +326,7 @@ export default function PublicChildRegistration() {
           {step > 1 && <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '13px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}><Icon name="←" /> Back</button>}
           {step < 3 ? (
             <button onClick={() => canContinue() && setStep(s => s + 1)} disabled={!canContinue()}
-              style={{ flex: 2, padding: '13px', borderRadius: 10, border: 'none', background: canContinue() ? primary : '#CBD5E1', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canContinue() ? 'pointer' : 'default' }}>
+              style={{ flex: 2, padding: '13px', borderRadius: 10, border: 'none', background: canContinue() ? primary : 'var(--text-faint)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canContinue() ? 'pointer' : 'default' }}>
               Continue →
             </button>
           ) : (

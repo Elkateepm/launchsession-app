@@ -121,9 +121,9 @@ function Outcomes({ org, sensitiveView }) {
         {[['active', 'Active'], ['historical', 'Historical']].map(([k, l]) => (
           <button key={k} onClick={() => setView(k)} style={{
             padding: '8px 14px', borderRadius: 10, cursor: 'pointer', minHeight: 44,
-            border: `1px solid ${view === k ? 'transparent' : '#E2E8F0'}`,
-            background: view === k ? '#0F172A' : '#fff',
-            color: view === k ? '#fff' : '#64748B',
+            border: `1px solid ${view === k ? 'transparent' : 'var(--border)'}`,
+            background: view === k ? '#0F172A' : 'var(--surface)',
+            color: view === k ? '#fff' : 'var(--text3)',
             fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
           }}>{l}</button>
         ))}
@@ -149,8 +149,8 @@ function Outcomes({ org, sensitiveView }) {
             <span style={{
               padding: '3px 10px', borderRadius: 99, fontSize: 11.5, fontWeight: 800,
               textTransform: 'capitalize',
-              background: w.effective_status === 'active' ? '#FEF2F2' : '#F3F2F7',
-              color: w.effective_status === 'active' ? '#B42318' : '#5A5772',
+              background: w.effective_status === 'active' ? 'var(--danger-bg)' : 'var(--surface2)',
+              color: w.effective_status === 'active' ? 'var(--danger-text)' : 'var(--text2)',
             }}>{w.effective_status}</span>
           </div>
         </div>
@@ -240,9 +240,9 @@ function OrgCompliance({ org, primary, isAdmin, onOpen }) {
           .map(([k, l]) => (
             <button key={k} onClick={() => setView(k)} style={{
               padding: '8px 14px', borderRadius: 10, cursor: 'pointer', minHeight: 44,
-              border: `1px solid ${view === k ? 'transparent' : '#E2E8F0'}`,
-              background: view === k ? '#0F172A' : '#fff',
-              color: view === k ? '#fff' : '#64748B',
+              border: `1px solid ${view === k ? 'transparent' : 'var(--border)'}`,
+              background: view === k ? '#0F172A' : 'var(--surface)',
+              color: view === k ? '#fff' : 'var(--text3)',
               fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
             }}>{l}</button>
           ))}
@@ -306,7 +306,7 @@ function OrgCompliance({ org, primary, isAdmin, onOpen }) {
                       </div>
                     </div>
                     {!r.active && (
-                      <span style={{ padding: '3px 10px', borderRadius: 99, background: 'var(--surface2)', color: '#5A5772', fontSize: 11.5, fontWeight: 800 }}>Off</span>
+                      <span style={{ padding: '3px 10px', borderRadius: 99, background: 'var(--surface2)', color: 'var(--text2)', fontSize: 11.5, fontWeight: 800 }}>Off</span>
                     )}
                   </div>
                   <button onClick={() => setEditing(r.id)} style={{ ...gBtn, marginTop: 10 }}>Edit</button>
@@ -446,12 +446,12 @@ function OrgAbsence({ org, primary, onOpen }) {
       <button style={HR.button} onClick={() => { setDate(shift(weekStart, 7)); setWeekStart(shift(weekStart, 7)); setView('day') }}>Next week</button>
     </div>
     <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 12, marginBottom: 12 }}>
-      {days.map(d => <button key={d} aria-pressed={date === d && view === 'day'} onClick={() => { setDate(d); setView('day') }} style={{ ...HR.button, display: 'block', minWidth: 90, flex: 1, background: date === d && view === 'day' ? primary : '#fff', color: date === d && view === 'day' ? '#fff' : HR.ink }}>
+      {days.map(d => <button key={d} aria-pressed={date === d && view === 'day'} onClick={() => { setDate(d); setView('day') }} style={{ ...HR.button, display: 'block', minWidth: 90, flex: 1, background: date === d && view === 'day' ? primary : 'var(--surface)', color: date === d && view === 'day' ? '#fff' : HR.ink }}>
         <span style={{ display: 'block', fontSize: 12 }}>{new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', timeZone: 'Europe/London' }).format(new Date(d + 'T12:00:00Z'))}</span>
         <span style={{ display: 'block', marginTop: 8, fontSize: 11, fontWeight: 400 }}>{rows ? new Set(rows.filter(r => absenceOnDate(r, d)).map(r => r.staff_id)).size : '—'} away</span>
       </button>)}
     </div>
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>{[['day', ukDate(date)], ['upcoming', 'Upcoming leave'], ['rtw', `Return to work (${rtwDue.length})`], ['all', 'All records']].map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => setView(key)} style={{ ...HR.button, background: view === key ? '#EEF2F7' : '#fff' }}>{label}</button>)}</div>
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>{[['day', ukDate(date)], ['upcoming', 'Upcoming leave'], ['rtw', `Return to work (${rtwDue.length})`], ['all', 'All records']].map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => setView(key)} style={{ ...HR.button, background: view === key ? 'var(--surface2)' : '#fff' }}>{label}</button>)}</div>
     {error ? <LoadError onRetry={() => setRetry(v => v + 1)} /> : rows === null ? <p style={{ color: HR.muted }}>Loading leave records…</p> : shown.length === 0 ? <p style={{ padding: 18, fontSize: 13, color: HR.muted }}>No leave records match this view.</p> : shown.map(r => <button key={r.id} onClick={() => onOpen({ id: null, hr_staff_id: r.staff_id, full_name: staff[r.staff_id] || 'Team member' })} style={{ ...HR.button, width: '100%', textAlign: 'left', justifyContent: 'space-between', padding: '17px 0', border: 0, borderTop: `1px solid ${HR.line}`, borderRadius: 0 }}>
       <span><strong style={{ fontSize: 14, color: HR.ink }}>{staff[r.staff_id] || 'Team member'}</strong><span style={{ display: 'block', fontSize: 12, color: HR.muted, fontWeight: 400, marginTop: 6, lineHeight: 1.6, textTransform: 'capitalize' }}>{String(r.category || r.type || 'Leave').replace(/_/g, ' ')} · {ukDate(r.start_date)}{r.end_date && r.end_date !== r.start_date ? ` – ${ukDate(r.end_date)}` : r.status === 'ongoing' ? ' · ongoing' : ''}</span></span><ArrowRight size={16} aria-hidden="true" />
     </button>)}

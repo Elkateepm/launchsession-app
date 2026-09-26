@@ -499,7 +499,7 @@ export function WeatherStrip({ weather, weatherError, icon, label, primary }) {
               </span>
               <span style={{
                 fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap',
-                color: d.rain != null && d.rain >= 50 ? '#B45309' : 'transparent',
+                color: d.rain != null && d.rain >= 50 ? 'var(--warn-text)' : 'transparent',
               }}>
                 {d.rain != null && d.rain >= 50 ? `${d.rain}%` : '·'}
               </span>
