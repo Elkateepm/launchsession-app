@@ -1038,7 +1038,7 @@ function TemplatesView({ templates, loading, primary, onBack, onUse, onEdit, onD
   const [query, setQuery] = useState('')
   const filtered = templates.filter(t => `${t.name} ${t.location || ''}`.toLowerCase().includes(query.toLowerCase().trim()))
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F6F8FA' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 22, flexWrap: 'wrap' }}>
           <div>
@@ -1134,7 +1134,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel, prim
                   <button key={t.key} onClick={() => set('session_type', t.key)}
                     style={{ padding: '12px 10px', borderRadius: 12, border: `2px solid ${active ? t.color : 'var(--border)'}`, background: active ? t.color + '15' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
                     <div style={{ fontSize: 18, marginBottom: 2 }}><Icon name={t.icon} /></div>
-                    <div style={{ fontSize: 12.5, fontWeight: 800, color: active ? t.color : '#111' }}>{t.label}</div>
+                    <div style={{ fontSize: 12.5, fontWeight: 800, color: active ? t.color : 'var(--text)' }}>{t.label}</div>
                   </button>
                 )
               })}
@@ -1378,15 +1378,20 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
   const [menuOpen, setMenuOpen] = useState(false)
   const terms = useTerms()
   const past = status === 'completed' || status === 'review'
-  const needsVols = s.volunteer_limit && volCount < s.volunteer_limit
+  // Boolean, not the raw limit: a limit of 0 made `{needsVols && ...}` print a stray "0".
+  const needsVols = !!s.volunteer_limit && volCount < s.volunteer_limit
   const labels = { live: 'Live now', upcoming: 'Upcoming', completed: 'Completed', review: 'Follow-up', draft: 'Draft', cancelled: 'Cancelled' }
-  const accent = status === 'live' ? 'var(--ok-text)' : status === 'review' ? 'var(--warn-text)' : primary
+  // Text and wash move as a themed pair. Raw brand colour as text is ~2.3:1 on
+  // the dark card, and `${colour}12` is invalid CSS once the colour is a var().
+  const tone = status === 'live' ? { color: 'var(--ok-text)', bg: 'var(--ok-bg)' }
+    : status === 'review' ? { color: 'var(--warn-text)', bg: 'var(--warn-bg)' }
+    : { color: 'var(--org-ink)', bg: 'var(--org-a10)' }
   const action = status === 'draft' ? onEdit : past && !hasReflection ? onReflect : onOpenRegister
   const actionLabel = status === 'draft' ? 'Continue planning' : past && !hasReflection ? 'Add reflection' : past ? 'View register' : 'Open register'
   return <article style={{ position: 'relative', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: isMobile ? 16 : 20, marginBottom: 12 }}>
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
       {!isMobile && <div style={{ width: 58, flexShrink: 0, background: 'var(--surface-hover)', borderRadius: 10, padding: '12px 0', textAlign: 'center' }}><div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase' }}>{s.session_date ? format(parseISO(s.session_date), 'MMM') : 'Date'}</div><strong style={{ display: 'block', fontSize: 22, color: 'var(--text)' }}>{s.session_date ? format(parseISO(s.session_date), 'dd') : '—'}</strong></div>}
-      <div style={{ flex: 1, minWidth: 0 }}><span style={{ display: 'inline-flex', fontSize: 11, fontWeight: 800, color: accent, background: `${accent}12`, borderRadius: 6, padding: '4px 7px', marginBottom: 5 }}>{labels[status]}</span>
+      <div style={{ flex: 1, minWidth: 0 }}><span style={{ display: 'inline-flex', fontSize: 11, fontWeight: 800, color: tone.color, background: tone.bg, borderRadius: 6, padding: '4px 7px', marginBottom: 5 }}>{labels[status]}</span>
         <button onClick={onView} style={{ display: 'block', textAlign: 'left', minHeight: 44, background: 'none', border: 0, padding: 0, fontSize: 17, fontWeight: 800, color: 'var(--text)', cursor: 'pointer', overflowWrap: 'anywhere' }}>{s.title}</button>
         <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text3)' }}>{s.session_date ? fmtDayLabel(s.session_date) : 'Date to be confirmed'}{s.start_time ? ` · ${s.start_time.slice(0, 5)}${s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}` : ''}</div>
         {s.location && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 3, overflowWrap: 'anywhere' }}><Icon name="📍" /> {s.location}</div>}
@@ -1993,7 +1998,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
   // ── LIST / WEEK VIEW ──
   return (
-    <div style={{ background: '#F6F8FA', minHeight: '100%' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
       <style>{`@keyframes sp-live-pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
       <div style={{ padding: isMobile ? 16 : 28, maxWidth: 1280, margin: '0 auto' }}>
 
@@ -2013,7 +2018,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             style={{
               display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left',
               padding: '12px 16px', marginBottom: 14, borderRadius: 14, cursor: 'pointer',
-              background: 'linear-gradient(135deg, #F5F3FF, #EEF2FF)',
+              background: 'var(--violet-bg)',
               border: '1px solid var(--violet-border)', boxSizing: 'border-box',
             }}>
             <span style={{ fontSize: 18, flexShrink: 0 }}><Icon name="🚀" /></span>
@@ -2026,26 +2031,36 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                 {runningProject.todays ? ` · Today: ${runningProject.todays.title}` : ' · No session today'}
               </span>
             </span>
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#6D5DF6', whiteSpace: 'nowrap' }}>Open project <Icon name="→" /></span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--violet-text)', whiteSpace: 'nowrap' }}>Open project <Icon name="→" /></span>
           </button>
         )}
 
-        {/* ═══ TABS ═══ */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 14, borderBottom: '1px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        {/* ═══ TABS ═══
+            Five or six tabs need ~400px and a phone has ~330-360, so on mobile
+            the row scrolls. Cut off bare at the screen edge, "Follow-up 57"
+            looked broken and Drafts looked absent; the fade says "more this
+            way", the trailing spacer lets the last tab scroll clear of the
+            fade, and a tapped tab is brought into view. Where they do fit,
+            the tabs share the width. */}
+        <div style={{
+          display: 'flex', gap: isMobile ? 0 : 4, marginBottom: 14, borderBottom: '1px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+          ...(isMobile ? { scrollbarWidth: 'none', WebkitMaskImage: 'linear-gradient(90deg, #000 calc(100% - 28px), transparent)', maskImage: 'linear-gradient(90deg, #000 calc(100% - 28px), transparent)' } : null),
+        }}>
           {TABS.map(t => (
-            <button key={t.key} aria-pressed={tab === t.key} onClick={() => setTab(t.key)}
-              style={{ minHeight: 48, padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? primary : 'var(--text3)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button key={t.key} aria-pressed={tab === t.key} onClick={e => { setTab(t.key); if (isMobile) e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }) }}
+              style={{ minHeight: 48, padding: isMobile ? '10px 6px' : '10px 14px', flex: isMobile ? '1 0 auto' : undefined, justifyContent: 'center', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: isMobile ? 5 : 6 }}>
               {t.live && t.count > 0 && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16A34A', animation: 'sp-live-pulse 1.6s ease-in-out infinite' }} />}
               {t.label}
-              <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? primary : 'var(--text-faint)', background: tab === t.key ? '#6D5DF618' : 'var(--border-soft)', borderRadius: 99, padding: '1px 7px' }}>{t.count}</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? 'var(--org-ink)' : 'var(--text-faint)', background: tab === t.key ? 'var(--org-a10)' : 'var(--border-soft)', borderRadius: 99, padding: isMobile ? '1px 6px' : '1px 7px' }}>{t.count}</span>
             </button>
           ))}
+          {isMobile && <span aria-hidden="true" style={{ flex: '0 0 24px' }} />}
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
           <input type="search" aria-label={`Search ${terms.sessions}`} value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or location…" style={{ ...flowInput, flex: '1 1 240px' }} />
           <button onClick={() => setShowFilters(true)} style={flowButton}>Filters{activeFilterChips.length ? ` (${activeFilterChips.length})` : ''}</button>
-          <div style={{ display: 'flex', gap: 4 }} aria-label="View style">{[{ key: 'list', label: 'List' }, { key: 'week', label: 'Week' }].map(v => <button key={v.key} aria-pressed={view === v.key} onClick={() => setView(v.key)} style={{ ...flowButton, color: view === v.key ? primary : 'var(--text3)', borderColor: view === v.key ? primary : 'var(--border)', background: view === v.key ? `${primary}0C` : '#fff' }}>{v.label}</button>)}</div>
+          <div style={{ display: 'flex', gap: 4 }} aria-label="View style">{[{ key: 'list', label: 'List' }, { key: 'week', label: 'Week' }].map(v => <button key={v.key} aria-pressed={view === v.key} onClick={() => setView(v.key)} style={{ ...flowButton, color: view === v.key ? 'var(--org-ink)' : 'var(--text3)', borderColor: view === v.key ? primary : 'var(--border)', background: view === v.key ? 'var(--org-a10)' : 'var(--surface)' }}>{v.label}</button>)}</div>
         </div>
         {activeFilterChips.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>{activeFilterChips.map(c => <button key={c.key} onClick={c.clear} aria-label={`Remove ${c.label} filter`} style={{ ...flowButton, fontSize: 12, padding: '8px 12px' }}>{c.label} ×</button>)}<button onClick={clearFilters} style={{ ...flowButton, border: 0, background: 'none', color: primary }}>Clear all</button></div>}
         {view === 'week' && <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 16 }}><button aria-label="Previous week" onClick={() => setWeekOffset(n => n - 1)} style={flowButton}>←</button><strong style={{ fontSize: 14, flex: 1 }}>{format(weekStart, 'd MMM')} – {format(addDays(weekStart, 6), 'd MMM yyyy')}</strong><button aria-label="Next week" onClick={() => setWeekOffset(n => n + 1)} style={flowButton}>→</button><button onClick={() => setWeekOffset(0)} style={flowButton}>This week</button></div>}
@@ -2058,7 +2073,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                   <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--surface-hover)' }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ height: 13, width: '38%', background: 'var(--surface-hover)', borderRadius: 6, marginBottom: 8 }} />
-                    <div style={{ height: 11, width: '60%', background: '#F5F7FA', borderRadius: 6 }} />
+                    <div style={{ height: 11, width: '60%', background: 'var(--border-soft)', borderRadius: 6 }} />
                   </div>
                 </div>
               </div>
@@ -2153,7 +2168,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                       borderBottom: `${isMobile ? 2 : 3}px solid ${isToday ? primary : 'var(--border)'}`,
                       marginBottom: 10,
                     }}>
-                      <div style={{ fontSize: isMobile ? 14.5 : 13, fontWeight: isToday ? 900 : 700, color: isToday ? primary : '#111' }}>
+                      <div style={{ fontSize: isMobile ? 14.5 : 13, fontWeight: isToday ? 900 : 700, color: isToday ? 'var(--org-ink)' : 'var(--text)' }}>
                         {format(day, isMobile ? 'EEEE d MMM' : 'EEE d')}{isMobile && isToday ? ' · Today' : ''}
                       </div>
                       <div style={{ fontSize: isMobile ? 11.5 : 10, color: 'var(--text3)', fontWeight: 600, marginTop: isMobile ? 0 : 2, whiteSpace: 'nowrap' }}>{daySessions.length} session{daySessions.length !== 1 ? 's' : ''}</div>
@@ -2208,11 +2223,11 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         {/* ═══ DISMISSIBLE TIP ═══ */}
         {!loading && !tipDismissed && completedSessions.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--violet-bg)', border: '1px solid var(--violet-border)', borderRadius: 14, padding: '12px 16px', marginTop: 16, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: '#4C1D95', fontWeight: 600 }}>
+            <div style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: 'var(--violet-text)', fontWeight: 600 }}>
               💡 Running the same activity again? Duplicate a previous session instead of creating one from scratch.
             </div>
             <button onClick={() => setShowDuplicatePicker(true)}
-              style={{ ...flowButton, color: primary }}>
+              style={{ ...flowButton, color: 'var(--org-ink)' }}>
               Duplicate session
             </button>
             <button onClick={dismissTip} aria-label="Dismiss tip"

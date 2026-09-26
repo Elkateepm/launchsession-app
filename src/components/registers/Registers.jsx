@@ -7,6 +7,8 @@ import { signRows, signOne } from '../../lib/storageUrl'
 import { useTodaySession, useAttendance, useChildren, useOnlineStatus } from '../../lib/hooks'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useIsDarkTheme } from '../../hooks/useIsDarkTheme'
+import { setThemeChoice } from '../../lib/theme'
 import { TemplatePicker, AVAILABLE_FIELDS, SAMPLE_ROW } from './TemplateCreator'
 import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
 import { useTerms } from '../../context/OrgContext'
@@ -388,7 +390,7 @@ function InlineChildImport({ org, template, onImported }) {
       <div style={{ background: 'var(--surface2)', borderRadius: 8, border: '1px solid var(--border)', maxHeight: 140, overflowY: 'auto', marginBottom: 10 }}>
         {rows.slice(0,8).map((r,i) => (
           <div key={i} style={{ display: 'flex', gap: 8, padding: '5px 10px', borderBottom: '1px solid var(--border-soft)', fontSize: 11 }}>
-            <span style={{ fontWeight: 700, color: r.first_name ? '#111' : '#C00', minWidth: 80 }}>{r.first_name || '⚠'} {r.last_name}</span>
+            <span style={{ fontWeight: 700, color: r.first_name ? 'var(--text)' : 'var(--danger-text)', minWidth: 80 }}>{r.first_name || '⚠'} {r.last_name}</span>
             <span style={{ color: 'var(--text-faint)' }}>{r.group_name || 'Ungrouped'}</span>
           </div>
         ))}
@@ -409,7 +411,7 @@ function InlineChildImport({ org, template, onImported }) {
         style={{ border: `2px dashed var(--org-a35)`, borderRadius: 10, padding: '14px 10px', textAlign: 'center', cursor: 'pointer', background: primary + '06', marginBottom: 8 }}>
         <input ref={inputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
         <div style={{ fontSize: 20, marginBottom: 4 }}><Icon name="📂" /></div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>Drop CSV or click to browse</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>Drop CSV or click to browse</div>
       </div>
       <textarea value={csvText} onChange={e => setCsvText(e.target.value)} placeholder="or paste CSV here..." rows={3} style={fi} />
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
@@ -1302,7 +1304,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
           {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: dark ? 'var(--border-soft)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {child.first_name} {child.last_name}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
@@ -1328,12 +1330,12 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
           // school and age are at least worth reading while browsing the roster.
           <div style={{ textAlign: 'right', minWidth: 0 }}>
             {child.school && (
-              <div style={{ fontSize: 11.5, fontWeight: 600, color: dark ? 'var(--text-faint)' : 'var(--text3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>
                 {child.school}
               </div>
             )}
             {child.date_of_birth && (
-              <div style={{ fontSize: 11, color: dark ? 'var(--text3)' : 'var(--text-faint)', marginTop: 1 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 1 }}>
                 {Math.floor((Date.now() - new Date(child.date_of_birth)) / 31557600000)} yrs
               </div>
             )}
@@ -1419,12 +1421,11 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const [note, setNote] = useState('')
   const [showMobileTools, setShowMobileTools] = useState(false)
   const [statListModal, setStatListModal] = useState(null) // 'allergies' | 'medical' | null
-  const [darkMode, setDarkMode] = useState(() => {
-    try { return localStorage.getItem('registerDarkMode') === '1' } catch { return false }
-  })
-  useEffect(() => {
-    try { localStorage.setItem('registerDarkMode', darkMode ? '1' : '0') } catch {}
-  }, [darkMode])
+  // Follows the app theme. The Register used to keep its own dark flag, which
+  // predates the app-wide theme; once that existed the two disagreed, and a dark
+  // app rendered this screen's light palette over dark tokens -- white header,
+  // invisible group headings.
+  const darkMode = useIsDarkTheme()
   // The header's Live/Upcoming/Ended badge is derived from the clock, so with
   // no ticker it only re-evaluated when something unrelated re-rendered. A
   // session could start, or end, and the header would keep claiming otherwise
@@ -1636,14 +1637,14 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   })()
 
   // Theme tokens — light values match the original design exactly; dark values
-  // only apply when the Dark Mode toggle (in Register Options) is switched on.
+  // apply whenever the app is in its dark theme.
   const t = {
     pageBg: darkMode ? 'linear-gradient(180deg, #0A0D1C 0%, #12152A 100%)' : 'var(--surface2)',
     headerBg: darkMode ? 'linear-gradient(165deg, #171B33 0%, rgba(16,19,36,0) 60%)' : `linear-gradient(165deg, var(--org-a05) 0%, #fff 55%)`,
     headerBorder: darkMode ? 'rgba(255,255,255,0.08)' : 'var(--border)',
-    text: darkMode ? 'var(--border-soft)' : '#0B1220',
-    textSub: darkMode ? 'var(--text-faint)' : 'var(--text3)',
-    textMuted: darkMode ? 'var(--text3)' : 'var(--text-faint)',
+    text: darkMode ? 'var(--text)' : '#0B1220',
+    textSub: 'var(--text3)',
+    textMuted: 'var(--text-faint)',
     miniChipBg: darkMode ? 'rgba(255,255,255,0.06)' : 'var(--surface2)',
     miniChipBorder: darkMode ? 'rgba(255,255,255,0.1)' : 'var(--border)',
     btnBg: darkMode ? null : '#fff',
@@ -1655,7 +1656,9 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
     inputBorder: darkMode ? 'rgba(255,255,255,0.1)' : (primary + '25'),
     filterBg: darkMode ? 'transparent' : '#fff',
     filterBorder: darkMode ? 'rgba(255,255,255,0.08)' : 'var(--border-soft)',
-    listBg: darkMode ? 'transparent' : 'var(--surface2)',
+    // Opaque in both themes: the sticky group headings paint with it, and a
+    // transparent heading let the cards scroll visibly through its text.
+    listBg: darkMode ? 'var(--bg)' : 'var(--surface2)',
   }
   const actionColors = { past: '#8B5CF6', archive: '#6366F1', medical: '#3B82F6', groups: '#14B8A6', print: '#A855F7', import: '#EC4899' }
 
@@ -1798,21 +1801,24 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           {/* Stats strip + search + select */}
           <div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: isMobile ? 8 : 10, marginBottom: isMobile ? 10 : 14 }}>
+              {/* Colours are hex, never var(--...): every use below appends an
+                  alpha suffix (`${s.color}22`), which makes a var() invalid CSS
+                  and silently drops the chip's background, border and shadow. */}
               {(session ? [
                 { icon: '📋', value: counts.total, label: 'On Register', color: primary },
-                { icon: '✅', value: counts.signed_in, label: 'Signed In', color: 'var(--ok-text)', live: isLiveSession },
-                { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: 'var(--warn-text)' },
+                { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A', live: isLiveSession },
+                { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
               ] : [
                 { icon: '📋', value: counts.total, label: 'On Register', color: primary },
-                { icon: '⚠️', value: children.filter(c => c.allergies).length, label: 'Allergies', color: 'var(--warn-text)', onClick: () => setStatListModal('allergies') },
-                { icon: '✚', value: children.filter(c => c.medical_notes).length, label: 'Medical Alerts', color: 'var(--danger-text)', onClick: () => setStatListModal('medical') },
+                { icon: '⚠️', value: children.filter(c => c.allergies).length, label: 'Allergies', color: '#D97706', onClick: () => setStatListModal('allergies') },
+                { icon: '✚', value: children.filter(c => c.medical_notes).length, label: 'Medical Alerts', color: '#DC2626', onClick: () => setStatListModal('medical') },
               ]).map(s => (
                 <motion.button key={s.label} onClick={s.onClick} disabled={!s.onClick}
                   whileHover={s.onClick ? { y: -2, boxShadow: `0 10px 22px -8px ${s.color}45` } : {}}
                   whileTap={s.onClick ? { scale: 0.97 } : {}}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, minWidth: 0,
-                    padding: isMobile ? '10px 10px' : '13px 14px', borderRadius: 16,
+                    display: 'flex', alignItems: 'center', gap: isMobile ? 7 : 10, minWidth: 0,
+                    padding: isMobile ? '10px 8px' : '13px 14px', borderRadius: 16,
                     background: darkMode ? `linear-gradient(160deg, ${s.color}22, ${s.color}0C)` : `linear-gradient(160deg, ${s.color}${s.live ? '1E' : '12'}, #fff)`,
                     border: `${s.live ? 2 : 1.5}px solid ${s.live ? s.color + (darkMode ? '66' : '55') : (darkMode ? s.color + '30' : s.color + '22')}`,
                     boxShadow: s.live
@@ -1822,19 +1828,21 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                     position: 'relative',
                   }}>
                   <span style={{
-                    width: isMobile ? 32 : 38, height: isMobile ? 32 : 38, borderRadius: 11, flexShrink: 0,
+                    width: isMobile ? 28 : 38, height: isMobile ? 28 : 38, borderRadius: isMobile ? 9 : 11, flexShrink: 0,
                     background: `linear-gradient(135deg, ${s.color}, ${s.color}CC)`, boxShadow: `0 4px 10px -3px ${s.color}70`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 14 : 16,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 13 : 16, color: '#fff',
                   }}><Icon name={s.icon} /></span>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: 900, color: t.text, lineHeight: 1.1 }}>{s.value}</div>
-                    <div style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 700, color: s.live ? (darkMode ? '#4ADE80' : 'var(--ok-text)') : t.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 700, color: s.live ? (darkMode ? '#4ADE80' : 'var(--ok-text)') : t.textSub, whiteSpace: isMobile ? 'normal' : 'nowrap', lineHeight: isMobile ? 1.2 : undefined, overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
                       {s.live && <span data-reg-live-anim style={{ width: 5, height: 5, borderRadius: '50%', background: '#16A34A', flexShrink: 0, animation: 'reg-live-dot 2s ease-in-out infinite' }} />}
                       {s.live ? 'On Site Now' : s.label}
                     </div>
                   </div>
                   {s.onClick && (
-                    <span style={{ marginLeft: 'auto', fontSize: 12, color: s.color, opacity: 0.6, flexShrink: 0 }}><Icon name="→" /></span>
+                    <span style={isMobile
+                      ? { position: 'absolute', top: 6, right: 7, fontSize: 10, lineHeight: 1, color: s.color, opacity: 0.6 }
+                      : { marginLeft: 'auto', fontSize: 12, color: s.color, opacity: 0.6, flexShrink: 0 }}><Icon name="→" /></span>
                   )}
                 </motion.button>
               ))}
@@ -2038,7 +2046,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       {!isMobile && (
         <div style={{ width: 220, background: 'var(--surface)', borderLeft: '1px solid var(--border-soft)', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
           <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid var(--border-soft)' }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Tools</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Register Tools</div>
             {[
               { icon: '➕', label: 'Add Child', sub: 'Not on list', action: () => setShowAdd(true) },
               { icon: '🏷️', label: 'Manage Groups', sub: 'Quick add & colours', action: () => setShowGroupsSetup(true) },
@@ -2069,7 +2077,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 }}>
                 <div className="tool-icon" style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, transition: 'transform 0.18s ease, background 0.18s ease' }}><Icon name={t.icon} /></div>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{t.label}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{t.label}</div>
                   <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{t.sub}</div>
                 </div>
               </button>
@@ -2111,14 +2119,14 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
           {/* Register notes */}
           <div style={{ padding: 14, borderBottom: '1px solid var(--border-soft)' }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}>Session Notes</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>Session Notes</div>
             <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Add notes about this session..."
               style={{ width: '100%', height: 72, border: '1px solid var(--border)', borderRadius: 8, padding: 8, fontSize: 11, resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', color: 'var(--text2)' }} />
           </div>
 
           {/* Safeguarding */}
           <div style={{ padding: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}><Icon name="🛡" /> Safeguarding</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}><Icon name="🛡" /> Safeguarding</div>
             <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 8, padding: '10px 12px' }}>
               {/* Counts children, not alerts, and says which -- this panel and
                   the Medical Alerts stat chip both read "medical alerts" while
@@ -2142,17 +2150,17 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       {isMobile && showMobileTools && createPortal(
         <div onClick={() => setShowMobileTools(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '8px 16px calc(24px + env(safe-area-inset-bottom))', boxShadow: '0 -20px 50px rgba(0,0,0,0.25)' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 10 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.12)' }} /></div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Options</div>
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 10 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'var(--border2)' }} /></div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Register Options</div>
             <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: 'var(--surface2)', marginBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{darkMode ? '🌙' : '☀️'}</div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>Dark Mode</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{darkMode ? 'On for this register' : 'Off'}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Dark Mode</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{darkMode ? 'On' : 'Off'} · applies to the whole app</div>
                 </div>
               </div>
-              <button onClick={() => setDarkMode(v => !v)} aria-label="Toggle dark mode"
+              <button onClick={() => setThemeChoice(darkMode ? 'light' : 'dark')} aria-label="Toggle dark mode" aria-pressed={darkMode}
                 style={{ width: 46, height: 26, borderRadius: 99, border: 'none', background: darkMode ? primary : 'var(--text-faint)', position: 'relative', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s' }}>
                 <span style={{ position: 'absolute', top: 3, left: darkMode ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: 'var(--surface)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.15s' }} />
               </button>
@@ -2167,15 +2175,15 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             ].map(t => (
               <button key={t.label} onClick={t.action}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: 'var(--surface2)', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name={t.icon} /></div>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface3)', color: 'var(--text2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name={t.icon} /></div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{t.label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.label}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{t.sub}</div>
                 </div>
               </button>
             ))}
             {onNavigate && (
-              <button onClick={() => { setShowMobileTools(false); onNavigate('settings') }} style={{ width: '100%', textAlign: 'center', border: '1px solid var(--border-soft)', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: primary, padding: '10px 8px', borderRadius: 12, marginTop: 2 }}>
+              <button onClick={() => { setShowMobileTools(false); onNavigate('settings') }} style={{ width: '100%', textAlign: 'center', border: '1px solid var(--border-soft)', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--org-ink)', padding: '10px 8px', borderRadius: 12, marginTop: 2 }}>
                 Full Groups Settings →
               </button>
             )}
@@ -2190,7 +2198,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
         <div onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Import Children</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Import Children</div>
               <button onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-hover)', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16 }}>×</button>
             </div>
             {activeImportTemplate && (
@@ -2214,7 +2222,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
         <div onClick={() => setShowTemplates(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Import Templates</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Import Templates</div>
               <button onClick={() => setShowTemplates(false)} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-hover)', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16 }}>×</button>
             </div>
             <TemplatePicker org={org} onUseTemplate={(template) => {
@@ -2244,7 +2252,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   <div style={{ fontSize: 12, color: 'var(--text-faint)', padding: '8px 10px' }}>No groups set up yet.</div>
                 ) : bubbles.map(b => (
                   <button key={b.key} onClick={() => handleBulkAssignGroup(b.label)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#111' }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 700, color: 'var(--text)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                     <span style={{ width: 10, height: 10, borderRadius: '50%', background: b.color, flexShrink: 0 }} />
@@ -2400,7 +2408,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, ${color}12 0%, #fff 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, ${color}12 0%, var(--surface) 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--surface)',
@@ -2409,13 +2417,13 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
             <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</div>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>{title}</div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.3 }}>{title}</div>
               <div style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 600 }}>{items.length} child{items.length !== 1 ? 'ren' : ''} on register</div>
             </div>
           </div>
           {items.length > 5 && (
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search by name..."
-              style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: '#111', fontSize: 12.5, outline: 'none' }} />
+              style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12.5, outline: 'none' }} />
           )}
         </div>
 
@@ -2438,7 +2446,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#0B1220' }}>{c.first_name} {c.last_name}</span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{c.first_name} {c.last_name}</span>
                       {c.group_name && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)' }}>· {c.group_name}</span>}
                     </div>
                     <div style={{ fontSize: 12, color, fontWeight: 600, marginTop: 3, lineHeight: 1.4 }}>{getFieldText(c)}</div>
@@ -2497,7 +2505,7 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, var(--surface) 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--surface)',
@@ -2506,12 +2514,12 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
             <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}><img src="/icons/past-registers-icon.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} /></div>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>Past Registers</div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.3 }}>Past Registers</div>
               <div style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 600 }}>{sessions.length} closed session{sessions.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search sessions..."
-            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: '#111', fontSize: 12.5, outline: 'none' }} />
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12.5, outline: 'none' }} />
         </div>
 
         {/* List */}
@@ -2534,9 +2542,9 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
                         background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, padding: '11px 13px',
                         cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
                       }}>
-                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name="🔒" /></span>
+                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--surface-hover)', color: 'var(--text3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name="🔒" /></span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 800, color: '#0B1220', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                           <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, marginTop: 1 }}>
                             {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}{s.location ? ` · ${s.location}` : ''}
                           </div>
@@ -2614,7 +2622,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, var(--surface) 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--surface)',
@@ -2623,7 +2631,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
             <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🗄️</div>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>Archive</div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.3 }}>Archive</div>
               <div style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 600 }}>{sessions.length} archived session{sessions.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
@@ -2633,7 +2641,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
             </div>
           )}
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search archived sessions..."
-            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: '#111', fontSize: 12.5, outline: 'none' }} />
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12.5, outline: 'none' }} />
         </div>
 
         {/* List */}
@@ -2660,7 +2668,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
                         }}>
                           <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🗄️</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 800, color: '#0B1220', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                             <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, marginTop: 1 }}>
                               {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}
                             </div>
